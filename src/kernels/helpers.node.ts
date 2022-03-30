@@ -4,6 +4,7 @@
 'use strict';
 
 import * as path from 'path';
+import * as url from 'url';
 import type { KernelSpec } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
@@ -32,7 +33,7 @@ import {
 import { PYTHON_LANGUAGE, isCI, Settings } from '../platform/common/constants.node';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/common/logger.node';
 import { getDisplayPath } from '../platform/common/platform/fs-paths.node';
-import { IPythonExecutionFactory } from '../platform/common/process/types';
+import { IPythonExecutionFactory } from '../platform/common/process/types.node';
 import {
     IPathUtils,
     IConfigurationService,
@@ -41,7 +42,7 @@ import {
     GLOBAL_MEMENTO,
     IDisplayOptions
 } from '../platform/common/types';
-import { createDeferred, createDeferredFromPromise, Deferred } from '../platform/common/utils/async.node';
+import { createDeferred, createDeferredFromPromise, Deferred } from '../platform/common/utils/async';
 import { DataScience } from '../platform/common/utils/localize.node';
 import { SysInfoReason } from '../platform/messageTypes';
 import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../telemetry/telemetry.node';
@@ -1851,4 +1852,12 @@ export async function connectToKernel(
     onAction: (action: 'start' | 'interrupt' | 'restart', kernel: IKernel) => void = () => noop()
 ): Promise<IKernel> {
     return wrapKernelMethod(controller, metadata, 'start', serviceContainer, resource, notebook, options, onAction);
+}
+
+export function isLocalHostConnection(kernelConnection: KernelConnectionMetadata): boolean {
+    if (kernelConnection.kind === 'connectToLiveKernel' || kernelConnection.kind === 'startUsingRemoteKernelSpec') {
+        const parsed = new url.URL(kernelConnection.baseUrl);
+        return parsed.hostname.toLocaleLowerCase() === 'localhost' || parsed.hostname === '127.0.0.1';
+    }
+    return false;
 }

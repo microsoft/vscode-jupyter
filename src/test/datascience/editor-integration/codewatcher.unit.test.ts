@@ -25,7 +25,7 @@ import {
     IVSCodeNotebook,
     IWorkspaceService
 } from '../../../platform/common/application/types';
-import { IFileSystem } from '../../../platform/common/platform/types';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IConfigurationService } from '../../../platform/common/types';
 import { CodeLensFactory } from '../../../interactive-window/editor-integration/codeLensFactory.node';
 import { DataScienceCodeLensProvider } from '../../../interactive-window/editor-integration/codelensprovider.node';

@@ -12,7 +12,7 @@ import {
 } from '../../platform/common/application/types';
 import { ContextKey } from '../../platform/common/contextKey.node';
 import { disposeAllDisposables } from '../../platform/common/helpers.node';
-import { IFileSystem } from '../../platform/common/platform/types';
+import { IFileSystem } from '../../platform/common/platform/types.node';
 
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc.node';

@@ -17,7 +17,7 @@ import {
     IPythonExecutionService,
     ObservableExecutionResult,
     SpawnOptions
-} from './types';
+} from './types.node';
 
 type ErrorResponse = { error?: string };
 export class PythonDaemonExecutionService extends BasePythonDaemon implements IPythonDaemonExecutionService {

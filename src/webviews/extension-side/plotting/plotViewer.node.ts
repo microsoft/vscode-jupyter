@@ -8,7 +8,7 @@ import * as path from 'path';
 import { Event, EventEmitter, Uri, ViewColumn } from 'vscode';
 
 import { traceError, traceInfo } from '../../../platform/common/logger.node';
-import { createDeferred } from '../../../platform/common/utils/async.node';
+import { createDeferred } from '../../../platform/common/utils/async';
 import { PlotViewerMessageListener } from './plotViewerMessageListener.node';
 import { IExportPlotRequest, IPlotViewer, IPlotViewerMapping, PlotViewerMessages } from './types';
 import {
@@ -16,7 +16,7 @@ import {
     IWorkspaceService,
     IApplicationShell
 } from '../../../platform/common/application/types';
-import { IFileSystem } from '../../../platform/common/platform/types';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
 import * as localize from '../../../platform/common/utils/localize.node';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';

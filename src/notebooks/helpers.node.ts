@@ -29,7 +29,7 @@ import { IVSCodeNotebook, IDocumentManager } from '../platform/common/applicatio
 import { PYTHON_LANGUAGE, MARKDOWN_LANGUAGE } from '../platform/common/constants.node';
 import { traceInfoIfCI, traceError, traceWarning } from '../platform/common/logger.node';
 import { arePathsSame } from '../platform/common/platform/fileUtils.node';
-import { IFileSystem } from '../platform/common/platform/types';
+import { IFileSystem } from '../platform/common/platform/types.node';
 import { Resource } from '../platform/common/types';
 import { getInterpreterHash } from '../platform/pythonEnvironments/info/interpreter.node';
 import { sendTelemetryEvent } from '../telemetry/index.node';

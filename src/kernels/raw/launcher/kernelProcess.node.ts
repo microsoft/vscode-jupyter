@@ -28,21 +28,21 @@ import {
 } from '../../../platform/errors/errorUtils.node';
 import { BaseError } from '../../../platform/errors/types';
 import { traceInfo, traceError, traceVerbose, traceWarning, traceInfoIfCI } from '../../../platform/common/logger.node';
-import { IFileSystem } from '../../../platform/common/platform/types';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 import {
     IProcessServiceFactory,
     IPythonExecutionFactory,
     ObservableExecutionResult,
     IProcessService
-} from '../../../platform/common/process/types';
+} from '../../../platform/common/process/types.node';
 import { Resource, IOutputChannel, IJupyterSettings } from '../../../platform/common/types';
-import { createDeferred } from '../../../platform/common/utils/async.node';
+import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize.node';
 import { noop, swallowExceptions } from '../../../platform/common/utils/misc.node';
 import { KernelDiedError } from '../../../platform/errors/kernelDiedError.node';
 import { KernelPortNotUsedTimeoutError } from '../../../platform/errors/kernelPortNotUsedTimeoutError.node';
 import { KernelProcessExitedError } from '../../../platform/errors/kernelProcessExitedError.node';
-import { traceDecorators } from '../../../platform/logging';
+import { traceDecorators } from '../../../platform/logging/index.node';
 import { ignoreLogging, TraceOptions } from '../../../platform/logging/trace.node';
 import { captureTelemetry } from '../../../telemetry/index.node';
 import { Telemetry, KernelInterruptDaemonModule } from '../../../webviews/webview-side/common/constants';

@@ -10,13 +10,14 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { traceError } from '../../../platform/common/logger.node';
-import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
+import { IPlatformService } from '../../../platform/common/platform/types';
 import { IDisposableRegistry, IConfigurationService } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize.node';
 import { Identifiers, CodeSnippets } from '../../../webviews/webview-side/common/constants';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { noop } from '../../../platform/common/utils/misc.node';
 import { INotebookImporter, INbConvertInterpreterDependencyChecker, INbConvertExportToPythonService } from '../types';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 
 @injectable()
 export class JupyterImporter implements INotebookImporter {

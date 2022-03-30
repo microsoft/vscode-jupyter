@@ -18,7 +18,7 @@ import { WorkspaceService } from '../../platform/common/application/workspace.no
 import { ConfigurationService } from '../../platform/common/configuration/service.node';
 import { PersistentState, PersistentStateFactory } from '../../platform/common/persistentState.node';
 import { FileSystem } from '../../platform/common/platform/fileSystem.node';
-import { IFileSystem } from '../../platform/common/platform/types';
+import { IFileSystem } from '../../platform/common/platform/types.node';
 import { ProcessServiceFactory } from '../../platform/common/process/processFactory.node';
 import { PythonExecutionFactory } from '../../platform/common/process/pythonExecutionFactory.node';
 import {
@@ -30,7 +30,7 @@ import {
     IPythonExecutionService,
     ObservableExecutionResult,
     Output
-} from '../../platform/common/process/types';
+} from '../../platform/common/process/types.node';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -62,7 +62,8 @@ import { MockOutputChannel } from '../mockClasses';
 import { MockJupyterServer } from './mockJupyterServer';
 import { MockJupyterSettings } from './mockJupyterSettings';
 import { DisplayOptions } from '../../kernels/displayOptions.node';
-import { INotebookServer, IJupyterSubCommandExecutionService } from '../../kernels/jupyter/types';
+import { INotebookServer } from '../../kernels/jupyter/types';
+import { IJupyterSubCommandExecutionService } from '../../kernels/jupyter/types.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 class DisposableRegistry implements IAsyncDisposableRegistry {

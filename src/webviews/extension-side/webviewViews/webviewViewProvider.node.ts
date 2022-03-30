@@ -3,7 +3,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { IWebviewViewProvider, IWebviewViewOptions, IWebviewView } from '../../../platform/common/application/types';
-import { IFileSystem } from '../../../platform/common/platform/types';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import { WebviewView } from './webviewView.node';
 

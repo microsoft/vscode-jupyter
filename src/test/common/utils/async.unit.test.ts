@@ -4,7 +4,7 @@
 'use strict';
 
 import * as assert from 'assert';
-import { chain, createDeferred, flattenIterator } from '../../../platform/common/utils/async.node';
+import { chain, createDeferred, flattenIterator } from '../../../platform/common/utils/async';
 
 suite('Deferred', () => {
     test('Resolve', (done) => {

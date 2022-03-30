@@ -12,7 +12,7 @@ import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { WorkspaceService } from '../../../platform/common/application/workspace.node';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
-import { ExecutionResult, ShellOptions } from '../../../platform/common/process/types';
+import { ExecutionResult, ShellOptions } from '../../../platform/common/process/types.node';
 import { IConfigurationService } from '../../../platform/common/types';
 import { ServiceContainer } from '../../../platform/ioc/container.node';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';

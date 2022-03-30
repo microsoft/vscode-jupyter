@@ -20,7 +20,7 @@ import { FileDownloader } from '../../../platform/common/net/fileDownloader.node
 import { HttpClient } from '../../../platform/common/net/httpClient.node';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { PlatformService } from '../../../platform/common/platform/platformService.node';
-import { IFileSystem } from '../../../platform/common/platform/types';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IHttpClient } from '../../../platform/common/types';
 import { Http } from '../../../platform/common/utils/localize.node';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';

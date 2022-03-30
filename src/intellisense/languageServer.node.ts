@@ -35,7 +35,7 @@ import { NOTEBOOK_SELECTOR, PYTHON_LANGUAGE } from '../platform/common/constants
 import { traceInfo } from '../platform/common/logger.node';
 import { getInterpreterId } from '../platform/pythonEnvironments/info/interpreter.node';
 import { noop } from '../platform/common/utils/misc.node';
-import { sleep } from '../platform/common/utils/async.node';
+import { sleep } from '../platform/common/utils/async';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

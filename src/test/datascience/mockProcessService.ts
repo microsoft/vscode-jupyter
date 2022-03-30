@@ -11,7 +11,7 @@ import {
     Output,
     ShellOptions,
     SpawnOptions
-} from '../../platform/common/process/types';
+} from '../../platform/common/process/types.node';
 import { noop, sleep } from '../core';
 
 export class MockProcessService implements IProcessService {

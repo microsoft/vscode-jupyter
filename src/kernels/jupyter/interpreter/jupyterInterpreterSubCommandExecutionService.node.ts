@@ -12,7 +12,7 @@ import {
     SpawnOptions,
     ObservableExecutionResult,
     IPythonDaemonExecutionService
-} from '../../../platform/common/process/types';
+} from '../../../platform/common/process/types.node';
 import { IOutputChannel, IPathUtils } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize.node';
 import { noop } from '../../../platform/common/utils/misc.node';
@@ -36,10 +36,10 @@ import {
 import { JupyterInterpreterService } from './jupyterInterpreterService.node';
 import {
     IJupyterInterpreterDependencyManager,
-    IJupyterSubCommandExecutionService,
     JupyterInterpreterDependencyResponse,
     JupyterServerInfo
 } from '../types';
+import { IJupyterSubCommandExecutionService } from '../types.node';
 
 /**
  * Responsible for execution of jupyter sub commands using a single/global interpreter set aside for launching jupyter server.

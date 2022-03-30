@@ -20,7 +20,7 @@ import {
 import { traceError, traceInfo } from '../platform/common/logger.node';
 import { StopWatch } from '../platform/common/utils/stopWatch.node';
 import { ResourceSpecificTelemetryProperties } from './types';
-import { CheckboxState, EventName, PlatformErrors, SliceOperationSource } from './constants.node';
+import { CheckboxState, EventName, PlatformErrors, SliceOperationSource } from './constants';
 import { noop } from '../platform/common/utils/misc.node';
 import { isPromise } from 'rxjs/internal-compatibility';
 import { DebuggingTelemetry } from '../platform/debugger/constants.node';

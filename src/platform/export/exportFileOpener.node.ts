@@ -3,7 +3,7 @@ import { Position, Uri } from 'vscode';
 import { sendTelemetryEvent } from '../../telemetry/index.node';
 import { IDocumentManager, IApplicationShell } from '../common/application/types';
 import { Telemetry, PYTHON_LANGUAGE } from '../common/constants.node';
-import { IFileSystem } from '../common/platform/types';
+import { IFileSystem } from '../common/platform/types.node';
 import { IBrowserService } from '../common/types';
 import * as localize from '../common/utils/localize.node';
 import { ExportFormat } from './types';

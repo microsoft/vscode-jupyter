@@ -10,7 +10,7 @@ import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platfo
 import { traceInfo, traceError, traceVerbose, traceWarning } from '../../../platform/common/logger.node';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
 import { IDisplayOptions, IDisposable, IOutputChannel, Resource } from '../../../platform/common/types';
-import { TimedOutError, createDeferred, sleep } from '../../../platform/common/utils/async.node';
+import { TimedOutError, createDeferred, sleep } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize.node';
 import { StopWatch } from '../../../platform/common/utils/stopWatch.node';
 import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../../telemetry/telemetry.node';

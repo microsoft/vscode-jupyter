@@ -3,7 +3,6 @@
 'use strict';
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import { Socket } from 'net';
 import { Request as RequestResult } from 'request';
 import { ConfigurationTarget, Disposable, Event, Extension, ExtensionContext, OutputChannel, Uri, Range } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
@@ -186,12 +185,6 @@ export interface IConfigurationService {
         resource?: Uri,
         configTarget?: ConfigurationTarget
     ): Promise<void>;
-}
-
-export const ISocketServer = Symbol('ISocketServer');
-export interface ISocketServer extends Disposable {
-    readonly client: Promise<Socket>;
-    Start(options?: { port?: number; host?: string }): Promise<number>;
 }
 
 export type DownloadOptions = {

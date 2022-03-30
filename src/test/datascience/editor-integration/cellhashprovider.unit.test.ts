@@ -6,7 +6,7 @@ import * as TypeMoq from 'typemoq';
 import { NotebookCell, NotebookCellKind, Position, Range, Uri } from 'vscode';
 
 import { IDebugService } from '../../../platform/common/application/types';
-import { IFileSystem } from '../../../platform/common/platform/types';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../../platform/common/types';
 import { CellHashProvider } from '../../../interactive-window/editor-integration/cellhashprovider.node';
 import { IKernel } from '../../../platform/../kernels/types';

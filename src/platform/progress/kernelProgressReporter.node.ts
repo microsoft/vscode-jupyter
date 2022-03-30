@@ -8,7 +8,7 @@ import { createPromiseFromCancellation } from '../common/cancellation.node';
 import { disposeAllDisposables } from '../common/helpers.node';
 import { traceError } from '../common/logger.node';
 import { IDisposable, IDisposableRegistry, Resource } from '../common/types';
-import { createDeferred } from '../common/utils/async.node';
+import { createDeferred } from '../common/utils/async';
 import { noop } from '../common/utils/misc.node';
 import { getUserMessageForAction } from './messages.node';
 import { ReportableAction } from './types';

@@ -4,10 +4,10 @@
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as TypeMoq from 'typemoq';
-import { IFileSystem } from '../../../platform/common/platform/types';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { createPythonEnv } from '../../../platform/common/process/pythonEnvironment.node';
 import { createPythonProcessService } from '../../../platform/common/process/pythonProcess.node';
-import { IProcessService, StdErrError } from '../../../platform/common/process/types';
+import { IProcessService, StdErrError } from '../../../platform/common/process/types.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { noop } from '../../core';
 

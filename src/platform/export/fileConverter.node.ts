@@ -3,7 +3,7 @@ import * as path from 'path';
 import { CancellationToken, NotebookCellData, NotebookData, NotebookDocument, Uri, workspace } from 'vscode';
 import { IApplicationShell } from '../common/application/types';
 import { traceError } from '../common/logger.node';
-import { IFileSystem, TemporaryDirectory } from '../common/platform/types';
+import { TemporaryDirectory } from '../common/platform/types';
 import { IConfigurationService, IExtensions } from '../common/types';
 import * as localize from '../common/utils/localize.node';
 import { PythonEnvironment } from '../pythonEnvironments/info';
@@ -14,6 +14,7 @@ import { ExportInterpreterFinder } from './exportInterpreterFinder.node';
 import { ExportUtil } from './exportUtil.node';
 import { ExportFormat, INbConvertExport, IExportDialog, IFileConverter, IExport } from './types';
 import { Telemetry } from '../common/constants.node';
+import { IFileSystem } from '../common/platform/types.node';
 
 // Class is responsible for file conversions (ipynb, py, pdf, html) and managing nb convert for some of those conversions
 @injectable()

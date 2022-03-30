@@ -7,7 +7,7 @@ import { parse } from 'jsonc-parser';
 import * as path from 'path';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { traceInfo, traceError, traceWarning } from '../../platform/common/logger.node';
-import { IFileSystem } from '../../platform/common/platform/types';
+import { IFileSystem } from '../../platform/common/platform/types.node';
 import { IConfigurationService, Resource } from '../../platform/common/types';
 import { DefaultTheme } from '../webview-side/common/constants';
 import { ICodeCssGenerator, IThemeFinder } from './types';

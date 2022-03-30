@@ -59,7 +59,7 @@ import {
     IsPreRelease,
     WORKSPACE_MEMENTO
 } from './platform/common/types';
-import { createDeferred } from './platform/common/utils/async.node';
+import { createDeferred } from './platform/common/utils/async';
 import { Common, OutputChannelNames } from './platform/common/utils/localize.node';
 import { IServiceContainer, IServiceManager } from './platform/ioc/types';
 import { sendErrorTelemetry, sendStartupTelemetry } from './platform/startupTelemetry.node';
@@ -75,9 +75,9 @@ import { registerTypes as registerIntellisenseTypes } from './intellisense/servi
 import { IExtensionActivationManager } from './platform/activation/types';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants.node';
 import { getDisplayPath } from './platform/common/platform/fs-paths.node';
-import { IFileSystem } from './platform/common/platform/types';
+import { IFileSystem } from './platform/common/platform/types.node';
 import { getJupyterOutputChannel } from './platform/devTools/jupyterOutputChannel.node';
-import { addOutputChannelLogging, setLoggingLevel } from './platform/logging';
+import { addOutputChannelLogging, setLoggingLevel } from './platform/logging/index.node';
 import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry.node';
 import { Container } from 'inversify/lib/container/container';
 import { ServiceContainer } from './platform/ioc/container.node';

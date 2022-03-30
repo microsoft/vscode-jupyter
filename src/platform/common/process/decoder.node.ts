@@ -4,7 +4,7 @@
 import * as iconv from 'iconv-lite';
 import { injectable } from 'inversify';
 import { DEFAULT_ENCODING } from './constants.node';
-import { IBufferDecoder } from './types';
+import { IBufferDecoder } from './types.node';
 
 @injectable()
 export class BufferDecoder implements IBufferDecoder {

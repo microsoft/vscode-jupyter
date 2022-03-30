@@ -13,7 +13,7 @@ import { INotebookControllerManager } from '../../notebooks/types';
 import { disposeAllDisposables } from '../common/helpers.node';
 import { traceInfo } from '../common/logger.node';
 import { IDisposable, IDisposableRegistry, IExtensions } from '../common/types';
-import { PromiseChain } from '../common/utils/async.node';
+import { PromiseChain } from '../common/utils/async';
 import { IKernelSocket as ExtensionKernelSocket } from '../../kernels/types';
 import { sendTelemetryEvent } from '../../telemetry/index.node';
 import { ApiAccessService } from './apiAccessService.node';

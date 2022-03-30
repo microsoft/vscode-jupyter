@@ -9,9 +9,9 @@ import { CancellationError, CancellationToken, Disposable, Event, EventEmitter }
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
 import { Cancellation } from '../../../platform/common/cancellation.node';
 import { traceInfo, traceError, traceWarning } from '../../../platform/common/logger.node';
-import { IFileSystem } from '../../../platform/common/platform/types';
-import { ObservableExecutionResult, Output } from '../../../platform/common/process/types';
-import { Deferred, createDeferred } from '../../../platform/common/utils/async.node';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { ObservableExecutionResult, Output } from '../../../platform/common/process/types.node';
+import { Deferred, createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize.node';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { RegExpValues } from '../../../webviews/webview-side/common/constants';

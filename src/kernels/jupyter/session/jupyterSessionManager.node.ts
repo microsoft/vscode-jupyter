@@ -33,7 +33,7 @@ import { JupyterKernelSpec } from '../jupyterKernelSpec.node';
 import { createAuthorizingRequest } from './jupyterRequest.node';
 import { JupyterSession } from './jupyterSession.node';
 import { createJupyterWebSocket } from './jupyterWebSocket.node';
-import { sleep } from '../../../platform/common/utils/async.node';
+import { sleep } from '../../../platform/common/utils/async';
 import { IJupyterSessionManager, IJupyterPasswordConnect, IJupyterKernel } from '../types';
 
 // Key for our insecure connection global state

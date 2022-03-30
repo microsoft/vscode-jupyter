@@ -14,7 +14,7 @@ import { IDisposable } from '@fluentui/react';
 import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation.node';
 import { disposeAllDisposables } from '../../../platform/common/helpers.node';
 import { traceInfo, traceError } from '../../../platform/common/logger.node';
-import { IFileSystem, TemporaryDirectory } from '../../../platform/common/platform/types';
+import { TemporaryDirectory } from '../../../platform/common/platform/types';
 import { IOutputChannel, Resource } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize.node';
 import { StopWatch } from '../../../platform/common/utils/stopWatch.node';
@@ -28,7 +28,8 @@ import { WrappedError } from '../../../platform/errors/types';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter.node';
 import { ReportableAction } from '../../../platform/progress/types';
 import { IJupyterConnection } from '../../types';
-import { IJupyterSubCommandExecutionService } from '../types';
+import { IJupyterSubCommandExecutionService } from '../types.node';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 
 /**
  * Responsible for starting a notebook.

@@ -9,7 +9,7 @@ import * as fsExtra from 'fs-extra';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when, verify } from 'ts-mockito';
 import { PathUtils } from '../../../platform/common/platform/pathUtils.node';
-import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
+import { IPlatformService } from '../../../platform/common/platform/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
 import { WorkspaceService } from '../../../platform/common/application/workspace.node';
 import { EnvironmentVariablesProvider } from '../../../platform/common/variables/environmentVariablesProvider.node';
@@ -42,6 +42,7 @@ import { loadKernelSpec } from '../../../kernels/raw/finder/localKernelSpecFinde
 import { LocalKnownPathKernelSpecFinder } from '../../../kernels/raw/finder/localKnownPathKernelSpecFinder.node';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../kernels/raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { ILocalKernelFinder } from '../../../kernels/raw/types';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {

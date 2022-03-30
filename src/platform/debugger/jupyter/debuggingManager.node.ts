@@ -27,7 +27,7 @@ import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../commo
 import { traceError, traceInfo, traceInfoIfCI } from '../../common/logger.node';
 import { DataScience } from '../../common/utils/localize.node';
 import { Commands as DSCommands, EditorContexts } from '../../../webviews/webview-side/common/constants';
-import { IFileSystem, IPlatformService } from '../../common/platform/types';
+import { IPlatformService } from '../../common/platform/types';
 import { IDebuggingManager, IKernelDebugAdapterConfig, KernelDebugMode } from '../types';
 import { DebuggingTelemetry, pythonKernelDebugAdapter } from '../constants.node';
 import { sendTelemetryEvent } from '../../../telemetry/index.node';
@@ -35,6 +35,7 @@ import { DebugCellController, RunByLineController } from './debugControllers.nod
 import { assertIsDebugConfig, IpykernelCheckResult, isUsingIpykernel6OrLater } from './helper.node';
 import { Debugger } from './debugger.node';
 import { INotebookControllerManager } from '../../../notebooks/types';
+import { IFileSystem } from '../../common/platform/types.node';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.

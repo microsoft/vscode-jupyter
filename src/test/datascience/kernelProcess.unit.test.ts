@@ -14,14 +14,14 @@ import {
     IPythonExecutionFactory,
     IPythonExecutionService,
     Output
-} from '../../platform/common/process/types';
+} from '../../platform/common/process/types.node';
 import { IKernelConnection } from '../../kernels/raw/types';
 import {
     IJupyterKernelSpec,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../../kernels/types';
-import { IFileSystem } from '../../platform/common/platform/types';
+import { IFileSystem } from '../../platform/common/platform/types.node';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { KernelEnvironmentVariablesService } from '../../kernels/raw/launcher/kernelEnvVarsService.node';
 import { IDisposable, IJupyterSettings, IOutputChannel } from '../../platform/common/types';

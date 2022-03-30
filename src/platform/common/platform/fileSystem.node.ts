@@ -8,7 +8,8 @@ import { traceError } from '../logger.node';
 import { createDirNotEmptyError, isFileNotFoundError } from './errors.node';
 import { convertFileType, convertStat, getHashString } from './fileSystemUtils.node';
 import { FileSystemPathUtils } from './fs-paths.node';
-import { FileType, IFileSystem, IFileSystemPathUtils, TemporaryFile } from './types';
+import { IFileSystemPathUtils, TemporaryFile } from './types';
+import { FileType, IFileSystem } from './types.node';
 
 const ENCODING = 'utf8';
 

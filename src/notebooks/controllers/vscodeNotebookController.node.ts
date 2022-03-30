@@ -41,7 +41,7 @@ import {
     IExtensionContext,
     IPathUtils
 } from '../../platform/common/types';
-import { createDeferred } from '../../platform/common/utils/async.node';
+import { createDeferred } from '../../platform/common/utils/async';
 import { chainable } from '../../platform/common/utils/decorators.node';
 import { DataScience, Common } from '../../platform/common/utils/localize.node';
 import { noop } from '../../platform/common/utils/misc.node';
@@ -50,7 +50,7 @@ import {
     sendKernelTelemetryEvent
 } from '../../telemetry/telemetry.node';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { traceDecorators } from '../../platform/logging';
+import { traceDecorators } from '../../platform/logging/index.node';
 import { TraceOptions } from '../../platform/logging/trace.node';
 import { ConsoleForegroundColors } from '../../platform/logging/_global.node';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';

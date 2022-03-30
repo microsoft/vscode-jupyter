@@ -15,7 +15,7 @@ import { InterpreterCountTracker } from './interpreterCountTracker.node';
 import { getTelemetrySafeHashedString, getTelemetrySafeLanguage } from '../platform/../telemetry/helpers.node';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { InterpreterPackages } from './interpreterPackages.node';
-import { createDeferred } from '../platform/common/utils/async.node';
+import { createDeferred } from '../platform/common/utils/async';
 import { getNormalizedInterpreterPath } from '../platform/pythonEnvironments/info/interpreter.node';
 import { getResourceType } from '../platform/common/utils.node';
 import { populateTelemetryWithErrorInfo } from '../platform/errors/index.node';

@@ -10,11 +10,11 @@ import {
     IPythonExecutionFactory,
     IPythonDaemonExecutionService,
     ExecutionResult
-} from '../../../platform/common/process/types';
+} from '../../../platform/common/process/types.node';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { JupyterCommands, JupyterDaemonModule } from '../../../webviews/webview-side/common/constants';
-import { IJupyterCommand, IJupyterCommandFactory } from '../types';
+import { IJupyterCommand, IJupyterCommandFactory } from '../types.node';
 
 class InterpreterJupyterCommand implements IJupyterCommand {
     protected interpreterPromise: Promise<PythonEnvironment>;

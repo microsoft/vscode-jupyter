@@ -6,6 +6,7 @@
 
 import { createHash } from 'crypto';
 import * as fs from 'fs-extra';
+import { ReadStream, WriteStream } from 'fs-extra';
 import * as glob from 'glob';
 import { promisify } from 'util';
 import * as vscode from 'vscode';
@@ -14,37 +15,29 @@ import { traceError } from '../logger.node';
 import { createDirNotEmptyError, isFileExistsError, isFileNotFoundError, isNoPermissionsError } from './errors.node';
 import { FileSystemPaths, FileSystemPathUtils } from './fs-paths.node';
 import { TemporaryFileSystem } from './fs-temp.node';
-import {
-    FileStat,
-    FileType,
-    IFileSystemPaths,
-    IFileSystemPathUtils,
-    IRawFileSystem,
-    ITempFileSystem,
-    ReadStream,
-    WriteStream
-} from './types';
+import { IFileSystemPaths, IFileSystemPathUtils, ITempFileSystem } from './types';
+import { IRawFileSystem } from './types.node';
 
 const ENCODING = 'utf8';
 
 // This helper function determines the file type of the given stats
 // object.  The type follows the convention of node's fs module, where
 // a file has exactly one type.  Symlinks are not resolved.
-export function convertFileType(stat: fs.Stats): FileType {
+export function convertFileType(stat: fs.Stats): vscode.FileType {
     if (stat.isFile()) {
-        return FileType.File;
+        return vscode.FileType.File;
     } else if (stat.isDirectory()) {
-        return FileType.Directory;
+        return vscode.FileType.Directory;
     } else if (stat.isSymbolicLink()) {
         // The caller is responsible for combining this ("logical or")
         // with File or Directory as necessary.
-        return FileType.SymbolicLink;
+        return vscode.FileType.SymbolicLink;
     } else {
-        return FileType.Unknown;
+        return vscode.FileType.Unknown;
     }
 }
 
-export function convertStat(old: fs.Stats, filetype: FileType): FileStat {
+export function convertStat(old: fs.Stats, filetype: vscode.FileType): vscode.FileStat {
     return {
         type: filetype,
         size: old.size,
@@ -58,15 +51,15 @@ export function convertStat(old: fs.Stats, filetype: FileType): FileStat {
 }
 
 function filterByFileType(
-    files: [string, FileType][], // the files to filter
-    fileType: FileType // the file type to look for
-): [string, FileType][] {
+    files: [string, vscode.FileType][], // the files to filter
+    fileType: vscode.FileType // the file type to look for
+): [string, vscode.FileType][] {
     // We preserve the pre-existing behavior of following symlinks.
-    if (fileType === FileType.Unknown) {
+    if (fileType === vscode.FileType.Unknown) {
         // FileType.Unknown == 0 so we can't just use bitwise
         // operations blindly here.
         return files.filter(([_file, ft]) => {
-            return ft === FileType.Unknown || ft === (FileType.SymbolicLink & FileType.Unknown);
+            return ft === vscode.FileType.Unknown || ft === (vscode.FileType.SymbolicLink & vscode.FileType.Unknown);
         });
     } else {
         return files.filter(([_file, ft]) => (ft & fileType) > 0);
@@ -83,10 +76,10 @@ interface IVSCodeFileSystemAPI {
     copy(source: vscode.Uri, target: vscode.Uri, options?: { overwrite: boolean }): Thenable<void>;
     createDirectory(uri: vscode.Uri): Thenable<void>;
     delete(uri: vscode.Uri, options?: { recursive: boolean; useTrash: boolean }): Thenable<void>;
-    readDirectory(uri: vscode.Uri): Thenable<[string, FileType][]>;
+    readDirectory(uri: vscode.Uri): Thenable<[string, vscode.FileType][]>;
     readFile(uri: vscode.Uri): Thenable<Uint8Array>;
     rename(source: vscode.Uri, target: vscode.Uri, options?: { overwrite: boolean }): Thenable<void>;
-    stat(uri: vscode.Uri): Thenable<FileStat>;
+    stat(uri: vscode.Uri): Thenable<vscode.FileStat>;
     writeFile(uri: vscode.Uri, content: Uint8Array): Thenable<void>;
 }
 
@@ -139,7 +132,7 @@ export class RawFileSystem implements IRawFileSystem {
         );
     }
 
-    public async stat(filename: string): Promise<FileStat> {
+    public async stat(filename: string): Promise<vscode.FileStat> {
         // Note that, prior to the November release of VS Code,
         // stat.ctime was always 0.
         // See: https://github.com/microsoft/vscode/issues/84525
@@ -147,7 +140,7 @@ export class RawFileSystem implements IRawFileSystem {
         return this.vscfs.stat(uri);
     }
 
-    public async lstat(filename: string): Promise<FileStat> {
+    public async lstat(filename: string): Promise<vscode.FileStat> {
         // TODO https://github.com/microsoft/vscode/issues/71204 (84514)):
         //   This functionality has been requested for the VS Code API.
         const stat = await this.fsExtra.lstat(filename);
@@ -182,7 +175,7 @@ export class RawFileSystem implements IRawFileSystem {
                 throw err; // re-throw
             }
             const stat = await this.vscfs.stat(tgtUri);
-            if (stat.type === FileType.Directory) {
+            if (stat.type === vscode.FileType.Directory) {
                 throw err; // re-throw
             }
             options.overwrite = true;
@@ -269,12 +262,12 @@ export class RawFileSystem implements IRawFileSystem {
         await this.vscfs.createDirectory(uri);
     }
 
-    public async listdir(dirname: string): Promise<[string, FileType][]> {
+    public async listdir(dirname: string): Promise<[string, vscode.FileType][]> {
         const uri = vscode.Uri.file(dirname);
         const files = await this.vscfs.readDirectory(uri);
         return files.map(([basename, filetype]) => {
             const filename = this.paths.join(dirname, basename);
-            return [filename, filetype] as [string, FileType];
+            return [filename, filetype] as [string, vscode.FileType];
         });
     }
 
@@ -285,13 +278,13 @@ export class RawFileSystem implements IRawFileSystem {
     // from perhaps create*Stream()).
     // See: https://github.com/microsoft/vscode/issues/84518
 
-    public statSync(filename: string): FileStat {
+    public statSync(filename: string): vscode.FileStat {
         // We follow the filetype behavior of the VS Code API, by
         // acknowledging symlinks.
         let stat = this.fsExtra.lstatSync(filename);
-        let filetype = FileType.Unknown;
+        let filetype = vscode.FileType.Unknown;
         if (stat.isSymbolicLink()) {
-            filetype = FileType.SymbolicLink;
+            filetype = vscode.FileType.SymbolicLink;
             stat = this.fsExtra.statSync(filename);
         }
         filetype |= convertFileType(stat);
@@ -370,9 +363,9 @@ export class FileSystemUtils {
         filename: string,
         // the file type to expect; if not provided then any file type
         // matches; otherwise a mismatch results in a "false" value
-        fileType?: FileType
+        fileType?: vscode.FileType
     ): Promise<boolean> {
-        let stat: FileStat;
+        let stat: vscode.FileStat;
         try {
             // Note that we are using stat() rather than lstat().  This
             // means that any symlinks are getting resolved.
@@ -388,20 +381,20 @@ export class FileSystemUtils {
         if (fileType === undefined) {
             return true;
         }
-        if (fileType === FileType.Unknown) {
+        if (fileType === vscode.FileType.Unknown) {
             // FileType.Unknown == 0, hence do not use bitwise operations.
-            return stat.type === FileType.Unknown;
+            return stat.type === vscode.FileType.Unknown;
         }
         return (stat.type & fileType) === fileType;
     }
     public async fileExists(filename: string): Promise<boolean> {
-        return this.pathExists(filename, FileType.File);
+        return this.pathExists(filename, vscode.FileType.File);
     }
     public async directoryExists(dirname: string): Promise<boolean> {
-        return this.pathExists(dirname, FileType.Directory);
+        return this.pathExists(dirname, vscode.FileType.Directory);
     }
 
-    public async listdir(dirname: string): Promise<[string, FileType][]> {
+    public async listdir(dirname: string): Promise<[string, vscode.FileType][]> {
         try {
             return await this.raw.listdir(dirname);
         } catch (err) {
@@ -414,13 +407,13 @@ export class FileSystemUtils {
     }
     public async getSubDirectories(dirname: string): Promise<string[]> {
         const files = await this.listdir(dirname);
-        const filtered = filterByFileType(files, FileType.Directory);
+        const filtered = filterByFileType(files, vscode.FileType.Directory);
         return filtered.map(([filename, _fileType]) => filename);
     }
     public async getFiles(dirname: string): Promise<string[]> {
         // Note that only "regular" files are returned.
         const files = await this.listdir(dirname);
-        const filtered = filterByFileType(files, FileType.File);
+        const filtered = filterByFileType(files, vscode.FileType.File);
         return filtered.map(([filename, _fileType]) => filename);
     }
 

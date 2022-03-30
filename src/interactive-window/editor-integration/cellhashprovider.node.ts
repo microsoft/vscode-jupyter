@@ -19,7 +19,7 @@ import * as localize from '../../platform/common/utils/localize.node';
 import { splitMultilineString } from '../../webviews/webview-side/common';
 import { IDebugService, IDocumentManager } from '../../platform/common/application/types';
 import { traceInfo, traceInfoIfCI } from '../../platform/common/logger.node';
-import { IFileSystem } from '../../platform/common/platform/types';
+import { IFileSystem } from '../../platform/common/platform/types.node';
 
 import { IConfigurationService } from '../../platform/common/types';
 import { getInteractiveCellMetadata } from '../interactiveWindow.node';

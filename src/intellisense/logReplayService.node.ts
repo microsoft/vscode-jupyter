@@ -12,10 +12,10 @@ import { ICommandManager, IApplicationShell } from '../platform/common/applicati
 import { PYTHON_LANGUAGE, NOTEBOOK_SELECTOR } from '../platform/common/constants.node';
 import { ContextKey } from '../platform/common/contextKey.node';
 import { traceInfo } from '../platform/common/logger.node';
-import { IFileSystem } from '../platform/common/platform/types';
+import { IFileSystem } from '../platform/common/platform/types.node';
 import { IDisposableRegistry, IConfigurationService } from '../platform/common/types';
 import { Commands, EditorContexts } from '../webviews/webview-side/common/constants';
-import { sleep, waitForCondition } from '../platform/common/utils/async.node';
+import { sleep, waitForCondition } from '../platform/common/utils/async';
 
 /**
  * Class used to replay pylance log output to regenerate a series of edits.

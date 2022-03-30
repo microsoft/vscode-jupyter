@@ -8,5 +8,5 @@ export {
     logInfoOnCI as traceInfoIfCI,
     logVerbose as traceVerbose,
     logWarning as traceWarning
-} from '../logging';
+} from '../logging/index.node';
 export { TraceOptions as LogOptions } from '../logging/trace.node';

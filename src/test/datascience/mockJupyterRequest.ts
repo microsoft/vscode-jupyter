@@ -6,7 +6,7 @@ import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ICell } from '../../platform/common/types';
 
-import { createDeferred, Deferred } from '../../platform/common/utils/async.node';
+import { createDeferred, Deferred } from '../../platform/common/utils/async';
 import { noop } from '../../platform/common/utils/misc.node';
 import { concatMultilineString } from '../../webviews/webview-side/common';
 

@@ -8,7 +8,7 @@ import { TraceOptions } from '../../logging/trace.node';
 import { traceDecorators, traceInfoIfCI } from '../logger.node';
 
 import { IDisposable } from '../types';
-import { createDeferred } from '../utils/async.node';
+import { createDeferred } from '../utils/async';
 import { EnvironmentVariables } from '../variables/types';
 import { DEFAULT_ENCODING } from './constants.node';
 import {
@@ -20,7 +20,7 @@ import {
     ShellOptions,
     SpawnOptions,
     StdErrError
-} from './types';
+} from './types.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export class ProcessService extends EventEmitter implements IProcessService {

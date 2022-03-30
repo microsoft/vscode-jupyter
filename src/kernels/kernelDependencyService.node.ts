@@ -12,7 +12,7 @@ import { getDisplayPath } from '../platform/common/platform/fs-paths.node';
 import { IMemento, GLOBAL_MEMENTO, IsCodeSpace, Resource, IDisplayOptions } from '../platform/common/types';
 import { DataScience, Common } from '../platform/common/utils/localize.node';
 import { IServiceContainer } from '../platform/ioc/types';
-import { traceDecorators } from '../platform/logging';
+import { traceDecorators } from '../platform/logging/index.node';
 import { ignoreLogging, logValue } from '../platform/logging/trace.node';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../telemetry/index.node';

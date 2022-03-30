@@ -10,14 +10,14 @@ import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import type { Data as WebSocketData } from 'ws';
 import { traceInfoIfCI, traceVerbose, traceError } from '../../platform/common/logger.node';
 import { IDisposable } from '../../platform/common/types';
-import { Deferred, createDeferred } from '../../platform/common/utils/async.node';
+import { Deferred, createDeferred } from '../../platform/common/utils/async';
 import { noop } from '../../platform/common/utils/misc.node';
-import { deserializeDataViews, serializeDataViews } from '../../platform/common/utils/serializers.node';
+import { deserializeDataViews, serializeDataViews } from '../../platform/common/utils/serializers';
 import { IPyWidgetMessages, IInteractiveWindowMapping } from '../../platform/messageTypes';
 import { sendTelemetryEvent } from '../../telemetry/index.node';
 import { Identifiers, Telemetry } from '../../webviews/webview-side/common/constants';
 import { IKernel, IKernelProvider, KernelSocketInformation } from '../types';
-import { WIDGET_MIMETYPE } from './constants.node';
+import { WIDGET_MIMETYPE } from './constants';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
 import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector.node';
 

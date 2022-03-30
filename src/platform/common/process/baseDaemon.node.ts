@@ -13,7 +13,7 @@ import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { BaseError } from '../../../platform/errors/types';
 import { traceError, traceVerbose, traceWarning } from '../logger.node';
 import { IDisposable } from '../types';
-import { createDeferred, Deferred } from '../utils/async.node';
+import { createDeferred, Deferred } from '../utils/async';
 import { noop } from '../utils/misc.node';
 import {
     ExecutionResult,
@@ -22,7 +22,7 @@ import {
     Output,
     SpawnOptions,
     StdErrError
-} from './types';
+} from './types.node';
 
 export type ErrorResponse = { error?: string };
 export type ExecResponse = ErrorResponse & { stdout: string; stderr?: string };

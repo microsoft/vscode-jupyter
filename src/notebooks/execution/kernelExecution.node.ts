@@ -10,7 +10,7 @@ import { KernelMessage } from '@jupyterlab/services';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { traceInfo, traceInfoIfCI, traceWarning } from '../../platform/common/logger.node';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
-import { createDeferred, waitForPromise } from '../../platform/common/utils/async.node';
+import { createDeferred, waitForPromise } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch.node';
 import { CellHashProviderFactory } from '../../interactive-window/editor-integration/cellHashProviderFactory.node';
 import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../telemetry/telemetry.node';

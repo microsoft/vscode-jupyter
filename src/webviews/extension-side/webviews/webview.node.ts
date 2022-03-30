@@ -14,7 +14,7 @@ import {
 } from 'vscode';
 import { IWebview, IWebviewOptions, WebviewMessage } from '../../../platform/common/application/types';
 import { traceError } from '../../../platform/common/logger.node';
-import { IFileSystem } from '../../../platform/common/platform/types';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import * as localize from '../../../platform/common/utils/localize.node';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';

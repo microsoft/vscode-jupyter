@@ -37,7 +37,7 @@ import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../
 import { disposeAllDisposables } from '../../../platform/common/helpers.node';
 import { traceInfo, traceInfoIfCI } from '../../../platform/common/logger.node';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
-import { createDeferred } from '../../../platform/common/utils/async.node';
+import { createDeferred } from '../../../platform/common/utils/async';
 import { swallowExceptions } from '../../../platform/common/utils/misc.node';
 import { IKernelProvider } from '../../../platform/../kernels/types';
 import { IExtensionTestApi, sleep, waitForCondition } from '../../common';

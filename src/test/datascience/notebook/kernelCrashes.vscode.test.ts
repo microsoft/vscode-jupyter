@@ -32,7 +32,7 @@ import {
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import * as dedent from 'dedent';
 import { IKernelProvider } from '../../../platform/../kernels/types';
-import { createDeferred } from '../../../platform/common/utils/async.node';
+import { createDeferred } from '../../../platform/common/utils/async';
 import { sleep } from '../../core';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../platform/../kernels/helpers.node';
 import { Uri, window, workspace } from 'vscode';

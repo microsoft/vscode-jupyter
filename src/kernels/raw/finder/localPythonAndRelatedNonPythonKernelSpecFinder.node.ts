@@ -19,7 +19,7 @@ import { IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants.node';
 import { traceInfoIfCI, traceVerbose, traceError } from '../../../platform/common/logger.node';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
-import { IFileSystem } from '../../../platform/common/platform/types';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IMemento, GLOBAL_MEMENTO, Resource } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter.node';

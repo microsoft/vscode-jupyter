@@ -7,7 +7,7 @@ import { EventEmitter, Memento, NotebookDocument } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { disposeAllDisposables } from '../../platform/common/helpers.node';
 import { IDisposable, IExtensions } from '../../platform/common/types';
-import { sleep } from '../../platform/common/utils/async.node';
+import { sleep } from '../../platform/common/utils/async';
 import { Common } from '../../platform/common/utils/localize.node';
 import { JupyterNotebookView } from '../../notebooks/constants';
 import { VSCodeNotebookController } from '../../notebooks/controllers/vscodeNotebookController.node';

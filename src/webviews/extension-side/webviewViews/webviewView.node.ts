@@ -4,7 +4,7 @@
 
 import { Event, EventEmitter, Uri, WebviewOptions, WebviewView as vscodeWebviewView } from 'vscode';
 import { IWebviewView, IWebviewViewOptions } from '../../../platform/common/application/types';
-import { IFileSystem } from '../../../platform/common/platform/types';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import { Webview } from '../webviews/webview.node';
 

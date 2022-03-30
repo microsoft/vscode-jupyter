@@ -3,9 +3,9 @@
 
 import { inject, injectable } from 'inversify';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../platform/api/types';
-import { IPythonExecutionFactory } from '../platform/common/process/types';
+import { IPythonExecutionFactory } from '../platform/common/process/types.node';
 import { IDisposableRegistry, InterpreterUri } from '../platform/common/types';
-import { createDeferred, Deferred } from '../platform/common/utils/async.node';
+import { createDeferred, Deferred } from '../platform/common/utils/async';
 import { isResource, noop } from '../platform/common/utils/misc.node';
 import { IInterpreterService } from '../platform/interpreter/contracts.node';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';

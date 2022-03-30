@@ -6,7 +6,7 @@ import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { InterpreterInformation } from '../../pythonEnvironments/info';
 import { getDisplayPath } from '../platform/fs-paths.node';
 import { IDisposableRegistry } from '../types';
-import { sleep } from '../utils/async.node';
+import { sleep } from '../utils/async';
 import { noop } from '../utils/misc.node';
 import { StopWatch } from '../utils/stopWatch.node';
 import { ProcessService } from './proc.node';
@@ -21,7 +21,7 @@ import {
     ObservableExecutionResult,
     PooledDaemonExecutionFactoryCreationOptions,
     SpawnOptions
-} from './types';
+} from './types.node';
 
 type DaemonType = 'StandardDaemon' | 'ObservableDaemon';
 

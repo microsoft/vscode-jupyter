@@ -12,7 +12,7 @@ import {
     IWorkspaceService
 } from '../platform/common/application/types';
 import { traceInfo } from '../platform/common/logger.node';
-import { IFileSystem } from '../platform/common/platform/types';
+import { IFileSystem } from '../platform/common/platform/types.node';
 
 import {
     GLOBAL_MEMENTO,
@@ -39,7 +39,7 @@ import {
     INativeInteractiveWindow
 } from './types';
 import { getInteractiveWindowTitle } from './identity.node';
-import { createDeferred } from '../platform/common/utils/async.node';
+import { createDeferred } from '../platform/common/utils/async';
 import { getDisplayPath } from '../platform/common/platform/fs-paths.node';
 import { INotebookExporter } from '../kernels/jupyter/types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';

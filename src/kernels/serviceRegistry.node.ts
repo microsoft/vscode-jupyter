@@ -12,7 +12,7 @@ import { JVSC_EXTENSION_ID } from '../platform/common/constants.node';
 import { IConfigurationService, IDataScienceCommandListener } from '../platform/common/types';
 
 import { ProtocolParser } from '../platform/debugger/extension/helpers/protocolParser.node';
-import { IProtocolParser } from '../platform/debugger/extension/types';
+import { IProtocolParser } from '../platform/debugger/extension/types.node';
 import { IServiceManager } from '../platform/ioc/types';
 import { setSharedProperty } from '../telemetry/index.node';
 import { InteractiveWindowDebugger } from './debugging/interactiveWindowDebugger.node';
@@ -87,7 +87,6 @@ import {
 } from '../webviews/extension-side/dataviewer/types';
 import { IJupyterDebugService } from './debugging/types';
 import {
-    IJupyterCommandFactory,
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
@@ -99,12 +98,12 @@ import {
     INbConvertExportToPythonService,
     IJupyterServerProvider,
     IJupyterInterpreterDependencyManager,
-    IJupyterSubCommandExecutionService,
     IJupyterUriProviderRegistration,
     IJupyterServerUriStorage
 } from './jupyter/types';
 import { IKernelDependencyService, INotebookProvider } from './types';
 import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
+import { IJupyterCommandFactory, IJupyterSubCommandExecutionService } from './jupyter/types.node';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IRawNotebookSupportedService>(

@@ -3,7 +3,7 @@
 
 import { expect } from 'chai';
 import { PassThrough } from 'stream';
-import { createDeferred } from '../../../platform/common/utils/async.node';
+import { createDeferred } from '../../../platform/common/utils/async';
 import { ProtocolParser } from '../../../platform/debugger/extension/helpers/protocolParser.node';
 import { sleep } from '../../common';
 

@@ -6,7 +6,7 @@
 
 import { assert, expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/common/process/types';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/common/process/types.node';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { PipInstaller } from '../../../kernels/installer/pipInstaller.node';

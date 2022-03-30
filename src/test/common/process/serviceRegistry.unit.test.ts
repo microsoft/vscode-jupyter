@@ -12,7 +12,7 @@ import {
     IBufferDecoder,
     IProcessServiceFactory,
     IPythonExecutionFactory
-} from '../../../platform/common/process/types';
+} from '../../../platform/common/process/types.node';
 import { ServiceManager } from '../../../platform/ioc/serviceManager.node';
 import { IServiceManager } from '../../../platform/ioc/types';
 

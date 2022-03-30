@@ -18,7 +18,7 @@ import { IWebview, IWorkspaceService } from '../../platform/common/application/t
 import { isTestExecution } from '../../platform/common/constants.node';
 import { traceInfo } from '../../platform/common/logger.node';
 import { Resource, IConfigurationService, IDisposable } from '../../platform/common/types';
-import { Deferred, createDeferred } from '../../platform/common/utils/async.node';
+import { Deferred, createDeferred } from '../../platform/common/utils/async';
 import { testOnlyMethod } from '../../platform/common/utils/decorators.node';
 import * as localize from '../../platform/common/utils/localize.node';
 import { StopWatch } from '../../platform/common/utils/stopWatch.node';

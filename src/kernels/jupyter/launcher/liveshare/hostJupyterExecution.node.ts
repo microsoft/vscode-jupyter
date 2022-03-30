@@ -12,7 +12,7 @@ import { ServerCache } from './serverCache.node';
 import { inject, injectable } from 'inversify';
 import { IWorkspaceService } from '../../../../platform/common/application/types';
 import { traceInfo } from '../../../../platform/common/logger.node';
-import { IFileSystem } from '../../../../platform/common/platform/types';
+import { IFileSystem } from '../../../../platform/common/platform/types.node';
 import {
     IDisposableRegistry,
     IAsyncDisposableRegistry,

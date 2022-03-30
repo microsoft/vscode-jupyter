@@ -17,13 +17,13 @@ import {
 } from '../../../platform/common/process/environmentActivationService.node';
 import * as path from 'path';
 import { IS_WINDOWS } from '../../../platform/common/platform/constants.node';
-import { IProcessServiceFactory } from '../../../platform/common/process/types';
+import { IProcessServiceFactory } from '../../../platform/common/process/types.node';
 import { disposeAllDisposables } from '../../../platform/common/helpers.node';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
-import { createDeferred } from '../../../platform/common/utils/async.node';
+import { createDeferred } from '../../../platform/common/utils/async';
 import { IPythonApiProvider, PythonApi } from '../../../platform/api/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
-import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
+import { IPlatformService } from '../../../platform/common/platform/types';
 import { CondaService } from '../../../platform/common/process/condaService.node';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { CurrentProcess } from '../../../platform/common/process/currentProcess.node';
@@ -32,6 +32,7 @@ import { IS_CONDA_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { Disposable, Memento } from 'vscode';
 import { instance, mock, verify } from 'ts-mockito';
 import { defaultNotebookTestTimeout } from '../notebook/helper';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
     let api: IExtensionTestApi;

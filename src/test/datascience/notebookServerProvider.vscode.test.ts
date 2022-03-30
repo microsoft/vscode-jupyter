@@ -10,7 +10,7 @@ import { IS_NON_RAW_NATIVE_TEST } from '../constants';
 import { initialize } from '../initialize';
 import { closeNotebooksAndCleanUpAfterTests, startJupyterServer } from './notebook/helper';
 import * as getFreePort from 'get-port';
-import { IPythonExecutionFactory } from '../../platform/common/process/types';
+import { IPythonExecutionFactory } from '../../platform/common/process/types.node';
 import { IInterpreterService } from '../../platform/interpreter/contracts.node';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IConfigurationService } from '../../platform/common/types';

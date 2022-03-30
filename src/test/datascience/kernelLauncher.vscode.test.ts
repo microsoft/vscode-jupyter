@@ -6,7 +6,7 @@ import { assert, use } from 'chai';
 
 import { KernelMessage } from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
-import { createDeferred } from '../../platform/common/utils/async.node';
+import { createDeferred } from '../../platform/common/utils/async';
 import { createEventHandler, PYTHON_PATH, sleep, waitForCondition } from '../common';
 import { requestExecute } from './raw-kernel/rawKernelTestHelpers';
 

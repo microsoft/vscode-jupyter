@@ -16,7 +16,7 @@ import { disposeAllDisposables } from '../../platform/common/helpers.node';
 import { traceInfo, traceVerbose, traceInfoIfCI } from '../../platform/common/logger.node';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths.node';
 import { IDisposableRegistry, IAsyncDisposableRegistry, IDisposable } from '../../platform/common/types';
-import { createDeferred } from '../../platform/common/utils/async.node';
+import { createDeferred } from '../../platform/common/utils/async';
 import { noop } from '../../platform/common/utils/misc.node';
 import { InteractiveWindowMessages, IPyWidgetMessages } from '../../platform/messageTypes';
 import { IServiceContainer } from '../../platform/ioc/types';

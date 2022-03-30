@@ -23,13 +23,13 @@ import { NotebookStarter } from './notebookStarter.node';
 import { IJupyterConnection } from '../../types';
 import {
     IJupyterExecution,
-    IJupyterSubCommandExecutionService,
     IJupyterUriProviderRegistration,
     IJupyterServerUri,
     INotebookServerOptions,
     INotebookServer,
     JupyterServerUriHandle
 } from '../types';
+import { IJupyterSubCommandExecutionService } from '../types.node';
 
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
 

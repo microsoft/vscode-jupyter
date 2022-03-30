@@ -7,7 +7,7 @@ import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platfo
 import '../../../platform/common/extensions.node';
 import { traceVerbose, traceInfoIfCI, traceError } from '../../../platform/common/logger.node';
 import { IDisposable, Resource } from '../../../platform/common/types';
-import { createDeferred, sleep } from '../../../platform/common/utils/async.node';
+import { createDeferred, sleep } from '../../../platform/common/utils/async';
 import { noop } from '../../../platform/common/utils/misc.node';
 import { KernelConnectionTimeoutError } from '../../../platform/errors/kernelConnectionTimeoutError.node';
 import { sendTelemetryEvent } from '../../../telemetry/index.node';

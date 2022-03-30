@@ -11,7 +11,7 @@ import { traceDecorators } from '../logger.node';
 import { IDisposableRegistry } from '../types';
 import { IEnvironmentVariablesProvider } from '../variables/types';
 import { ProcessService } from './proc.node';
-import { IBufferDecoder, IProcessLogger, IProcessService, IProcessServiceFactory } from './types';
+import { IBufferDecoder, IProcessLogger, IProcessService, IProcessServiceFactory } from './types.node';
 
 @injectable()
 export class ProcessServiceFactory implements IProcessServiceFactory {

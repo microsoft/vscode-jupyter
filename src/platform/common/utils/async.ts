@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { BaseError } from '../../../platform/errors/types';
+import { BaseError } from '../../errors/types';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type PromiseFunction = (...any: any[]) => Promise<any>;

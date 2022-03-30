@@ -27,7 +27,7 @@ import { ICommandManager, IDocumentManager, IWorkspaceService } from '../platfor
 import { Commands, defaultNotebookFormat, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants.node';
 import '../platform/common/extensions.node';
 import { traceInfoIfCI } from '../platform/common/logger.node';
-import { IFileSystem } from '../platform/common/platform/types';
+import { IFileSystem } from '../platform/common/platform/types.node';
 import * as uuid from 'uuid/v4';
 
 import { IConfigurationService, InteractiveWindowMode, Resource } from '../platform/common/types';
@@ -39,7 +39,7 @@ import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../te
 import { chainable } from '../platform/common/utils/decorators.node';
 import { InteractiveCellResultError } from '../platform/errors/interactiveCellResultError.node';
 import { DataScience } from '../platform/common/utils/localize.node';
-import { createDeferred, Deferred } from '../platform/common/utils/async.node';
+import { createDeferred, Deferred } from '../platform/common/utils/async';
 import { connectToKernel } from '../kernels/helpers.node';
 import { IServiceContainer } from '../platform/ioc/types';
 import { SysInfoReason } from '../platform/messageTypes';

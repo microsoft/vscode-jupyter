@@ -9,7 +9,7 @@ import { Event, Extension, extensions, Uri } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../constants.node';
 import { IExtensions } from '../types';
 import { DataScience } from '../utils/localize.node';
-import { IFileSystem } from '../platform/types';
+import { IFileSystem } from '../platform/types.node';
 import * as stacktrace from 'stack-trace';
 
 @injectable()

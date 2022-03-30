@@ -7,13 +7,13 @@ import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
-import { IFileSystem } from '../../../platform/common/platform/types';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 import {
     createCondaEnv,
     createPythonEnv,
     createWindowsStoreEnv
 } from '../../../platform/common/process/pythonEnvironment.node';
-import { IProcessService, StdErrError } from '../../../platform/common/process/types';
+import { IProcessService, StdErrError } from '../../../platform/common/process/types.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 
 use(chaiAsPromised);

@@ -9,7 +9,7 @@ import * as requestTypes from 'request';
 import { Progress } from 'vscode';
 import { IApplicationShell } from '../application/types';
 import { Octicons } from '../constants.node';
-import { IFileSystem } from '../platform/types';
+import { IFileSystem } from '../platform/types.node';
 import { DownloadOptions, IFileDownloader, IHttpClient } from '../types';
 import { Http } from '../utils/localize.node';
 import { noop } from '../utils/misc.node';

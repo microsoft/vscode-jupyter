@@ -4,7 +4,7 @@
 
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { BaseError } from '../../platform/errors/types';
-import { createDeferred } from './utils/async.node';
+import { createDeferred } from './utils/async';
 import * as localize from './utils/localize.node';
 
 /**

@@ -8,8 +8,8 @@ import { Event, EventEmitter, NotebookDocument, Uri, workspace } from 'vscode';
 import { IApplicationShell, IWorkspaceService, IVSCodeNotebook } from '../platform/common/application/types';
 import { traceInfoIfCI, traceVerbose, traceWarning } from '../platform/common/logger.node';
 import { getDisplayPath } from '../platform/common/platform/fs-paths.node';
-import { IFileSystem } from '../platform/common/platform/types';
-import { IPythonExecutionFactory } from '../platform/common/process/types';
+import { IFileSystem } from '../platform/common/platform/types.node';
+import { IPythonExecutionFactory } from '../platform/common/process/types.node';
 import {
     IAsyncDisposable,
     IAsyncDisposableRegistry,

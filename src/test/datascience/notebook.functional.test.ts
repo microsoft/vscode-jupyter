@@ -25,7 +25,7 @@ suite('Dummy9', () => {
 // import { Cancellation } from '../../platform/common/cancellation';
 // import { EXTENSION_ROOT_DIR } from '../../platform/common/constants';
 // import { traceError, traceInfo } from '../../platform/common/logger.node';
-// import { IFileSystem } from '../../platform/common/platform/types';
+// import { IFileSystem } from '../../platform/common/platform/types.node';
 // import { IPythonExecutionFactory } from '../../platform/common/process/types';
 // import { Product } from '../../platform/common/types';
 // import { createDeferred, waitForPromise } from '../../platform/common/utils/async';

@@ -19,7 +19,8 @@ import { Product, IInstaller, InstallerResponse } from '../../installer/types';
 import { HelpLinks } from '../../../platform/common/constants.node';
 import { reportAction } from '../../../platform/progress/decorator.node';
 import { ReportableAction } from '../../../platform/progress/types';
-import { IJupyterCommandFactory, JupyterInterpreterDependencyResponse } from '../types';
+import { JupyterInterpreterDependencyResponse } from '../types';
+import { IJupyterCommandFactory } from '../types.node';
 
 /**
  * Sorts the given list of products (in place) in the order in which they need to be installed.

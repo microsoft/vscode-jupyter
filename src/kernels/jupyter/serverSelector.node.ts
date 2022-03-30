@@ -17,7 +17,7 @@ import {
     IQuickPickParameters,
     InputFlowAction
 } from '../../platform/common/utils/multiStepInput.node';
-import { traceDecorators } from '../../platform/logging';
+import { traceDecorators } from '../../platform/logging/index.node';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry/index.node';
 import { Telemetry, Identifiers } from '../../webviews/webview-side/common/constants';
 import {

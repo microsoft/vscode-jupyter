@@ -16,7 +16,7 @@ import {
     IDisposable,
     IDisplayOptions
 } from '../../../../platform/common/types';
-import { Deferred, createDeferred, sleep } from '../../../../platform/common/utils/async.node';
+import { Deferred, createDeferred, sleep } from '../../../../platform/common/utils/async';
 import { DataScience } from '../../../../platform/common/utils/localize.node';
 import { StopWatch } from '../../../../platform/common/utils/stopWatch.node';
 import { SessionDisposedError } from '../../../../platform/errors/sessionDisposedError.node';

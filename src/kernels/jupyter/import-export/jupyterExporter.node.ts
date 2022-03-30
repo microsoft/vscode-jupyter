@@ -12,7 +12,8 @@ import { CellMatcher } from '../../../interactive-window/editor-integration/cell
 import { INotebookEditorProvider } from '../../../notebooks/types';
 import { IWorkspaceService, IApplicationShell } from '../../../platform/common/application/types';
 import { traceError } from '../../../platform/common/logger.node';
-import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
+import { IPlatformService } from '../../../platform/common/platform/types';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { ICell, IConfigurationService } from '../../../platform/common/types';
 import { pruneCell } from '../../../platform/common/utils.node';
 import { DataScience } from '../../../platform/common/utils/localize.node';
