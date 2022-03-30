@@ -269,7 +269,9 @@ export class KernelProcess implements IKernelProcess {
             this._process?.kill(); // NOSONAR
             this.exitEvent.fire({});
         });
-        swallowExceptions(async () => (this.connectionFile ? fs.remove(this.connectionFile) : noop()));
+        swallowExceptions(async () =>
+            this.connectionFile ? this.fileSystem.deleteLocalFile(this.connectionFile) : noop()
+        );
     }
 
     private sendToOutput(data: string) {
