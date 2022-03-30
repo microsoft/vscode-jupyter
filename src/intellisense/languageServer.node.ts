@@ -1,16 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import {
-    Disposable,
-    extensions,
-    NotebookDocument,
-    workspace,
-    window,
-    notebooks,
-    Uri,
-    NotebookCellsChangeEvent
-} from 'vscode';
+import { Disposable, extensions, NotebookDocument, workspace, window, Uri, NotebookDocumentChangeEvent } from 'vscode';
 import {
     ClientCapabilities,
     DynamicFeature,
@@ -102,7 +93,7 @@ export class LanguageServer implements Disposable {
         private disposables: Disposable[]
     ) {
         this._interpreterId = getInterpreterId(interpreter);
-        notebooks.onDidChangeNotebookCells(this.onDidChangeNotebookCells, this, disposables);
+        workspace.onDidChangeNotebookDocument(this.onDidChangeNotebookDocument, this, disposables);
     }
 
     public async dispose() {
@@ -207,9 +198,11 @@ export class LanguageServer implements Disposable {
         }
     }
 
-    private onDidChangeNotebookCells(e: NotebookCellsChangeEvent) {
-        // Tell the middleware to refresh its concat document (pylance or notebook)
-        this.middleware.refresh(e.document);
+    private onDidChangeNotebookDocument(e: NotebookDocumentChangeEvent) {
+        if (e.notebook && e.cellChanges.length) {
+            // Tell the middleware to refresh its concat document (pylance or notebook)
+            this.middleware.refresh(e.notebook);
+        }
     }
 
     private static async createServerOptions(
