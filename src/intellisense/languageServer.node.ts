@@ -199,7 +199,7 @@ export class LanguageServer implements Disposable {
     }
 
     private onDidChangeNotebookDocument(e: NotebookDocumentChangeEvent) {
-        if (e.notebook && e.cellChanges.length) {
+        if (e.notebook && e.contentChanges.length) {
             // Tell the middleware to refresh its concat document (pylance or notebook)
             this.middleware.refresh(e.notebook);
         }
