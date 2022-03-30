@@ -1020,28 +1020,26 @@ export class CodeWatcher implements ICodeWatcher {
         const currentRunCellLens = this.getCurrentCellLens(range.start);
         const nextRunCellLens = this.getNextCellLens(range.start);
 
-        if (currentRunCellLens) {
-            if (this.document) {
-                const iw = await this.getActiveInteractiveWindow();
-                const code = this.document.getText(currentRunCellLens.range);
+        if (currentRunCellLens && this.document) {
+            const code = this.document.getText(currentRunCellLens.range);
 
-                // Move the next cell if allowed.
-                if (advance) {
-                    const editor = this.documentManager.activeTextEditor;
-                    const { newCellOnRunLast } = this.configService.getSettings(editor?.document.uri);
-                    const cellMatcher = new CellMatcher(this.configService.getSettings(editor?.document.uri));
+            // Move the next cell if allowed.
+            if (advance) {
+                const editor = this.documentManager.activeTextEditor;
+                const { newCellOnRunLast } = this.configService.getSettings(this.document.uri);
+                const cellMatcher = new CellMatcher(this.configService.getSettings(this.document.uri));
 
-                    if (nextRunCellLens) {
-                        this.advanceToRange(nextRunCellLens.range);
-                    } else if (newCellOnRunLast && editor && !cellMatcher.isEmptyCell(code)) {
-                        // insert new cell at bottom after current
-                        this.insertCell(editor, currentRunCellLens.range.end.line + 1);
-                    }
+                if (nextRunCellLens) {
+                    this.advanceToRange(nextRunCellLens.range);
+                } else if (newCellOnRunLast && editor && !cellMatcher.isEmptyCell(code)) {
+                    // insert new cell at bottom after current
+                    this.insertCell(editor, currentRunCellLens.range.end.line + 1);
                 }
-
-                // Run the cell after moving the selection
-                await this.addCode(iw, code, this.document.uri, currentRunCellLens.range.start.line, debug);
             }
+
+            // Run the cell after moving the selection
+            const iw = await this.getActiveInteractiveWindow();
+            await this.addCode(iw, code, this.document.uri, currentRunCellLens.range.start.line, debug);
         }
     }
 
