@@ -5,7 +5,7 @@ import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, Uri, window, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../platform/common/application/types';
-import { displayErrorsInCell } from '../platform/errors/errorUtils.node';
+import { endCellAndDisplayErrorsInCell } from '../platform/errors/errorUtils.node';
 import { traceInfo } from '../platform/common/logger.node';
 import {
     IDisposableRegistry,
@@ -196,7 +196,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 );
             } catch (ex) {
                 if (currentCell) {
-                    displayErrorsInCell(
+                    endCellAndDisplayErrorsInCell(
                         currentCell,
                         kernel.controller,
                         await this.errorHandler.getErrorMessageForDisplayInCell(ex, context),
