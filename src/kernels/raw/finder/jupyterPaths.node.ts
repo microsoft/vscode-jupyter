@@ -18,18 +18,11 @@ import {
 import { tryGetRealPath } from '../../../platform/common/utils.node';
 import { IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
 import { traceDecorators } from '../../../platform/logging/index.node';
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const untildify = require('untildify');
-
-const homeDir = untildify('~');
 
 const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
 const macJupyterPath = path.join('Library', 'Jupyter', 'kernels');
-const winJupyterRuntimePath = path.join(homeDir, 'AppData', 'Roaming', 'jupyter', 'runtime');
-const linuxJupyterRuntimePath = process.env['$XDG_RUNTIME_DIR']
-    ? path.join(process.env['$XDG_RUNTIME_DIR'], 'jupyter')
-    : path.join(homeDir, '.local', 'share', 'jupyter');
+const winJupyterRuntimePath = path.join('AppData', 'Roaming', 'jupyter', 'runtime');
 const macJupyterRuntimePath = path.join('Library', 'Jupyter', 'runtime');
 
 export const baseKernelPath = path.join('share', 'jupyter', 'kernels');
@@ -105,11 +98,13 @@ export class JupyterPaths {
         if (this.platformService.isWindows) {
             // On windows the path is not correct if we combine those variables.
             // It won't point to a path that you can actually read from.
-            runtimeDir = await tryGetRealPath(winJupyterRuntimePath);
+            runtimeDir = await tryGetRealPath(path.join(this.pathUtils.home, winJupyterRuntimePath));
         } else if (this.platformService.isMac) {
-            runtimeDir = macJupyterRuntimePath;
+            runtimeDir = path.join(this.pathUtils.home, macJupyterRuntimePath);
         } else {
-            runtimeDir = linuxJupyterRuntimePath;
+            runtimeDir = process.env['$XDG_RUNTIME_DIR']
+                ? path.join(process.env['$XDG_RUNTIME_DIR'], 'jupyter')
+                : path.join(this.pathUtils.home, '.local', 'share', 'jupyter');
         }
         if (!runtimeDir) {
             traceError(`Failed to determine Jupyter runtime directory`);

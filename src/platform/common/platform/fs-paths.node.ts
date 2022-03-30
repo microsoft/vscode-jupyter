@@ -8,6 +8,8 @@ import { IExecutables, IFileSystemPaths, IFileSystemPathUtils } from './types';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const untildify = require('untildify');
 
+export const homePath = untildify('~');
+
 // The parts of node's 'path' module used by FileSystemPaths.
 interface INodePath {
     sep: string;
@@ -119,7 +121,7 @@ export class FileSystemPathUtils implements IFileSystemPathUtils {
         }
         return new FileSystemPathUtils(
             // Use the current user's home directory.
-            untildify('~'),
+            homePath,
             paths,
             Executables.withDefaults(),
             // Use the actual node "path" module.
@@ -143,8 +145,6 @@ export class FileSystemPathUtils implements IFileSystemPathUtils {
         }
     }
 }
-
-const homePath = untildify('~');
 export function getDisplayPath(
     filename?: string | Uri,
     workspaceFolders: readonly WorkspaceFolder[] | WorkspaceFolder[] = []
