@@ -34,6 +34,7 @@ import { ChildProcess } from 'child_process';
 import { EventEmitter } from 'stream';
 import { PythonKernelInterruptDaemon } from '../../kernels/raw/finder/pythonKernelInterruptDaemon.node';
 import { JupyterPaths } from '../../kernels/raw/finder/jupyterPaths.node';
+import { waitForCondition } from '../common';
 
 suite('kernel Process', () => {
     let kernelProcess: KernelProcess;
@@ -224,6 +225,17 @@ suite('kernel Process', () => {
             'csharp',
             `"${expectedConnectionFile}"`
         ]);
+
+        // Verify it gets deleted.
+        await kernelProcess.dispose();
+        await waitForCondition(
+            () => {
+                verify(fs.deleteLocalFile(expectedConnectionFile)).once();
+                return true;
+            },
+            5_000,
+            'Connection file not deleted'
+        );
     });
     test('Ensure connection file is created in temp directory (.net kernel)', async () => {
         const kernelSpec: IJupyterKernelSpec = {
@@ -245,6 +257,17 @@ suite('kernel Process', () => {
 
         assert.strictEqual(capture(processService.execObservable).first()[0], 'dotnet');
         assert.deepStrictEqual(capture(processService.execObservable).first()[1], ['csharp', `"${tempFile}"`]);
+
+        // Verify it gets deleted.
+        await kernelProcess.dispose();
+        await waitForCondition(
+            () => {
+                verify(fs.deleteLocalFile(tempFile)).once();
+                return true;
+            },
+            5_000,
+            'Connection file not deleted'
+        );
     });
     test('Ensure connection file is created in jupyter runtime directory (python daemon kernel)', async () => {
         const kernelSpec: IJupyterKernelSpec = {
@@ -283,6 +306,17 @@ suite('kernel Process', () => {
         verify(pythonExecFactory.createDaemon(anything())).times(os.platform() === 'win32' ? 1 : 0);
         verify(processService.execObservable(anything(), anything())).never();
         verify(pythonProcess.execObservable(deepEqual(expectedArgs), anything())).once();
+
+        // Verify it gets deleted.
+        await kernelProcess.dispose();
+        await waitForCondition(
+            () => {
+                verify(fs.deleteLocalFile(expectedConnectionFile)).once();
+                return true;
+            },
+            5_000,
+            'Connection file not deleted'
+        );
     });
     test('Ensure connection file is created in temp directory (python daemon kernel)', async () => {
         const kernelSpec: IJupyterKernelSpec = {
@@ -319,6 +353,17 @@ suite('kernel Process', () => {
         verify(pythonExecFactory.createDaemon(anything())).times(os.platform() === 'win32' ? 1 : 0);
         verify(processService.execObservable(anything(), anything())).never();
         verify(pythonProcess.execObservable(deepEqual(expectedArgs), anything())).once();
+
+        // Verify it gets deleted.
+        await kernelProcess.dispose();
+        await waitForCondition(
+            () => {
+                verify(fs.deleteLocalFile(tempFile)).once();
+                return true;
+            },
+            5_000,
+            'Connection file not deleted'
+        );
     });
     test('Start Python process along with the daemon', async () => {
         const kernelSpec: IJupyterKernelSpec = {
