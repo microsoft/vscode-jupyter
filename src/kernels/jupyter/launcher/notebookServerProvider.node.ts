@@ -191,8 +191,8 @@ export class NotebookServerProvider implements IJupyterServerProvider {
     private async getNotebookServerOptions(resource: Resource, forLocal: boolean): Promise<INotebookServerOptions> {
         // Since there's one server per session, don't use a resource to figure out these settings
         let serverURI: string | undefined = await this.serverUriStorage.getUri();
-        const useDefaultConfig: boolean | undefined = this.configuration.getSettings(undefined)
-            .useDefaultConfigForJupyter;
+        const useDefaultConfig: boolean | undefined =
+            this.configuration.getSettings(undefined).useDefaultConfigForJupyter;
 
         // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
         if (forLocal || (serverURI && serverURI.toLowerCase() === Settings.JupyterServerLocalLaunch)) {

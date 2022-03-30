@@ -105,7 +105,7 @@ export class PythonApiProvider implements IPythonApiProvider {
 
         // Log experiment status here. Python extension is definitely loaded at this point.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const pythonConfig = workspace.getConfiguration('python', (null as any) as Uri);
+        const pythonConfig = workspace.getConfiguration('python', null as any as Uri);
         const experimentsSection = pythonConfig.get('experiments');
         traceInfo(`Experiment status for python is ${JSON.stringify(experimentsSection)}`);
     }

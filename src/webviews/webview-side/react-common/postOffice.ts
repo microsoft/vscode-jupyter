@@ -64,7 +64,7 @@ class VsCodeMessageApi implements IMessageApi {
                 // In such instances the `acquireVSCodeApi` will return the event handler to get messages from extension.
                 // See ./src/webviews/webview-side/native-editor/index.html
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const api = (this.vscodeApi as any) as undefined | { handleMessage?: Function };
+                const api = this.vscodeApi as any as undefined | { handleMessage?: Function };
                 if (api && api.handleMessage) {
                     api.handleMessage(this.handleVSCodeApiMessages.bind(this));
                 }
@@ -135,7 +135,7 @@ class KernelMessageApi implements IMessageApi {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private async handleKernelMessage(ev: unknown) {
-        const msg = (ev as unknown) as WebviewMessage;
+        const msg = ev as unknown as WebviewMessage;
         if (msg && this.messageCallback) {
             await this.messageCallback(msg);
         }

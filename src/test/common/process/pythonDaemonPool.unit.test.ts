@@ -62,7 +62,7 @@ suite('Daemon - Python Daemon Pool', () => {
     });
 
     async function setupDaemon(daemonPoolService: DaemonPool) {
-        const mockMessageConnection = ({
+        const mockMessageConnection = {
             sendRequest: sendRequestStub,
             listen: listenStub,
             onClose: noop,
@@ -70,8 +70,8 @@ suite('Daemon - Python Daemon Pool', () => {
             onError: noop,
             onNotification: noop,
             onUnhandledNotification: noop
-        } as any) as MessageConnection;
-        const daemonProc = (new EventEmitter() as any) as ReadWrite<ChildProcess>;
+        } as any as MessageConnection;
+        const daemonProc = new EventEmitter() as any as ReadWrite<ChildProcess>;
         daemonProc.killed = false;
         daemonProc.pid = process.pid;
         daemonProc.kill = noop as any;

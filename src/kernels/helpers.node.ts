@@ -1458,9 +1458,9 @@ export async function executeSilently(
             outputs.push(output);
         } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
             traceInfoIfCI(
-                `Got io pub message (error), ${msg.content.ename},${
-                    msg.content.evalue
-                }, ${msg.content.traceback.join().substring(0, 100)}}`
+                `Got io pub message (error), ${msg.content.ename},${msg.content.evalue}, ${msg.content.traceback
+                    .join()
+                    .substring(0, 100)}}`
             );
             const output: nbformat.IError = {
                 ename: msg.content.ename,

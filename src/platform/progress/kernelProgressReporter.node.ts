@@ -97,7 +97,7 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
     public static reportProgress(resource: Resource, action: ReportableAction): IDisposable;
     public static reportProgress(resource: Resource, title: string): IDisposable;
     public static reportProgress(resource: Resource, option: string | ReportableAction): IDisposable {
-        const progressMessage = getUserMessageForAction((option as unknown) as ReportableAction) || option;
+        const progressMessage = getUserMessageForAction(option as unknown as ReportableAction) || option;
         const key = resource ? resource.fsPath : '';
         if (!progressMessage) {
             return new Disposable(() => noop);

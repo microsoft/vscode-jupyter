@@ -111,8 +111,8 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         RawNotebookSupportedService
     );
     const isVSCInsiders = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment).channel === 'insiders';
-    const packageJson: { engines: { vscode: string } } | undefined = vscode.extensions.getExtension(JVSC_EXTENSION_ID)
-        ?.packageJSON;
+    const packageJson: { engines: { vscode: string } } | undefined =
+        vscode.extensions.getExtension(JVSC_EXTENSION_ID)?.packageJSON;
     const isInsiderVersion = packageJson?.engines?.vscode?.toLowerCase()?.endsWith('insider');
     setSharedProperty('isInsiderExtension', isVSCInsiders && isInsiderVersion ? 'true' : 'false');
 

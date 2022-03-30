@@ -231,7 +231,7 @@ export class MockJupyterRequestICell implements Kernel.IFuture<any, any> {
                 version: '1.1',
                 session: '1111111111',
                 msg_id: '1.1',
-                msg_type: ('shell' as any) as KernelMessage.ShellMessageType,
+                msg_type: 'shell' as any as KernelMessage.ShellMessageType,
                 date: ''
             },
             parent_header: {},
@@ -377,7 +377,7 @@ export class MockJupyterRequest implements Kernel.IFuture<any, any> {
                 version: '1.1',
                 session: '1111111111',
                 msg_id: '1.1',
-                msg_type: ('shell' as any) as KernelMessage.ShellMessageType,
+                msg_type: 'shell' as any as KernelMessage.ShellMessageType,
                 date: ''
             },
             parent_header: {},

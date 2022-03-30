@@ -9,7 +9,8 @@ import { createDeferred } from '../../platform/common/utils/async';
 
 // Wraps a future so that a requestExecute on a session will wait for the previous future to finish before actually executing
 export class DelayedFutureExecute
-    implements Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
+    implements Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>
+{
     private doneDeferred = createDeferred<KernelMessage.IExecuteReplyMsg>();
     private requestFuture:
         | Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>
