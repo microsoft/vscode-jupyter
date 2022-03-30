@@ -55,7 +55,7 @@ import { TraceOptions } from '../../platform/logging/trace.node';
 import { ConsoleForegroundColors } from '../../platform/logging/_global.node';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { Telemetry, Commands } from '../../webviews/webview-side/common/constants';
-import { displayErrorsInCell } from '../../platform/errors/errorUtils.node';
+import { endCellAndDisplayErrorsInCell } from '../../platform/errors/errorUtils.node';
 import { IDataScienceErrorHandler, WrappedError } from '../../platform/errors/types';
 import { IPyWidgetMessages } from '../../platform/messageTypes';
 import { NotebookCellLanguageService } from '../../intellisense/cellLanguageService.node';
@@ -445,19 +445,22 @@ export class VSCodeNotebookController implements Disposable {
             currentExecution.start(new Date().getTime());
             void currentExecution.clearOutput(cell);
         }
+        return currentExecution;
     }
 
     private async executeCell(doc: NotebookDocument, cell: NotebookCell) {
         traceInfo(`Execute Cell ${cell.index} ${getDisplayPath(cell.notebook.uri)}`);
         // Start execution now (from the user's point of view)
-        this.startCellExecutionIfNecessary(cell, this.controller);
+        const execution = this.startCellExecutionIfNecessary(cell, this.controller);
 
         // Connect to a matching kernel if possible (but user may pick a different one)
         let context: 'start' | 'execution' = 'start';
         let kernel: IKernel | undefined;
         let controller = this.controller;
+        let connectedToKernel = false;
         try {
             kernel = await this.connectToKernel(doc, new DisplayOptions(false));
+            connectedToKernel = true;
             // If the controller changed, then ensure to create a new cell execution object.
             if (kernel && kernel.controller.id !== controller.id) {
                 controller = kernel.controller;
@@ -469,12 +472,15 @@ export class VSCodeNotebookController implements Disposable {
             }
             return await kernel.executeCell(cell);
         } catch (ex) {
+            if (!connectedToKernel){
+                console.log(execution);
+            }
             const errorHandler = this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
             ex = WrappedError.unwrap(ex);
             const isCancelled =
                 ex instanceof CancellationError || ex instanceof VscCancellationError || ex instanceof KernelDeadError;
             // If there was a failure connecting or executing the kernel, stick it in this cell
-            displayErrorsInCell(
+            endCellAndDisplayErrorsInCell(
                 cell,
                 controller,
                 await errorHandler.getErrorMessageForDisplayInCell(ex, context),
