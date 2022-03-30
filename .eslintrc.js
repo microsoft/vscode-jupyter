@@ -125,7 +125,6 @@ module.exports = {
         'src/test/datascience/data-viewing/dataViewerPDependencyService.unit.test.ts',
         'src/test/datascience/mockInputBox.ts',
         'src/test/datascience/crossProcessLock.unit.test.ts',
-        'src/test/datascience/mockWorkspaceConfiguration.ts',
         'src/test/datascience/mockLanguageServerAnalysisOptions.ts',
         'src/test/datascience/mockLanguageServerProxy.ts',
         'src/test/datascience/mockPythonSettings.ts',
