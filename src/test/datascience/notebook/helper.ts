@@ -620,16 +620,18 @@ export async function waitForQueuedForExecutionOrExecuting(
             )}`
     );
 }
-export async function waitForEmptyCellExecutionCompleted(
+export async function waitForExecutionCompletedWithoutChangesToExecutionCount(
     cell: NotebookCell,
     timeout: number = defaultNotebookTestTimeout
 ) {
     await waitForCondition(
-        async () => assertHasEmptyCellExecutionCompleted(cell),
+        async () =>
+            (cell.executionSummary?.executionOrder ?? 0) === 0 &&
+            (NotebookCellStateTracker.getCellState(cell) ?? NotebookCellExecutionState.Idle) ===
+                NotebookCellExecutionState.Idle,
         timeout,
         () => `Cell ${cell.index + 1} did not complete, State = ${NotebookCellStateTracker.getCellState(cell)}`
     );
-    await waitForCellExecutionToComplete(cell);
 }
 export async function waitForExecutionCompletedWithErrors(
     cell: NotebookCell,
