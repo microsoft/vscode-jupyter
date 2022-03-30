@@ -29,6 +29,7 @@ import { JupyterKernelService } from '../jupyterKernelService.node';
 import { JupyterWebSockets } from './jupyterWebSocket.node';
 import { DisplayOptions } from '../../displayOptions.node';
 import { IFileSystem } from '../../../platform/common/platform/types';
+import { noop } from '../../../platform/common/utils/misc.node';
 
 const jvscIdentifier = '-jvsc-';
 function getRemoteIPynbSuffix(): string {
@@ -206,7 +207,7 @@ export class JupyterSession extends BaseJupyterSession {
         }
     }
 
-    private async createBackingFile(): Promise<string | undefined> {
+    private async createBackingFile(): Promise<{ dispose: () => Promise<unknown>; filePath: string } | undefined> {
         if (this.connInfo.localLaunch) {
             const tempFile = await this.fs.createTemporaryLocalFile('.ipynb');
             const tempDirectory = path.join(
@@ -216,7 +217,11 @@ export class JupyterSession extends BaseJupyterSession {
             await tempFile.dispose();
             // This way we ensure all checkpoints are in a unique directory and will not conflict.
             await this.fs.ensureLocalDir(tempDirectory);
-            return path.join(tempDirectory, path.basename(tempFile.filePath));
+            const filePath = path.join(tempDirectory, path.basename(tempFile.filePath));
+            return {
+                filePath,
+                dispose: () => this.fs.deleteLocalFile(filePath)
+            };
         }
         let backingFile: Contents.IModel | undefined = undefined;
 
@@ -259,7 +264,11 @@ export class JupyterSession extends BaseJupyterSession {
         }
 
         if (backingFile) {
-            return backingFile.path;
+            const filePath = backingFile.path;
+            return {
+                filePath,
+                dispose: () => this.contentsManager.delete(filePath)
+            };
         }
     }
 
@@ -282,13 +291,7 @@ export class JupyterSession extends BaseJupyterSession {
                 );
             } catch (ex) {
                 // If we failed to create the kernel, we need to clean up the file.
-                if (this.connInfo && backingFile) {
-                    if (this.connInfo.localLaunch) {
-                        this.contentsManager.delete(backingFile).ignoreErrors();
-                    } else {
-                        this.fs.deleteLocalFile(backingFile).ignoreErrors();
-                    }
-                }
+                backingFile?.dispose().catch(noop);
                 throw ex;
             }
         }
@@ -301,7 +304,7 @@ export class JupyterSession extends BaseJupyterSession {
 
         // Create our session options using this temporary notebook and our connection info
         const sessionOptions: Session.ISessionOptions = {
-            path: backingFile || `${uuid()}.ipynb`, // Name has to be unique
+            path: backingFile?.filePath || `${uuid()}.ipynb`, // Name has to be unique
             kernel: {
                 name: kernelName
             },
@@ -348,13 +351,7 @@ export class JupyterSession extends BaseJupyterSession {
                     })
                     .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
                     .finally(() => {
-                        if (this.connInfo && backingFile) {
-                            if (this.connInfo.localLaunch) {
-                                this.contentsManager.delete(backingFile).ignoreErrors();
-                            } else {
-                                this.fs.deleteLocalFile(backingFile).ignoreErrors();
-                            }
-                        }
+                        backingFile?.dispose().catch(noop);
                     }),
             options.token
         );
