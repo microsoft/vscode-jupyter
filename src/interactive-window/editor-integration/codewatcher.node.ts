@@ -357,7 +357,7 @@ export class CodeWatcher implements ICodeWatcher {
         }
 
         const editor = this.documentManager.activeTextEditor;
-        const cellMatcher = new CellMatcher();
+        const cellMatcher = new CellMatcher(this.configService.getSettings(editor.document.uri));
         let index = 0;
         const cellDelineator = this.getDefaultCellMarker(editor.document.uri);
 
@@ -1020,27 +1020,26 @@ export class CodeWatcher implements ICodeWatcher {
         const currentRunCellLens = this.getCurrentCellLens(range.start);
         const nextRunCellLens = this.getNextCellLens(range.start);
 
-        if (currentRunCellLens) {
+        if (currentRunCellLens && this.document) {
+            const code = this.document.getText(currentRunCellLens.range);
+
             // Move the next cell if allowed.
             if (advance) {
                 const editor = this.documentManager.activeTextEditor;
-                const { newCellOnRunLast } = this.configService.getSettings(editor?.document.uri);
+                const { newCellOnRunLast } = this.configService.getSettings(this.document.uri);
+                const cellMatcher = new CellMatcher(this.configService.getSettings(this.document.uri));
+
                 if (nextRunCellLens) {
                     this.advanceToRange(nextRunCellLens.range);
-                } else if (newCellOnRunLast && editor) {
+                } else if (newCellOnRunLast && editor && !cellMatcher.isEmptyCell(code)) {
                     // insert new cell at bottom after current
                     this.insertCell(editor, currentRunCellLens.range.end.line + 1);
                 }
             }
 
             // Run the cell after moving the selection
-            if (this.document) {
-                const iw = await this.getActiveInteractiveWindow();
-
-                // Use that to get our code.
-                const code = this.document.getText(currentRunCellLens.range);
-                await this.addCode(iw, code, this.document.uri, currentRunCellLens.range.start.line, debug);
-            }
+            const iw = await this.getActiveInteractiveWindow();
+            await this.addCode(iw, code, this.document.uri, currentRunCellLens.range.start.line, debug);
         }
     }
 
