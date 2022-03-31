@@ -433,7 +433,7 @@ export class VSCodeNotebookController implements Disposable {
             .then(noop, (ex) => console.error(ex));
     }
 
-    private startCellExecutionIfNecessary(cell: NotebookCell, controller: NotebookController) {
+    private createCellExecutionIfNecessary(cell: NotebookCell, controller: NotebookController) {
         // Only have one cell in the 'running' state for this notebook
         let currentExecution = this.runningCellExecutions.get(cell.notebook);
         if (!currentExecution || currentExecution.cell === cell) {
@@ -447,15 +447,13 @@ export class VSCodeNotebookController implements Disposable {
                 this.runningCellExecutions.delete(cell.notebook);
                 originalEnd(success, endTime);
             };
-            currentExecution.start(new Date().getTime());
-            void currentExecution.clearOutput(cell);
         }
     }
 
     private async executeCell(doc: NotebookDocument, cell: NotebookCell) {
         traceInfo(`Execute Cell ${cell.index} ${getDisplayPath(cell.notebook.uri)}`);
         // Start execution now (from the user's point of view)
-        this.startCellExecutionIfNecessary(cell, this.controller);
+        this.createCellExecutionIfNecessary(cell, this.controller);
 
         // Connect to a matching kernel if possible (but user may pick a different one)
         let currentContext: 'start' | 'execution' = 'start';
@@ -466,7 +464,7 @@ export class VSCodeNotebookController implements Disposable {
             // If the controller changed, then ensure to create a new cell execution object.
             if (kernel && kernel.controller.id !== controller.id) {
                 controller = kernel.controller;
-                this.startCellExecutionIfNecessary(cell, kernel.controller);
+                this.createCellExecutionIfNecessary(cell, kernel.controller);
             }
             currentContext = 'execution';
             if (kernel.controller.id === this.id) {
