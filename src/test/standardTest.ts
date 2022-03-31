@@ -5,11 +5,8 @@ import * as path from 'path';
 import * as fs from 'fs-extra';
 import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from '@vscode/test-electron';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from './constants';
-import { initializeLogger } from './testLogger';
 import * as tmp from 'tmp';
 import { PythonExtension, PylanceExtension } from '../platform/common/constants';
-
-initializeLogger();
 
 process.env.IS_CI_SERVER_TEST_DEBUGGER = '';
 process.env.VSC_JUPYTER_CI_TEST = '1';

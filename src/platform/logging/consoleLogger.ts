@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Arguments, ILogging } from './types';
+import { Arguments, ILogger } from './types';
 import { getTimeForLogging } from './util';
 const format = require('format-util') as typeof import('format-util');
 
@@ -11,7 +11,7 @@ function formatMessage(level: string | undefined, message: string, ...data: Argu
         : format(message, ...data);
 }
 
-export class ConsoleLogger implements ILogging {
+export class ConsoleLogger implements ILogger {
     constructor(private readonly prefix: string | undefined) {}
 
     public traceLog(message: string, ...data: Arguments): void {

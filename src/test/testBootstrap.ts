@@ -9,9 +9,6 @@ import { AddressInfo, createServer, Server } from 'net';
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants';
 import { noop, sleep } from './core';
-import { initializeLogger } from './testLogger';
-
-initializeLogger();
 
 /* eslint-disable no-console */
 

@@ -30,9 +30,6 @@ import {
 import { noop } from './core';
 import { stopJupyterServer } from './datascience/notebook/helper';
 import { initialize } from './initialize';
-import { initializeLogger } from './testLogger';
-
-initializeLogger();
 
 type SetupOptions = Mocha.MochaOptions & {
     testFilesSuffix: string;

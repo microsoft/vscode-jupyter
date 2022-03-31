@@ -73,7 +73,7 @@ import { registerTypes as registerWebviewTypes } from './webviews/extension-side
 import { registerTypes as registerTelemetryTypes } from './telemetry/serviceRegistry.node';
 import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry.node';
 import { IExtensionActivationManager } from './platform/activation/types';
-import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants';
+import { isCI, isTestExecution, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants';
 import { getDisplayPath } from './platform/common/platform/fs-paths.node';
 import { IFileSystem } from './platform/common/platform/types.node';
 import { getJupyterOutputChannel } from './platform/devTools/jupyterOutputChannel.node';
@@ -84,6 +84,8 @@ import { ServiceContainer } from './platform/ioc/container.node';
 import { ServiceManager } from './platform/ioc/serviceManager.node';
 import { OutputChannelLogger } from './platform/logging/outputChannelLogger';
 import { ConsoleLogger } from './platform/logging/consoleLogger';
+import { FileLogger } from './platform/logging/fileLogger.node';
+import { createWriteStream } from 'fs-extra';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -222,6 +224,12 @@ function addConsoleLogger() {
         }
 
         registerLogger(new ConsoleLogger(label));
+    }
+
+    // For tests also log to a file.
+    if (isCI && process.env.VSC_JUPYTER_LOG_FILE) {
+        const fileLogger = new FileLogger(createWriteStream(process.env.VSC_JUPYTER_LOG_FILE));
+        registerLogger(fileLogger);
     }
 }
 

@@ -7,7 +7,7 @@
 import { Disposable, Uri } from 'vscode';
 import { sendTelemetryEvent } from '../../telemetry';
 import { isCI } from '../common/constants';
-import { Arguments, ILogging, LogLevel, TraceDecoratorType, TraceOptions } from './types';
+import { Arguments, ILogger, LogLevel, TraceDecoratorType, TraceOptions } from './types';
 import { CallInfo, trace as traceDecorator } from '../common/utils/decorators';
 import { TraceInfo, tracing as _tracing } from '../common/utils/misc';
 import { argsToLogString, returnValueToLogString } from './util';
@@ -15,8 +15,8 @@ import { LoggingLevelSettingType } from '../common/types';
 const homeAsLowerCase = (require('untildify')('~') || '').toLowerCase(); // TODO: This will have to be conditional for node only
 const DEFAULT_OPTS: TraceOptions = TraceOptions.Arguments | TraceOptions.ReturnValue;
 
-let loggers: ILogging[] = [];
-export function registerLogger(logger: ILogging): Disposable {
+let loggers: ILogger[] = [];
+export function registerLogger(logger: ILogger): Disposable {
     loggers.push(logger);
     return {
         dispose: () => {

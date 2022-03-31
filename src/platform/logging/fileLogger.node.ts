@@ -4,7 +4,7 @@
 import { WriteStream } from 'fs-extra';
 import * as util from 'util';
 import { Disposable } from 'vscode-jsonrpc';
-import { Arguments, ILogging } from './types';
+import { Arguments, ILogger } from './types';
 import { getTimeForLogging } from './util';
 
 function formatMessage(level?: string, ...data: Arguments): string {
@@ -13,7 +13,7 @@ function formatMessage(level?: string, ...data: Arguments): string {
         : `${util.format(...data)}\r\n`;
 }
 
-export class FileLogger implements ILogging, Disposable {
+export class FileLogger implements ILogger, Disposable {
     constructor(private readonly stream: WriteStream) {}
 
     public traceLog(...data: Arguments): void {

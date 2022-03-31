@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { OutputChannel } from 'vscode';
-import { Arguments, ILogging } from './types';
+import { Arguments, ILogger } from './types';
 import { getTimeForLogging } from './util';
 const format = require('format-util') as typeof import('format-util');
 
@@ -12,7 +12,7 @@ function formatMessage(level: string | undefined, message: string, ...data: Argu
         : format(message, ...data);
 }
 
-export class OutputChannelLogger implements ILogging {
+export class OutputChannelLogger implements ILogger {
     constructor(private readonly channel: OutputChannel) {}
 
     public traceLog(message: string, ...data: Arguments): void {
