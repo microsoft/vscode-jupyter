@@ -218,7 +218,6 @@ function addConsoleLogger() {
     if (process.env.VSC_JUPYTER_FORCE_LOGGING) {
         let label = undefined;
         // In CI there's no need for the label.
-        const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
         if (!isCI) {
             label = 'Jupyter Extension:';
         }
