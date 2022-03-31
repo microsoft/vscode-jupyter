@@ -7,7 +7,7 @@ import * as path from 'path';
 import { CancellationToken, Memento } from 'vscode';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
-import { traceError } from '../../../platform/common/logger.node';
+import { traceError } from '../../../platform/logging';
 import {
     IPathUtils,
     IDisposableRegistry,
