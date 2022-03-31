@@ -29,6 +29,7 @@
         -   [ ] `package.json`
         -   [ ] `package-lock.json`
         -   [ ] Confirm the 3rd part of the version ends with `100`.
+    -   [ ] Update the VS Code engine version in package.json to target the upcoming stable release. This will allow us to release before VS Code and be ready in the marketplace. [Example](https://github.com/microsoft/vscode-jupyter/pull/9494/files)
     -   [ ] Create a pull request against `main`
     -   [ ] Merge pull request into `main`
 -   [ ] GDPR bookkeeping (@greazer) (🤖; Notes in OneNote under Python VS Code -> Dev Process -> GDPR)
@@ -36,7 +37,8 @@
     -   new features
     -   settings changes
     -   etc. (ask the team)
--   [ ] Release notes from VS code have something about jupyter
+-   [ ] Release notes from VS Code have something about Jupyter
+    -   Example doc update [here](https://github.com/microsoft/vscode-docs/pull/5256)
 -   [ ] Schedule a sanity test. Aim for close after freeze so there is still time to fix release bugs before release. Ask teams before bash for specific areas that need testing.
 -   [ ] Is the validation pipeline clear? If not, drive to make sure that it is clear for release. Sanity test can be used to help with this.
 -   [ ] Ask CTI to test the release candidate
@@ -45,6 +47,7 @@
 
 -  [ ] Obtain VS Code [prebuild](https://builds.code.visualstudio.com/builds/stable) for sanity testing
 -  [ ] Sanity test release candidate VSIX against VS Code prebuild
+   -   Make sure that the sanity test hits both macOS and Windows builds
 -  [ ] Candidate bug fixes found from sanity test should be checked into `main` and cherry-picked to `release` branch
 
 # Release (Tuesday or day before VS Code publishes, whichever is later)
