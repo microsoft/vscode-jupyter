@@ -39,8 +39,10 @@ const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
 const MaximumRowChunkSizeForDebugger = 100;
 
 @injectable()
-export class DebuggerVariables extends DebugLocationTracker
-    implements IConditionalJupyterVariables, DebugAdapterTracker {
+export class DebuggerVariables
+    extends DebugLocationTracker
+    implements IConditionalJupyterVariables, DebugAdapterTracker
+{
     private refreshEventEmitter = new EventEmitter<void>();
     private lastKnownVariables: IJupyterVariable[] = [];
     private importedDataFrameScriptsIntoKernel = new Set<string>();

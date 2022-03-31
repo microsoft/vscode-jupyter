@@ -27,7 +27,8 @@ import {
     runAllCellsInActiveNotebook,
     waitForKernelToGetAutoSelected,
     deleteCell,
-    defaultNotebookTestTimeout
+    defaultNotebookTestTimeout,
+    waitForExecutionCompletedWithoutChangesToExecutionCount
 } from './helper';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import * as dedent from 'dedent';
@@ -196,6 +197,47 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
                 getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
             );
             const restartPrompt = await hijackPrompt(
+                'showErrorMessage',
+                {
+                    exactMatch: expectedErrorMessage
+                },
+                { text: DataScience.restartKernel(), clickImmediately: true },
+                disposables
+            );
+            // Confirm we get a prompt to restart the kernel, and it gets restarted.
+            // & also confirm the cell completes execution with an execution count of 1 (thats how we tell kernel restarted).
+            await Promise.all([restartPrompt.displayed, runCell(cell3), waitForExecutionCompletedSuccessfully(cell3)]);
+            // If execution order is 1, then we know the kernel restarted.
+            assert.strictEqual(cell3.executionSummary?.executionOrder, 1);
+        });
+        test('Ensure we get a modal prompt to restart kernel when running cells against a dead kernel (dismiss and run again)', async function () {
+            await runAndFailWithKernelCrash();
+            await insertCodeCell('print("123412341234")', { index: 2 });
+            const cell3 = vscodeNotebook.activeNotebookEditor!.document.cellAt(2);
+            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document.uri)!;
+
+            const expectedErrorMessage = DataScience.cannotRunCellKernelIsDead().format(
+                getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
+            );
+            let restartPrompt = await hijackPrompt(
+                'showErrorMessage',
+                {
+                    exactMatch: expectedErrorMessage
+                },
+                { dismissPrompt: true },
+                disposables
+            );
+            // Confirm we get a prompt to restart the kernel
+            await Promise.all([
+                restartPrompt.displayed,
+                runCell(cell3),
+                waitForExecutionCompletedWithoutChangesToExecutionCount(cell3)
+            ]);
+
+            restartPrompt.dispose();
+
+            // Running cell again should display the prompt and restart the kernel.
+            restartPrompt = await hijackPrompt(
                 'showErrorMessage',
                 {
                     exactMatch: expectedErrorMessage

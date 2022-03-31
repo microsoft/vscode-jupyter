@@ -90,7 +90,8 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         this.mirrorSend = this.mirrorSend.bind(this);
         this.onKernelSocketMessage = this.onKernelSocketMessage.bind(this);
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const jupyterLabSerialize = require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
+        const jupyterLabSerialize =
+            require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
         this.deserialize = jupyterLabSerialize.deserialize;
     }
     public dispose() {

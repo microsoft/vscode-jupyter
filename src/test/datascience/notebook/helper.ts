@@ -479,12 +479,6 @@ function assertHasExecutionCompletedSuccessfully(cell: NotebookCell) {
         !hasErrorOutput(cell.outputs)
     );
 }
-function assertHasEmptyCellExecutionCompleted(cell: NotebookCell) {
-    return (
-        (cell.executionSummary?.executionOrder ?? 0) === 0 &&
-        NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Idle
-    );
-}
 /**
  *  Wait for VSC to perform some last minute clean up of cells.
  * In tests we can end up deleting cells. However if extension is still dealing with the cells, we need to give it some time to finish.
@@ -620,16 +614,18 @@ export async function waitForQueuedForExecutionOrExecuting(
             )}`
     );
 }
-export async function waitForEmptyCellExecutionCompleted(
+export async function waitForExecutionCompletedWithoutChangesToExecutionCount(
     cell: NotebookCell,
     timeout: number = defaultNotebookTestTimeout
 ) {
     await waitForCondition(
-        async () => assertHasEmptyCellExecutionCompleted(cell),
+        async () =>
+            (cell.executionSummary?.executionOrder ?? 0) === 0 &&
+            (NotebookCellStateTracker.getCellState(cell) ?? NotebookCellExecutionState.Idle) ===
+                NotebookCellExecutionState.Idle,
         timeout,
         () => `Cell ${cell.index + 1} did not complete, State = ${NotebookCellStateTracker.getCellState(cell)}`
     );
-    await waitForCellExecutionToComplete(cell);
 }
 export async function waitForExecutionCompletedWithErrors(
     cell: NotebookCell,

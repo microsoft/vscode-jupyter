@@ -109,7 +109,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                 );
                 await daemon.initialize();
                 this.disposables.push(daemon);
-                return (daemon as unknown) as T;
+                return daemon as unknown as T;
             } else {
                 traceInfo(
                     `Creating daemon process for ${getDisplayPath(options.interpreter.path)} with env variables count ${
@@ -131,7 +131,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
 
         if (isDaemonPoolCreationOption(options)) {
             // Ensure we do not create multiple daemon pools for the same python interpreter.
-            promise = (this.daemonsPerPythonService.get(daemonPoolKey) as unknown) as Promise<T>;
+            promise = this.daemonsPerPythonService.get(daemonPoolKey) as unknown as Promise<T>;
             if (!promise) {
                 promise = start();
                 this.daemonsPerPythonService.set(daemonPoolKey, promise as Promise<IPythonDaemonExecutionService>);
@@ -144,7 +144,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             // What ever the cause, we need to log this & give a standard IPythonExecutionService
             traceError('Failed to create the daemon service, defaulting to activated environment', ex);
             this.daemonsPerPythonService.delete(daemonPoolKey);
-            return (activatedProcPromise as unknown) as T;
+            return activatedProcPromise as unknown as T;
         });
     }
     @traceDecoratorVerbose('Create activated Env', TraceOptions.BeforeCall | TraceOptions.Arguments)

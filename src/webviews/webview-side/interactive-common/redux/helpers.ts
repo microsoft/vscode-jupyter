@@ -73,17 +73,18 @@ export function postActionToExtension<K, M extends IInteractiveWindowMapping, T 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function postActionToExtension(originalReducerArg: ReducerArg, message: any, payload?: any) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const newPayload: BaseReduxActionPayload<any> = ({
+    const newPayload: BaseReduxActionPayload<any> = {
         data: payload,
         messageDirection: 'outgoing'
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any) as BaseReduxActionPayload<any>;
+    } as any as BaseReduxActionPayload<any>;
     const action = { type: CommonActionType.PostOutgoingMessage, payload: { payload: newPayload, type: message } };
     originalReducerArg.queueAction(action);
 }
-export function unwrapPostableAction(
-    action: Redux.AnyAction
-): { type: keyof IInteractiveWindowMapping; payload?: BaseReduxActionPayload<{}> } {
+export function unwrapPostableAction(action: Redux.AnyAction): {
+    type: keyof IInteractiveWindowMapping;
+    payload?: BaseReduxActionPayload<{}>;
+} {
     // Unwrap the payload that was created in `createPostableAction`.
     const type = action.type;
     const payload: BaseReduxActionPayload<{}> | undefined = action.payload;

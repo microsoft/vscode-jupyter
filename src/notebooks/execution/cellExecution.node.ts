@@ -704,7 +704,7 @@ export class CellExecution implements IDisposable {
                     'text' in payload &&
                     'replace' in payload
                 ) {
-                    this.handleSetNextInput((payload as unknown) as ISetNextInputPayload);
+                    this.handleSetNextInput(payload as unknown as ISetNextInputPayload);
                 }
                 if (payload.data && payload.data.hasOwnProperty('text/plain')) {
                     this.addToCellData(

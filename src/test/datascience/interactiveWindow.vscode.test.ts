@@ -68,9 +68,8 @@ suite('Interactive window', async function () {
         const notebookDocument = vscode.workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
         );
-        const notebookControllerManager = api.serviceManager.get<INotebookControllerManager>(
-            INotebookControllerManager
-        );
+        const notebookControllerManager =
+            api.serviceManager.get<INotebookControllerManager>(INotebookControllerManager);
 
         // Ensure we picked up the active interpreter for use as the kernel
         const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getApi();
@@ -113,9 +112,8 @@ suite('Interactive window', async function () {
         const notebookDocument = vscode.workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
         )!;
-        const notebookControllerManager = api.serviceManager.get<INotebookControllerManager>(
-            INotebookControllerManager
-        );
+        const notebookControllerManager =
+            api.serviceManager.get<INotebookControllerManager>(INotebookControllerManager);
         // Ensure we picked up the active interpreter for use as the kernel
         const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getApi();
 

@@ -96,7 +96,7 @@ export class PythonDaemonFactory {
             );
             if (instance instanceof BasePythonDaemon) {
                 this.disposables.push(instance);
-                return (instance as unknown) as T;
+                return instance as unknown as T;
             }
             throw new Error(`Daemon class ${cls.name} must inherit BasePythonDaemon.`);
         } catch (ex) {

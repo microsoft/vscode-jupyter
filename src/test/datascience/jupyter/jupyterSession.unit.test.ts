@@ -104,9 +104,8 @@ suite('DataScience - JupyterSession', () => {
         when(session.kernel).thenReturn(instance(kernel));
         statusChangedSignal = mock<ISignal<ISessionWithSocket, Kernel.Status>>();
         kernelChangedSignal = mock<ISignal<ISessionWithSocket, IKernelChangedArgs>>();
-        const ioPubSignal = mock<
-            ISignal<ISessionWithSocket, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>
-        >();
+        const ioPubSignal =
+            mock<ISignal<ISessionWithSocket, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>>();
         when(session.statusChanged).thenReturn(instance(statusChangedSignal));
         when(session.kernelChanged).thenReturn(instance(kernelChangedSignal));
         when(session.iopubMessage).thenReturn(instance(ioPubSignal));
@@ -326,9 +325,10 @@ suite('DataScience - JupyterSession', () => {
                 newKernelConnection = mock(KernelConnection);
                 newStatusChangedSignal = mock<ISignal<Session.ISessionConnection, Kernel.Status>>();
                 newKernelChangedSignal = mock<ISignal<Session.ISessionConnection, IKernelChangedArgs>>();
-                const newIoPubSignal = mock<
-                    ISignal<Session.ISessionConnection, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>
-                >();
+                const newIoPubSignal =
+                    mock<
+                        ISignal<Session.ISessionConnection, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>
+                    >();
                 restartSessionCreatedEvent = createDeferred();
                 restartSessionUsedEvent = createDeferred();
                 when(newSession.statusChanged).thenReturn(instance(newStatusChangedSignal));
@@ -355,9 +355,8 @@ suite('DataScience - JupyterSession', () => {
                 setup(executeUserCode);
 
                 async function executeUserCode() {
-                    const future = mock<
-                        Kernel.IFuture<KernelMessage.IShellControlMessage, KernelMessage.IShellControlMessage>
-                    >();
+                    const future =
+                        mock<Kernel.IFuture<KernelMessage.IShellControlMessage, KernelMessage.IShellControlMessage>>();
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     when(future.done).thenReturn(Promise.resolve(undefined as any));
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any

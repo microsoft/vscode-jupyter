@@ -308,10 +308,8 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                     }
                 })
                 .map(async (item) => {
-                    const kernelSpec:
-                        | undefined
-                        | LocalKernelSpecConnectionMetadata
-                        | PythonKernelConnectionMetadata = await item;
+                    const kernelSpec: undefined | LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata =
+                        await item;
                     // Check if we have already seen this.
                     if (kernelSpec && !distinctKernelMetadata.has(kernelSpec.id)) {
                         distinctKernelMetadata.set(kernelSpec.id, kernelSpec);

@@ -54,7 +54,7 @@ suite('VSCode Notebook - Run By Line', function () {
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
         const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        variableViewProvider = (coreVariableViewProvider as any) as ITestVariableViewProvider; // Cast to expose the test interfaces
+        variableViewProvider = coreVariableViewProvider as any as ITestVariableViewProvider; // Cast to expose the test interfaces
         debuggingManager = api.serviceContainer.get<IDebuggingManager>(IDebuggingManager);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         traceInfo(`Start Test Suite (completed)`);
@@ -102,7 +102,7 @@ suite('VSCode Notebook - Run By Line', function () {
         traceInfo(`Got past first stop event`);
 
         const coreVariableView = await variableViewProvider.activeVariableView;
-        const variableView = (coreVariableView as unknown) as ITestWebviewHost;
+        const variableView = coreVariableView as unknown as ITestWebviewHost;
 
         await commandManager.executeCommand(Commands.RunByLineNext, cell);
         await waitForStoppedEvent(debugAdapter!);

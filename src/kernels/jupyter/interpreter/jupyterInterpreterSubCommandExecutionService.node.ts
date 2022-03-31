@@ -50,7 +50,8 @@ import { IJupyterSubCommandExecutionService } from '../types.node';
  */
 @injectable()
 export class JupyterInterpreterSubCommandExecutionService
-    implements IJupyterSubCommandExecutionService, IJupyterInterpreterDependencyManager {
+    implements IJupyterSubCommandExecutionService, IJupyterInterpreterDependencyManager
+{
     constructor(
         @inject(JupyterInterpreterService) private readonly jupyterInterpreter: JupyterInterpreterService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,

@@ -197,14 +197,14 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
     ): Promise<[Uri, NotebookEditor]> {
         const controllerId = preferredController ? `${JVSC_EXTENSION_ID}/${preferredController.id}` : undefined;
         const hasOwningFile = resource !== undefined;
-        const { inputUri, notebookEditor } = ((await commandManager.executeCommand(
+        const { inputUri, notebookEditor } = (await commandManager.executeCommand(
             'interactive.open',
             // Keep focus on the owning file if there is one
             { viewColumn: ViewColumn.Beside, preserveFocus: hasOwningFile },
             undefined,
             controllerId,
             resource && mode === 'perFile' ? getInteractiveWindowTitle(resource) : undefined
-        )) as unknown) as INativeInteractiveWindow;
+        )) as unknown as INativeInteractiveWindow;
         if (!notebookEditor) {
             // This means VS Code failed to create an interactive window.
             // This should never happen.

@@ -46,12 +46,10 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         const args = await this.getExecutionArgs(name, interpreter, flags);
         const pythonFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         const procFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
-        const activationHelper = this.serviceContainer.get<IEnvironmentActivationService>(
-            IEnvironmentActivationService
-        );
-        const environmentService = this.serviceContainer.get<IEnvironmentVariablesService>(
-            IEnvironmentVariablesService
-        );
+        const activationHelper =
+            this.serviceContainer.get<IEnvironmentActivationService>(IEnvironmentActivationService);
+        const environmentService =
+            this.serviceContainer.get<IEnvironmentVariablesService>(IEnvironmentVariablesService);
         if (cancelTokenSource.token.isCancellationRequested) {
             return;
         }

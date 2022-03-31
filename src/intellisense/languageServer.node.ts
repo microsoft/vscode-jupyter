@@ -169,7 +169,7 @@ export class LanguageServer implements Disposable {
 
             // Before starting do a little hack to prevent the pylance double command registration (working with Jake to have an option to skip commands)
             /* eslint-disable @typescript-eslint/no-explicit-any */
-            const features: (StaticFeature | DynamicFeature<any>)[] = ((languageClient as unknown) as any)._features;
+            const features: (StaticFeature | DynamicFeature<any>)[] = (languageClient as unknown as any)._features;
             const minusCommands = features.filter(
                 (f) => (f as any).registrationType?.method != 'workspace/executeCommand'
             );

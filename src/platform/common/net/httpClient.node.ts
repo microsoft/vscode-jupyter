@@ -21,7 +21,7 @@ export class HttpClient implements IHttpClient {
 
     public async downloadFile(uri: string): Promise<requestTypes.Request> {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const request = ((await import('request')) as any) as typeof requestTypes;
+        const request = (await import('request')) as any as typeof requestTypes;
         return request(uri, this.requestOptions);
     }
 

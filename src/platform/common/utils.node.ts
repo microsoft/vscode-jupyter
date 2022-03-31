@@ -124,11 +124,11 @@ function fixupOutput(output: nbformat.IOutput): nbformat.IOutput {
 
 export function pruneCell(cell: nbformat.ICell): nbformat.ICell {
     // Source is usually a single string on input. Convert back to an array
-    const result = ({
+    const result = {
         ...cell,
         source: splitMultilineString(cell.source)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any) as nbformat.ICell; // nyc (code coverage) barfs on this so just trick it.
+    } as any as nbformat.ICell; // nyc (code coverage) barfs on this so just trick it.
 
     // Remove outputs and execution_count from non code cells
     if (result.cell_type !== 'code') {

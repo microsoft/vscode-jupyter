@@ -11,7 +11,8 @@ import { IDisposableRegistry } from '../../common/types';
 
 @injectable()
 export class InterpreterStatusBarVisibility
-    implements IInterpreterStatusbarVisibilityFilter, IExtensionSingleActivationService {
+    implements IInterpreterStatusbarVisibilityFilter, IExtensionSingleActivationService
+{
     private _changed = new EventEmitter<void>();
     private _registered = false;
 

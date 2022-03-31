@@ -5,8 +5,8 @@
 import { ChildProcess } from 'child_process';
 import { kill } from 'process';
 import * as fs from 'fs-extra';
-import * as tmp from 'tmp';
 import * as os from 'os';
+import * as path from 'path';
 import { CancellationError, CancellationToken, Event, EventEmitter } from 'vscode';
 import {
     connectionFilePlaceholder,
@@ -54,6 +54,7 @@ import { captureTelemetry } from '../../../telemetry';
 import { Telemetry, KernelInterruptDaemonModule } from '../../../webviews/webview-side/common/constants';
 import { PythonKernelInterruptDaemon } from '../finder/pythonKernelInterruptDaemon.node';
 import { TraceOptions } from '../../../platform/logging/types';
+import { JupyterPaths } from '../finder/jupyterPaths.node';
 
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
 // Exposes connection information and the process itself.
@@ -99,7 +100,8 @@ export class KernelProcess implements IKernelProcess {
         private readonly kernelEnvVarsService: KernelEnvironmentVariablesService,
         private readonly pythonExecFactory: IPythonExecutionFactory,
         private readonly outputChannel: IOutputChannel | undefined,
-        private readonly jupyterSettings: IJupyterSettings
+        private readonly jupyterSettings: IJupyterSettings,
+        private readonly jupyterPaths: JupyterPaths
     ) {
         this._kernelConnectionMetadata = kernelConnectionMetadata;
     }
@@ -274,7 +276,9 @@ export class KernelProcess implements IKernelProcess {
             this._process?.kill(); // NOSONAR
             this.exitEvent.fire({});
         });
-        swallowExceptions(async () => (this.connectionFile ? fs.remove(this.connectionFile) : noop()));
+        swallowExceptions(async () =>
+            this.connectionFile ? this.fileSystem.deleteLocalFile(this.connectionFile) : noop()
+        );
     }
 
     private sendToOutput(data: string) {
@@ -328,6 +332,7 @@ export class KernelProcess implements IKernelProcess {
             );
         }
 
+        this.connectionFile = await this.createConnectionFile();
         // Python kernels are special. Handle the extra arguments.
         if (this.isPythonKernel) {
             // Slice out -f and the connection file from the args
@@ -336,17 +341,9 @@ export class KernelProcess implements IKernelProcess {
             // Add in our connection command line args
             this.launchKernelSpec.argv.push(...this.addPythonConnectionArgs());
         } else {
-            // For other kernels, just write to the connection file.
-            // Note: We have to dispose the temp file and recreate it because otherwise the file
-            // system will hold onto the file with an open handle. THis doesn't work so well when
-            // a different process tries to open it.
-            const tempFile = await this.fileSystem.createTemporaryLocalFile('.json');
-            this.connectionFile = tempFile.filePath;
-            // Ensure we dispose this, and don't maintain a handle on this file.
-            await tempFile.dispose(); // Do not remove this line.
             await this.fileSystem.writeLocalFile(this.connectionFile, JSON.stringify(this._connection));
 
-            // Then replace the connection file argument with this file
+            // Replace the connection file argument with this file
             // Remmeber, non-python kernels can have argv as `--connection-file={connection_file}`,
             // hence we should not replace the entire entry, but just replace the text `{connection_file}`
             // See https://github.com/microsoft/vscode-jupyter/issues/7203
@@ -366,7 +363,17 @@ export class KernelProcess implements IKernelProcess {
             }
         }
     }
-
+    private async createConnectionFile() {
+        const runtimeDir = await this.jupyterPaths.getRuntimeDir();
+        const tempFile = await this.fileSystem.createTemporaryLocalFile({ fileExtension: '.json', prefix: 'kernel-' });
+        // Note: We have to dispose the temp file and recreate it else the file
+        // system will hold onto the file with an open handle. THis doesn't work so well when
+        // a different process tries to open it.
+        const connectionFile = runtimeDir ? path.join(runtimeDir, path.basename(tempFile.filePath)) : tempFile.filePath;
+        // Ensure we dispose this, and don't maintain a handle on this file.
+        await tempFile.dispose(); // Do not remove this line.
+        return connectionFile;
+    }
     // Add the command line arguments
     private addPythonConnectionArgs(): string[] {
         const newConnectionArgs: string[] = [];
@@ -390,7 +397,7 @@ export class KernelProcess implements IKernelProcess {
 
         // We still put in the tmp name to make sure the kernel picks a valid connection file name. It won't read it as
         // we passed in the arguments, but it will use it as the file name so it doesn't clash with other kernels.
-        newConnectionArgs.push(`--f=${tmp.tmpNameSync({ postfix: '.json' })}`);
+        newConnectionArgs.push(`--f=${this.connectionFile}`);
 
         return newConnectionArgs;
     }

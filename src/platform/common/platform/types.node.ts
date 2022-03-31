@@ -73,7 +73,8 @@ export interface IFileSystem {
     createLocalDirectory(path: string): Promise<void>;
     createLocalWriteStream(path: string): WriteStream;
     copyLocal(source: string, destination: string): Promise<void>;
-    createTemporaryLocalFile(fileExtension: string, mode?: number): Promise<TemporaryFile>;
+    createTemporaryLocalFile(options: { fileExtension: string; prefix: string }): Promise<TemporaryFile>;
+    createTemporaryLocalFile(fileExtension: string): Promise<TemporaryFile>;
     deleteLocalDirectory(dirname: string): Promise<void>;
     deleteLocalFile(path: string): Promise<void>;
     ensureLocalDir(path: string): Promise<void>;

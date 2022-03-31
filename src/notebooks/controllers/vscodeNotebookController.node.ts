@@ -30,7 +30,14 @@ import {
 } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers.node';
-import { traceInfoIfCI, traceInfo, traceVerbose, traceWarning, traceDecoratorVerbose } from '../../platform/logging';
+import {
+    traceInfoIfCI,
+    traceInfo,
+    traceVerbose,
+    traceWarning,
+    traceDecoratorVerbose,
+    traceError
+} from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths.node';
 import {
     IBrowserService,
@@ -42,7 +49,6 @@ import {
     IPathUtils
 } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
-import { chainable } from '../../platform/common/utils/decorators';
 import { DataScience, Common } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import {
@@ -52,7 +58,7 @@ import {
 import { IServiceContainer } from '../../platform/ioc/types';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { Telemetry, Commands } from '../../webviews/webview-side/common/constants';
-import { displayErrorsInCell } from '../../platform/errors/errorUtils';
+import { endCellAndDisplayErrorsInCell } from '../../platform/errors/errorUtils';
 import { IDataScienceErrorHandler, WrappedError } from '../../platform/errors/types';
 import { IPyWidgetMessages } from '../../platform/messageTypes';
 import { NotebookCellLanguageService } from '../../intellisense/cellLanguageService.node';
@@ -452,7 +458,7 @@ export class VSCodeNotebookController implements Disposable {
         this.startCellExecutionIfNecessary(cell, this.controller);
 
         // Connect to a matching kernel if possible (but user may pick a different one)
-        let context: 'start' | 'execution' = 'start';
+        let currentContext: 'start' | 'execution' = 'start';
         let kernel: IKernel | undefined;
         let controller = this.controller;
         try {
@@ -462,21 +468,22 @@ export class VSCodeNotebookController implements Disposable {
                 controller = kernel.controller;
                 this.startCellExecutionIfNecessary(cell, kernel.controller);
             }
-            context = 'execution';
+            currentContext = 'execution';
             if (kernel.controller.id === this.id) {
                 this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
             }
             return await kernel.executeCell(cell);
         } catch (ex) {
+            traceError(`Error in execution`, ex);
             const errorHandler = this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
             ex = WrappedError.unwrap(ex);
             const isCancelled =
                 ex instanceof CancellationError || ex instanceof VscCancellationError || ex instanceof KernelDeadError;
             // If there was a failure connecting or executing the kernel, stick it in this cell
-            displayErrorsInCell(
+            endCellAndDisplayErrorsInCell(
                 cell,
                 controller,
-                await errorHandler.getErrorMessageForDisplayInCell(ex, context),
+                await errorHandler.getErrorMessageForDisplayInCell(ex, currentContext),
                 isCancelled
             );
             return NotebookCellExecutionState.Idle;
@@ -485,12 +492,16 @@ export class VSCodeNotebookController implements Disposable {
         // Execution should be ended elsewhere
     }
 
-    @chainable()
     private async connectToKernel(doc: NotebookDocument, options: IDisplayOptions) {
-        // executeCell can get called multiple times before the first one is resolved. Since we only want
-        // one of the calls to connect to the kernel, chain these together. The chained promise will then fail out
-        // all of the cells if it fails.
-        return connectToKernel(this.controller, this.kernelConnection, this.serviceContainer, doc.uri, doc, options);
+        return connectToKernel(
+            this.controller,
+            this.kernelConnection,
+            this.serviceContainer,
+            doc.uri,
+            doc,
+            options,
+            this.disposables
+        );
     }
 
     private updateKernelInfoInNotebookWhenAvailable(kernel: IKernel, doc: NotebookDocument) {

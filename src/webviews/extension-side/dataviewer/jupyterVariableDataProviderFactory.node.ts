@@ -15,9 +15,8 @@ export class JupyterVariableDataProviderFactory implements IJupyterVariableDataP
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
 
     public async create(variable: IJupyterVariable, kernel?: IKernel): Promise<IJupyterVariableDataProvider> {
-        const jupyterVariableDataProvider = this.serviceContainer.get<IJupyterVariableDataProvider>(
-            IJupyterVariableDataProvider
-        );
+        const jupyterVariableDataProvider =
+            this.serviceContainer.get<IJupyterVariableDataProvider>(IJupyterVariableDataProvider);
         jupyterVariableDataProvider.setDependencies(variable, kernel);
         return jupyterVariableDataProvider;
     }
