@@ -2307,7 +2307,7 @@
         "less-plugin-inline-urls": "^1.2.0",
         "levn": "^0.4.1",
         "lolex": "^5.1.2",
-        "lru-cache": "^7.6.0",
+        "lru-cache": "^7.7.3",
         "md5": "^2.3.0",
         "mimic-response": "^4.0.0",
         "mocha": "^9.2.0",
