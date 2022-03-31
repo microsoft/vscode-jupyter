@@ -120,7 +120,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                                 output.out.length > 100
                                     ? `${output.out.substring(0, 50)}...${output.out.substring(output.out.length - 50)}`
                                     : output.out;
-                            progress?.report({ message });
+                            progress.report({ message });
                         }
                         traceInfo(output.out);
                         if (output.source === 'stderr') {
