@@ -6,15 +6,13 @@ import * as path from 'path';
 import { CancellationToken, Memento } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants.node';
-import { traceInfo, traceVerbose, traceError } from '../../../platform/common/logger.node';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { traceInfo, traceVerbose, traceError, traceDecoratorError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { ReadWrite } from '../../../platform/common/types';
-import { testOnlyMethod } from '../../../platform/common/utils/decorators.node';
-import { noop } from '../../../platform/common/utils/misc.node';
-import { traceDecorators } from '../../../platform/logging/index.node';
-import { ignoreLogging } from '../../../platform/logging/trace.node';
+import { testOnlyMethod } from '../../../platform/common/utils/decorators';
+import { noop } from '../../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { getInterpreterKernelSpecName, getKernelRegistrationInfo } from '../../../kernels/helpers.node';
 import {
@@ -66,11 +64,11 @@ export abstract class LocalKernelSpecFinderBase {
      * @param {boolean} dependsOnPythonExtension Whether this list of kernels fetched depends on whether the python extension is installed/not installed.
      * If for instance first Python Extension isn't installed, then we call this again, after installing it, then the cache will be blown away
      */
-    @traceDecorators.error('List kernels failed')
+    @traceDecoratorError('List kernels failed')
     protected async listKernelsWithCache(
         cacheKey: string,
         dependsOnPythonExtension: boolean,
-        @ignoreLogging() finder: () => Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>,
+        finder: () => Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]>,
         ignoreCache?: boolean
     ): Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
         // If we have already searched for this resource, then use that.

@@ -4,7 +4,7 @@ import { injectable } from 'inversify';
 import * as tmp from 'tmp';
 import { promisify } from 'util';
 import * as vscode from 'vscode';
-import { traceError } from '../logger.node';
+import { traceError } from '../../logging';
 import { createDirNotEmptyError, isFileNotFoundError } from './errors.node';
 import { convertFileType, convertStat, getHashString } from './fileSystemUtils.node';
 import { FileSystemPathUtils } from './fs-paths.node';

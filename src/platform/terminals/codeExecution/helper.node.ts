@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import '../../common/extensions.node';
+import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import { Position, Range, TextEditor, Uri } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
-import { PYTHON_LANGUAGE } from '../../common/constants.node';
-import { traceError } from '../../common/logger.node';
+import { PYTHON_LANGUAGE } from '../../common/constants';
+import { traceError } from '../../logging';
 import * as internalScripts from '../../common/process/internal/scripts/index.node';
 import { IProcessServiceFactory } from '../../common/process/types.node';
 import { createDeferred } from '../../common/utils/async';

@@ -5,13 +5,13 @@ import { inject, injectable, named } from 'inversify';
 import { SemVer } from 'semver';
 import { EventEmitter, Memento, RelativePattern, Uri, workspace } from 'vscode';
 import { IPythonApiProvider } from '../../api/types';
-import { TraceOptions } from '../../logging/trace.node';
-import { traceDecorators, traceError, traceVerbose } from '../logger.node';
+import { TraceOptions } from '../../logging/types';
+import { traceDecoratorVerbose, traceError, traceVerbose } from '../../logging';
 import { IPlatformService } from '../platform/types';
 import { GLOBAL_MEMENTO, IDisposable, IDisposableRegistry, IMemento } from '../types';
 import { createDeferredFromPromise } from '../utils/async';
 import * as path from 'path';
-import { swallowExceptions } from '../utils/decorators.node';
+import { swallowExceptions } from '../utils/decorators';
 import { IFileSystem } from '../platform/types.node';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const untildify = require('untildify');
@@ -40,7 +40,7 @@ export class CondaService {
         void this.monitorCondaEnvFile();
     }
 
-    @traceDecorators.verbose('getCondaVersion', TraceOptions.BeforeCall)
+    @traceDecoratorVerbose('getCondaVersion', TraceOptions.BeforeCall)
     async getCondaVersion() {
         if (this._version) {
             return this._version;
@@ -64,7 +64,7 @@ export class CondaService {
         this._previousVersionCall = promise();
         return this._previousVersionCall;
     }
-    @traceDecorators.verbose('getCondaFile', TraceOptions.BeforeCall)
+    @traceDecoratorVerbose('getCondaFile', TraceOptions.BeforeCall)
     async getCondaFile() {
         if (this._file) {
             return this._file;
@@ -91,7 +91,7 @@ export class CondaService {
         return this._previousFileCall;
     }
 
-    @traceDecorators.verbose('getCondaBatchFile', TraceOptions.BeforeCall)
+    @traceDecoratorVerbose('getCondaBatchFile', TraceOptions.BeforeCall)
     async getCondaBatchFile() {
         if (this._batchFile) {
             return this._batchFile;
@@ -194,7 +194,7 @@ export class CondaService {
             };
         }
     }
-    @traceDecorators.verbose('getCondaVersionFromPython', TraceOptions.BeforeCall)
+    @traceDecoratorVerbose('getCondaVersionFromPython', TraceOptions.BeforeCall)
     private async getCondaVersionFromPython(): Promise<SemVer | undefined> {
         return this.pythonApi.getApi().then((api) => (api.getCondaVersion ? api.getCondaVersion() : undefined));
     }

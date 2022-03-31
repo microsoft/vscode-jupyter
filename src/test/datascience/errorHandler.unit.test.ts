@@ -8,7 +8,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths.node';
-import { Common, DataScience } from '../../platform/common/utils/localize.node';
+import { Common, DataScience } from '../../platform/common/utils/localize';
 import { IBrowserService, IConfigurationService } from '../../platform/common/types';
 import {
     IKernelDependencyService,
@@ -19,7 +19,7 @@ import { getOSType, OSType } from '../common';
 import { PythonEnvironment, EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
 import { DataScienceErrorHandler } from '../../platform/errors/errorHandler.node';
-import { JupyterConnectError } from '../../platform/errors/jupyterConnectError.node';
+import { JupyterConnectError } from '../../platform/errors/jupyterConnectError';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError.node';
 import { KernelDiedError } from '../../platform/errors/kernelDiedError.node';

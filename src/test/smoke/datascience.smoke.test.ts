@@ -10,7 +10,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
-import { traceInfo } from '../../platform/common/logger.node';
+import { traceInfo } from '../../platform/logging';
 import { IInterpreterService } from '../../platform/interpreter/contracts.node';
 import { IExtensionTestApi, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';

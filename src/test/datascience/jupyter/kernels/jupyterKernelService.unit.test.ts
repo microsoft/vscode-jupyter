@@ -11,7 +11,7 @@ import { KernelDependencyService } from '../../../../platform/../kernels/kernelD
 import { IKernelDependencyService, LocalKernelConnectionMetadata } from '../../../../platform/../kernels/types';
 import { IEnvironmentActivationService } from '../../../../platform/interpreter/activation/types';
 import { EnvironmentType } from '../../../../platform/pythonEnvironments/info';
-import { EXTENSION_ROOT_DIR } from '../../../../platform/constants.node';
+import { EXTENSION_ROOT_DIR } from '../../../../platform/constants';
 import * as path from 'path';
 import { getOSType, OSType } from '../../../common';
 import { CancellationTokenSource } from 'vscode';

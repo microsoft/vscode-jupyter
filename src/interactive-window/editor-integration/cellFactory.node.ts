@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../platform/common/extensions.node';
+import '../../platform/common/extensions';
 
 import type * as nbformat from '@jupyterlab/nbformat';
 import { NotebookCell, NotebookCellKind, NotebookDocument, Range, TextDocument, Uri } from 'vscode';
@@ -11,7 +11,7 @@ import { CellMatcher } from './cellMatcher.node';
 import { getInteractiveCellMetadata } from '../../interactive-window/interactiveWindow.node';
 import { createJupyterCellFromVSCNotebookCell } from '../../notebooks/helpers.node';
 import { ICell, ICellRange, IJupyterSettings, Resource } from '../../platform/common/types';
-import { noop } from '../../platform/common/utils/misc.node';
+import { noop } from '../../platform/common/utils/misc';
 
 export function createCodeCell(): nbformat.ICodeCell;
 // eslint-disable-next-line @typescript-eslint/unified-signatures

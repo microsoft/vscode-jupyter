@@ -7,10 +7,10 @@ import { IExtensionSyncActivationService } from '../activation/types';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../common/application/types';
 import { disposeAllDisposables } from '../common/helpers.node';
 import { GLOBAL_MEMENTO, IDisposable, IDisposableRegistry, IExtensions, IMemento } from '../common/types';
-import { Common, DataScience } from '../common/utils/localize.node';
-import { noop } from '../common/utils/misc.node';
-import { sendTelemetryEvent } from '../../telemetry/index.node';
-import { Telemetry } from './constants.node';
+import { Common, DataScience } from './utils/localize';
+import { noop } from './utils/misc';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Telemetry } from './constants';
 import {
     getKernelConnectionLanguage,
     getLanguageInNotebookMetadata,

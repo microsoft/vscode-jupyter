@@ -21,7 +21,7 @@ import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IInteractiveWindowProvider } from '../../../interactive-window/types';
 import { IJupyterVariables } from '../../../kernels/variables/types';
-import { Identifiers } from '../../../platform/common/constants.node';
+import { Identifiers } from '../../../platform/common/constants';
 
 suite('Hover provider', async () => {
     const file = path.join(

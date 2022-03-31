@@ -9,17 +9,17 @@ import * as fsExtra from 'fs-extra';
 import { SemVer, parse } from 'semver';
 import untildify = require('untildify');
 import { Uri } from 'vscode';
-import { sendTelemetryEvent } from '../../telemetry/index.node';
-import { getTelemetrySafeLanguage } from '../../telemetry/helpers.node';
+import { sendTelemetryEvent } from '../../telemetry';
+import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
 import { splitMultilineString } from '../../webviews/webview-side/common';
 
 import { IWorkspaceService } from './application/types';
-import { jupyterLanguageToMonacoLanguageMapping, Telemetry } from './constants.node';
-import { traceError, traceInfo } from './logger.node';
+import { jupyterLanguageToMonacoLanguageMapping, Telemetry } from './constants';
+import { traceError, traceInfo } from '../logging';
 import { IFileSystem } from './platform/types.node';
 
 import { ICell, IConfigurationService, Resource } from './types';
-import { DataScience } from './utils/localize.node';
+import { DataScience } from './utils/localize';
 
 export async function calculateWorkingDirectory(
     configService: IConfigurationService,

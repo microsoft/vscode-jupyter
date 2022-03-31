@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { traceError } from '../../platform/common/logger.node';
+import { traceError } from '../../platform/logging';
 import { getEnvironmentVariable } from '../../platform/common/utils/platform';
 import { pathExists, readFile, arePathsSame, normCasePath } from '../../platform/common/platform/fileUtils.node';
 

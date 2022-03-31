@@ -15,12 +15,12 @@ import {
 } from 'vscode';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { IApplicationEnvironment, IApplicationShell, ICommandManager } from '../common/application/types';
-import { Commands, MARKDOWN_LANGUAGE } from '../common/constants.node';
-import { traceError } from '../common/logger.node';
+import { Commands, MARKDOWN_LANGUAGE } from '../common/constants';
+import { traceError } from '../logging';
 import { IPlatformService } from '../common/platform/types';
 import { IFileSystem } from '../common/platform/types.node';
 import { IDataScienceCommandListener, IDisposableRegistry, IExtensionContext, IPathUtils } from '../common/types';
-import { GitHubIssue } from '../common/utils/localize.node';
+import { GitHubIssue } from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts.node';
 
 @injectable()

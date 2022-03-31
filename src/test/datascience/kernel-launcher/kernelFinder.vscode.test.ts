@@ -6,12 +6,12 @@
 import * as path from 'path';
 import { assert } from 'chai';
 import { Uri, workspace } from 'vscode';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants.node';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { getKernelConnectionLanguage } from '../../../platform/../kernels/helpers.node';
 import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
 import { IExtensionTestApi } from '../../common';
 import { initialize } from '../../initialize';
-import { traceInfo } from '../../../platform/common/logger.node';
+import { traceInfo } from '../../../platform/logging';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter.node';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
 import { ILocalKernelFinder } from '../../../kernels/raw/types';

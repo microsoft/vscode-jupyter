@@ -33,12 +33,12 @@ import {
     Diagnostic
 } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook } from '../../../platform/common/application/types';
-import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../platform/common/constants.node';
+import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers.node';
-import { traceInfo, traceInfoIfCI } from '../../../platform/common/logger.node';
+import { traceInfo, traceInfoIfCI } from '../../../platform/logging';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
 import { createDeferred } from '../../../platform/common/utils/async';
-import { swallowExceptions } from '../../../platform/common/utils/misc.node';
+import { swallowExceptions } from '../../../platform/common/utils/misc';
 import { IKernelProvider } from '../../../platform/../kernels/types';
 import { IExtensionTestApi, sleep, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
@@ -47,7 +47,7 @@ import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
 import { JupyterServer } from '../jupyterServer';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebuggingManager, IKernelDebugAdapter } from '../../../platform/debugger/types';
-import { DataScience } from '../../../platform/common/utils/localize.node';
+import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector.node';
 import { LastSavedNotebookCellLanguage } from '../../../intellisense/cellLanguageService.node';
 import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeNotebookController.node';

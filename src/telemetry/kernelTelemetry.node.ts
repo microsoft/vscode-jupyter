@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { Resource } from '../platform/common/types';
-import { StopWatch } from '../platform/common/utils/stopWatch.node';
+import { StopWatch } from '../platform/common/utils/stopWatch';
 import { EnvironmentType } from '../platform/pythonEnvironments/info';
 import { KernelConnectionMetadata } from '../platform/../kernels/types';
-import { Telemetry } from '../platform/common/constants.node';
+import { Telemetry } from '../platform/common/constants';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from './telemetry.node';
 
 export function sendKernelListTelemetry(

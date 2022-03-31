@@ -16,19 +16,19 @@ import {
     NativeMouseCommandTelemetry,
     Telemetry,
     VSCodeNativeTelemetry
-} from '../platform/common/constants.node';
-import { traceError, traceInfo } from '../platform/common/logger.node';
-import { StopWatch } from '../platform/common/utils/stopWatch.node';
+} from '../platform/common/constants';
+import { traceError, traceInfo } from '../platform/logging';
+import { StopWatch } from '../platform/common/utils/stopWatch';
 import { ResourceSpecificTelemetryProperties } from './types';
 import { CheckboxState, EventName, PlatformErrors, SliceOperationSource } from './constants';
-import { noop } from '../platform/common/utils/misc.node';
+import { noop } from '../platform/common/utils/misc';
 import { isPromise } from 'rxjs/internal-compatibility';
-import { DebuggingTelemetry } from '../platform/debugger/constants.node';
+import { DebuggingTelemetry } from '../platform/debugger/constants';
 import { EnvironmentType } from '../platform/pythonEnvironments/info';
-import { TelemetryErrorProperties, ErrorCategory } from '../platform/../platform/errors/types';
+import { TelemetryErrorProperties, ErrorCategory } from '../platform/errors/types';
 import { ExportFormat } from '../platform/export/types';
 import { InterruptResult, KernelInterpreterDependencyResponse } from '../kernels/types';
-import { populateTelemetryWithErrorInfo } from '../platform/errors/index.node';
+import { populateTelemetryWithErrorInfo } from '../platform/errors';
 import { IExportedKernelService } from '../platform/api/extension';
 
 export const waitBeforeSending = 'waitBeforeSending';

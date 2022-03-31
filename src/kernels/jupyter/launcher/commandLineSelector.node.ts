@@ -9,14 +9,14 @@ import parseArgsStringToArgv from 'string-argv';
 import { ConfigurationChangeEvent, ConfigurationTarget, QuickPickItem, Uri } from 'vscode';
 import { IWorkspaceService, IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
 import { IConfigurationService } from '../../../platform/common/types';
-import { DataScience } from '../../../platform/common/utils/localize.node';
+import { DataScience } from '../../../platform/common/utils/localize';
 import {
     IMultiStepInputFactory,
     IMultiStepInput,
     InputStep,
     IQuickPickParameters
 } from '../../../platform/common/utils/multiStepInput.node';
-import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry/index.node';
+import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 
 @injectable()

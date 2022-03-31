@@ -8,13 +8,13 @@ import { IPythonExtensionChecker } from '../platform/api/types';
 import { JupyterCommandLineSelectorCommand } from '../platform/commands/commandLineSelector.node';
 import { JupyterServerSelectorCommand } from '../platform/commands/serverSelector.node';
 import { IApplicationEnvironment } from '../platform/common/application/types';
-import { JVSC_EXTENSION_ID } from '../platform/common/constants.node';
+import { JVSC_EXTENSION_ID } from '../platform/common/constants';
 import { IConfigurationService, IDataScienceCommandListener } from '../platform/common/types';
 
 import { ProtocolParser } from '../platform/debugger/extension/helpers/protocolParser.node';
 import { IProtocolParser } from '../platform/debugger/extension/types.node';
 import { IServiceManager } from '../platform/ioc/types';
-import { setSharedProperty } from '../telemetry/index.node';
+import { setSharedProperty } from '../telemetry';
 import { InteractiveWindowDebugger } from './debugging/interactiveWindowDebugger.node';
 import { JupyterDebugService } from './debugging/jupyterDebugService.node';
 import { isLocalLaunch } from './helpers.node';

@@ -7,7 +7,7 @@ import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationTokenSource, Memento, NotebookDocument, NotebookEditor, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../../platform/common/application/types';
-import { Common, DataScience } from '../../../../platform/common/utils/localize.node';
+import { Common, DataScience } from '../../../../platform/common/utils/localize';
 import { createInterpreterKernelSpec } from '../../../../platform/../kernels/helpers.node';
 import { KernelDependencyService } from '../../../../platform/../kernels/kernelDependencyService.node';
 import {

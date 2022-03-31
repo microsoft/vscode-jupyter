@@ -11,14 +11,14 @@ import {
 } from '../../interactive-window/shiftEnterBanner.node';
 
 import { IApplicationShell } from '../../platform/common/application/types';
-import { Telemetry } from '../../platform/common/constants.node';
+import { Telemetry } from '../../platform/common/constants';
 import {
     IConfigurationService,
     IPersistentState,
     IPersistentStateFactory,
     IWatchableJupyterSettings
 } from '../../platform/common/types';
-import { clearTelemetryReporter } from '../../telemetry/index.node';
+import { clearTelemetryReporter } from '../../telemetry';
 
 suite('Interactive Shift Enter Banner', () => {
     const oldValueOfVSC_JUPYTER_UNIT_TEST = process.env.VSC_JUPYTER_UNIT_TEST;

@@ -4,7 +4,7 @@
 'use strict';
 
 import { IExperimentationTelemetry } from 'vscode-tas-client';
-import { sendTelemetryEvent, setSharedProperty } from '../../../telemetry/index.node';
+import { sendTelemetryEvent, setSharedProperty } from '../../../telemetry';
 
 export class ExperimentationTelemetry implements IExperimentationTelemetry {
     public setSharedProperty(name: string, value: string): void {

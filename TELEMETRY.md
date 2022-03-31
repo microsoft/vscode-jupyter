@@ -7,19 +7,16 @@ Expand each section to see more information about that event.
 
 ## Description
 
-
-
- Data Science
+Data Science
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/commands/commandRegistry.ts#L376](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/commandRegistry.ts#L376)
+
 ```typescript
         }
     }
@@ -36,16 +33,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
--  format: ExportFormat
+-   format: ExportFormat
 
 ## Locations Used
 
 [src/interactive-window/commands/exportCommands.ts#L125](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/exportCommands.ts#L125)
+
 ```typescript
             if (pickedItem !== undefined) {
                 pickedItem.handler();
@@ -56,8 +53,8 @@ No description provided
     }
 ```
 
-
 [src/interactive-window/commands/exportCommands.ts#L141](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/exportCommands.ts#L141)
+
 ```typescript
                 label: DataScience.exportPythonQuickPickLabel(),
                 picked: true,
@@ -68,8 +65,8 @@ No description provided
                     void this.commandManager.executeCommand(Commands.ExportAsPythonScript, sourceDocument, interpreter);
 ```
 
-
 [src/interactive-window/commands/exportCommands.ts#L155](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/exportCommands.ts#L155)
+
 ```typescript
                     label: DataScience.exportHTMLQuickPickLabel(),
                     picked: false,
@@ -80,8 +77,8 @@ No description provided
                         void this.commandManager.executeCommand(
 ```
 
-
 [src/interactive-window/commands/exportCommands.ts#L170](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/exportCommands.ts#L170)
+
 ```typescript
                     label: DataScience.exportPDFQuickPickLabel(),
                     picked: false,
@@ -98,14 +95,11 @@ No description provided
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -117,14 +111,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -136,18 +127,16 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/interactiveWindowCommandListener.ts#L355](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/interactiveWindowCommandListener.ts#L355)
+
 ```typescript
         }
     }
@@ -164,21 +153,17 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry event sent when a slice is first applied in a
- data viewer instance to a sliceable Python variable.
+Telemetry event sent when a slice is first applied in a
+data viewer instance to a sliceable Python variable.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/datascience/data-viewing/dataViewer.ts#L322](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/data-viewing/dataViewer.ts#L322)
+
 ```typescript
 
     private maybeSendSliceDataDimensionalityTelemetry(numberOfDimensions: number) {
@@ -195,22 +180,18 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry event sent whenever the user toggles the checkbox
- controlling whether a slice is currently being applied to an
- n-dimensional variable.
+Telemetry event sent whenever the user toggles the checkbox
+controlling whether a slice is currently being applied to an
+n-dimensional variable.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/datascience/data-viewing/dataViewer.ts#L204](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/data-viewing/dataViewer.ts#L204)
+
 ```typescript
                 break;
 
@@ -227,21 +208,17 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry event sent whenever the user applies a valid slice
- to a sliceable Python variable in the data viewer.
+Telemetry event sent whenever the user applies a valid slice
+to a sliceable Python variable in the data viewer.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/datascience/data-viewing/dataViewer.ts#L265](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/data-viewing/dataViewer.ts#L265)
+
 ```typescript
                 if (payload.shape?.length) {
                     this.maybeSendSliceDataDimensionalityTelemetry(payload.shape.length);
@@ -258,18 +235,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/commands/commandRegistry.ts#L368](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/commandRegistry.ts#L368)
+
 ```typescript
         }
     }
@@ -286,18 +261,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codewatcher.ts#L124](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L124)
+
 ```typescript
         return this.codeLenses;
     }
@@ -308,8 +281,8 @@ No properties for event
             return;
 ```
 
-
 [src/interactive-window/editor-integration/codewatcher.ts#L329](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L329)
+
 ```typescript
         return this.runMatchingCell(range, advance);
     }
@@ -326,18 +299,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codewatcher.ts#L188](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L188)
+
 ```typescript
         return this.runFileInteractiveInternal(false);
     }
@@ -354,18 +325,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/commands/commandRegistry.ts#L342](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/commandRegistry.ts#L342)
+
 ```typescript
         }
     }
@@ -382,18 +351,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/commands/commandRegistry.ts#L350](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/commandRegistry.ts#L350)
+
 ```typescript
         }
     }
@@ -410,18 +377,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/debugger/jupyter/debuggingManager.ts#L481](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/debugger/jupyter/debuggingManager.ts#L481)
+
 ```typescript
         );
 
@@ -438,18 +403,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/debugger/jupyter/debuggingManager.ts#L162](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/debugger/jupyter/debuggingManager.ts#L162)
+
 ```typescript
             }),
 
@@ -466,18 +429,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/debugger/jupyter/debuggingManager.ts#L109](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/debugger/jupyter/debuggingManager.ts#L109)
+
 ```typescript
             }),
 
@@ -494,18 +455,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/debugger/jupyter/debuggingManager.ts#L486](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/debugger/jupyter/debuggingManager.ts#L486)
+
 ```typescript
                 'https://github.com/microsoft/vscode-jupyter/wiki/Setting-Up-Run-by-Line-and-Debugging-for-Notebooks'
             );
@@ -522,17 +481,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-- 
-        reason: 'normally' | 'onKernelDisposed' | 'onAnInterrupt' | 'onARestart' | 'withKeybinding';
+-         reason: 'normally' | 'onKernelDisposed' | 'onAnInterrupt' | 'onARestart' | 'withKeybinding';
 
 ## Locations Used
 
 [src/platform/debugger/jupyter/kernelDebugAdapter.ts#L95](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/debugger/jupyter/kernelDebugAdapter.ts#L95)
+
 ```typescript
                 this.kernel.onDisposed(() => {
                     void debug.stopDebugging(this.session);
@@ -543,8 +501,8 @@ No description provided
         }
 ```
 
-
 [src/platform/debugger/jupyter/kernelDebugAdapter.ts#L109](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/debugger/jupyter/kernelDebugAdapter.ts#L109)
+
 ```typescript
                         cellStateChange.state === NotebookCellExecutionState.Idle &&
                         !this.disconected
@@ -555,8 +513,8 @@ No description provided
                 },
 ```
 
-
 [src/platform/debugger/jupyter/debuggingManager.ts#L153](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/debugger/jupyter/debuggingManager.ts#L153)
+
 ```typescript
                 if (editor) {
                     const controller = this.notebookToRunByLineController.get(editor.document);
@@ -573,17 +531,16 @@ No description provided
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-- 
-        status: 'installed' | 'notInstalled';
+-         status: 'installed' | 'notInstalled';
 
 ## Locations Used
 
 [src/platform/debugger/jupyter/debuggingManager.ts#L463](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/debugger/jupyter/debuggingManager.ts#L463)
+
 ```typescript
             }
 
@@ -600,18 +557,16 @@ No description provided
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/debugger/jupyter/debugControllers.ts#L25](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/debugger/jupyter/debugControllers.ts#L25)
+
 ```typescript
         private readonly kernel: IKernel,
         private readonly commandManager: ICommandManager
@@ -628,18 +583,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/debugger/jupyter/debugControllers.ts#L54](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/debugger/jupyter/debugControllers.ts#L54)
+
 ```typescript
         private readonly kernel: IKernel,
         private readonly settings: IConfigurationService
@@ -656,14 +609,11 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -675,14 +625,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -694,14 +641,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -713,14 +657,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -732,14 +673,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -751,14 +689,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -770,18 +705,16 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/datascience/shiftEnterBanner.ts#L93](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/shiftEnterBanner.ts#L93)
+
 ```typescript
         );
     }
@@ -792,8 +725,8 @@ No properties for event
             'sendSelectionToInteractiveWindow',
 ```
 
-
 [src/test/datascience/shiftEnterBanner.unit.test.ts#L100](https://github.com/microsoft/vscode-jupyter/tree/main/src/test/datascience/shiftEnterBanner.unit.test.ts#L100)
+
 ```typescript
 
         expect(Reporter.eventNames).to.deep.equal([
@@ -810,18 +743,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/datascience/shiftEnterBanner.ts#L104](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/shiftEnterBanner.ts#L104)
+
 ```typescript
         await this.disableBanner();
     }
@@ -832,8 +763,8 @@ No properties for event
             'sendSelectionToInteractiveWindow',
 ```
 
-
 [src/test/datascience/shiftEnterBanner.unit.test.ts#L69](https://github.com/microsoft/vscode-jupyter/tree/main/src/test/datascience/shiftEnterBanner.unit.test.ts#L69)
+
 ```typescript
 
         expect(Reporter.eventNames).to.deep.equal([
@@ -850,19 +781,16 @@ No properties for event
 
 ## Description
 
-
-
- Applies to everything (interactive+Notebooks & local+remote)
+Applies to everything (interactive+Notebooks & local+remote)
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/telemetry/telemetry.ts#L84](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/telemetry.ts#L84)
+
 ```typescript
     properties?: P[E] & { waitBeforeSending?: Promise<void> },
     ex?: Error
@@ -873,8 +801,8 @@ No properties for event
 
 ```
 
-
 [src/telemetry/telemetry.ts#L121](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/telemetry.ts#L121)
+
 ```typescript
     stopWatch?: StopWatch,
     properties?: P[E] & { [waitBeforeSending]?: Promise<void> }
@@ -885,8 +813,8 @@ No properties for event
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ```
 
-
 [src/notebooks/controllers/vscodeNotebookController.ts#L255](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/vscodeNotebookController.ts#L255)
+
 ```typescript
             return;
         }
@@ -897,8 +825,8 @@ No properties for event
         await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
 ```
 
-
 [src/kernels/kernel.ts#L197](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts#L197)
+
 ```typescript
 
     public async executeCell(cell: NotebookCell): Promise<NotebookCellRunState> {
@@ -915,14 +843,11 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -934,14 +859,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -953,14 +875,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -972,19 +891,19 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
--  format: ExportFormat;
--  cancelled?: boolean;
--  successful?: boolean;
--  opened?: boolean
+-   format: ExportFormat;
+-   cancelled?: boolean;
+-   successful?: boolean;
+-   opened?: boolean
 
 ## Locations Used
 
 [src/platform/datascience/export/exportFileOpener.ts#L25](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/export/exportFileOpener.ts#L25)
+
 ```typescript
     public async openFile(format: ExportFormat, uri: Uri) {
         if (format === ExportFormat.python) {
@@ -995,8 +914,8 @@ No description provided
                 opened: true
 ```
 
-
 [src/platform/datascience/export/exportFileOpener.ts#L32](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/export/exportFileOpener.ts#L32)
+
 ```typescript
             });
         } else {
@@ -1007,8 +926,8 @@ No description provided
                 opened: opened
 ```
 
-
 [src/platform/datascience/export/fileConverter.ts#L69](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/export/fileConverter.ts#L69)
+
 ```typescript
         }
 
@@ -1025,16 +944,16 @@ No description provided
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
--  format: ExportFormat
+-   format: ExportFormat
 
 ## Locations Used
 
 [src/interactive-window/commands/exportCommands.ts#L110](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/exportCommands.ts#L110)
+
 ```typescript
                 this.controllers.getSelectedNotebookController(sourceDocument)?.connection.interpreter ||
                 this.controllers.getPreferredNotebookController(sourceDocument)?.connection.interpreter;
@@ -1051,16 +970,16 @@ No description provided
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
--  format: ExportFormat
+-   format: ExportFormat
 
 ## Locations Used
 
 [src/platform/datascience/export/fileConverter.ts#L90](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/export/fileConverter.ts#L90)
+
 ```typescript
             await this.performExport(format, sourceDocument, target, token, candidateInterpreter);
         } catch (e) {
@@ -1077,18 +996,16 @@ No description provided
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/interactiveWindowCommandListener.ts#L203](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/interactiveWindowCommandListener.ts#L203)
+
 ```typescript
         return result;
     }
@@ -1105,18 +1022,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/interactiveWindowCommandListener.ts#L251](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/interactiveWindowCommandListener.ts#L251)
+
 ```typescript
         }
     }
@@ -1133,18 +1048,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/datascience/variablesView/variableView.ts#L174](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/variablesView/variableView.ts#L174)
+
 ```typescript
             }
         } catch (e) {
@@ -1161,19 +1074,16 @@ No properties for event
 
 ## Description
 
-
-
- Telemetry sent when we fail to create a Notebook Controller (an entry for the UI kernel list in Native Notebooks).
+Telemetry sent when we fail to create a Notebook Controller (an entry for the UI kernel list in Native Notebooks).
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/notebooks/controllers/notebookControllerManager.ts#L803](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/notebookControllerManager.ts#L803)
+
 ```typescript
         } catch (ex) {
             // We know that this fails when we have xeus kernels installed (untill that's resolved thats one instance when we can have duplicates).
@@ -1190,20 +1100,16 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry sent when we're unable to find a KernelSpec connection for Interactive window that can be started usig Python interpreter.
+Telemetry sent when we're unable to find a KernelSpec connection for Interactive window that can be started usig Python interpreter.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/helpers.ts#L599](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/helpers.ts#L599)
+
 ```typescript
                     return preferredInterpreterKernelSpec;
                 }
@@ -1214,8 +1120,8 @@ No properties for event
 
 ```
 
-
 [src/kernels/helpers.ts#L1350](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/helpers.ts#L1350)
+
 ```typescript
             return kernelMatchingPreferredInterpreter;
         }
@@ -1232,18 +1138,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L30](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L30)
+
 ```typescript
         @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}
@@ -1260,18 +1164,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codewatcher.ts#L689](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L689)
+
 ```typescript
         });
     }
@@ -1288,18 +1190,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codewatcher.ts#L706](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L706)
+
 ```typescript
         }
     }
@@ -1316,14 +1216,11 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -1335,16 +1232,16 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
--  scope: 'command' | 'file'
+-   scope: 'command' | 'file'
 
 ## Locations Used
 
 [src/interactive-window/interactiveWindowCommandListener.ts#L370](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/interactiveWindowCommandListener.ts#L370)
+
 ```typescript
         return this.statusProvider.waitWithStatus(promise, message, undefined, canceled);
     }
@@ -1355,8 +1252,8 @@ No description provided
         const filtersObject: { [name: string]: string[] } = {};
 ```
 
-
 [src/interactive-window/interactiveWindowCommandListener.ts#L393](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/interactiveWindowCommandListener.ts#L393)
+
 ```typescript
         }
     }
@@ -1373,19 +1270,17 @@ No description provided
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-- 
-        ename: string;
-- 
-        evalue: string;
+-         ename: string;
+-         evalue: string;
 
 ## Locations Used
 
 [src/kernels/debugging/interactiveWindowDebugger.ts#L114](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/debugging/interactiveWindowDebugger.ts#L114)
+
 ```typescript
         executeSilently(kernel.session, this.tracingEnableCode, {
             traceErrors: true,
@@ -1396,8 +1291,8 @@ No description provided
 
 ```
 
-
 [src/kernels/debugging/interactiveWindowDebugger.ts#L125](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/debugging/interactiveWindowDebugger.ts#L125)
+
 ```typescript
         executeSilently(kernel.session, this.tracingDisableCode, {
             traceErrors: true,
@@ -1408,8 +1303,8 @@ No description provided
 
 ```
 
-
 [src/kernels/debugging/interactiveWindowDebugger.ts#L154](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/debugging/interactiveWindowDebugger.ts#L154)
+
 ```typescript
                 const importResults = await executeSilently(kernel.session, this.waitForDebugClientCode, {
                     traceErrors: true,
@@ -1420,8 +1315,8 @@ No description provided
                     traceWarning(`${this.debuggerPackage} not found in path.`);
 ```
 
-
 [src/kernels/debugging/interactiveWindowDebugger.ts#L276](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/debugging/interactiveWindowDebugger.ts#L276)
+
 ```typescript
                       {
                           traceErrors: true,
@@ -1432,8 +1327,8 @@ No description provided
                 : [];
 ```
 
-
 [src/kernels/debugging/interactiveWindowDebugger.ts#L305](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/debugging/interactiveWindowDebugger.ts#L305)
+
 ```typescript
             ? await executeSilently(kernel.session, this.enableDebuggerCode, {
                   traceErrors: true,
@@ -1450,18 +1345,16 @@ No description provided
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/notebooks/execution/kernelExecution.ts#L194](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/kernelExecution.ts#L194)
+
 ```typescript
         this.documentExecutions.set(document, newCellExecutionQueue);
         return newCellExecutionQueue;
@@ -1478,15 +1371,12 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-- 
-        where: 'activeInterpreter' | 'otherInterpreter' | 'path' | 'nowhere';
-- 
-        command: JupyterCommands;
+-         where: 'activeInterpreter' | 'otherInterpreter' | 'path' | 'nowhere';
+-         command: JupyterCommands;
 
 ## Locations Used
 
@@ -1498,19 +1388,17 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-- 
-        extensionId: string;
-- 
-        allowed: 'yes' | 'no';
+-         extensionId: string;
+-         allowed: 'yes' | 'no';
 
 ## Locations Used
 
 [src/platform/api/apiAccessService.ts#L70](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/apiAccessService.ts#L70)
+
 ```typescript
         const extensionPermissions = this.globalState.get<ApiExtensionInfo | undefined>(API_ACCESS_GLOBAL_KEY);
         const extensionPermission = extensionPermissions?.find((item) => item.extensionId === info.extensionId);
@@ -1521,8 +1409,8 @@ No description provided
             });
 ```
 
-
 [src/platform/api/apiAccessService.ts#L98](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/apiAccessService.ts#L98)
+
 ```typescript
                 extensionPermissions.push({ allowed: allow ? 'yes' : 'no', extensionId: info.extensionId });
                 return this.globalState.update(API_ACCESS_GLOBAL_KEY, extensionPermissions);
@@ -1539,19 +1427,17 @@ No description provided
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-- 
-        extensionId: string;
-- 
-        pemUsed: keyof IExportedKernelService;
+-         extensionId: string;
+-         pemUsed: keyof IExportedKernelService;
 
 ## Locations Used
 
 [src/platform/api/kernelApi.ts#L70](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/kernelApi.ts#L70)
+
 ```typescript
         KernelConnectionMetadata
     >();
@@ -1562,8 +1448,8 @@ No description provided
         });
 ```
 
-
 [src/platform/api/kernelApi.ts#L78](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/kernelApi.ts#L78)
+
 ```typescript
         return this._onDidChangeKernelSpecifications.event;
     }
@@ -1574,8 +1460,8 @@ No description provided
         });
 ```
 
-
 [src/platform/api/kernelApi.ts#L100](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/kernelApi.ts#L100)
+
 ```typescript
         );
     }
@@ -1586,8 +1472,8 @@ No description provided
         });
 ```
 
-
 [src/platform/api/kernelApi.ts#L109](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/kernelApi.ts#L109)
+
 ```typescript
         return items.map((item) => this.translateKernelConnectionMetadataToExportedType(item));
     }
@@ -1598,8 +1484,8 @@ No description provided
         });
 ```
 
-
 [src/platform/api/kernelApi.ts#L125](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/kernelApi.ts#L125)
+
 ```typescript
     getKernel(
         notebook: NotebookDocument
@@ -1610,8 +1496,8 @@ No description provided
         });
 ```
 
-
 [src/platform/api/kernelApi.ts#L139](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/kernelApi.ts#L139)
+
 ```typescript
         }
     }
@@ -1622,8 +1508,8 @@ No description provided
         });
 ```
 
-
 [src/platform/api/kernelApi.ts#L146](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/kernelApi.ts#L146)
+
 ```typescript
         return this.startOrConnect(spec, notebook);
     }
@@ -1640,18 +1526,16 @@ No description provided
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L157](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L157)
+
 ```typescript
                 moduleName: ProductNames.get(Product.jupyter)!,
                 pythonEnvType: interpreter.envType
@@ -1668,27 +1552,25 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-- 
-        ename: string;
-- 
-        evalue: string;
+-         ename: string;
+-         evalue: string;
 
 ## Locations Used
 
 [src/kernels/kernel.ts#L559](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts#L559)
-```typescript
-            await this.executeSilently(notebook, startupCode, {
-                traceErrors: true,
-                traceErrorsMessage: 'Error executing jupyter extension internal startup code',
-                telemetryName: Telemetry.KernelStartupCodeFailure
-            });
 
-            // Run user specified startup commands
+```typescript
+await this.executeSilently(notebook, startupCode, {
+    traceErrors: true,
+    traceErrorsMessage: 'Error executing jupyter extension internal startup code',
+    telemetryName: Telemetry.KernelStartupCodeFailure
+});
+
+// Run user specified startup commands
 ```
 
 </details>
@@ -1697,14 +1579,11 @@ No description provided
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -1716,18 +1595,16 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/notebooks/notebookEditorProvider.ts#L30](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/notebookEditorProvider.ts#L30)
+
 ```typescript
         const nb = await this.vscodeNotebook.openNotebookDocument(file);
         await this.vscodeNotebook.showNotebookDocument(nb);
@@ -1744,14 +1621,11 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -1763,14 +1637,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -1782,14 +1653,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -1801,14 +1669,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -1820,14 +1685,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -1839,14 +1701,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -1858,14 +1717,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -1877,14 +1733,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -1896,14 +1749,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -1915,14 +1765,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -1934,14 +1781,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -1953,14 +1797,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -1972,14 +1813,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -1991,14 +1829,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -2010,14 +1845,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -2029,14 +1861,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -2048,14 +1877,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -2067,14 +1893,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -2086,14 +1909,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -2105,14 +1925,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -2124,14 +1941,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -2143,14 +1957,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -2162,14 +1973,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -2181,14 +1989,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -2200,14 +2005,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -2219,14 +2021,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -2238,14 +2037,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -2257,14 +2053,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -2276,14 +2069,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -2295,14 +2085,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -2314,14 +2101,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -2333,12 +2117,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
--  scope: 'command' | 'file'
+-   scope: 'command' | 'file'
 
 ## Locations Used
 
@@ -2350,18 +2133,16 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/datascience/activation.ts#L46](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/activation.ts#L46)
+
 ```typescript
         }
         this.notebookOpened = true;
@@ -2378,17 +2159,12 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry sent with details of the selection of the quick pick for when user creates new notebook.
- This only applies with other extensions like .NET registers with us.
+Telemetry sent with details of the selection of the quick pick for when user creates new notebook.
+This only applies with other extensions like .NET registers with us.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -2400,16 +2176,14 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-- 
-        /**
-         * The id of the extension registering with us to be displayed the dropdown list for notebook creation.
-         */
-        extensionId: string;
+-         /**
+           * The id of the extension registering with us to be displayed the dropdown list for notebook creation.
+           */
+          extensionId: string;
 
 ## Locations Used
 
@@ -2421,18 +2195,16 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/telemetry/telemetry.ts#L369](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/telemetry.ts#L369)
+
 ```typescript
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function resetData(resource: Resource, eventName: string, properties: any) {
@@ -2443,8 +2215,8 @@ function resetData(resource: Resource, eventName: string, properties: any) {
         // Check result to determine if success.
 ```
 
-
 [src/telemetry/telemetry.ts#L370](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/telemetry.ts#L370)
+
 ```typescript
 function resetData(resource: Resource, eventName: string, properties: any) {
     // Once we have successfully interrupted, clear the interrupt counter.
@@ -2455,8 +2227,8 @@ function resetData(resource: Resource, eventName: string, properties: any) {
         if (data && 'result' in data && data.result === InterruptResult.Success) {
 ```
 
-
 [src/telemetry/telemetry.ts#L371](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/telemetry.ts#L371)
+
 ```typescript
     // Once we have successfully interrupted, clear the interrupt counter.
     if (eventName === Telemetry.NotebookInterrupt) {
@@ -2467,8 +2239,8 @@ function resetData(resource: Resource, eventName: string, properties: any) {
             clearInterruptCounter(resource);
 ```
 
-
 [src/notebooks/execution/kernelExecution.ts#L250](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/kernelExecution.ts#L250)
+
 ```typescript
                 // Otherwise a real error occurred.
                 sendKernelTelemetryEvent(
@@ -2479,8 +2251,8 @@ function resetData(resource: Resource, eventName: string, properties: any) {
                     exc
 ```
 
-
 [src/notebooks/execution/kernelExecution.ts#L262](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/kernelExecution.ts#L262)
+
 ```typescript
         })();
 
@@ -2497,23 +2269,19 @@ function resetData(resource: Resource, eventName: string, properties: any) {
 
 ## Description
 
+Telemetry event sent to indicate the language used in a notebook
 
-
-
- Telemetry event sent to indicate the language used in a notebook
-
- @type { language: string }
- @memberof IEventNamePropertyMapping
+@type { language: string }
+@memberof IEventNamePropertyMapping
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/datascience/common.ts#L171](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/common.ts#L171)
+
 ```typescript
 }
 
@@ -2530,18 +2298,16 @@ export function sendNotebookOrKernelLanguageTelemetry(
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/telemetry/telemetry.ts#L378](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/telemetry.ts#L378)
+
 ```typescript
         }
     }
@@ -2552,8 +2318,8 @@ No properties for event
         // For restart to be successful, we should not have `failed`
 ```
 
-
 [src/telemetry/telemetry.ts#L379](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/telemetry.ts#L379)
+
 ```typescript
     }
     // Once we have successfully restarted, clear the interrupt counter.
@@ -2564,8 +2330,8 @@ No properties for event
         const failed = data && 'failed' in data ? data.failed : false;
 ```
 
-
 [src/telemetry/telemetry.ts#L380](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/telemetry.ts#L380)
+
 ```typescript
     // Once we have successfully restarted, clear the interrupt counter.
     if (eventName === Telemetry.NotebookRestart) {
@@ -2576,8 +2342,8 @@ No properties for event
         if (!failed) {
 ```
 
-
 [src/kernels/kernel.ts#L306](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts#L306)
+
 ```typescript
                 ? this.kernelExecution.restart(this._notebookPromise?.then((item) => item.session))
                 : this.start(new DisplayOptions(false)));
@@ -2588,16 +2354,16 @@ No properties for event
             this._ignoreNotebookDisposedErrors = true;
 ```
 
-
 [src/kernels/kernel.ts#L317](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts#L317)
+
 ```typescript
-            this.restarting = undefined;
-            // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
-            // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
-            sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime, undefined, ex);
-            await notebook?.session.dispose().catch(noop);
-            this._ignoreNotebookDisposedErrors = false;
-            throw ex;
+this.restarting = undefined;
+// If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
+// Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
+sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime, undefined, ex);
+await notebook?.session.dispose().catch(noop);
+this._ignoreNotebookDisposedErrors = false;
+throw ex;
 ```
 
 </details>
@@ -2606,18 +2372,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/telemetry/telemetry.ts#L411](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/telemetry.ts#L411)
+
 ```typescript
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -2628,8 +2392,8 @@ function incrementStartFailureCount(resource: Resource, eventName: any, properti
         // Check start failed.
 ```
 
-
 [src/telemetry/telemetry.ts#L412](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/telemetry.ts#L412)
+
 ```typescript
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function incrementStartFailureCount(resource: Resource, eventName: any, properties: any) {
@@ -2640,8 +2404,8 @@ function incrementStartFailureCount(resource: Resource, eventName: any, properti
         if (data && 'failed' in data && data.failed) {
 ```
 
-
 [src/telemetry/telemetry.ts#L413](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/telemetry.ts#L413)
+
 ```typescript
 function incrementStartFailureCount(resource: Resource, eventName: any, properties: any) {
     if (eventName === Telemetry.NotebookStart) {
@@ -2652,8 +2416,8 @@ function incrementStartFailureCount(resource: Resource, eventName: any, properti
             trackKernelResourceInformation(resource, { startFailed: true });
 ```
 
-
 [src/kernels/jupyter/launcher/notebookProvider.ts#L91](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/notebookProvider.ts#L91)
+
 ```typescript
               )
             : this.jupyterNotebookProvider.createNotebook(options);
@@ -2670,18 +2434,16 @@ function incrementStartFailureCount(resource: Resource, eventName: any, properti
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/datascience/plotting/plotViewerProvider.ts#L46](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/plotting/plotViewerProvider.ts#L46)
+
 ```typescript
             this.currentViewer = this.serviceContainer.get<IPlotViewer>(IPlotViewer);
             this.currentViewerClosed = this.currentViewer.closed(this.closedViewer);
@@ -2698,14 +2460,11 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -2717,19 +2476,17 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-- 
-        ename: string;
-- 
-        evalue: string;
+-         ename: string;
+-         evalue: string;
 
 ## Locations Used
 
 [src/kernels/variables/pythonVariableRequester.ts#L62](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/variables/pythonVariableRequester.ts#L62)
+
 ```typescript
                   {
                       traceErrors: true,
@@ -2740,8 +2497,8 @@ No description provided
             : [];
 ```
 
-
 [src/kernels/variables/pythonVariableRequester.ts#L93](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/variables/pythonVariableRequester.ts#L93)
+
 ```typescript
                   {
                       traceErrors: true,
@@ -2752,8 +2509,8 @@ No description provided
             : [];
 ```
 
-
 [src/kernels/variables/pythonVariableRequester.ts#L126](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/variables/pythonVariableRequester.ts#L126)
+
 ```typescript
                           {
                               traceErrors: true,
@@ -2764,8 +2521,8 @@ No description provided
                     : [];
 ```
 
-
 [src/kernels/variables/pythonVariableRequester.ts#L154](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/variables/pythonVariableRequester.ts#L154)
+
 ```typescript
                       {
                           traceErrors: true,
@@ -2776,8 +2533,8 @@ No description provided
                 : [];
 ```
 
-
 [src/kernels/variables/pythonVariableRequester.ts#L197](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/variables/pythonVariableRequester.ts#L197)
+
 ```typescript
                   {
                       traceErrors: true,
@@ -2794,30 +2551,27 @@ No description provided
 
 ## Description
 
-
-
- Telemetry sent when we recommend installing an extension.
+Telemetry sent when we recommend installing an extension.
 
 ## Properties
 
-- 
-        /**
-         * Extension we recommended the user to install.
-         */
-        extensionId: string;
-- 
-        /**
-         * `displayed` - If prompt was displayed
-         * `dismissed` - If prompt was displayed & dismissed by the user
-         * `ok` - If prompt was displayed & ok clicked by the user
-         * `cancel` - If prompt was displayed & cancel clicked by the user
-         * `doNotShowAgain` - If prompt was displayed & doNotShowAgain clicked by the user
-         */
-        action: 'displayed' | 'dismissed' | 'ok' | 'cancel' | 'doNotShowAgain';
+-         /**
+           * Extension we recommended the user to install.
+           */
+          extensionId: string;
+-         /**
+           * `displayed` - If prompt was displayed
+           * `dismissed` - If prompt was displayed & dismissed by the user
+           * `ok` - If prompt was displayed & ok clicked by the user
+           * `cancel` - If prompt was displayed & cancel clicked by the user
+           * `doNotShowAgain` - If prompt was displayed & doNotShowAgain clicked by the user
+           */
+          action: 'displayed' | 'dismissed' | 'ok' | 'cancel' | 'doNotShowAgain';
 
 ## Locations Used
 
 [src/platform/datascience/extensionRecommendation.ts#L120](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/extensionRecommendation.ts#L120)
+
 ```typescript
             `[${extensionInfo.displayName}](${extensionInfo.extensionLink})`,
             language
@@ -2828,8 +2582,8 @@ No description provided
             Common.bannerLabelYes(),
 ```
 
-
 [src/platform/datascience/extensionRecommendation.ts#L129](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/extensionRecommendation.ts#L129)
+
 ```typescript
         );
         switch (selection) {
@@ -2840,8 +2594,8 @@ No description provided
             }
 ```
 
-
 [src/platform/datascience/extensionRecommendation.ts#L134](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/extensionRecommendation.ts#L134)
+
 ```typescript
                 break;
             }
@@ -2852,8 +2606,8 @@ No description provided
             case Common.doNotShowAgain(): {
 ```
 
-
 [src/platform/datascience/extensionRecommendation.ts#L138](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/extensionRecommendation.ts#L138)
+
 ```typescript
                 break;
             }
@@ -2864,8 +2618,8 @@ No description provided
                     list.push(extensionId);
 ```
 
-
 [src/platform/datascience/extensionRecommendation.ts#L147](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/extensionRecommendation.ts#L147)
+
 ```typescript
                 break;
             }
@@ -2882,14 +2636,11 @@ No description provided
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -2901,20 +2652,16 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
-
-
- Sent when the jupyter.refreshDataViewer command is invoked
+Sent when the jupyter.refreshDataViewer command is invoked
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/datascience/data-viewing/dataViewer.ts#L200](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/data-viewing/dataViewer.ts#L200)
+
 ```typescript
 
             case DataViewerMessages.RefreshDataViewer:
@@ -2931,18 +2678,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/kernelCommandListener.ts#L136](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelCommandListener.ts#L136)
+
 ```typescript
             return;
         }
@@ -2959,16 +2704,11 @@ No properties for event
 
 ## Description
 
-
-
-
- Misc
+Misc
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -2980,20 +2720,16 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
-
-
- Run Cell Commands in Interactive Python
+Run Cell Commands in Interactive Python
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codewatcher.ts#L138](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L138)
+
 ```typescript
         this.closeDocumentDisposable?.dispose(); // NOSONAR
         this.updateRequiredDisposable?.dispose(); // NOSONAR
@@ -3010,18 +2746,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codewatcher.ts#L194](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L194)
+
 ```typescript
     }
 
@@ -3038,15 +2772,11 @@ No properties for event
 
 ## Description
 
-
-
- Run by line events
+Run by line events
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -3058,14 +2788,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -3077,14 +2804,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -3096,18 +2820,16 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/variables/debuggerVariables.ts#L127](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/variables/debuggerVariables.ts#L127)
+
 ```typescript
             // Note, full variable results isn't necessary for this call. It only really needs the variable value.
             const result = this.lastKnownVariables.find((v) => v.name === name);
@@ -3124,14 +2846,11 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -3143,18 +2862,16 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codewatcher.ts#L232](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L232)
+
 ```typescript
         await finished;
     }
@@ -3171,18 +2888,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codewatcher.ts#L682](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L682)
+
 ```typescript
         });
     }
@@ -3199,18 +2914,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codewatcher.ts#L675](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L675)
+
 ```typescript
         await this.moveCellsDirection(false);
     }
@@ -3227,18 +2940,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codewatcher.ts#L339](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L339)
+
 ```typescript
         return this.runMatchingCell(range, false, true);
     }
@@ -3255,18 +2966,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codewatcher.ts#L367](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L367)
+
 ```typescript
         }
     }
@@ -3283,18 +2992,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codewatcher.ts#L349](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L349)
+
 ```typescript
         return this.runMatchingCell(this.documentManager.activeTextEditor.selection, false);
     }
@@ -3311,18 +3018,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codewatcher.ts#L439](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L439)
+
 ```typescript
         }
     }
@@ -3339,18 +3044,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codewatcher.ts#L531](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L531)
+
 ```typescript
         editor.selections = selections;
     }
@@ -3367,18 +3070,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codewatcher.ts#L597](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L597)
+
 ```typescript
         }
     }
@@ -3395,18 +3096,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codewatcher.ts#L183](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L183)
+
 ```typescript
         }
     }
@@ -3423,18 +3122,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codewatcher.ts#L301](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L301)
+
 ```typescript
         }
     }
@@ -3451,18 +3148,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codewatcher.ts#L426](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L426)
+
 ```typescript
         }
     }
@@ -3479,18 +3174,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codewatcher.ts#L413](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L413)
+
 ```typescript
         }
     }
@@ -3507,20 +3200,16 @@ No properties for event
 
 ## Description
 
-
-
-
- Cell Edit Commands in Interactive Python
+Cell Edit Commands in Interactive Python
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codewatcher.ts#L405](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L405)
+
 ```typescript
         );
     }
@@ -3537,18 +3226,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codewatcher.ts#L670](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L670)
+
 ```typescript
         await this.moveCellsDirection(true);
     }
@@ -3565,18 +3252,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codewatcher.ts#L665](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L665)
+
 ```typescript
         }
     }
@@ -3593,18 +3278,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codewatcher.ts#L476](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L476)
+
 ```typescript
         });
     }
@@ -3621,18 +3304,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codewatcher.ts#L493](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L493)
+
 ```typescript
         }
     }
@@ -3649,18 +3330,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codewatcher.ts#L257](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L257)
+
 ```typescript
         await finished;
     }
@@ -3677,18 +3356,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codewatcher.ts#L286](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L286)
+
 ```typescript
         }
     }
@@ -3705,14 +3382,11 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -3724,14 +3398,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -3743,23 +3414,19 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
+Telemetry sent when user selects an interpreter to start jupyter server.
 
-
-
- Telemetry sent when user selects an interpreter to start jupyter server.
-
- @type {(never | undefined)}
- @memberof IEventNamePropertyMapping
+@type {(never | undefined)}
+@memberof IEventNamePropertyMapping
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/interpreter/jupyterInterpreterSelectionCommand.ts#L24](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/interpreter/jupyterInterpreterSelectionCommand.ts#L24)
+
 ```typescript
     public async activate(): Promise<void> {
         this.disposables.push(
@@ -3776,18 +3443,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/launcher/commandLineSelector.ts#L36](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/commandLineSelector.ts#L36)
+
 ```typescript
         workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this));
     }
@@ -3798,8 +3463,8 @@ No properties for event
         return multiStep.run(this.startSelectingCommandLine.bind(this, file), {});
 ```
 
-
 [src/kernels/jupyter/serverSelector.ts#L57](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts#L57)
+
 ```typescript
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
     ) {}
@@ -3816,18 +3481,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/notebooks/controllers/vscodeNotebookController.ts#L571](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/vscodeNotebookController.ts#L571)
+
 ```typescript
         // Else VSC is just setting a kernel for a notebook after it has opened.
         if (existingKernel) {
@@ -3844,18 +3507,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/notebooks/controllers/vscodeNotebookController.ts#L572](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/vscodeNotebookController.ts#L572)
+
 ```typescript
         if (existingKernel) {
             const telemetryEvent = isLocalConnection(this.kernelConnection)
@@ -3872,18 +3533,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/errors/errorHandler.ts#L76](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/errors/errorHandler.ts#L76)
+
 ```typescript
                             ConfigurationTarget.Workspace
                         );
@@ -3894,8 +3553,8 @@ No properties for event
         } else if (err instanceof VscCancellationError || err instanceof CancellationError) {
 ```
 
-
 [src/platform/errors/errorHandler.ts#L181](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/errors/errorHandler.ts#L181)
+
 ```typescript
                             ConfigurationTarget.Workspace
                         );
@@ -3906,8 +3565,8 @@ No properties for event
             return KernelInterpreterDependencyResponse.failed;
 ```
 
-
 [src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L397](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L397)
+
 ```typescript
                     );
                     return this.fetchFunction(url, this.addAllowUnauthorized(url, true, options));
@@ -3924,18 +3583,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/errors/errorHandler.ts#L68](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/errors/errorHandler.ts#L68)
+
 ```typescript
                 .showErrorMessage(DataScience.jupyterSelfCertFail().format(err.message), enableOption, closeOption)
                 .then((value) => {
@@ -3945,9 +3602,9 @@ No properties for event
                             'allowUnauthorizedRemoteConnection',
                             true,
 ```
-
 
 [src/platform/errors/errorHandler.ts#L173](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/errors/errorHandler.ts#L173)
+
 ```typescript
                 .showErrorMessage(DataScience.jupyterSelfCertFail().format(err.message), enableOption, closeOption)
                 .then((value) => {
@@ -3958,8 +3615,8 @@ No properties for event
                             true,
 ```
 
-
 [src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L388](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L388)
+
 ```typescript
                     closeOption
                 );
@@ -3976,18 +3633,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/serverSelector.ts#L69](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts#L69)
+
 ```typescript
         const multiStep = this.multiStepFactory.create<{}>();
         return multiStep.run(this.startSelectingURI.bind(this, allowLocal), {});
@@ -4004,20 +3659,16 @@ No properties for event
 
 ## Description
 
-
-
-
- This telemetry tracks the display of the Picker for Jupyter Remote servers.
+This telemetry tracks the display of the Picker for Jupyter Remote servers.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/serverSelector.ts#L63](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts#L63)
+
 ```typescript
         allowLocal: boolean,
         commandSource: SelectJupyterUriCommandSource = 'nonUser'
@@ -4034,17 +3685,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-- 
-        azure: boolean;
+-         azure: boolean;
 
 ## Locations Used
 
 [src/kernels/jupyter/serverSelector.ts#L78](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts#L78)
+
 ```typescript
         await this.serverUriStorage.setUri(userURI);
 
@@ -4061,17 +3711,17 @@ No description provided
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
--  rows: number | undefined;
--  columns: number | undefined
+-   rows: number | undefined;
+-   columns: number | undefined
 
 ## Locations Used
 
 [src/platform/datascience/data-viewing/dataViewer.ts#L233](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/data-viewing/dataViewer.ts#L233)
+
 ```typescript
 
         // Log telemetry about number of rows
@@ -4082,8 +3732,8 @@ No description provided
             });
 ```
 
-
 [src/platform/datascience/data-viewing/dataViewer.ts#L316](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/data-viewing/dataViewer.ts#L316)
+
 ```typescript
 
     private sendElapsedTimeTelemetry() {
@@ -4100,18 +3750,16 @@ No description provided
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/datascience/data-viewing/dataViewerFactory.ts#L41](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/data-viewing/dataViewerFactory.ts#L41)
+
 ```typescript
         }
     }
@@ -4128,14 +3776,11 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -4147,14 +3792,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -4166,18 +3808,16 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L208](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L208)
+
 ```typescript
                 }
 
@@ -4188,8 +3828,8 @@ No properties for event
 
 ```
 
-
 [src/kernels/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L214](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L214)
+
 ```typescript
 
                 case DataScience.pythonInteractiveHelpLink(): {
@@ -4200,8 +3840,8 @@ No properties for event
 
 ```
 
-
 [src/kernels/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L219](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L219)
+
 ```typescript
                 }
 
@@ -4218,18 +3858,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/datascience/data-viewing/dataViewerDependencyService.ts#L108](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/data-viewing/dataViewerDependencyService.ts#L108)
+
 ```typescript
                 sendTelemetryEvent(Telemetry.UserInstalledPandas);
             }
@@ -4246,18 +3884,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L201](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L201)
+
 ```typescript
                             return JupyterInterpreterDependencyResponse.cancel;
                         }
@@ -4274,19 +3910,14 @@ No properties for event
 
 ## Description
 
+Telemetry event sent when installing a jupyter dependency
 
-
-
- Telemetry event sent when installing a jupyter dependency
-
- @type {product: string}
- @memberof IEventNamePropertyMapping
+@type {product: string}
+@memberof IEventNamePropertyMapping
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -4298,18 +3929,16 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/datascience/data-viewing/dataViewerDependencyService.ts#L105](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/data-viewing/dataViewerDependencyService.ts#L105)
+
 ```typescript
                 cancellatonPromise
             ]);
@@ -4326,19 +3955,17 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-- 
-        ename: string;
-- 
-        evalue: string;
+-         ename: string;
+-         evalue: string;
 
 ## Locations Used
 
 [src/kernels/kernel.ts#L566](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts#L566)
+
 ```typescript
             await this.executeSilently(notebook, this.getUserStartupCommands(), {
                 traceErrors: true,
@@ -4355,13 +3982,12 @@ No description provided
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
--  open: boolean;
--  runByLine: boolean
+-   open: boolean;
+-   runByLine: boolean
 
 ## Locations Used
 
@@ -4373,14 +3999,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -4392,14 +4015,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -4411,14 +4031,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -4430,15 +4047,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
-
- Native notebooks events
+Native notebooks events
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -4450,14 +4063,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -4469,28 +4079,27 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-- 
-        /**
-         * Whether this is the first time in the session.
-         * (fetching kernels first time in the session is slower, later its cached).
-         * This is a generic property supported for all telemetry (sent by decorators).
-         */
-        firstTime?: boolean;
+-         /**
+           * Whether this is the first time in the session.
+           * (fetching kernels first time in the session is slower, later its cached).
+           * This is a generic property supported for all telemetry (sent by decorators).
+           */
+          firstTime?: boolean;
 
 ## Locations Used
 
 [src/platform/api/pythonApi.ts#L289](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/pythonApi.ts#L289)
+
 ```typescript
         }
     }
     private workspaceCachedActiveInterpreter = new Map<string, Promise<PythonEnvironment | undefined>>();
     @captureTelemetry(Telemetry.ActiveInterpreterListingPerf)
-    @traceDecorators.verbose('Get Active Interpreter', TraceOptions.Arguments | TraceOptions.BeforeCall)
+    @traceDecoratorVerbose('Get Active Interpreter', TraceOptions.Arguments | TraceOptions.BeforeCall)
     public getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
         this.hookupOnDidChangeInterpreterEvent();
 ```
@@ -4501,16 +4110,11 @@ No description provided
 
 ## Description
 
-
-
-
- Sent when a jupyter session fails to start and we ask the user for a new kernel
+Sent when a jupyter session fails to start and we ask the user for a new kernel
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -4522,12 +4126,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
--  count: number
+-   count: number
 
 ## Locations Used
 
@@ -4539,26 +4142,24 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/codelensprovider.ts#L60](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codelensprovider.ts#L60)
+
 ```typescript
-        // On shutdown send how long on average we spent parsing code lens
-        if (this.totalGetCodeLensCalls > 0) {
-            sendTelemetryEvent(
-                Telemetry.CodeLensAverageAcquisitionTime,
-                this.totalExecutionTimeInMs / this.totalGetCodeLensCalls
-            );
-        }
+// On shutdown send how long on average we spent parsing code lens
+if (this.totalGetCodeLensCalls > 0) {
+    sendTelemetryEvent(
+        Telemetry.CodeLensAverageAcquisitionTime,
+        this.totalExecutionTimeInMs / this.totalGetCodeLensCalls
+    );
+}
 ```
 
 </details>
@@ -4567,20 +4168,16 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry sent when a command is executed.
+Telemetry sent when a command is executed.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/common/application/commandManager.ts#L37](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/application/commandManager.ts#L37)
+
 ```typescript
         return commands.registerCommand(
             command,
@@ -4591,8 +4188,8 @@ No properties for event
                 } else {
 ```
 
-
 [src/platform/common/application/commandManager.ts#L71](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/application/commandManager.ts#L71)
+
 ```typescript
         return commands.registerTextEditorCommand(
             command,
@@ -4603,8 +4200,8 @@ No properties for event
                 } else {
 ```
 
-
 [src/platform/common/application/commandManager.ts#L102](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/application/commandManager.ts#L102)
+
 ```typescript
         U extends ICommandNameArgumentTypeMapping[E]
     >(command: E, ...rest: U): Thenable<T> {
@@ -4621,20 +4218,15 @@ No properties for event
 
 ## Description
 
+Telemetry event sent to capture total time taken for completions list to be provided by Jupyter.
+This is used to compare against time taken by LS.
 
-
-
- Telemetry event sent to capture total time taken for completions list to be provided by Jupyter.
- This is used to compare against time taken by LS.
-
- @type {(undefined | never)}
- @memberof IEventNamePropertyMapping
+@type {(undefined | never)}
+@memberof IEventNamePropertyMapping
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -4646,20 +4238,15 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
+Telemetry event sent to capture total time taken for completions list to be provided by LS.
+This is used to compare against time taken by Jupyter.
 
-
-
- Telemetry event sent to capture total time taken for completions list to be provided by LS.
- This is used to compare against time taken by Jupyter.
-
- @type {(undefined | never)}
- @memberof IEventNamePropertyMapping
+@type {(undefined | never)}
+@memberof IEventNamePropertyMapping
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -4671,18 +4258,16 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/launcher/jupyterExecution.ts#L178](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/jupyterExecution.ts#L178)
+
 ```typescript
                                 );
                             }
@@ -4699,18 +4284,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/launcher/jupyterExecution.ts#L139](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/jupyterExecution.ts#L139)
+
 ```typescript
                     traceInfo(`Connection complete server`);
 
@@ -4727,18 +4310,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/launcher/jupyterExecution.ts#L165](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/jupyterExecution.ts#L165)
+
 ```typescript
 
                         // Something else went wrong
@@ -4755,18 +4336,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/launcher/jupyterExecution.ts#L139](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/jupyterExecution.ts#L139)
+
 ```typescript
                     traceInfo(`Connection complete server`);
 
@@ -4783,28 +4362,24 @@ No properties for event
 
 ## Description
 
-
-
-
- Connecting to an existing Jupyter server, but connecting to localhost.
+Connecting to an existing Jupyter server, but connecting to localhost.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/launcher/jupyterExecution.ts#L128](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/jupyterExecution.ts#L128)
-```typescript
-                    connection = await this.startOrConnect(options, cancelToken);
 
-                    if (!connection.localLaunch && LocalHosts.includes(connection.hostName.toLowerCase())) {
-                        sendTelemetryEvent(Telemetry.ConnectRemoteJupyterViaLocalHost);
-                    }
-                    // Create a server tha  t we will then attempt to connect to.
-                    result = this.serviceContainer.get<INotebookServer>(INotebookServer);
+```typescript
+connection = await this.startOrConnect(options, cancelToken);
+
+if (!connection.localLaunch && LocalHosts.includes(connection.hostName.toLowerCase())) {
+    sendTelemetryEvent(Telemetry.ConnectRemoteJupyterViaLocalHost);
+}
+// Create a server tha  t we will then attempt to connect to.
+result = this.serviceContainer.get<INotebookServer>(INotebookServer);
 ```
 
 </details>
@@ -4813,18 +4388,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/launcher/jupyterExecution.ts#L169](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/jupyterExecution.ts#L169)
+
 ```typescript
 
                             // Check for the self signed certs error specifically
@@ -4841,24 +4414,22 @@ No properties for event
 
 ## Description
 
-
-
- Whether we've attempted to start a raw Python kernel without any interpreter information.
- If we don't detect such telemetry in a few months, then we can remove this along with the temporary code associated with this telemetry.
+Whether we've attempted to start a raw Python kernel without any interpreter information.
+If we don't detect such telemetry in a few months, then we can remove this along with the temporary code associated with this telemetry.
 
 ## Properties
 
-- 
-        /**
-         * Indicates whether the python extension is installed.
-         * If we send telemetry fro this & this is `true`, then we have a bug.
-         * If its `false`, then we can ignore this telemetry.
-         */
-        pythonExtensionInstalled: boolean;
+-         /**
+           * Indicates whether the python extension is installed.
+           * If we send telemetry fro this & this is `true`, then we have a bug.
+           * If its `false`, then we can ignore this telemetry.
+           */
+          pythonExtensionInstalled: boolean;
 
 ## Locations Used
 
 [src/kernels/raw/session/hostRawNotebookProvider.ts#L115](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/hostRawNotebookProvider.ts#L115)
+
 ```typescript
                 kernelConnection.kind === 'startUsingLocalKernelSpec'
             ) {
@@ -4875,33 +4446,29 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry sent to capture first time execution of a cell.
- If `notebook = true`, this its telemetry for native editor/notebooks.
+Telemetry sent to capture first time execution of a cell.
+If `notebook = true`, this its telemetry for native editor/notebooks.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/notebooks/execution/cellExecution.ts#L435](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/cellExecution.ts#L435)
+
 ```typescript
-        const props = { notebook: true };
-        if (!CellExecution.sentExecuteCellTelemetry) {
-            CellExecution.sentExecuteCellTelemetry = true;
-            sendTelemetryEvent(Telemetry.ExecuteCellPerceivedCold, this.stopWatchForTelemetry.elapsedTime, props);
-        } else {
-            sendTelemetryEvent(Telemetry.ExecuteCellPerceivedWarm, this.stopWatchForTelemetry.elapsedTime, props);
-        }
+const props = { notebook: true };
+if (!CellExecution.sentExecuteCellTelemetry) {
+    CellExecution.sentExecuteCellTelemetry = true;
+    sendTelemetryEvent(Telemetry.ExecuteCellPerceivedCold, this.stopWatchForTelemetry.elapsedTime, props);
+} else {
+    sendTelemetryEvent(Telemetry.ExecuteCellPerceivedWarm, this.stopWatchForTelemetry.elapsedTime, props);
+}
 ```
 
-
 [src/interactive-window/editor-integration/codewatcher.ts#L1064](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L1064)
+
 ```typescript
         if (runningStopWatch) {
             if (!CodeWatcher.sentExecuteCellTelemetry) {
@@ -4918,21 +4485,17 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry sent to capture subsequent execution of a cell.
- If `notebook = true`, this its telemetry for native editor/notebooks.
+Telemetry sent to capture subsequent execution of a cell.
+If `notebook = true`, this its telemetry for native editor/notebooks.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/notebooks/execution/cellExecution.ts#L437](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/cellExecution.ts#L437)
+
 ```typescript
             CellExecution.sentExecuteCellTelemetry = true;
             sendTelemetryEvent(Telemetry.ExecuteCellPerceivedCold, this.stopWatchForTelemetry.elapsedTime, props);
@@ -4943,8 +4506,8 @@ No properties for event
     private canExecuteCell() {
 ```
 
-
 [src/interactive-window/editor-integration/codewatcher.ts#L1066](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts#L1066)
+
 ```typescript
                 CodeWatcher.sentExecuteCellTelemetry = true;
                 sendTelemetryEvent(Telemetry.ExecuteCellPerceivedCold, runningStopWatch.elapsedTime);
@@ -4961,18 +4524,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/jupyterKernelService.ts#L203](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/jupyterKernelService.ts#L203)
+
 ```typescript
             await this.fs.writeLocalFile(kernelSpecFilePath, JSON.stringify(contents, undefined, 4));
         } catch (ex) {
@@ -4983,8 +4544,8 @@ No properties for event
         if (cancelToken.isCancellationRequested) {
 ```
 
-
 [src/kernels/jupyter/jupyterKernelService.ts#L343](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/jupyterKernelService.ts#L343)
+
 ```typescript
                     await this.fs.writeLocalFile(kernelSpecFilePath, JSON.stringify(specModel, undefined, 2));
                 } catch (ex) {
@@ -5001,12 +4562,11 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
--  command: string
+-   command: string
 
 ## Locations Used
 
@@ -5018,14 +4578,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -5037,22 +4594,17 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
+Telemetry event sent once done searching for kernel spec and interpreter for a local connection.
 
-
-
- Telemetry event sent once done searching for kernel spec and interpreter for a local connection.
-
- @type {{
+@type {{
          kernelSpecFound: boolean;
          interpreterFound: boolean;
      }}
- @memberof IEventNamePropertyMapping
+@memberof IEventNamePropertyMapping
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -5064,21 +4616,17 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
-
-
- Used to capture time taken to get enviornment variables for a python environment.
- Also lets us know whether it worked or not.
+Used to capture time taken to get enviornment variables for a python environment.
+Also lets us know whether it worked or not.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/common/process/environmentActivationService.ts#L239](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/process/environmentActivationService.ts#L239)
+
 ```typescript
         ]);
 
@@ -5089,8 +4637,8 @@ No properties for event
             source: 'python',
 ```
 
-
 [src/platform/common/process/environmentActivationService.ts#L291](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/process/environmentActivationService.ts#L291)
+
 ```typescript
                     interpreter?.path
                 )}, shell cannot be determined.`
@@ -5101,8 +4649,8 @@ No properties for event
                 source: 'jupyter',
 ```
 
-
 [src/platform/common/process/environmentActivationService.ts#L334](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/process/environmentActivationService.ts#L334)
+
 ```typescript
                 const stopWatch = new StopWatch();
                 try {
@@ -5113,8 +4661,8 @@ No properties for event
                         source: 'jupyter',
 ```
 
-
 [src/platform/common/process/environmentActivationService.ts#L343](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/process/environmentActivationService.ts#L343)
+
 ```typescript
                     });
                     return env;
@@ -5125,8 +4673,8 @@ No properties for event
                         source: 'jupyter',
 ```
 
-
 [src/platform/common/process/environmentActivationService.ts#L387](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/process/environmentActivationService.ts#L387)
+
 ```typescript
             const processService = await processServicePromise;
             const hasCustomEnvVars = Object.keys(customEnvVars).length;
@@ -5137,8 +4685,8 @@ No properties for event
                     source: 'jupyter',
 ```
 
-
 [src/platform/common/process/environmentActivationService.ts#L479](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/process/environmentActivationService.ts#L479)
+
 ```typescript
             } else if (returnedEnv) {
                 delete returnedEnv[PYTHON_WARNINGS];
@@ -5149,8 +4697,8 @@ No properties for event
                 source: 'jupyter',
 ```
 
-
 [src/platform/common/process/environmentActivationService.ts#L489](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/process/environmentActivationService.ts#L489)
+
 ```typescript
 
             return returnedEnv;
@@ -5167,18 +4715,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L258](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L258)
+
 ```typescript
             const requestHeaders = { Cookie: cookieString, 'X-XSRFToken': xsrfCookie };
             return { requestHeaders };
@@ -5195,18 +4741,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L253](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L253)
+
 ```typescript
 
         // If we found everything return it all back if not, undefined as partial is useless
@@ -5223,16 +4767,11 @@ No properties for event
 
 ## Description
 
-
-
-
- Total time taken to get the preferred kernel for notebook.
+Total time taken to get the preferred kernel for notebook.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -5244,14 +4783,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -5263,48 +4799,34 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-- 
-        /**
-         * Hash of the cell output mimetype
-         *
-         * @type {string}
-         */
-        hashedName: string;
-- 
-        hasText: boolean;
-- 
-        hasLatex: boolean;
-- 
-        hasHtml: boolean;
-- 
-        hasSvg: boolean;
-- 
-        hasXml: boolean;
-- 
-        hasJson: boolean;
-- 
-        hasImage: boolean;
-- 
-        hasGeo: boolean;
-- 
-        hasPlotly: boolean;
-- 
-        hasVega: boolean;
-- 
-        hasWidget: boolean;
-- 
-        hasJupyter: boolean;
-- 
-        hasVnd: boolean;
+-         /**
+           * Hash of the cell output mimetype
+           *
+           * @type {string}
+           */
+          hashedName: string;
+-         hasText: boolean;
+-         hasLatex: boolean;
+-         hasHtml: boolean;
+-         hasSvg: boolean;
+-         hasXml: boolean;
+-         hasJson: boolean;
+-         hasImage: boolean;
+-         hasGeo: boolean;
+-         hasPlotly: boolean;
+-         hasVega: boolean;
+-         hasWidget: boolean;
+-         hasJupyter: boolean;
+-         hasVnd: boolean;
 
 ## Locations Used
 
 [src/kernels/jupyter/jupyterCellOutputMimeTypeTracker.ts#L154](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/jupyterCellOutputMimeTypeTracker.ts#L154)
+
 ```typescript
             hasJupyter: lowerMimeType.includes('jupyter'),
             hasVnd: lowerMimeType.includes('vnd')
@@ -5321,18 +4843,16 @@ No description provided
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/jupyterCellOutputMimeTypeTracker.ts#L120](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/jupyterCellOutputMimeTypeTracker.ts#L120)
+
 ```typescript
         this.pendingChecks.set(id, setTimeout(check, 5000));
     }
@@ -5349,14 +4869,11 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -5368,27 +4885,25 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
-
- Capture telemetry re: how long returning a tooltip takes
+Capture telemetry re: how long returning a tooltip takes
 
 ## Properties
 
-- 
-        // Result is null if user signalled cancellation or if we timed out
-        isResultNull: boolean;
+-         // Result is null if user signalled cancellation or if we timed out
+          isResultNull: boolean;
 
 ## Locations Used
 
 [src/interactive-window/editor-integration/hoverProvider.ts#L79](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/hoverProvider.ts#L79)
+
 ```typescript
-        const timeoutHandler = sleep(300).then(() => undefined);
-        this.stopWatch.reset();
-        const result = await Promise.race([timeoutHandler, this.getVariableHover(document, position, token)]);
-        sendTelemetryEvent(Telemetry.InteractiveFileTooltipsPerf, this.stopWatch.elapsedTime, {
-            isResultNull: !!result
-        });
-        return result;
+const timeoutHandler = sleep(300).then(() => undefined);
+this.stopWatch.reset();
+const result = await Promise.race([timeoutHandler, this.getVariableHover(document, position, token)]);
+sendTelemetryEvent(Telemetry.InteractiveFileTooltipsPerf, this.stopWatch.elapsedTime, {
+    isResultNull: !!result
+});
+return result;
 ```
 
 </details>
@@ -5397,26 +4912,22 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
-
-
- Time taken to list the Python interpreters.
+Time taken to list the Python interpreters.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/api/pythonApi.ts#L267](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/pythonApi.ts#L267)
+
 ```typescript
         return this.didChangeInterpreters.event;
     }
 
     @captureTelemetry(Telemetry.InterpreterListingPerf)
-    @traceDecorators.verbose('Get Interpreters', TraceOptions.Arguments | TraceOptions.BeforeCall)
+    @traceDecoratorVerbose('Get Interpreters', TraceOptions.Arguments | TraceOptions.BeforeCall)
     public getInterpreters(resource?: Uri): Promise<PythonEnvironment[]> {
         this.hookupOnDidChangeInterpreterEvent();
 ```
@@ -5427,18 +4938,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/notebooks/execution/kernelExecution.ts#L195](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/kernelExecution.ts#L195)
+
 ```typescript
         return newCellExecutionQueue;
     }
@@ -5455,22 +4964,18 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry event sent when a kernel picked crashes on startup
- @type {(undefined | never)}
- @memberof IEventNamePropertyMapping
+Telemetry event sent when a kernel picked crashes on startup
+@type {(undefined | never)}
+@memberof IEventNamePropertyMapping
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/errors/jupyterInvalidKernelError.ts#L18](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/errors/jupyterInvalidKernelError.ts#L18)
+
 ```typescript
             DataScience.kernelInvalid().format(getDisplayNameOrNameOfKernelConnection(kernelConnectionMetadata)),
             kernelConnectionMetadata
@@ -5487,16 +4992,11 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry event sent with name of a Widget found.
+Telemetry event sent with name of a Widget found.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -5508,20 +5008,16 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
-
-
- Something went wrong in looking for a widget.
+Something went wrong in looking for a widget.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/ipywidgets-message-coordination/ipyWidgetScriptSource.ts#L220](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/ipyWidgetScriptSource.ts#L220)
+
 ```typescript
             widgetSource = await this.scriptProvider.getWidgetScriptSource(moduleName, moduleVersion);
         } catch (ex) {
@@ -5538,16 +5034,11 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry event sent when an loading of 3rd party ipywidget JS scripts from 3rd party source has been disabled.
+Telemetry event sent when an loading of 3rd party ipywidget JS scripts from 3rd party source has been disabled.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -5559,20 +5050,16 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
-
-
- Telemetry event sent when an ipywidget module fails to load. Module name is hashed.
+Telemetry event sent when an ipywidget module fails to load. Module name is hashed.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/ipywidgets-message-coordination/commonMessageCoordinator.ts#L164](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/commonMessageCoordinator.ts#L164)
+
 ```typescript
             }
             traceError(`Widget load failure ${errorMessage}`, payload);
@@ -5589,20 +5076,16 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry event sent when an ipywidget module loads. Module name is hashed.
+Telemetry event sent when an ipywidget module loads. Module name is hashed.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/ipywidgets-message-coordination/commonMessageCoordinator.ts#L123](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/commonMessageCoordinator.ts#L123)
+
 ```typescript
 
     private sendLoadSucceededTelemetry(payload: LoadIPyWidgetClassLoadAction) {
@@ -5619,20 +5102,16 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry event sent to indicate the overhead of syncing the kernel with the UI.
+Telemetry event sent to indicate the overhead of syncing the kernel with the UI.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/ipywidgets-message-coordination/ipyWidgetMessageDispatcher.ts#L497](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/ipyWidgetMessageDispatcher.ts#L497)
+
 ```typescript
     }
 
@@ -5649,21 +5128,17 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry sent when we prompt user to use a CDN for IPyWidget scripts.
- This is always sent when we display a prompt.
+Telemetry sent when we prompt user to use a CDN for IPyWidget scripts.
+This is always sent when we display a prompt.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/ipywidgets-message-coordination/ipyWidgetScriptSourceProvider.ts#L211](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/ipyWidgetScriptSourceProvider.ts#L211)
+
 ```typescript
             return this.configurationPromise.promise;
         }
@@ -5680,20 +5155,16 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry sent when user does something with the prompt displayed to user about using CDN for IPyWidget scripts.
+Telemetry sent when user does something with the prompt displayed to user about using CDN for IPyWidget scripts.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/ipywidgets-message-coordination/ipyWidgetScriptSourceProvider.ts#L241](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/ipyWidgetScriptSourceProvider.ts#L241)
+
 ```typescript
                 break;
         }
@@ -5710,20 +5181,16 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry event sent when the widget render function fails (note, this may not be sufficient to capture all failures).
+Telemetry event sent when the widget render function fails (note, this may not be sufficient to capture all failures).
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/ipywidgets-message-coordination/commonMessageCoordinator.ts#L187](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/commonMessageCoordinator.ts#L187)
+
 ```typescript
     private sendRenderFailureTelemetry(payload: Error) {
         try {
@@ -5740,16 +5207,11 @@ No properties for event
 
 ## Description
 
-
-
-
- Total time taken to discover a widget script on CDN.
+Total time taken to discover a widget script on CDN.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -5761,21 +5223,17 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
-
-
- Total time taken to discover all IPyWidgets on disc.
- This is how long it takes to discover a single widget on disc (from python environment).
+Total time taken to discover all IPyWidgets on disc.
+This is how long it takes to discover a single widget on disc (from python environment).
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/ipywidgets-message-coordination/localWidgetScriptSourceProvider.ts#L53](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/localWidgetScriptSourceProvider.ts#L53)
+
 ```typescript
         }
         return (this.cachedWidgetScripts = this.getWidgetScriptSourcesWithoutCache());
@@ -5792,20 +5250,16 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry event sent when the widget tries to send a kernel message but nothing was listening
+Telemetry event sent when the widget tries to send a kernel message but nothing was listening
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/ipywidgets-message-coordination/commonMessageCoordinator.ts#L206](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/commonMessageCoordinator.ts#L206)
+
 ```typescript
                 this.jupyterOutput.appendLine(
                     DataScience.unhandledMessage().format(msg.header.msg_type, JSON.stringify(msg.content))
@@ -5822,20 +5276,16 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry event sent with name of a Widget that is used.
+Telemetry event sent with name of a Widget that is used.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/ipywidgets-message-coordination/ipyWidgetScriptSourceProvider.ts#L107](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/ipyWidgetScriptSourceProvider.ts#L107)
+
 ```typescript
             }
         }
@@ -5852,20 +5302,16 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry event sent when an ipywidget version that is not supported is used & we have trapped this and warned the user abou it.
+Telemetry event sent when an ipywidget version that is not supported is used & we have trapped this and warned the user abou it.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/ipywidgets-message-coordination/commonMessageCoordinator.ts#L176](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/commonMessageCoordinator.ts#L176)
+
 ```typescript
     }
     private sendUnsupportedWidgetVersionFailureTelemetry(payload: NotifyIPyWidgeWidgetVersionNotSupportedAction) {
@@ -5882,18 +5328,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/launcher/liveshare/hostJupyterServer.ts#L194](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/liveshare/hostJupyterServer.ts#L194)
+
 ```typescript
             this.throwIfDisposedOrCancelled(cancelToken);
             const baseUrl = this.connection?.baseUrl || '';
@@ -5904,8 +5348,8 @@ No properties for event
             sendKernelTelemetryEvent(
 ```
 
-
 [src/kernels/jupyter/launcher/liveshare/hostJupyterServer.ts#L199](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/liveshare/hostJupyterServer.ts#L199)
+
 ```typescript
         } catch (ex) {
             sendKernelTelemetryEvent(
@@ -5922,22 +5366,18 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry event sent to when user customizes the jupyter command line
- @type {(undefined | never)}
- @memberof IEventNamePropertyMapping
+Telemetry event sent to when user customizes the jupyter command line
+@type {(undefined | never)}
+@memberof IEventNamePropertyMapping
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/launcher/commandLineSelector.ts#L93](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/commandLineSelector.ts#L93)
+
 ```typescript
 
     private async setJupyterCommandLine(val: string): Promise<void> {
@@ -5954,18 +5394,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/errors/jupyterWaitForIdleError.ts#L14](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/errors/jupyterWaitForIdleError.ts#L14)
+
 ```typescript
 export class JupyterWaitForIdleError extends BaseKernelError {
     constructor(kernelConnectionMetadata: KernelConnectionMetadata) {
@@ -5973,7 +5411,6 @@ export class JupyterWaitForIdleError extends BaseKernelError {
         sendTelemetryEvent(Telemetry.SessionIdleTimeout);
     }
 }
-
 ```
 
 </details>
@@ -5982,19 +5419,14 @@ export class JupyterWaitForIdleError extends BaseKernelError {
 
 ## Description
 
+Telemetry event sent if there's an error installing a jupyter required dependency
 
-
-
- Telemetry event sent if there's an error installing a jupyter required dependency
-
- @type { product: string }
- @memberof IEventNamePropertyMapping
+@type { product: string }
+@memberof IEventNamePropertyMapping
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -6006,23 +5438,19 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
+Telemetry event sent when jupyter has been found in interpreter but we cannot find kernelspec.
 
-
-
- Telemetry event sent when jupyter has been found in interpreter but we cannot find kernelspec.
-
- @type {(never | undefined)}
- @memberof IEventNamePropertyMapping
+@type {(never | undefined)}
+@memberof IEventNamePropertyMapping
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L329](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L329)
+
 ```typescript
             return JupyterInterpreterDependencyResponse.ok;
         }
@@ -6039,18 +5467,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/jupyterKernelService.ts#L149](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/jupyterKernelService.ts#L149)
+
 ```typescript
      */
     // eslint-disable-next-line
@@ -6067,18 +5493,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-- 
-        /**
-         * Total time spent in attempting to start and connect to jupyter before giving up.
-         *
-         * @type {number}
-         */
-        timeout: number;
+-         /**
+           * Total time spent in attempting to start and connect to jupyter before giving up.
+           *
+           * @type {number}
+           */
+          timeout: number;
 
 ## Locations Used
 
@@ -6090,18 +5514,16 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/launcher/jupyterExecution.ts#L241](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/jupyterExecution.ts#L241)
+
 ```typescript
     }
 
@@ -6118,19 +5540,16 @@ No properties for event
 
 ## Description
 
-
-
- Misc
+Misc
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/telemetry/kernelTelemetry.ts#L53](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/kernelTelemetry.ts#L53)
+
 ```typescript
     });
     trackKernelResourceInformation(resource, counters);
@@ -6147,19 +5566,14 @@ No properties for event
 
 ## Description
 
+Telemetry event sent to every time a kernel enumeration is done
 
-
-
- Telemetry event sent to every time a kernel enumeration is done
-
- @type {...}
- @memberof IEventNamePropertyMapping
+@type {...}
+@memberof IEventNamePropertyMapping
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -6171,36 +5585,32 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
-
-
- Total time taken to find a kernel on disc or on a remote machine.
+Total time taken to find a kernel on disc or on a remote machine.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/raw/finder/localKernelFinder.ts#L55](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/finder/localKernelFinder.ts#L55)
+
 ```typescript
         @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}
-    @traceDecorators.verbose('Find kernel spec', TraceOptions.BeforeCall | TraceOptions.Arguments)
+    @traceDecoratorVerbose('Find kernel spec', TraceOptions.BeforeCall | TraceOptions.Arguments)
     @captureTelemetry(Telemetry.KernelFinderPerf)
     public async findKernel(
         resource: Resource,
         notebookMetadata?: nbformat.INotebookMetadata,
 ```
 
-
 [src/kernels/raw/finder/remoteKernelFinder.ts#L60](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/finder/remoteKernelFinder.ts#L60)
+
 ```typescript
         );
     }
-    @traceDecorators.verbose('Find remote kernel spec')
+    @traceDecoratorVerbose('Find remote kernel spec')
     @captureTelemetry(Telemetry.KernelFinderPerf)
     @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'remote' })
     public async findKernel(
@@ -6213,20 +5623,16 @@ No properties for event
 
 ## Description
 
-
-
-
- Total time taken to Launch a raw kernel.
+Total time taken to Launch a raw kernel.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/raw/launcher/kernelLauncher.ts#L113](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/launcher/kernelLauncher.ts#L113)
+
 ```typescript
             // Should be available now, wait with a timeout
             return await this.launchProcess(kernelConnectionMetadata, resource, workingDirectory, timeout, cancelToken);
@@ -6243,28 +5649,26 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-- 
-        /**
-         * Whether this is the first time in the session.
-         * (fetching kernels first time in the session is slower, later its cached).
-         * This is a generic property supported for all telemetry (sent by decorators).
-         */
-        firstTime?: boolean;
-- 
-        /**
-         * Whether this telemetry is for listing of all kernels or just python or just non-python.
-         * (fetching kernels first time in the session is slower, later its cached).
-         */
-        kind: 'remote' | 'local' | 'localKernelSpec' | 'localPython';
+-         /**
+           * Whether this is the first time in the session.
+           * (fetching kernels first time in the session is slower, later its cached).
+           * This is a generic property supported for all telemetry (sent by decorators).
+           */
+          firstTime?: boolean;
+-         /**
+           * Whether this telemetry is for listing of all kernels or just python or just non-python.
+           * (fetching kernels first time in the session is slower, later its cached).
+           */
+          kind: 'remote' | 'local' | 'localKernelSpec' | 'localPython';
 
 ## Locations Used
 
 [src/kernels/raw/finder/localKnownPathKernelSpecFinder.ts#L45](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/finder/localKnownPathKernelSpecFinder.ts#L45)
+
 ```typescript
     /**
      * @param {boolean} includePythonKernels Include/exclude Python kernels in the result.
@@ -6275,8 +5679,8 @@ No description provided
         cancelToken?: CancellationToken
 ```
 
-
 [src/kernels/raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.ts#L74](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.ts#L74)
+
 ```typescript
     ) {
         super(fs, workspaceService, extensionChecker, globalState);
@@ -6287,8 +5691,8 @@ No description provided
         const workspaceFolderId =
 ```
 
-
 [src/kernels/raw/finder/localKernelFinder.ts#L191](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/finder/localKernelFinder.ts#L191)
+
 ```typescript
         return preferredKernel;
     }
@@ -6299,11 +5703,11 @@ No description provided
         cancelToken?: CancellationToken
 ```
 
-
 [src/kernels/raw/finder/remoteKernelFinder.ts#L61](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/finder/remoteKernelFinder.ts#L61)
+
 ```typescript
     }
-    @traceDecorators.verbose('Find remote kernel spec')
+    @traceDecoratorVerbose('Find remote kernel spec')
     @captureTelemetry(Telemetry.KernelFinderPerf)
     @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'remote' })
     public async findKernel(
@@ -6317,18 +5721,16 @@ No description provided
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-- 
-        action: 'displayed';
--  // Message displayed.
-        /**
-         * Language found in the notebook if a known language. Otherwise 'unknown'
-         */
-        language: string;
+-         action: 'displayed';
+-   // Message displayed.
+    /\*\*
+    _ Language found in the notebook if a known language. Otherwise 'unknown'
+    _/
+    language: string;
 
 ## Locations Used
 
@@ -6340,16 +5742,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
-
-
- Total time taken to list kernels for VS Code.
+Total time taken to list kernels for VS Code.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -6361,19 +5758,14 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
+Telemetry event sent to indicate registering a kernel with jupyter failed.
 
-
-
- Telemetry event sent to indicate registering a kernel with jupyter failed.
-
- @type {(undefined | never)}
- @memberof IEventNamePropertyMapping
+@type {(undefined | never)}
+@memberof IEventNamePropertyMapping
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -6385,23 +5777,19 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
+Telemetry event sent to indicate 'jupyter kernelspec' is not possible.
 
-
-
- Telemetry event sent to indicate 'jupyter kernelspec' is not possible.
-
- @type {(undefined | never)}
- @memberof IEventNamePropertyMapping
+@type {(undefined | never)}
+@memberof IEventNamePropertyMapping
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L305](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L305)
+
 ```typescript
             .then(() => true)
             .catch((e) => {
@@ -6418,16 +5806,14 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-- 
-        /**
-         * Number of kernel specs.
-         */
-        count: number;
+-         /**
+           * Number of kernel specs.
+           */
+          count: number;
 
 ## Locations Used
 
@@ -6439,19 +5825,16 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
-
- Native variable view events
+Native variable view events
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/datascience/variablesView/variableView.ts#L84](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/variablesView/variableView.ts#L84)
+
 ```typescript
         this.dataViewerChecker = new DataViewerChecker(configuration, appShell);
     }
@@ -6468,18 +5851,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/datascience/variablesView/variableView.ts#L143](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/variablesView/variableView.ts#L143)
+
 ```typescript
 
         // I've we've been made visible, make sure that we are updated
@@ -6496,16 +5877,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
--  count: number
+-   count: number
 
 ## Locations Used
 
 [src/notebooks/notebookUsageTracker.ts#L45](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/notebookUsageTracker.ts#L45)
+
 ```typescript
     public dispose() {
         // Send a bunch of telemetry
@@ -6522,14 +5903,11 @@ No description provided
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -6541,16 +5919,16 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
--  count: number
+-   count: number
 
 ## Locations Used
 
 [src/notebooks/notebookUsageTracker.ts#L48](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/notebookUsageTracker.ts#L48)
+
 ```typescript
             sendTelemetryEvent(Telemetry.NotebookOpenCount, undefined, { count: this.openedNotebookCount });
         }
@@ -6567,16 +5945,11 @@ No description provided
 
 ## Description
 
-
-
-
- Telemetry event fired if a failure occurs loading a notebook
+Telemetry event fired if a failure occurs loading a notebook
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -6588,18 +5961,13 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
-
-
- Telemetry event sent when a user runs the interactive window with a new file
- @type {(undefined | never)}
- @memberof IEventNamePropertyMapping
+Telemetry event sent when a user runs the interactive window with a new file
+@type {(undefined | never)}
+@memberof IEventNamePropertyMapping
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -6611,19 +5979,18 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
-
- When users connect to a remote kernel, we store the kernel id so we can re-connect to that
- when user opens the same notebook. We only store the last 100.
- Count is the number of entries saved in the list.
+When users connect to a remote kernel, we store the kernel id so we can re-connect to that
+when user opens the same notebook. We only store the last 100.
+Count is the number of entries saved in the list.
 
 ## Properties
 
--  count: number
+-   count: number
 
 ## Locations Used
 
 [src/kernels/raw/finder/preferredRemoteKernelIdProvider.ts#L59](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/finder/preferredRemoteKernelIdProvider.ts#L59)
+
 ```typescript
         }
 
@@ -6640,20 +6007,16 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
-
-
- Time take for jupyter server to start and be ready to run first user cell.
+Time take for jupyter server to start and be ready to run first user cell.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/kernel.ts#L349](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts#L349)
+
 ```typescript
         // Setup telemetry
         if (!this.perceivedJupyterStartupTelemetryCaptured) {
@@ -6664,16 +6027,11 @@ No properties for event
             );
 ```
 
-
 [src/kernels/kernel.ts#L438](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts#L438)
-```typescript
 
-            sendKernelTelemetryEvent(
-                this.resourceUri,
-                Telemetry.PerceivedJupyterStartupNotebook,
-                stopWatch.elapsedTime
-            );
-            this.notebook = notebook;
+```typescript
+sendKernelTelemetryEvent(this.resourceUri, Telemetry.PerceivedJupyterStartupNotebook, stopWatch.elapsedTime);
+this.notebook = notebook;
 ```
 
 </details>
@@ -6682,20 +6040,16 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry sent when we have attempted to find the preferred kernel.
+Telemetry sent when we have attempted to find the preferred kernel.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/raw/finder/localKernelFinder.ts#L92](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/finder/localKernelFinder.ts#L92)
+
 ```typescript
 
             // Find the preferred kernel index from the list.
@@ -6706,8 +6060,8 @@ No properties for event
                 language: telemetrySafeLanguage,
 ```
 
-
 [src/kernels/raw/finder/localKernelFinder.ts#L104](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/finder/localKernelFinder.ts#L104)
+
 ```typescript
             }
         } catch (ex) {
@@ -6718,8 +6072,8 @@ No properties for event
                     result: 'failed',
 ```
 
-
 [src/kernels/raw/finder/remoteKernelFinder.ts#L85](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/finder/remoteKernelFinder.ts#L85)
+
 ```typescript
                 undefined,
                 this.preferredRemoteKernelIdProvider
@@ -6730,8 +6084,8 @@ No properties for event
                 language: telemetrySafeLanguage
 ```
 
-
 [src/kernels/raw/finder/remoteKernelFinder.ts#L93](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/finder/remoteKernelFinder.ts#L93)
+
 ```typescript
             return preferred;
         } catch (ex) {
@@ -6748,20 +6102,19 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-- 
-        action:
-            | 'displayed' // Message displayed.
-            | 'dismissed' // user dismissed the message.
-            | 'download';
+-         action:
+              | 'displayed' // Message displayed.
+              | 'dismissed' // user dismissed the message.
+              | 'download';
 
 ## Locations Used
 
 [src/platform/api/pythonApi.ts#L169](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/pythonApi.ts#L169)
+
 ```typescript
         // Ask user if they want to install and then wait for them to actually install it.
         const yes = localize.Common.bannerLabelYes();
@@ -6772,8 +6125,8 @@ No description provided
             { modal: true },
 ```
 
-
 [src/platform/api/pythonApi.ts#L177](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/pythonApi.ts#L177)
+
 ```typescript
             no
         );
@@ -6784,8 +6137,8 @@ No description provided
             sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
 ```
 
-
 [src/platform/api/pythonApi.ts#L180](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/pythonApi.ts#L180)
+
 ```typescript
             sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
             await this.installPythonExtension();
@@ -6796,8 +6149,8 @@ No description provided
     private async installPythonExtension() {
 ```
 
-
 [src/notebooks/controllers/noPythonKernelsNotebookController.ts#L63](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/noPythonKernelsNotebookController.ts#L63)
+
 ```typescript
         }
     }
@@ -6808,8 +6161,8 @@ No description provided
             { modal: true },
 ```
 
-
 [src/notebooks/controllers/noPythonKernelsNotebookController.ts#L70](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/noPythonKernelsNotebookController.ts#L70)
+
 ```typescript
             Common.install()
         );
@@ -6820,8 +6173,8 @@ No description provided
             sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
 ```
 
-
 [src/notebooks/controllers/noPythonKernelsNotebookController.ts#L73](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/noPythonKernelsNotebookController.ts#L73)
+
 ```typescript
             sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
             this.commandManager.executeCommand('extension.open', PythonExtension).then(noop, noop);
@@ -6838,22 +6191,18 @@ No description provided
 
 ## Description
 
-
-
-
- Telemetry sent for local Python Kernels.
- Tracking whether we have managed to launch the kernel that matches the interpreter.
- If match=false, then this means we have failed to launch the right kernel.
+Telemetry sent for local Python Kernels.
+Tracking whether we have managed to launch the kernel that matches the interpreter.
+If match=false, then this means we have failed to launch the right kernel.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/helpers.ts#L1697](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/helpers.ts#L1697)
+
 ```typescript
             kernelConnection.interpreter.path.toLowerCase(),
             sysExecutable.toLowerCase()
@@ -6864,8 +6213,8 @@ No properties for event
         });
 ```
 
-
 [src/kernels/helpers.ts#L1721](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/helpers.ts#L1721)
+
 ```typescript
                 });
                 if (execOutput.stdout.trim().length > 0) {
@@ -6882,49 +6231,44 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-- 
-        moduleName: string;
-- 
-        /**
-         * Whether the module was already (once before) installed into the python environment or
-         * whether this already exists (detected via `pip list`)
-         */
-        isModulePresent?: 'true' | undefined;
-- 
-        action:
-            | 'cancelled' // User cancelled the installation or closed the notebook or the like.
-            | 'displayed' // Install prompt may have been displayed.
-            | 'prompted' // Install prompt was displayed.
-            | 'installed' // Installation disabled (this is what python extension returns).
-            | 'ignored' // Installation disabled (this is what python extension returns).
-            | 'disabled' // Installation disabled (this is what python extension returns).
-            | 'failed' // Installation disabled (this is what python extension returns).
-            | 'install' // User chose install from prompt.
-            | 'donotinstall' // User chose not to install from prompt.
-            | 'differentKernel' // User chose to select a different kernel.
-            | 'error' // Some other error.
-            | 'installedInJupyter' // The package was successfully installed in Jupyter whilst failed to install in Python ext.
-            | 'failedToInstallInJupyter' // Failed to install the package in Jupyter as well as Python ext.
-            | 'dismissed';
--  // User chose to dismiss the prompt.
-        resourceType?: 'notebook' | 'interactive';
-- 
-        /**
-         * Hash of the resource (notebook.uri or pythonfile.uri associated with this).
-         * If we run the same notebook tomorrow, the hash will be the same.
-         */
-        resourceHash?: string;
-- 
-        pythonEnvType?: EnvironmentType;
+-         moduleName: string;
+-         /**
+           * Whether the module was already (once before) installed into the python environment or
+           * whether this already exists (detected via `pip list`)
+           */
+          isModulePresent?: 'true' | undefined;
+-         action:
+              | 'cancelled' // User cancelled the installation or closed the notebook or the like.
+              | 'displayed' // Install prompt may have been displayed.
+              | 'prompted' // Install prompt was displayed.
+              | 'installed' // Installation disabled (this is what python extension returns).
+              | 'ignored' // Installation disabled (this is what python extension returns).
+              | 'disabled' // Installation disabled (this is what python extension returns).
+              | 'failed' // Installation disabled (this is what python extension returns).
+              | 'install' // User chose install from prompt.
+              | 'donotinstall' // User chose not to install from prompt.
+              | 'differentKernel' // User chose to select a different kernel.
+              | 'error' // Some other error.
+              | 'installedInJupyter' // The package was successfully installed in Jupyter whilst failed to install in Python ext.
+              | 'failedToInstallInJupyter' // Failed to install the package in Jupyter as well as Python ext.
+              | 'dismissed';
+-   // User chose to dismiss the prompt.
+    resourceType?: 'notebook' | 'interactive';
+-         /**
+           * Hash of the resource (notebook.uri or pythonfile.uri associated with this).
+           * If we run the same notebook tomorrow, the hash will be the same.
+           */
+          resourceHash?: string;
+-         pythonEnvType?: EnvironmentType;
 
 ## Locations Used
 
 [src/kernels/installer/productInstaller.ts#L299](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/installer/productInstaller.ts#L299)
+
 ```typescript
             action = 'failed';
             throw ex;
@@ -6935,8 +6279,8 @@ No description provided
             });
 ```
 
-
 [src/kernels/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L152](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/interpreter/jupyterInterpreterDependencyService.ts#L152)
+
 ```typescript
                 pipInstalledInNonCondaEnv === false ? [Product.pip].concat(missingProducts) : missingProducts,
                 interpreter.displayName
@@ -6947,8 +6291,8 @@ No description provided
                 pythonEnvType: interpreter.envType
 ```
 
-
 [src/platform/datascience/data-viewing/dataViewerDependencyService.ts#L71](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/data-viewing/dataViewerDependencyService.ts#L71)
+
 ```typescript
         interpreter: PythonEnvironment,
         tokenSource: CancellationTokenSource
@@ -6959,8 +6303,8 @@ No description provided
             pythonEnvType: interpreter?.envType
 ```
 
-
 [src/kernels/kernelDependencyService.ts#L212](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelDependencyService.ts#L212)
+
 ```typescript
         const productNameForTelemetry = products.map((product) => ProductNames.get(product)!).join(', ');
         const resourceType = resource ? getResourceType(resource) : undefined;
@@ -6971,8 +6315,8 @@ No description provided
             resourceType,
 ```
 
-
 [src/kernels/kernelDependencyService.ts#L230](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelDependencyService.ts#L230)
+
 ```typescript
         const options = resource ? [Common.install(), selectKernel] : [Common.install()];
         try {
@@ -6983,8 +6327,8 @@ No description provided
                     resourceType,
 ```
 
-
 [src/kernels/kernelDependencyService.ts#L246](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelDependencyService.ts#L246)
+
 ```typescript
                       promptCancellationPromise
                   ]);
@@ -6995,8 +6339,8 @@ No description provided
                     resourceType,
 ```
 
-
 [src/kernels/kernelDependencyService.ts#L256](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelDependencyService.ts#L256)
+
 ```typescript
                 return KernelInterpreterDependencyResponse.cancel;
             }
@@ -7007,8 +6351,8 @@ No description provided
                     resourceType,
 ```
 
-
 [src/kernels/kernelDependencyService.ts#L265](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelDependencyService.ts#L265)
+
 ```typescript
                 });
                 return KernelInterpreterDependencyResponse.selectDifferentKernel;
@@ -7019,8 +6363,8 @@ No description provided
                     resourceType,
 ```
 
-
 [src/kernels/kernelDependencyService.ts#L289](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelDependencyService.ts#L289)
+
 ```typescript
                     cancellationPromise
                 ]);
@@ -7031,8 +6375,8 @@ No description provided
                         resourceType,
 ```
 
-
 [src/kernels/kernelDependencyService.ts#L298](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelDependencyService.ts#L298)
+
 ```typescript
                     });
                     return KernelInterpreterDependencyResponse.ok;
@@ -7043,8 +6387,8 @@ No description provided
                         resourceType,
 ```
 
-
 [src/kernels/kernelDependencyService.ts#L309](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelDependencyService.ts#L309)
+
 ```typescript
                 }
             }
@@ -7055,8 +6399,8 @@ No description provided
                 resourceType,
 ```
 
-
 [src/kernels/kernelDependencyService.ts#L319](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelDependencyService.ts#L319)
+
 ```typescript
             return KernelInterpreterDependencyResponse.cancel;
         } catch (ex) {
@@ -7073,20 +6417,19 @@ No description provided
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-- 
-        action:
-            | 'displayed' // Message displayed.
-            | 'dismissed' // user dismissed the message.
-            | 'download';
+-         action:
+              | 'displayed' // Message displayed.
+              | 'dismissed' // user dismissed the message.
+              | 'download';
 
 ## Locations Used
 
 [src/notebooks/controllers/noPythonKernelsNotebookController.ts#L77](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/noPythonKernelsNotebookController.ts#L77)
+
 ```typescript
         }
     }
@@ -7097,8 +6440,8 @@ No description provided
             { modal: true },
 ```
 
-
 [src/notebooks/controllers/noPythonKernelsNotebookController.ts#L84](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/noPythonKernelsNotebookController.ts#L84)
+
 ```typescript
             Common.install()
         );
@@ -7109,8 +6452,8 @@ No description provided
             sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'dismissed' });
 ```
 
-
 [src/notebooks/controllers/noPythonKernelsNotebookController.ts#L87](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/noPythonKernelsNotebookController.ts#L87)
+
 ```typescript
             sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'download' });
             this.appShell.openUrl('https://www.python.org/downloads');
@@ -7127,19 +6470,16 @@ No description provided
 
 ## Description
 
-
-
- Telemetry send when we create a notebook for a raw kernel or jupyter
+Telemetry send when we create a notebook for a raw kernel or jupyter
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/raw/session/hostRawNotebookProvider.ts#L93](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/hostRawNotebookProvider.ts#L93)
+
 ```typescript
         return this.rawNotebookSupportedService.isSupported;
     }
@@ -7156,23 +6496,19 @@ No properties for event
 
 ## Description
 
-
-
-
- After starting a kernel we send a request to get the kernel info.
- This tracks the total time taken to get the response back (or wether we timedout).
- If we timeout and later we find successful comms for this session, then timeout is too low
- or we need more attempts.
+After starting a kernel we send a request to get the kernel info.
+This tracks the total time taken to get the response back (or wether we timedout).
+If we timeout and later we find successful comms for this session, then timeout is too low
+or we need more attempts.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/raw/session/rawJupyterSession.ts#L349](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.ts#L349)
+
 ```typescript
         } else {
             traceWarning(`Didn't get response for requestKernelInfo after ${stopWatch.elapsedTime}ms.`);
@@ -7189,18 +6525,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/raw/launcher/kernelProcess.ts#L119](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/launcher/kernelProcess.ts#L119)
+
 ```typescript
         }
     }
@@ -7217,19 +6551,16 @@ No properties for event
 
 ## Description
 
-
-
- Raw kernel timing events
+Raw kernel timing events
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/raw/session/rawJupyterSession.ts#L146](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.ts#L146)
+
 ```typescript
                 throw error;
             }
@@ -7246,20 +6577,16 @@ No properties for event
 
 ## Description
 
-
-
-
- This event is sent when a RawSession's `dispose` method is called.
+This event is sent when a RawSession's `dispose` method is called.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/raw/session/rawSession.ts#L95](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawSession.ts#L95)
+
 ```typescript
     public async dispose() {
         // We want to know who called dispose on us
@@ -7276,21 +6603,17 @@ No properties for event
 
 ## Description
 
-
-
-
- This event is sent when the underlying kernelProcess for a
- RawJupyterSession exits.
+This event is sent when the underlying kernelProcess for a
+RawJupyterSession exits.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/raw/launcher/kernelLauncher.ts#L213](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/launcher/kernelLauncher.ts#L213)
+
 ```typescript
 
         const disposable = kernelProcess.exited(
@@ -7301,28 +6624,28 @@ No properties for event
                 });
 ```
 
-
 [src/kernels/raw/session/rawSession.ts#L255](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawSession.ts#L255)
+
 ```typescript
-        traceError(`Disposing session as kernel process died ExitCode: ${e.exitCode}, Reason: ${e.reason}`);
-        // Send telemetry so we know why the kernel process exited,
-        // as this affects our kernel startup success
-        sendTelemetryEvent(Telemetry.RawKernelSessionKernelProcessExited, undefined, {
-            exitCode: e.exitCode,
-            exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(e.reason)
-        });
+traceError(`Disposing session as kernel process died ExitCode: ${e.exitCode}, Reason: ${e.reason}`);
+// Send telemetry so we know why the kernel process exited,
+// as this affects our kernel startup success
+sendTelemetryEvent(Telemetry.RawKernelSessionKernelProcessExited, undefined, {
+    exitCode: e.exitCode,
+    exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(e.reason)
+});
 ```
 
-
 [src/kernels/raw/session/rawJupyterSession.ts#L190](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.ts#L190)
+
 ```typescript
-            if (session !== this.session) {
-                return;
-            }
-            sendTelemetryEvent(Telemetry.RawKernelSessionKernelProcessExited, undefined, {
-                exitCode,
-                exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(reason)
-            });
+if (session !== this.session) {
+    return;
+}
+sendTelemetryEvent(Telemetry.RawKernelSessionKernelProcessExited, undefined, {
+    exitCode,
+    exitReason: getTelemetrySafeErrorMessageFromPythonTraceback(reason)
+});
 ```
 
 </details>
@@ -7331,26 +6654,24 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/helpers.ts#L1951](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/helpers.ts#L1951)
+
 ```typescript
-    const isLocal = isLocalConnection(controller?.connection);
-    const rawLocalKernel = serviceContainer.get<IRawNotebookProvider>(IRawNotebookProvider).isSupported && isLocal;
-    if (rawLocalKernel && context === 'start') {
-        sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartNoIpykernel, {
-            reason: handleResult
-        });
-    }
+const isLocal = isLocalConnection(controller?.connection);
+const rawLocalKernel = serviceContainer.get<IRawNotebookProvider>(IRawNotebookProvider).isSupported && isLocal;
+if (rawLocalKernel && context === 'start') {
+    sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartNoIpykernel, {
+        reason: handleResult
+    });
+}
 ```
 
 </details>
@@ -7359,21 +6680,17 @@ No properties for event
 
 ## Description
 
-
-
-
- This event is sent when a RawJupyterSession's `shutdownSession`
- method is called.
+This event is sent when a RawJupyterSession's `shutdownSession`
+method is called.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/raw/session/rawJupyterSession.ts#L164](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.ts#L164)
+
 ```typescript
         // We want to know why we got shut down
         const stacktrace = new Error().stack;
@@ -7390,31 +6707,27 @@ No properties for event
 
 ## Description
 
-
-
- Raw kernel single events
+Raw kernel single events
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/raw/session/rawJupyterSession.ts#L87](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.ts#L87)
-```typescript
-            Cancellation.throwIfCanceled(options.token);
-            // Only connect our session if we didn't cancel or timeout
-            sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStartSuccess);
-            sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime);
-            traceInfo('Raw session started and connected');
-            this.setSession(newSession);
 
+```typescript
+Cancellation.throwIfCanceled(options.token);
+// Only connect our session if we didn't cancel or timeout
+sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStartSuccess);
+sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime);
+traceInfo('Raw session started and connected');
+this.setSession(newSession);
 ```
 
-
 [src/kernels/raw/session/rawJupyterSession.ts#L104](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.ts#L104)
+
 ```typescript
             if (error instanceof CancellationError) {
                 sendKernelTelemetryEvent(
@@ -7425,8 +6738,8 @@ No properties for event
                     error
 ```
 
-
 [src/kernels/raw/session/rawJupyterSession.ts#L115](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.ts#L115)
+
 ```typescript
             } else if (error instanceof TimedOutError) {
                 sendKernelTelemetryEvent(
@@ -7437,8 +6750,8 @@ No properties for event
                     error
 ```
 
-
 [src/kernels/raw/session/rawJupyterSession.ts#L127](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.ts#L127)
+
 ```typescript
                 // Send our telemetry event with the error included
                 sendKernelTelemetryEvent(
@@ -7455,18 +6768,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/raw/session/rawJupyterSession.ts#L135](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.ts#L135)
+
 ```typescript
                 );
                 sendKernelTelemetryEvent(
@@ -7483,26 +6794,24 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/raw/session/rawJupyterSession.ts#L86](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.ts#L86)
+
 ```typescript
-            newSession = await this.startRawSession(options);
-            Cancellation.throwIfCanceled(options.token);
-            // Only connect our session if we didn't cancel or timeout
-            sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStartSuccess);
-            sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime);
-            traceInfo('Raw session started and connected');
-            this.setSession(newSession);
+newSession = await this.startRawSession(options);
+Cancellation.throwIfCanceled(options.token);
+// Only connect our session if we didn't cancel or timeout
+sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStartSuccess);
+sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime);
+traceInfo('Raw session started and connected');
+this.setSession(newSession);
 ```
 
 </details>
@@ -7511,18 +6820,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/raw/session/rawJupyterSession.ts#L120](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.ts#L120)
+
 ```typescript
                     undefined,
                     error
@@ -7539,18 +6846,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/raw/session/rawJupyterSession.ts#L109](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.ts#L109)
+
 ```typescript
                     undefined,
                     error
@@ -7567,18 +6872,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/raw/session/rawJupyterSession.ts#L237](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.ts#L237)
+
 ```typescript
         return this.startRawSession({ token: cancelToken, ui: new DisplayOptions(disableUI) });
     }
@@ -7595,18 +6898,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/jupyterKernelService.ts#L225](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/jupyterKernelService.ts#L225)
+
 ```typescript
             );
         }
@@ -7623,16 +6924,14 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-- 
-        /**
-         * Number of kernel specs.
-         */
-        count: number;
+-         /**
+           * Number of kernel specs.
+           */
+          count: number;
 
 ## Locations Used
 
@@ -7644,18 +6943,16 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/notebooks/execution/kernelExecution.ts#L270](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/kernelExecution.ts#L270)
+
 ```typescript
     }
 
@@ -7672,18 +6969,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/notebooks/execution/kernelExecution.ts#L269](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/kernelExecution.ts#L269)
+
 ```typescript
         });
     }
@@ -7700,25 +6995,24 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-- 
-        /**
-         * The result of the selection.
-         * notSelected - No interpreter was selected.
-         * selected - An interpreter was selected (and configured to have jupyter and notebook).
-         * installationCancelled - Installation of jupyter and/or notebook was cancelled for an interpreter.
-         *
-         * @type {('notSelected' | 'selected' | 'installationCancelled')}
-         */
-        result?: 'notSelected' | 'selected' | 'installationCancelled';
+-         /**
+           * The result of the selection.
+           * notSelected - No interpreter was selected.
+           * selected - An interpreter was selected (and configured to have jupyter and notebook).
+           * installationCancelled - Installation of jupyter and/or notebook was cancelled for an interpreter.
+           *
+           * @type {('notSelected' | 'selected' | 'installationCancelled')}
+           */
+          result?: 'notSelected' | 'selected' | 'installationCancelled';
 
 ## Locations Used
 
 [src/kernels/jupyter/interpreter/jupyterInterpreterService.ts#L86](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/interpreter/jupyterInterpreterService.ts#L86)
+
 ```typescript
     public async selectInterpreter(): Promise<PythonEnvironment | undefined> {
         const interpreter = await this.jupyterInterpreterSelector.selectInterpreter();
@@ -7729,8 +7023,8 @@ No description provided
 
 ```
 
-
 [src/kernels/jupyter/interpreter/jupyterInterpreterService.ts#L97](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/interpreter/jupyterInterpreterService.ts#L97)
+
 ```typescript
                 return interpreter;
             }
@@ -7741,8 +7035,8 @@ No description provided
                 return this.selectInterpreter();
 ```
 
-
 [src/kernels/jupyter/interpreter/jupyterInterpreterService.ts#L162](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/interpreter/jupyterInterpreterService.ts#L162)
+
 ```typescript
         this._selectedInterpreter = interpreter;
         this._onDidChangeInterpreter.fire(interpreter);
@@ -7759,18 +7053,16 @@ No description provided
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService.ts#L86](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService.ts#L86)
+
 ```typescript
             if (!interpreter) {
                 // Unlikely scenario, user hasn't selected python, python extension will fall over.
@@ -7787,18 +7079,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/datascience/datascience.ts#L126](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/datascience.ts#L126)
+
 ```typescript
                     resultSettings[k] = currentValue;
                 }
@@ -7815,18 +7105,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/datascience/shiftEnterBanner.ts#L68](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/shiftEnterBanner.ts#L68)
+
 ```typescript
             return;
         }
@@ -7837,8 +7125,8 @@ No properties for event
             case this.bannerLabels[InteractiveShiftEnterLabelIndex.Yes]: {
 ```
 
-
 [src/test/datascience/shiftEnterBanner.unit.test.ts#L68](https://github.com/microsoft/vscode-jupyter/tree/main/src/test/datascience/shiftEnterBanner.unit.test.ts#L68)
+
 ```typescript
         config.verifyAll();
 
@@ -7849,8 +7137,8 @@ No properties for event
     });
 ```
 
-
 [src/test/datascience/shiftEnterBanner.unit.test.ts#L99](https://github.com/microsoft/vscode-jupyter/tree/main/src/test/datascience/shiftEnterBanner.unit.test.ts#L99)
+
 ```typescript
         config.verifyAll();
 
@@ -7867,18 +7155,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/datascience/data-viewing/dataViewerDependencyService.ts#L60](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/data-viewing/dataViewerDependencyService.ts#L60)
+
 ```typescript
                 throw new Error(DataScience.pandasTooOldForViewingFormat().format(versionStr));
             }
@@ -7895,26 +7181,24 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/datascience/data-viewing/dataViewerDependencyService.ts#L54](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/data-viewing/dataViewerDependencyService.ts#L54)
+
 ```typescript
-                if (isVersionOfPandasSupported(pandasVersion)) {
-                    return;
-                }
-                sendTelemetryEvent(Telemetry.PandasTooOld);
-                // Warn user that we cannot start because pandas is too old.
-                const versionStr = `${pandasVersion.major}.${pandasVersion.minor}.${pandasVersion.build}`;
-                throw new Error(DataScience.pandasTooOldForViewingFormat().format(versionStr));
+if (isVersionOfPandasSupported(pandasVersion)) {
+    return;
+}
+sendTelemetryEvent(Telemetry.PandasTooOld);
+// Warn user that we cannot start because pandas is too old.
+const versionStr = `${pandasVersion.major}.${pandasVersion.minor}.${pandasVersion.build}`;
+throw new Error(DataScience.pandasTooOldForViewingFormat().format(versionStr));
 ```
 
 </details>
@@ -7923,20 +7207,16 @@ No properties for event
 
 ## Description
 
-
-
-
- Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.
+Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/kernel.ts#L351](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.ts#L351)
+
 ```typescript
             this.perceivedJupyterStartupTelemetryCaptured = true;
             sendTelemetryEvent(Telemetry.PerceivedJupyterStartupNotebook, stopWatch.elapsedTime);
@@ -7953,18 +7233,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/launcher/notebookStarter.ts#L150](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/notebookStarter.ts#L150)
+
 ```typescript
             }
 
@@ -7981,15 +7259,11 @@ No properties for event
 
 ## Description
 
-
-
- Telemetry sent when starting auto starting Native Notebook kernel fails silently.
+Telemetry sent when starting auto starting Native Notebook kernel fails silently.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -8001,23 +7275,19 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
+Telemetry event sent when starting a session for a local connection failed.
 
-
-
- Telemetry event sent when starting a session for a local connection failed.
-
- @type {(undefined | never)}
- @memberof IEventNamePropertyMapping
+@type {(undefined | never)}
+@memberof IEventNamePropertyMapping
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/common/baseJupyterSession.ts#L40](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/common/baseJupyterSession.ts#L40)
+
 ```typescript
 export class JupyterSessionStartError extends WrappedError {
     constructor(originalException: Error) {
@@ -8025,7 +7295,6 @@ export class JupyterSessionStartError extends WrappedError {
         sendTelemetryEvent(Telemetry.StartSessionFailedJupyter, undefined, undefined, originalException, true);
     }
 }
-
 ```
 
 </details>
@@ -8034,18 +7303,16 @@ export class JupyterSessionStartError extends WrappedError {
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/notebooks/controllers/vscodeNotebookController.ts#L566](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/vscodeNotebookController.ts#L566)
+
 ```typescript
             default:
             // We don't know as its the default kernel on Jupyter server.
@@ -8062,16 +7329,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
--  language: string
+-   language: string
 
 ## Locations Used
 
 [src/platform/datascience/common.ts#L171](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/common.ts#L171)
+
 ```typescript
 }
 
@@ -8082,8 +7349,8 @@ export function sendNotebookOrKernelLanguageTelemetry(
     language = getTelemetrySafeLanguage(language);
 ```
 
-
 [src/notebooks/controllers/vscodeNotebookController.ts#L548](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/vscodeNotebookController.ts#L548)
+
 ```typescript
         }
         switch (this.connection.kind) {
@@ -8094,8 +7361,8 @@ export function sendNotebookOrKernelLanguageTelemetry(
                 sendNotebookOrKernelLanguageTelemetry(
 ```
 
-
 [src/notebooks/controllers/vscodeNotebookController.ts#L552](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/vscodeNotebookController.ts#L552)
+
 ```typescript
                 break;
             case 'connectToLiveKernel':
@@ -8106,8 +7373,8 @@ export function sendNotebookOrKernelLanguageTelemetry(
                 break;
 ```
 
-
 [src/notebooks/controllers/vscodeNotebookController.ts#L559](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/vscodeNotebookController.ts#L559)
+
 ```typescript
             case 'startUsingLocalKernelSpec':
             case 'startUsingRemoteKernelSpec':
@@ -8124,14 +7391,11 @@ export function sendNotebookOrKernelLanguageTelemetry(
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -8143,15 +7407,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
-
- Sync events
+Sync events
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -8163,14 +7423,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -8182,14 +7439,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -8201,14 +7455,11 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
@@ -8220,18 +7471,16 @@ Event can be removed. Not referenced anywhere
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/variables/jupyterVariables.ts#L42](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/variables/jupyterVariables.ts#L42)
+
 ```typescript
     }
 
@@ -8248,16 +7497,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
--  variableCount: number
+-   variableCount: number
 
 ## Locations Used
 
 [src/platform/datascience/variablesView/variableView.ts#L187](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/variablesView/variableView.ts#L187)
+
 ```typescript
             const response = await this.variables.getVariables(args, activeNotebook);
 
@@ -8274,25 +7523,23 @@ No description provided
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-- 
-        isErrorOutput: boolean;
+-         isErrorOutput: boolean;
 
 ## Locations Used
 
 [src/notebooks/helpers.ts#L736](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/helpers.ts#L736)
-```typescript
-            // Unless we already know its an unknown output type.
-            const outputType: nbformat.OutputType =
-                <nbformat.OutputType>customMetadata?.outputType || (isStream ? 'stream' : 'display_data');
-            sendTelemetryEvent(Telemetry.VSCNotebookCellTranslationFailed, undefined, {
-                isErrorOutput: outputType === 'error'
-            });
 
+```typescript
+// Unless we already know its an unknown output type.
+const outputType: nbformat.OutputType =
+    <nbformat.OutputType>customMetadata?.outputType || (isStream ? 'stream' : 'display_data');
+sendTelemetryEvent(Telemetry.VSCNotebookCellTranslationFailed, undefined, {
+    isErrorOutput: outputType === 'error'
+});
 ```
 
 </details>
@@ -8301,18 +7548,16 @@ No description provided
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/jupyter/session/jupyterSession.ts#L78](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/session/jupyterSession.ts#L78)
+
 ```typescript
         super(resource, kernelConnectionMetadata, restartSessionUsed, workingDirectory, interruptTimeout);
     }
@@ -8329,16 +7574,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
--  type: string
+-   type: string
 
 ## Locations Used
 
 [src/platform/datascience/webviews/webviewHost.ts#L282](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/webviews/webviewHost.ts#L282)
+
 ```typescript
     protected webViewRendered() {
         if (this.webviewInit && !this.webviewInit.resolved) {
@@ -8355,18 +7600,16 @@ No description provided
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/datascience/webviews/webviewHost.ts#L300](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/datascience/webviews/webviewHost.ts#L300)
+
 ```typescript
         this.dispose();
     };
@@ -8383,20 +7626,16 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry event sent when the ZMQ native binaries do work.
+Telemetry event sent when the ZMQ native binaries do work.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/raw/session/rawNotebookSupportedService.ts#L43](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawNotebookSupportedService.ts#L43)
+
 ```typescript
         try {
             require('zeromq');
@@ -8413,20 +7652,16 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry event sent when the ZMQ native binaries do not work.
+Telemetry event sent when the ZMQ native binaries do not work.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/kernels/raw/session/rawNotebookSupportedService.ts#L47](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawNotebookSupportedService.ts#L47)
+
 ```typescript
             this._isSupported = true;
         } catch (e) {
@@ -8443,20 +7678,16 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry event sent when substituting Environment variables to calculate value of variables
+Telemetry event sent when substituting Environment variables to calculate value of variables
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/common/variables/environment.ts#L173](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/variables/environment.ts#L173)
+
 ```typescript
     });
     if (!invalid && replacement !== value) {
@@ -8473,20 +7704,16 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry event sent when an environment file is detected in the workspace.
+Telemetry event sent when an environment file is detected in the workspace.
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/telemetry/envFileTelemetry.ts#L46](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/envFileTelemetry.ts#L46)
+
 ```typescript
 }
 
@@ -8503,20 +7730,16 @@ function sendTelemetry(hasCustomEnvPath: boolean = false) {
 
 ## Description
 
-
-
-
- Telemetry event sent with details just after editor loads
+Telemetry event sent with details just after editor loads
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/telemetry/types.ts#L10](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/types.ts#L10)
+
 ```typescript
 import { IEventNamePropertyMapping } from '../telemetry/index';
 import { EventName } from './constants';
@@ -8524,11 +7747,10 @@ import { EventName } from './constants';
 export type EditorLoadTelemetry = IEventNamePropertyMapping[EventName.EXTENSION_LOAD];
 export const IImportTracker = Symbol('IImportTracker');
 export interface IImportTracker {}
-
 ```
 
-
 [src/platform/startupTelemetry.ts#L31](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/startupTelemetry.ts#L31)
+
 ```typescript
         await activatedPromise;
         durations.totalActivateTime = stopWatch.elapsedTime;
@@ -8539,8 +7761,8 @@ export interface IImportTracker {}
     }
 ```
 
-
 [src/platform/startupTelemetry.ts#L52](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/startupTelemetry.ts#L52)
+
 ```typescript
                 traceError('getActivationTelemetryProps() failed.', ex);
             }
@@ -8557,20 +7779,16 @@ export interface IImportTracker {}
 
 ## Description
 
-
-
-
- Telemetry event sent with details when tracking imports
+Telemetry event sent with details when tracking imports
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/telemetry/importTracker.ts#L205](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/importTracker.ts#L205)
+
 ```typescript
         // Hash the package name so that we will never accidentally see a
         // user's private package name.
@@ -8581,8 +7799,8 @@ No properties for event
     private lookForImports(lines: (string | undefined)[]) {
 ```
 
-
 [src/test/telemetry/importTracker.unit.test.ts#L44](https://github.com/microsoft/vscode-jupyter/tree/main/src/test/telemetry/importTracker.unit.test.ts#L44)
+
 ```typescript
         public static expectHashes(...hashes: string[]) {
             expect(Reporter.eventNames).to.contain(EventName.HASHED_PACKAGE_PERF);
@@ -8599,18 +7817,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/telemetry/importTracker.ts#L158](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/importTracker.ts#L158)
+
 ```typescript
         }
     }
@@ -8621,8 +7837,8 @@ No properties for event
         const lines = this.getNotebookDocumentLines(e);
 ```
 
-
 [src/telemetry/importTracker.ts#L165](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/importTracker.ts#L165)
+
 ```typescript
         this.lookForImports(lines);
     }
@@ -8633,8 +7849,8 @@ No properties for event
             return;
 ```
 
-
 [src/telemetry/importTracker.ts#L189](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/importTracker.ts#L189)
+
 ```typescript
         this.lookForImports(result);
     }
@@ -8645,8 +7861,8 @@ No properties for event
         const lines = this.getDocumentLines(document);
 ```
 
-
 [src/test/telemetry/importTracker.unit.test.ts#L42](https://github.com/microsoft/vscode-jupyter/tree/main/src/test/telemetry/importTracker.unit.test.ts#L42)
+
 ```typescript
         public static measures: {}[] = [];
 
@@ -8663,20 +7879,16 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry event sent with details when a user has requested to opt it or out of an experiment group
+Telemetry event sent with details when a user has requested to opt it or out of an experiment group
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/common/experiments/service.ts#L104](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/experiments/service.ts#L104)
+
 ```typescript
         // so we need to perform these checks and send the corresponding telemetry manually.
         switch (this.getOptInOptOutStatus(experiment)) {
@@ -8687,8 +7899,8 @@ No properties for event
 
 ```
 
-
 [src/platform/common/experiments/service.ts#L112](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/experiments/service.ts#L112)
+
 ```typescript
             }
             case 'optIn': {
@@ -8699,28 +7911,28 @@ No properties for event
 
 ```
 
-
 [src/test/common/experiments/service.unit.test.ts#L221](https://github.com/microsoft/vscode-jupyter/tree/main/src/test/common/experiments/service.unit.test.ts#L221)
+
 ```typescript
-            assert.isTrue(result);
-            assert.equal(telemetryEvents.length, 1);
-            assert.deepEqual(telemetryEvents[0], {
-                eventName: EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT,
-                properties: { expNameOptedInto: experiment }
-            });
-            sinon.assert.calledOnce(isCachedFlightEnabledStub);
+assert.isTrue(result);
+assert.equal(telemetryEvents.length, 1);
+assert.deepEqual(telemetryEvents[0], {
+    eventName: EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT,
+    properties: { expNameOptedInto: experiment }
+});
+sinon.assert.calledOnce(isCachedFlightEnabledStub);
 ```
 
-
 [src/test/common/experiments/service.unit.test.ts#L241](https://github.com/microsoft/vscode-jupyter/tree/main/src/test/common/experiments/service.unit.test.ts#L241)
+
 ```typescript
-            assert.isFalse(result);
-            assert.equal(telemetryEvents.length, 1);
-            assert.deepEqual(telemetryEvents[0], {
-                eventName: EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT,
-                properties: { expNameOptedOutOf: experiment }
-            });
-            sinon.assert.notCalled(isCachedFlightEnabledStub);
+assert.isFalse(result);
+assert.equal(telemetryEvents.length, 1);
+assert.deepEqual(telemetryEvents[0], {
+    eventName: EventName.JUPYTER_EXPERIMENTS_OPT_IN_OUT,
+    properties: { expNameOptedOutOf: experiment }
+});
+sinon.assert.notCalled(isCachedFlightEnabledStub);
 ```
 
 </details>
@@ -8729,18 +7941,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/commands/commandRegistry.ts#L566](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/commandRegistry.ts#L566)
+
 ```typescript
                     sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS);
                 }
@@ -8757,18 +7967,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/commands/commandRegistry.ts#L539](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/commandRegistry.ts#L539)
+
 ```typescript
         return this.commandManager.executeCommand('outline.focus');
     }
@@ -8785,18 +7993,16 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/interactive-window/commands/commandRegistry.ts#L563](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/commandRegistry.ts#L563)
+
 ```typescript
                 if (columnSize && (await this.dataViewerChecker.isRequestedColumnSizeAllowed(columnSize))) {
                     const title: string = `${DataScience.dataExplorerTitle()} - ${jupyterVariable.name}`;
@@ -8813,20 +8019,16 @@ No properties for event
 
 ## Description
 
-
-
-
- Telemetry event sent after fetching the OS version
+Telemetry event sent after fetching the OS version
 
 ## Properties
 
-
 No properties for event
-
 
 ## Locations Used
 
 [src/platform/common/platform/platformService.ts#L21](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/platform/platformService.ts#L21)
+
 ```typescript
     public version?: SemVer;
     constructor() {
@@ -8837,8 +8039,8 @@ No properties for event
         }
 ```
 
-
 [src/platform/common/platform/platformService.ts#L45](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/platform/platformService.ts#L45)
+
 ```typescript
                 try {
                     const ver = coerce(os.release());
@@ -8849,8 +8051,8 @@ No properties for event
                         return (this.version = ver);
 ```
 
-
 [src/platform/common/platform/platformService.ts#L52](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/platform/platformService.ts#L52)
+
 ```typescript
                     }
                     throw new Error('Unable to parse version');
@@ -8867,44 +8069,40 @@ No properties for event
 
 ## Description
 
-
 No description provided
 
 ## Properties
 
-- 
-        /**
-         * Carries `true` if environment variables are present, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        hasEnvVars?: boolean;
-- 
-        /**
-         * Carries `true` if fetching environment variables failed, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        failed?: boolean;
-- 
-        /**
-         * Whether the environment was activated within a terminal or not.
-         *
-         * @type {boolean}
-         */
-        activatedInTerminal?: boolean;
-- 
-        /**
-         * Whether the environment was activated by the wrapper class.
-         * If `true`, this telemetry is sent by the class that wraps the two activation providers   .
-         *
-         * @type {boolean}
-         */
-        activatedByWrapper?: boolean;
+-         /**
+           * Carries `true` if environment variables are present, `false` otherwise
+           *
+           * @type {boolean}
+           */
+          hasEnvVars?: boolean;
+-         /**
+           * Carries `true` if fetching environment variables failed, `false` otherwise
+           *
+           * @type {boolean}
+           */
+          failed?: boolean;
+-         /**
+           * Whether the environment was activated within a terminal or not.
+           *
+           * @type {boolean}
+           */
+          activatedInTerminal?: boolean;
+-         /**
+           * Whether the environment was activated by the wrapper class.
+           * If `true`, this telemetry is sent by the class that wraps the two activation providers   .
+           *
+           * @type {boolean}
+           */
+          activatedByWrapper?: boolean;
 
 ## Locations Used
 
 [src/platform/common/process/pythonExecutionFactory.ts#L164](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/process/pythonExecutionFactory.ts#L164)
+
 ```typescript
             options.allowEnvironmentFetchExceptions
         );

@@ -6,10 +6,10 @@
 import { inject, injectable } from 'inversify';
 import { ICommandManager } from '../../platform/common/application/types';
 import { IDisposable } from '../../platform/common/types';
-import { traceInfo } from '../../platform/common/logger.node';
 import { Uri } from 'vscode';
 import { JupyterServerSelector } from '../../kernels/jupyter/serverSelector.node';
-import { Commands } from '../common/constants.node';
+import { Commands } from '../common/constants';
+import { traceInfo } from '../logging';
 
 @injectable()
 export class JupyterServerSelectorCommand implements IDisposable {

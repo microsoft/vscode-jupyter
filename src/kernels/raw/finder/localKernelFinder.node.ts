@@ -16,23 +16,28 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAnd
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { createPromiseFromCancellation } from '../../../platform/common/cancellation.node';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants.node';
-import { traceInfo, traceError } from '../../../platform/common/logger.node';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import {
+    traceInfo,
+    traceError,
+    traceDecoratorVerbose,
+    ignoreLogging,
+    traceDecoratorError
+} from '../../../platform/logging';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IMemento, GLOBAL_MEMENTO, Resource } from '../../../platform/common/types';
 import { isPythonNotebook } from '../../../notebooks/helpers.node';
 import { sendKernelListTelemetry } from '../../../telemetry/kernelTelemetry.node';
 import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
-import { traceDecorators } from '../../../platform/logging/index.node';
-import { ignoreLogging, TraceOptions } from '../../../platform/logging/trace.node';
 import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/interpreter.node';
-import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry/index.node';
-import { getTelemetrySafeLanguage } from '../../../telemetry/helpers.node';
+import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
+import { getTelemetrySafeLanguage } from '../../../telemetry/helpers';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { ILocalKernelFinder } from '../types';
-import { swallowExceptions } from '../../../platform/common/utils/decorators.node';
-import { noop } from '../../../platform/common/utils/misc.node';
+import { swallowExceptions } from '../../../platform/common/utils/decorators';
+import { noop } from '../../../platform/common/utils/misc';
 import { getResourceType } from '../../../platform/common/utils.node';
+import { TraceOptions } from '../../../platform/logging/types';
 
 const GlobalKernelSpecsCacheKey = 'JUPYTER_GLOBAL_KERNELSPECS_V2';
 const LocalKernelSpecConnectionsCacheKey = 'LOCAL_KERNEL_SPEC_CONNECTIONS_CACHE_KEY_V2';
@@ -51,7 +56,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
         @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}
-    @traceDecorators.verbose('Find kernel spec', TraceOptions.BeforeCall | TraceOptions.Arguments)
+    @traceDecoratorVerbose('Find kernel spec', TraceOptions.BeforeCall | TraceOptions.Arguments)
     @captureTelemetry(Telemetry.KernelFinderPerf)
     public async findKernel(
         resource: Resource,
@@ -120,7 +125,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     /**
      * Search all our local file system locations for installed kernel specs and return them
      */
-    @traceDecorators.error('List kernels failed')
+    @traceDecoratorError('List kernels failed')
     public async listKernels(
         resource: Resource,
         @ignoreLogging() cancelToken?: CancellationToken,

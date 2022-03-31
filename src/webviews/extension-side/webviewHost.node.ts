@@ -3,7 +3,7 @@
 
 'use strict';
 
-import '../../platform/common/extensions.node';
+import '../../platform/common/extensions';
 
 import {
     ConfigurationChangeEvent,
@@ -15,15 +15,15 @@ import {
     WorkspaceConfiguration
 } from 'vscode';
 import { IWebview, IWorkspaceService } from '../../platform/common/application/types';
-import { isTestExecution } from '../../platform/common/constants.node';
-import { traceInfo } from '../../platform/common/logger.node';
+import { isTestExecution } from '../../platform/common/constants';
+import { traceInfo } from '../../platform/logging';
 import { Resource, IConfigurationService, IDisposable } from '../../platform/common/types';
 import { Deferred, createDeferred } from '../../platform/common/utils/async';
-import { testOnlyMethod } from '../../platform/common/utils/decorators.node';
-import * as localize from '../../platform/common/utils/localize.node';
-import { StopWatch } from '../../platform/common/utils/stopWatch.node';
+import { testOnlyMethod } from '../../platform/common/utils/decorators';
+import * as localize from '../../platform/common/utils/localize';
+import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { InteractiveWindowMessages, SharedMessages, CssMessages, IGetCssRequest } from '../../platform/messageTypes';
-import { sendTelemetryEvent, captureTelemetry } from '../../telemetry/index.node';
+import { sendTelemetryEvent, captureTelemetry } from '../../telemetry';
 import { DefaultTheme, PythonExtension, Telemetry } from '../webview-side/common/constants';
 import { ICodeCssGenerator, IThemeFinder, IJupyterExtraSettings } from './types';
 

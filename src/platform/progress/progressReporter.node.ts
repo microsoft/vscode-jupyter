@@ -8,7 +8,7 @@ import { CancellationToken, CancellationTokenSource, Progress as VSCProgress, Pr
 import { IApplicationShell } from '../common/application/types';
 import { IDisposable } from '../common/types';
 import { createDeferred } from '../common/utils/async';
-import { noop } from '../common/utils/misc.node';
+import { noop } from '../common/utils/misc';
 import { registerReporter } from './decorator.node';
 import { getUserMessageForAction } from './messages.node';
 import { IProgressReporter, Progress, ReportableAction } from './types';

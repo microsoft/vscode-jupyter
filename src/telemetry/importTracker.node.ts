@@ -6,18 +6,18 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { NotebookCellExecutionStateChangeEvent, NotebookCellKind, NotebookDocument, TextDocument } from 'vscode';
-import { captureTelemetry, sendTelemetryEvent } from './index.node';
+import { captureTelemetry, sendTelemetryEvent } from '.';
 import { splitMultilineString } from '../webviews/webview-side/common';
 import { getAssociatedJupyterNotebook, isJupyterNotebook } from '../notebooks/helpers.node';
 import { IExtensionSingleActivationService } from '../platform/activation/types';
 import { IDocumentManager, IVSCodeNotebook } from '../platform/common/application/types';
-import { isCI, isTestExecution, PYTHON_LANGUAGE } from '../platform/common/constants.node';
-import '../platform/common/extensions.node';
+import { isCI, isTestExecution, PYTHON_LANGUAGE } from '../platform/common/constants';
+import '../platform/common/extensions';
 import { disposeAllDisposables } from '../platform/common/helpers.node';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
-import { noop } from '../platform/common/utils/misc.node';
+import { noop } from '../platform/common/utils/misc';
 import { EventName } from './constants';
-import { getTelemetrySafeHashedString } from './helpers.node';
+import { getTelemetrySafeHashedString } from './helpers';
 
 /*
 Python has a fairly rich import statement. Originally the matching regexp was kept simple for

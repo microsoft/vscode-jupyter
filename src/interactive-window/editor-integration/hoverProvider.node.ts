@@ -7,14 +7,14 @@ import * as vscode from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { Cancellation } from '../../platform/common/cancellation.node';
-import { Identifiers, PYTHON, Telemetry } from '../../platform/common/constants.node';
-import { traceError } from '../../platform/common/logger.node';
+import { Identifiers, PYTHON, Telemetry } from '../../platform/common/constants';
+import { traceError } from '../../platform/logging';
 import { IFileSystem } from '../../platform/common/platform/types.node';
 import { IDisposableRegistry } from '../../platform/common/types';
 
 import { sleep } from '../../platform/common/utils/async';
-import { StopWatch } from '../../platform/common/utils/stopWatch.node';
-import { sendTelemetryEvent } from '../../telemetry/index.node';
+import { StopWatch } from '../../platform/common/utils/stopWatch';
+import { sendTelemetryEvent } from '../../telemetry';
 import { getInteractiveCellMetadata } from '../interactiveWindow.node';
 import { IKernel, IKernelProvider } from '../../kernels/types';
 import { InteractiveWindowView } from '../../notebooks/constants';

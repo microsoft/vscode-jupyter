@@ -5,7 +5,7 @@ import * as glob from 'glob';
 import * as path from 'path';
 import { parse, SemVer } from 'semver';
 import { promisify } from 'util';
-import { traceError, traceVerbose, traceWarning } from '../../platform/common/logger.node';
+import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
 import { arePathsSame } from '../../platform/common/platform/fileUtils.node';
 import { BufferDecoder } from '../../platform/common/process/decoder.node';
 import { ProcessService } from '../../platform/common/process/proc.node';

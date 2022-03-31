@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
-import { traceInfo } from '../../platform/common/logger.node';
+import { traceInfo } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider.node';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common';
@@ -22,7 +22,7 @@ import { ITestWebviewHost } from './testInterfaces';
 import { waitForVariablesToMatch } from './variableView/variableViewHelpers';
 import { ITestVariableViewProvider } from './variableView/variableViewTestInterfaces';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
-import { Commands } from '../../platform/common/constants.node';
+import { Commands } from '../../platform/common/constants';
 import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
 
 suite('Interactive window debugging', async function () {

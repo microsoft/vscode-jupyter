@@ -9,11 +9,11 @@ import {
     Uri,
     WorkspaceConfiguration
 } from 'vscode';
-import '../common/extensions.node';
-import { LogLevel } from '../logging/levels';
+import './extensions';
+import { LogLevel } from '../logging/types';
 import { IWorkspaceService } from './application/types';
-import { WorkspaceService } from './application/workspace.node';
-import { isTestExecution } from './constants.node';
+import { WorkspaceService } from './application/workspace';
+import { isTestExecution } from './constants';
 import {
     IExperiments,
     ILoggingSettings,
@@ -25,7 +25,7 @@ import {
     Resource,
     WidgetCDNs
 } from './types';
-import { debounceSync } from './utils/decorators.node';
+import { debounceSync } from './utils/decorators';
 import { SystemVariables } from './variables/systemVariables.node';
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
@@ -38,7 +38,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
 
     private static jupyterSettings: Map<string, JupyterSettings> = new Map<string, JupyterSettings>();
     public experiments!: IExperiments;
-    public logging: ILoggingSettings = { level: LogLevel.Error };
+    public logging: ILoggingSettings = { level: 'error' };
     public allowImportFromNotebook: boolean = false;
     public allowUnauthorizedRemoteConnection: boolean = false;
     public jupyterInterruptTimeout: number = 10_000;

@@ -1,26 +1,91 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
 
-import type { Uri } from 'vscode';
-import { CallInfo, trace as traceDecorator } from '../common/utils/decorators.node';
-import { TraceInfo, tracing as _tracing } from '../common/utils/misc.node';
-import { sendTelemetryEvent } from '../../telemetry/index.node';
-import { LogLevel } from './levels';
-import { ILogger, logToAll } from './logger.node';
-import { argsToLogString, returnValueToLogString } from './util.node';
-const homeAsLowerCase = (require('untildify')('~') || '').toLowerCase();
+/* eslint-disable @typescript-eslint/ban-types */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-// The information we want to log.
-export enum TraceOptions {
-    None = 0,
-    Arguments = 1,
-    ReturnValue = 2,
-    /**
-     * Default is to log after a method call.
-     * This allows logging of the method call before it is done.
-     */
-    BeforeCall = 4
+import { Disposable, Uri } from 'vscode';
+import { sendTelemetryEvent } from '../../telemetry';
+import { isCI } from '../common/constants';
+import { Arguments, ILogging, LogLevel, TraceDecoratorType, TraceOptions } from './types';
+import { CallInfo, trace as traceDecorator } from '../common/utils/decorators';
+import { TraceInfo, tracing as _tracing } from '../common/utils/misc';
+import { argsToLogString, returnValueToLogString } from './util';
+import { LoggingLevelSettingType } from '../common/types';
+const homeAsLowerCase = (require('untildify')('~') || '').toLowerCase(); // TODO: This will have to be conditional for node only
+const DEFAULT_OPTS: TraceOptions = TraceOptions.Arguments | TraceOptions.ReturnValue;
+
+let loggers: ILogging[] = [];
+export function registerLogger(logger: ILogging): Disposable {
+    loggers.push(logger);
+    return {
+        dispose: () => {
+            loggers = loggers.filter((l) => l !== logger);
+        }
+    };
+}
+
+const logLevelMap: Map<string | undefined, LogLevel> = new Map([
+    ['error', LogLevel.Error],
+    ['warn', LogLevel.Warn],
+    ['info', LogLevel.Info],
+    ['debug', LogLevel.Debug],
+    ['none', LogLevel.Off],
+    ['off', LogLevel.Off],
+    [undefined, LogLevel.Error]
+]);
+
+let globalLoggingLevel: LogLevel;
+export function setLoggingLevel(level?: LoggingLevelSettingType): void {
+    globalLoggingLevel = logLevelMap.get(level) ?? LogLevel.Error;
+}
+
+export function traceLog(message: string, ...args: Arguments): void {
+    loggers.forEach((l) => l.traceLog(message, ...args));
+}
+
+export function traceError(message: string, ...args: Arguments): void {
+    if (globalLoggingLevel >= LogLevel.Error) {
+        loggers.forEach((l) => l.traceError(message, ...args));
+    }
+}
+
+export function traceWarning(message: string, ...args: Arguments): void {
+    if (globalLoggingLevel >= LogLevel.Warn) {
+        loggers.forEach((l) => l.traceWarn(message, ...args));
+    }
+}
+
+export function traceInfo(message: string, ...args: Arguments): void {
+    if (globalLoggingLevel >= LogLevel.Info) {
+        loggers.forEach((l) => l.traceInfo(message, ...args));
+    }
+}
+
+export function traceVerbose(message: string, ...args: Arguments): void {
+    if (globalLoggingLevel >= LogLevel.Debug) {
+        loggers.forEach((l) => l.traceVerbose(message, ...args));
+    }
+}
+export function traceInfoIfCI(message: string, ...args: Arguments): void {
+    if (isCI) {
+        traceInfo(message, ...args);
+    }
+}
+
+/** Logging Decorators go here */
+
+export function traceDecoratorVerbose(message: string, opts: TraceOptions = DEFAULT_OPTS): TraceDecoratorType {
+    return createTracingDecorator({ message, opts, level: LogLevel.Debug });
+}
+export function traceDecoratorError(message: string): TraceDecoratorType {
+    return createTracingDecorator({ message, opts: DEFAULT_OPTS, level: LogLevel.Error });
+}
+export function traceDecoratorInfo(message: string): TraceDecoratorType {
+    return createTracingDecorator({ message, opts: DEFAULT_OPTS, level: LogLevel.Info });
+}
+export function traceDecoratorWarn(message: string): TraceDecoratorType {
+    return createTracingDecorator({ message, opts: DEFAULT_OPTS, level: LogLevel.Warn });
 }
 
 type ParameterLogInformation =
@@ -80,20 +145,16 @@ export function ignoreLogging() {
         });
     };
 }
-export function createTracingDecorator(loggers: ILogger[], logInfo: LogInfo) {
+export function createTracingDecorator(logInfo: LogInfo) {
     return traceDecorator(
-        (call, traced) => logResult(loggers, logInfo, traced, call),
+        (call, traced) => logResult(logInfo, traced, call),
         (logInfo.opts & TraceOptions.BeforeCall) > 0
     );
 }
 
 // This is like a "context manager" that logs tracing info.
-export function tracing<T>(loggers: ILogger[], logInfo: LogInfo, run: () => T, call?: CallInfo): T {
-    return _tracing(
-        (traced) => logResult(loggers, logInfo, traced, call),
-        run,
-        (logInfo.opts & TraceOptions.BeforeCall) > 0
-    );
+export function tracing<T>(logInfo: LogInfo, run: () => T, call?: CallInfo): T {
+    return _tracing((traced) => logResult(logInfo, traced, call), run, (logInfo.opts & TraceOptions.BeforeCall) > 0);
 }
 
 export type LogInfo = {
@@ -185,23 +246,23 @@ function formatMessages(info: LogInfo, traced: TraceInfo, call?: CallInfo): stri
     return messages.join(', ');
 }
 
-function logResult(loggers: ILogger[], info: LogInfo, traced: TraceInfo, call?: CallInfo) {
+function logResult(info: LogInfo, traced: TraceInfo, call?: CallInfo) {
     const formatted = formatMessages(info, traced, call);
     if (!traced) {
         if (info.level && info.level !== LogLevel.Error) {
-            logToAll(loggers, info.level, [formatted]);
+            logTo(info.level, formatted);
         }
     } else if (traced.err === undefined) {
         // The call did not fail.
         if (info.level && info.level === LogLevel.Error) {
             // No errors, hence nothing to log.
         } else if (info.level) {
-            logToAll(loggers, info.level, [formatted]);
+            logTo(info.level, formatted);
         } else {
-            logToAll(loggers, LogLevel.Info, [formatted]);
+            logTo(LogLevel.Info, formatted);
         }
     } else {
-        logToAll(loggers, LogLevel.Error, [formatted, traced.err]);
+        logTo(LogLevel.Error, formatted, traced.err);
         sendTelemetryEvent(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             'ERROR' as any,
@@ -213,5 +274,24 @@ function logResult(loggers: ILogger[], info: LogInfo, traced: TraceInfo, call?: 
             traced.err,
             true
         );
+    }
+}
+
+export function logTo(logLevel: LogLevel, message: string, ...args: Arguments): void {
+    switch (logLevel) {
+        case LogLevel.Error:
+            traceError(message, ...args);
+            break;
+        case LogLevel.Warn:
+            traceWarning(message, ...args);
+            break;
+        case LogLevel.Info:
+            traceInfo(message, ...args);
+            break;
+        case LogLevel.Debug:
+            traceVerbose(message, ...args);
+            break;
+        default:
+            break;
     }
 }

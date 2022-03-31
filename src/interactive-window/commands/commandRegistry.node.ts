@@ -18,7 +18,7 @@ import {
     IDocumentManager,
     IWorkspaceService
 } from '../../platform/common/application/types';
-import { traceError } from '../../platform/common/logger.node';
+import { traceError } from '../../platform/logging';
 import { IFileSystem } from '../../platform/common/platform/types.node';
 
 import {
@@ -27,14 +27,13 @@ import {
     IDisposable,
     IOutputChannel
 } from '../../platform/common/types';
-import { DataScience } from '../../platform/common/utils/localize.node';
-import { isUri, noop } from '../../platform/common/utils/misc.node';
+import { DataScience } from '../../platform/common/utils/localize';
+import { isUri, noop } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts.node';
-import { LogLevel } from '../../platform/logging/levels';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry/index.node';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ExportCommands } from './exportCommands.node';
-import { JUPYTER_OUTPUT_CHANNEL, Identifiers, Commands, Telemetry } from '../../platform/common/constants.node';
+import { JUPYTER_OUTPUT_CHANNEL, Identifiers, Commands, Telemetry } from '../../platform/common/constants';
 import { DataViewerDependencyService } from '../../webviews/extension-side/dataviewer/dataViewerDependencyService.node';
 import {
     IDataViewerFactory,
@@ -172,7 +171,7 @@ export class CommandRegistry implements IDisposable {
 
     private async enableDebugLogging() {
         const previousValue = this.configService.getSettings().logging.level;
-        if (previousValue !== LogLevel.Debug) {
+        if (previousValue !== 'debug') {
             await this.configService.updateSetting('logging.level', 'debug', undefined, ConfigurationTarget.Global);
             this.commandManager.executeCommand('jupyter.reloadVSCode', DataScience.reloadRequired()).then(noop, noop);
         }
@@ -180,7 +179,7 @@ export class CommandRegistry implements IDisposable {
 
     private async resetLoggingLevel() {
         const previousValue = this.configService.getSettings().logging.level;
-        if (previousValue !== LogLevel.Error) {
+        if (previousValue !== 'error') {
             await this.configService.updateSetting('logging.level', 'error', undefined, ConfigurationTarget.Global);
             this.commandManager.executeCommand('jupyter.reloadVSCode', DataScience.reloadRequired()).then(noop, noop);
         }

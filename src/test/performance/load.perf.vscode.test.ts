@@ -10,8 +10,8 @@ import * as fs from 'fs-extra';
 import { EOL } from 'os';
 import * as path from 'path';
 import { commands, extensions } from 'vscode';
-import { JVSC_EXTENSION_ID } from '../../platform/common/constants.node';
-import { StopWatch } from '../../platform/common/utils/stopWatch.node';
+import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
+import { StopWatch } from '../../platform/common/utils/stopWatch';
 
 const AllowedIncreaseInActivationDelayInMS = 500;
 

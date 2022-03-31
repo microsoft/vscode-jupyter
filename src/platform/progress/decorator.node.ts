@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { traceError } from '../common/logger.node';
+import { traceError } from '../logging';
 import { PromiseFunction } from '../common/utils/async';
 import { IProgressReporter, Progress, ReportableAction } from './types';
 

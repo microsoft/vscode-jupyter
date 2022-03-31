@@ -6,8 +6,8 @@ import { IExtensionSyncActivationService } from '../../../platform/activation/ty
 import { ICommandManager, IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers.node';
 import { IDisposable, IDisposableRegistry, IPathUtils } from '../../../platform/common/types';
-import { DataScience } from '../../../platform/common/utils/localize.node';
-import { noop } from '../../../platform/common/utils/misc.node';
+import { DataScience } from '../../../platform/common/utils/localize';
+import { noop } from '../../../platform/common/utils/misc';
 import {
     getDisplayNameOrNameOfKernelConnection,
     getKernelConnectionPath,

@@ -19,7 +19,7 @@ import {
 import { IApplicationShell, IWorkspaceService } from '../platform/common/application/types';
 import { WrappedError } from '../platform/errors/types';
 import { disposeAllDisposables } from '../platform/common/helpers.node';
-import { traceInfo, traceInfoIfCI, traceError, traceVerbose, traceWarning } from '../platform/common/logger.node';
+import { traceInfo, traceInfoIfCI, traceError, traceVerbose, traceWarning } from '../platform/logging';
 import { getDisplayPath } from '../platform/common/platform/fs-paths.node';
 import { IFileSystem } from '../platform/common/platform/types.node';
 import { IPythonExecutionFactory } from '../platform/common/process/types.node';
@@ -31,11 +31,11 @@ import {
     IDisplayOptions
 } from '../platform/common/types';
 import { Deferred, sleep } from '../platform/common/utils/async';
-import { DataScience } from '../platform/common/utils/localize.node';
-import { noop } from '../platform/common/utils/misc.node';
-import { StopWatch } from '../platform/common/utils/stopWatch.node';
+import { DataScience } from '../platform/common/utils/localize';
+import { noop } from '../platform/common/utils/misc';
+import { StopWatch } from '../platform/common/utils/stopWatch';
 import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory.node';
-import { JupyterConnectError } from '../platform/errors/jupyterConnectError.node';
+import { JupyterConnectError } from '../platform/errors/jupyterConnectError';
 import { InteractiveWindowView } from '../notebooks/constants';
 import {
     sendKernelTelemetryEvent,
@@ -43,7 +43,7 @@ import {
     initializeInteractiveOrNotebookTelemetryBasedOnUserAction
 } from '../telemetry/telemetry.node';
 import { calculateWorkingDirectory } from '../platform/common/utils.node';
-import { sendTelemetryEvent } from '../telemetry/index.node';
+import { sendTelemetryEvent } from '../telemetry';
 import { concatMultilineString } from '../webviews/webview-side/common';
 import { Telemetry, Identifiers, CodeSnippets } from '../webviews/webview-side/common/constants';
 import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker.node';
@@ -70,7 +70,7 @@ import {
 import { KernelExecution } from '../notebooks/execution/kernelExecution.node';
 import { traceCellMessage } from '../notebooks/helpers.node';
 import { Cancellation } from '../platform/common/cancellation.node';
-import { AddRunCellHook } from '../platform/common/constants.node';
+import { AddRunCellHook } from '../platform/common/constants';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter.node';
 import { IStatusProvider } from '../platform/progress/types';
 import { DisplayOptions } from './displayOptions.node';

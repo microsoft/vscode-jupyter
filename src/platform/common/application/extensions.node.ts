@@ -6,9 +6,9 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Event, Extension, extensions, Uri } from 'vscode';
-import { EXTENSION_ROOT_DIR } from '../constants.node';
+import { EXTENSION_ROOT_DIR } from '../constants';
 import { IExtensions } from '../types';
-import { DataScience } from '../utils/localize.node';
+import { DataScience } from '../utils/localize';
 import { IFileSystem } from '../platform/types.node';
 import * as stacktrace from 'stack-trace';
 

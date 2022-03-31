@@ -12,17 +12,17 @@ import * as uuid from 'uuid/v4';
 import { CancellationError, CancellationToken, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation.node';
-import { isTestExecution } from '../../../platform/common/constants.node';
-import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils.node';
-import { traceInfo, traceWarning } from '../../../platform/common/logger.node';
+import { isTestExecution } from '../../../platform/common/constants';
+import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
+import { traceInfo, traceWarning } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../platform/common/process/types.node';
 import { IDisposableRegistry, IConfigurationService, Resource } from '../../../platform/common/types';
-import { swallowExceptions } from '../../../platform/common/utils/decorators.node';
-import { DataScience } from '../../../platform/common/utils/localize.node';
+import { swallowExceptions } from '../../../platform/common/utils/decorators';
+import { DataScience } from '../../../platform/common/utils/localize';
 import { sendKernelTelemetryWhenDone } from '../../../telemetry/telemetry.node';
-import { sendTelemetryEvent } from '../../../telemetry/index.node';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import {
     isLocalConnection,

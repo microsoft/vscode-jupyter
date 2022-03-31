@@ -8,18 +8,23 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken } from 'vscode';
 import { Cancellation } from '../../platform/common/cancellation.node';
-import '../../platform/common/extensions.node';
-import { traceInfoIfCI, traceInfo, traceVerbose } from '../../platform/common/logger.node';
+import '../../platform/common/extensions';
+import {
+    traceInfoIfCI,
+    traceInfo,
+    traceVerbose,
+    logValue,
+    ignoreLogging,
+    traceDecoratorError
+} from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths.node';
 import { IFileSystem } from '../../platform/common/platform/types.node';
 import { Resource, ReadWrite, IDisplayOptions } from '../../platform/common/types';
-import { noop } from '../../platform/common/utils/misc.node';
+import { noop } from '../../platform/common/utils/misc';
 import { IEnvironmentVariablesService } from '../../platform/common/variables/types';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
-import { traceDecorators } from '../../platform/logging/index.node';
-import { logValue, ignoreLogging } from '../../platform/logging/trace.node';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry/index.node';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { JupyterKernelDependencyError } from '../../platform/errors/jupyterKernelDependencyError.node';
 import { getKernelRegistrationInfo, cleanEnvironment } from '../helpers.node';
@@ -147,7 +152,7 @@ export class JupyterKernelService {
     // eslint-disable-next-line
     // eslint-disable-next-line complexity
     @captureTelemetry(Telemetry.RegisterInterpreterAsKernel, undefined, true)
-    @traceDecorators.error('Failed to register an interpreter as a kernel')
+    @traceDecoratorError('Failed to register an interpreter as a kernel')
     // eslint-disable-next-line
     private async registerKernel(
         kernel: LocalKernelConnectionMetadata,

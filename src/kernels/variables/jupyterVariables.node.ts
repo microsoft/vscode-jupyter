@@ -5,7 +5,7 @@ import { inject, injectable, named } from 'inversify';
 
 import { CancellationToken, Event, EventEmitter } from 'vscode';
 import { IDisposableRegistry } from '../../platform/common/types';
-import { captureTelemetry } from '../../telemetry/index.node';
+import { captureTelemetry } from '../../telemetry';
 import { Identifiers, Telemetry } from '../../webviews/webview-side/common/constants';
 import { IKernel } from '../types';
 import {

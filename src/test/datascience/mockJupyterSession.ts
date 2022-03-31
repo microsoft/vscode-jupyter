@@ -6,7 +6,7 @@ import { JSONObject } from '@lumino/coreutils';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
 import { Observable } from 'rxjs/Observable';
-import { noop } from '../../platform/common/utils/misc.node';
+import { noop } from '../../platform/common/utils/misc';
 import { JupyterInvalidKernelError } from '../../platform/errors/jupyterInvalidKernelError.node';
 import { JupyterWaitForIdleError } from '../../platform/errors/jupyterWaitForIdleError.node';
 import { IJupyterSession, KernelConnectionMetadata, KernelSocketInformation } from '../../platform/../kernels/types';

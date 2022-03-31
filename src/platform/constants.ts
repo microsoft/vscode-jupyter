@@ -3,7 +3,7 @@
 
 'use strict';
 
-import * as path from 'path';
+import * as path from 'path-browserify';
 
 const webpacked = !path.basename(__dirname).includes('platform');
 

@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../platform/common/extensions.node';
+import '../../../platform/common/extensions';
 
 import * as path from 'path';
 import { WebviewView as vscodeWebviewView } from 'vscode';
 
-import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry/index.node';
+import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { INotebookWatcher, IVariableViewPanelMapping } from './types';
 import { VariableViewMessageListener } from './variableViewMessageListener.node';
 import { InteractiveWindowMessages, IShowDataViewer } from '../../../platform/messageTypes';
@@ -23,10 +23,10 @@ import {
     IDocumentManager
 } from '../../../platform/common/application/types';
 import { ContextKey } from '../../../platform/common/contextKey.node';
-import { traceError } from '../../../platform/common/logger.node';
+import { traceError } from '../../../platform/logging';
 import { Resource, IConfigurationService, IDisposableRegistry, IDisposable } from '../../../platform/common/types';
-import * as localize from '../../../platform/common/utils/localize.node';
-import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
+import * as localize from '../../../platform/common/utils/localize';
+import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
 import { Telemetry } from '../../webview-side/common/constants';
 import { DataViewerChecker } from '../dataviewer/dataViewerChecker.node';
 import { IJupyterVariableDataProviderFactory, IDataViewerFactory, IDataViewer } from '../dataviewer/types';

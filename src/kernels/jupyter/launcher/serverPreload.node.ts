@@ -5,8 +5,8 @@ import { inject, injectable, named } from 'inversify';
 import { CancellationTokenSource, Memento, NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../../platform/activation/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../../../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants.node';
-import { traceInfo, traceError } from '../../../platform/common/logger.node';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { traceInfo, traceError } from '../../../platform/logging';
 import {
     IConfigurationService,
     IDisposableRegistry,

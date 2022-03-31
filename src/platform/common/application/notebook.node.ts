@@ -21,7 +21,7 @@ import {
     NotebookDocumentShowOptions,
     NotebookCellExecutionStateChangeEvent
 } from 'vscode';
-import { isUri } from '../utils/misc.node';
+import { isUri } from '../utils/misc';
 import { IApplicationEnvironment, IVSCodeNotebook } from './types';
 
 @injectable()

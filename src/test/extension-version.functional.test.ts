@@ -9,7 +9,7 @@ import { expect } from 'chai';
 import * as fs from 'fs';
 import * as glob from 'glob';
 import * as path from 'path';
-import { EXTENSION_ROOT_DIR } from '../platform/common/constants.node';
+import { EXTENSION_ROOT_DIR } from '../platform/common/constants';
 
 suite('Extension localization files', () => {
     test('Load localization file', () => {

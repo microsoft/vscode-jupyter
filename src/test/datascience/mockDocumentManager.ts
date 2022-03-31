@@ -22,7 +22,7 @@ import {
 } from 'vscode';
 
 import { IDocumentManager } from '../../platform/common/application/types';
-import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
+import { EXTENSION_ROOT_DIR } from '../../platform/constants';
 import { MockDocument } from './mockDocument';
 import { MockEditor } from './mockTextEditor';
 

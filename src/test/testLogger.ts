@@ -3,14 +3,36 @@
 
 'use strict';
 
+import { createWriteStream } from 'fs-extra';
+import { logTo, registerLogger } from '../platform/logging';
+import { FileLogger } from '../platform/logging/fileLogger.node';
+import { LogLevel } from '../platform/logging/types';
+
 // IMPORTANT: This file should only be importing from the '../platform/logging' directory, as we
 // delete everything in '../platform' except for '../platform/logging' before running smoke tests.
 
-import { LogLevel } from '../platform/logging/levels';
-import { configureLogger, createLogger, getPreDefinedConfiguration, logToAll } from '../platform/logging/logger.node';
-
 const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
-const monkeyPatchLogger = createLogger();
+export function getPreDefinedConfiguration() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const config: any = {};
+
+    // Do not log to console if running tests and we're not
+    // asked to do so.
+    if (process.env.VSC_JUPYTER_FORCE_LOGGING) {
+        config.console = {};
+        // In CI there's no need for the label.
+        const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
+        if (!isCI) {
+            config.console.label = 'Jupyter Extension:';
+        }
+    }
+    if (process.env.VSC_JUPYTER_LOG_FILE) {
+        config.file = {
+            logfile: process.env.VSC_JUPYTER_LOG_FILE
+        };
+    }
+    return config;
+}
 
 export function initializeLogger() {
     const config = getPreDefinedConfiguration();
@@ -18,7 +40,8 @@ export function initializeLogger() {
         delete config.console;
         // This is a separate logger that matches our config but
         // does not do any console logging.
-        configureLogger(monkeyPatchLogger, config);
+        const fileLogger = new FileLogger(createWriteStream(process.env.VSC_JUPYTER_LOG_FILE));
+        registerLogger(fileLogger);
         // Send console.*() to the non-console loggers.
         monkeypatchConsole();
     }
@@ -53,7 +76,7 @@ function monkeypatchConsole() {
             const fn = consoleAny[sym];
             fn(...args);
             const level = levels[stream] || LogLevel.Info;
-            logToAll([monkeyPatchLogger], level, args);
+            logTo(level, args[0], args.length > 0 ? args.slice(1) : []);
         };
     }
 }

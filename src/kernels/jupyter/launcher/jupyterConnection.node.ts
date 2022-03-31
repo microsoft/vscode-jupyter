@@ -1,21 +1,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../platform/common/extensions.node';
+import '../../../platform/common/extensions';
 
 import { ChildProcess } from 'child_process';
 import { Subscription } from 'rxjs';
 import { CancellationError, CancellationToken, Disposable, Event, EventEmitter } from 'vscode';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
 import { Cancellation } from '../../../platform/common/cancellation.node';
-import { traceInfo, traceError, traceWarning } from '../../../platform/common/logger.node';
+import { traceInfo, traceError, traceWarning } from '../../../platform/logging';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { ObservableExecutionResult, Output } from '../../../platform/common/process/types.node';
 import { Deferred, createDeferred } from '../../../platform/common/utils/async';
-import { DataScience } from '../../../platform/common/utils/localize.node';
+import { DataScience } from '../../../platform/common/utils/localize';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { RegExpValues } from '../../../webviews/webview-side/common/constants';
-import { JupyterConnectError } from '../../../platform/errors/jupyterConnectError.node';
+import { JupyterConnectError } from '../../../platform/errors/jupyterConnectError';
 import { IJupyterConnection } from '../../types';
 import { JupyterServerInfo } from '../types';
 

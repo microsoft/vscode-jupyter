@@ -17,7 +17,7 @@ import {
     NotebookCreationOptions
 } from '../../../kernels/types';
 import { Cancellation } from '../../../platform/common/cancellation.node';
-import { Settings } from '../../../platform/common/constants.node';
+import { Settings } from '../../../platform/common/constants';
 import { DisplayOptions } from '../../displayOptions.node';
 import { IRawNotebookProvider } from '../../raw/types';
 import { IJupyterNotebookProvider } from '../types';

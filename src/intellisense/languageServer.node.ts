@@ -22,10 +22,10 @@ import * as fs from 'fs-extra';
 import { FileBasedCancellationStrategy } from './fileBasedCancellationStrategy.node';
 import { createNotebookMiddleware, createPylanceMiddleware, NotebookMiddleware } from '@vscode/jupyter-lsp-middleware';
 import * as uuid from 'uuid/v4';
-import { NOTEBOOK_SELECTOR, PYTHON_LANGUAGE } from '../platform/common/constants.node';
-import { traceInfo } from '../platform/common/logger.node';
+import { NOTEBOOK_SELECTOR, PYTHON_LANGUAGE } from '../platform/common/constants';
+import { traceInfo } from '../platform/logging';
 import { getInterpreterId } from '../platform/pythonEnvironments/info/interpreter.node';
-import { noop } from '../platform/common/utils/misc.node';
+import { noop } from '../platform/common/utils/misc';
 import { sleep } from '../platform/common/utils/async';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 

@@ -13,8 +13,8 @@ import {
     IDocumentManager,
     IApplicationShell
 } from '../../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../../platform/common/constants.node';
-import { traceInfoIfCI, traceError, traceWarning, traceInfo } from '../../platform/common/logger.node';
+import { PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { traceInfoIfCI, traceError, traceWarning, traceInfo, traceDecoratorVerbose } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths.node';
 import { CondaService } from '../../platform/common/process/condaService.node';
 import {
@@ -27,17 +27,16 @@ import {
     Resource
 } from '../../platform/common/types';
 import { waitForCondition } from '../../platform/common/utils/async';
-import { debounceAsync } from '../../platform/common/utils/decorators.node';
-import { DataScience } from '../../platform/common/utils/localize.node';
-import { noop } from '../../platform/common/utils/misc.node';
-import { StopWatch } from '../../platform/common/utils/stopWatch.node';
+import { debounceAsync } from '../../platform/common/utils/decorators';
+import { DataScience } from '../../platform/common/utils/localize';
+import { noop } from '../../platform/common/utils/misc';
+import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { sendKernelListTelemetry } from '../../telemetry/kernelTelemetry.node';
 import { trackKernelResourceInformation } from '../../telemetry/telemetry.node';
 import { IInterpreterService } from '../../platform/interpreter/contracts.node';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { traceDecorators } from '../../platform/logging/index.node';
 import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../telemetry/index.node';
+import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { NotebookCellLanguageService } from '../../intellisense/cellLanguageService.node';
 import {
@@ -351,7 +350,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         traceInfo(`Creating controller for ${notebookType} with interpreter ${getDisplayPath(activeInterpreter.path)}`);
         return this.getOrCreateControllerForActiveInterpreter(activeInterpreter, notebookType);
     }
-    @traceDecorators.verbose('Get default Remote Controller')
+    @traceDecoratorVerbose('Get default Remote Controller')
     private async createDefaultRemoteController() {
         // Get all remote kernels
         await this.loadNotebookControllers();

@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { traceInfo, traceError } from '../../../platform/common/logger.node';
+import { traceInfo, traceError } from '../../../platform/logging';
 import { IConfigurationService } from '../../../platform/common/types';
-import { sendTelemetryEvent } from '../../../telemetry/index.node';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { IRawNotebookSupportedService } from '../types';
 

@@ -14,11 +14,11 @@ import {
     TextDocumentContentChangeEvent,
     Uri
 } from 'vscode';
-import * as localize from '../../platform/common/utils/localize.node';
+import * as localize from '../../platform/common/utils/localize';
 
 import { splitMultilineString } from '../../webviews/webview-side/common';
 import { IDebugService, IDocumentManager } from '../../platform/common/application/types';
-import { traceInfo, traceInfoIfCI } from '../../platform/common/logger.node';
+import { traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { IFileSystem } from '../../platform/common/platform/types.node';
 
 import { IConfigurationService } from '../../platform/common/types';

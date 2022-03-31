@@ -4,12 +4,11 @@ import { inject, injectable } from 'inversify';
 import { IPlatformService } from '../../common/platform/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IServiceContainer } from '../../ioc/types';
-import { ignoreLogging, TraceOptions } from '../../logging/trace.node';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../telemetry/index.node';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { IWorkspaceService } from '../application/types';
-import { traceDecorators, traceError, traceInfo } from '../logger.node';
+import { ignoreLogging, traceDecoratorVerbose, traceError, traceInfo } from '../../logging';
 import { getDisplayPath } from '../platform/fs-paths.node';
 import { IFileSystem } from '../platform/types.node';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../types';
@@ -31,6 +30,7 @@ import {
     IPythonExecutionService,
     isDaemonPoolCreationOption
 } from './types.node';
+import { TraceOptions } from '../../logging/types';
 
 // Minimum version number of conda required to be able to use 'conda run'
 export const CONDA_RUN_VERSION = '4.6.0';
@@ -55,7 +55,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         this.logger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         this.fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
     }
-    @traceDecorators.verbose('Creating execution process')
+    @traceDecoratorVerbose('Creating execution process')
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
 
@@ -68,7 +68,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         );
     }
 
-    @traceDecorators.verbose('Create daemon', TraceOptions.BeforeCall | TraceOptions.Arguments)
+    @traceDecoratorVerbose('Create daemon', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async createDaemon<T extends IPythonDaemonExecutionService | IDisposable>(
         options: DaemonExecutionFactoryCreationOptions
     ): Promise<T | IPythonExecutionService> {
@@ -147,7 +147,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             return (activatedProcPromise as unknown) as T;
         });
     }
-    @traceDecorators.verbose('Create activated Env', TraceOptions.BeforeCall | TraceOptions.Arguments)
+    @traceDecoratorVerbose('Create activated Env', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async createActivatedEnvironment(
         @ignoreLogging() options: ExecutionFactoryCreateWithEnvironmentOptions
     ): Promise<IPythonExecutionService> {

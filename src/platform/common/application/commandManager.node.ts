@@ -5,8 +5,8 @@
 
 import { injectable } from 'inversify';
 import { commands, Disposable, TextEditor, TextEditorEdit } from 'vscode';
-import { sendTelemetryEvent } from '../../../telemetry/index.node';
-import { Telemetry } from '../constants.node';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { Telemetry } from '../constants';
 import { ICommandNameArgumentTypeMapping } from './commands';
 import { ICommandManager } from './types';
 

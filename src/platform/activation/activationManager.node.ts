@@ -7,8 +7,7 @@ import { inject, injectable, multiInject, optional } from 'inversify';
 import { TextDocument } from 'vscode';
 import { IPythonExtensionChecker } from '../api/types';
 import { IActiveResourceService, IDocumentManager, IWorkspaceService } from '../common/application/types';
-import { PYTHON_LANGUAGE } from '../common/constants.node';
-import { traceDecorators } from '../common/logger.node';
+import { PYTHON_LANGUAGE } from '../common/constants';
 import { IFileSystem } from '../common/platform/types.node';
 import { IDisposable, Resource } from '../common/types';
 import { Deferred } from '../common/utils/async';
@@ -20,6 +19,7 @@ import {
     IExtensionSingleActivationService,
     IExtensionSyncActivationService
 } from './types';
+import { traceDecoratorError } from '../logging';
 
 @injectable()
 export class ExtensionActivationManager implements IExtensionActivationManager {
@@ -64,7 +64,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
             this.activateWorkspace(this.activeResourceService.getActiveResource())
         ]);
     }
-    @traceDecorators.error('Failed to activate a workspace')
+    @traceDecoratorError('Failed to activate a workspace')
     public async activateWorkspace(resource: Resource) {
         const key = this.getWorkspaceKey(resource);
         if (this.activatedWorkspaces.has(key)) {

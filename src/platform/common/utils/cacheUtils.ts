@@ -5,7 +5,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
 
-import '../../common/extensions.node';
+import '../extensions';
 
 type CacheData = {
     value: unknown;

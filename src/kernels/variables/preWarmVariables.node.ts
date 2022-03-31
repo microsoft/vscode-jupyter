@@ -9,7 +9,7 @@ import { IPythonExtensionChecker, IPythonApiProvider } from '../../platform/api/
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { CondaService } from '../../platform/common/process/condaService.node';
 import { IDisposableRegistry } from '../../platform/common/types';
-import { noop } from '../../platform/common/utils/misc.node';
+import { noop } from '../../platform/common/utils/misc';
 import { IEnvironmentVariablesProvider } from '../../platform/common/variables/types';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
 import { JupyterInterpreterService } from '../jupyter/interpreter/jupyterInterpreterService.node';

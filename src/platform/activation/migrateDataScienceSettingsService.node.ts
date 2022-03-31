@@ -8,12 +8,11 @@ import { applyEdits, ModificationOptions, modify, parse, ParseError } from 'json
 import * as path from 'path';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../common/application/types';
-import { Settings } from '../common/constants.node';
-import { traceError } from '../common/logger.node';
+import { Settings } from '../common/constants';
 import { IFileSystem } from '../common/platform/types.node';
 import { IPersistentStateFactory, Resource } from '../common/types';
-import { swallowExceptions } from '../common/utils/decorators.node';
-import { traceDecorators } from '../logging/index.node';
+import { swallowExceptions } from '../common/utils/decorators';
+import { traceDecoratorError, traceError } from '../logging';
 import { IExtensionActivationService } from './types';
 
 interface IKeyBinding {
@@ -166,7 +165,7 @@ export class MigrateDataScienceSettingsService implements IExtensionActivationSe
         await this.fs.writeLocalFile(filePath, JSON.stringify(migratedKeybindings, undefined, 4));
     }
 
-    @traceDecorators.error('Failed to update test settings')
+    @traceDecoratorError('Failed to update test settings')
     private async updateSettings(resource: Resource): Promise<void> {
         const filesToBeFixed = this.getSettingsFiles(resource).map((file) => this.fixSettingsFile(file));
         await Promise.all(filesToBeFixed);

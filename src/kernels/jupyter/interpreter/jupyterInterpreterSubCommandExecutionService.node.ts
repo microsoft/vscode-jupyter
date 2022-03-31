@@ -6,7 +6,7 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { CancellationToken } from 'vscode';
-import { traceWarning } from '../../../platform/common/logger.node';
+import { traceWarning } from '../../../platform/logging';
 import {
     IPythonExecutionFactory,
     SpawnOptions,
@@ -14,13 +14,13 @@ import {
     IPythonDaemonExecutionService
 } from '../../../platform/common/process/types.node';
 import { IOutputChannel, IPathUtils } from '../../../platform/common/types';
-import { DataScience } from '../../../platform/common/utils/localize.node';
-import { noop } from '../../../platform/common/utils/misc.node';
-import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
+import { DataScience } from '../../../platform/common/utils/localize';
+import { noop } from '../../../platform/common/utils/misc';
+import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
 import { IEnvironmentActivationService } from '../../../platform/interpreter/activation/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../telemetry/index.node';
+import { sendTelemetryEvent } from '../../../telemetry';
 import {
     JupyterDaemonModule,
     JUPYTER_OUTPUT_CHANNEL,

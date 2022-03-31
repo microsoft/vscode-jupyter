@@ -7,7 +7,7 @@ import { CancellationToken, PortAttributes, PortAttributesProvider, PortAutoForw
 import { NotebookStarter } from '../../../kernels/jupyter/launcher/notebookStarter.node';
 import { KernelLauncher } from '../../../kernels/raw/launcher/kernelLauncher.node';
 import { IExtensionSyncActivationService } from '../../activation/types';
-import { traceError } from '../logger.node';
+import { traceError } from '../../logging';
 import { IDisposableRegistry } from '../types';
 
 @injectable()

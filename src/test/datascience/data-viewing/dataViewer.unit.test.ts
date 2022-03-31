@@ -12,7 +12,7 @@ import {
     IWorkspaceService
 } from '../../../platform/common/application/types';
 import { WebviewPanelProvider } from '../../../webviews/extension-side/webviewPanels/webviewPanelProvider.node';
-import { WorkspaceService } from '../../../platform/common/application/workspace.node';
+import { WorkspaceService } from '../../../platform/common/application/workspace';
 import { JupyterSettings } from '../../../platform/common/configSettings.node';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { IConfigurationService } from '../../../platform/common/types';

@@ -6,7 +6,7 @@ import { inject, injectable } from 'inversify';
 import { parse } from 'jsonc-parser';
 import * as path from 'path';
 import { IWorkspaceService } from '../../platform/common/application/types';
-import { traceInfo, traceError, traceWarning } from '../../platform/common/logger.node';
+import { traceInfo, traceError, traceWarning } from '../../platform/logging';
 import { IFileSystem } from '../../platform/common/platform/types.node';
 import { IConfigurationService, Resource } from '../../platform/common/types';
 import { DefaultTheme } from '../webview-side/common/constants';

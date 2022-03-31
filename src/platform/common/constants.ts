@@ -1,6 +1,6 @@
 import { JupyterNotebookView } from '../../notebooks/constants';
-import * as path from 'path';
-import { EXTENSION_ROOT_DIR } from '../constants.node';
+import * as path from 'path-browserify';
+import { EXTENSION_ROOT_DIR } from '../constants';
 
 export const PYTHON_LANGUAGE = 'python';
 export const MARKDOWN_LANGUAGE = 'markdown';
@@ -62,7 +62,7 @@ export function isUnitTestExecution(): boolean {
     return process.env.VSC_JUPYTER_UNIT_TEST === '1';
 }
 
-export * from '../constants.node';
+export * from '../constants';
 
 export * from '../../webviews/webview-side/common/constants';
 

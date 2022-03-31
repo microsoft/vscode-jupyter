@@ -3,13 +3,13 @@
 import { inject, injectable, optional } from 'inversify';
 import * as path from 'path';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWatcher, Uri } from 'vscode';
-import { TraceOptions } from '../../logging/trace.node';
+import { TraceOptions } from '../../logging/types';
 import { sendFileCreationTelemetry } from '../../../telemetry/envFileTelemetry.node';
 import { IWorkspaceService } from '../application/types';
-import { traceDecorators, traceInfoIfCI, traceVerbose } from '../logger.node';
 import { IDisposableRegistry } from '../types';
-import { InMemoryCache } from '../utils/cacheUtils.node';
+import { InMemoryCache } from '../utils/cacheUtils';
 import { EnvironmentVariables, IEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
+import { traceDecoratorVerbose, traceInfoIfCI, traceVerbose } from '../../logging';
 
 const CACHE_DURATION = 60 * 60 * 1000;
 @injectable()
@@ -42,7 +42,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         });
     }
 
-    @traceDecorators.verbose('Get Custom Env Variables', TraceOptions.BeforeCall | TraceOptions.Arguments)
+    @traceDecoratorVerbose('Get Custom Env Variables', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables> {
         // Cache resource specific interpreter data
         const key = this.workspaceService.getWorkspaceFolderIdentifier(resource);

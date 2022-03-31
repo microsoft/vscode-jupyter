@@ -7,13 +7,13 @@ import * as download from 'download';
 import { sha256 } from 'hash.js';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { traceError, traceInfo, traceInfoIfCI } from '../../platform/common/logger.node';
+import { traceError, traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { TemporaryFile } from '../../platform/common/platform/types';
 import { IFileSystem } from '../../platform/common/platform/types.node';
 import { IConfigurationService, WidgetCDNs } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
-import { ConsoleForegroundColors } from '../../platform/logging/_global.node';
 import { ILocalResourceUriConverter, IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
+import { ConsoleForegroundColors } from '../../platform/logging/types';
 
 // Source borrowed from https://github.com/jupyter-widgets/ipywidgets/blob/54941b7a4b54036d089652d91b39f937bde6b6cd/packages/html-manager/src/libembed-amd.ts#L33
 const unpgkUrl = 'https://unpkg.com/';

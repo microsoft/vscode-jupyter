@@ -3,7 +3,7 @@
 'use strict';
 import * as path from 'path';
 import { IFileSystem } from '../../platform/common/platform/types.node';
-import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
+import { EXTENSION_ROOT_DIR } from '../../platform/constants';
 import { IJupyterVariable } from './types';
 
 export class VariableScriptLoader {

@@ -6,10 +6,10 @@ import { CancellationToken, Disposable, Progress, ProgressLocation, window } fro
 import { IExtensionSyncActivationService } from '../activation/types';
 import { createPromiseFromCancellation } from '../common/cancellation.node';
 import { disposeAllDisposables } from '../common/helpers.node';
-import { traceError } from '../common/logger.node';
 import { IDisposable, IDisposableRegistry, Resource } from '../common/types';
 import { createDeferred } from '../common/utils/async';
-import { noop } from '../common/utils/misc.node';
+import { noop } from '../common/utils/misc';
+import { traceError } from '../logging';
 import { getUserMessageForAction } from './messages.node';
 import { ReportableAction } from './types';
 

@@ -6,7 +6,7 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
-import { traceInfo } from '../platform/common/logger.node';
+import { traceInfo } from '../platform/logging';
 import { captureScreenShot, IExtensionTestApi } from './common';
 
 import * as ts from 'typescript';

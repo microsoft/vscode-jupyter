@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 import * as WebSocketWS from 'ws';
-import { traceError } from '../../../platform/common/logger.node';
-import { noop } from '../../../platform/common/utils/misc.node';
+import { traceError } from '../../../platform/logging';
+import { noop } from '../../../platform/common/utils/misc';
 import { KernelSocketWrapper } from '../../common/kernelSocketWrapper.node';
 import { IKernelSocket } from '../../types';
 

@@ -8,7 +8,7 @@ import { ApplicationShell } from '../../../../platform/common/application/applic
 import { CommandManager } from '../../../../platform/common/application/commandManager.node';
 import { ReloadVSCodeCommandHandler } from '../../../../platform/common/application/commands/reloadCommand.node';
 import { IApplicationShell, ICommandManager } from '../../../../platform/common/application/types';
-import { Common } from '../../../../platform/common/utils/localize.node';
+import { Common } from '../../../../platform/common/utils/localize';
 
 // Defines a Mocha test suite to group tests of similar kind together
 suite('Common Commands ReloadCommand', () => {

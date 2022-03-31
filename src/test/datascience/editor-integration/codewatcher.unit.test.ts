@@ -42,7 +42,7 @@ import { IKernel, IKernelProvider } from '../../../platform/../kernels/types';
 import { InteractiveCellResultError } from '../../../platform/errors/interactiveCellResultError.node';
 import { ICodeWatcher } from '../../../interactive-window/editor-integration/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../../interactive-window/types';
-import { Commands, EditorContexts } from '../../../platform/common/constants.node';
+import { Commands, EditorContexts } from '../../../platform/common/constants';
 import { IDebugLocationTracker } from '../../../platform/debugger/types';
 import { IDataScienceErrorHandler } from '../../../platform/errors/types';
 

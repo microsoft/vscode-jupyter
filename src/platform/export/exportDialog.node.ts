@@ -3,7 +3,7 @@ import * as path from 'path';
 import { SaveDialogOptions, Uri } from 'vscode';
 import { computeWorkingDirectory } from '../../kernels/jupyter/jupyterUtils.node';
 import { IApplicationShell, IWorkspaceService } from '../common/application/types';
-import * as localize from '../common/utils/localize.node';
+import * as localize from '../common/utils/localize';
 import { ExportFormat, IExportDialog } from './types';
 
 // File extensions for each export method

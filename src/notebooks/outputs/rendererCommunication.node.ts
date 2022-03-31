@@ -6,7 +6,7 @@ import { Event, extensions, NotebookEditor, window } from 'vscode';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { disposeAllDisposables } from '../../platform/common/helpers.node';
 import { IDisposable } from '../../platform/common/types';
-import { noop } from '../../platform/common/utils/misc.node';
+import { noop } from '../../platform/common/utils/misc';
 import { PlotSaveHandler } from './plotSaveHandler.node';
 import { PlotViewHandler } from './plotViewHandler.node';
 

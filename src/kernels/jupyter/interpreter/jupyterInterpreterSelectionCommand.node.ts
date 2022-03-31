@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { IExtensionSingleActivationService } from '../../../platform/activation/types';
 import { ICommandManager } from '../../../platform/common/application/types';
 import { IDisposableRegistry } from '../../../platform/common/types';
-import { sendTelemetryEvent } from '../../../telemetry/index.node';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { JupyterInterpreterService } from './jupyterInterpreterService.node';
 

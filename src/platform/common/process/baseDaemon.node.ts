@@ -11,10 +11,10 @@ import { MessageConnection, NotificationType, RequestType, RequestType0 } from '
 import { IPlatformService } from '../../common/platform/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { BaseError } from '../../../platform/errors/types';
-import { traceError, traceVerbose, traceWarning } from '../logger.node';
+import { traceError, traceVerbose, traceWarning } from '../../logging';
 import { IDisposable } from '../types';
 import { createDeferred, Deferred } from '../utils/async';
-import { noop } from '../utils/misc.node';
+import { noop } from '../utils/misc';
 import {
     ExecutionResult,
     IPythonExecutionService,
@@ -378,6 +378,6 @@ export abstract class BasePythonDaemon {
                 traceError(msg);
             }
         });
-        this.connection.onUnhandledNotification(traceError);
+        this.connection.onUnhandledNotification((e) => traceError(`Unhandled notification: ${e.method}`));
     }
 }

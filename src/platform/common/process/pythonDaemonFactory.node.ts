@@ -10,9 +10,9 @@ import {
     StreamMessageWriter
 } from 'vscode-jsonrpc/node';
 
-import { EXTENSION_ROOT_DIR } from '../../constants.node';
+import { EXTENSION_ROOT_DIR } from '../../constants';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { traceDecorators, traceError, traceVerbose } from '../logger.node';
+import { traceDecoratorError, traceError, traceVerbose } from '../../logging';
 import { IPlatformService } from '../platform/types';
 import { IDisposable, IDisposableRegistry } from '../types';
 import { createDeferred } from '../utils/async';
@@ -53,7 +53,7 @@ export class PythonDaemonFactory {
             : envPythonPath;
         this.envVariables.PYTHONUNBUFFERED = '1';
     }
-    @traceDecorators.error('Failed to create daemon')
+    @traceDecoratorError('Failed to create daemon')
     public async createDaemonService<T extends IPythonDaemonExecutionService | IDisposable>(): Promise<T> {
         // Add '--log-file=/Users/donjayamanne/Desktop/Development/vsc/pythonVSCode/daaemon.log' to log to a file.
         const loggingArgs: string[] = ['-v']; // Log information messages or greater (see daemon.__main__.py for options).
@@ -120,7 +120,7 @@ export class PythonDaemonFactory {
      * @param {MessageConnection} connection
      * @memberof PythonDaemonExecutionServicePool
      */
-    @traceDecorators.error('Pinging Daemon Failed')
+    @traceDecoratorError('Pinging Daemon Failed')
     protected async testDaemon(connection: MessageConnection) {
         // If we don't get a reply to the ping in 5 seconds assume it will never work. Bomb out.
         // At this point there should be some information logged in stderr of the daemon process.

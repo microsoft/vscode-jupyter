@@ -4,7 +4,7 @@ import { assert } from 'chai';
 import * as path from 'path';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants.node';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IPythonExecutionFactory } from '../../../platform/common/process/types.node';

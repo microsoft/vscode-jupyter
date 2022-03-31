@@ -3,7 +3,7 @@
 
 import { EventEmitter } from 'events';
 import { Container, decorate, injectable, interfaces } from 'inversify';
-import { traceWarning } from '../common/logger.node';
+import { traceWarning } from '../logging';
 import { Abstract, IServiceContainer, Newable } from './types';
 
 // This needs to be done once, hence placed in a common location.

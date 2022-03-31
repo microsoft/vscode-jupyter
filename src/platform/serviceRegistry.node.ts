@@ -6,10 +6,9 @@ import { IServiceManager } from '../platform/ioc/types';
 import { CommandRegistry } from './commands/commandRegistry.node';
 import { registerTypes as registerApiTypes } from './api/serviceRegistry.node';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry.node';
-import { registerLoggerTypes } from './logging/serviceRegistry.node';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry.node';
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry.node';
-import { DataScienceStartupTime } from './common/constants.node';
+import { DataScienceStartupTime } from './common/constants';
 import { LogReplayService } from '../intellisense/logReplayService.node';
 import { Activation } from '../kernels/activation.node';
 import { CodeCssGenerator } from '../webviews/extension-side/codeCssGenerator.node';
@@ -55,7 +54,6 @@ import { IStatusProvider } from './progress/types';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     // Logging should be done first so we get logging going asap
-    registerLoggerTypes(serviceManager);
     serviceManager.addSingleton<CommandRegistry>(CommandRegistry, CommandRegistry);
     activationRegisterTypes(serviceManager);
     registerApiTypes(serviceManager);

@@ -5,11 +5,11 @@
 
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { traceError } from '../../platform/common/logger.node';
+import { traceError } from '../../platform/logging';
 import { IFileSystem } from '../../platform/common/platform/types.node';
 import { IPythonExecutionFactory } from '../../platform/common/process/types.node';
 import { IInterpreterService } from '../../platform/interpreter/contracts.node';
-import { captureTelemetry } from '../../telemetry/index.node';
+import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
 import {
     getInterpreterFromKernelConnectionMetadata,

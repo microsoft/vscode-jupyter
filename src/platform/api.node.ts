@@ -10,10 +10,10 @@ import { IDataViewerDataProvider, IDataViewerFactory } from '../webviews/extensi
 import { IExportedKernelService } from './api/extension';
 import { JupyterKernelServiceFactory } from './api/kernelApi.node';
 import { IPythonApiProvider, PythonApi } from './api/types';
-import { isTestExecution } from './common/constants.node';
-import { traceError } from './common/logger.node';
+import { isTestExecution } from './common/constants';
 import { IExtensionContext } from './common/types';
 import { IServiceContainer, IServiceManager } from './ioc/types';
+import { traceError } from './logging';
 
 /*
  * Do not introduce any breaking changes to this API.

@@ -7,7 +7,7 @@ import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTest
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from './constants';
 import { initializeLogger } from './testLogger';
 import * as tmp from 'tmp';
-import { PythonExtension, PylanceExtension } from '../platform/common/constants.node';
+import { PythonExtension, PylanceExtension } from '../platform/common/constants';
 
 initializeLogger();
 

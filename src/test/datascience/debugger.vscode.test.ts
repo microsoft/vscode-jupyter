@@ -20,14 +20,14 @@ import {
     getDebugSessionAndAdapter
 } from './notebook/helper';
 import { ITestVariableViewProvider } from './variableView/variableViewTestInterfaces';
-import { traceInfo } from '../../platform/common/logger.node';
+import { traceInfo } from '../../platform/logging';
 import { IDebuggingManager } from '../../platform/debugger/types';
 import { assert } from 'chai';
 import { debug } from 'vscode';
 import { ITestWebviewHost } from './testInterfaces';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { waitForVariablesToMatch } from './variableView/variableViewHelpers';
-import { Commands } from '../../platform/common/constants.node';
+import { Commands } from '../../platform/common/constants';
 import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
 
 suite('VSCode Notebook - Run By Line', function () {

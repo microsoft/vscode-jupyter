@@ -6,9 +6,9 @@ import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IVSCodeNotebook, ICommandManager, IApplicationShell } from '../../platform/common/application/types';
 import { disposeAllDisposables } from '../../platform/common/helpers.node';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
-import { DataScience, Common } from '../../platform/common/utils/localize.node';
-import { noop } from '../../platform/common/utils/misc.node';
-import { sendTelemetryEvent } from '../../telemetry/index.node';
+import { DataScience, Common } from '../../platform/common/utils/localize';
+import { noop } from '../../platform/common/utils/misc';
+import { sendTelemetryEvent } from '../../telemetry';
 import {
     LanguagesSupportedByPythonkernel,
     Telemetry,

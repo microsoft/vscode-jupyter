@@ -3,7 +3,7 @@
 'use strict';
 import { SemVer } from 'semver';
 
-import { ErrorUtils } from '../../platform/errors/errorUtils.node';
+import { ErrorUtils } from '../../platform/errors/errorUtils';
 import { ModuleNotInstalledError } from '../../platform/errors/moduleNotInstalledError.node';
 import { BufferDecoder } from '../../platform/common/process/decoder.node';
 import { ProcessService } from '../../platform/common/process/proc.node';

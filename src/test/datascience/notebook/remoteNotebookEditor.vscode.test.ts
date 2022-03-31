@@ -9,7 +9,7 @@ import * as sinon from 'sinon';
 import * as path from 'path';
 import { commands, Memento, Uri } from 'vscode';
 import { IEncryptedStorage, IVSCodeNotebook } from '../../../platform/common/application/types';
-import { traceInfo, traceInfoIfCI } from '../../../platform/common/logger.node';
+import { traceInfo, traceInfoIfCI } from '../../../platform/logging';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
 import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize';
@@ -29,7 +29,7 @@ import {
     createEmptyPythonNotebook
 } from './helper';
 import { openNotebook } from '../helpers';
-import { PYTHON_LANGUAGE, Settings } from '../../../platform/common/constants.node';
+import { PYTHON_LANGUAGE, Settings } from '../../../platform/common/constants';
 import { RemoteKernelSpecConnectionMetadata } from '../../../platform/../kernels/types';
 import { JupyterServer } from '../jupyterServer';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';

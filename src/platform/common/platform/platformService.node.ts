@@ -5,7 +5,7 @@
 import { injectable } from 'inversify';
 import * as os from 'os';
 import { coerce, SemVer } from 'semver';
-import { sendTelemetryEvent } from '../../../telemetry/index.node';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName, PlatformErrors } from '../../../telemetry/constants';
 import { getOSType, OSType } from '../utils/platform';
 import { parseVersion } from '../utils/version.node';

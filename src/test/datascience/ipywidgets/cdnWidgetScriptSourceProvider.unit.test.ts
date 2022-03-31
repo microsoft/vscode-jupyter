@@ -13,8 +13,8 @@ import { ConfigurationService } from '../../../platform/common/configuration/ser
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IConfigurationService, WidgetCDNs } from '../../../platform/common/types';
-import { noop } from '../../../platform/common/utils/misc.node';
-import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
+import { noop } from '../../../platform/common/utils/misc';
+import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
 import { CDNWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider.node';
 import { IPyWidgetScriptSource } from '../../../kernels/ipywidgets-message-coordination/ipyWidgetScriptSource.node';
 import {

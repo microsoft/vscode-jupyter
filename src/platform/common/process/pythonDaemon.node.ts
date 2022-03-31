@@ -8,7 +8,7 @@ import { MessageConnection, RequestType, RequestType0 } from 'vscode-jsonrpc';
 import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { InterpreterInformation, PythonEnvironment } from '../../pythonEnvironments/info';
 import { extractInterpreterInfo } from '../../pythonEnvironments/info/interpreter.node';
-import { traceWarning } from '../logger.node';
+import { traceWarning } from '../../logging';
 import { IPlatformService } from '../platform/types';
 import { BasePythonDaemon, ConnectionClosedError, DaemonError } from './baseDaemon.node';
 import { PythonEnvInfo } from './internal/scripts/index.node';

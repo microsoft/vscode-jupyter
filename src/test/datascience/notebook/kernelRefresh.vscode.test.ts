@@ -7,7 +7,7 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { window } from 'vscode';
-import { traceInfo } from '../../../platform/common/logger.node';
+import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';

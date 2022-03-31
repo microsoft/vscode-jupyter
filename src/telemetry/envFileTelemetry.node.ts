@@ -7,7 +7,7 @@ import { IWorkspaceService } from '../platform/common/application/types';
 import { Resource } from '../platform/common/types';
 import { SystemVariables } from '../platform/common/variables/systemVariables.node';
 
-import { sendTelemetryEvent } from './index.node';
+import { sendTelemetryEvent } from '.';
 import { IFileSystem } from '../platform/common/platform/types.node';
 import { EventName } from './constants';
 
