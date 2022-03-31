@@ -70,7 +70,8 @@ function getPlugins(bundle) {
             env: {
                 NODE_ENV: JSON.stringify(isProdBuild ? 'production' : 'development')
             }
-        }
+        },
+        BROWSER: JSON.stringify(true) // All UI pieces are running in the browser
     });
     switch (bundle) {
         case 'viewers': {

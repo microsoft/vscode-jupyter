@@ -9,7 +9,7 @@ import { JupyterSettings } from '../../../platform/common/configSettings.node';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { CondaService } from '../../../platform/common/process/condaService.node';
 import { IConfigurationService } from '../../../platform/common/types';
-import { ServiceContainer } from '../../../platform/ioc/container.node';
+import { ServiceContainer } from '../../../platform/ioc/container';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { CondaInstaller } from '../../../kernels/installer/condaInstaller.node';

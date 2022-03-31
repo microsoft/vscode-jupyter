@@ -39,11 +39,9 @@ import {
     window,
     workspace
 } from 'vscode';
-import * as fsExtra from 'fs-extra';
-import * as path from 'path';
 import { buildApi, IExtensionApi } from './platform/api';
 import { IApplicationEnvironment, ICommandManager } from './platform/common/application/types';
-import { setHomeDirectory, traceError } from './platform/logging';
+import { traceError } from './platform/logging';
 import {
     GLOBAL_MEMENTO,
     IAsyncDisposableRegistry,
@@ -56,7 +54,6 @@ import {
     IOutputChannel,
     IsCodeSpace,
     IsDevMode,
-    IsPreRelease,
     WORKSPACE_MEMENTO
 } from './platform/common/types';
 import { createDeferred } from './platform/common/utils/async';
@@ -65,27 +62,15 @@ import { IServiceContainer, IServiceManager } from './platform/ioc/types';
 import { sendErrorTelemetry, sendStartupTelemetry } from './platform/startupTelemetry';
 import { noop } from './platform/common/utils/misc';
 import { JUPYTER_OUTPUT_CHANNEL, PythonExtension } from './webviews/webview-side/common/constants';
-import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.node';
-import { registerTypes as registerKernelTypes } from './kernels/serviceRegistry.node';
-import { registerTypes as registerNotebookTypes } from './notebooks/serviceRegistry.node';
-import { registerTypes as registerInteractiveTypes } from './interactive-window/serviceRegistry.node';
-import { registerTypes as registerWebviewTypes } from './webviews/extension-side/serviceRegistry.node';
-import { registerTypes as registerTelemetryTypes } from './telemetry/serviceRegistry.node';
-import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry.node';
 import { IExtensionActivationManager } from './platform/activation/types';
 import { isCI, isTestExecution, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants';
-import { getDisplayPath } from './platform/common/platform/fs-paths.node';
-import { IFileSystem } from './platform/common/platform/types.node';
 import { getJupyterOutputChannel } from './platform/devTools/jupyterOutputChannel';
 import { registerLogger, setLoggingLevel } from './platform/logging';
-import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry.node';
 import { Container } from 'inversify/lib/container/container';
 import { ServiceContainer } from './platform/ioc/container';
 import { ServiceManager } from './platform/ioc/serviceManager';
 import { OutputChannelLogger } from './platform/logging/outputChannelLogger';
 import { ConsoleLogger } from './platform/logging/consoleLogger';
-import { FileLogger } from './platform/logging/fileLogger.node';
-import { createWriteStream } from 'fs-extra';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -224,12 +209,6 @@ function addConsoleLogger() {
 
         registerLogger(new ConsoleLogger(label));
     }
-
-    // For tests also log to a file.
-    if (isCI && process.env.VSC_JUPYTER_LOG_FILE) {
-        const fileLogger = new FileLogger(createWriteStream(process.env.VSC_JUPYTER_LOG_FILE));
-        registerLogger(fileLogger);
-    }
 }
 
 function addOutputChannel(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
@@ -254,16 +233,8 @@ function addOutputChannel(context: IExtensionContext, serviceManager: IServiceMa
     }
     if (!workspace.workspaceFolders || workspace.workspaceFolders.length === 0) {
         standardOutputChannel.appendLine(`No workspace folder opened.`);
-    } else if (workspace.workspaceFolders.length === 1) {
-        standardOutputChannel.appendLine(
-            `Workspace folder ${getDisplayPath(workspace.workspaceFolders[0].uri.fsPath)}`
-        );
     } else {
-        standardOutputChannel.appendLine(
-            `Multiple Workspace folders opened ${workspace.workspaceFolders
-                .map((item) => getDisplayPath(item.uri.fsPath))
-                .join(', ')}`
-        );
+        standardOutputChannel.appendLine(`Opened workspace folder.`);
     }
 }
 
@@ -288,19 +259,9 @@ async function activateLegacy(
         (context.extensionMode === ExtensionMode.Development ||
             workspace.getConfiguration('jupyter').get<boolean>('development', false));
     serviceManager.addSingletonInstance<boolean>(IsDevMode, isDevMode);
-    const isPreReleasePromise = fsExtra
-        .readFile(path.join(context.extensionPath, 'package.json'), { encoding: 'utf-8' })
-        .then((contents) => {
-            const packageJSONLive = JSON.parse(contents);
-            return isDevMode || packageJSONLive?.__metadata?.preRelease;
-        });
-    serviceManager.addSingletonInstance<Promise<boolean>>(IsPreRelease, isPreReleasePromise);
     if (isDevMode) {
         void commands.executeCommand('setContext', 'jupyter.development', true);
     }
-
-    // Set the logger home dir (we can compute this in a node app)
-    setHomeDirectory(require('untildify')('~') || '');
 
     // Setup the console logger if asked to
     addConsoleLogger();
@@ -308,17 +269,6 @@ async function activateLegacy(
     addOutputChannel(context, serviceManager, isDevMode);
 
     // Register the rest of the types (platform is first because it's needed by others)
-    registerPlatformTypes(serviceManager, isDevMode);
-    registerTelemetryTypes(serviceManager);
-    registerKernelTypes(serviceManager, isDevMode);
-    registerNotebookTypes(serviceManager);
-    registerInteractiveTypes(serviceManager);
-    registerWebviewTypes(serviceManager, isDevMode);
-    registerIntellisenseTypes(serviceManager, isDevMode);
-
-    // We need to setup this property before any telemetry is sent
-    const fs = serviceManager.get<IFileSystem>(IFileSystem);
-    await setExtensionInstallTelemetryProperties(fs);
 
     // Load the two data science experiments that we need to register types
     // Await here to keep the register method sync

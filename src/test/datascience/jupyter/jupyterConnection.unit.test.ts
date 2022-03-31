@@ -15,7 +15,7 @@ import { IConfigurationService, IJupyterSettings } from '../../../platform/commo
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
-import { ServiceContainer } from '../../../platform/ioc/container.node';
+import { ServiceContainer } from '../../../platform/ioc/container';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { JupyterConnectionWaiter } from '../../../kernels/jupyter/launcher/jupyterConnection.node';
 import { JupyterServerInfo } from '../../../kernels/jupyter/types';

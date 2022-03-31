@@ -32,6 +32,19 @@
             }
         },
         {
+            "name": "Extension (web)",
+            "type": "pwa-extensionHost",
+            "debugWebWorkerHost": true,
+            "request": "launch",
+            "args": ["--extensionDevelopmentPath=${workspaceFolder}", "--extensionDevelopmentKind=web"],
+            "outFiles": ["${workspaceFolder}/out/extension.web.dist.js"],
+            "preLaunchTask": "Compile Web Extension",
+            "presentation": {
+                "group": "1_extension",
+                "order": 1
+            }
+        },
+        {
             "name": "Extension (with daemon compilation)",
             "type": "extensionHost",
             "request": "launch",

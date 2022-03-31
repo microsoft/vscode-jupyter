@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import type { IExtensionApi } from '../platform/api.node';
+import type { IExtensionApi } from '../platform/api';
 import { disposeAllDisposables } from '../platform/common/helpers.node';
 import type { IDisposable } from '../platform/common/types';
 import { clearPendingChainedUpdatesForTests } from '../notebooks/execution/notebookUpdater.node';

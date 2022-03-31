@@ -10,7 +10,7 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { coerce, SemVer } from 'semver';
 import type { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
-import { IExtensionApi } from '../platform/api.node';
+import { IExtensionApi } from '../platform/api';
 import { IProcessService } from '../platform/common/process/types.node';
 import { IDisposable, IJupyterSettings } from '../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../platform/ioc/types';

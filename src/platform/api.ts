@@ -8,8 +8,7 @@ import { IJupyterUriProvider, IJupyterUriProviderRegistration } from '../kernels
 import { INotebookEditorProvider } from '../notebooks/types';
 import { IDataViewerDataProvider, IDataViewerFactory } from '../webviews/extension-side/dataviewer/types';
 import { IExportedKernelService } from './api/extension';
-import { JupyterKernelServiceFactory } from './api/kernelApi.node';
-import { IPythonApiProvider, PythonApi } from './api/types';
+import { IExportedKernelServiceFactory, IPythonApiProvider, PythonApi } from './api/types';
 import { isTestExecution } from './common/constants';
 import { IExtensionContext } from './common/types';
 import { IServiceContainer, IServiceManager } from './ioc/types';
@@ -87,7 +86,9 @@ export function buildApi(
             await service.createNew(options);
         },
         getKernelService: async () => {
-            const kernelServiceFactory = serviceContainer.get<JupyterKernelServiceFactory>(JupyterKernelServiceFactory);
+            const kernelServiceFactory = serviceContainer.get<IExportedKernelServiceFactory>(
+                IExportedKernelServiceFactory
+            );
             return kernelServiceFactory.getService();
         }
     };

@@ -12,7 +12,7 @@ import { CallInfo, trace as traceDecorator } from '../common/utils/decorators';
 import { TraceInfo, tracing as _tracing } from '../common/utils/misc';
 import { argsToLogString, returnValueToLogString } from './util';
 import { LoggingLevelSettingType } from '../common/types';
-const homeAsLowerCase = (require('untildify')('~') || '').toLowerCase(); // TODO: This will have to be conditional for node only
+let homeAsLowerCase = '';
 const DEFAULT_OPTS: TraceOptions = TraceOptions.Arguments | TraceOptions.ReturnValue;
 
 let loggers: ILogger[] = [];
@@ -38,6 +38,10 @@ const logLevelMap: Map<string | undefined, LogLevel> = new Map([
 let globalLoggingLevel: LogLevel;
 export function setLoggingLevel(level?: LoggingLevelSettingType): void {
     globalLoggingLevel = logLevelMap.get(level) ?? LogLevel.Error;
+}
+
+export function setHomeDirectory(homeDir: string) {
+    homeAsLowerCase = homeDir.toLocaleLowerCase();
 }
 
 export function traceLog(message: string, ...args: Arguments): void {
@@ -188,7 +192,7 @@ function isUri(resource?: Uri | any): resource is Uri {
 
 function removeUserPaths(value: string) {
     // Where possible strip user names from paths, then users will be more likely to provide the logs.
-    const indexOfStart = value.toLowerCase().indexOf(homeAsLowerCase);
+    const indexOfStart = homeAsLowerCase ? value.toLowerCase().indexOf(homeAsLowerCase) : -1;
     return indexOfStart === -1 ? value : `~${value.substring(indexOfStart + homeAsLowerCase.length)}`;
 }
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

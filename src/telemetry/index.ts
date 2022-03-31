@@ -3,7 +3,7 @@
 
 import type { JSONObject } from '@lumino/coreutils';
 // eslint-disable-next-line
-import TelemetryReporter from 'vscode-extension-telemetry/lib/telemetryReporter';
+import TelemetryReporter from '@vscode/extension-telemetry/lib/telemetryReporter';
 
 import { IWorkspaceService } from '../platform/common/application/types';
 import {
@@ -45,7 +45,7 @@ function isTelemetrySupported(): boolean {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const vsc = require('vscode');
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const reporter = require('vscode-extension-telemetry');
+        const reporter = require('@vscode/extension-telemetry');
         return vsc !== undefined && reporter !== undefined;
     } catch {
         return false;
@@ -99,7 +99,7 @@ function getTelemetryReporter() {
     const extensionVersion = extension.packageJSON.version;
 
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const reporter = require('vscode-extension-telemetry').default as typeof TelemetryReporter;
+    const reporter = require('@vscode/extension-telemetry').default as typeof TelemetryReporter;
     return (telemetryReporter = new reporter(extensionId, extensionVersion, AppinsightsKey, true));
 }
 

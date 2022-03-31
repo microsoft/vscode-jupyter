@@ -82,7 +82,7 @@ export function initialize() {
         if (request === 'vscode') {
             return mockedVSCode;
         }
-        if (request === 'vscode-extension-telemetry') {
+        if (request === '@vscode/extension-telemetry') {
             return { default: vscMockTelemetryReporter as any };
         }
         // less files need to be in import statements to be converted to css

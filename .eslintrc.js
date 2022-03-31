@@ -286,6 +286,16 @@ module.exports = {
                         target: './src/**[!test]**/**/*[!.web].ts',
                         from: './src/**/*.web.ts',
                         message: 'Importing web modules into non web files is not allowed.'
+                    },
+                    {
+                        target: './src/extension.node.ts',
+                        from: './src/**/*.web.ts',
+                        message: 'Importing web modules into extension.node.ts is not allowed.'
+                    },
+                    {
+                        target: './src/extension.web.ts',
+                        from: './src/**/*.node.ts',
+                        message: 'Importing node modules into extension.web.ts is not allowed.'
                     }
                 ]
             }

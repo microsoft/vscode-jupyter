@@ -14,7 +14,7 @@ import { WorkspaceService } from '../../../platform/common/application/workspace
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { ExecutionResult, ShellOptions } from '../../../platform/common/process/types.node';
 import { IConfigurationService } from '../../../platform/common/types';
-import { ServiceContainer } from '../../../platform/ioc/container.node';
+import { ServiceContainer } from '../../../platform/ioc/container';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { TEST_LAYOUT_ROOT } from '../../../test/pythonEnvironments/constants';
 import * as fileUtils from '../../../platform/common/platform/fileUtils.node';

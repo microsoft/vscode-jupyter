@@ -146,7 +146,10 @@ gulp.task('compile-viewers', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js');
 });
 
-gulp.task('compile-webviews', gulp.parallel('compile-viewers', 'compile-renderers'));
+gulp.task('compile-webextension', async () => {
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.web.config.js');
+});
+gulp.task('compile-webviews', gulp.parallel('compile-viewers', 'compile-renderers', 'compile-webextension'));
 
 async function buildWebPackForDevOrProduction(configFile, configNameForProductionBuilds) {
     if (configNameForProductionBuilds) {
@@ -163,7 +166,8 @@ gulp.task('webpack', async () => {
     // Individually is faster on CI.
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-renderers.config.js', 'production');
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js', 'production');
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension');
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.node.config.js', 'extension');
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.web.config.js', 'extension');
 });
 
 gulp.task('updateBuildNumber', async () => {
