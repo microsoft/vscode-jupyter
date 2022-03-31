@@ -83,6 +83,7 @@ import { Container } from 'inversify/lib/container/container';
 import { ServiceContainer } from './platform/ioc/container.node';
 import { ServiceManager } from './platform/ioc/serviceManager.node';
 import { OutputChannelLogger } from './platform/logging/outputChannelLogger';
+import { ConsoleLogger } from './platform/logging/consoleLogger';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -211,6 +212,19 @@ async function activateComponents(
     return activateLegacy(context, serviceManager, serviceContainer);
 }
 
+function addConsoleLogger() {
+    if (process.env.VSC_JUPYTER_FORCE_LOGGING) {
+        let label = undefined;
+        // In CI there's no need for the label.
+        const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
+        if (!isCI) {
+            label = 'Jupyter Extension:';
+        }
+
+        registerLogger(new ConsoleLogger(label));
+    }
+}
+
 function addOutputChannel(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter());
     registerLogger(new OutputChannelLogger(standardOutputChannel));
@@ -278,6 +292,8 @@ async function activateLegacy(
         void commands.executeCommand('setContext', 'jupyter.development', true);
     }
 
+    // Setup the console logger if asked to
+    addConsoleLogger();
     // Output channel is special. We need it before everything else
     addOutputChannel(context, serviceManager, isDevMode);
 
