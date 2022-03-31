@@ -29,7 +29,7 @@ import { GlobalActivation } from './common/globalActivation.node';
 import { FileSystemPathUtils } from './common/platform/fs-paths.node';
 import { IFileSystemPathUtils } from './common/platform/types';
 import { PreReleaseChecker } from './common/prereleaseChecker.node';
-import { IDataScienceCommandListener } from './common/types';
+import { IConfigurationService, IDataScienceCommandListener } from './common/types';
 import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFactory.node';
 import { DebuggingManager } from './debugger/jupyter/debuggingManager.node';
 import { IDebugLocationTracker, IDebuggingManager } from './debugger/types';
@@ -51,10 +51,22 @@ import { KernelProgressReporter } from './progress/kernelProgressReporter.node';
 import { ProgressReporter } from './progress/progressReporter.node';
 import { StatusProvider } from './progress/statusProvider.node';
 import { IStatusProvider } from './progress/types';
+import { ApplicationShell } from './common/application/applicationShell.node';
+import { CommandManager } from './common/application/commandManager.node';
+import { ICommandManager, IWorkspaceService, IApplicationShell } from './common/application/types';
+import { WorkspaceService } from './common/application/workspace';
+import { ConfigurationService } from './common/configuration/service.node';
+import { IFileSystem } from './common/platform/types.node';
+import { FileSystem } from './common/platform/fileSystem.node';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
-    // Logging should be done first so we get logging going asap
+    serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
+    serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
+    serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
+    serviceManager.addSingleton<IApplicationShell>(IApplicationShell, ApplicationShell);
+    serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
     serviceManager.addSingleton<CommandRegistry>(CommandRegistry, CommandRegistry);
+
     activationRegisterTypes(serviceManager);
     registerApiTypes(serviceManager);
     commonRegisterTypes(serviceManager);

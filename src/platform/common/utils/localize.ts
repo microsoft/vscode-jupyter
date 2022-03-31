@@ -4,15 +4,16 @@
 'use strict';
 
 // Embed all known translations so we can use them on the web too
-const packageBaseNlsJson = require('package.nls.json');
-const packageNlsJsons: Record<string, string> = {
-    en: require('package.nls.json'),
-    it: require('package.nls.it.json'),
-    nl: require('package.nls.nl.json'),
-    pl: require('package.nls.pl.json'),
-    ru: require('package.nls.ru.json'),
-    'zh-cn': require('package.nls.zh-cn.json'),
-    'zh-tw': require('package.nls.zh-tw.json')
+const packageBaseNlsJson = require('../../../../package.nls.json');
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const packageNlsJsons: Record<string, any> = {
+    en: require('../../../../package.nls.json'),
+    it: require('../../../../package.nls.it.json'),
+    nl: require('../../../../package.nls.nl.json'),
+    pl: require('../../../../package.nls.pl.json'),
+    ru: require('../../../../package.nls.ru.json'),
+    'zh-cn': require('../../../../package.nls.zh-cn.json'),
+    'zh-tw': require('../../../../package.nls.zh-tw.json')
 };
 
 // External callers of localize use these tables to retrieve localized values.
@@ -1229,7 +1230,7 @@ function load() {
     // Find the nls file that matches (if there is one)
     let contents = packageNlsJsons[loadedLocale];
     if (contents) {
-        loadedCollection = JSON.parse(contents);
+        loadedCollection = contents;
     } else {
         // If there isn't one, at least remember that we looked so we don't try to load a second time
         loadedCollection = {};
@@ -1237,7 +1238,7 @@ function load() {
 
     // Get the default collection if necessary. Strings may be in the default or the locale json
     if (!defaultCollection) {
-        defaultCollection = JSON.parse(packageBaseNlsJson);
+        defaultCollection = packageBaseNlsJson;
     }
 }
 

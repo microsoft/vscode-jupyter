@@ -44,7 +44,7 @@ import { WebviewPanelHost } from '../webviewPanelHost.node';
 import { noop } from '../../../platform/common/utils/misc';
 
 const PREFERRED_VIEWGROUP = 'JupyterDataViewerPreferredViewColumn';
-const dataExplorerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'webviews/webview-side', 'viewers');
+const dataExplorerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'webviews', 'webview-side', 'viewers');
 @injectable()
 export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements IDataViewer, IDisposable {
     private dataProvider: IDataViewerDataProvider | IJupyterVariableDataProvider | undefined;

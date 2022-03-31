@@ -409,7 +409,8 @@ export class VSCodeNotebookController implements Disposable {
                 join(
                     this.context.extensionPath,
                     'out',
-                    'webviews/webview-side',
+                    'webviews',
+                    'webview-side',
                     'ipywidgetsKernel',
                     'ipywidgetsKernel.js'
                 ),

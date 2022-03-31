@@ -23,7 +23,7 @@ import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
 import { ICodeCssGenerator, IThemeFinder } from '../types';
 import { WebviewPanelHost } from '../webviewPanelHost.node';
 
-const plotDir = path.join(EXTENSION_ROOT_DIR, 'out', 'webviews/webview-side', 'viewers');
+const plotDir = path.join(EXTENSION_ROOT_DIR, 'out', 'webviews', 'webview-side', 'viewers');
 @injectable()
 export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements IPlotViewer, IDisposable {
     private closedEvent: EventEmitter<IPlotViewer> = new EventEmitter<IPlotViewer>();
