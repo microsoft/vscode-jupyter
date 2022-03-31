@@ -72,7 +72,6 @@
         -   [ ] Tag is version number
         -   [ ] Branch is release branch
         -   [ ] Copy contents of release branch changelog into the release (just copy the markdown)
-        -   [ ] Download the VSIX from the Stable pipeline and attach it to the release
         -   [ ] Save
 -   [ ] Determine if a hotfix is needed
     -   [ ] Ensure the version in package.json is updated as follows:
