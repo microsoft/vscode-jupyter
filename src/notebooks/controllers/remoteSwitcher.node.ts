@@ -12,13 +12,13 @@ import {
     IApplicationShell
 } from '../../platform/common/application/types';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
-import { DataScience } from '../../platform/common/utils/localize.node';
+import { DataScience } from '../../platform/common/utils/localize';
 import { Commands } from '../../webviews/webview-side/common/constants';
 import { JupyterServerSelector } from '../../kernels/jupyter/serverSelector.node';
 import { isJupyterNotebook } from '../helpers.node';
 import { INotebookControllerManager } from '../types';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
-import { Settings } from '../../platform/common/constants.node';
+import { Settings } from '../../platform/common/constants';
 
 @injectable()
 export class RemoteSwitcher implements IExtensionSingleActivationService {

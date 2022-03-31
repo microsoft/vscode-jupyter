@@ -7,7 +7,7 @@ import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { ApplicationShell } from '../../../../platform/common/application/applicationShell.node';
 import { IApplicationShell } from '../../../../platform/common/application/types';
-import { DataScience } from '../../../../platform/common/utils/localize.node';
+import { DataScience } from '../../../../platform/common/utils/localize';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
 import { ProductInstaller } from '../../../../kernels/installer/productInstaller.node';
 import { IInstaller, Product, InstallerResponse } from '../../../../kernels/installer/types';

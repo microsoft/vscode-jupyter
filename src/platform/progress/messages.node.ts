@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { DataScience } from '../common/utils/localize.node';
+import { DataScience } from '../common/utils/localize';
 import { ReportableAction } from './types';
 
 const progressMessages = {

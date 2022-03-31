@@ -28,9 +28,16 @@ import {
     IDocumentManager,
     IApplicationShell
 } from '../../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../../platform/common/constants.node';
+import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers.node';
-import { traceInfoIfCI, traceInfo, traceVerbose, traceWarning, traceError } from '../../platform/common/logger.node';
+import {
+    traceInfoIfCI,
+    traceInfo,
+    traceVerbose,
+    traceWarning,
+    traceDecoratorVerbose,
+    traceError
+} from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths.node';
 import {
     IBrowserService,
@@ -42,19 +49,16 @@ import {
     IPathUtils
 } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
-import { DataScience, Common } from '../../platform/common/utils/localize.node';
-import { noop } from '../../platform/common/utils/misc.node';
+import { DataScience, Common } from '../../platform/common/utils/localize';
+import { noop } from '../../platform/common/utils/misc';
 import {
     initializeInteractiveOrNotebookTelemetryBasedOnUserAction,
     sendKernelTelemetryEvent
 } from '../../telemetry/telemetry.node';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { traceDecorators } from '../../platform/logging/index.node';
-import { TraceOptions } from '../../platform/logging/trace.node';
-import { ConsoleForegroundColors } from '../../platform/logging/_global.node';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { Telemetry, Commands } from '../../webviews/webview-side/common/constants';
-import { endCellAndDisplayErrorsInCell } from '../../platform/errors/errorUtils.node';
+import { endCellAndDisplayErrorsInCell } from '../../platform/errors/errorUtils';
 import { IDataScienceErrorHandler, WrappedError } from '../../platform/errors/types';
 import { IPyWidgetMessages } from '../../platform/messageTypes';
 import { NotebookCellLanguageService } from '../../intellisense/cellLanguageService.node';
@@ -80,11 +84,12 @@ import {
     PythonKernelConnectionMetadata
 } from '../../kernels/types';
 import { InteractiveWindowView } from '../constants';
-import { CellExecutionCreator } from '../execution/cellExecutionCreator.node';
+import { CellExecutionCreator } from '../execution/cellExecutionCreator';
 import { isJupyterNotebook, traceCellMessage, updateNotebookDocumentMetadata } from '../helpers.node';
 import { KernelDeadError } from '../../platform/errors/kernelDeadError.node';
 import { DisplayOptions } from '../../kernels/displayOptions.node';
 import { sendNotebookOrKernelLanguageTelemetry } from '../../platform/common/utils.node';
+import { ConsoleForegroundColors, TraceOptions } from '../../platform/logging/types';
 
 export class VSCodeNotebookController implements Disposable {
     private readonly _onNotebookControllerSelected: EventEmitter<{
@@ -224,7 +229,7 @@ export class VSCodeNotebookController implements Disposable {
     }
 
     // Handle the execution of notebook cell
-    @traceDecorators.verbose('VSCodeNotebookController::handleExecution', TraceOptions.BeforeCall)
+    @traceDecoratorVerbose('VSCodeNotebookController::handleExecution', TraceOptions.BeforeCall)
     private async handleExecution(cells: NotebookCell[], notebook: NotebookDocument) {
         if (cells.length < 1) {
             return;
@@ -410,7 +415,8 @@ export class VSCodeNotebookController implements Disposable {
                 join(
                     this.context.extensionPath,
                     'out',
-                    'webviews/webview-side',
+                    'webviews',
+                    'webview-side',
                     'ipywidgetsKernel',
                     'ipywidgetsKernel.js'
                 ),

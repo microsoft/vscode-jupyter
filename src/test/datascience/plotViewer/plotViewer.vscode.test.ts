@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import * as vscode from 'vscode';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
-import { traceInfo } from '../../../platform/common/logger.node';
+import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { createJupyterCellFromVSCNotebookCell } from '../../../notebooks/helpers.node';
 import { IExtensionTestApi, waitForCondition } from '../../common';

@@ -12,7 +12,7 @@ import { requestExecute } from './raw-kernel/rawKernelTestHelpers';
 
 // Chai as promised is not part of this file
 import * as chaiAsPromised from 'chai-as-promised';
-import { traceInfo } from '../../platform/common/logger.node';
+import { traceInfo } from '../../platform/logging';
 import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { initialize } from '../initialize';
 import { PortAttributesProviders } from '../../platform/common/net/portAttributeProvider.node';

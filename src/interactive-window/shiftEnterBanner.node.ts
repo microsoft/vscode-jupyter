@@ -6,11 +6,11 @@
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget } from 'vscode';
 import { IApplicationShell } from '../platform/common/application/types';
-import { Telemetry } from '../platform/common/constants.node';
-import '../platform/common/extensions.node';
+import { Telemetry } from '../platform/common/constants';
+import '../platform/common/extensions';
 import { IJupyterExtensionBanner, IPersistentStateFactory, IConfigurationService } from '../platform/common/types';
-import * as localize from '../platform/common/utils/localize.node';
-import { sendTelemetryEvent, captureTelemetry } from '../telemetry/index.node';
+import * as localize from '../platform/common/utils/localize';
+import { sendTelemetryEvent, captureTelemetry } from '../telemetry';
 
 export enum InteractiveShiftEnterStateKeys {
     ShowBanner = 'InteractiveShiftEnterBanner'

@@ -22,7 +22,7 @@ import {
     ReadWrite
 } from '../../../../platform/common/types';
 import { createDeferred, sleep } from '../../../../platform/common/utils/async';
-import { Common, DataScience } from '../../../../platform/common/utils/localize.node';
+import { Common, DataScience } from '../../../../platform/common/utils/localize';
 import { InteractiveWindowProvider } from '../../../../interactive-window/interactiveWindowProvider.node';
 import { hasErrorOutput, translateCellErrorOutput } from '../../../../notebooks/helpers.node';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts.node';
@@ -60,7 +60,7 @@ import {
 import * as kernelSelector from '../../../../notebooks/controllers/kernelSelector.node';
 import { noop } from '../../../core';
 import { IInteractiveWindowProvider } from '../../../../interactive-window/types';
-import { Commands } from '../../../../platform/common/constants.node';
+import { Commands } from '../../../../platform/common/constants';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience Install IPyKernel (slow) (install)', function () {

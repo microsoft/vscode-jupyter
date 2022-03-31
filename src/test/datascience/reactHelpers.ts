@@ -56,7 +56,7 @@ import { configure } from 'enzyme';
 import * as Adapter from 'enzyme-adapter-react-16';
 import { DOMWindow, JSDOM } from 'jsdom';
 
-import { noop } from '../../platform/common/utils/misc.node';
+import { noop } from '../../platform/common/utils/misc';
 
 class MockCanvas implements CanvasRenderingContext2D {
     public canvas!: HTMLCanvasElement;

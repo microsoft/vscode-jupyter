@@ -4,11 +4,11 @@
 import { injectable, inject, named } from 'inversify';
 import { ExtensionMode, Memento } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
-import { JVSC_EXTENSION_ID, Telemetry } from '../common/constants.node';
+import { JVSC_EXTENSION_ID, Telemetry } from '../common/constants';
 import { GLOBAL_MEMENTO, IExtensionContext, IMemento } from '../common/types';
 import { PromiseChain } from '../common/utils/async';
-import { Common, DataScience } from '../common/utils/localize.node';
-import { sendTelemetryEvent } from '../../telemetry/index.node';
+import { Common, DataScience } from '../common/utils/localize';
+import { sendTelemetryEvent } from '../../telemetry';
 
 type ApiExtensionInfo = {
     extensionId: string;

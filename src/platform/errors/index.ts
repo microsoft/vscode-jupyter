@@ -3,9 +3,9 @@
 
 import { FetchError } from 'node-fetch';
 import * as stackTrace from 'stack-trace';
-import { getTelemetrySafeHashedString } from '../../telemetry/helpers.node';
-import { getErrorTags } from './errors.node';
-import { getLastFrameFromPythonTraceback } from './errorUtils.node';
+import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
+import { getErrorTags } from './errors';
+import { getLastFrameFromPythonTraceback } from './errorUtils';
 import { BaseError, getErrorCategory, TelemetryErrorProperties, WrappedError } from './types';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

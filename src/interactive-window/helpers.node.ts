@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { window } from 'vscode';
-import { NotebookCellScheme } from '../platform/common/constants.node';
+import { NotebookCellScheme } from '../platform/common/constants';
 import { IJupyterSettings } from '../platform/common/types';
 import { removeLinesFromFrontAndBackNoConcat, appendLineFeed } from '../webviews/webview-side/common';
 import { uncommentMagicCommands } from './editor-integration/cellFactory.node';

@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 import { CancellationToken, CancellationTokenSource, Progress, ProgressLocation, ProgressOptions } from 'vscode';
 import { IApplicationShell } from '../../platform/common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants.node';
-import { traceError, traceInfo } from '../../platform/common/logger.node';
+import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants';
+import { traceError, traceInfo } from '../../platform/logging';
 import {
     IProcessServiceFactory,
     IPythonExecutionFactory,
@@ -11,7 +11,7 @@ import {
 } from '../../platform/common/process/types.node';
 import { IOutputChannel } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
-import { Products } from '../../platform/common/utils/localize.node';
+import { Products } from '../../platform/common/utils/localize';
 import { IEnvironmentVariablesService } from '../../platform/common/variables/types';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
 import { IServiceContainer } from '../../platform/ioc/types';

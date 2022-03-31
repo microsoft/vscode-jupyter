@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { Disposable, EventEmitter, NotebookCell } from 'vscode';
-import { traceInfo, traceError } from '../../platform/common/logger.node';
-import { noop } from '../../platform/common/utils/misc.node';
+import { traceInfo, traceError } from '../../platform/logging';
+import { noop } from '../../platform/common/utils/misc';
 import { traceCellMessage } from '../../notebooks/helpers.node';
 import { CellExecution, CellExecutionFactory } from './cellExecution.node';
 import { IJupyterSession, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';

@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { analyzeKernelErrors } from './errorUtils.node';
+import { analyzeKernelErrors } from './errorUtils';
 
 const taggers = [tagWithChildProcessExited, tagWithKernelRestarterFailed];
 export function getErrorTags(stdErrOrStackTrace: string | string[]) {

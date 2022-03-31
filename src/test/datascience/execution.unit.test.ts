@@ -14,7 +14,7 @@ import * as uuid from 'uuid/v4';
 import { CancellationTokenSource, ConfigurationChangeEvent, Disposable, EventEmitter } from 'vscode';
 import { ApplicationShell } from '../../platform/common/application/applicationShell.node';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
-import { WorkspaceService } from '../../platform/common/application/workspace.node';
+import { WorkspaceService } from '../../platform/common/application/workspace';
 import { ConfigurationService } from '../../platform/common/configuration/service.node';
 import { PersistentState, PersistentStateFactory } from '../../platform/common/persistentState.node';
 import { FileSystem } from '../../platform/common/platform/fileSystem.node';

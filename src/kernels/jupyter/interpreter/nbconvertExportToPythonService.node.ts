@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Uri } from 'vscode';
-import { traceError } from '../../../platform/common/logger.node';
+import { traceError } from '../../../platform/logging';
 import { IPythonExecutionFactory, IPythonDaemonExecutionService } from '../../../platform/common/process/types.node';
 import { reportAction } from '../../../platform/progress/decorator.node';
 import { ReportableAction } from '../../../platform/progress/types';

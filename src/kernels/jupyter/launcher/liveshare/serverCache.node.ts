@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../../platform/common/extensions.node';
+import '../../../../platform/common/extensions';
 
 import { CancellationToken } from 'vscode';
 import { IWorkspaceService } from '../../../../platform/common/application/types';
-import { traceInfo, traceError } from '../../../../platform/common/logger.node';
+import { traceInfo, traceError } from '../../../../platform/logging';
 import { IFileSystem } from '../../../../platform/common/platform/types.node';
 import { IAsyncDisposable, IConfigurationService } from '../../../../platform/common/types';
-import { testOnlyMethod } from '../../../../platform/common/utils/decorators.node';
+import { testOnlyMethod } from '../../../../platform/common/utils/decorators';
 import { calculateWorkingDirectory } from '../../../../platform/common/utils.node';
 import { sleep } from '../../../../platform/common/utils/async';
 import { INotebookServerOptions, INotebookServer } from '../../types';

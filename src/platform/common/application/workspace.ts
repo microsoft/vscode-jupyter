@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
-import * as path from 'path';
+import * as path from 'path-browserify';
 import {
     CancellationToken,
     ConfigurationChangeEvent,

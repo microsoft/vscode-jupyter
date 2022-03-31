@@ -3,8 +3,8 @@
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
-import '../platform/common/extensions.node';
-import * as localize from '../platform/common/utils/localize.node';
+import '../platform/common/extensions';
+import * as localize from '../platform/common/utils/localize';
 
 let identities: string[] = [];
 let createCount = 0;

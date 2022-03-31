@@ -12,7 +12,7 @@ import { IDocumentManager, IVSCodeNotebook } from '../../platform/common/applica
 import { disposeAllDisposables } from '../../platform/common/helpers.node';
 import { IDisposable } from '../../platform/common/types';
 import { EventName } from '../../telemetry/constants';
-import { getTelemetrySafeHashedString } from '../../telemetry/helpers.node';
+import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { ImportTracker } from '../../telemetry/importTracker.node';
 import { createDocument } from '../datascience/editor-integration/helpers';
 

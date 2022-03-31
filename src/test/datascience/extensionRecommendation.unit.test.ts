@@ -8,7 +8,7 @@ import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platf
 import { disposeAllDisposables } from '../../platform/common/helpers.node';
 import { IDisposable, IExtensions } from '../../platform/common/types';
 import { sleep } from '../../platform/common/utils/async';
-import { Common } from '../../platform/common/utils/localize.node';
+import { Common } from '../../platform/common/utils/localize';
 import { JupyterNotebookView } from '../../notebooks/constants';
 import { VSCodeNotebookController } from '../../notebooks/controllers/vscodeNotebookController.node';
 import { INotebookControllerManager } from '../../notebooks/types';

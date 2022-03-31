@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../platform/common/extensions.node';
+import '../../../platform/common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
@@ -9,13 +9,13 @@ import * as path from 'path';
 
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../platform/common/application/types';
-import { traceError } from '../../../platform/common/logger.node';
+import { traceError } from '../../../platform/logging';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IDisposableRegistry, IConfigurationService } from '../../../platform/common/types';
-import { DataScience } from '../../../platform/common/utils/localize.node';
+import { DataScience } from '../../../platform/common/utils/localize';
 import { Identifiers, CodeSnippets } from '../../../webviews/webview-side/common/constants';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { noop } from '../../../platform/common/utils/misc.node';
+import { noop } from '../../../platform/common/utils/misc';
 import { INotebookImporter, INbConvertInterpreterDependencyChecker, INbConvertExportToPythonService } from '../types';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 

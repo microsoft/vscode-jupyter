@@ -3,7 +3,7 @@
 
 import { window, workspace } from 'vscode';
 import { IDisposableRegistry, IOutputChannel } from '../common/types';
-import * as localize from '../common/utils/localize.node';
+import * as localize from '../common/utils/localize';
 
 /**
  * Returns the output panel for output related to Jupyter Server.

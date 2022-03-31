@@ -15,19 +15,17 @@
 import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, Uri, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
-import { isCI, PythonExtension, Telemetry } from '../common/constants.node';
-import { traceDecorators, traceError, traceInfo, traceVerbose } from '../common/logger.node';
+import { isCI, PythonExtension, Telemetry } from '../common/constants';
 import { getDisplayPath } from '../common/platform/fs-paths.node';
 import { IDisposableRegistry, IExtensions, InterpreterUri, Resource } from '../common/types';
 import { createDeferred } from '../common/utils/async';
-import * as localize from '../common/utils/localize.node';
-import { noop } from '../common/utils/misc.node';
+import * as localize from '../common/utils/localize';
+import { noop } from '../common/utils/misc';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts.node';
-import { TraceOptions } from '../logging/trace.node';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { areInterpreterPathsSame } from '../pythonEnvironments/info/interpreter.node';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry/index.node';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import {
     ILanguageServer,
     ILanguageServerProvider,
@@ -38,6 +36,8 @@ import {
     PythonApi,
     RefreshInterpretersOptions
 } from './types';
+import { traceInfo, traceVerbose, traceError, traceDecoratorVerbose } from '../logging';
+import { TraceOptions } from '../logging/types';
 
 /* eslint-disable max-classes-per-file */
 @injectable()
@@ -277,7 +277,7 @@ export class InterpreterService implements IInterpreterService {
     }
 
     @captureTelemetry(Telemetry.InterpreterListingPerf)
-    @traceDecorators.verbose('Get Interpreters', TraceOptions.Arguments | TraceOptions.BeforeCall)
+    @traceDecoratorVerbose('Get Interpreters', TraceOptions.Arguments | TraceOptions.BeforeCall)
     public getInterpreters(resource?: Uri): Promise<PythonEnvironment[]> {
         this.hookupOnDidChangeInterpreterEvent();
         // Cache result as it only changes when the interpreter list changes or we add more workspace folders
@@ -305,7 +305,7 @@ export class InterpreterService implements IInterpreterService {
     }
     private workspaceCachedActiveInterpreter = new Map<string, Promise<PythonEnvironment | undefined>>();
     @captureTelemetry(Telemetry.ActiveInterpreterListingPerf)
-    @traceDecorators.verbose('Get Active Interpreter', TraceOptions.Arguments | TraceOptions.BeforeCall)
+    @traceDecoratorVerbose('Get Active Interpreter', TraceOptions.Arguments | TraceOptions.BeforeCall)
     public getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
         this.hookupOnDidChangeInterpreterEvent();
         const workspaceId = this.workspace.getWorkspaceFolderIdentifier(resource);
@@ -337,7 +337,7 @@ export class InterpreterService implements IInterpreterService {
         return promise;
     }
 
-    @traceDecorators.verbose('Get Interpreter details', TraceOptions.Arguments | TraceOptions.BeforeCall)
+    @traceDecoratorVerbose('Get Interpreter details', TraceOptions.Arguments | TraceOptions.BeforeCall)
     public async getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<undefined | PythonEnvironment> {
         this.hookupOnDidChangeInterpreterEvent();
         try {

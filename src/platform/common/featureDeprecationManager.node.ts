@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { Disposable, WorkspaceConfiguration } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from './application/types';
-import { traceVerbose } from './logger.node';
+import { traceVerbose } from '../logging';
 import { launch } from './net/browser.node';
 import {
     DeprecatedFeatureInfo,

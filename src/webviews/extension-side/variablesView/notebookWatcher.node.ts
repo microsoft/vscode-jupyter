@@ -11,7 +11,7 @@ import {
     NotebookDocument,
     NotebookEditor
 } from 'vscode';
-import '../../../platform/common/extensions.node';
+import '../../../platform/common/extensions';
 import { getActiveInteractiveWindow } from '../../../interactive-window/helpers.node';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { JupyterNotebookView } from '../../../notebooks/constants';

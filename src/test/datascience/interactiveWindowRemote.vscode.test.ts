@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import { workspace, Disposable } from 'vscode';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
-import { traceInfo } from '../../platform/common/logger.node';
+import { traceInfo } from '../../platform/logging';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
 import { submitFromPythonFile } from './helpers';
 import {

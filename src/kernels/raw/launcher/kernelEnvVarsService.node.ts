@@ -3,10 +3,10 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { traceInfo, traceError } from '../../../platform/common/logger.node';
+import { traceInfo, traceError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
 import { Resource } from '../../../platform/common/types';
-import { noop } from '../../../platform/common/utils/misc.node';
+import { noop } from '../../../platform/common/utils/misc';
 import { IEnvironmentVariablesService, IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
 import { IEnvironmentActivationService } from '../../../platform/interpreter/activation/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts.node';

@@ -7,16 +7,21 @@ import { inject, injectable, named } from 'inversify';
 import { CancellationToken, CancellationTokenSource, Memento } from 'vscode';
 import { IApplicationShell } from '../platform/common/application/types';
 import { createPromiseFromCancellation } from '../platform/common/cancellation.node';
-import { traceInfo, traceError, traceInfoIfCI } from '../platform/common/logger.node';
+import {
+    traceInfo,
+    traceError,
+    traceInfoIfCI,
+    traceDecoratorVerbose,
+    ignoreLogging,
+    logValue
+} from '../platform/logging';
 import { getDisplayPath } from '../platform/common/platform/fs-paths.node';
 import { IMemento, GLOBAL_MEMENTO, IsCodeSpace, Resource, IDisplayOptions } from '../platform/common/types';
-import { DataScience, Common } from '../platform/common/utils/localize.node';
+import { DataScience, Common } from '../platform/common/utils/localize';
 import { IServiceContainer } from '../platform/ioc/types';
-import { traceDecorators } from '../platform/logging/index.node';
-import { ignoreLogging, logValue } from '../platform/logging/trace.node';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { sendTelemetryEvent } from '../telemetry/index.node';
-import { getTelemetrySafeHashedString } from '../telemetry/helpers.node';
+import { sendTelemetryEvent } from '../telemetry';
+import { getTelemetrySafeHashedString } from '../telemetry/helpers';
 import { Telemetry } from '../webviews/webview-side/common/constants';
 import {
     isModulePresentInEnvironmentCache,
@@ -26,7 +31,7 @@ import {
 import { ProductNames } from './installer/productNames.node';
 import { IInstaller, Product, InstallerResponse } from './installer/types';
 import { IKernelDependencyService, KernelConnectionMetadata, KernelInterpreterDependencyResponse } from './types';
-import { noop } from '../platform/common/utils/misc.node';
+import { noop } from '../platform/common/utils/misc';
 import { getResourceType } from '../platform/common/utils.node';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter.node';
 import { IRawNotebookSupportedService } from './raw/types';
@@ -50,7 +55,7 @@ export class KernelDependencyService implements IKernelDependencyService {
      * Configures the python interpreter to ensure it can run a Jupyter Kernel by installing any missing dependencies.
      * If user opts not to install they can opt to select another interpreter.
      */
-    @traceDecorators.verbose('Install Missing Dependencies')
+    @traceDecoratorVerbose('Install Missing Dependencies')
     public async installMissingDependencies(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
@@ -123,7 +128,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         }
         return dependencyResponse;
     }
-    @traceDecorators.verbose('Are Dependencies Installed')
+    @traceDecoratorVerbose('Are Dependencies Installed')
     public async areDependenciesInstalled(
         @logValue<KernelConnectionMetadata>('id') kernelConnection: KernelConnectionMetadata,
         token?: CancellationToken,

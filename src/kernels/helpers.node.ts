@@ -30,8 +30,8 @@ import {
     IVSCodeNotebook,
     IApplicationShell
 } from '../platform/common/application/types';
-import { PYTHON_LANGUAGE, isCI, Settings } from '../platform/common/constants.node';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/common/logger.node';
+import { PYTHON_LANGUAGE, isCI, Settings } from '../platform/common/constants';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
 import { getDisplayPath } from '../platform/common/platform/fs-paths.node';
 import { IPythonExecutionFactory } from '../platform/common/process/types.node';
 import {
@@ -44,7 +44,7 @@ import {
     IDisposable
 } from '../platform/common/types';
 import { createDeferred, createDeferredFromPromise, Deferred } from '../platform/common/utils/async';
-import { DataScience } from '../platform/common/utils/localize.node';
+import { DataScience } from '../platform/common/utils/localize';
 import { SysInfoReason } from '../platform/messageTypes';
 import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../telemetry/telemetry.node';
 import { IServiceContainer } from '../platform/ioc/types';
@@ -53,8 +53,8 @@ import {
     getInterpreterHash,
     areInterpreterPathsSame
 } from '../platform/pythonEnvironments/info/interpreter.node';
-import { sendTelemetryEvent } from '../telemetry/index.node';
-import { getTelemetrySafeVersion } from '../telemetry/helpers.node';
+import { sendTelemetryEvent } from '../telemetry';
+import { getTelemetrySafeVersion } from '../telemetry/helpers';
 import { concatMultilineString } from '../webviews/webview-side/common';
 import { Telemetry, Commands } from '../webviews/webview-side/common/constants';
 import { clearInstalledIntoInterpreterMemento } from './installer/productInstaller.node';
@@ -72,7 +72,7 @@ import { INotebookControllerManager } from '../notebooks/types';
 import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKernelIdProvider.node';
 import { findNotebookEditor, selectKernel } from '../notebooks/controllers/kernelSelector.node';
 import { KernelDeadError } from '../platform/errors/kernelDeadError.node';
-import { noop } from '../platform/common/utils/misc.node';
+import { noop } from '../platform/common/utils/misc';
 import { IInteractiveWindowProvider } from '../interactive-window/types';
 import { getResourceType } from '../platform/common/utils.node';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
@@ -656,7 +656,7 @@ export function findPreferredKernel(
         // Remember, all we're doing is sorting the list, just because its sorted in order of preference doesn't mean we have a match.
         preferredKernel = undefined;
     } else {
-        traceInfoIfCI(isCI, `Preferred kernel is ${JSON.stringify(kernels[0])}`);
+        traceInfoIfCI(`Preferred kernel is ${JSON.stringify(kernels[0])}`);
     }
     return preferredKernel;
 }

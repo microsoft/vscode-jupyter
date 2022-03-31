@@ -4,7 +4,7 @@ import {
     IJupyterInterpreterDependencyManager,
     INbConvertInterpreterDependencyChecker
 } from '../../kernels/jupyter/types';
-import * as localize from '../common/utils/localize.node';
+import * as localize from '../common/utils/localize';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 
 @injectable()

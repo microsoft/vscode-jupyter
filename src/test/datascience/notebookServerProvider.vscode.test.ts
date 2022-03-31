@@ -5,7 +5,7 @@
 
 import { assert } from 'chai';
 import { Disposable, CancellationTokenSource } from 'vscode';
-import { traceInfo } from '../../platform/common/logger.node';
+import { traceInfo } from '../../platform/logging';
 import { IS_NON_RAW_NATIVE_TEST } from '../constants';
 import { initialize } from '../initialize';
 import { closeNotebooksAndCleanUpAfterTests, startJupyterServer } from './notebook/helper';

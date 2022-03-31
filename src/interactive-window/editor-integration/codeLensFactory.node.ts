@@ -15,15 +15,15 @@ import {
 } from 'vscode';
 
 import { IDocumentManager, IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
-import { traceWarning, traceInfoIfCI } from '../../platform/common/logger.node';
+import { traceWarning, traceInfoIfCI } from '../../platform/logging';
 
 import { ICellRange, IConfigurationService, IDisposableRegistry, Resource } from '../../platform/common/types';
-import * as localize from '../../platform/common/utils/localize.node';
+import * as localize from '../../platform/common/utils/localize';
 import { getInteractiveCellMetadata } from '../interactiveWindow.node';
 import { IKernelProvider } from '../../kernels/types';
 import { InteractiveWindowView } from '../../notebooks/constants';
 import { CellHashProviderFactory } from './cellHashProviderFactory.node';
-import { CodeLensCommands, Commands } from '../../platform/common/constants.node';
+import { CodeLensCommands, Commands } from '../../platform/common/constants';
 import { generateCellRangesFromDocument } from './cellFactory.node';
 import { ICodeLensFactory, ICellHashProvider, IFileHashes } from './types';
 import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector.node';

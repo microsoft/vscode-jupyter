@@ -3,7 +3,7 @@ import { anyString, anything, instance, mock, when } from 'ts-mockito';
 import { MigrateDataScienceSettingsService } from '../../platform/activation/migrateDataScienceSettingsService.node';
 import { ApplicationEnvironment } from '../../platform/common/application/applicationEnvironment.node';
 import { IApplicationEnvironment, IWorkspaceService } from '../../platform/common/application/types';
-import { WorkspaceService } from '../../platform/common/application/workspace.node';
+import { WorkspaceService } from '../../platform/common/application/workspace';
 import { PersistentStateFactory, PersistentState } from '../../platform/common/persistentState.node';
 import { IPersistentStateFactory } from '../../platform/common/types';
 import { JupyterServerUriStorage } from '../../kernels/jupyter/launcher/serverUriStorage.node';

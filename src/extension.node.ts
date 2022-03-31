@@ -9,7 +9,7 @@ if ((Reflect as any).metadata === undefined) {
 }
 
 // Initialize the logger first.
-require('./platform/common/logger.node');
+require('./platform/logging');
 
 //===============================================
 // We start tracking the extension's startup time at this point.  The
@@ -17,7 +17,7 @@ require('./platform/common/logger.node');
 // the same way as this.
 
 const durations: Record<string, number> = {};
-import { StopWatch } from './platform/common/utils/stopWatch.node';
+import { StopWatch } from './platform/common/utils/stopWatch';
 // Do not move this line of code (used to measure extension load times).
 const stopWatch = new StopWatch();
 
@@ -43,7 +43,7 @@ import * as fsExtra from 'fs-extra';
 import * as path from 'path';
 import { buildApi, IExtensionApi } from './platform/api.node';
 import { IApplicationEnvironment, ICommandManager } from './platform/common/application/types';
-import { traceError } from './platform/common/logger.node';
+import { traceError } from './platform/logging';
 import {
     GLOBAL_MEMENTO,
     IAsyncDisposableRegistry,
@@ -60,10 +60,10 @@ import {
     WORKSPACE_MEMENTO
 } from './platform/common/types';
 import { createDeferred } from './platform/common/utils/async';
-import { Common, OutputChannelNames } from './platform/common/utils/localize.node';
+import { Common, OutputChannelNames } from './platform/common/utils/localize';
 import { IServiceContainer, IServiceManager } from './platform/ioc/types';
 import { sendErrorTelemetry, sendStartupTelemetry } from './platform/startupTelemetry.node';
-import { noop } from './platform/common/utils/misc.node';
+import { noop } from './platform/common/utils/misc';
 import { JUPYTER_OUTPUT_CHANNEL, PythonExtension } from './webviews/webview-side/common/constants';
 import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.node';
 import { registerTypes as registerKernelTypes } from './kernels/serviceRegistry.node';
@@ -73,15 +73,19 @@ import { registerTypes as registerWebviewTypes } from './webviews/extension-side
 import { registerTypes as registerTelemetryTypes } from './telemetry/serviceRegistry.node';
 import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry.node';
 import { IExtensionActivationManager } from './platform/activation/types';
-import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants.node';
+import { isCI, isTestExecution, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants';
 import { getDisplayPath } from './platform/common/platform/fs-paths.node';
 import { IFileSystem } from './platform/common/platform/types.node';
 import { getJupyterOutputChannel } from './platform/devTools/jupyterOutputChannel.node';
-import { addOutputChannelLogging, setLoggingLevel } from './platform/logging/index.node';
+import { registerLogger, setLoggingLevel } from './platform/logging';
 import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry.node';
 import { Container } from 'inversify/lib/container/container';
 import { ServiceContainer } from './platform/ioc/container.node';
 import { ServiceManager } from './platform/ioc/serviceManager.node';
+import { OutputChannelLogger } from './platform/logging/outputChannelLogger';
+import { ConsoleLogger } from './platform/logging/consoleLogger';
+import { FileLogger } from './platform/logging/fileLogger.node';
+import { createWriteStream } from 'fs-extra';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -210,9 +214,27 @@ async function activateComponents(
     return activateLegacy(context, serviceManager, serviceContainer);
 }
 
+function addConsoleLogger() {
+    if (process.env.VSC_JUPYTER_FORCE_LOGGING) {
+        let label = undefined;
+        // In CI there's no need for the label.
+        if (!isCI) {
+            label = 'Jupyter Extension:';
+        }
+
+        registerLogger(new ConsoleLogger(label));
+    }
+
+    // For tests also log to a file.
+    if (isCI && process.env.VSC_JUPYTER_LOG_FILE) {
+        const fileLogger = new FileLogger(createWriteStream(process.env.VSC_JUPYTER_LOG_FILE));
+        registerLogger(fileLogger);
+    }
+}
+
 function addOutputChannel(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter());
-    addOutputChannelLogging(standardOutputChannel);
+    registerLogger(new OutputChannelLogger(standardOutputChannel));
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(
         IOutputChannel,
@@ -277,6 +299,8 @@ async function activateLegacy(
         void commands.executeCommand('setContext', 'jupyter.development', true);
     }
 
+    // Setup the console logger if asked to
+    addConsoleLogger();
     // Output channel is special. We need it before everything else
     addOutputChannel(context, serviceManager, isDevMode);
 

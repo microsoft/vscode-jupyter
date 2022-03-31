@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../../platform/common/extensions.node';
+import '../../../../platform/common/extensions';
 
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
@@ -11,14 +11,14 @@ import { NotebookStarter } from '../notebookStarter.node';
 import { ServerCache } from './serverCache.node';
 import { inject, injectable } from 'inversify';
 import { IWorkspaceService } from '../../../../platform/common/application/types';
-import { traceInfo } from '../../../../platform/common/logger.node';
+import { traceInfo } from '../../../../platform/logging';
 import { IFileSystem } from '../../../../platform/common/platform/types.node';
 import {
     IDisposableRegistry,
     IAsyncDisposableRegistry,
     IConfigurationService
 } from '../../../../platform/common/types';
-import { testOnlyMethod } from '../../../../platform/common/utils/decorators.node';
+import { testOnlyMethod } from '../../../../platform/common/utils/decorators';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts.node';
 import { IServiceContainer } from '../../../../platform/ioc/types';
 import { IJupyterExecution, INotebookServerOptions, INotebookServer } from '../../types';

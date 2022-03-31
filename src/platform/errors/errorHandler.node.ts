@@ -15,10 +15,10 @@ import { KernelDiedError } from './kernelDiedError.node';
 import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError.node';
 import { KernelProcessExitedError } from './kernelProcessExitedError.node';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
-import { traceError, traceWarning } from '../../platform/common/logger.node';
+import { traceError, traceWarning } from '../logging';
 import { IBrowserService, IConfigurationService, Resource } from '../../platform/common/types';
-import { DataScience, Common } from '../../platform/common/utils/localize.node';
-import { sendTelemetryEvent } from '../../telemetry/index.node';
+import { DataScience, Common } from '../common/utils/localize';
+import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry, Commands } from '../../webviews/webview-side/common/constants';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers.node';
 import { translateProductToModule } from '../../kernels/installer/moduleInstaller.node';
@@ -29,11 +29,11 @@ import {
     KernelConnectionMetadata,
     KernelInterpreterDependencyResponse
 } from '../../kernels/types';
-import { analyzeKernelErrors, KernelFailureReason, getErrorMessageFromPythonTraceback } from './errorUtils.node';
-import { JupyterConnectError } from './jupyterConnectError.node';
+import { analyzeKernelErrors, KernelFailureReason, getErrorMessageFromPythonTraceback } from './errorUtils';
+import { JupyterConnectError } from './jupyterConnectError';
 import { JupyterKernelDependencyError } from './jupyterKernelDependencyError.node';
 import { WrappedError, BaseKernelError, WrappedKernelError, BaseError, IDataScienceErrorHandler } from './types';
-import { noop } from '../../platform/common/utils/misc.node';
+import { noop } from '../common/utils/misc';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { KernelDeadError } from './kernelDeadError.node';
 import { DisplayOptions } from '../../kernels/displayOptions.node';

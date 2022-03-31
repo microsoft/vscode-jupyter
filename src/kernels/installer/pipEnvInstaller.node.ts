@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { InterpreterUri } from '../../platform/common/types';
-import { isResource } from '../../platform/common/utils/misc.node';
+import { isResource } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts.node';
 import { ExecutionInstallArgs, ModuleInstaller } from './moduleInstaller.node';
 import { ModuleInstallerType, ModuleInstallFlags } from './types';

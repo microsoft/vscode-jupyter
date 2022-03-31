@@ -21,19 +21,19 @@ import { IDocumentManager } from '../../platform/common/application/types';
 import { IFileSystem } from '../../platform/common/platform/types.node';
 
 import { ICellRange, IConfigurationService, IDisposable, Resource } from '../../platform/common/types';
-import { chainable } from '../../platform/common/utils/decorators.node';
-import { isUri } from '../../platform/common/utils/misc.node';
-import { StopWatch } from '../../platform/common/utils/stopWatch.node';
-import { traceDecorators } from '../../platform/logging/index.node';
-import { TraceOptions } from '../../platform/logging/trace.node';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry/index.node';
+import { chainable } from '../../platform/common/utils/decorators';
+import { isUri } from '../../platform/common/utils/misc';
+import { StopWatch } from '../../platform/common/utils/stopWatch';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../platform/terminals/types';
 import { InteractiveCellResultError } from '../../platform/errors/interactiveCellResultError.node';
-import { Telemetry, Commands, Identifiers } from '../../platform/common/constants.node';
+import { Telemetry, Commands, Identifiers } from '../../platform/common/constants';
 import { IDataScienceErrorHandler } from '../../platform/errors/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../types';
 import { CellMatcher } from './cellMatcher.node';
 import { ICodeWatcher, ICodeLensFactory } from './types';
+import { traceDecoratorVerbose } from '../../platform/logging';
+import { TraceOptions } from '../../platform/logging/types';
 
 function getIndex(index: number, length: number): number {
     // return index within the length range with negative indexing
@@ -299,7 +299,7 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
-    @traceDecorators.verbose('CodeWatcher::runCell', TraceOptions.BeforeCall)
+    @traceDecoratorVerbose('CodeWatcher::runCell', TraceOptions.BeforeCall)
     public async runCell(range: Range): Promise<void> {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
             return;

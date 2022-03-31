@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../platform/common/extensions.node';
+import '../platform/common/extensions';
 
 import { inject, injectable } from 'inversify';
 
@@ -11,7 +11,7 @@ import { IDataScienceCommandListener, IDisposableRegistry } from '../platform/co
 import { Commands } from '../webviews/webview-side/common/constants';
 import { chainWithPendingUpdates } from './execution/notebookUpdater.node';
 import { getNotebookMetadata } from './helpers.node';
-import { noop } from '../platform/common/utils/misc.node';
+import { noop } from '../platform/common/utils/misc';
 import { NotebookCellLanguageService } from '../intellisense/cellLanguageService.node';
 
 @injectable()

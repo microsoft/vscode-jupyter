@@ -7,7 +7,7 @@ import {
     IEncryptedStorage,
     IApplicationEnvironment
 } from '../../../platform/common/application/types';
-import { Settings } from '../../../platform/common/constants.node';
+import { Settings } from '../../../platform/common/constants';
 import { IConfigurationService, ICryptoUtils, IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
 import { IJupyterServerUriStorage } from '../types';
 

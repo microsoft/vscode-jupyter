@@ -7,9 +7,9 @@ import { inject, injectable } from 'inversify';
 import { isNil } from 'lodash';
 import { EventEmitter, QuickPickItem, ThemeIcon, Uri } from 'vscode';
 import { IClipboard } from '../../platform/common/application/types';
-import { Settings } from '../../platform/common/constants.node';
-import { traceError } from '../../platform/common/logger.node';
-import { DataScience } from '../../platform/common/utils/localize.node';
+import { Settings } from '../../platform/common/constants';
+import { traceDecoratorError, traceError } from '../../platform/logging';
+import { DataScience } from '../../platform/common/utils/localize';
 import {
     IMultiStepInputFactory,
     IMultiStepInput,
@@ -17,8 +17,7 @@ import {
     IQuickPickParameters,
     InputFlowAction
 } from '../../platform/common/utils/multiStepInput.node';
-import { traceDecorators } from '../../platform/logging/index.node';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry/index.node';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry, Identifiers } from '../../webviews/webview-side/common/constants';
 import {
     IJupyterUriProvider,
@@ -55,7 +54,7 @@ export class JupyterServerSelector {
     ) {}
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
-    @traceDecorators.error('Failed to select Jupyter Uri')
+    @traceDecoratorError('Failed to select Jupyter Uri')
     public selectJupyterURI(
         allowLocal: boolean,
         commandSource: SelectJupyterUriCommandSource = 'nonUser'

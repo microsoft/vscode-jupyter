@@ -12,7 +12,7 @@ import untildify = require('untildify');
 import { PathUtils } from '../../../platform/common/platform/pathUtils.node';
 import { ProcessLogger } from '../../../platform/common/process/logger.node';
 import { IOutputChannel } from '../../../platform/common/types';
-import { Logging } from '../../../platform/common/utils/localize.node';
+import { Logging } from '../../../platform/common/utils/localize';
 import { getOSType, OSType } from '../../common';
 
 /* eslint-disable  */

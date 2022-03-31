@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../platform/common/extensions.node';
+import '../../../platform/common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Event, EventEmitter, Uri, ViewColumn } from 'vscode';
 
-import { traceError, traceInfo } from '../../../platform/common/logger.node';
+import { traceError, traceInfo } from '../../../platform/logging';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { PlotViewerMessageListener } from './plotViewerMessageListener.node';
 import { IExportPlotRequest, IPlotViewer, IPlotViewerMapping, PlotViewerMessages } from './types';
@@ -18,12 +18,12 @@ import {
 } from '../../../platform/common/application/types';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
-import * as localize from '../../../platform/common/utils/localize.node';
+import * as localize from '../../../platform/common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { ICodeCssGenerator, IThemeFinder } from '../types';
 import { WebviewPanelHost } from '../webviewPanelHost.node';
 
-const plotDir = path.join(EXTENSION_ROOT_DIR, 'out', 'webviews/webview-side', 'viewers');
+const plotDir = path.join(EXTENSION_ROOT_DIR, 'out', 'webviews', 'webview-side', 'viewers');
 @injectable()
 export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements IPlotViewer, IDisposable {
     private closedEvent: EventEmitter<IPlotViewer> = new EventEmitter<IPlotViewer>();

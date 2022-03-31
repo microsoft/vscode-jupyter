@@ -4,7 +4,7 @@
 import { SpawnOptions } from 'child_process';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { traceError } from '../../../platform/common/logger.node';
+import { traceError } from '../../../platform/logging';
 import {
     IPythonExecutionService,
     IPythonExecutionFactory,

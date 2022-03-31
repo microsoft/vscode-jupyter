@@ -9,7 +9,7 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import { commands, NotebookCell, Uri } from 'vscode';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
-import { traceInfo } from '../../../platform/common/logger.node';
+import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { IKernelProvider } from '../../../platform/../kernels/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';

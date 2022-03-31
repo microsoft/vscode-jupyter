@@ -16,7 +16,7 @@ import {
     Event,
     WorkspaceFolder
 } from 'vscode';
-import { traceInfoIfCI } from '../logger.node';
+import { traceInfoIfCI } from '../../logging';
 import { IDebugService } from './types';
 
 @injectable()

@@ -5,9 +5,9 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
-import { DataScience } from '../../../platform/common/utils/localize.node';
+import { DataScience } from '../../../platform/common/utils/localize';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
-import { traceInfo } from '../../../platform/common/logger.node';
+import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';

@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../platform/common/extensions.node';
+import '../../../platform/common/extensions';
 
 import { inject, injectable } from 'inversify';
 
-import { captureTelemetry } from '../../../telemetry/index.node';
+import { captureTelemetry } from '../../../telemetry';
 import { IDataViewer, IDataViewerDataProvider, IDataViewerFactory } from './types';
 import { debounce } from 'lodash';
 import { ICommandManager } from '../../../platform/common/application/types';

@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 import type { TextDocument, Uri } from 'vscode';
-import { InteractiveInputScheme, NotebookCellScheme } from '../constants.node';
+import { InteractiveInputScheme, NotebookCellScheme } from '../constants';
 import { IAsyncDisposable, IDisposable, InterpreterUri, Resource } from '../types';
 import { isPromise } from './async';
-import { StopWatch } from './stopWatch.node';
+import { StopWatch } from './stopWatch';
 
 // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
 export function noop() {}

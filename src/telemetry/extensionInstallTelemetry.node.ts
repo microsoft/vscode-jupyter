@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { setSharedProperty } from './index.node';
+import { setSharedProperty } from '.';
 import { IFileSystem } from '../platform/common/platform/types.node';
 import { EXTENSION_ROOT_DIR } from '../platform/constants.node';
 

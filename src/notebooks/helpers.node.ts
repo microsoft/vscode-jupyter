@@ -26,13 +26,13 @@ import cloneDeep = require('lodash/cloneDeep');
 import fastDeepEqual = require('fast-deep-equal');
 import * as path from 'path';
 import { IVSCodeNotebook, IDocumentManager } from '../platform/common/application/types';
-import { PYTHON_LANGUAGE, MARKDOWN_LANGUAGE } from '../platform/common/constants.node';
-import { traceInfoIfCI, traceError, traceWarning } from '../platform/common/logger.node';
+import { PYTHON_LANGUAGE, MARKDOWN_LANGUAGE } from '../platform/common/constants';
+import { traceInfoIfCI, traceError, traceWarning } from '../platform/logging';
 import { arePathsSame } from '../platform/common/platform/fileUtils.node';
 import { IFileSystem } from '../platform/common/platform/types.node';
 import { Resource } from '../platform/common/types';
 import { getInterpreterHash } from '../platform/pythonEnvironments/info/interpreter.node';
-import { sendTelemetryEvent } from '../telemetry/index.node';
+import { sendTelemetryEvent } from '../telemetry';
 import { splitMultilineString, concatMultilineString } from '../webviews/webview-side/common';
 import { Telemetry } from '../webviews/webview-side/common/constants';
 import {

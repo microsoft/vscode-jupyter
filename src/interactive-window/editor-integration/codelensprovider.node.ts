@@ -15,18 +15,18 @@ import { disposeAllDisposables } from '../../platform/common/helpers.node';
 import { IFileSystem } from '../../platform/common/platform/types.node';
 
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../platform/common/types';
-import { noop } from '../../platform/common/utils/misc.node';
-import { StopWatch } from '../../platform/common/utils/stopWatch.node';
+import { noop } from '../../platform/common/utils/misc';
+import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { sendTelemetryEvent } from '../../telemetry/index.node';
-import { traceInfoIfCI } from '../../platform/common/logger.node';
+import { sendTelemetryEvent } from '../../telemetry';
+import { traceInfoIfCI } from '../../platform/logging';
 import {
     CodeLensCommands,
     EditorContexts,
     PYTHON_FILE,
     PYTHON_UNTITLED,
     Telemetry
-} from '../../platform/common/constants.node';
+} from '../../platform/common/constants';
 import { IDebugLocationTracker } from '../../platform/debugger/types';
 import { IDataScienceCodeLensProvider, ICodeWatcher } from './types';
 

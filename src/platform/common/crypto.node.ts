@@ -6,7 +6,7 @@
 
 import { createHash } from 'crypto';
 import { injectable } from 'inversify';
-import { traceError } from './logger.node';
+import { traceError } from '../logging';
 import { ICryptoUtils, IHashFormat } from './types';
 
 /**

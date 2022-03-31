@@ -11,7 +11,7 @@ import { anything, instance, mock, when, verify } from 'ts-mockito';
 import { PathUtils } from '../../../platform/common/platform/pathUtils.node';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
-import { WorkspaceService } from '../../../platform/common/application/workspace.node';
+import { WorkspaceService } from '../../../platform/common/application/workspace';
 import { EnvironmentVariablesProvider } from '../../../platform/common/variables/environmentVariablesProvider.node';
 import { InterpreterService, PythonExtensionChecker } from '../../../platform/api/pythonApi.node';
 import {
@@ -26,7 +26,7 @@ import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import type { KernelSpec } from '@jupyterlab/services';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants.node';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { getOSType } from '../../common';
 import { EventEmitter, Memento, Uri } from 'vscode';
 import { IDisposable, IExtensionContext } from '../../../platform/common/types';

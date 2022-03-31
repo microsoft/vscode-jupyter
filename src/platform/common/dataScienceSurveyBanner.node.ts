@@ -8,8 +8,8 @@ import { NotebookCellExecutionState, NotebookCellExecutionStateChangeEvent, UIKi
 import { isJupyterNotebook } from '../../notebooks/helpers.node';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from './application/types';
-import './extensions.node';
-import { traceError } from './logger.node';
+import './extensions';
+import { traceError } from '../logging';
 import {
     BannerType,
     IBrowserService,
@@ -19,7 +19,7 @@ import {
     IPersistentStateFactory,
     IsCodeSpace
 } from './types';
-import * as localize from './utils/localize.node';
+import * as localize from './utils/localize';
 import { MillisecondsInADay } from '../constants.node';
 
 export enum InsidersNotebookSurveyStateKeys {

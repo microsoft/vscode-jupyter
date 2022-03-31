@@ -3,9 +3,9 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { sendTelemetryEvent } from '../../../telemetry/index.node';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
-import { traceError } from '../logger.node';
+import { traceError } from '../../logging';
 import { isFileNotFoundError } from '../platform/errors.node';
 import { IFileSystem } from '../platform/types.node';
 import { EnvironmentVariables, IEnvironmentVariablesService } from './types';

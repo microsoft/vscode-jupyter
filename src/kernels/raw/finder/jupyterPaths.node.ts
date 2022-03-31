@@ -7,7 +7,7 @@ import * as path from 'path';
 import { CancellationToken, Memento } from 'vscode';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
-import { traceError } from '../../../platform/common/logger.node';
+import { traceError } from '../../../platform/logging';
 import {
     IPathUtils,
     IDisposableRegistry,
@@ -17,7 +17,7 @@ import {
 } from '../../../platform/common/types';
 import { tryGetRealPath } from '../../../platform/common/utils.node';
 import { IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
-import { traceDecorators } from '../../../platform/logging/index.node';
+import { traceDecoratorVerbose } from '../../../platform/logging';
 
 const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
@@ -64,7 +64,7 @@ export class JupyterPaths {
      * This should return a WRITABLE place that jupyter will look for a kernel as documented
      * here: https://jupyter-client.readthedocs.io/en/stable/kernels.html#kernel-specs
      */
-    @traceDecorators.verbose('Getting Jupyter KernelSpec Root Path')
+    @traceDecoratorVerbose('Getting Jupyter KernelSpec Root Path')
     public async getKernelSpecRootPath(): Promise<string | undefined> {
         this.cachedKernelSpecRootPath =
             this.cachedKernelSpecRootPath ||
@@ -124,7 +124,7 @@ export class JupyterPaths {
      * This list comes from the docs here:
      * https://jupyter-client.readthedocs.io/en/stable/kernels.html#kernel-specs
      */
-    @traceDecorators.verbose('Get Kernelspec root path')
+    @traceDecoratorVerbose('Get Kernelspec root path')
     public async getKernelSpecRootPaths(cancelToken?: CancellationToken): Promise<string[]> {
         // Paths specified in JUPYTER_PATH are supposed to come first in searching
         const paths = new Set<string>(await this.getJupyterPathPaths(cancelToken));
@@ -155,7 +155,7 @@ export class JupyterPaths {
      * We need to look at the 'kernels' sub-directory and these paths are supposed to come first in the searching
      * https://jupyter.readthedocs.io/en/latest/projects/jupyter-directories.html#envvar-JUPYTER_PATH
      */
-    @traceDecorators.verbose('Get Jupyter Paths')
+    @traceDecoratorVerbose('Get Jupyter Paths')
     private async getJupyterPathPaths(cancelToken?: CancellationToken): Promise<string[]> {
         this.cachedJupyterPaths =
             this.cachedJupyterPaths ||

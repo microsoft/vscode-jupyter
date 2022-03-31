@@ -15,7 +15,7 @@ import { Agent as HttpsAgent } from 'https';
 import * as nodeFetch from 'node-fetch';
 import { CancellationToken, EventEmitter } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { traceInfo, traceError } from '../../../platform/common/logger.node';
+import { traceInfo, traceError } from '../../../platform/logging';
 import {
     IPersistentState,
     IConfigurationService,
@@ -24,7 +24,7 @@ import {
     Resource,
     IDisplayOptions
 } from '../../../platform/common/types';
-import { Common, DataScience } from '../../../platform/common/utils/localize.node';
+import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError.node';
 import { createInterpreterKernelSpec } from '../../helpers.node';
 import { IJupyterConnection, IJupyterKernelSpec, KernelConnectionMetadata } from '../../types';

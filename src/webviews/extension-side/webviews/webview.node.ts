@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../platform/common/extensions.node';
+import '../../../platform/common/extensions';
 
 import * as path from 'path';
 import {
@@ -13,10 +13,10 @@ import {
     WebviewView as vscodeWebviewView
 } from 'vscode';
 import { IWebview, IWebviewOptions, WebviewMessage } from '../../../platform/common/application/types';
-import { traceError } from '../../../platform/common/logger.node';
+import { traceError } from '../../../platform/logging';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IDisposableRegistry } from '../../../platform/common/types';
-import * as localize from '../../../platform/common/utils/localize.node';
+import * as localize from '../../../platform/common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { Identifiers } from '../../webview-side/common/constants';
 

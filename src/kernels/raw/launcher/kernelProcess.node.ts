@@ -25,9 +25,17 @@ import { Cancellation, createPromiseFromCancellation } from '../../../platform/c
 import {
     getTelemetrySafeErrorMessageFromPythonTraceback,
     getErrorMessageFromPythonTraceback
-} from '../../../platform/errors/errorUtils.node';
+} from '../../../platform/errors/errorUtils';
 import { BaseError } from '../../../platform/errors/types';
-import { traceInfo, traceError, traceVerbose, traceWarning, traceInfoIfCI } from '../../../platform/common/logger.node';
+import {
+    traceInfo,
+    traceError,
+    traceVerbose,
+    traceWarning,
+    traceInfoIfCI,
+    traceDecoratorVerbose,
+    ignoreLogging
+} from '../../../platform/logging';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import {
     IProcessServiceFactory,
@@ -37,16 +45,15 @@ import {
 } from '../../../platform/common/process/types.node';
 import { Resource, IOutputChannel, IJupyterSettings } from '../../../platform/common/types';
 import { createDeferred } from '../../../platform/common/utils/async';
-import { DataScience } from '../../../platform/common/utils/localize.node';
-import { noop, swallowExceptions } from '../../../platform/common/utils/misc.node';
+import { DataScience } from '../../../platform/common/utils/localize';
+import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
 import { KernelDiedError } from '../../../platform/errors/kernelDiedError.node';
 import { KernelPortNotUsedTimeoutError } from '../../../platform/errors/kernelPortNotUsedTimeoutError.node';
 import { KernelProcessExitedError } from '../../../platform/errors/kernelProcessExitedError.node';
-import { traceDecorators } from '../../../platform/logging/index.node';
-import { ignoreLogging, TraceOptions } from '../../../platform/logging/trace.node';
-import { captureTelemetry } from '../../../telemetry/index.node';
+import { captureTelemetry } from '../../../telemetry';
 import { Telemetry, KernelInterruptDaemonModule } from '../../../webviews/webview-side/common/constants';
 import { PythonKernelInterruptDaemon } from '../finder/pythonKernelInterruptDaemon.node';
+import { TraceOptions } from '../../../platform/logging/types';
 import { JupyterPaths } from '../finder/jupyterPaths.node';
 
 // Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
@@ -395,7 +402,7 @@ export class KernelProcess implements IKernelProcess {
         return newConnectionArgs;
     }
 
-    @traceDecorators.verbose('Launching kernel in kernelProcess.ts', TraceOptions.Arguments | TraceOptions.BeforeCall)
+    @traceDecoratorVerbose('Launching kernel in kernelProcess.ts', TraceOptions.Arguments | TraceOptions.BeforeCall)
     private async launchAsObservable(workingDirectory: string, @ignoreLogging() cancelToken: CancellationToken) {
         let exeObs: ObservableExecutionResult<string> | undefined;
 

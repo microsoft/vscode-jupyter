@@ -4,7 +4,7 @@ import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, EventEmitter } from 'vscode';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers.node';
-import { traceVerbose } from '../../../platform/common/logger.node';
+import { traceVerbose } from '../../../platform/logging';
 import { IConfigurationService, IDisposable, IDisposableRegistry, IPathUtils } from '../../../platform/common/types';
 import { KernelConnectionMetadata } from '../../../kernels/types';
 

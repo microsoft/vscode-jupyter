@@ -10,11 +10,11 @@ import { isJupyterNotebook } from '../notebooks/helpers.node';
 import { IExtensionSingleActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { IVSCodeNotebook } from '../platform/common/application/types';
-import { Telemetry, JupyterDaemonModule } from '../platform/common/constants.node';
+import { Telemetry, JupyterDaemonModule } from '../platform/common/constants';
 import { IPythonExecutionFactory, IPythonDaemonExecutionService } from '../platform/common/process/types.node';
 import { IDisposableRegistry } from '../platform/common/types';
-import { debounceAsync, swallowExceptions } from '../platform/common/utils/decorators.node';
-import { sendTelemetryEvent } from '../telemetry/index.node';
+import { debounceAsync, swallowExceptions } from '../platform/common/utils/decorators';
+import { sendTelemetryEvent } from '../telemetry';
 import { JupyterInterpreterService } from './jupyter/interpreter/jupyterInterpreterService.node';
 import { IRawNotebookSupportedService } from './raw/types';
 

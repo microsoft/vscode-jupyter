@@ -17,8 +17,8 @@ import {
     ObservableExecutionResult,
     Output
 } from '../../../../platform/common/process/types.node';
-import { DataScience } from '../../../../platform/common/utils/localize.node';
-import { noop } from '../../../../platform/common/utils/misc.node';
+import { DataScience } from '../../../../platform/common/utils/localize';
+import { noop } from '../../../../platform/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../../platform/constants.node';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts.node';
 import { MockOutputChannel } from '../../../mockClasses';
@@ -31,7 +31,7 @@ import { JupyterInterpreterDependencyService } from '../../../../kernels/jupyter
 import { JupyterInterpreterService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
 import { JupyterInterpreterSubCommandExecutionService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService.node';
 import { JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths.node';
-import { JupyterDaemonModule } from '../../../../platform/common/constants.node';
+import { JupyterDaemonModule } from '../../../../platform/common/constants';
 import { JupyterServerInfo } from '../../../../kernels/jupyter/types';
 use(chaiPromise);
 

@@ -4,10 +4,10 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import { isCI, isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../constants.node';
-import { traceInfo } from '../logger.node';
+import { isCI, isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../constants';
+import { traceInfo } from '../../logging';
 import { IOutputChannel, IPathUtils } from '../types';
-import { Logging } from '../utils/localize.node';
+import { Logging } from '../utils/localize';
 import { IProcessLogger, SpawnOptions } from './types.node';
 
 @injectable()

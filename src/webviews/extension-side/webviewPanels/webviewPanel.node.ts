@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../platform/common/extensions.node';
+import '../../../platform/common/extensions';
 
 import { Uri, ViewColumn, WebviewOptions, WebviewPanel as vscodeWebviewPanel, window } from 'vscode';
 import { IFileSystem } from '../../../platform/common/platform/types.node';

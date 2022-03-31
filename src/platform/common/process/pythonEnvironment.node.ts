@@ -6,7 +6,7 @@ import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/ex
 import { InterpreterInformation } from '../../pythonEnvironments/info';
 import { getExecutablePath } from '../../pythonEnvironments/info/executable.node';
 import { getInterpreterInfo } from '../../pythonEnvironments/info/interpreter.node';
-import { traceError, traceInfo } from '../logger.node';
+import { traceError, traceInfo } from '../../logging';
 import * as internalPython from './internal/python.node';
 import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from './types.node';
 import { compare, SemVer } from 'semver';

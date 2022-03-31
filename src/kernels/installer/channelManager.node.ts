@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { IPlatformService } from '../../platform/common/platform/types';
-import { Installer } from '../../platform/common/utils/localize.node';
+import { Installer } from '../../platform/common/utils/localize';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { IInstallationChannelManager, IModuleInstaller, Product } from './types';
 

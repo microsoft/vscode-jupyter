@@ -10,9 +10,9 @@ import * as path from 'path';
 import * as dedent from 'dedent';
 import * as sinon from 'sinon';
 import { commands, NotebookCell, NotebookCellExecutionState, NotebookCellKind, NotebookCellOutput, Uri } from 'vscode';
-import { Common } from '../../../platform/common/utils/localize.node';
+import { Common } from '../../../platform/common/utils/localize';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
-import { traceInfo, traceInfoIfCI } from '../../../platform/common/logger.node';
+import { traceInfo, traceInfoIfCI } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { captureScreenShot, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
@@ -45,7 +45,7 @@ import {
     waitForCellExecutionToComplete
 } from './helper';
 import { openNotebook } from '../helpers';
-import { noop } from '../../../platform/common/utils/misc.node';
+import { noop } from '../../../platform/common/utils/misc';
 import { getTextOutputValue, hasErrorOutput, translateCellErrorOutput } from '../../../notebooks/helpers.node';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
 import { ProductNames } from '../../../kernels/installer/productNames.node';

@@ -18,7 +18,7 @@ import {
     WorkspaceEdit
 } from 'vscode';
 import { IVSCodeNotebook } from '../../../../platform/common/application/types';
-import { traceInfo } from '../../../../platform/common/logger.node';
+import { traceInfo } from '../../../../platform/logging';
 import { IDisposable } from '../../../../platform/common/types';
 import { PythonKernelCompletionProvider } from '../../../../intellisense/pythonKernelCompletionProvider.node';
 import { IExtensionTestApi, sleep } from '../../../common';

@@ -4,11 +4,11 @@
 'use strict';
 
 import * as path from 'path';
-import { isTestExecution } from '../../platform/common/constants.node';
-import { traceVerbose, traceError } from '../../platform/common/logger.node';
-import { cache } from '../../platform/common/utils/decorators.node';
+import { isTestExecution } from '../../platform/common/constants';
+import { traceVerbose, traceError } from '../../platform/logging';
+import { cache } from '../../platform/common/utils/decorators';
 import { getOSType, getUserHomeDir, OSType } from '../../platform/common/utils/platform';
-import { StopWatch } from '../../platform/common/utils/stopWatch.node';
+import { StopWatch } from '../../platform/common/utils/stopWatch';
 import {
     getPythonSetting,
     shellExecute,

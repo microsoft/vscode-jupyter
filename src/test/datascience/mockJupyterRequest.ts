@@ -7,7 +7,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { ICell } from '../../platform/common/types';
 
 import { createDeferred, Deferred } from '../../platform/common/utils/async';
-import { noop } from '../../platform/common/utils/misc.node';
+import { noop } from '../../platform/common/utils/misc';
 import { concatMultilineString } from '../../webviews/webview-side/common';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */

@@ -3,9 +3,18 @@
 
 'use strict';
 
-import * as fs from 'fs-extra';
-import * as path from 'path';
-import { EXTENSION_ROOT_DIR } from '../../constants.node';
+// Embed all known translations so we can use them on the web too
+const packageBaseNlsJson = require('../../../../package.nls.json');
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const packageNlsJsons: Record<string, any> = {
+    en: require('../../../../package.nls.json'),
+    it: require('../../../../package.nls.it.json'),
+    nl: require('../../../../package.nls.nl.json'),
+    pl: require('../../../../package.nls.pl.json'),
+    ru: require('../../../../package.nls.ru.json'),
+    'zh-cn': require('../../../../package.nls.zh-cn.json'),
+    'zh-tw': require('../../../../package.nls.zh-tw.json')
+};
 
 // External callers of localize use these tables to retrieve localized values.
 
@@ -1219,10 +1228,9 @@ function load() {
     loadedLocale = parseLocale();
 
     // Find the nls file that matches (if there is one)
-    const nlsFile = path.join(EXTENSION_ROOT_DIR, `package.nls.${loadedLocale}.json`);
-    if (fs.pathExistsSync(nlsFile)) {
-        const contents = fs.readFileSync(nlsFile, 'utf-8');
-        loadedCollection = JSON.parse(contents);
+    let contents = packageNlsJsons[loadedLocale];
+    if (contents) {
+        loadedCollection = contents;
     } else {
         // If there isn't one, at least remember that we looked so we don't try to load a second time
         loadedCollection = {};
@@ -1230,13 +1238,7 @@ function load() {
 
     // Get the default collection if necessary. Strings may be in the default or the locale json
     if (!defaultCollection) {
-        const defaultNlsFile = path.join(EXTENSION_ROOT_DIR, 'package.nls.json');
-        if (fs.pathExistsSync(defaultNlsFile)) {
-            const contents = fs.readFileSync(defaultNlsFile, 'utf-8');
-            defaultCollection = JSON.parse(contents);
-        } else {
-            defaultCollection = {};
-        }
+        defaultCollection = packageBaseNlsJson;
     }
 }
 

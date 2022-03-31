@@ -6,8 +6,8 @@
 import type { KernelMessage } from '@jupyterlab/services';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../platform/common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants.node';
-import { traceVerbose, traceError, traceInfo, traceInfoIfCI } from '../../platform/common/logger.node';
+import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants';
+import { traceVerbose, traceError, traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { IFileSystem } from '../../platform/common/platform/types.node';
 import { IPythonExecutionFactory } from '../../platform/common/process/types.node';
 import {
@@ -18,15 +18,14 @@ import {
     IPersistentStateFactory,
     IExtensionContext
 } from '../../platform/common/types';
-import { Common, DataScience } from '../../platform/common/utils/localize.node';
-import { noop } from '../../platform/common/utils/misc.node';
+import { Common, DataScience } from '../../platform/common/utils/localize';
+import { noop } from '../../platform/common/utils/misc';
 import { stripAnsi } from '../../platform/common/utils/regexp.node';
 import { InteractiveWindowMessages } from '../../platform/messageTypes';
 import { IInterpreterService } from '../../platform/interpreter/contracts.node';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { ConsoleForegroundColors } from '../../platform/logging/_global.node';
-import { sendTelemetryEvent } from '../../telemetry/index.node';
-import { getTelemetrySafeHashedString } from '../../telemetry/helpers.node';
+import { sendTelemetryEvent } from '../../telemetry';
+import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { Telemetry, Commands } from '../../webviews/webview-side/common/constants';
 import {
     LoadIPyWidgetClassLoadAction,
@@ -37,6 +36,7 @@ import { IKernelProvider } from '../types';
 import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherFactory.node';
 import { IPyWidgetScriptSource } from './ipyWidgetScriptSource.node';
 import { IIPyWidgetMessageDispatcher } from './types';
+import { ConsoleForegroundColors } from '../../platform/logging/types';
 
 /**
  * This class wraps all of the ipywidgets communication with a backing notebook

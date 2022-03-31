@@ -21,12 +21,12 @@ import {
     workspace
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../common/logger.node';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../logging';
 import { IPlatformService } from '../../common/platform/types';
 import { IDisposable } from '../../common/types';
 import { IJupyterSession, IKernel } from '../../../kernels/types';
-import { sendTelemetryEvent } from '../../../telemetry/index.node';
-import { DebuggingTelemetry } from '../constants.node';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { DebuggingTelemetry } from '../constants';
 import {
     IDebuggingDelegate,
     IDebugInfoResponse,

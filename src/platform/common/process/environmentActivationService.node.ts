@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../extensions.node';
+import '../extensions';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { inject, injectable, named, optional } from 'inversify';
@@ -15,28 +15,36 @@ import { createDeferredFromPromise, sleep } from '../utils/async';
 import { OSType } from '../utils/platform';
 import { EnvironmentVariables, IEnvironmentVariablesProvider } from '../variables/types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../telemetry/index.node';
-import { logValue, TraceOptions } from '../../logging/trace.node';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter.node';
 import { IPythonApiProvider } from '../../api/types';
-import { StopWatch } from '../utils/stopWatch.node';
+import { StopWatch } from '../utils/stopWatch';
 import { Memento } from 'vscode';
 import { getDisplayPath } from '../platform/fs-paths.node';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService } from '../../interpreter/contracts.node';
 import { CurrentProcess } from './currentProcess.node';
-import { traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } from '../logger.node';
-import { getTelemetrySafeHashedString } from '../../../telemetry/helpers.node';
+import { getTelemetrySafeHashedString } from '../../../telemetry/helpers';
 import { CondaService } from './condaService.node';
 import { condaVersionSupportsLiveStreaming, createCondaEnv } from './pythonEnvironment.node';
 import { printEnvVariablesToFile } from './internal/scripts/index.node';
 import { ProcessService } from './proc.node';
 import { BufferDecoder } from './decoder.node';
-import { testOnlyMethod } from '../utils/decorators.node';
-import { DataScience } from '../utils/localize.node';
+import { testOnlyMethod } from '../utils/decorators';
+import { DataScience } from '../utils/localize';
 import { KernelProgressReporter } from '../../progress/kernelProgressReporter.node';
-import { Telemetry } from '../constants.node';
+import { Telemetry } from '../constants';
 import { IFileSystem } from '../platform/types.node';
+import {
+    logValue,
+    traceDecoratorError,
+    traceDecoratorVerbose,
+    traceError,
+    traceInfo,
+    traceVerbose,
+    traceWarning
+} from '../../logging';
+import { TraceOptions } from '../../logging/types';
 
 const ENVIRONMENT_PREFIX = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const ENVIRONMENT_TIMEOUT = 30000;
@@ -138,7 +146,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     public dispose(): void {
         this.disposables.forEach((d) => d.dispose());
     }
-    @traceDecorators.verbose('Getting activated env variables', TraceOptions.BeforeCall | TraceOptions.Arguments)
+    @traceDecoratorVerbose('Getting activated env variables', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async getActivatedEnvironmentVariables(
         resource: Resource,
         @logValue<PythonEnvironment>('path') interpreter: PythonEnvironment
@@ -150,7 +158,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             this.getActivatedEnvironmentVariablesImpl(resource, interpreter)
         );
     }
-    @traceDecorators.verbose('Getting activated env variables impl', TraceOptions.BeforeCall | TraceOptions.Arguments)
+    @traceDecoratorVerbose('Getting activated env variables impl', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public async getActivatedEnvironmentVariablesImpl(
         resource: Resource,
         @logValue<PythonEnvironment>('path') interpreter: PythonEnvironment
@@ -195,7 +203,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         }
         return envVariablesFromPython.promise;
     }
-    @traceDecorators.verbose(
+    @traceDecoratorVerbose(
         'Getting activated env variables from Python',
         TraceOptions.BeforeCall | TraceOptions.Arguments
     )
@@ -271,7 +279,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         }
         return env;
     }
-    @traceDecorators.verbose(
+    @traceDecoratorVerbose(
         'Getting activated env variables ourselves',
         TraceOptions.BeforeCall | TraceOptions.Arguments
     )
@@ -614,7 +622,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         });
     }
 
-    @traceDecorators.verbose('getCondaEnvVariables', TraceOptions.BeforeCall)
+    @traceDecoratorVerbose('getCondaEnvVariables', TraceOptions.BeforeCall)
     public async getCondaEnvVariables(
         resource: Resource,
         interpreter: PythonEnvironment
@@ -675,7 +683,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             tmpFile.dispose();
         }
     }
-    @traceDecorators.verbose('Getting env activation commands', TraceOptions.BeforeCall | TraceOptions.Arguments)
+    @traceDecoratorVerbose('Getting env activation commands', TraceOptions.BeforeCall | TraceOptions.Arguments)
     private async getActivationCommands(
         resource: Resource,
         @logValue<PythonEnvironment>('path') interpreter?: PythonEnvironment
@@ -728,8 +736,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         // Replace 'source ' with '. ' as that works in shell exec
         return commands.map((cmd) => cmd.replace(/^source\s+/, '. '));
     }
-    @traceDecorators.error('Failed to parse Environment variables')
-    @traceDecorators.verbose('parseEnvironmentOutput', TraceOptions.None)
+    @traceDecoratorError('Failed to parse Environment variables')
+    @traceDecoratorVerbose('parseEnvironmentOutput', TraceOptions.None)
     protected parseEnvironmentOutput(output: string, parse: (out: string) => NodeJS.ProcessEnv | undefined) {
         output = output.substring(output.indexOf(ENVIRONMENT_PREFIX) + ENVIRONMENT_PREFIX.length);
         const js = output.substring(output.indexOf('{')).trim();

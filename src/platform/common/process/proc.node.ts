@@ -4,8 +4,8 @@ import { exec, execSync, spawn } from 'child_process';
 import { EventEmitter } from 'events';
 import { Observable } from 'rxjs/Observable';
 import { CancellationError, Disposable } from 'vscode';
-import { TraceOptions } from '../../logging/trace.node';
-import { traceDecorators, traceInfoIfCI } from '../logger.node';
+import { traceDecoratorVerbose, traceInfoIfCI } from '../../logging';
+import { TraceOptions } from '../../logging/types';
 
 import { IDisposable } from '../types';
 import { createDeferred } from '../utils/async';
@@ -194,7 +194,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
         return deferred.promise;
     }
 
-    @traceDecorators.verbose('Execing shell command', TraceOptions.BeforeCall | TraceOptions.Arguments)
+    @traceDecoratorVerbose('Execing shell command', TraceOptions.BeforeCall | TraceOptions.Arguments)
     public shellExec(command: string, options: ShellOptions = {}): Promise<ExecutionResult<string>> {
         const shellOptions = this.getDefaultOptions(options);
         return new Promise((resolve, reject) => {

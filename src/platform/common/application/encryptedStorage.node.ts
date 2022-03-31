@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
 import { ExtensionMode } from 'vscode';
-import { isCI } from '../constants.node';
-import { traceError } from '../logger.node';
+import { isCI } from '../constants';
+import { traceError } from '../../logging';
 import { IExtensionContext } from '../types';
 import { IEncryptedStorage } from './types';
 

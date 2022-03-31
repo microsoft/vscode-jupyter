@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../platform/common/extensions.node';
+import '../platform/common/extensions';
 
 import { inject, injectable } from 'inversify';
 import {
@@ -22,12 +22,12 @@ import {
     IDocumentManager,
     IVSCodeNotebook
 } from '../platform/common/application/types';
-import { Commands, JVSC_EXTENSION_ID, PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants.node';
-import { traceError, traceInfo } from '../platform/common/logger.node';
+import { Commands, JVSC_EXTENSION_ID, PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
+import { traceError, traceInfo } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types.node';
 import { IConfigurationService, IDataScienceCommandListener, IDisposableRegistry } from '../platform/common/types';
-import * as localize from '../platform/common/utils/localize.node';
-import { captureTelemetry } from '../telemetry/index.node';
+import * as localize from '../platform/common/utils/localize';
+import { captureTelemetry } from '../telemetry';
 import { CommandSource } from '../platform/testing/common/constants';
 import { JupyterInstallError } from '../platform/errors/jupyterInstallError';
 import { getActiveInteractiveWindow } from './helpers.node';

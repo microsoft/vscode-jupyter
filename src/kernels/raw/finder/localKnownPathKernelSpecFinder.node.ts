@@ -14,11 +14,11 @@ import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase.node';
 import { JupyterPaths } from './jupyterPaths.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants.node';
-import { traceInfo, traceError } from '../../../platform/common/logger.node';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { traceInfo, traceError } from '../../../platform/logging';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
-import { captureTelemetry } from '../../../telemetry/index.node';
+import { captureTelemetry } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 
 /**

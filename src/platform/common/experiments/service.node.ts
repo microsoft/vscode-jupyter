@@ -6,11 +6,11 @@
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { getExperimentationService, IExperimentationService, TargetPopulation } from 'vscode-tas-client';
-import { sendTelemetryEvent } from '../../../telemetry/index.node';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { IApplicationEnvironment } from '../application/types';
-import { JVSC_EXTENSION_ID, STANDARD_OUTPUT_CHANNEL } from '../constants.node';
-import { traceVerbose } from '../logger.node';
+import { JVSC_EXTENSION_ID, STANDARD_OUTPUT_CHANNEL } from '../constants';
+import { traceVerbose } from '../../logging';
 import {
     GLOBAL_MEMENTO,
     IConfigurationService,
@@ -19,7 +19,7 @@ import {
     IMemento,
     IOutputChannel
 } from '../types';
-import { Experiments } from '../utils/localize.node';
+import { Experiments } from '../utils/localize';
 import { Experiments as ExperimentGroups } from './groups';
 import { ExperimentationTelemetry } from './telemetry.node';
 

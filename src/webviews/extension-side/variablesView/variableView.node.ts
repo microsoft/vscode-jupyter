@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../platform/common/extensions.node';
+import '../../../platform/common/extensions';
 
 import * as path from 'path';
+import * as pathBrowser from 'path-browserify';
 import { WebviewView as vscodeWebviewView } from 'vscode';
 
-import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry/index.node';
+import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { INotebookWatcher, IVariableViewPanelMapping } from './types';
 import { VariableViewMessageListener } from './variableViewMessageListener.node';
 import { InteractiveWindowMessages, IShowDataViewer } from '../../../platform/messageTypes';
@@ -23,9 +24,9 @@ import {
     IDocumentManager
 } from '../../../platform/common/application/types';
 import { ContextKey } from '../../../platform/common/contextKey.node';
-import { traceError } from '../../../platform/common/logger.node';
+import { traceError } from '../../../platform/logging';
 import { Resource, IConfigurationService, IDisposableRegistry, IDisposable } from '../../../platform/common/types';
-import * as localize from '../../../platform/common/utils/localize.node';
+import * as localize from '../../../platform/common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { Telemetry } from '../../webview-side/common/constants';
 import { DataViewerChecker } from '../dataviewer/dataViewerChecker.node';
@@ -33,7 +34,7 @@ import { IJupyterVariableDataProviderFactory, IDataViewerFactory, IDataViewer } 
 import { ICodeCssGenerator, IThemeFinder } from '../types';
 import { WebviewViewHost } from '../webviewViewHost.node';
 
-const variableViewDir = path.join(EXTENSION_ROOT_DIR, 'out', 'webviews/webview-side', 'viewers');
+const variableViewDir = path.join(EXTENSION_ROOT_DIR, 'out', 'webviews', 'webview-side', 'viewers');
 
 // This is the client side host for the native notebook variable view webview
 // It handles passing messages to and from the react view as well as the connection
@@ -77,6 +78,9 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         this.documentManager.onDidChangeActiveTextEditor(this.activeTextEditorChanged, this, this.disposables);
 
         this.dataViewerChecker = new DataViewerChecker(configuration, appShell);
+        console.log(`Dirname up one is ${pathBrowser.join(__dirname, '..')}`);
+        console.log(`Dirname up one is ${path.join(__dirname, '..')}`);
+        console.log(`Done initing variables`);
     }
 
     @captureTelemetry(Telemetry.NativeVariableViewLoaded)

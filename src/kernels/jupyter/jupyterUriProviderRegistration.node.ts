@@ -3,7 +3,7 @@
 import { inject, injectable } from 'inversify';
 
 import { IExtensions } from '../../platform/common/types';
-import * as localize from '../../platform/common/utils/localize.node';
+import * as localize from '../../platform/common/utils/localize';
 import { JupyterUriProviderWrapper } from './jupyterUriProviderWrapper.node';
 import {
     IJupyterServerUri,

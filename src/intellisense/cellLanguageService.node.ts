@@ -10,10 +10,10 @@ import { IExtensionSingleActivationService } from '../platform/activation/types'
 import { IJupyterKernelSpec } from '../platform/api/extension';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { IVSCodeNotebook } from '../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../platform/common/constants.node';
-import { traceWarning } from '../platform/common/logger.node';
+import { PYTHON_LANGUAGE } from '../platform/common/constants';
+import { traceWarning } from '../platform/logging';
 import { IDisposableRegistry, IMemento, GLOBAL_MEMENTO } from '../platform/common/types';
-import { swallowExceptions } from '../platform/common/utils/decorators.node';
+import { swallowExceptions } from '../platform/common/utils/decorators';
 import {
     LanguagesSupportedByPythonkernel,
     VSCodeKnownNotebookLanguages

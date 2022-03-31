@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../platform/common/extensions.node';
+import '../../../platform/common/extensions';
 
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { EventEmitter, Memento, ViewColumn } from 'vscode';
 
-import { sendTelemetryEvent } from '../../../telemetry/index.node';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { JupyterDataRateLimitError } from '../../../platform/errors/jupyterDataRateLimitError.node';
 import { DataViewerMessageListener } from './dataViewerMessageListener.node';
 import {
@@ -31,20 +31,20 @@ import {
     IWorkspaceService,
     IApplicationShell
 } from '../../../platform/common/application/types';
-import { HelpLinks } from '../../../platform/common/constants.node';
-import { traceError, traceInfo } from '../../../platform/common/logger.node';
+import { HelpLinks } from '../../../platform/common/constants';
+import { traceError, traceInfo } from '../../../platform/logging';
 import { IConfigurationService, IMemento, GLOBAL_MEMENTO, Resource, IDisposable } from '../../../platform/common/types';
-import * as localize from '../../../platform/common/utils/localize.node';
-import { StopWatch } from '../../../platform/common/utils/stopWatch.node';
+import * as localize from '../../../platform/common/utils/localize';
+import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { IDataScienceErrorHandler } from '../../../platform/errors/types';
 import { Telemetry } from '../../webview-side/common/constants';
 import { ICodeCssGenerator, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
 import { WebviewPanelHost } from '../webviewPanelHost.node';
-import { noop } from '../../../platform/common/utils/misc.node';
+import { noop } from '../../../platform/common/utils/misc';
 
 const PREFERRED_VIEWGROUP = 'JupyterDataViewerPreferredViewColumn';
-const dataExplorerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'webviews/webview-side', 'viewers');
+const dataExplorerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'webviews', 'webview-side', 'viewers');
 @injectable()
 export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements IDataViewer, IDisposable {
     private dataProvider: IDataViewerDataProvider | IJupyterVariableDataProvider | undefined;
@@ -296,7 +296,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             return await func();
         } catch (e) {
             if (e instanceof JupyterDataRateLimitError) {
-                traceError(e);
+                traceError(e.message);
                 const actionTitle = localize.DataScience.pythonInteractiveHelpLink();
                 this.applicationShell
                     .showErrorMessage(localize.DataScience.jupyterDataRateExceeded(), actionTitle)

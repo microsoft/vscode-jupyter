@@ -6,7 +6,7 @@ import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
 import { JupyterSettings } from '../configSettings.node';
-import { isUnitTestExecution } from '../constants.node';
+import { isUnitTestExecution } from '../constants';
 import { IConfigurationService, IWatchableJupyterSettings } from '../types';
 
 @injectable()

@@ -10,8 +10,8 @@ import { IExtensionSingleActivationService } from '../../platform/activation/typ
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { disposeAllDisposables } from '../../platform/common/helpers.node';
 import { IDisposableRegistry } from '../../platform/common/types';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry/index.node';
-import { getTelemetrySafeHashedString } from '../../telemetry/helpers.node';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { isJupyterNotebook, createJupyterCellFromVSCNotebookCell } from '../../notebooks/helpers.node';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires

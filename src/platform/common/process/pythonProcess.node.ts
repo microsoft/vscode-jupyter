@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { PythonExecInfo } from '../../pythonEnvironments/exec';
-import { ErrorUtils } from '../../../platform/errors/errorUtils.node';
+import { ErrorUtils } from '../../errors/errorUtils';
 import { ModuleNotInstalledError } from '../../../platform/errors/moduleNotInstalledError.node';
 import * as internalPython from './internal/python.node';
 import { ExecutionResult, IProcessService, ObservableExecutionResult, SpawnOptions } from './types.node';
