@@ -2145,7 +2145,6 @@
         "react-svg-pan-zoom": "3.9.0",
         "react-svgmt": "1.1.11",
         "react-virtualized": "^9.21.1",
-        "react17": "npm:react@^17.0.2",
         "redux": "^4.0.4",
         "redux-logger": "^3.0.6",
         "reflect-metadata": "^0.1.12",
