@@ -19,7 +19,7 @@ import {
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
 import * as localize from '../../../platform/common/utils/localize';
-import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
+import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { ICodeCssGenerator, IThemeFinder } from '../types';
 import { WebviewPanelHost } from '../webviewPanelHost.node';
 

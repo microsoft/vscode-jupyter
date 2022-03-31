@@ -11,7 +11,7 @@ import {
     IPythonDaemonExecutionService,
     ExecutionResult
 } from '../../../platform/common/process/types.node';
-import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
+import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { JupyterCommands, JupyterDaemonModule } from '../../../webviews/webview-side/common/constants';
 import { IJupyterCommand, IJupyterCommandFactory } from '../types.node';

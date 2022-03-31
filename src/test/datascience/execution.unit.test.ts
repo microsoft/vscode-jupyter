@@ -37,7 +37,7 @@ import {
     IOutputChannel,
     IPathUtils
 } from '../../platform/common/types';
-import { EXTENSION_ROOT_DIR } from '../../platform/constants';
+import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts.node';
 import { ServiceContainer } from '../../platform/ioc/container.node';

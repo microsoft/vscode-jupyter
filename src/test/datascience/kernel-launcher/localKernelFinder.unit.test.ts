@@ -21,7 +21,7 @@ import {
     getKernelRegistrationInfo
 } from '../../../platform/../kernels/helpers.node';
 import { PlatformService } from '../../../platform/common/platform/platformService.node';
-import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
+import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import type { KernelSpec } from '@jupyterlab/services';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';

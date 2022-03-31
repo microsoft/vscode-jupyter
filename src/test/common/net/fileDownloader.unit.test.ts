@@ -23,7 +23,7 @@ import { PlatformService } from '../../../platform/common/platform/platformServi
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IHttpClient } from '../../../platform/common/types';
 import { Http } from '../../../platform/common/utils/localize';
-import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
+import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { noop } from '../../core';
 import { MockOutputChannel } from '../../mockClasses';
 const requestProgress = require('request-progress');

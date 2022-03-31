@@ -36,7 +36,7 @@ import { traceError, traceInfo } from '../../../platform/logging';
 import { IConfigurationService, IMemento, GLOBAL_MEMENTO, Resource, IDisposable } from '../../../platform/common/types';
 import * as localize from '../../../platform/common/utils/localize';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
-import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
+import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { IDataScienceErrorHandler } from '../../../platform/errors/types';
 import { Telemetry } from '../../webview-side/common/constants';
 import { ICodeCssGenerator, IThemeFinder, WebViewViewChangeEventArgs } from '../types';

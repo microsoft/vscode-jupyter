@@ -5,7 +5,7 @@
 
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { EXTENSION_ROOT_DIR } from '../../constants';
+import { EXTENSION_ROOT_DIR } from '../../constants.node';
 
 const darkIconsPath = path.join(EXTENSION_ROOT_DIR, 'resources', 'dark');
 const lightIconsPath = path.join(EXTENSION_ROOT_DIR, 'resources', 'light');

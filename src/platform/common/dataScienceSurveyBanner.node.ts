@@ -20,7 +20,7 @@ import {
     IsCodeSpace
 } from './types';
 import * as localize from './utils/localize';
-import { MillisecondsInADay } from '../constants';
+import { MillisecondsInADay } from '../constants.node';
 
 export enum InsidersNotebookSurveyStateKeys {
     ShowBanner = 'ShowInsidersNotebookSurveyBanner',

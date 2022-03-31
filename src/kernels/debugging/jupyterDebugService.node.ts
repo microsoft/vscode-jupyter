@@ -27,7 +27,7 @@ import { traceInfo, traceError } from '../../platform/logging';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { noop } from '../../platform/common/utils/misc';
-import { EXTENSION_ROOT_DIR } from '../../platform/constants';
+import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
 import { IProtocolParser } from '../../platform/debugger/extension/types.node';
 import { IJupyterDebugService } from './types';
 

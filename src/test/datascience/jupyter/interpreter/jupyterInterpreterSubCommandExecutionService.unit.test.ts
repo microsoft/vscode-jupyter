@@ -19,7 +19,7 @@ import {
 } from '../../../../platform/common/process/types.node';
 import { DataScience } from '../../../../platform/common/utils/localize';
 import { noop } from '../../../../platform/common/utils/misc';
-import { EXTENSION_ROOT_DIR } from '../../../../platform/constants';
+import { EXTENSION_ROOT_DIR } from '../../../../platform/constants.node';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts.node';
 import { MockOutputChannel } from '../../../mockClasses';
 import { createPythonInterpreter } from '../../../utils/interpreters';

@@ -8,7 +8,7 @@ import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector.node';
 import { IDebugService, IVSCodeNotebook } from '../../platform/common/application/types';
-import { DataFrameLoading, GetVariableInfo } from '../../platform/common/constants';
+import { DataFrameLoading, GetVariableInfo } from '../../platform/common/constants.node';
 import { traceError } from '../../platform/logging';
 import { IConfigurationService, Resource } from '../../platform/common/types';
 import { DebugLocationTracker } from '../../platform/debugger/debugLocationTracker.node';

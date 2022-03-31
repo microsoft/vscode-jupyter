@@ -22,7 +22,7 @@ import { IPlatformService } from '../../../platform/common/platform/types';
 import { PythonDaemonExecutionService } from '../../../platform/common/process/pythonDaemon.node';
 import { IPythonExecutionService } from '../../../platform/common/process/types.node';
 import { IDisposable } from '../../../platform/common/types';
-import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
+import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { PythonEnvironment, PythonVersionInfo } from '../../../platform/pythonEnvironments/info';
 import { parsePythonVersion } from '../../../platform/pythonEnvironments/info/pythonVersion';
 import { isPythonVersion, PYTHON_PATH } from '../../common';

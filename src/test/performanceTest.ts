@@ -22,7 +22,8 @@ import * as download from 'download';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as request from 'request';
-import { EXTENSION_ROOT_DIR, JVSC_EXTENSION_ID } from '../platform/common/constants';
+import { JVSC_EXTENSION_ID } from '../platform/common/constants';
+import { EXTENSION_ROOT_DIR } from '../platform/constants.node';
 import { unzip } from './common';
 
 const NamedRegexp = require('named-js-regexp');
