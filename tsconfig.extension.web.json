@@ -1,25 +1,20 @@
 {
+    "extends": "./tsconfig",
     "compilerOptions": {
-        "baseUrl": ".",
-        "module": "commonjs",
-        "target": "es2020",
-        "outDir": "out",
-        "lib": ["es6", "WebWorker"],
-        "jsx": "react",
-        "sourceMap": true,
-        "rootDir": "src",
-        "experimentalDecorators": true,
-        "allowSyntheticDefaultImports": true,
-        "useUnknownInCatchVariables": false,
-        "noImplicitThis": false
+        "types": ["@types/vscode-notebook-renderer/preload", "webpack-env"]
     },
     "exclude": [
         "node_modules",
         ".vscode-test",
         ".vscode test",
-        "src/test",
+        "src/test/datascience/extensionapi",
         "build",
+        "out",
+        "tmp",
+        ".nyc_output",
+        ".git",
         "src/*.node.ts",
-        "src/**/*.node.ts"
+        "src/**/*.node.ts",
+        ".vscode-test-web"
     ]
 }

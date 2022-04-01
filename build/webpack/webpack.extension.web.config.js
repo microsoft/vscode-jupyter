@@ -6,19 +6,16 @@ const path = require('path');
 const tsconfig_paths_webpack_plugin = require('tsconfig-paths-webpack-plugin');
 const webpack = require('webpack');
 const constants = require('../constants');
-const common = require('./common');
 // tslint:disable-next-line:no-var-requires no-require-imports
 const configFileName = path.join(constants.ExtensionRootDir, 'tsconfig.extension.web.json');
-// Some modules will be pre-genearted and stored in out/.. dir and they'll be referenced via NormalModuleReplacementPlugin
-// We need to ensure they do not get bundled into the output (as they are large).
-const existingModulesInOutDir = common.getListOfExistingModulesInOutDir();
 const config = {
     mode: 'none',
     target: 'webworker',
     entry: {
-        extension: './src/extension.web.ts'
+        extension: './src/extension.web.ts',
+        'test/suite/index': './src/test/web/suite/index.ts' // source of the web extension test runner
     },
-    devtool: 'source-map',
+    devtool: 'nosources-source-map',
     node: {
         __dirname: false
     },
@@ -46,7 +43,10 @@ const config = {
                 exclude: /node_modules/,
                 use: [
                     {
-                        loader: 'ts-loader'
+                        loader: 'ts-loader',
+                        options: {
+                            configFile: 'tsconfig.extension.web.json'
+                        }
                     }
                 ]
             },
@@ -88,25 +88,32 @@ const config = {
             }
         ]
     },
-    externals: [
-        'vscode',
-        'commonjs',
-        'electron',
-        './node_modules/@vscode/jupyter-ipywidgets',
-        ...existingModulesInOutDir,
-        '@opentelemetry/tracing',
-        'applicationinsights-native-metrics'
-    ], // Don't bundle these
+    externals: ['vscode', 'commonjs', 'electron'], // Don't bundle these
     plugins: [
-        ...common.getDefaultPlugins('extension'),
+        new webpack.ProvidePlugin({
+            process: 'process/browser' // provide a shim for the global `process` variable
+        }),
         new webpack.DefinePlugin({
             // Definitions...
             BROWSER: JSON.stringify(true)
-        })
+        }),
+        new webpack.ContextReplacementPlugin(/mocha\/mocha/)
     ],
     resolve: {
         extensions: ['.ts', '.js'],
-        plugins: [new tsconfig_paths_webpack_plugin.TsconfigPathsPlugin({ configFile: configFileName })]
+        mainFields: ['browser', 'module', 'main'], // look for `browser` entry point in imported node modules
+        plugins: [
+            new tsconfig_paths_webpack_plugin.TsconfigPathsPlugin({ configFile: configFileName, logLevel: 'INFO' })
+        ],
+        alias: {
+            // provides alternate implementation for node module and source files
+        },
+        fallback: {
+            // Webpack 5 no longer polyfills Node.js core modules automatically.
+            // see https://webpack.js.org/configuration/resolve/#resolvefallback
+            // for the list of Node.js core module polyfills.
+            assert: require.resolve('assert')
+        }
     },
     output: {
         filename: '[name].web.js',

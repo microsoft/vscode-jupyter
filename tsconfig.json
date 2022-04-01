@@ -35,12 +35,14 @@
         "src/ipywidgets",
         "src/smoke",
         "src/test/datascience/extensionapi",
+        "src/test/web",
         "build",
         "out",
         "ipywidgets",
         "tmp",
         ".nyc_output",
         ".git",
+        "src/webviews/webview-side",
         "src/*.web.ts",
         "src/**/*.web.ts"
     ]
