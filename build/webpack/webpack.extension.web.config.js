@@ -8,12 +8,12 @@ const webpack = require('webpack');
 const constants = require('../constants');
 const common = require('./common');
 // tslint:disable-next-line:no-var-requires no-require-imports
-const configFileName = path.join(constants.ExtensionRootDir, 'tsconfig.extension.json');
+const configFileName = path.join(constants.ExtensionRootDir, 'tsconfig.extension.web.json');
 // Some modules will be pre-genearted and stored in out/.. dir and they'll be referenced via NormalModuleReplacementPlugin
 // We need to ensure they do not get bundled into the output (as they are large).
 const existingModulesInOutDir = common.getListOfExistingModulesInOutDir();
 const config = {
-    mode: 'production',
+    mode: 'none',
     target: 'webworker',
     entry: {
         extension: './src/extension.web.ts'
@@ -109,7 +109,7 @@ const config = {
         plugins: [new tsconfig_paths_webpack_plugin.TsconfigPathsPlugin({ configFile: configFileName })]
     },
     output: {
-        filename: '[name].web.dist.js',
+        filename: '[name].web.js',
         path: path.resolve(constants.ExtensionRootDir, 'out'),
         libraryTarget: 'commonjs2',
         devtoolModuleFilenameTemplate: '../../[resource-path]'

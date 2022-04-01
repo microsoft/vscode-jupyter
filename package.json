@@ -74,7 +74,7 @@
         "onNotebook:interactive"
     ],
     "main": "./out/extension.node.js",
-    "browser": "./out/extension.web.dist.js",
+    "browser": "./out/extension.web.js",
     "capabilities": {
         "virtualWorkspaces": true,
         "untrustedWorkspaces": {

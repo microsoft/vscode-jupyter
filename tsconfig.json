@@ -40,6 +40,8 @@
         "ipywidgets",
         "tmp",
         ".nyc_output",
-        ".git"
+        ".git",
+        "src/*.web.ts",
+        "src/**/*.web.ts"
     ]
 }

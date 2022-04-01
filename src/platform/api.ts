@@ -86,19 +86,14 @@ export function buildApi(
             await service.createNew(options);
         },
         getKernelService: async () => {
-            const kernelServiceFactory = serviceContainer.get<IExportedKernelServiceFactory>(
-                IExportedKernelServiceFactory
-            );
+            const kernelServiceFactory =
+                serviceContainer.get<IExportedKernelServiceFactory>(IExportedKernelServiceFactory);
             return kernelServiceFactory.getService();
         }
     };
 
     // In test/dev environment return the DI Container.
-    if (
-        isTestExecution() ||
-        process.env.VSC_JUPYTER_EXPOSE_SVC ||
-        context.extensionMode === ExtensionMode.Development
-    ) {
+    if (isTestExecution() || context.extensionMode === ExtensionMode.Development) {
         /* eslint-disable @typescript-eslint/no-explicit-any */
         (api as any).serviceContainer = serviceContainer;
         (api as any).serviceManager = serviceManager;

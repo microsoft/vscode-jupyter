@@ -167,7 +167,7 @@ module.exports = {
     ],
     parser: '@typescript-eslint/parser',
     parserOptions: {
-        project: 'tsconfig.json',
+        project: ['tsconfig.json', 'tsconfig.extension.web.json'],
         sourceType: 'module'
     },
     plugins: [
@@ -301,6 +301,7 @@ module.exports = {
             }
         ],
         'local-rules/node-imports': ['error', { allow: ['events'] }],
+        'local-rules/dont-use-process': ['error'],
         strict: 'off'
     },
     settings: {
