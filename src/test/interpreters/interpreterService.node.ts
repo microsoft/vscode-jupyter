@@ -4,7 +4,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
-import { getInterpreterInfo } from '.';
+import { getInterpreterInfo } from './index.node';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { Resource } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts.node';

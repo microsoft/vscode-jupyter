@@ -10,9 +10,9 @@ import { languages } from 'vscode';
 import { traceInfo } from '../../../../platform/logging';
 import { IDisposable } from '../../../../platform/common/types';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts.node';
-import { captureScreenShot, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../../constants';
-import { initialize, IS_CI_SERVER } from '../../../initialize';
+import { captureScreenShot, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../../common.node';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../../constants.node';
+import { initialize, IS_CI_SERVER } from '../../../initialize.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
     insertCodeCell,
@@ -26,6 +26,8 @@ import {
 import { IVSCodeNotebook } from '../../../../platform/common/application/types';
 import { IPythonExecutionFactory } from '../../../../platform/common/process/types.node';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
+import { setIntellisenseTimeout } from '../../../../intellisense/pythonKernelCompletionProvider.node';
+import { Settings } from '../../../../platform/common/constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - Intellisense Switch interpreters in a notebook', function () {
@@ -91,12 +93,12 @@ suite('DataScience - Intellisense Switch interpreters in a notebook', function (
         sinon.restore();
         await startJupyterServer();
         await createEmptyPythonNotebook(disposables);
-        process.env.VSC_JUPYTER_IntellisenseTimeout = '30000';
+        setIntellisenseTimeout(30000);
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
-        delete process.env.VSC_JUPYTER_IntellisenseTimeout;
+        setIntellisenseTimeout(Settings.IntellisenseTimeout);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this.currentTest?.title);
         }

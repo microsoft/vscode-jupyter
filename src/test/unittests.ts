@@ -7,7 +7,7 @@
 // However if a system32 process is run first, everything works.
 import * as child_process from 'child_process';
 import * as os from 'os';
-import { setupCoverage } from './coverage';
+import { setupCoverage } from './coverage.node';
 if (os.platform() === 'win32') {
     const proc = child_process.spawn('C:\\Windows\\System32\\Reg.exe', ['/?']);
     proc.on('error', () => {

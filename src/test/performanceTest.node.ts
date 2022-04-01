@@ -24,7 +24,7 @@ import * as path from 'path';
 import * as request from 'request';
 import { JVSC_EXTENSION_ID } from '../platform/common/constants';
 import { EXTENSION_ROOT_DIR } from '../platform/constants.node';
-import { unzip } from './common';
+import { unzip } from './common.node';
 
 const NamedRegexp = require('named-js-regexp');
 const del = require('del');

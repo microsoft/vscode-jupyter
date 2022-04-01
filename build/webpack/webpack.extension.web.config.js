@@ -95,7 +95,10 @@ const config = {
         }),
         new webpack.DefinePlugin({
             // Definitions...
-            BROWSER: JSON.stringify(true)
+            BROWSER: JSON.stringify(true),
+            process: {
+                platform: 'web'
+            }
         }),
         new webpack.ContextReplacementPlugin(/mocha\/mocha/)
     ],

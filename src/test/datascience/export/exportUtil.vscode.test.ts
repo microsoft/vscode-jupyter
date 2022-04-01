@@ -9,9 +9,9 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { IDisposable } from '../../../platform/common/types';
 import { ExportUtil } from '../../../platform/export/exportUtil.node';
-import { IExtensionTestApi } from '../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
-import { closeActiveWindows, initialize } from '../../initialize';
+import { IExtensionTestApi } from '../../common.node';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
+import { closeActiveWindows, initialize } from '../../initialize.node';
 import { createTemporaryNotebook } from '../notebook/helper';
 
 suite('DataScience - Export Util', () => {
@@ -20,12 +20,6 @@ suite('DataScience - Export Util', () => {
     const testDisposables: IDisposable[] = [];
     suiteSetup(async function () {
         api = await initialize();
-        // Export Util tests require jupyter to run. Otherwise can't
-        // run any of our variable execution code
-        if (!process.env.VSC_FORCE_REAL_JUPYTER) {
-            // eslint-disable-next-line no-invalid-this
-            this.skip();
-        }
     });
     setup(async () => {
         // Create a new file (instead of modifying existing file).

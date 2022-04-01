@@ -19,17 +19,17 @@ import * as glob from 'glob';
 import * as Mocha from 'mocha';
 import * as path from 'path';
 import * as v8 from 'v8';
-import { IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER } from './ciConstants';
+import { IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER } from './ciConstants.node';
 import {
     IS_MULTI_ROOT_TEST,
     IS_SMOKE_TEST,
     MAX_EXTENSION_ACTIVATION_TIME,
     TEST_RETRYCOUNT,
     TEST_TIMEOUT
-} from './constants';
+} from './constants.node';
 import { noop } from './core';
 import { stopJupyterServer } from './datascience/notebook/helper';
-import { initialize } from './initialize';
+import { initialize } from './initialize.node';
 
 type SetupOptions = Mocha.MochaOptions & {
     testFilesSuffix: string;
@@ -71,7 +71,7 @@ function configure(): SetupOptions {
     // We do this to ensure we only run debugger test, as debugger tests are very flaky on CI.
     // So the solution is to run them separately and first on CI.
     const grep = IS_CI_SERVER_TEST_DEBUGGER ? 'Debug' : defaultGrep;
-    const testFilesSuffix = process.env.TEST_FILES_SUFFIX || '.test';
+    const testFilesSuffix = process.env.TEST_FILES_SUFFIX || '.test*';
 
     const options: SetupOptions & { retries: number; invert: boolean } = {
         ui: 'tdd',
@@ -159,11 +159,11 @@ export async function run(): Promise<void> {
             break;
         }
         case 'vscode.test': {
-            ignoreGlob.push('**/**.native.vscode.test.js');
+            ignoreGlob.push('**/**.native.vscode.test*.js');
             break;
         }
         case '.test': {
-            ignoreGlob.push('**/**.vscode.test.js');
+            ignoreGlob.push('**/**.vscode.test*.js');
             break;
         }
         default:

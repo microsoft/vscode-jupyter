@@ -60,7 +60,8 @@ export const defaultShells = {
     [OSType.Windows]: { shell: 'cmd', shellType: TerminalShellType.commandPrompt },
     [OSType.OSX]: { shell: 'bash', shellType: TerminalShellType.bash },
     [OSType.Linux]: { shell: 'bash', shellType: TerminalShellType.bash },
-    [OSType.Unknown]: undefined
+    [OSType.Unknown]: undefined,
+    [OSType.Web]: undefined
 };
 export const PYTHON_WARNINGS = 'PYTHONWARNINGS';
 

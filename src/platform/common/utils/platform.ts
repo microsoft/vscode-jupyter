@@ -3,13 +3,12 @@
 
 'use strict';
 
-import { EnvironmentVariables } from '../variables/types';
-
 export enum OSType {
     Unknown = 'Unknown',
     Windows = 'Windows',
     OSX = 'OSX',
-    Linux = 'Linux'
+    Linux = 'Linux',
+    Web = 'Web'
 }
 
 // Return the OS type for the given platform string.
@@ -20,23 +19,9 @@ export function getOSType(platform: string = process.platform): OSType {
         return OSType.OSX;
     } else if (/^linux/.test(platform)) {
         return OSType.Linux;
+    } else if (/^web/.test(platform)) {
+        return OSType.Web;
     } else {
         return OSType.Unknown;
     }
-}
-
-export function getEnvironmentVariable(key: string): string | undefined {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (process.env as any as EnvironmentVariables)[key];
-}
-
-export function getPathEnvironmentVariable(): string | undefined {
-    return getEnvironmentVariable('Path') || getEnvironmentVariable('PATH');
-}
-
-export function getUserHomeDir(): string | undefined {
-    if (getOSType() === OSType.Windows) {
-        return getEnvironmentVariable('USERPROFILE');
-    }
-    return getEnvironmentVariable('HOME') || getEnvironmentVariable('HOMEPATH');
 }

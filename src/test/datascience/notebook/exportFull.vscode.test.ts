@@ -12,8 +12,8 @@ import { Common } from '../../../platform/common/utils/localize';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
-import { captureScreenShot, IExtensionTestApi } from '../../common';
-import { initialize } from '../../initialize';
+import { captureScreenShot, IExtensionTestApi } from '../../common.node';
+import { initialize } from '../../initialize.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
@@ -25,7 +25,7 @@ import {
 } from './helper';
 import { commands, ConfigurationTarget, Uri, window, workspace } from 'vscode';
 import { createDeferred } from '../../../platform/common/utils/async';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
 import { ProductNames } from '../../../kernels/installer/productNames.node';
 import { Product } from '../../../kernels/installer/types';
 
@@ -83,8 +83,6 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         const settings = workspace.getConfiguration('jupyter', null);
         await settings.update('pythonExportMethod', 'direct', ConfigurationTarget.Global);
 
-        // Added temporarily to identify why tests are failing.
-        process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = undefined;
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });

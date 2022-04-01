@@ -11,8 +11,13 @@ import { commands, Memento, Uri } from 'vscode';
 import { IEncryptedStorage, IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo, traceInfoIfCI } from '../../../platform/logging';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
-import { IExtensionTestApi, waitForCondition } from '../../common';
-import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize';
+import { IExtensionTestApi, waitForCondition } from '../../common.node';
+import {
+    closeActiveWindows,
+    EXTENSION_ROOT_DIR_FOR_TESTS,
+    initialize,
+    IS_REMOTE_NATIVE_TEST
+} from '../../initialize.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
     runAllCellsInActiveNotebook,
@@ -31,8 +36,8 @@ import {
 import { openNotebook } from '../helpers';
 import { PYTHON_LANGUAGE, Settings } from '../../../platform/common/constants';
 import { RemoteKernelSpecConnectionMetadata } from '../../../platform/../kernels/types';
-import { JupyterServer } from '../jupyterServer';
-import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
+import { JupyterServer } from '../jupyterServer.node';
+import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants.node';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector.node';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider.node';
 import { INotebookControllerManager } from '../../../notebooks/types';

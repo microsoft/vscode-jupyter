@@ -30,7 +30,7 @@ import {
     IVSCodeNotebook,
     IApplicationShell
 } from '../platform/common/application/types';
-import { PYTHON_LANGUAGE, isCI, Settings } from '../platform/common/constants';
+import { PYTHON_LANGUAGE, Settings } from '../platform/common/constants';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
 import { getDisplayPath } from '../platform/common/platform/fs-paths.node';
 import { IPythonExecutionFactory } from '../platform/common/process/types.node';
@@ -79,6 +79,7 @@ import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { IStatusProvider } from '../platform/progress/types';
 import { IRawNotebookProvider } from './raw/types';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
+import { isCI } from '../platform/common/constants.node';
 
 // Helper functions for dealing with kernels and kernelspecs
 

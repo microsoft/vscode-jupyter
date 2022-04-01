@@ -17,7 +17,7 @@ import {
     Telemetry,
     VSCodeNativeTelemetry
 } from '../platform/common/constants';
-import { traceError, traceInfo } from '../platform/logging';
+import { traceError, traceVerbose } from '../platform/logging';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { ResourceSpecificTelemetryProperties } from './types';
 import { CheckboxState, EventName, PlatformErrors, SliceOperationSource } from './constants';
@@ -263,13 +263,11 @@ function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E exten
         reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     }
 
-    if (process.env && process.env.VSC_JUPYTER_LOG_TELEMETRY) {
-        traceInfo(
-            `Telemetry Event : ${eventNameSent} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
-                customProperties
-            )} `
-        );
-    }
+    traceVerbose(
+        `Telemetry Event : ${eventNameSent} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
+            customProperties
+        )} `
+    );
 }
 
 // Type-parameterized form of MethodDecorator in lib.es5.d.ts.

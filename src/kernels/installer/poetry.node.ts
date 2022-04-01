@@ -4,10 +4,9 @@
 'use strict';
 
 import * as path from 'path';
-import { isTestExecution } from '../../platform/common/constants';
 import { traceVerbose, traceError } from '../../platform/logging';
 import { cache } from '../../platform/common/utils/decorators';
-import { getOSType, getUserHomeDir, OSType } from '../../platform/common/utils/platform';
+import { getOSType, getUserHomeDir, OSType } from '../../platform/common/utils/platform.node';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import {
     getPythonSetting,
@@ -19,6 +18,7 @@ import {
     isVirtualenvEnvironment,
     pathExists
 } from '../../platform/common/platform/fileUtils.node';
+import { isTestExecution } from '../../platform/common/constants.node';
 
 /**
  * Global virtual env dir for a project is named as:

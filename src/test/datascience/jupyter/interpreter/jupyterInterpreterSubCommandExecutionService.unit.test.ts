@@ -25,7 +25,7 @@ import { MockOutputChannel } from '../../../mockClasses';
 import { createPythonInterpreter } from '../../../utils/interpreters';
 import { ProductNames } from '../../../../kernels/installer/productNames.node';
 import { Product } from '../../../../kernels/installer/types';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants.node';
 import { IEnvironmentActivationService } from '../../../../platform/interpreter/activation/types';
 import { JupyterInterpreterDependencyService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService.node';
 import { JupyterInterpreterService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterService.node';

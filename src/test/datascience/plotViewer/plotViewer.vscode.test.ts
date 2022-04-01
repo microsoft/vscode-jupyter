@@ -9,8 +9,8 @@ import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { createJupyterCellFromVSCNotebookCell } from '../../../notebooks/helpers.node';
-import { IExtensionTestApi, waitForCondition } from '../../common';
-import { closeActiveWindows, initialize } from '../../initialize';
+import { IExtensionTestApi, waitForCondition } from '../../common.node';
+import { closeActiveWindows, initialize } from '../../initialize.node';
 import {
     startJupyterServer,
     closeNotebooksAndCleanUpAfterTests,

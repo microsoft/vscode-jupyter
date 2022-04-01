@@ -11,7 +11,13 @@ import {
 } from '../../interactive-window/shiftEnterBanner.node';
 
 import { IApplicationShell } from '../../platform/common/application/types';
-import { Telemetry } from '../../platform/common/constants';
+import {
+    isTestExecution,
+    isUnitTestExecution,
+    setTestExecution,
+    setUnitTestExecution,
+    Telemetry
+} from '../../platform/common/constants';
 import {
     IConfigurationService,
     IPersistentState,
@@ -21,8 +27,8 @@ import {
 import { clearTelemetryReporter } from '../../telemetry';
 
 suite('Interactive Shift Enter Banner', () => {
-    const oldValueOfVSC_JUPYTER_UNIT_TEST = process.env.VSC_JUPYTER_UNIT_TEST;
-    const oldValueOfVSC_JUPYTER_CI_TEST = process.env.VSC_JUPYTER_CI_TEST;
+    const oldValueOfVSC_JUPYTER_UNIT_TEST = isUnitTestExecution();
+    const oldValueOfVSC_JUPYTER_CI_TEST = isTestExecution();
     let appShell: typemoq.IMock<IApplicationShell>;
     let config: typemoq.IMock<IConfigurationService>;
 
@@ -39,8 +45,8 @@ suite('Interactive Shift Enter Banner', () => {
 
     setup(() => {
         clearTelemetryReporter();
-        process.env.VSC_JUPYTER_UNIT_TEST = undefined;
-        process.env.VSC_JUPYTER_CI_TEST = undefined;
+        setUnitTestExecution(false);
+        setTestExecution(false);
         appShell = typemoq.Mock.ofType<IApplicationShell>();
         config = typemoq.Mock.ofType<IConfigurationService>();
         rewiremock.enable();
@@ -48,8 +54,8 @@ suite('Interactive Shift Enter Banner', () => {
     });
 
     teardown(() => {
-        process.env.VSC_JUPYTER_UNIT_TEST = oldValueOfVSC_JUPYTER_UNIT_TEST;
-        process.env.VSC_JUPYTER_CI_TEST = oldValueOfVSC_JUPYTER_CI_TEST;
+        setUnitTestExecution(oldValueOfVSC_JUPYTER_UNIT_TEST);
+        setTestExecution(oldValueOfVSC_JUPYTER_CI_TEST);
         Reporter.properties = [];
         Reporter.eventNames = [];
         Reporter.measures = [];

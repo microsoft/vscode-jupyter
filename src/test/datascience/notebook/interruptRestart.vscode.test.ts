@@ -11,9 +11,9 @@ import { traceInfo } from '../../../platform/logging';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { IKernelProvider } from '../../../platform/../kernels/types';
-import { captureScreenShot, createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common';
-import { IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
-import { initialize } from '../../initialize';
+import { captureScreenShot, createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common.node';
+import { IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
+import { initialize } from '../../initialize.node';
 import {
     assertVSCCellIsNotRunning,
     closeNotebooksAndCleanUpAfterTests,

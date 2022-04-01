@@ -41,9 +41,6 @@
         "ipywidgets",
         "tmp",
         ".nyc_output",
-        ".git",
-        "src/webviews/webview-side",
-        "src/*.web.ts",
-        "src/**/*.web.ts"
+        ".git"
     ]
 }

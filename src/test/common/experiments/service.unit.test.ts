@@ -15,7 +15,7 @@ import { ExperimentService } from '../../../platform/common/experiments/service.
 import { IConfigurationService } from '../../../platform/common/types';
 import * as Telemetry from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
-import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
+import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants.node';
 import { MockOutputChannel } from '../../mockClasses';
 import { MockMemento } from '../../mocks/mementos';
 suite('Experimentation service', () => {

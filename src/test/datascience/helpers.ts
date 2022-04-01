@@ -10,14 +10,14 @@ import { arePathsSame } from '../../platform/common/platform/fileUtils.node';
 import { IJupyterSettings } from '../../platform/common/types';
 import { InteractiveWindow } from '../../interactive-window/interactiveWindow.node';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider.node';
-import { waitForCondition } from '../common';
+import { waitForCondition } from '../common.node';
 import {
     createTemporaryFile,
     defaultNotebookTestTimeout,
     waitForCellExecutionToComplete,
     waitForExecutionCompletedSuccessfully
 } from './notebook/helper';
-import { initialize } from '../initialize';
+import { initialize } from '../initialize.node';
 import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../interactive-window/types';
 import { Commands } from '../../platform/common/constants';

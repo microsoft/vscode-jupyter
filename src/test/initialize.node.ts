@@ -4,14 +4,14 @@ import type { IExtensionApi } from '../platform/api';
 import { disposeAllDisposables } from '../platform/common/helpers.node';
 import type { IDisposable } from '../platform/common/types';
 import { clearPendingChainedUpdatesForTests } from '../notebooks/execution/notebookUpdater.node';
-import { clearPendingTimers, IExtensionTestApi, PYTHON_PATH, setPythonPathInWorkspaceRoot } from './common';
-import { IS_SMOKE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from './constants';
+import { clearPendingTimers, IExtensionTestApi, PYTHON_PATH, setPythonPathInWorkspaceRoot } from './common.node';
+import { IS_SMOKE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from './constants.node';
 import { sleep } from './core';
 import { startJupyterServer } from './datascience/notebook/helper';
 import { PythonExtension } from '../platform/common/constants';
 
-export * from './constants';
-export * from './ciConstants';
+export * from './constants.node';
+export * from './ciConstants.node';
 export const multirootPath = path.join(__dirname, '..', '..', 'src', 'test', 'testMultiRootWkspc');
 
 //First thing to be executed.

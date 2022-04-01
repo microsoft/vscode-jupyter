@@ -19,11 +19,17 @@ import {
     sendTelemetryEvent,
     setSharedProperty
 } from '../../telemetry';
+import {
+    isUnitTestExecution,
+    isTestExecution,
+    setTestExecution,
+    setUnitTestExecution
+} from '../../platform/common/constants';
 
 suite('Telemetry', () => {
     let workspaceService: IWorkspaceService;
-    const oldValueOfVSC_JUPYTER_UNIT_TEST = process.env.VSC_JUPYTER_UNIT_TEST;
-    const oldValueOfVSC_JUPYTER_CI_TEST = process.env.VSC_JUPYTER_CI_TEST;
+    const oldValueOfVSC_JUPYTER_UNIT_TEST = isUnitTestExecution();
+    const oldValueOfVSC_JUPYTER_CI_TEST = isTestExecution();
 
     class Reporter {
         public static eventName: string[] = [];
@@ -49,14 +55,14 @@ suite('Telemetry', () => {
 
     setup(() => {
         workspaceService = mock(WorkspaceService);
-        process.env.VSC_JUPYTER_UNIT_TEST = undefined;
-        process.env.VSC_JUPYTER_CI_TEST = undefined;
+        setTestExecution(false);
+        setUnitTestExecution(false);
         clearTelemetryReporter();
         Reporter.clear();
     });
     teardown(() => {
-        process.env.VSC_JUPYTER_UNIT_TEST = oldValueOfVSC_JUPYTER_UNIT_TEST;
-        process.env.VSC_JUPYTER_CI_TEST = oldValueOfVSC_JUPYTER_CI_TEST;
+        setUnitTestExecution(oldValueOfVSC_JUPYTER_UNIT_TEST);
+        setTestExecution(oldValueOfVSC_JUPYTER_CI_TEST);
         rewiremock.disable();
         _resetSharedProperties();
     });

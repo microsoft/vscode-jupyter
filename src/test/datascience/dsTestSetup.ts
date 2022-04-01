@@ -4,7 +4,7 @@
 import * as fs from 'fs-extra';
 import { applyEdits, ModificationOptions, modify } from 'jsonc-parser';
 import * as path from 'path';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
 
 const settingsFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.vscode/settings.json');
 

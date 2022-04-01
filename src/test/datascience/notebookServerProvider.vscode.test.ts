@@ -6,8 +6,8 @@
 import { assert } from 'chai';
 import { Disposable, CancellationTokenSource } from 'vscode';
 import { traceInfo } from '../../platform/logging';
-import { IS_NON_RAW_NATIVE_TEST } from '../constants';
-import { initialize } from '../initialize';
+import { IS_NON_RAW_NATIVE_TEST } from '../constants.node';
+import { initialize } from '../initialize.node';
 import { closeNotebooksAndCleanUpAfterTests, startJupyterServer } from './notebook/helper';
 import * as getFreePort from 'get-port';
 import { IPythonExecutionFactory } from '../../platform/common/process/types.node';

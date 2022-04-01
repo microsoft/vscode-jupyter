@@ -3,7 +3,7 @@
 'use strict';
 import * as fastDeepEqual from 'fast-deep-equal';
 import { assert } from 'chai';
-import { waitForCondition } from '../../common';
+import { waitForCondition } from '../../common.node';
 import { defaultNotebookTestTimeout } from '../notebook/helper';
 import { ITestWebviewHost } from '../testInterfaces';
 

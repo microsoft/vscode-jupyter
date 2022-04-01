@@ -40,11 +40,11 @@ import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/
 import { createDeferred } from '../../../platform/common/utils/async';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
 import { IKernelProvider } from '../../../platform/../kernels/types';
-import { IExtensionTestApi, sleep, waitForCondition } from '../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
+import { IExtensionTestApi, sleep, waitForCondition } from '../../common.node';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants.node';
 import { noop } from '../../core';
-import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
-import { JupyterServer } from '../jupyterServer';
+import { closeActiveWindows, initialize, isInsiders } from '../../initialize.node';
+import { JupyterServer } from '../jupyterServer.node';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebuggingManager, IKernelDebugAdapter } from '../../../platform/debugger/types';
 import { DataScience } from '../../../platform/common/utils/localize';

@@ -11,9 +11,9 @@ import {
     IVariableTooltipFields,
     ReadWrite
 } from '../../../platform/common/types';
-import { IExtensionTestApi, openFile, sleep } from '../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
-import { initialize } from '../../initialize';
+import { IExtensionTestApi, openFile, sleep } from '../../common.node';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
+import { initialize } from '../../initialize.node';
 import { HoverProvider } from '../../../interactive-window/editor-integration/hoverProvider.node';
 import { disposeAllDisposables } from '../../../platform/common/helpers.node';
 import { IKernelProvider } from '../../../platform/../kernels/types';

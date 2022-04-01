@@ -17,9 +17,9 @@ import {
     getInterpreterHash,
     getNormalizedInterpreterPath
 } from '../../../platform/pythonEnvironments/info/interpreter.node';
-import { createEventHandler, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../constants';
-import { closeActiveWindows, initialize, IS_CI_SERVER } from '../../initialize';
+import { createEventHandler, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common.node';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
+import { closeActiveWindows, initialize, IS_CI_SERVER } from '../../initialize.node';
 import { openNotebook } from '../helpers';
 import {
     closeNotebooksAndCleanUpAfterTests,

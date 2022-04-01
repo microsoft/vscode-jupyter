@@ -9,24 +9,15 @@ import { IDocumentManager } from '../../../platform/common/application/types';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { ExportInterpreterFinder } from '../../../platform/export/exportInterpreterFinder.node';
 import { INbConvertExport, ExportFormat } from '../../../platform/export/types';
-import { IExtensionTestApi } from '../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
-import { closeActiveWindows, initialize } from '../../initialize';
+import { IExtensionTestApi } from '../../common.node';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
+import { closeActiveWindows, initialize } from '../../initialize.node';
 
 suite('DataScience - Export Python', function () {
     let api: IExtensionTestApi;
     this.timeout(10_000);
     suiteSetup(async function () {
         api = await initialize();
-        // Export to Python tests require jupyter to run. Othewrise can't
-        // run any of our variable execution code
-        const isRollingBuild = process.env ? process.env.VSC_FORCE_REAL_JUPYTER !== undefined : false;
-        if (!isRollingBuild) {
-            // eslint-disable-next-line no-console
-            console.log('Skipping Export to Python tests. Requires python environment');
-            // eslint-disable-next-line no-invalid-this
-            this.skip();
-        }
     });
     teardown(closeActiveWindows);
     suiteTeardown(closeActiveWindows);

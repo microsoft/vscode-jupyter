@@ -12,10 +12,10 @@ import * as vscode from 'vscode';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { traceInfo } from '../../platform/logging';
 import { IInterpreterService } from '../../platform/interpreter/contracts.node';
-import { IExtensionTestApi, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
+import { IExtensionTestApi, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common.node';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants.node';
 import { sleep } from '../core';
-import { closeActiveWindows, initialize, initializeTest } from '../initialize';
+import { closeActiveWindows, initialize, initializeTest } from '../initialize.node';
 
 const timeoutForCellToRun = 3 * 60 * 1_000;
 suite('Smoke Tests', () => {

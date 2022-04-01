@@ -12,8 +12,8 @@ import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { IKernelProvider } from '../../../platform/../kernels/types';
-import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
-import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
+import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize.node';
 import { openNotebook } from '../helpers';
 import {
     closeNotebooks,

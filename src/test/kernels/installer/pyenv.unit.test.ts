@@ -4,7 +4,7 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import * as platformUtils from '../../../platform/common/utils/platform';
+import * as platformUtils from '../../../platform/common/utils/platform.node';
 import * as fileUtils from '../../../platform/common/platform/fileUtils.node';
 import {
     isPyenvEnvironment,

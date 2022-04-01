@@ -9,7 +9,7 @@ import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
 import { arePathsSame } from '../../platform/common/platform/fileUtils.node';
 import { BufferDecoder } from '../../platform/common/process/decoder.node';
 import { ProcessService } from '../../platform/common/process/proc.node';
-import { getOSType, OSType } from '../common';
+import { getOSType, OSType } from '../common.node';
 import { parseCondaEnvFileContents } from './condaHelper';
 import { isCondaEnvironment } from './condaLocator';
 

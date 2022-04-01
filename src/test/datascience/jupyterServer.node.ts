@@ -10,9 +10,9 @@ import { traceError, traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { IPythonExecutionFactory } from '../../platform/common/process/types.node';
 import { IAsyncDisposable, IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { PYTHON_PATH, sleep } from '../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
-import { initialize } from '../initialize';
+import { PYTHON_PATH, sleep } from '../common.node';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
+import { initialize } from '../initialize.node';
 const testFolder = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience');
 
 export class JupyterServer implements IAsyncDisposable {

@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../platform/common/utils/platform';
+import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../platform/common/utils/platform.node';
 import { arePathsSame, isParentPath, pathExists } from '../../platform/common/platform/fileUtils.node';
 
 export function getPyenvDir(): string {

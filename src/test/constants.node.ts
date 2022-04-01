@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER } from './ciConstants';
+import { setCI, setTestExecution, setUnitTestExecution } from '../platform/common/constants';
+import { IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER } from './ciConstants.node';
 
 // Activating extension for Multiroot and Debugger CI tests for Windows takes just over 2 minutes sometimes, so 3 minutes seems like a safe margin
 export const MAX_EXTENSION_ACTIVATION_TIME = 180_000;
@@ -45,3 +46,8 @@ export const SMOKE_TEST_EXTENSIONS_DIR = path.join(
 );
 
 export const IPYTHON_VERSION_CODE = 'import IPython\nprint(int(IPython.__version__[0]))\n';
+
+// Have to set these values in a '.node' based file.
+setCI(process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true');
+setTestExecution(process.env.VSC_JUPYTER_CI_TEST === '1');
+setUnitTestExecution(process.env.VSC_JUPYTER_UNIT_TEST === '1');

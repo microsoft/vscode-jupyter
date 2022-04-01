@@ -63,14 +63,13 @@ import { sendErrorTelemetry, sendStartupTelemetry } from './platform/startupTele
 import { noop } from './platform/common/utils/misc';
 import { JUPYTER_OUTPUT_CHANNEL, PythonExtension } from './webviews/webview-side/common/constants';
 import { IExtensionActivationManager } from './platform/activation/types';
-import { isCI, isTestExecution, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants';
+import { STANDARD_OUTPUT_CHANNEL } from './platform/common/constants';
 import { getJupyterOutputChannel } from './platform/devTools/jupyterOutputChannel';
 import { registerLogger, setLoggingLevel } from './platform/logging';
 import { Container } from 'inversify/lib/container/container';
 import { ServiceContainer } from './platform/ioc/container';
 import { ServiceManager } from './platform/ioc/serviceManager';
 import { OutputChannelLogger } from './platform/logging/outputChannelLogger';
-import { ConsoleLogger } from './platform/logging/consoleLogger';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -199,18 +198,6 @@ async function activateComponents(
     return activateLegacy(context, serviceManager, serviceContainer);
 }
 
-function addConsoleLogger() {
-    if (process.env.VSC_JUPYTER_FORCE_LOGGING) {
-        let label = undefined;
-        // In CI there's no need for the label.
-        if (!isCI) {
-            label = 'Jupyter Extension:';
-        }
-
-        registerLogger(new ConsoleLogger(label));
-    }
-}
-
 function addOutputChannel(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     const standardOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter());
     registerLogger(new OutputChannelLogger(standardOutputChannel));
@@ -255,16 +242,13 @@ async function activateLegacy(
 ) {
     // register "services"
     const isDevMode =
-        !isTestExecution() &&
-        (context.extensionMode === ExtensionMode.Development ||
-            workspace.getConfiguration('jupyter').get<boolean>('development', false));
+        context.extensionMode === ExtensionMode.Development ||
+        workspace.getConfiguration('jupyter').get<boolean>('development', false);
     serviceManager.addSingletonInstance<boolean>(IsDevMode, isDevMode);
     if (isDevMode) {
         void commands.executeCommand('setContext', 'jupyter.development', true);
     }
 
-    // Setup the console logger if asked to
-    addConsoleLogger();
     // Output channel is special. We need it before everything else
     addOutputChannel(context, serviceManager, isDevMode);
 

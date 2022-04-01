@@ -7,8 +7,8 @@ import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { traceInfo } from '../../../../platform/logging';
 import { IDisposable } from '../../../../platform/common/types';
-import { captureScreenShot, createEventHandler, waitForCondition } from '../../../common';
-import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
+import { captureScreenShot, createEventHandler, waitForCondition } from '../../../common.node';
+import { IS_REMOTE_NATIVE_TEST } from '../../../constants.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
     insertCodeCell,
@@ -17,6 +17,8 @@ import {
     createEmptyPythonNotebook,
     defaultNotebookTestTimeout
 } from '../helper';
+import { setIntellisenseTimeout } from '../../../../intellisense/pythonKernelCompletionProvider.node';
+import { Settings } from '../../../../platform/common/constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Intellisense Notebook and Interactive Goto Definition (slow)', function () {
@@ -40,12 +42,12 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Goto Definitio
         sinon.restore();
         await startJupyterServer();
         await createEmptyPythonNotebook(disposables);
-        process.env.VSC_JUPYTER_IntellisenseTimeout = '30000';
+        setIntellisenseTimeout(30000);
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
-        delete process.env.VSC_JUPYTER_IntellisenseTimeout;
+        setIntellisenseTimeout(Settings.IntellisenseTimeout);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this.currentTest?.title);
         }

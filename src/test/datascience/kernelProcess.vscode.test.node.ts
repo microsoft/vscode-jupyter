@@ -5,7 +5,7 @@
 
 import * as assert from 'assert';
 import * as sinon from 'sinon';
-import { IS_REMOTE_NATIVE_TEST } from '../constants';
+import { IS_REMOTE_NATIVE_TEST } from '../constants.node';
 import { IDisposable, IJupyterSettings } from '../../platform/common/types';
 import rewiremock from 'rewiremock';
 import {
@@ -15,7 +15,7 @@ import {
     ObservableExecutionResult
 } from '../../platform/common/process/types.node';
 import { anything, capture, instance, mock, when } from 'ts-mockito';
-import { LocalKernelSpecConnectionMetadata } from '../../platform/../kernels/types';
+import { LocalKernelSpecConnectionMetadata } from '../../kernels/types';
 import { IFileSystem } from '../../platform/common/platform/types.node';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { noop } from '../core';
