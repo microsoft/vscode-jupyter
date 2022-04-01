@@ -26,7 +26,7 @@ import {
     WidgetCDNs
 } from './types';
 import { debounceSync } from './utils/decorators';
-import { SystemVariables } from './variables/systemVariables.node';
+import { ISystemVariablesConstructor } from './variables/types';
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 
@@ -112,7 +112,11 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     private _disposables: Disposable[] = [];
     private readonly _workspace: IWorkspaceService;
 
-    constructor(workspaceFolder: Resource, workspace?: IWorkspaceService) {
+    constructor(
+        workspaceFolder: Resource,
+        private readonly systemVariablesCtor: ISystemVariablesConstructor,
+        workspace?: IWorkspaceService
+    ) {
         this._workspace = workspace || new WorkspaceService();
         this._workspaceRoot = workspaceFolder;
         this.initialize();
@@ -122,13 +126,17 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         }
     }
     // eslint-disable-next-line
-    public static getInstance(resource: Uri | undefined, workspace?: IWorkspaceService): JupyterSettings {
+    public static getInstance(
+        resource: Uri | undefined,
+        systemVariablesCtor: ISystemVariablesConstructor,
+        workspace?: IWorkspaceService
+    ): JupyterSettings {
         workspace = workspace || new WorkspaceService();
         const workspaceFolderUri = JupyterSettings.getSettingsUriAndTarget(resource, workspace).uri;
         const workspaceFolderKey = workspaceFolderUri ? workspaceFolderUri.fsPath : '';
 
         if (!JupyterSettings.jupyterSettings.has(workspaceFolderKey)) {
-            const settings = new JupyterSettings(workspaceFolderUri, workspace);
+            const settings = new JupyterSettings(workspaceFolderUri, systemVariablesCtor, workspace);
             JupyterSettings.jupyterSettings.set(workspaceFolderKey, settings);
         }
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -180,7 +188,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     // eslint-disable-next-line complexity,
     protected update(jupyterConfig: WorkspaceConfiguration, pythonConfig: WorkspaceConfiguration | undefined) {
         const workspaceRoot = this._workspaceRoot?.fsPath;
-        const systemVariables: SystemVariables = new SystemVariables(undefined, workspaceRoot, this._workspace);
+        const systemVariables = new this.systemVariablesCtor(undefined, workspaceRoot, this._workspace);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const loggingSettings = systemVariables.resolveAny(jupyterConfig.get<any>('logging'))!;

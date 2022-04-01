@@ -7,7 +7,7 @@ import { assert } from 'chai';
 import * as path from 'path';
 import { SemVer } from 'semver';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
-import { ApplicationShell } from '../../../platform/common/application/applicationShell.node';
+import { ApplicationShell } from '../../../platform/common/application/applicationShell';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { PythonExecutionFactory } from '../../../platform/common/process/pythonExecutionFactory.node';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/common/process/types.node';

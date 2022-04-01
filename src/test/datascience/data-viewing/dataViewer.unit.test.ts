@@ -5,7 +5,7 @@
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { ConfigurationChangeEvent, EventEmitter } from 'vscode';
-import { ApplicationShell } from '../../../platform/common/application/applicationShell.node';
+import { ApplicationShell } from '../../../platform/common/application/applicationShell';
 import {
     IApplicationShell,
     IWebviewPanelProvider,
@@ -13,7 +13,7 @@ import {
 } from '../../../platform/common/application/types';
 import { WebviewPanelProvider } from '../../../webviews/extension-side/webviewPanels/webviewPanelProvider.node';
 import { WorkspaceService } from '../../../platform/common/application/workspace';
-import { JupyterSettings } from '../../../platform/common/configSettings.node';
+import { JupyterSettings } from '../../../platform/common/configSettings';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { IConfigurationService } from '../../../platform/common/types';
 import { IDataScienceErrorHandler } from '../../../platform/errors/types';

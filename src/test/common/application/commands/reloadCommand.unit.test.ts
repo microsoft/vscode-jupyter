@@ -4,8 +4,8 @@
 'use strict';
 
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
-import { ApplicationShell } from '../../../../platform/common/application/applicationShell.node';
-import { CommandManager } from '../../../../platform/common/application/commandManager.node';
+import { ApplicationShell } from '../../../../platform/common/application/applicationShell';
+import { CommandManager } from '../../../../platform/common/application/commandManager';
 import { ReloadVSCodeCommandHandler } from '../../../../platform/common/application/commands/reloadCommand.node';
 import { IApplicationShell, ICommandManager } from '../../../../platform/common/application/types';
 import { Common } from '../../../../platform/common/utils/localize';

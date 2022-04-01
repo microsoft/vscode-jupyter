@@ -28,12 +28,12 @@ import {
 } from './application/types';
 import { AsyncDisposableRegistry } from './asyncDisposableRegistry.node';
 import { CryptoUtils } from './crypto.node';
-import { ExperimentService } from './experiments/service.node';
-import { FeatureDeprecationManager } from './featureDeprecationManager.node';
-import { BrowserService } from './net/browser.node';
+import { ExperimentService } from './experiments/service';
+import { FeatureDeprecationManager } from './featureDeprecationManager';
+import { BrowserService } from './net/browser';
 import { FileDownloader } from './net/fileDownloader.node';
 import { HttpClient } from './net/httpClient.node';
-import { PersistentStateFactory } from './persistentState.node';
+import { PersistentStateFactory } from './persistentState';
 import { IS_WINDOWS } from './platform/constants.node';
 import { PathUtils } from './platform/pathUtils.node';
 import { ProcessLogger } from './process/logger.node';

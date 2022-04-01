@@ -7,7 +7,7 @@ import * as nodeFetch from 'node-fetch';
 import * as typemoq from 'typemoq';
 
 import { anything, instance, mock, when } from 'ts-mockito';
-import { ApplicationShell } from '../../platform/common/application/applicationShell.node';
+import { ApplicationShell } from '../../platform/common/application/applicationShell';
 import { AsyncDisposableRegistry } from '../../platform/common/asyncDisposableRegistry.node';
 import { ConfigurationService } from '../../platform/common/configuration/service.node';
 import { MultiStepInputFactory } from '../../platform/common/utils/multiStepInput.node';

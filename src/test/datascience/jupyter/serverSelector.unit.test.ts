@@ -6,7 +6,7 @@ import { anyString, anything, instance, mock, when } from 'ts-mockito';
 import * as sinon from 'sinon';
 import * as os from 'os';
 import { QuickPickItem } from 'vscode';
-import { ApplicationShell } from '../../../platform/common/application/applicationShell.node';
+import { ApplicationShell } from '../../../platform/common/application/applicationShell';
 import { ClipboardService } from '../../../platform/common/application/clipboard.node';
 import { IClipboard } from '../../../platform/common/application/types';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';

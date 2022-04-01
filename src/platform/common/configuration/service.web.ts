@@ -6,7 +6,7 @@ import { Uri } from 'vscode';
 import { IServiceContainer } from '../../ioc/types';
 import { JupyterSettings } from '../configSettings';
 import { IWatchableJupyterSettings } from '../types';
-import { SystemVariables } from '../variables/systemVariables.node';
+import { SystemVariables } from '../variables/systemVariables.web';
 import { BaseConfigurationService } from './service.base';
 
 @injectable()

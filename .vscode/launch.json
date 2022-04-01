@@ -37,7 +37,7 @@
             "debugWebWorkerHost": true,
             "request": "launch",
             "args": ["--extensionDevelopmentPath=${workspaceFolder}", "--extensionDevelopmentKind=web"],
-            "outFiles": ["${workspaceFolder}/out/extension.web.dist.js"],
+            "outFiles": ["${workspaceFolder}/out/**/*", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile Web Extension",
             "presentation": {
                 "group": "1_extension",

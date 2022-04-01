@@ -5,7 +5,7 @@
 
 import * as assert from 'assert';
 import { instance, mock, when } from 'ts-mockito';
-import { JupyterSettings } from '../../../platform/common/configSettings.node';
+import { JupyterSettings } from '../../../platform/common/configSettings';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { CondaService } from '../../../platform/common/process/condaService.node';
 import { IConfigurationService } from '../../../platform/common/types';

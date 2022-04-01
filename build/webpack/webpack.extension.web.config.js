@@ -15,7 +15,7 @@ const config = {
         extension: './src/extension.web.ts',
         'test/suite/index': './src/test/web/suite/index.ts' // source of the web extension test runner
     },
-    devtool: 'nosources-source-map',
+    devtool: 'nosources-source-map', // create a source map that points to the original source file
     node: {
         __dirname: false
     },
@@ -99,8 +99,7 @@ const config = {
             process: {
                 platform: 'web'
             }
-        }),
-        new webpack.ContextReplacementPlugin(/mocha\/mocha/)
+        })
     ],
     resolve: {
         extensions: ['.ts', '.js'],
@@ -119,10 +118,10 @@ const config = {
         }
     },
     output: {
-        filename: '[name].web.js',
+        filename: '[name].web.bundle.js',
         path: path.resolve(constants.ExtensionRootDir, 'out'),
         libraryTarget: 'commonjs2',
-        devtoolModuleFilenameTemplate: '../../[resource-path]'
+        devtoolModuleFilenameTemplate: '../[resource-path]'
     }
 };
 // tslint:disable-next-line:no-default-export

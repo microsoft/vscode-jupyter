@@ -1,40 +1,24 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
-
-'use strict';
-
-import { inject, injectable, multiInject, optional } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { TextDocument } from 'vscode';
+import { sendActivationTelemetry } from '../../telemetry/envFileTelemetry.node';
 import { IPythonExtensionChecker } from '../api/types';
-import { IActiveResourceService, IDocumentManager, IWorkspaceService } from '../common/application/types';
+import { IWorkspaceService, IActiveResourceService, IDocumentManager } from '../common/application/types';
 import { PYTHON_LANGUAGE } from '../common/constants';
 import { IFileSystem } from '../common/platform/types.node';
 import { IDisposable, Resource } from '../common/types';
 import { Deferred } from '../common/utils/async';
 import { IInterpreterService } from '../interpreter/contracts.node';
-import { sendActivationTelemetry } from '../../telemetry/envFileTelemetry.node';
-import {
-    IExtensionActivationManager,
-    IExtensionActivationService,
-    IExtensionSingleActivationService,
-    IExtensionSyncActivationService
-} from './types';
 import { traceDecoratorError } from '../logging';
+import { IExtensionSingleActivationService } from './types';
 
 @injectable()
-export class ExtensionActivationManager implements IExtensionActivationManager {
+export class WorkspaceActivation implements IExtensionSingleActivationService {
     public readonly activatedWorkspaces = new Set<string>();
     protected readonly isInterpreterSetForWorkspacePromises = new Map<string, Deferred<void>>();
     private readonly disposables: IDisposable[] = [];
     private docOpenedHandler?: IDisposable;
+
     constructor(
-        @multiInject(IExtensionActivationService)
-        @optional()
-        private readonly activationServices: IExtensionActivationService[],
-        @multiInject(IExtensionSingleActivationService)
-        private readonly singleActivationServices: IExtensionSingleActivationService[],
-        @multiInject(IExtensionSyncActivationService)
-        private readonly syncActivationServices: IExtensionSyncActivationService[],
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
@@ -43,27 +27,12 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {}
 
-    public dispose() {
-        while (this.disposables.length > 0) {
-            const disposable = this.disposables.shift()!;
-            disposable.dispose();
-        }
-        if (this.docOpenedHandler) {
-            this.docOpenedHandler.dispose();
-            this.docOpenedHandler = undefined;
-        }
-    }
-    public activateSync(): void {
-        this.syncActivationServices.map((item) => item.activate());
-    }
     public async activate(): Promise<void> {
-        await this.initialize();
-        // Activate all activation services together.
-        await Promise.all([
-            Promise.all(this.singleActivationServices.map((item) => item.activate())),
-            this.activateWorkspace(this.activeResourceService.getActiveResource())
-        ]);
+        this.addHandlers();
+        this.addRemoveDocOpenedHandlers();
+        return this.activateWorkspace(this.activeResourceService.getActiveResource());
     }
+
     @traceDecoratorError('Failed to activate a workspace')
     public async activateWorkspace(resource: Resource) {
         const key = this.getWorkspaceKey(resource);
@@ -78,15 +47,8 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         }
 
         await sendActivationTelemetry(this.fileSystem, this.workspaceService, resource);
+    }
 
-        if (this.activationServices) {
-            await Promise.all(this.activationServices.map((item) => item.activate(resource)));
-        }
-    }
-    public async initialize() {
-        this.addHandlers();
-        this.addRemoveDocOpenedHandlers();
-    }
     public onDocOpened(doc: TextDocument) {
         if (doc.languageId !== PYTHON_LANGUAGE) {
             return;

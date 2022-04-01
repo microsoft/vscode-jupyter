@@ -74,7 +74,7 @@
         "onNotebook:interactive"
     ],
     "main": "./out/extension.node.js",
-    "browser": "./out/extension.web.js",
+    "browser": "./out/extension.web.bundle.js",
     "capabilities": {
         "virtualWorkspaces": true,
         "untrustedWorkspaces": {
@@ -2098,7 +2098,7 @@
         "postdownload-api": "vscode-dts main",
         "generateTelemetry": "gulp generateTelemetryMd",
         "open-in-browser": "vscode-test-web --extensionDevelopmentPath=. .",
-        "testWebExtension": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. --extensionTestsPath=out/web/test/suite/index.js"
+        "testWebExtension": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. --extensionTestsPath=out/web/test/suite/index.web.bundle.js"
     },
     "dependencies": {
         "@enonic/fnv-plus": "^1.3.0",

@@ -62,6 +62,7 @@ import { IServiceContainer, IServiceManager } from './platform/ioc/types';
 import { sendErrorTelemetry, sendStartupTelemetry } from './platform/startupTelemetry';
 import { noop } from './platform/common/utils/misc';
 import { JUPYTER_OUTPUT_CHANNEL, PythonExtension } from './webviews/webview-side/common/constants';
+import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.web';
 import { IExtensionActivationManager } from './platform/activation/types';
 import { STANDARD_OUTPUT_CHANNEL } from './platform/common/constants';
 import { getJupyterOutputChannel } from './platform/devTools/jupyterOutputChannel';
@@ -253,6 +254,7 @@ async function activateLegacy(
     addOutputChannel(context, serviceManager, isDevMode);
 
     // Register the rest of the types (platform is first because it's needed by others)
+    registerPlatformTypes(serviceManager);
 
     // Load the two data science experiments that we need to register types
     // Await here to keep the register method sync

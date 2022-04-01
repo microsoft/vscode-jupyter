@@ -4,18 +4,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 'use strict';
-import * as Path from 'path';
 import { Uri, Range } from 'vscode';
 import { IWorkspaceService, IDocumentManager } from '../application/types';
 import { AbstractSystemVariables } from './systemVariables';
 
 export class SystemVariables extends AbstractSystemVariables {
     private _workspaceFolder: string;
-    private _workspaceFolderName: string;
     private _filePath: string | undefined;
     private _lineNumber: number | undefined;
     private _selectedText: string | undefined;
-    private _execPath: string;
 
     constructor(
         file: Uri | undefined,
@@ -25,9 +22,8 @@ export class SystemVariables extends AbstractSystemVariables {
     ) {
         super();
         const workspaceFolder = workspace && file ? workspace.getWorkspaceFolder(file) : undefined;
-        this._workspaceFolder = workspaceFolder ? workspaceFolder.uri.fsPath : rootFolder || __dirname;
-        this._workspaceFolderName = Path.basename(this._workspaceFolder);
-        this._filePath = file ? file.fsPath : undefined;
+        this._workspaceFolder = workspaceFolder ? workspaceFolder.uri.path : rootFolder || __dirname;
+        this._filePath = file ? file.path : undefined;
         if (documentManager && documentManager.activeTextEditor) {
             this._lineNumber = documentManager.activeTextEditor.selection.anchor.line + 1;
             this._selectedText = documentManager.activeTextEditor.document.getText(
@@ -37,12 +33,6 @@ export class SystemVariables extends AbstractSystemVariables {
                 )
             );
         }
-        this._execPath = process.execPath;
-        Object.keys(process.env).forEach((key) => {
-            (this as any as Record<string, string | undefined>)[`env:${key}`] = (
-                this as any as Record<string, string | undefined>
-            )[`env.${key}`] = process.env[key];
-        });
     }
 
     public get cwd(): string {
@@ -57,40 +47,8 @@ export class SystemVariables extends AbstractSystemVariables {
         return this._workspaceFolder;
     }
 
-    public get workspaceRootFolderName(): string {
-        return this._workspaceFolderName;
-    }
-
-    public get workspaceFolderBasename(): string {
-        return this._workspaceFolderName;
-    }
-
     public get file(): string | undefined {
         return this._filePath;
-    }
-
-    public get relativeFile(): string | undefined {
-        return this.file ? Path.relative(this._workspaceFolder, this.file) : undefined;
-    }
-
-    public get relativeFileDirname(): string | undefined {
-        return this.relativeFile ? Path.dirname(this.relativeFile) : undefined;
-    }
-
-    public get fileBasename(): string | undefined {
-        return this.file ? Path.basename(this.file) : undefined;
-    }
-
-    public get fileBasenameNoExtension(): string | undefined {
-        return this.file ? Path.parse(this.file).name : undefined;
-    }
-
-    public get fileDirname(): string | undefined {
-        return this.file ? Path.dirname(this.file) : undefined;
-    }
-
-    public get fileExtname(): string | undefined {
-        return this.file ? Path.extname(this.file) : undefined;
     }
 
     public get lineNumber(): number | undefined {
@@ -99,9 +57,5 @@ export class SystemVariables extends AbstractSystemVariables {
 
     public get selectedText(): string | undefined {
         return this._selectedText;
-    }
-
-    public get execPath(): string {
-        return this._execPath;
     }
 }

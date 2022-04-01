@@ -1194,8 +1194,7 @@ export function localize(key: string, defValue?: string) {
 
 function parseLocale(): string {
     // Attempt to load from the vscode locale. If not there, use english
-    const vscodeConfigString = vscode.env.language;
-    return vscodeConfigString ? JSON.parse(vscodeConfigString).locale : 'en-us';
+    return vscode.env.language || 'en-us';
 }
 
 function getString(key: string, defValue?: string) {

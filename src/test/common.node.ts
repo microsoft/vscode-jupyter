@@ -17,6 +17,7 @@ import { IServiceContainer, IServiceManager } from '../platform/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants.node';
 import { noop } from './core';
 import { isCI } from '../platform/common/constants';
+import { SystemVariables } from '../platform/common/variables/systemVariables.node';
 
 const StreamZip = require('node-stream-zip');
 
@@ -91,8 +92,8 @@ function getWorkspaceRoot() {
 
 export function getExtensionSettings(resource: Uri | undefined): IJupyterSettings {
     const pythonSettings =
-        require('../platform/common/configSettings.node') as typeof import('../platform/common/configSettings.node');
-    return pythonSettings.JupyterSettings.getInstance(resource);
+        require('../platform/common/configSettings.node') as typeof import('../platform/common/configSettings');
+    return pythonSettings.JupyterSettings.getInstance(resource, SystemVariables);
 }
 export function retryAsync(this: any, wrapped: Function, retryCount: number = 2) {
     return async (...args: any[]) => {

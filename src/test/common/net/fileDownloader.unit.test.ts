@@ -14,7 +14,7 @@ import * as sinon from 'sinon';
 import { Readable } from 'stream';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Progress } from 'vscode';
-import { ApplicationShell } from '../../../platform/common/application/applicationShell.node';
+import { ApplicationShell } from '../../../platform/common/application/applicationShell';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { FileDownloader } from '../../../platform/common/net/fileDownloader.node';
 import { HttpClient } from '../../../platform/common/net/httpClient.node';

@@ -8,7 +8,7 @@ import * as path from 'path';
 import { Readable } from 'stream';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { JupyterSettings } from '../../../platform/common/configSettings.node';
+import { JupyterSettings } from '../../../platform/common/configSettings';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { IFileSystem } from '../../../platform/common/platform/types.node';

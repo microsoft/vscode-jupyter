@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../../platform/common/application/types';
-import { JupyterSettings } from '../../../platform/common/configSettings.node';
+import { JupyterSettings } from '../../../platform/common/configSettings';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { IExperimentService } from '../../../platform/common/types';
 import { IServiceContainer } from '../../../platform/ioc/types';

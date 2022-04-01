@@ -45,6 +45,7 @@ import { IInteractiveWindowProvider, IInteractiveWindow } from '../../../interac
 import { Commands, EditorContexts } from '../../../platform/common/constants';
 import { IDebugLocationTracker } from '../../../platform/debugger/types';
 import { IDataScienceErrorHandler } from '../../../platform/errors/types';
+import { SystemVariables } from '../../../platform/common/variables/systemVariables.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -85,7 +86,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
     let debugService: TypeMoq.IMock<IDebugService>;
     let debugLocationTracker: TypeMoq.IMock<IDebugLocationTracker>;
     const contexts: Map<string, boolean> = new Map<string, boolean>();
-    const jupyterSettings = new MockJupyterSettings(undefined);
+    const jupyterSettings = new MockJupyterSettings(undefined, SystemVariables);
     const disposables: Disposable[] = [];
 
     setup(() => {

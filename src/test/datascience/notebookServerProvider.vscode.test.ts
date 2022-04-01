@@ -14,7 +14,7 @@ import { IPythonExecutionFactory } from '../../platform/common/process/types.nod
 import { IInterpreterService } from '../../platform/interpreter/contracts.node';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IConfigurationService } from '../../platform/common/types';
-import { JupyterSettings } from '../../platform/common/configSettings.node';
+import { JupyterSettings } from '../../platform/common/configSettings';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { HostJupyterExecution } from '../../kernels/jupyter/launcher/liveshare/hostJupyterExecution.node';
 import { NotebookServerProvider } from '../../kernels/jupyter/launcher/notebookServerProvider.node';

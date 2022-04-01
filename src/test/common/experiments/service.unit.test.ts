@@ -11,7 +11,7 @@ import { ApplicationEnvironment } from '../../../platform/common/application/app
 import { Channel, IApplicationEnvironment, IWorkspaceService } from '../../../platform/common/application/types';
 import { WorkspaceService } from '../../../platform/common/application/workspace';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
-import { ExperimentService } from '../../../platform/common/experiments/service.node';
+import { ExperimentService } from '../../../platform/common/experiments/service';
 import { IConfigurationService } from '../../../platform/common/types';
 import * as Telemetry from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';

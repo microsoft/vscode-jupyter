@@ -191,7 +191,7 @@ export async function ensureNewNotebooksHavePythonCells() {
 export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposable[] = []) {
     if (!IS_SMOKE_TEST) {
         // When running smoke tests, we won't have access to these.
-        const configSettings = await import('../../../platform/common/configSettings.node');
+        const configSettings = await import('../../../platform/common/configSettings');
         // Dispose any cached python settings (used only in test env).
         configSettings.JupyterSettings.dispose();
     }

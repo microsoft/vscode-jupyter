@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { Event, Uri } from 'vscode';
+import { IDocumentManager, IWorkspaceService } from '../application/types';
 
 export type EnvironmentVariables = Object & Record<string, string | undefined>;
 
@@ -45,6 +46,13 @@ export interface ISystemVariables {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 }
+
+export type ISystemVariablesConstructor = new (
+    file: Uri | undefined,
+    rootFolder: string | undefined,
+    workspace?: IWorkspaceService,
+    documentManager?: IDocumentManager
+) => ISystemVariables;
 
 export const IEnvironmentVariablesProvider = Symbol('IEnvironmentVariablesProvider');
 
