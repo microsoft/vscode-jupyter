@@ -389,6 +389,5 @@ export interface ICell {
 // provide cells for the CodeWatcher to use.
 export interface ICellRange {
     range: Range;
-    title: string;
     cell_type: string;
 }
