@@ -370,6 +370,7 @@ function ensureIOPubContent(message: KernelMessage.IMessage) {
             }
             const fieldName = names[i];
             if (!(fieldName in content) || typeof content[fieldName] !== args[0]) {
+                // Looks like a mandatory field is missing, add the field with a default value.
                 switch (args[0]) {
                     case 'string':
                         content[fieldName] = '';
