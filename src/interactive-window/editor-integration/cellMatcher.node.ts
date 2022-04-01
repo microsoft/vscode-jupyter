@@ -14,7 +14,6 @@ export class CellMatcher {
     private codeMatchRegEx: RegExp;
     private markdownMatchRegEx: RegExp;
     private defaultCellMarker: string;
-    private defaultCellMarkerExec: RegExp;
 
     constructor(settings?: IJupyterSettings) {
         this.codeMatchRegEx = this.createRegExp(
@@ -28,7 +27,6 @@ export class CellMatcher {
         this.codeExecRegEx = new RegExp(`${this.codeMatchRegEx.source}(.*)`);
         this.markdownExecRegEx = new RegExp(`${this.markdownMatchRegEx.source}(.*)`);
         this.defaultCellMarker = settings?.defaultCellMarker ? settings.defaultCellMarker : '# %%';
-        this.defaultCellMarkerExec = this.createRegExp(`${this.defaultCellMarker}(.*)`, /# %%(.*)/);
     }
 
     public isCell(code: string): boolean {
@@ -75,24 +73,6 @@ export class CellMatcher {
         if (lines.length > 0 && (this.isCode(lines[0]) || this.isMarkdown(lines[0]))) {
             return lines[0];
         }
-    }
-
-    public exec(code: string): string | undefined {
-        let result: RegExpExecArray | null = null;
-        if (this.defaultCellMarkerExec.test(code)) {
-            this.defaultCellMarkerExec.lastIndex = -1;
-            result = this.defaultCellMarkerExec.exec(code);
-        } else if (this.codeMatchRegEx.test(code)) {
-            this.codeExecRegEx.lastIndex = -1;
-            result = this.codeExecRegEx.exec(code);
-        } else if (this.markdownMatchRegEx.test(code)) {
-            this.markdownExecRegEx.lastIndex = -1;
-            result = this.markdownExecRegEx.exec(code);
-        }
-        if (result) {
-            return result.length > 1 ? result[result.length - 1].trim() : '';
-        }
-        return undefined;
     }
 
     private createRegExp(potential: string | undefined, backup: RegExp): RegExp {
