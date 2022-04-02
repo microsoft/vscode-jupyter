@@ -298,6 +298,7 @@ async function activateLegacy(
     if (isDevMode) {
         void commands.executeCommand('setContext', 'jupyter.development', true);
     }
+    void commands.executeCommand('setContext', 'jupyter.webExtension', false);
 
     // Set the logger home dir (we can compute this in a node app)
     setHomeDirectory(require('untildify')('~') || '');

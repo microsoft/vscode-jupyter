@@ -249,6 +249,7 @@ async function activateLegacy(
     if (isDevMode) {
         void commands.executeCommand('setContext', 'jupyter.development', true);
     }
+    void commands.executeCommand('setContext', 'jupyter.webExtension', true);
 
     // Output channel is special. We need it before everything else
     addOutputChannel(context, serviceManager, isDevMode);
