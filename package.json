@@ -271,7 +271,7 @@
                 "command": "dataScience.ClearCache",
                 "title": "Clear Cache",
                 "category": "Jupyter (Dev)",
-                "enablement": "jupyter.development && !jupyter.webExtension"
+                "enablement": "jupyter.development"
             },
             {
                 "command": "jupyter.replayPylanceLog",

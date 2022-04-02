@@ -1,3 +1,7 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+'use strict';
+
 import { ApplicationEnvironment } from './common/application/applicationEnvironment.web';
 import { ApplicationShell } from './common/application/applicationShell';
 import { CommandManager } from './common/application/commandManager';
@@ -11,10 +15,11 @@ import { WorkspaceService } from './common/application/workspace';
 import { ConfigurationService } from './common/configuration/service.web';
 import { registerTypes as registerCommonTypes } from './common/serviceRegistry.web';
 import { registerTypes as registerActivationTypes } from './activation/serviceRegistry.web';
-import { IConfigurationService } from './common/types';
+import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
+import { IConfigurationService, IExtensionContext } from './common/types';
 import { IServiceManager } from './ioc/types';
 
-export function registerTypes(serviceManager: IServiceManager) {
+export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
     serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
     serviceManager.addSingleton<IApplicationShell>(IApplicationShell, ApplicationShell);
@@ -23,4 +28,5 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     registerCommonTypes(serviceManager);
     registerActivationTypes(serviceManager);
+    registerDevToolTypes(context, serviceManager, isDevMode);
 }

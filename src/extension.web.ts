@@ -255,7 +255,7 @@ async function activateLegacy(
     addOutputChannel(context, serviceManager, isDevMode);
 
     // Register the rest of the types (platform is first because it's needed by others)
-    registerPlatformTypes(serviceManager);
+    registerPlatformTypes(context, serviceManager, isDevMode);
 
     // Load the two data science experiments that we need to register types
     // Await here to keep the register method sync

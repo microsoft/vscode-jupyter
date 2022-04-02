@@ -8,6 +8,7 @@ import { registerTypes as registerApiTypes } from './api/serviceRegistry.node';
 import { registerTypes as registerCommonTypes } from './common/serviceRegistry.node';
 import { registerTypes as registerTerminalTypes } from './terminals/serviceRegistry.node';
 import { registerTypes as registerActivationTypes } from './activation/serviceRegistry.node';
+import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
 import { DataScienceStartupTime } from './common/constants';
 import { LogReplayService } from '../intellisense/logReplayService.node';
 import { Activation } from '../kernels/activation.node';
@@ -29,7 +30,7 @@ import { GlobalActivation } from './common/globalActivation.node';
 import { FileSystemPathUtils } from './common/platform/fs-paths.node';
 import { IFileSystemPathUtils } from './common/platform/types';
 import { PreReleaseChecker } from './common/prereleaseChecker.node';
-import { IConfigurationService, IDataScienceCommandListener } from './common/types';
+import { IConfigurationService, IDataScienceCommandListener, IExtensionContext } from './common/types';
 import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFactory.node';
 import { DebuggingManager } from './debugger/jupyter/debuggingManager.node';
 import { IDebugLocationTracker, IDebuggingManager } from './debugger/types';
@@ -59,7 +60,7 @@ import { ConfigurationService } from './common/configuration/service.node';
 import { IFileSystem } from './common/platform/types.node';
 import { FileSystem } from './common/platform/fileSystem.node';
 
-export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
+export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
     serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
     serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
@@ -71,6 +72,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     registerApiTypes(serviceManager);
     registerCommonTypes(serviceManager);
     registerTerminalTypes(serviceManager);
+    registerDevToolTypes(context, serviceManager, isDevMode);
 
     // Root platform types
     serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());

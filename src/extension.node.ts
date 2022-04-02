@@ -309,7 +309,7 @@ async function activateLegacy(
     addOutputChannel(context, serviceManager, isDevMode);
 
     // Register the rest of the types (platform is first because it's needed by others)
-    registerPlatformTypes(serviceManager, isDevMode);
+    registerPlatformTypes(context, serviceManager, isDevMode);
     registerTelemetryTypes(serviceManager);
     registerKernelTypes(serviceManager, isDevMode);
     registerNotebookTypes(serviceManager);
