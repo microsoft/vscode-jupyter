@@ -28,6 +28,8 @@ import { KernelConnectionMetadata, isLocalConnection, IJupyterConnection, ISessi
 import { JupyterKernelService } from '../jupyterKernelService.node';
 import { JupyterWebSockets } from './jupyterWebSocket.node';
 import { DisplayOptions } from '../../displayOptions.node';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { noop } from '../../../platform/common/utils/misc';
 
 const jvscIdentifier = '-jvsc-';
 function getRemoteIPynbSuffix(): string {
@@ -68,7 +70,8 @@ export class JupyterSession extends BaseJupyterSession {
         readonly workingDirectory: string,
         private readonly idleTimeout: number,
         private readonly kernelService: JupyterKernelService,
-        interruptTimeout: number
+        interruptTimeout: number,
+        private readonly fs: IFileSystem
     ) {
         super(resource, kernelConnectionMetadata, restartSessionUsed, workingDirectory, interruptTimeout);
     }
@@ -204,7 +207,27 @@ export class JupyterSession extends BaseJupyterSession {
         }
     }
 
-    private async createBackingFile(): Promise<Contents.IModel | undefined> {
+    private async createBackingFile(): Promise<{ dispose: () => Promise<unknown>; filePath: string } | undefined> {
+        if (this.connInfo.localLaunch) {
+            const tempFile = await this.fs.createTemporaryLocalFile('.ipynb');
+            const tempDirectory = path.join(
+                path.dirname(tempFile.filePath),
+                path.basename(tempFile.filePath, '.ipynb')
+            );
+            await tempFile.dispose();
+            // This way we ensure all checkpoints are in a unique directory and will not conflict.
+            await this.fs.ensureLocalDir(tempDirectory);
+
+            const newName = this.resource
+                ? `${path.basename(this.resource.fsPath, '.ipynb')}.ipynb`
+                : `${DataScience.defaultNotebookName()}-${uuid()}.ipynb`;
+
+            const filePath = path.join(tempDirectory, newName);
+            return {
+                filePath,
+                dispose: () => this.fs.deleteLocalFile(filePath)
+            };
+        }
         let backingFile: Contents.IModel | undefined = undefined;
 
         // First make sure the notebook is in the right relative path (jupyter expects a relative path with unix delimiters)
@@ -246,7 +269,11 @@ export class JupyterSession extends BaseJupyterSession {
         }
 
         if (backingFile) {
-            return backingFile;
+            const filePath = backingFile.path;
+            return {
+                filePath,
+                dispose: () => this.contentsManager.delete(filePath)
+            };
         }
     }
 
@@ -269,9 +296,7 @@ export class JupyterSession extends BaseJupyterSession {
                 );
             } catch (ex) {
                 // If we failed to create the kernel, we need to clean up the file.
-                if (this.connInfo && backingFile) {
-                    this.contentsManager.delete(backingFile.path).ignoreErrors();
-                }
+                backingFile?.dispose().catch(noop);
                 throw ex;
             }
         }
@@ -284,7 +309,7 @@ export class JupyterSession extends BaseJupyterSession {
 
         // Create our session options using this temporary notebook and our connection info
         const sessionOptions: Session.ISessionOptions = {
-            path: backingFile?.path || `${uuid()}.ipynb`, // Name has to be unique
+            path: backingFile?.filePath || `${uuid()}.ipynb`, // Name has to be unique
             kernel: {
                 name: kernelName
             },
@@ -331,9 +356,7 @@ export class JupyterSession extends BaseJupyterSession {
                     })
                     .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
                     .finally(() => {
-                        if (this.connInfo && backingFile) {
-                            this.contentsManager.delete(backingFile.path).ignoreErrors();
-                        }
+                        backingFile?.dispose().catch(noop);
                     }),
             options.token
         );
