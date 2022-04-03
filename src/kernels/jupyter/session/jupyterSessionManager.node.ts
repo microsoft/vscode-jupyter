@@ -35,7 +35,7 @@ import { JupyterSession } from './jupyterSession.node';
 import { createJupyterWebSocket } from './jupyterWebSocket.node';
 import { sleep } from '../../../platform/common/utils/async';
 import { IJupyterSessionManager, IJupyterPasswordConnect, IJupyterKernel } from '../types';
-import { IFileSystem } from '../../../platform/common/platform/types';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 
 // Key for our insecure connection global state
 const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnections';
