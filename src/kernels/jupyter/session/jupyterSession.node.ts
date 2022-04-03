@@ -28,8 +28,8 @@ import { KernelConnectionMetadata, isLocalConnection, IJupyterConnection, ISessi
 import { JupyterKernelService } from '../jupyterKernelService.node';
 import { JupyterWebSockets } from './jupyterWebSocket.node';
 import { DisplayOptions } from '../../displayOptions.node';
-import { IFileSystem } from '../../../platform/common/platform/types';
-import { noop } from '../../../platform/common/utils/misc.node';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { noop } from '../../../platform/common/utils/misc';
 
 const jvscIdentifier = '-jvsc-';
 function getRemoteIPynbSuffix(): string {
