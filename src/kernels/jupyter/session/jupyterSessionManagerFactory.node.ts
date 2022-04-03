@@ -16,7 +16,7 @@ import { JUPYTER_OUTPUT_CHANNEL } from '../../../webviews/webview-side/common/co
 import { JupyterKernelService } from '../jupyterKernelService.node';
 import { IJupyterConnection } from '../../types';
 import { IJupyterSessionManagerFactory, IJupyterPasswordConnect, IJupyterSessionManager } from '../types';
-import { IFileSystem } from '../../../platform/common/platform/types';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 
 @injectable()
 export class JupyterSessionManagerFactory implements IJupyterSessionManagerFactory {
