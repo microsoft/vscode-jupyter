@@ -12,12 +12,11 @@ import { coerce, SemVer } from 'semver';
 import type { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
 import { IExtensionApi } from '../platform/api';
 import { IProcessService } from '../platform/common/process/types.node';
-import { IDisposable, IJupyterSettings } from '../platform/common/types';
+import { IDisposable } from '../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../platform/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants.node';
 import { noop } from './core';
 import { isCI } from '../platform/common/constants';
-import { SystemVariables } from '../platform/common/variables/systemVariables.node';
 
 const StreamZip = require('node-stream-zip');
 
@@ -90,10 +89,11 @@ function getWorkspaceRoot() {
     return workspaceFolder ? workspaceFolder.uri : vscode.workspace.workspaceFolders[0].uri;
 }
 
-export function getExtensionSettings(resource: Uri | undefined): IJupyterSettings {
+export async function getExtensionSettings(resource: Uri | undefined) {
     const pythonSettings =
         require('../platform/common/configSettings.node') as typeof import('../platform/common/configSettings');
-    return pythonSettings.JupyterSettings.getInstance(resource, SystemVariables);
+    const systemVariables = await import('../platform/common/variables/systemVariables.node');
+    return pythonSettings.JupyterSettings.getInstance(resource, systemVariables.SystemVariables);
 }
 export function retryAsync(this: any, wrapped: Function, retryCount: number = 2) {
     return async (...args: any[]) => {

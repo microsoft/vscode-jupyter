@@ -81,8 +81,12 @@ class TestRunner {
     }
 
     private async extractLatestExtension(targetDir: string): Promise<void> {
-        const extensionFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, process.env.VSIX_NAME!);
-        await unzip(extensionFile, targetDir);
+        if (process.env.VSIX_NAME) {
+            const extensionFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, process.env.VSIX_NAME!);
+            await unzip(extensionFile, targetDir);
+        } else {
+            fs.mkdirSync(targetDir, { recursive: true });
+        }
     }
 }
 

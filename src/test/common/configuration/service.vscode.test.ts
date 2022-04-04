@@ -15,10 +15,10 @@ suite('Configuration Service', () => {
         serviceContainer = (await initialize()).serviceContainer;
     });
 
-    test('Ensure same instance of settings return', () => {
+    test('Ensure same instance of settings return', async () => {
         const workspaceUri = workspace.workspaceFolders![0].uri;
         const settings = serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(workspaceUri);
-        const instanceIsSame = settings === getExtensionSettings(workspaceUri);
+        const instanceIsSame = settings === (await getExtensionSettings(workspaceUri));
         expect(instanceIsSame).to.be.equal(true, 'Incorrect settings');
     });
 
