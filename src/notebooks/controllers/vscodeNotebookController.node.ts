@@ -11,7 +11,6 @@ import {
     languages,
     NotebookCell,
     NotebookCellExecution,
-    NotebookCellExecutionState,
     NotebookCellKind,
     NotebookController,
     NotebookControllerAffinity,
@@ -448,23 +447,26 @@ export class VSCodeNotebookController implements Disposable {
                 originalEnd(success, endTime);
             };
         }
+        return currentExecution;
     }
 
     private async executeCell(doc: NotebookDocument, cell: NotebookCell) {
         traceInfo(`Execute Cell ${cell.index} ${getDisplayPath(cell.notebook.uri)}`);
         // Start execution now (from the user's point of view)
-        this.createCellExecutionIfNecessary(cell, this.controller);
+        let exec = this.createCellExecutionIfNecessary(cell, this.controller);
 
         // Connect to a matching kernel if possible (but user may pick a different one)
         let currentContext: 'start' | 'execution' = 'start';
         let kernel: IKernel | undefined;
         let controller = this.controller;
+        let kernelStarted = false;
         try {
             kernel = await this.connectToKernel(doc, new DisplayOptions(false));
+            kernelStarted = true;
             // If the controller changed, then ensure to create a new cell execution object.
             if (kernel && kernel.controller.id !== controller.id) {
                 controller = kernel.controller;
-                this.createCellExecutionIfNecessary(cell, kernel.controller);
+                exec = this.createCellExecutionIfNecessary(cell, kernel.controller);
             }
             currentContext = 'execution';
             if (kernel.controller.id === this.id) {
@@ -473,18 +475,21 @@ export class VSCodeNotebookController implements Disposable {
             return await kernel.executeCell(cell);
         } catch (ex) {
             traceError(`Error in execution`, ex);
+            if (!kernelStarted) {
+                exec.start();
+                void exec.clearOutput(cell);
+            }
             const errorHandler = this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
             ex = WrappedError.unwrap(ex);
             const isCancelled =
                 ex instanceof CancellationError || ex instanceof VscCancellationError || ex instanceof KernelDeadError;
             // If there was a failure connecting or executing the kernel, stick it in this cell
-            endCellAndDisplayErrorsInCell(
+            await endCellAndDisplayErrorsInCell(
                 cell,
                 controller,
                 await errorHandler.getErrorMessageForDisplayInCell(ex, currentContext),
                 isCancelled
             );
-            return NotebookCellExecutionState.Idle;
         }
 
         // Execution should be ended elsewhere

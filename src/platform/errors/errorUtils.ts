@@ -567,7 +567,7 @@ function isBuiltInModuleOverwritten(
     };
 }
 
-export function endCellAndDisplayErrorsInCell(
+export async function endCellAndDisplayErrorsInCell(
     cell: NotebookCell,
     controller: NotebookController,
     errorMessage: string,
@@ -587,7 +587,7 @@ export function endCellAndDisplayErrorsInCell(
         execution.start(cell.executionSummary?.timing?.endTime);
         execution.executionOrder = cell.executionSummary?.executionOrder;
     }
-    void execution.appendOutput(output);
+    await execution.appendOutput(output);
     execution.end(isCancelled ? undefined : false, cell.executionSummary?.timing?.endTime);
 }
 
