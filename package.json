@@ -2332,7 +2332,6 @@
         "remove-files-webpack-plugin": "^1.4.0",
         "rewiremock": "^3.13.0",
         "rimraf": "^3.0.2",
-        "screenshot-capture": "^0.2.1",
         "screenshot-desktop": "^1.12.7",
         "sinon": "^8.0.1",
         "source-map": "^0.7.3",
