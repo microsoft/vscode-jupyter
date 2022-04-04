@@ -199,7 +199,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 );
             } catch (ex) {
                 if (currentCell) {
-                    endCellAndDisplayErrorsInCell(
+                    await endCellAndDisplayErrorsInCell(
                         currentCell,
                         kernel.controller,
                         await this.errorHandler.getErrorMessageForDisplayInCell(ex, currentContext),
