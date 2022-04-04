@@ -4,7 +4,8 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import * as platformUtils from '../../../platform/common/utils/platform.node';
+import * as platformUtilsNode from '../../../platform/common/utils/platform.node';
+import * as platformUtils from '../../../platform/common/utils/platform';
 import * as fileUtils from '../../../platform/common/platform/fileUtils.node';
 import {
     isPyenvEnvironment,
@@ -14,21 +15,25 @@ import {
 } from '../../../kernels/installer/pyenv.node';
 
 suite('Pyenv Identifier Tests', () => {
-    const home = platformUtils.getUserHomeDir() || '';
+    const home = platformUtilsNode.getUserHomeDir() || '';
     let getEnvVariableStub: sinon.SinonStub;
     let pathExistsStub: sinon.SinonStub;
     let getOsTypeStub: sinon.SinonStub;
+    let homeStub: sinon.SinonStub;
 
     setup(() => {
-        getEnvVariableStub = sinon.stub(platformUtils, 'getEnvironmentVariable');
+        getEnvVariableStub = sinon.stub(platformUtilsNode, 'getEnvironmentVariable');
+        homeStub = sinon.stub(platformUtilsNode, 'getUserHomeDir');
         getOsTypeStub = sinon.stub(platformUtils, 'getOSType');
         pathExistsStub = sinon.stub(fileUtils, 'pathExists');
+        homeStub.returns(home); // This changes when the OS type stub changes, so force it.
     });
 
     teardown(() => {
         getEnvVariableStub.restore();
         pathExistsStub.restore();
         getOsTypeStub.restore();
+        homeStub.restore();
     });
 
     type PyenvUnitTestData = {
@@ -288,7 +293,7 @@ suite('Pyenv Shims Dir filter tests', () => {
     const pyenvRoot = path.join('path', 'to', 'pyenv', 'root');
 
     setup(() => {
-        getEnvVariableStub = sinon.stub(platformUtils, 'getEnvironmentVariable');
+        getEnvVariableStub = sinon.stub(platformUtilsNode, 'getEnvironmentVariable');
         getEnvVariableStub.withArgs('PYENV_ROOT').returns(pyenvRoot);
     });
 

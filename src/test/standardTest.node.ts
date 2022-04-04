@@ -6,7 +6,7 @@ import * as fs from 'fs-extra';
 import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from '@vscode/test-electron';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from './constants.node';
 import * as tmp from 'tmp';
-import { PythonExtension, PylanceExtension } from '../platform/common/constants';
+import { PythonExtension, PylanceExtension, setTestExecution } from '../platform/common/constants';
 
 process.env.IS_CI_SERVER_TEST_DEBUGGER = '';
 process.env.VSC_JUPYTER_CI_TEST = '1';
@@ -18,6 +18,7 @@ const extensionDevelopmentPath = process.env.CODE_EXTENSIONS_PATH
     : EXTENSION_ROOT_DIR_FOR_TESTS;
 const isRunningSmokeTests = process.env.TEST_FILES_SUFFIX === 'smoke.test';
 const isRunningVSCodeTests = process.env.TEST_FILES_SUFFIX?.includes('vscode.test');
+setTestExecution(true);
 
 function requiresPythonExtensionToBeInstalled() {
     if (process.env.VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT) {
