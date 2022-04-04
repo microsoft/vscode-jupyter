@@ -113,7 +113,11 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             if (observable) {
                 observable.out.subscribe({
                     next: (output) => {
-                        progress?.report({ message: output.out });
+                        const message =
+                            output.out.length > 100
+                                ? `${output.out.substring(0, 50)}...${output.out.substring(output.out.length - 50)}`
+                                : output.out;
+                        progress.report({ message });
                         traceInfo(output.out);
                         if (output.source === 'stderr') {
                             lastStdErr = output.out;

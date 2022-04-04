@@ -151,14 +151,10 @@ export function generateCellRangesFromDocument(document: TextDocument, settings?
                 previousCell.range = new Range(previousCell.range.start, document.lineAt(index - 1).range.end);
             }
 
-            const results = matcher.exec(line.text);
-            if (results !== undefined) {
-                cells.push({
-                    range: line.range,
-                    title: results,
-                    cell_type: matcher.getCellType(line.text)
-                });
-            }
+            cells.push({
+                range: line.range,
+                cell_type: matcher.getCellType(line.text)
+            });
         }
     }
 

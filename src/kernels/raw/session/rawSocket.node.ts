@@ -11,6 +11,7 @@ import { noop } from '../../../platform/common/utils/misc';
 import { IWebSocketLike } from '../../common/kernelSocketWrapper.node';
 import { IKernelSocket } from '../../types';
 import { IKernelConnection } from '../types';
+import type { Channel } from '@jupyterlab/services/lib/kernel/messages';
 
 function formConnectionString(config: IKernelConnection, channel: string) {
     const portDelimiter = config.transport === 'tcp' ? ':' : '-';
@@ -125,7 +126,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     }
     private generateChannel<T extends Subscriber | Dealer>(
         connection: IKernelConnection,
-        channel: 'iopub' | 'shell' | 'control' | 'stdin',
+        channel: Channel,
         ctor: () => T
     ): T {
         const result = ctor();
@@ -135,10 +136,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         );
         return result;
     }
-    private async processSocketMessages(
-        channel: 'iopub' | 'shell' | 'control' | 'stdin',
-        readable: Subscriber | Dealer
-    ) {
+    private async processSocketMessages(channel: Channel, readable: Subscriber | Dealer) {
         // eslint-disable-next-line @typescript-eslint/await-thenable
         for await (const msg of readable) {
             // Make sure to quit if we are disposed.
@@ -218,14 +216,14 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         return result;
     }
 
-    private onIncomingMessage(channel: string, data: any) {
+    private onIncomingMessage(channel: Channel, data: any) {
         // Decode the message if still possible.
-        const message = this.closed
+        const message: KernelMessage.IMessage = this.closed
             ? {}
             : (wireProtocol.decode(data, this.connection.key, this.connection.signature_scheme) as any);
 
         // Make sure it has a channel on it
-        message.channel = channel;
+        message.channel = channel as any;
 
         if (this.receiveHooks.length) {
             // Stick the receive hooks into the message chain. We use chain
@@ -239,15 +237,21 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
                     const serialized = this.serialize(message);
                     return Promise.all(this.receiveHooks.map((p) => p(serialized)));
                 })
-                .then(() => this.fireOnMessage(message));
+                .then(() => this.fireOnMessage(message, channel));
         } else {
-            this.msgChain = this.msgChain.then(() => this.fireOnMessage(message));
+            this.msgChain = this.msgChain.then(() => this.fireOnMessage(message, channel));
         }
     }
 
-    private fireOnMessage(message: any) {
+    private fireOnMessage(message: KernelMessage.IMessage, channel: Channel) {
         if (!this.closed) {
-            this.onmessage({ data: message, type: 'message', target: this });
+            try {
+                ensureFields(message, channel);
+                this.onmessage({ data: message as any, type: 'message', target: this });
+            } catch (ex) {
+                // Swallow this error, so that other messages get processed.
+                traceError(`Failed to handle message in Jupyter Kernel package ${JSON.stringify(message)}`, ex);
+            }
         }
     }
 
@@ -278,6 +282,110 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
             });
         } else {
             traceError(`Attempting to send message on invalid channel: ${channel}`);
+        }
+    }
+}
+
+/**
+ * Required fields for `IKernelHeader`.
+ */
+const HEADER_FIELDS = ['username', 'version', 'session', 'msg_id', 'msg_type'];
+/**
+ * Required fields and types for contents of various types of `kernel.IMessage`
+ * messages on the iopub channel.
+ */
+const IOPUB_CONTENT_FIELDS = {
+    stream: { name: 'string', text: 'string' },
+    display_data: { data: 'object', metadata: 'object' },
+    execute_input: { code: 'string', execution_count: 'number' },
+    execute_result: {
+        execution_count: 'number',
+        data: 'object',
+        metadata: 'object'
+    },
+    error: { ename: 'string', evalue: 'string', traceback: 'object' },
+    status: {
+        execution_state: ['string', ['starting', 'idle', 'busy', 'restarting', 'dead']]
+    },
+    clear_output: { wait: 'boolean' },
+    comm_open: { comm_id: 'string', target_name: 'string', data: 'object' },
+    comm_msg: { comm_id: 'string', data: 'object' },
+    comm_close: { comm_id: 'string' },
+    shutdown_reply: { restart: 'boolean' } // Emitted by the IPython kernel.
+};
+
+/**
+ * Sometimes we get responses from kernels that don't send the required information.
+ * Python starts the kernels (e.g. java kernels), and java sends information to python.
+ * Python then takes this and formats those messages to be sent to the front end.
+ * The front end uses Jupyter Lab npm package which validates the data & that's what we also use.
+ * Unfortunately the data is not formatted by python in our case as we take the raw output from
+ * the kernel and sent that to the npm package & things fall over.
+ * So we need to format the data ourselves.
+ *
+ * An excellent example is the `Ganymede` kernel.
+ * This kernel doesn't send all of the fields the npm package expects.
+ *
+ * If we do not add the necessary fields, the npm package throws errors, as it validates the incoming data.
+ * Validation can be found here node_modules/@jupyterlab/services/lib/kernel/validate.js
+ */
+function ensureFields(message: KernelMessage.IMessage, channel: Channel) {
+    const header = message.header as any;
+    HEADER_FIELDS.forEach((field) => {
+        if (typeof header[field] !== 'string') {
+            header[field] = '';
+        }
+    });
+    if (typeof message.channel !== 'string') {
+        message.channel = channel;
+    }
+    if (!message.content) {
+        message.content = {};
+    }
+    if (!message.metadata) {
+        message.metadata = {};
+    }
+    if (message.channel === 'iopub') {
+        ensureIOPubContent(message);
+    }
+}
+
+function ensureIOPubContent(message: KernelMessage.IMessage) {
+    if (message.channel !== 'iopub') {
+        return;
+    }
+    const messageType = message.header.msg_type as keyof typeof IOPUB_CONTENT_FIELDS;
+    if (messageType in IOPUB_CONTENT_FIELDS) {
+        const fields = IOPUB_CONTENT_FIELDS[messageType] as Record<string, any>;
+        // Check for unknown message type.
+        if (fields === undefined) {
+            return;
+        }
+        const names = Object.keys(fields);
+        const content = message.content as Record<string, any>;
+        for (let i = 0; i < names.length; i++) {
+            let args = fields[names[i]];
+            if (!Array.isArray(args)) {
+                args = [args];
+            }
+            const fieldName = names[i];
+            if (!(fieldName in content) || typeof content[fieldName] !== args[0]) {
+                // Looks like a mandatory field is missing, add the field with a default value.
+                switch (args[0]) {
+                    case 'string':
+                        content[fieldName] = '';
+                        break;
+                    case 'boolean':
+                        content[fieldName] = false;
+                        break;
+                    case 'object':
+                        content[fieldName] = {};
+                        break;
+                    case 'number':
+                        content[fieldName] = 0;
+                        break;
+                }
+            }
         }
     }
 }

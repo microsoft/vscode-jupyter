@@ -36,7 +36,7 @@ import { PythonKernelInterruptDaemon } from '../../kernels/raw/finder/pythonKern
 import { JupyterPaths } from '../../kernels/raw/finder/jupyterPaths.node';
 import { waitForCondition } from '../common.node';
 
-suite.only('kernel Process', () => {
+suite('kernel Process', () => {
     let kernelProcess: KernelProcess;
     let processServiceFactory: IProcessServiceFactory;
     const connection: IKernelConnection = {

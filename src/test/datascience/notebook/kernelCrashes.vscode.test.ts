@@ -228,7 +228,7 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
             // Confirm we get a prompt to restart the kernel
             await Promise.all([
                 restartPrompt.displayed,
-                runCell(cell3),
+                runCell(cell3, true),
                 waitForExecutionCompletedWithoutChangesToExecutionCount(cell3)
             ]);
 

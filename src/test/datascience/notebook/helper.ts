@@ -795,7 +795,7 @@ export function assertVSCCellHasErrorOutput(cell: NotebookCell) {
 export async function saveActiveNotebook() {
     await commands.executeCommand('workbench.action.files.saveAll');
 }
-export async function runCell(cell: NotebookCell) {
+export async function runCell(cell: NotebookCell, waitForExecutionToComplete = false) {
     const api = await initialize();
     const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     await waitForKernelToGetAutoSelected(undefined, 60_000);
@@ -803,13 +803,17 @@ export async function runCell(cell: NotebookCell) {
         throw new Error('No notebook or document');
     }
 
-    void commands.executeCommand(
+    const promise = commands.executeCommand(
         'notebook.cell.execute',
         { start: cell.index, end: cell.index + 1 },
         vscodeNotebook.activeNotebookEditor.document.uri
     );
+
+    if (waitForExecutionToComplete) {
+        await promise.then(noop, noop);
+    }
 }
-export async function runAllCellsInActiveNotebook() {
+export async function runAllCellsInActiveNotebook(waitForExecutionToComplete = false) {
     const api = await initialize();
     const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     await waitForKernelToGetAutoSelected(undefined, 60_000);
@@ -818,7 +822,13 @@ export async function runAllCellsInActiveNotebook() {
         throw new Error('No editor or document');
     }
 
-    void commands.executeCommand('notebook.execute', vscodeNotebook.activeNotebookEditor.document.uri);
+    const promise = commands
+        .executeCommand('notebook.execute', vscodeNotebook.activeNotebookEditor.document.uri)
+        .then(noop, noop);
+
+    if (waitForExecutionToComplete) {
+        await promise.then(noop, noop);
+    }
 }
 
 export type WindowPromptStub = {
