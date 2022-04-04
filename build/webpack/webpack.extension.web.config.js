@@ -13,7 +13,8 @@ const config = {
     target: 'webworker',
     entry: {
         extension: './src/extension.web.ts',
-        'test/suite/index': './src/test/web/suite/index.ts' // source of the web extension test runner
+        'test/vscode.test/index': './src/test/web/vscode.test/index.ts', // source of the web extension test runner
+        'test/smoke.test/index': './src/test/web/smoke.test/index.ts' // source of the web extension test runner
     },
     devtool: 'nosources-source-map', // create a source map that points to the original source file
     node: {
