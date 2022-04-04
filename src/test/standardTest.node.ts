@@ -120,7 +120,7 @@ async function start() {
     await runTests({
         vscodeExecutablePath,
         extensionDevelopmentPath: extensionDevelopmentPath,
-        extensionTestsPath: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'out', 'test', 'index'),
+        extensionTestsPath: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'out', 'test', 'index.node.js'),
         launchArgs: baseLaunchArgs
             .concat([workspacePath])
             .concat(['--skip-welcome'])

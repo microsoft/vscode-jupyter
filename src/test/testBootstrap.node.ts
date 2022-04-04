@@ -116,6 +116,6 @@ async function start() {
 }
 
 start().catch((ex) => {
-    console.error('File testBootstrap.ts failed with Errors', ex);
+    console.error('File testBootstrap.node.ts failed with Errors', ex);
     process.exit(1);
 });

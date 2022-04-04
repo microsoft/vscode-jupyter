@@ -99,7 +99,7 @@
                 "${workspaceFolder}/src/test/testMultiRootWkspc/smokeTests",
                 "--enable-proposed-api",
                 "--extensionDevelopmentPath=${workspaceFolder}",
-                "--extensionTestsPath=${workspaceFolder}/out/test"
+                "--extensionTestsPath=${workspaceFolder}/out/test/index.node.js"
             ],
             "env": {
                 "CI_PYTHON_PATH": "<Python Path>",

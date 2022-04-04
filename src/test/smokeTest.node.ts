@@ -62,7 +62,7 @@ class TestRunner {
                 ...process.env,
                 ...customEnvVars
             };
-            const proc = spawn('node', [path.join(__dirname, 'standardTest.js')], {
+            const proc = spawn('node', [path.join(__dirname, 'standardTest.node.js')], {
                 cwd: EXTENSION_ROOT_DIR_FOR_TESTS,
                 env
             });

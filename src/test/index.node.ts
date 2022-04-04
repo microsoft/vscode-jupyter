@@ -158,11 +158,11 @@ export async function run(): Promise<void> {
         case 'native.vscode.test': {
             break;
         }
-        case 'vscode.test': {
+        case 'vscode.test*': {
             ignoreGlob.push('**/**.native.vscode.test*.js');
             break;
         }
-        case '.test': {
+        case '.test*': {
             ignoreGlob.push('**/**.vscode.test*.js');
             break;
         }

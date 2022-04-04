@@ -22,8 +22,6 @@ if ((Reflect as any).metadata === undefined) {
     require('reflect-metadata');
 }
 
-process.env.VSC_JUPYTER_CI_TEST = '1';
-process.env.VSC_JUPYTER_UNIT_TEST = '1';
 setTestExecution(true);
 setUnitTestExecution(true);
 
