@@ -1424,6 +1424,11 @@
                     "when": "jupyter.hascodecells && jupyter.ispythonornativeactive"
                 },
                 {
+                    "command": "jupyter.createnewnotebook",
+                    "category": "Jupyter",
+                    "when": "false"
+                },
+                {
                     "command": "jupyter.runtoline",
                     "category": "Jupyter",
                     "when": "config.noExists"
