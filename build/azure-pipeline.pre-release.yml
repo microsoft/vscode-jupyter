@@ -23,6 +23,10 @@ extends:
   template: azure-pipelines/extension/pre-release.yml@templates
   parameters:
     buildSteps:
+      - task: NodeTool@0
+        inputs:
+          versionSpec: '16.13'
+
       - script: npm ci
         displayName: Install dependencies
 
