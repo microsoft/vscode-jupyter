@@ -16,7 +16,7 @@ const workspacePath = process.env.CODE_TESTS_WORKSPACE
 const extensionDevelopmentPath = process.env.CODE_EXTENSIONS_PATH
     ? process.env.CODE_EXTENSIONS_PATH
     : EXTENSION_ROOT_DIR_FOR_TESTS;
-const isRunningSmokeTests = process.env.TEST_FILES_SUFFIX === 'smoke.test';
+const isRunningSmokeTests = process.env.TEST_FILES_SUFFIX === 'smoke.test*';
 const isRunningVSCodeTests = process.env.TEST_FILES_SUFFIX?.includes('vscode.test');
 setTestExecution(true);
 

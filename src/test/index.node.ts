@@ -12,7 +12,7 @@ if ((Reflect as any).metadata === undefined) {
 }
 // Always place at top, must be done before we import any of the files from src/client folder.
 // We need to ensure nyc gets a change to setup necessary hooks before files are loaded.
-const { setupCoverage } = require('./coverage');
+const { setupCoverage } = require('./coverage.node');
 const nyc = setupCoverage();
 
 import * as glob from 'glob';

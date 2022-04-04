@@ -8,7 +8,7 @@ import { clearPendingTimers, IExtensionTestApi, PYTHON_PATH, setPythonPathInWork
 import { IS_SMOKE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from './constants.node';
 import { sleep } from './core';
 import { startJupyterServer } from './datascience/notebook/helper';
-import { PythonExtension } from '../platform/common/constants';
+import { PythonExtension, setTestExecution } from '../platform/common/constants';
 
 export * from './constants.node';
 export * from './ciConstants.node';
@@ -16,6 +16,7 @@ export const multirootPath = path.join(__dirname, '..', '..', 'src', 'test', 'te
 
 //First thing to be executed.
 process.env.VSC_JUPYTER_CI_TEST = '1';
+setTestExecution(true);
 
 // Ability to use custom python environments for testing
 export async function initializePython() {
