@@ -7,7 +7,7 @@ import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
-import { getDisplayPath } from '../../platform/common/platform/fs-paths.node';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { Common, DataScience } from '../../platform/common/utils/localize';
 import { IBrowserService, IConfigurationService } from '../../platform/common/types';
 import {
@@ -231,7 +231,7 @@ suite('DataScience Error Handler Unit Tests', () => {
 
             const expectedMessage = DataScience.failedToStartKernelDueToImportFailureFromFile().format(
                 'Random',
-                getDisplayPath('c:\\Development\\samples\\pySamples\\sample1\\kernel_issues\\start\\random.py', [])
+                'c:\\Development\\samples\\pySamples\\sample1\\kernel_issues\\start\\random.py'
             );
 
             verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresModuleImportErrFromFile');
