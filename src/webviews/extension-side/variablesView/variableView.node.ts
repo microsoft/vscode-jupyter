@@ -4,7 +4,6 @@
 import '../../../platform/common/extensions';
 
 import * as path from 'path';
-import * as pathBrowser from 'path-browserify';
 import { WebviewView as vscodeWebviewView } from 'vscode';
 
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
@@ -78,7 +77,6 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         this.documentManager.onDidChangeActiveTextEditor(this.activeTextEditorChanged, this, this.disposables);
 
         this.dataViewerChecker = new DataViewerChecker(configuration, appShell);
-        console.log(`Dirname up one is ${pathBrowser.join(__dirname, '..')}`);
         console.log(`Dirname up one is ${path.join(__dirname, '..')}`);
         console.log(`Done initing variables`);
     }

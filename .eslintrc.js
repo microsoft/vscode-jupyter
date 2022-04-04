@@ -290,7 +290,7 @@ module.exports = {
                 ]
             }
         ],
-        'local-rules/node-imports': ['error', { allow: ['events'] }],
+        'local-rules/node-imports': ['error', { allow: ['events', 'path'] }],
         strict: 'off'
     },
     settings: {
