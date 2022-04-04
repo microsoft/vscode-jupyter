@@ -10,10 +10,8 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { coerce, SemVer } from 'semver';
 import type { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
-import { IExtensionApi } from '../platform/api';
 import { IProcessService } from '../platform/common/process/types.node';
 import { IDisposable } from '../platform/common/types';
-import { IServiceContainer, IServiceManager } from '../platform/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants.node';
 import { noop } from './core';
 import { isCI } from '../platform/common/constants';
@@ -21,6 +19,8 @@ import { isCI } from '../platform/common/constants';
 const StreamZip = require('node-stream-zip');
 
 export { sleep } from './core';
+
+export * from './common';
 
 /* eslint-disable no-invalid-this, @typescript-eslint/no-explicit-any */
 
@@ -287,11 +287,6 @@ export async function isPythonVersion(...versions: string[]): Promise<boolean> {
         );
         return false;
     }
-}
-
-export interface IExtensionTestApi extends IExtensionApi {
-    serviceContainer: IServiceContainer;
-    serviceManager: IServiceManager;
 }
 
 export async function unzip(zipFile: string, targetFolder: string): Promise<void> {

@@ -2125,6 +2125,7 @@
         "testPerformance": "node ./out/test/testBootstrap.node.js ./out/test/performanceTest.js",
         "testSmoke": "node ./out/test/testBootstrap.node.js ./out/test/smokeTest.node.js",
         "testSmokeLogged": "cross-env VSC_JUPYTER_FORCE_LOGGING=true VSC_JUPYTER_LOG_FILE=smoke-test.log node --no-force-async-hooks-checks ./out/test/testBootstrap.node.js ./out/test/smokeTest.node.js",
+        "testSmokeWeb": "node ./out/test/smokeTest.web.js",
         "lint": "eslint -c .eslintrc.js --ext .ts src",
         "prettier-fix": "prettier 'src/**/*.ts*' --write && prettier 'build/**/*.js' --write",
         "clean": "gulp clean",

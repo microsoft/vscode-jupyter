@@ -4,10 +4,10 @@ import { runTests } from '@vscode/test-web';
 async function go() {
     try {
         // The folder containing the Extension Manifest package.json
-        const extensionDevelopmentPath = path.resolve(__dirname, '../../../');
+        const extensionDevelopmentPath = path.resolve(__dirname, '../../');
 
         // The path to module with the test runner and tests
-        const extensionTestsPath = path.resolve(__dirname, './web/smoke.test/index');
+        const extensionTestsPath = path.resolve(__dirname, './smoke.test/index.web.bundle');
 
         // Start a web server that serves VSCode in a browser, run the tests
         await runTests({
