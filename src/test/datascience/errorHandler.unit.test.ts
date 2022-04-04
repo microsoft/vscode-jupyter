@@ -231,7 +231,7 @@ suite('DataScience Error Handler Unit Tests', () => {
 
             const expectedMessage = DataScience.failedToStartKernelDueToImportFailureFromFile().format(
                 'Random',
-                getDisplayPath('c:\\Development\\samples\\pySamples\\sample1\\kernel_issues\\start\\random.py', [])
+                'c:\\Development\\samples\\pySamples\\sample1\\kernel_issues\\start\\random.py'
             );
 
             verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresModuleImportErrFromFile');

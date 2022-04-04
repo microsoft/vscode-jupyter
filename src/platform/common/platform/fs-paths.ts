@@ -20,24 +20,29 @@ export function getDisplayPath(
 }
 
 function getDisplayPathImpl(filename?: string | Uri, cwd?: string): string {
+    // Common file separator is unix based '/'. Handle mixing of paths
+    let cwdReplaced = cwd ? cwd.replace(/\\/g, '/') : undefined;
+    if (cwdReplaced?.includes(':') && cwdReplaced.startsWith('/')) {
+        cwdReplaced = cwdReplaced.slice(1);
+    }
     let file = '';
     if (typeof filename === 'string') {
-        file = filename;
+        file = filename.replace(/\\/g, '/');
     } else if (!filename) {
         file = '';
     } else if (filename.scheme === 'file') {
         file = filename.path;
     } else {
-        file = filename.toString();
+        file = filename.toString().replace(/\\/g, '/');
     }
     if (!file) {
         return '';
-    } else if (cwd && file.startsWith(cwd)) {
-        const relativePath = `.${path.sep}${path.relative(cwd, file)}`;
+    } else if (cwdReplaced && file.startsWith(cwdReplaced)) {
+        const relativePath = `.${path.sep}${path.relative(cwdReplaced, file)}`;
         // On CI the relative path might not work as expected as when testing we might have windows paths
         // and the code is running on a unix machine.
-        return relativePath === file || relativePath.includes(cwd)
-            ? `.${path.sep}${file.substring(file.indexOf(cwd) + cwd.length)}`
+        return relativePath === file || relativePath.includes(cwdReplaced)
+            ? `.${path.sep}${file.substring(file.indexOf(cwdReplaced) + cwdReplaced.length)}`
             : relativePath;
     } else {
         return file;
