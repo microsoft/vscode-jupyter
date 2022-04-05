@@ -40,7 +40,7 @@ import { getDisplayNameOrNameOfKernelConnection } from '../../../platform/../ker
 import { Uri, window, workspace } from 'vscode';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
 import { translateCellErrorOutput } from '../../../notebooks/helpers.node';
-import { INotebookControllerManager, INotebookEditorProvider } from '../../../notebooks/types';
+import { INotebookEditorProvider } from '../../../notebooks/types';
 
 const codeToKillKernel = dedent`
 import IPython
@@ -54,7 +54,6 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
     let kernelProvider: IKernelProvider;
-    let controllers: INotebookControllerManager;
     let config: IConfigurationService;
     const kernelCrashFailureMessageInCell =
         'The Kernel crashed while executing code in the the current cell or a previous cell. Please review the code in the cell(s) to identify a possible cause of the failure';
@@ -66,7 +65,6 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
             api = await initialize();
             kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
             config = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
-            controllers = api.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
             await workAroundVSCodeNotebookStartPages();
             await startJupyterServer();
             await prewarmNotebooks();
