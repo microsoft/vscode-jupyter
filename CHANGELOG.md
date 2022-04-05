@@ -1,9 +1,13 @@
 # Changelog
 
+## 2022.3.101 (5 April 2022)
+
+### Fixes
+
+1. Updates to the VS Code Proposed API.
+   ([#9590](https://github.com/Microsoft/vscode-jupyter/issues/9590))
+
 ## 2022.3.100 (25 March 2022)
-
-### Enhancements
-
 
 ### Fixes
 
