@@ -2305,6 +2305,7 @@
         "chai-arrays": "^2.0.0",
         "chai-as-promised": "^7.1.1",
         "chai-exclude": "^2.0.2",
+        "clean-terminal-webpack-plugin": "^3.0.0",
         "codecov": "^3.7.1",
         "colors": "^1.2.1",
         "copy-webpack-plugin": "^10.2.4",

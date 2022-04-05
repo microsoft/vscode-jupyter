@@ -6,6 +6,8 @@ const path = require('path');
 const tsconfig_paths_webpack_plugin = require('tsconfig-paths-webpack-plugin');
 const webpack = require('webpack');
 const constants = require('../constants');
+const CleanTerminalPlugin = require('clean-terminal-webpack-plugin');
+
 // tslint:disable-next-line:no-var-requires no-require-imports
 const configFileName = path.join(constants.ExtensionRootDir, 'tsconfig.extension.web.json');
 const config = {
@@ -101,7 +103,8 @@ const config = {
             process: {
                 platform: 'web'
             }
-        })
+        }),
+        new CleanTerminalPlugin()
     ],
     resolve: {
         extensions: ['.ts', '.js'],
