@@ -30,7 +30,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     public readonly onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;
     public readonly onDidOpenNotebookDocument: Event<NotebookDocument>;
     public readonly onDidCloseNotebookDocument: Event<NotebookDocument>;
-    public readonly onDidChangeVisibleNotebookEditors: Event<NotebookEditor[]>;
+    public readonly onDidChangeVisibleNotebookEditors: Event<readonly NotebookEditor[]>;
     public readonly onDidSaveNotebookDocument: Event<NotebookDocument>;
     public get onDidChangeNotebookCellExecutionState(): Event<NotebookCellExecutionStateChangeEvent> {
         return notebooks.onDidChangeNotebookCellExecutionState;

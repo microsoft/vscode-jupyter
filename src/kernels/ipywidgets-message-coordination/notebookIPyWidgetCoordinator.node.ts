@@ -192,7 +192,7 @@ export class NotebookIPyWidgetCoordinator {
         currentDisposables.push(...disposables);
         this.notebookDisposables.set(notebook, currentDisposables);
     }
-    private async onDidChangeVisibleNotebookEditors(e: NotebookEditor[]) {
+    private async onDidChangeVisibleNotebookEditors(e: readonly NotebookEditor[]) {
         // Find any new editors that may be associated with the current notebook.
         // This can happen when users split editors.
         e.forEach((editor) => this.initializeNotebookCommunication(editor));

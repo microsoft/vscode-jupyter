@@ -1220,7 +1220,7 @@ export interface IVSCodeNotebook {
     readonly notebookDocuments: ReadonlyArray<NotebookDocument>;
     readonly onDidOpenNotebookDocument: Event<NotebookDocument>;
     readonly onDidCloseNotebookDocument: Event<NotebookDocument>;
-    readonly onDidChangeVisibleNotebookEditors: Event<NotebookEditor[]>;
+    readonly onDidChangeVisibleNotebookEditors: Event<readonly NotebookEditor[]>;
     readonly onDidSaveNotebookDocument: Event<NotebookDocument>;
     readonly onDidChangeNotebookEditorSelection: Event<NotebookEditorSelectionChangeEvent>;
     readonly onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;
