@@ -9,7 +9,8 @@ import {
     window,
     notebooks,
     Uri,
-    NotebookCellsChangeEvent
+    NotebookCellsChangeEvent,
+    NotebookDocumentChangeEvent
 } from 'vscode';
 import {
     ClientCapabilities,
@@ -102,7 +103,7 @@ export class LanguageServer implements Disposable {
         private disposables: Disposable[]
     ) {
         this._interpreterId = getInterpreterId(interpreter);
-        notebooks.onDidChangeNotebookCells(this.onDidChangeNotebookCells, this, disposables);
+        workspace.onDidChangeNotebookDocument(this.onDidChangeNotebookCells, this, disposables);
     }
 
     public async dispose() {
@@ -207,9 +208,9 @@ export class LanguageServer implements Disposable {
         }
     }
 
-    private onDidChangeNotebookCells(e: NotebookCellsChangeEvent) {
+    private onDidChangeNotebookCells(e: NotebookDocumentChangeEvent) {
         // Tell the middleware to refresh its concat document (pylance or notebook)
-        this.middleware.refresh(e.document);
+        this.middleware.refresh(e.notebook);
     }
 
     private static async createServerOptions(
