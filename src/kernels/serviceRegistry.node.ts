@@ -3,7 +3,7 @@
 'use strict';
 import * as vscode from 'vscode';
 import { Identifiers } from '../webviews/webview-side/common/constants';
-import { IExtensionSingleActivationService } from '../platform/activation/types';
+import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { JupyterCommandLineSelectorCommand } from '../platform/commands/commandLineSelector.node';
 import { JupyterServerSelectorCommand } from '../platform/commands/serverSelector.node';
@@ -104,6 +104,8 @@ import {
 import { IKernelDependencyService, INotebookProvider } from './types';
 import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
 import { IJupyterCommandFactory, IJupyterSubCommandExecutionService } from './jupyter/types.node';
+import { KernelCrashMonitor } from './kernelCrashMonitor.node';
+import { KernelAutoRestartMonitor } from './kernelAutoRestartMonitor.node';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IRawNotebookSupportedService>(
@@ -275,6 +277,11 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);
     serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelCrashMonitor);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        KernelAutoRestartMonitor
+    );
 
     // Subdirectories
     registerInstallerTypes(serviceManager);

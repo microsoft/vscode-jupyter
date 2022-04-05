@@ -1,42 +1,30 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, Uri, window, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../platform/common/application/types';
 import { endCellAndDisplayErrorsInCell } from '../platform/errors/errorUtils';
 import { traceInfo } from '../platform/logging';
-import {
-    IDisposableRegistry,
-    IConfigurationService,
-    IDisposable,
-    IDataScienceCommandListener
-} from '../platform/common/types';
+import { IDisposableRegistry, IConfigurationService, IDataScienceCommandListener } from '../platform/common/types';
 import { DataScience } from '../platform/common/utils/localize';
 import { INotebookControllerManager } from '../notebooks/types';
 import { trackKernelResourceInformation } from '../telemetry/telemetry.node';
 import { IServiceContainer } from '../platform/ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { Commands, Telemetry } from '../webviews/webview-side/common/constants';
-import { getDisplayNameOrNameOfKernelConnection, wrapKernelMethod } from './helpers.node';
-import { JupyterSession } from './jupyter/session/jupyterSession.node';
-import { RawJupyterSession } from './raw/session/rawJupyterSession.node';
+import { wrapKernelMethod } from './helpers.node';
 import { IKernel, IKernelProvider } from './types';
 import { IInteractiveWindowProvider } from '../interactive-window/types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
-import { IStatusProvider } from '../platform/progress/types';
 import { getAssociatedNotebookDocument } from '../notebooks/controllers/kernelSelector.node';
 import { DisplayOptions } from './displayOptions.node';
 
 @injectable()
 export class KernelCommandListener implements IDataScienceCommandListener {
     private kernelInterruptedDontAskToRestart: boolean = false;
-    private kernelsStartedSuccessfully = new WeakSet<IKernel>();
-    private kernelRestartProgress = new WeakMap<IKernel, IDisposable>();
 
     constructor(
-        @inject(IStatusProvider) private statusProvider: IStatusProvider,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IKernelProvider) private kernelProvider: IKernelProvider,
@@ -85,20 +73,6 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                 (context?: { notebookEditor: { notebookUri: Uri } }) =>
                     this.restartKernel(context?.notebookEditor?.notebookUri)
             )
-        );
-        this.disposableRegistry.push(this.kernelProvider.onKernelStatusChanged(this.onKernelStatusChanged, this));
-        this.disposableRegistry.push(this.kernelProvider.onDidStartKernel(this.onDidStartKernel, this));
-        this.disposableRegistry.push(
-            this.kernelProvider.onDidDisposeKernel((kernel) => {
-                this.kernelRestartProgress.get(kernel)?.dispose();
-                this.kernelRestartProgress.delete(kernel);
-            }, this)
-        );
-        this.disposableRegistry.push(
-            this.kernelProvider.onDidRestartKernel((kernel) => {
-                this.kernelRestartProgress.get(kernel)?.dispose();
-                this.kernelRestartProgress.delete(kernel);
-            }, this)
         );
     }
 
@@ -233,44 +207,6 @@ export class KernelCommandListener implements IDataScienceCommandListener {
             this.configurationService
                 .updateSetting('askForKernelRestart', false, undefined, ConfigurationTarget.Global)
                 .ignoreErrors();
-        }
-    }
-    private onDidStartKernel(kernel: IKernel) {
-        this.kernelsStartedSuccessfully.add(kernel);
-    }
-    private onKernelStatusChanged({ kernel }: { status: KernelMessage.Status; kernel: IKernel }) {
-        // We're only interested in kernels that started successfully.
-        if (!this.kernelsStartedSuccessfully.has(kernel)) {
-            return;
-        }
-
-        // If this kernel is still active & we're using raw kernels,
-        // and the session has died, then notify the user of this dead kernel.
-        // Note: We know this kernel started successfully.
-        if (
-            kernel?.session &&
-            kernel?.session instanceof RawJupyterSession &&
-            kernel.status === 'dead' &&
-            !kernel.disposed &&
-            !kernel.disposing
-        ) {
-            void this.applicationShell.showErrorMessage(
-                DataScience.kernelDiedWithoutError().format(
-                    getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
-                )
-            );
-        }
-
-        // If this is a Jupyter kernel (non-raw or remote jupyter), & kernel is restarting
-        // then display a progress message indicating its restarting.
-        // The user needs to know that its automatically restarting (they didn't explicitly restart the kernel).
-        if (kernel.status === 'autorestarting' && kernel.session && kernel.session instanceof JupyterSession) {
-            // Set our status
-            const status = this.statusProvider.set(DataScience.restartingKernelStatus().format(''));
-            this.kernelRestartProgress.set(kernel, status);
-        } else if (kernel.status !== 'starting' && kernel.status !== 'busy' && kernel.status !== 'unknown') {
-            this.kernelRestartProgress.get(kernel)?.dispose();
-            this.kernelRestartProgress.delete(kernel);
         }
     }
 }

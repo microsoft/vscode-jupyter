@@ -476,7 +476,6 @@ suite('Jupyter Execution', async () => {
                 'notebook',
                 '--no-browser',
                 /--notebook-dir=.*/,
-                '--KernelManager.autorestart=False',
                 /--config=.*/,
                 '--NotebookApp.iopub_data_rate_limit=10000000000.0',
                 ...dockerArgs
@@ -520,7 +519,6 @@ suite('Jupyter Execution', async () => {
                 'notebook',
                 '--no-browser',
                 /--notebook-dir=.*/,
-                '--KernelManager.autorestart=False',
                 /--config=.*/,
                 '--NotebookApp.iopub_data_rate_limit=10000000000.0'
             ],
@@ -636,7 +634,6 @@ suite('Jupyter Execution', async () => {
                 'notebook',
                 '--no-browser',
                 /--notebook-dir=.*/,
-                '--KernelManager.autorestart=False',
                 /--config=.*/,
                 '--NotebookApp.iopub_data_rate_limit=10000000000.0'
             ],
@@ -681,7 +678,6 @@ suite('Jupyter Execution', async () => {
                 'notebook',
                 '--no-browser',
                 /--notebook-dir=.*/,
-                '--KernelManager.autorestart=False',
                 /--config=.*/,
                 '--NotebookApp.iopub_data_rate_limit=10000000000.0'
             ],
@@ -723,7 +719,6 @@ suite('Jupyter Execution', async () => {
                 'notebook',
                 '--no-browser',
                 /--notebook-dir=.*/,
-                '--KernelManager.autorestart=False',
                 /--config=.*/,
                 '--NotebookApp.iopub_data_rate_limit=10000000000.0'
             ],

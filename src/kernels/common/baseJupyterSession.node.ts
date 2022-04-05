@@ -91,6 +91,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     private chainingExecute = new ChainingExecuteRequester();
 
     constructor(
+        public readonly kind: 'localRaw' | 'remoteJupyter' | 'localJupyter',
         protected resource: Resource,
         protected readonly kernelConnectionMetadata: KernelConnectionMetadata,
         private restartSessionUsed: (id: Kernel.IKernelConnection) => void,

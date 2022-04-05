@@ -198,11 +198,6 @@ export class NotebookStarter implements Disposable {
         const promisedArgs: Promise<string>[] = [];
         promisedArgs.push(Promise.resolve('--no-browser'));
         promisedArgs.push(Promise.resolve(this.getNotebookDirArgument(workingDirectory)));
-        // When kernels fail to start, Jupyter will attempt to restart 5 times,
-        // & this is very slow (we dont want users to wait because of kernel failures).
-        // Also when kernels die, we don't restart automatically with raw kernels,
-        // We should'nt do the same with jupyter (else startup code will not run).
-        promisedArgs.push(Promise.resolve('--KernelManager.autorestart=False'));
         if (useDefaultConfig) {
             promisedArgs.push(this.getConfigArgument(tempDirPromise));
         }

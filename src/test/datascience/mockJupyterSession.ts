@@ -44,6 +44,7 @@ export class MockJupyterSession implements IJupyterSession {
     public get kernelId(): string {
         return '1';
     }
+    public readonly kind = 'localRaw';
     constructor(
         cellDictionary: Record<string, nbformat.IBaseCell> | nbformat.IBaseCell[],
         timedelay: number,

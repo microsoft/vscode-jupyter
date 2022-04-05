@@ -435,6 +435,14 @@ export namespace DataScience {
         'DataScience.kernelDiedWithoutError',
         "The kernel '{0}' died. View Jupyter [log](command:jupyter.viewOutput) for further details."
     );
+    export const kernelDiedWithoutErrorAndAutoRestarting = localize(
+        'DataScience.kernelDiedWithoutErrorAndAutoRestarting',
+        "The kernel '{0}' died and is being automatically restarted by Jupyter. Click <a href='https://aka.ms/vscodeJupyterKernelCrashesWhenUsingAPackageModule'>here</a> for more info. View Jupyter [log](command:jupyter.viewOutput) for further details."
+    );
+    export const kernelCrashedDueToCodeInCurrentOrPreviousCell = localize(
+        'DataScience.kernelCrashedDueToCodeInCurrentOrPreviousCell',
+        "The Kernel crashed while executing code in the the current cell or a previous cell. Please review the code in the cell(s) to identify a possible cause of the failure. Click <a href='https://aka.ms/vscodeJupyterKernelCrashesWhenUsingAPackageModule'>here</a> for more info. View Jupyter [log](command:jupyter.viewOutput) for further details."
+    );
     export const cannotRunCellKernelIsDead = localize(
         'DataScience.cannotRunCellKernelIsDead',
         "Cannot run cells, as the kernel '{0}' is dead."
