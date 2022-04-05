@@ -6,15 +6,15 @@
 import { assert } from 'chai';
 import { Disposable, CancellationTokenSource } from 'vscode';
 import { traceInfo } from '../../platform/logging';
-import { IS_NON_RAW_NATIVE_TEST } from '../constants';
-import { initialize } from '../initialize';
+import { IS_NON_RAW_NATIVE_TEST } from '../constants.node';
+import { initialize } from '../initialize.node';
 import { closeNotebooksAndCleanUpAfterTests, startJupyterServer } from './notebook/helper';
 import * as getFreePort from 'get-port';
 import { IPythonExecutionFactory } from '../../platform/common/process/types.node';
 import { IInterpreterService } from '../../platform/interpreter/contracts.node';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IConfigurationService } from '../../platform/common/types';
-import { JupyterSettings } from '../../platform/common/configSettings.node';
+import { JupyterSettings } from '../../platform/common/configSettings';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { HostJupyterExecution } from '../../kernels/jupyter/launcher/liveshare/hostJupyterExecution.node';
 import { NotebookServerProvider } from '../../kernels/jupyter/launcher/notebookServerProvider.node';

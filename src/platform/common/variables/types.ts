@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { Event, Uri } from 'vscode';
+import { ClassType } from '../../ioc/types';
 
 export type EnvironmentVariables = Object & Record<string, string | undefined>;
 
@@ -45,6 +46,8 @@ export interface ISystemVariables {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 }
+
+export type ISystemVariablesConstructor = ClassType<ISystemVariables>;
 
 export const IEnvironmentVariablesProvider = Symbol('IEnvironmentVariablesProvider');
 

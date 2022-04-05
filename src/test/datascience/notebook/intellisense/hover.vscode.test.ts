@@ -8,10 +8,12 @@ import { Position } from 'vscode';
 import { IVSCodeNotebook } from '../../../../platform/common/application/types';
 import { traceInfo } from '../../../../platform/logging';
 import { IDisposable } from '../../../../platform/common/types';
-import { IExtensionTestApi } from '../../../common';
-import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
-import { initialize } from '../../../initialize';
+import { IExtensionTestApi } from '../../../common.node';
+import { IS_REMOTE_NATIVE_TEST } from '../../../constants.node';
+import { initialize } from '../../../initialize.node';
 import { closeNotebooksAndCleanUpAfterTests, insertCodeCell, createEmptyPythonNotebook, waitForHover } from '../helper';
+import { setIntellisenseTimeout } from '../../../../intellisense/pythonKernelCompletionProvider.node';
+import { Settings } from '../../../../platform/common/constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Intellisense Notebook Hover', function () {
@@ -36,12 +38,12 @@ suite('DataScience - VSCode Intellisense Notebook Hover', function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
         await createEmptyPythonNotebook(disposables);
-        process.env.VSC_JUPYTER_IntellisenseTimeout = '30000';
+        setIntellisenseTimeout(30000);
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
-        delete process.env.VSC_JUPYTER_IntellisenseTimeout;
+        setIntellisenseTimeout(Settings.IntellisenseTimeout);
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });

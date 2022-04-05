@@ -5,7 +5,7 @@ import { expect } from 'chai';
 import { PassThrough } from 'stream';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { ProtocolParser } from '../../../platform/debugger/extension/helpers/protocolParser.node';
-import { sleep } from '../../common';
+import { sleep } from '../../common.node';
 
 suite('Debugging - Protocol Parser', () => {
     test('Test request, response and event messages', async () => {

@@ -30,9 +30,13 @@ import {
     areInterpreterPathsSame,
     getInterpreterHash
 } from '../../../../platform/pythonEnvironments/info/interpreter.node';
-import { captureScreenShot, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from '../../../constants';
-import { closeActiveWindows, initialize } from '../../../initialize';
+import { captureScreenShot, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../../common.node';
+import {
+    EXTENSION_ROOT_DIR_FOR_TESTS,
+    IS_REMOTE_NATIVE_TEST,
+    JVSC_EXTENSION_ID_FOR_TESTS
+} from '../../../constants.node';
+import { closeActiveWindows, initialize } from '../../../initialize.node';
 import { openNotebook, submitFromPythonFile, submitFromPythonFileUsingCodeWatcher } from '../../helpers';
 import { JupyterNotebookView } from '../../../../notebooks/constants';
 import { INotebookControllerManager } from '../../../../notebooks/types';

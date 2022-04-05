@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationToken, CancellationTokenSource, Progress as VSCProgress } from 'vscode';
-import { ApplicationShell } from '../../../platform/common/application/applicationShell.node';
+import { ApplicationShell } from '../../../platform/common/application/applicationShell';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { getUserMessageForAction } from '../../../platform/progress/messages.node';
 import { ProgressReporter } from '../../../platform/progress/progressReporter.node';

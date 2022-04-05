@@ -12,8 +12,8 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../platform/common/types';
-import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
-import { initialize } from '../../initialize';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
+import { initialize } from '../../initialize.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
     runCell,
@@ -30,7 +30,7 @@ import {
     defaultNotebookTestTimeout,
     waitForExecutionCompletedWithoutChangesToExecutionCount
 } from './helper';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import * as dedent from 'dedent';
 import { IKernelProvider } from '../../../platform/../kernels/types';
 import { createDeferred } from '../../../platform/common/utils/async';
@@ -95,8 +95,6 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
         }
         const settings = config.getSettings() as ReadWrite<IJupyterSettings>;
         settings.disablePythonDaemon = false;
-        // Added temporarily to identify why tests are failing.
-        process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = undefined;
         await closeNotebooksAndCleanUpAfterTests(disposables);
         sinon.restore();
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);

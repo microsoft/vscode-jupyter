@@ -29,6 +29,7 @@ export function createDocument(
         .setup((d) => d.uri)
         .returns(() => uri)
         .verifiable(times);
+    // eslint-disable-next-line local-rules/dont-use-fspath
     document.setup((d) => d.fileName).returns(() => uri.fsPath);
     document
         .setup((d) => d.version)

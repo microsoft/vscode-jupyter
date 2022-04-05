@@ -1,3 +1,4 @@
+/* eslint-disable local-rules/dont-use-filename */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -8,10 +9,10 @@
 import * as glob from 'glob';
 import * as Mocha from 'mocha';
 import * as path from 'path';
-import { IS_SMOKE_TEST, MAX_EXTENSION_ACTIVATION_TIME } from './constants';
+import { IS_SMOKE_TEST, MAX_EXTENSION_ACTIVATION_TIME } from './constants.node';
 import { noop } from './core';
 import { stopJupyterServer } from './datascience/notebook/helper';
-import { initialize } from './initialize';
+import { initialize } from './initialize.node';
 
 // Linux: prevent a weird NPE when mocha on Linux requires the window size from the TTY.
 // Since we are not running in a tty environment, we just implement the method statically.

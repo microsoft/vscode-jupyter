@@ -5,7 +5,7 @@
 
 import { assert } from 'chai';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
-import { ApplicationShell } from '../../../../platform/common/application/applicationShell.node';
+import { ApplicationShell } from '../../../../platform/common/application/applicationShell';
 import { IApplicationShell, IWorkspaceService } from '../../../../platform/common/application/types';
 import { WorkspaceService } from '../../../../platform/common/application/workspace';
 import { PathUtils } from '../../../../platform/common/platform/pathUtils.node';

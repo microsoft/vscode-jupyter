@@ -9,8 +9,8 @@ import * as vscode from 'vscode';
 import { traceInfo } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider.node';
-import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common';
-import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common.node';
+import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize.node';
 import {
     submitFromPythonFile,
     submitFromPythonFileUsingCodeWatcher,

@@ -35,6 +35,7 @@
         "src/ipywidgets",
         "src/smoke",
         "src/test/datascience/extensionapi",
+        "src/test/web",
         "build",
         "out",
         "ipywidgets",

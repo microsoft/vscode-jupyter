@@ -3,7 +3,7 @@
 
 import * as path from 'path';
 import { traceError } from '../../platform/logging';
-import { getEnvironmentVariable } from '../../platform/common/utils/platform';
+import { getEnvironmentVariable } from '../../platform/common/utils/platform.node';
 import { pathExists, readFile, arePathsSame, normCasePath } from '../../platform/common/platform/fileUtils.node';
 
 function getSearchHeight() {

@@ -5,9 +5,10 @@
 import { IServiceManager } from '../platform/ioc/types';
 import { CommandRegistry } from './commands/commandRegistry.node';
 import { registerTypes as registerApiTypes } from './api/serviceRegistry.node';
-import { registerTypes as commonRegisterTypes } from './common/serviceRegistry.node';
-import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry.node';
-import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry.node';
+import { registerTypes as registerCommonTypes } from './common/serviceRegistry.node';
+import { registerTypes as registerTerminalTypes } from './terminals/serviceRegistry.node';
+import { registerTypes as registerActivationTypes } from './activation/serviceRegistry.node';
+import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
 import { DataScienceStartupTime } from './common/constants';
 import { LogReplayService } from '../intellisense/logReplayService.node';
 import { Activation } from '../kernels/activation.node';
@@ -29,7 +30,7 @@ import { GlobalActivation } from './common/globalActivation.node';
 import { FileSystemPathUtils } from './common/platform/fs-paths.node';
 import { IFileSystemPathUtils } from './common/platform/types';
 import { PreReleaseChecker } from './common/prereleaseChecker.node';
-import { IConfigurationService, IDataScienceCommandListener } from './common/types';
+import { IConfigurationService, IDataScienceCommandListener, IExtensionContext } from './common/types';
 import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFactory.node';
 import { DebuggingManager } from './debugger/jupyter/debuggingManager.node';
 import { IDebugLocationTracker, IDebuggingManager } from './debugger/types';
@@ -51,15 +52,15 @@ import { KernelProgressReporter } from './progress/kernelProgressReporter.node';
 import { ProgressReporter } from './progress/progressReporter.node';
 import { StatusProvider } from './progress/statusProvider.node';
 import { IStatusProvider } from './progress/types';
-import { ApplicationShell } from './common/application/applicationShell.node';
-import { CommandManager } from './common/application/commandManager.node';
+import { ApplicationShell } from './common/application/applicationShell';
+import { CommandManager } from './common/application/commandManager';
 import { ICommandManager, IWorkspaceService, IApplicationShell } from './common/application/types';
 import { WorkspaceService } from './common/application/workspace';
 import { ConfigurationService } from './common/configuration/service.node';
 import { IFileSystem } from './common/platform/types.node';
 import { FileSystem } from './common/platform/fileSystem.node';
 
-export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
+export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
     serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
     serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
@@ -67,10 +68,11 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
     serviceManager.addSingleton<CommandRegistry>(CommandRegistry, CommandRegistry);
 
-    activationRegisterTypes(serviceManager);
+    registerActivationTypes(serviceManager);
     registerApiTypes(serviceManager);
-    commonRegisterTypes(serviceManager);
-    commonRegisterTerminalTypes(serviceManager);
+    registerCommonTypes(serviceManager);
+    registerTerminalTypes(serviceManager);
+    registerDevToolTypes(context, serviceManager, isDevMode);
 
     // Root platform types
     serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());

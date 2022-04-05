@@ -142,3 +142,7 @@ export function isNotebookCell(documentOrUri: TextDocument | Uri): boolean {
 export function isUntitledFile(file?: Uri) {
     return file?.scheme === 'untitled';
 }
+
+export function isWeb() {
+    return process.platform.toString() === 'web'; // Webpack is modifying this to force this to happen
+}

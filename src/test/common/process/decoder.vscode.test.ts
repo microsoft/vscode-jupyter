@@ -4,7 +4,7 @@
 import { expect } from 'chai';
 import { encode, encodingExists } from 'iconv-lite';
 import { BufferDecoder } from '../../../platform/common/process/decoder.node';
-import { initialize } from '../../initialize';
+import { initialize } from '../../initialize.node';
 
 suite('Decoder', () => {
     setup(initialize);

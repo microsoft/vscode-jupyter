@@ -1,4 +1,6 @@
 // Based this logic on this file here: https://github.com/import-js/eslint-plugin-import/blob/main/src/rules/no-nodejs-modules.js
+// Also this is a useful reference for creating new rules (describes API of stuff like MemberReference)
+// https://btmills.github.io/parserapi/
 const importType = require('eslint-plugin-import/lib/core/importType');
 const moduleVisitor = require('eslint-module-utils/moduleVisitor');
 const path = require('path');
@@ -51,6 +53,68 @@ module.exports = {
                     },
                     { commonjs: true }
                 );
+            }
+        },
+        'dont-use-process': {
+            create: function (context) {
+                return {
+                    MemberExpression(node) {
+                        const objectName = node.object.name;
+                        const propertyName = node.property.name;
+                        const fileName = context.getFilename();
+
+                        if (
+                            !fileName.endsWith('.node.ts') &&
+                            objectName === 'process' &&
+                            !node.computed &&
+                            propertyName &&
+                            propertyName === 'env'
+                        ) {
+                            context.report(node, `process.env is not allowed in anything but .node files`);
+                        }
+                    }
+                };
+            }
+        },
+        'dont-use-fspath': {
+            create: function (context) {
+                return {
+                    MemberExpression(node) {
+                        const objectName = node.object.name;
+                        const propertyName = node.property.name;
+                        const fileName = context.getFilename();
+
+                        if (
+                            !fileName.endsWith('.node.ts') &&
+                            !fileName.endsWith('.test.ts') &&
+                            !node.computed &&
+                            propertyName &&
+                            propertyName === 'fsPath'
+                        ) {
+                            context.report(node, `fsPath is not allowed in anything but .node files`);
+                        }
+                    }
+                };
+            }
+        },
+        'dont-use-filename': {
+            create: function (context) {
+                return {
+                    Identifier(node) {
+                        const objectName = node.name;
+                        const fileName = context.getFilename();
+
+                        if (
+                            !fileName.endsWith('.node.ts') &&
+                            !fileName.endsWith('.test.ts') &&
+                            !node.computed &&
+                            objectName &&
+                            (objectName === '__dirname' || objectName === '__filename')
+                        ) {
+                            context.report(node, `${objectName} is not allowed in anything but .node files`);
+                        }
+                    }
+                };
             }
         }
     }

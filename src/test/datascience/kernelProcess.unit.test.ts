@@ -34,7 +34,7 @@ import { ChildProcess } from 'child_process';
 import { EventEmitter } from 'stream';
 import { PythonKernelInterruptDaemon } from '../../kernels/raw/finder/pythonKernelInterruptDaemon.node';
 import { JupyterPaths } from '../../kernels/raw/finder/jupyterPaths.node';
-import { waitForCondition } from '../common';
+import { waitForCondition } from '../common.node';
 
 suite('kernel Process', () => {
     let kernelProcess: KernelProcess;

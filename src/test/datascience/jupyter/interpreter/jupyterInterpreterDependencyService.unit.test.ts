@@ -5,7 +5,7 @@
 
 import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
-import { ApplicationShell } from '../../../../platform/common/application/applicationShell.node';
+import { ApplicationShell } from '../../../../platform/common/application/applicationShell';
 import { IApplicationShell } from '../../../../platform/common/application/types';
 import { DataScience } from '../../../../platform/common/utils/localize';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';

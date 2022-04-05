@@ -175,7 +175,6 @@ export type WidgetCDNs = 'unpkg.com' | 'jsdelivr.com';
 export const IConfigurationService = Symbol('IConfigurationService');
 export interface IConfigurationService {
     getSettings(resource?: Uri): IWatchableJupyterSettings;
-    isTestExecution(): boolean;
     updateSetting(setting: string, value?: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void>;
     updateSectionSetting(
         section: string,

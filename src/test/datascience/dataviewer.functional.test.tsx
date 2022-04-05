@@ -60,18 +60,6 @@ suite('Dummy1a', () => {
 //     let sandbox = sinon.createSandbox();
 //     let sendTelemetryStub: sinon.SinonStub;
 
-//     suiteSetup(function () {
-//         // DataViewer tests require jupyter to run. Othewrise can't
-//         // run any of our variable execution code
-//         const isRollingBuild = process.env ? process.env.VSC_FORCE_REAL_JUPYTER !== undefined : false;
-//         if (!isRollingBuild) {
-//             // eslint-disable-next-line no-console
-//             console.log('Skipping DataViewer tests. Requires python environment');
-//             // eslint-disable-next-line no-invalid-this
-//             this.skip();
-//         }
-//     });
-
 //     suiteTeardown(() => {
 //         writeDiffSnapshot(snapshot, 'DataViewer');
 //     });

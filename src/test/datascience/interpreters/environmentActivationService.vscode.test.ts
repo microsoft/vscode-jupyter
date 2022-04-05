@@ -7,8 +7,8 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { traceInfo } from '../../../platform/logging';
-import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
-import { initialize } from '../../initialize';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
+import { initialize } from '../../initialize.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
 import {
@@ -28,7 +28,7 @@ import { CondaService } from '../../../platform/common/process/condaService.node
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { CurrentProcess } from '../../../platform/common/process/currentProcess.node';
 import { IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
-import { IS_CONDA_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
+import { IS_CONDA_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import { Disposable, Memento } from 'vscode';
 import { instance, mock, verify } from 'ts-mockito';
 import { defaultNotebookTestTimeout } from '../notebook/helper';

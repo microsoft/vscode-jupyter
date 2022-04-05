@@ -15,11 +15,11 @@ import {
     waitForTextOutput,
     workAroundVSCodeNotebookStartPages
 } from '../datascience/notebook/helper';
-import { initialize } from '../initialize';
+import { initialize } from '../initialize.node';
 import * as sinon from 'sinon';
-import { captureScreenShot, createEventHandler, IExtensionTestApi } from '../common';
+import { captureScreenShot, createEventHandler, IExtensionTestApi } from '../common.node';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../constants.node';
 import { Uri, workspace } from 'vscode';
 
 // eslint-disable-next-line
@@ -63,7 +63,6 @@ suite('3rd Party Kernel Service API', function () {
             await captureScreenShot(this.currentTest?.title);
         }
         // Added temporarily to identify why tests are failing.
-        process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = undefined;
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });

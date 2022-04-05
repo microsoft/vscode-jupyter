@@ -7,14 +7,14 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import { traceInfo } from '../platform/logging';
-import { captureScreenShot, IExtensionTestApi } from './common';
+import { captureScreenShot, IExtensionTestApi } from './common.node';
 
 import * as ts from 'typescript';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import * as path from 'path';
 
-import { initialize } from './initialize';
+import { initialize } from './initialize.node';
 import { interfaces } from 'inversify/lib/interfaces/interfaces';
 
 /**

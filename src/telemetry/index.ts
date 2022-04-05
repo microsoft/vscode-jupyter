@@ -3,7 +3,7 @@
 
 import type { JSONObject } from '@lumino/coreutils';
 // eslint-disable-next-line
-import TelemetryReporter from 'vscode-extension-telemetry/lib/telemetryReporter';
+import TelemetryReporter from '@vscode/extension-telemetry/lib/telemetryReporter';
 
 import { IWorkspaceService } from '../platform/common/application/types';
 import {
@@ -17,7 +17,7 @@ import {
     Telemetry,
     VSCodeNativeTelemetry
 } from '../platform/common/constants';
-import { traceError, traceInfo } from '../platform/logging';
+import { traceError, traceVerbose } from '../platform/logging';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { ResourceSpecificTelemetryProperties } from './types';
 import { CheckboxState, EventName, PlatformErrors, SliceOperationSource } from './constants';
@@ -45,7 +45,7 @@ function isTelemetrySupported(): boolean {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const vsc = require('vscode');
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const reporter = require('vscode-extension-telemetry');
+        const reporter = require('@vscode/extension-telemetry');
         return vsc !== undefined && reporter !== undefined;
     } catch {
         return false;
@@ -99,7 +99,7 @@ function getTelemetryReporter() {
     const extensionVersion = extension.packageJSON.version;
 
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const reporter = require('vscode-extension-telemetry').default as typeof TelemetryReporter;
+    const reporter = require('@vscode/extension-telemetry').default as typeof TelemetryReporter;
     return (telemetryReporter = new reporter(extensionId, extensionVersion, AppinsightsKey, true));
 }
 
@@ -263,13 +263,11 @@ function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E exten
         reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     }
 
-    if (process.env && process.env.VSC_JUPYTER_LOG_TELEMETRY) {
-        traceInfo(
-            `Telemetry Event : ${eventNameSent} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
-                customProperties
-            )} `
-        );
-    }
+    traceVerbose(
+        `Telemetry Event : ${eventNameSent} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
+            customProperties
+        )} `
+    );
 }
 
 // Type-parameterized form of MethodDecorator in lib.es5.d.ts.

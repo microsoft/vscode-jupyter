@@ -41,9 +41,9 @@ import {
 } from 'vscode';
 import * as fsExtra from 'fs-extra';
 import * as path from 'path';
-import { buildApi, IExtensionApi } from './platform/api.node';
+import { buildApi, IExtensionApi } from './platform/api';
 import { IApplicationEnvironment, ICommandManager } from './platform/common/application/types';
-import { traceError } from './platform/logging';
+import { setHomeDirectory, traceError } from './platform/logging';
 import {
     GLOBAL_MEMENTO,
     IAsyncDisposableRegistry,
@@ -62,7 +62,7 @@ import {
 import { createDeferred } from './platform/common/utils/async';
 import { Common, OutputChannelNames } from './platform/common/utils/localize';
 import { IServiceContainer, IServiceManager } from './platform/ioc/types';
-import { sendErrorTelemetry, sendStartupTelemetry } from './platform/startupTelemetry.node';
+import { sendErrorTelemetry, sendStartupTelemetry } from './platform/startupTelemetry';
 import { noop } from './platform/common/utils/misc';
 import { JUPYTER_OUTPUT_CHANNEL, PythonExtension } from './webviews/webview-side/common/constants';
 import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.node';
@@ -76,12 +76,12 @@ import { IExtensionActivationManager } from './platform/activation/types';
 import { isCI, isTestExecution, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants';
 import { getDisplayPath } from './platform/common/platform/fs-paths.node';
 import { IFileSystem } from './platform/common/platform/types.node';
-import { getJupyterOutputChannel } from './platform/devTools/jupyterOutputChannel.node';
+import { getJupyterOutputChannel } from './platform/devTools/jupyterOutputChannel';
 import { registerLogger, setLoggingLevel } from './platform/logging';
 import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry.node';
 import { Container } from 'inversify/lib/container/container';
-import { ServiceContainer } from './platform/ioc/container.node';
-import { ServiceManager } from './platform/ioc/serviceManager.node';
+import { ServiceContainer } from './platform/ioc/container';
+import { ServiceManager } from './platform/ioc/serviceManager';
 import { OutputChannelLogger } from './platform/logging/outputChannelLogger';
 import { ConsoleLogger } from './platform/logging/consoleLogger';
 import { FileLogger } from './platform/logging/fileLogger.node';
@@ -298,6 +298,10 @@ async function activateLegacy(
     if (isDevMode) {
         void commands.executeCommand('setContext', 'jupyter.development', true);
     }
+    void commands.executeCommand('setContext', 'jupyter.webExtension', false);
+
+    // Set the logger home dir (we can compute this in a node app)
+    setHomeDirectory(require('untildify')('~') || '');
 
     // Setup the console logger if asked to
     addConsoleLogger();
@@ -305,7 +309,7 @@ async function activateLegacy(
     addOutputChannel(context, serviceManager, isDevMode);
 
     // Register the rest of the types (platform is first because it's needed by others)
-    registerPlatformTypes(serviceManager, isDevMode);
+    registerPlatformTypes(context, serviceManager, isDevMode);
     registerTelemetryTypes(serviceManager);
     registerKernelTypes(serviceManager, isDevMode);
     registerNotebookTypes(serviceManager);

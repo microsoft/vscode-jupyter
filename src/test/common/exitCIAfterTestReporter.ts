@@ -11,7 +11,7 @@
 import * as fs from 'fs-extra';
 import * as net from 'net';
 import * as path from 'path';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
 import { noop } from '../core';
 
 let client: net.Socket | undefined;

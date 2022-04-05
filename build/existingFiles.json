@@ -255,7 +255,6 @@
     "src/telemetry/constants.ts",
     "src/telemetry/index.ts",
     "src/telemetry/types.ts",
-    "src/telemetry/vscode-extension-telemetry.d.ts",
     "src/platform/terminals/activation.ts",
     "src/platform/terminals/codeExecution/codeExecutionManager.ts",
     "src/platform/terminals/codeExecution/djangoContext.ts",

@@ -12,9 +12,9 @@ import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
-import { IExtensionTestApi, waitForCondition } from '../../common';
-import { IS_REMOTE_NATIVE_TEST } from '../../constants';
-import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
+import { IExtensionTestApi, waitForCondition } from '../../common.node';
+import { IS_REMOTE_NATIVE_TEST } from '../../constants.node';
+import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize.node';
 import { openNotebook } from '../helpers';
 import {
     assertHasTextOutputInVSCode,

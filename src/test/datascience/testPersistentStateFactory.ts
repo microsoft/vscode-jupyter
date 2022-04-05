@@ -1,5 +1,5 @@
 import { Memento } from 'vscode';
-import { PersistentStateFactory } from '../../platform/common/persistentState.node';
+import { PersistentStateFactory } from '../../platform/common/persistentState';
 import { IPersistentState, IPersistentStateFactory } from '../../platform/common/types';
 
 const PrefixesToStore = ['INTERPRETERS_CACHE'];

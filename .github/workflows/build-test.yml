@@ -342,7 +342,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
     env:
-      VSC_FORCE_REAL_JUPYTER: 1
       VSC_PYTHON_FORCE_LOGGING: 1
       VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
     strategy:
@@ -596,7 +595,6 @@ jobs:
         with:
           run: ${{ env.xvfbCommand }} npm run testNativeNotebooksInVSCode
         env:
-          VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
@@ -612,7 +610,6 @@ jobs:
         run: |
           npm run testNativeNotebooksInVSCodeWithoutTestSuffix
         env:
-          VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
@@ -621,7 +618,7 @@ jobs:
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
-          TEST_FILES_SUFFIX: '+(interrupt|execut)*.vscode.test'
+          TEST_FILES_SUFFIX: '+(interrupt|execut)*.vscode.test*'
         id: test_notebook_vscode_windows
         if: matrix.python != 'noPython' && matrix.os == 'windows-latest'
 
@@ -638,7 +635,6 @@ jobs:
         with:
           run: ${{ env.xvfbCommand }} npm run testNativeNotebooksWithoutPythonInVSCode
         env:
-          VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
@@ -744,7 +740,7 @@ jobs:
         run: npx tsc -p ./
         shell: bash
 
-      - name: Run smoke tests
+      - name: Run desktop smoke tests
         env:
           DISPLAY: 10
         uses: GabrielBB/xvfb-action@v1.4
@@ -769,6 +765,13 @@ jobs:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: .nyc_output
           retention-days: 1
+
+      - name: Build web parts
+        run: npm run compile-web
+        if: always()
+
+      - name: Run web smoke test
+        run: npm run testSmokeWeb
 
   coverage:
     name: Coverage reports upload

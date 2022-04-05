@@ -1,7 +1,7 @@
 import * as assert from 'assert';
 import * as pathModule from 'path';
 import * as sinon from 'sinon';
-import * as platformApis from '../../../platform/common/utils/platform';
+import * as platformApis from '../../../platform/common/utils/platform.node';
 import * as fileUtils from '../../../platform/common/platform/fileUtils.node';
 import { TEST_LAYOUT_ROOT } from '../../../test/pythonEnvironments/constants';
 import {

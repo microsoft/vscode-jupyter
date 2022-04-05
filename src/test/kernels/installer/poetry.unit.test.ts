@@ -7,6 +7,7 @@ import * as sinon from 'sinon';
 import { TEST_LAYOUT_ROOT } from '../../../test/pythonEnvironments/constants';
 import { ShellOptions, ExecutionResult } from '../../../platform/common/process/types.node';
 import * as platformApis from '../../../platform/common/utils/platform';
+import * as platformApisNode from '../../../platform/common/utils/platform.node';
 import * as fileUtils from '../../../platform/common/platform/fileUtils.node';
 import { isPoetryEnvironment, Poetry } from '../../../kernels/installer/poetry.node';
 
@@ -157,7 +158,7 @@ suite('Poetry binary is located correctly', async () => {
     });
 
     test('When poetry is not available on PATH, try using the default poetry location if valid', async () => {
-        const home = platformApis.getUserHomeDir();
+        const home = platformApisNode.getUserHomeDir();
         if (!home) {
             assert(true);
             return;

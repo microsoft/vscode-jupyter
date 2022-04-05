@@ -12,11 +12,11 @@ import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
 import { CancellationTokenSource, ConfigurationChangeEvent, Disposable, EventEmitter } from 'vscode';
-import { ApplicationShell } from '../../platform/common/application/applicationShell.node';
+import { ApplicationShell } from '../../platform/common/application/applicationShell';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
 import { WorkspaceService } from '../../platform/common/application/workspace';
 import { ConfigurationService } from '../../platform/common/configuration/service.node';
-import { PersistentState, PersistentStateFactory } from '../../platform/common/persistentState.node';
+import { PersistentState, PersistentStateFactory } from '../../platform/common/persistentState';
 import { FileSystem } from '../../platform/common/platform/fileSystem.node';
 import { IFileSystem } from '../../platform/common/platform/types.node';
 import { ProcessServiceFactory } from '../../platform/common/process/processFactory.node';
@@ -40,7 +40,7 @@ import {
 import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts.node';
-import { ServiceContainer } from '../../platform/ioc/container.node';
+import { ServiceContainer } from '../../platform/ioc/container';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/interpreter.node';
 import { getKernelId } from '../../kernels/helpers.node';
@@ -55,8 +55,8 @@ import { JupyterPaths } from '../../kernels/raw/finder/jupyterPaths.node';
 import { LocalKernelFinder } from '../../kernels/raw/finder/localKernelFinder.node';
 import { ILocalKernelFinder } from '../../kernels/raw/types';
 import { IJupyterKernelSpec, LocalKernelConnectionMetadata } from '../../kernels/types';
-import { getOSType, OSType } from '../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
+import { getOSType, OSType } from '../common.node';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
 import { noop } from '../core';
 import { MockOutputChannel } from '../mockClasses';
 import { MockJupyterServer } from './mockJupyterServer';
@@ -64,6 +64,7 @@ import { MockJupyterSettings } from './mockJupyterSettings';
 import { DisplayOptions } from '../../kernels/displayOptions.node';
 import { INotebookServer } from '../../kernels/jupyter/types';
 import { IJupyterSubCommandExecutionService } from '../../kernels/jupyter/types.node';
+import { SystemVariables } from '../../platform/common/variables/systemVariables.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 class DisposableRegistry implements IAsyncDisposableRegistry {
@@ -100,7 +101,7 @@ suite('Jupyter Execution', async () => {
     const disposableRegistry = new DisposableRegistry();
     const dummyEvent = new EventEmitter<void>();
     const configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
-    const pythonSettings = new MockJupyterSettings(undefined);
+    const pythonSettings = new MockJupyterSettings(undefined, SystemVariables, 'node');
     const jupyterOnPath = getOSType() === OSType.Windows ? '/foo/bar/jupyter.exe' : '/foo/bar/jupyter';
     let ipykernelInstallCount = 0;
     let notebookStarter: NotebookStarter;

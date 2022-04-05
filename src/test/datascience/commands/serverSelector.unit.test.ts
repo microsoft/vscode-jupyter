@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import { anything, capture, instance, mock, verify } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { CommandManager } from '../../../platform/common/application/commandManager.node';
+import { CommandManager } from '../../../platform/common/application/commandManager';
 import { ICommandManager } from '../../../platform/common/application/types';
 import { JupyterServerSelectorCommand } from '../../../platform/commands/serverSelector.node';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector.node';

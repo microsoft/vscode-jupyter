@@ -21,6 +21,7 @@ import {
     PythonExtensionChecker
 } from './pythonApi.node';
 import {
+    IExportedKernelServiceFactory,
     ILanguageServerProvider,
     IPythonApiProvider,
     IPythonDebuggerPathProvider,
@@ -42,6 +43,9 @@ export function registerTypes(serviceManager: IServiceManager): void {
         IEnvironmentActivationService,
         EnvironmentActivationService
     );
-    serviceManager.addSingleton<JupyterKernelServiceFactory>(JupyterKernelServiceFactory, JupyterKernelServiceFactory);
+    serviceManager.addSingleton<IExportedKernelServiceFactory>(
+        IExportedKernelServiceFactory,
+        JupyterKernelServiceFactory
+    );
     serviceManager.addSingleton<ApiAccessService>(ApiAccessService, ApiAccessService);
 }

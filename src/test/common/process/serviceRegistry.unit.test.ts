@@ -13,7 +13,7 @@ import {
     IProcessServiceFactory,
     IPythonExecutionFactory
 } from '../../../platform/common/process/types.node';
-import { ServiceManager } from '../../../platform/ioc/serviceManager.node';
+import { ServiceManager } from '../../../platform/ioc/serviceManager';
 import { IServiceManager } from '../../../platform/ioc/types';
 
 suite('Common Process Service Registry', () => {

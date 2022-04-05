@@ -47,3 +47,4 @@ nodeLanguageServer/**
 nodeLanguageServer.*/**
 src/test/datascience/.venv*
 !src/test/pythonEnvironments/**/*.*
+.vscode-test-web

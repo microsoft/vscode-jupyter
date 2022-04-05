@@ -7,6 +7,7 @@ import { InterpreterUri, Resource } from '../common/types';
 import { IInterpreterQuickPickItem } from '../interpreter/configuration/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import type { SemVer } from 'semver';
+import { IExportedKernelService } from './extension';
 export type ILanguageServerConnection = Pick<
     lsp.ProtocolConnection,
     'sendRequest' | 'sendNotification' | 'onProgress' | 'sendProgress' | 'onNotification' | 'onRequest'
@@ -151,4 +152,9 @@ export interface IPythonDebuggerPathProvider {
 export const ILanguageServerProvider = Symbol('ILanguageServerProvider');
 export interface ILanguageServerProvider {
     getLanguageServer(resource?: InterpreterUri): Promise<ILanguageServer | undefined>;
+}
+
+export const IExportedKernelServiceFactory = Symbol('IExportedKernelServiceFactory');
+export interface IExportedKernelServiceFactory {
+    getService(): Promise<IExportedKernelService | undefined>;
 }

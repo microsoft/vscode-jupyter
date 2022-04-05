@@ -12,7 +12,6 @@ import * as uuid from 'uuid/v4';
 import { CancellationError, CancellationToken, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation.node';
-import { isTestExecution } from '../../../platform/common/constants';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
 import { traceInfo, traceWarning } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
@@ -33,6 +32,7 @@ import { IKernelLauncher, IKernelProcess, IKernelConnection } from '../types';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService.node';
 import { KernelProcess } from './kernelProcess.node';
 import { JupyterPaths } from '../finder/jupyterPaths.node';
+import { isTestExecution } from '../../../platform/common/constants.node';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.

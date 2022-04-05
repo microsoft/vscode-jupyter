@@ -7,7 +7,8 @@
 // However if a system32 process is run first, everything works.
 import * as child_process from 'child_process';
 import * as os from 'os';
-import { setupCoverage } from './coverage';
+import { setTestExecution, setUnitTestExecution } from '../platform/common/constants';
+import { setupCoverage } from './coverage.node';
 if (os.platform() === 'win32') {
     const proc = child_process.spawn('C:\\Windows\\System32\\Reg.exe', ['/?']);
     proc.on('error', () => {
@@ -21,8 +22,8 @@ if ((Reflect as any).metadata === undefined) {
     require('reflect-metadata');
 }
 
-process.env.VSC_JUPYTER_CI_TEST = '1';
-process.env.VSC_JUPYTER_UNIT_TEST = '1';
+setTestExecution(true);
+setUnitTestExecution(true);
 
 import { initialize } from './vscode-mock';
 

@@ -48,10 +48,8 @@ module.exports = {
         'src/test/smoke/runInTerminal.smoke.test.ts',
         'src/test/smoke/languageServer.smoke.test.ts',
         'src/test/textUtils.ts',
-        'src/test/unittests.ts',
         'src/test/utils/fs.ts',
         'src/test/api.functional.test.ts',
-        'src/test/common/exitCIAfterTestReporter.ts',
         'src/test/common/configuration/service.test.ts',
         'src/test/common/moduleInstaller.test.ts',
         'src/test/common/misc.test.ts',
@@ -167,7 +165,7 @@ module.exports = {
     ],
     parser: '@typescript-eslint/parser',
     parserOptions: {
-        project: 'tsconfig.json',
+        project: ['tsconfig.json', 'tsconfig.extension.web.json'],
         sourceType: 'module'
     },
     plugins: [
@@ -286,11 +284,24 @@ module.exports = {
                         target: './src/**[!test]**/**/*[!.web].ts',
                         from: './src/**/*.web.ts',
                         message: 'Importing web modules into non web files is not allowed.'
+                    },
+                    {
+                        target: './src/extension.node.ts',
+                        from: './src/**/*.web.ts',
+                        message: 'Importing web modules into extension.node.ts is not allowed.'
+                    },
+                    {
+                        target: './src/extension.web.ts',
+                        from: './src/**/*.node.ts',
+                        message: 'Importing node modules into extension.web.ts is not allowed.'
                     }
                 ]
             }
         ],
         'local-rules/node-imports': ['error', { allow: ['events'] }],
+        'local-rules/dont-use-process': ['error'],
+        'local-rules/dont-use-fspath': ['error'],
+        'local-rules/dont-use-filename': ['error'],
         strict: 'off'
     },
     settings: {

@@ -5,8 +5,8 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { ICommandManager, IVSCodeNotebook } from '../../../platform/common/application/types';
 import { IDisposable } from '../../../platform/common/types';
-import { IExtensionTestApi, waitForCondition } from '../../common';
-import { initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize';
+import { IExtensionTestApi, waitForCondition } from '../../common.node';
+import { initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,

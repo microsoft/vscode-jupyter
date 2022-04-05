@@ -30,6 +30,11 @@ import { IInteractiveWindowProvider } from '../interactive-window/types';
 import { Settings } from '../platform/common/constants';
 import { INotebookCompletion } from './types';
 
+let IntellisenseTimeout = Settings.IntellisenseTimeout;
+export function setIntellisenseTimeout(timeoutMs: number) {
+    IntellisenseTimeout = timeoutMs;
+}
+
 // Type that holds extra string (makes it quicker to filter). Exported for testing
 export type JupyterCompletionItem = CompletionItem & {
     itemText: string;
@@ -90,15 +95,13 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
             return [];
         }
         // Allow slower timeouts for CI (testing).
-        const timeout =
-            parseInt(process.env.VSC_JUPYTER_IntellisenseTimeout || '0', 10) || Settings.IntellisenseTimeout;
         traceInfoIfCI(`Notebook completion request for ${document.getText()}, ${document.offsetAt(position)}`);
         const [result, pylanceResults] = await Promise.all([
             waitForPromise(
                 this.getJupyterCompletion(kernel.session, document.getText(), document.offsetAt(position), token),
-                timeout
+                IntellisenseTimeout
             ),
-            waitForPromise(this.getPylanceCompletions(document, position, context, token), timeout)
+            waitForPromise(this.getPylanceCompletions(document, position, context, token), IntellisenseTimeout)
         ]);
         if (!result) {
             traceInfoIfCI(`Notebook completions not found.`);

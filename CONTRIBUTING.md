@@ -5,7 +5,6 @@
 | `main` branch |
 | ------------- |
 
-
 ## | ![Main Build](https://github.com/microsoft/vscode-jupyter/actions/workflows/build-test.yml/badge.svg?branch=main)
 
 [For contributing to the [Microsoft Python Language Server](https://github.com/Microsoft/python-language-server) see its own repo; for [Pylance](https://github.com/microsoft/pylance-release) see its own repo; for [debugpy](https://github.com/microsoft/debugpy) see its own repo]
@@ -113,7 +112,7 @@ You can run functional tests in a similar way to that for unit tests:
 
 ### Running Integration Tests (with VS Code)
 
-Note: Integration tests are those in files with extension `*.vscode.test.ts`.
+Note: Integration tests are those in files with extension `*.vscode.test*.ts`.
 
 1. Make sure you have compiled all code (done automatically when using incremental building)
 1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests

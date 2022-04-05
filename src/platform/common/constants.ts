@@ -43,22 +43,6 @@ export const DEFAULT_INTERPRETER_SETTING = 'python';
 
 export const STANDARD_OUTPUT_CHANNEL = 'STANDARD_OUTPUT_CHANNEL';
 
-export const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
-
-export function isTestExecution(): boolean {
-    return process.env.VSC_JUPYTER_CI_TEST === '1' || isUnitTestExecution();
-}
-
-/**
- * Whether we're running unit tests (*.unit.test.ts).
- * These tests have a speacial meaning, they run fast.
- * @export
- * @returns {boolean}
- */
-export function isUnitTestExecution(): boolean {
-    return process.env.VSC_JUPYTER_UNIT_TEST === '1';
-}
-
 export * from '../constants';
 
 export * from '../../webviews/webview-side/common/constants';
@@ -80,4 +64,31 @@ export namespace Settings {
     export const JupyterServerUriListMax = 10;
     // If this timeout expires, ignore the completion request sent to Jupyter.
     export const IntellisenseTimeout = 2000;
+}
+
+export let isCI = false;
+export function setCI(enabled: boolean) {
+    isCI = enabled;
+}
+
+let _isTestExecution = false;
+export function isTestExecution(): boolean {
+    return _isTestExecution || isUnitTestExecution();
+}
+export function setTestExecution(enabled: boolean) {
+    _isTestExecution = enabled;
+}
+
+let _isUnitTestExecution = false;
+/**
+ * Whether we're running unit tests (*.unit.test.ts).
+ * These tests have a speacial meaning, they run fast.
+ * @export
+ * @returns {boolean}
+ */
+export function isUnitTestExecution(): boolean {
+    return _isUnitTestExecution;
+}
+export function setUnitTestExecution(enabled: boolean) {
+    _isUnitTestExecution = enabled;
 }

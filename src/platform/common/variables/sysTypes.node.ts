@@ -6,7 +6,7 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any,  */
 
-import { isFunction, isString } from '../utils/sysTypes.node';
+import { isFunction, isString } from '../utils/sysTypes';
 
 export type TypeConstraint = string | Function;
 

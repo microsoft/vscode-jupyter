@@ -13,7 +13,7 @@ import { IEnvironmentActivationService } from '../../../../platform/interpreter/
 import { EnvironmentType } from '../../../../platform/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR } from '../../../../platform/constants.node';
 import * as path from 'path';
-import { getOSType, OSType } from '../../../common';
+import { getOSType, OSType } from '../../../common.node';
 import { CancellationTokenSource } from 'vscode';
 import { EnvironmentVariablesService } from '../../../../platform/common/variables/environment.node';
 import { arePathsSame } from '../../../../platform/common/platform/fileUtils.node';

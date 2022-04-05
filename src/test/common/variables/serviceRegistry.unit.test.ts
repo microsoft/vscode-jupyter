@@ -8,7 +8,7 @@ import { EnvironmentVariablesService } from '../../../platform/common/variables/
 import { EnvironmentVariablesProvider } from '../../../platform/common/variables/environmentVariablesProvider.node';
 import { registerTypes } from '../../../platform/common/variables/serviceRegistry.node';
 import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../../../platform/common/variables/types';
-import { ServiceManager } from '../../../platform/ioc/serviceManager.node';
+import { ServiceManager } from '../../../platform/ioc/serviceManager';
 import { IServiceManager } from '../../../platform/ioc/types';
 
 suite('Common variables Service Registry', () => {

@@ -10,8 +10,8 @@ import { assert } from 'chai';
 import { NotebookDocument, Uri, window } from 'vscode';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { IDisposable } from '../../../platform/common/types';
-import { IExtensionTestApi } from '../../common';
-import { initialize } from '../../initialize';
+import { IExtensionTestApi } from '../../common.node';
+import { initialize } from '../../initialize.node';
 import { openNotebook } from '../helpers';
 import {
     closeNotebooks,
@@ -21,7 +21,7 @@ import {
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected
 } from './helper';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { InteractiveWindowMessages } from '../../../platform/messageTypes';
 import { NotebookIPyWidgetCoordinator } from '../../../kernels/ipywidgets-message-coordination/notebookIPyWidgetCoordinator.node';

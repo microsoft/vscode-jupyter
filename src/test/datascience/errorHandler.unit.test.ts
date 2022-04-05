@@ -15,7 +15,7 @@ import {
     KernelConnectionMetadata,
     KernelInterpreterDependencyResponse
 } from '../../platform/../kernels/types';
-import { getOSType, OSType } from '../common';
+import { getOSType, OSType } from '../common.node';
 import { PythonEnvironment, EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
 import { DataScienceErrorHandler } from '../../platform/errors/errorHandler.node';

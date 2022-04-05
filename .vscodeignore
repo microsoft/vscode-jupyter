@@ -54,6 +54,7 @@ webpack.datascience-*.config.js
 .venv/**
 .vscode/**
 .vscode-test/**
+.vscode-test-web/**
 .vscode test/**
 languageServer/**
 languageServer.*/**

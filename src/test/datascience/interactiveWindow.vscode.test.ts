@@ -12,8 +12,8 @@ import { getDisplayPath } from '../../platform/common/platform/fs-paths.node';
 import { IDisposable } from '../../platform/common/types';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider.node';
 import { IKernelProvider } from '../../platform/../kernels/types';
-import { captureScreenShot, createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../common';
-import { initialize, IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../initialize';
+import { captureScreenShot, createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../common.node';
+import { initialize, IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../initialize.node';
 import {
     createStandaloneInteractiveWindow,
     insertIntoInputEditor,
