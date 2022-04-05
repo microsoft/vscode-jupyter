@@ -552,7 +552,7 @@ function isBuiltInModuleOverwritten(
     }
 
     // eslint-disable-next-line local-rules/dont-use-fspath
-    if (!workspaceFolders.some((folder) => fileName?.toLowerCase().startsWith(folder.uri.fsPath.toLowerCase()))) {
+    if (!workspaceFolders.some((folder) => fileName?.toLowerCase().startsWith(folder.uri.fsPath?.toLowerCase()))) {
         return;
     }
 

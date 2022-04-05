@@ -41,7 +41,7 @@ export function setLoggingLevel(level?: LoggingLevelSettingType): void {
 }
 
 export function setHomeDirectory(homeDir: string) {
-    homeAsLowerCase = homeDir.toLocaleLowerCase();
+    homeAsLowerCase = homeDir.toLowerCase();
 }
 
 export function traceLog(message: string, ...args: Arguments): void {
