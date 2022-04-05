@@ -149,7 +149,7 @@
                 "${workspaceFolder}/src/test/datascience",
                 "--enable-proposed-api",
                 "--extensionDevelopmentPath=${workspaceFolder}",
-                "--extensionTestsPath=${workspaceFolder}/out/test"
+                "--extensionTestsPath=${workspaceFolder}/out/test/index.node.js"
             ],
             "env": {
                 "VSC_JUPYTER_FORCE_LOGGING": "1",

@@ -86,7 +86,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
     let debugService: TypeMoq.IMock<IDebugService>;
     let debugLocationTracker: TypeMoq.IMock<IDebugLocationTracker>;
     const contexts: Map<string, boolean> = new Map<string, boolean>();
-    const jupyterSettings = new MockJupyterSettings(undefined, SystemVariables);
+    const jupyterSettings = new MockJupyterSettings(undefined, SystemVariables, 'node');
     const disposables: Disposable[] = [];
 
     setup(() => {

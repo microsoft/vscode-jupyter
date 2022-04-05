@@ -16,6 +16,6 @@ export class ConfigurationService extends BaseConfigurationService {
         super(serviceContainer);
     }
     public getSettings(resource?: Uri): IWatchableJupyterSettings {
-        return JupyterSettings.getInstance(resource, SystemVariables, this.workspaceService);
+        return JupyterSettings.getInstance(resource, SystemVariables, 'web', this.workspaceService);
     }
 }

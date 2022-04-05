@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Event, Uri } from 'vscode';
-import { IDocumentManager, IWorkspaceService } from '../application/types';
+import { ClassType } from '../../ioc/types';
 
 export type EnvironmentVariables = Object & Record<string, string | undefined>;
 
@@ -47,12 +47,7 @@ export interface ISystemVariables {
     [key: string]: any;
 }
 
-export type ISystemVariablesConstructor = new (
-    file: Uri | undefined,
-    rootFolder: string | undefined,
-    workspace?: IWorkspaceService,
-    documentManager?: IDocumentManager
-) => ISystemVariables;
+export type ISystemVariablesConstructor = ClassType<ISystemVariables>;
 
 export const IEnvironmentVariablesProvider = Symbol('IEnvironmentVariablesProvider');
 

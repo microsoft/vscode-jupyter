@@ -93,7 +93,7 @@ export async function getExtensionSettings(resource: Uri | undefined) {
     const pythonSettings =
         require('../platform/common/configSettings.node') as typeof import('../platform/common/configSettings');
     const systemVariables = await import('../platform/common/variables/systemVariables.node');
-    return pythonSettings.JupyterSettings.getInstance(resource, systemVariables.SystemVariables);
+    return pythonSettings.JupyterSettings.getInstance(resource, systemVariables.SystemVariables, 'node');
 }
 export function retryAsync(this: any, wrapped: Function, retryCount: number = 2) {
     return async (...args: any[]) => {

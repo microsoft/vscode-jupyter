@@ -114,7 +114,8 @@ export class JupyterSettings implements IWatchableJupyterSettings {
 
     constructor(
         workspaceFolder: Resource,
-        private readonly systemVariablesCtor: ISystemVariablesConstructor,
+        private _systemVariablesCtor: ISystemVariablesConstructor, // Note: All properties not set with '_' are destroyed on update.
+        private _type: 'node' | 'web',
         workspace?: IWorkspaceService
     ) {
         this._workspace = workspace || new WorkspaceService();
@@ -129,18 +130,24 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public static getInstance(
         resource: Uri | undefined,
         systemVariablesCtor: ISystemVariablesConstructor,
+        type: 'node' | 'web',
         workspace?: IWorkspaceService
     ): JupyterSettings {
         workspace = workspace || new WorkspaceService();
         const workspaceFolderUri = JupyterSettings.getSettingsUriAndTarget(resource, workspace).uri;
         const workspaceFolderKey = workspaceFolderUri ? workspaceFolderUri.path : '';
 
-        if (!JupyterSettings.jupyterSettings.has(workspaceFolderKey)) {
-            const settings = new JupyterSettings(workspaceFolderUri, systemVariablesCtor, workspace);
+        let settings = JupyterSettings.jupyterSettings.get(workspaceFolderKey);
+        if (!settings) {
+            settings = new JupyterSettings(workspaceFolderUri, systemVariablesCtor, type, workspace);
             JupyterSettings.jupyterSettings.set(workspaceFolderKey, settings);
+        } else if (settings._type === 'web' && type === 'node') {
+            // Update to a node system variables if anybody every asks for a node one after
+            // asking for a web one.
+            settings._systemVariablesCtor = systemVariablesCtor;
+            settings._type = type;
         }
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        return JupyterSettings.jupyterSettings.get(workspaceFolderKey)!;
+        return settings;
     }
 
     // eslint-disable-next-line @typescript-eslint/member-delimiter-style
@@ -188,7 +195,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     // eslint-disable-next-line complexity,
     protected update(jupyterConfig: WorkspaceConfiguration, pythonConfig: WorkspaceConfiguration | undefined) {
         const workspaceRoot = this._workspaceRoot?.path;
-        const systemVariables = new this.systemVariablesCtor(undefined, workspaceRoot, this._workspace);
+        const systemVariables = new this._systemVariablesCtor(undefined, workspaceRoot, this._workspace);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const loggingSettings = systemVariables.resolveAny(jupyterConfig.get<any>('logging'))!;

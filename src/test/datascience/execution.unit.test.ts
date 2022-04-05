@@ -101,7 +101,7 @@ suite('Jupyter Execution', async () => {
     const disposableRegistry = new DisposableRegistry();
     const dummyEvent = new EventEmitter<void>();
     const configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
-    const pythonSettings = new MockJupyterSettings(undefined, SystemVariables);
+    const pythonSettings = new MockJupyterSettings(undefined, SystemVariables, 'node');
     const jupyterOnPath = getOSType() === OSType.Windows ? '/foo/bar/jupyter.exe' : '/foo/bar/jupyter';
     let ipykernelInstallCount = 0;
     let notebookStarter: NotebookStarter;
