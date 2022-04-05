@@ -2038,7 +2038,6 @@
         ]
     },
     "enabledApiProposals": [
-        "notebookConcatTextDocument",
         "notebookControllerKind",
         "notebookDebugOptions",
         "notebookDocumentEvents",
