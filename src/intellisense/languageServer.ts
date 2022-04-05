@@ -7,9 +7,7 @@ import {
     NotebookDocument,
     workspace,
     window,
-    notebooks,
     Uri,
-    NotebookCellsChangeEvent,
     NotebookDocumentChangeEvent
 } from 'vscode';
 import {
