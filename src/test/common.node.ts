@@ -91,7 +91,7 @@ function getWorkspaceRoot() {
 
 export async function getExtensionSettings(resource: Uri | undefined) {
     const pythonSettings =
-        require('../platform/common/configSettings.node') as typeof import('../platform/common/configSettings');
+        require('../platform/common/configSettings') as typeof import('../platform/common/configSettings');
     const systemVariables = await import('../platform/common/variables/systemVariables.node');
     return pythonSettings.JupyterSettings.getInstance(resource, systemVariables.SystemVariables, 'node');
 }
