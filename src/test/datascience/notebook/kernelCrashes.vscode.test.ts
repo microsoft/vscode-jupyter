@@ -142,7 +142,10 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
             await waitForCondition(
                 async () => {
                     const output = getCellOutputs(cell2);
-                    return output.includes(kernelCrashFailureMessageInCell) && output.includes('https://aka.ms/vscodeJupyterKernelCrashesWhenUsingAPackageModule');
+                    return (
+                        output.includes(kernelCrashFailureMessageInCell) &&
+                        output.includes('https://aka.ms/vscodeJupyterKernelCrashesWhenUsingAPackageModule')
+                    );
                 },
                 defaultNotebookTestTimeout,
                 () => `Cell did not have kernel crash output, the output is = ${getCellOutputs(cell2)}`
@@ -200,7 +203,10 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
             await waitForCondition(
                 async () => {
                     const output = getCellOutputs(cell2);
-                    return output.includes(kernelCrashFailureMessageInCell) && output.includes('https://aka.ms/vscodeJupyterKernelCrashesWhenUsingAPackageModule');
+                    return (
+                        output.includes(kernelCrashFailureMessageInCell) &&
+                        output.includes('https://aka.ms/vscodeJupyterKernelCrashesWhenUsingAPackageModule')
+                    );
                 },
                 defaultNotebookTestTimeout,
                 () => `Cell did not have kernel crash output, the output is = ${getCellOutputs(cell2)}`
