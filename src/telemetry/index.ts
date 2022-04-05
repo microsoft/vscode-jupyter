@@ -155,7 +155,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     ex?: Error,
     sendOriginalEventWithErrors?: boolean
 ) {
-    if (isTestExecution() || !isTelemetrySupported()) {
+    if (!isTelemetrySupported() || (isTestExecution() && eventName !== Telemetry.RunTest)) {
         return;
     }
     // If stuff is already queued, then queue the rest.
@@ -1546,5 +1546,9 @@ export interface IEventNamePropertyMapping {
          * Whether we've loaded local or remote controllers.
          */
         kind: 'local' | 'remote';
+    [Telemetry.RunTest]: {
+        testName: string;
+        testResult: string;
+        isCIServer: boolean;
     };
 }
