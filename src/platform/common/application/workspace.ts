@@ -26,7 +26,7 @@ export class WorkspaceService implements IWorkspaceService {
     }
     public get rootPath(): string | undefined {
         return Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0
-            ? workspace.workspaceFolders[0].uri.fsPath
+            ? workspace.workspaceFolders[0].uri.path
             : undefined;
     }
     public get workspaceFolders(): readonly WorkspaceFolder[] | undefined {
@@ -86,7 +86,7 @@ export class WorkspaceService implements IWorkspaceService {
             : undefined;
         return workspaceFolder
             ? path.normalize(
-                  getOSType() === OSType.Windows ? workspaceFolder.uri.fsPath.toUpperCase() : workspaceFolder.uri.fsPath
+                  getOSType() === OSType.Windows ? workspaceFolder.uri.path.toUpperCase() : workspaceFolder.uri.path
               )
             : defaultValue;
     }

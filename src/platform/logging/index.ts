@@ -199,7 +199,7 @@ function removeUserPaths(value: string) {
 function formatArgument(target: Object, method: MethodName, arg: any, parameterIndex: number) {
     if (isUri(arg)) {
         // Where possible strip user names from paths, then users will be more likely to provide the logs.
-        return removeUserPaths(arg.fsPath);
+        return removeUserPaths(arg.path);
     }
     if (!arg) {
         return arg;

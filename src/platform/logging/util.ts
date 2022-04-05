@@ -14,9 +14,9 @@ function valueToLogString(value: unknown, kind: string): string {
     }
     try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if (value && (value as any).fsPath) {
+        if (value && (value as any).path) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            return `<Uri:${(value as any).fsPath}>`;
+            return `<Uri:${(value as any).path}>`;
         }
         return JSON.stringify(value);
     } catch {

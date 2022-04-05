@@ -133,7 +133,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     ): JupyterSettings {
         workspace = workspace || new WorkspaceService();
         const workspaceFolderUri = JupyterSettings.getSettingsUriAndTarget(resource, workspace).uri;
-        const workspaceFolderKey = workspaceFolderUri ? workspaceFolderUri.fsPath : '';
+        const workspaceFolderKey = workspaceFolderUri ? workspaceFolderUri.path : '';
 
         if (!JupyterSettings.jupyterSettings.has(workspaceFolderKey)) {
             const settings = new JupyterSettings(workspaceFolderUri, systemVariablesCtor, workspace);
@@ -187,7 +187,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     }
     // eslint-disable-next-line complexity,
     protected update(jupyterConfig: WorkspaceConfiguration, pythonConfig: WorkspaceConfiguration | undefined) {
-        const workspaceRoot = this._workspaceRoot?.fsPath;
+        const workspaceRoot = this._workspaceRoot?.path;
         const systemVariables = new this.systemVariablesCtor(undefined, workspaceRoot, this._workspace);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -235,7 +235,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
 
     protected onWorkspaceFoldersChanged() {
         //If an activated workspace folder was removed, delete its key
-        const workspaceKeys = this._workspace.workspaceFolders!.map((workspaceFolder) => workspaceFolder.uri.fsPath);
+        const workspaceKeys = this._workspace.workspaceFolders!.map((workspaceFolder) => workspaceFolder.uri.path);
         const activatedWkspcKeys = Array.from(JupyterSettings.jupyterSettings.keys());
         const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter((item) => workspaceKeys.indexOf(item) < 0);
         if (activatedWkspcFoldersRemoved.length > 0) {

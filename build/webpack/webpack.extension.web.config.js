@@ -18,7 +18,8 @@ const config = {
     },
     devtool: 'nosources-source-map', // create a source map that points to the original source file
     node: {
-        __dirname: false
+        __dirname: false,
+        __filename: false
     },
     module: {
         rules: [

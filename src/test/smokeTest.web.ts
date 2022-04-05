@@ -1,3 +1,4 @@
+/* eslint-disable local-rules/dont-use-filename */
 import * as path from 'path';
 import { runTests } from '@vscode/test-web';
 
