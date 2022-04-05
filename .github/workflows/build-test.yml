@@ -740,7 +740,7 @@ jobs:
         run: npx tsc -p ./
         shell: bash
 
-      - name: Run smoke tests
+      - name: Run desktop smoke tests
         env:
           DISPLAY: 10
         uses: GabrielBB/xvfb-action@v1.4
@@ -765,6 +765,13 @@ jobs:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: .nyc_output
           retention-days: 1
+
+      - name: Build web parts
+        run: npm run compile-web
+        if: always()
+
+      - name: Run web smoke test
+        run: npm run testSmokeWeb
 
   coverage:
     name: Coverage reports upload

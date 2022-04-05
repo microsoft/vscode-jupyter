@@ -2102,6 +2102,7 @@
         "kill-compiled": "deemon --kill npm run compile",
         "compile-webviews-watch": "webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
         "compile-web-watch": "webpack --config ./build/webpack/webpack.extension.web.config.js --stats-error-details --watch",
+        "compile-web": "webpack --config ./build/webpack/webpack.extension.web.config.js",
         "compile-webviews-watchd": "deemon npm run compile-webviews-watch",
         "compile-widgetTester": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui-widgetTester.config.js --watch",
         "kill-compile-webviews-watchd": "deemon --kill npm run compile-webviews-watch",
