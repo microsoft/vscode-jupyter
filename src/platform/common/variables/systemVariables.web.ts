@@ -22,7 +22,7 @@ export class SystemVariables extends AbstractSystemVariables {
     ) {
         super();
         const workspaceFolder = workspace && file ? workspace.getWorkspaceFolder(file) : undefined;
-        this._workspaceFolder = workspaceFolder ? workspaceFolder.uri.path : rootFolder || __dirname;
+        this._workspaceFolder = workspaceFolder ? workspaceFolder.uri.path : rootFolder || '';
         this._filePath = file ? file.path : undefined;
         if (documentManager && documentManager.activeTextEditor) {
             this._lineNumber = documentManager.activeTextEditor.selection.anchor.line + 1;

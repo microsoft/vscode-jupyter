@@ -73,6 +73,26 @@ module.exports = {
                     }
                 };
             }
+        },
+        'dont-use-fspath': {
+            create: function (context) {
+                return {
+                    MemberExpression(node) {
+                        const objectName = node.object.name;
+                        const propertyName = node.property.name;
+                        const fileName = context.getFilename();
+
+                        if (
+                            !fileName.endsWith('.node.ts') &&
+                            !node.computed &&
+                            propertyName &&
+                            propertyName === 'fsPath'
+                        ) {
+                            context.report(node, `fsPath is not allowed in anything but .node files`);
+                        }
+                    }
+                };
+            }
         }
     }
 };

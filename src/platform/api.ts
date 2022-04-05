@@ -93,7 +93,11 @@ export function buildApi(
     };
 
     // In test/dev environment return the DI Container.
-    if (isTestExecution() || context.extensionMode === ExtensionMode.Development) {
+    if (
+        isTestExecution() ||
+        context.extensionMode === ExtensionMode.Development ||
+        context.extensionMode === ExtensionMode.Test
+    ) {
         /* eslint-disable @typescript-eslint/no-explicit-any */
         (api as any).serviceContainer = serviceContainer;
         (api as any).serviceManager = serviceManager;

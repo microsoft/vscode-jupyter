@@ -300,6 +300,7 @@ module.exports = {
         ],
         'local-rules/node-imports': ['error', { allow: ['events'] }],
         'local-rules/dont-use-process': ['error'],
+        'local-rules/dont-use-fspath': ['error'],
         strict: 'off'
     },
     settings: {
