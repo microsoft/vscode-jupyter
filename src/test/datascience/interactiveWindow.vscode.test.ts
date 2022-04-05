@@ -35,12 +35,16 @@ import {
 import { translateCellErrorOutput, getTextOutputValue } from '../../notebooks/helpers.node';
 import { INotebookControllerManager } from '../../notebooks/types';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Telemetry } from '../../platform/common/constants';
+import { StopWatch } from '../../platform/common/utils/stopWatch';
 
 suite('Interactive window', async function () {
     this.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let interactiveWindowProvider: InteractiveWindowProvider;
+    let stopwatch: StopWatch;
 
     setup(async function () {
         if (IS_REMOTE_NATIVE_TEST) {
@@ -49,10 +53,18 @@ suite('Interactive window', async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         api = await initialize();
         interactiveWindowProvider = api.serviceManager.get(IInteractiveWindowProvider);
+        stopwatch = new StopWatch();
 
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
+        let result = this.currentTest?.isFailed() ? 'failed' : this.currentTest?.isPassed() ? 'passed' : 'skipped';
+        if (this.currentTest?.title) {
+            sendTelemetryEvent(Telemetry.RunTest, stopwatch.elapsedTime, {
+                testName: this.currentTest?.title,
+                testResult: result
+            });
+        }
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             // For a flaky interrupt test.

@@ -155,7 +155,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     ex?: Error,
     sendOriginalEventWithErrors?: boolean
 ) {
-    if (isTestExecution() || !isTelemetrySupported()) {
+    if (!isTelemetrySupported() || (isTestExecution() && eventName !== Telemetry.RunTest)) {
         return;
     }
     // If stuff is already queued, then queue the rest.
@@ -1531,4 +1531,8 @@ export interface IEventNamePropertyMapping {
         evalue: string;
     };
     [Telemetry.KernelCrash]: never | undefined;
+    [Telemetry.RunTest]: {
+        testName: string;
+        testResult: string;
+    };
 }
