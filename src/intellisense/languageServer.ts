@@ -1,15 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import {
-    Disposable,
-    extensions,
-    NotebookDocument,
-    workspace,
-    window,
-    Uri,
-    NotebookDocumentChangeEvent
-} from 'vscode';
+import { Disposable, extensions, NotebookDocument, workspace, window, Uri, NotebookDocumentChangeEvent } from 'vscode';
 import {
     ClientCapabilities,
     DynamicFeature,
