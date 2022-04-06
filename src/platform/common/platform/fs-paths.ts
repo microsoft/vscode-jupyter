@@ -1,5 +1,5 @@
 import { Uri, WorkspaceFolder } from 'vscode';
-import * as path from 'path-browserify';
+import * as path from '../../vscode-path/path';
 
 export function getDisplayPath(
     filename?: string | Uri,
