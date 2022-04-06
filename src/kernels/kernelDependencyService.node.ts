@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, CancellationTokenSource, Memento } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Memento, Uri } from 'vscode';
 import { IApplicationShell } from '../platform/common/application/types';
 import { createPromiseFromCancellation } from '../platform/common/cancellation.node';
 import {
@@ -64,9 +64,9 @@ export class KernelDependencyService implements IKernelDependencyService {
         ignoreCache?: boolean
     ): Promise<KernelInterpreterDependencyResponse> {
         traceInfo(
-            `installMissingDependencies ${getDisplayPath(kernelConnection.interpreter?.path)}, ui.disabled=${
-                ui.disableUI
-            } for resource ${getDisplayPath(resource)}`
+            `installMissingDependencies ${
+                kernelConnection.interpreter?.path ? getDisplayPath(Uri.file(kernelConnection.interpreter?.path)) : ''
+            }, ui.disabled=${ui.disableUI} for resource ${getDisplayPath(resource)}`
         );
         if (
             kernelConnection.kind === 'connectToLiveKernel' ||
@@ -152,7 +152,9 @@ export class KernelDependencyService implements IKernelDependencyService {
             isModulePresentInEnvironmentCache(this.memento, Product.ipykernel, kernelConnection.interpreter)
         ) {
             traceInfo(
-                `IPyKernel found previously in this environment ${getDisplayPath(kernelConnection.interpreter.path)}`
+                `IPyKernel found previously in this environment ${getDisplayPath(
+                    Uri.file(kernelConnection.interpreter.path)
+                )}`
             );
             return true;
         }

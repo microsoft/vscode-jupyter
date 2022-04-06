@@ -4,7 +4,8 @@
 
 import { inject, injectable, named } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
-import { CancellationToken, Memento } from 'vscode';
+import * as uriPath from '../../../platform/vscode-path/resources';
+import { CancellationToken, Memento, Uri } from 'vscode';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { traceError } from '../../../platform/logging';
@@ -56,8 +57,8 @@ export class JupyterPaths {
      * (this way we don't register kernels in global path).
      */
     public async getKernelSpecTempRegistrationFolder() {
-        const dir = path.join(this.context.extensionUri.fsPath, 'temp', 'jupyter', 'kernels');
-        await this.fs.ensureLocalDir(dir);
+        const dir = uriPath.joinPath(this.context.extensionUri, 'temp', 'jupyter', 'kernels');
+        await this.fs.ensureLocalDir(dir.fsPath);
         return dir;
     }
     /**
@@ -125,7 +126,7 @@ export class JupyterPaths {
      * https://jupyter-client.readthedocs.io/en/stable/kernels.html#kernel-specs
      */
     @traceDecoratorVerbose('Get Kernelspec root path')
-    public async getKernelSpecRootPaths(cancelToken?: CancellationToken): Promise<string[]> {
+    public async getKernelSpecRootPaths(cancelToken?: CancellationToken): Promise<Uri[]> {
         // Paths specified in JUPYTER_PATH are supposed to come first in searching
         const paths = new Set<string>(await this.getJupyterPathPaths(cancelToken));
 
@@ -156,7 +157,7 @@ export class JupyterPaths {
      * https://jupyter.readthedocs.io/en/latest/projects/jupyter-directories.html#envvar-JUPYTER_PATH
      */
     @traceDecoratorVerbose('Get Jupyter Paths')
-    private async getJupyterPathPaths(cancelToken?: CancellationToken): Promise<string[]> {
+    private async getJupyterPathPaths(cancelToken?: CancellationToken): Promise<Uri[]> {
         this.cachedJupyterPaths =
             this.cachedJupyterPaths ||
             (async () => {

@@ -6,7 +6,8 @@
 import type { KernelSpec } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import * as path from '../../platform/vscode-path/path';
-import { CancellationToken } from 'vscode';
+import * as uriPath from '../../platform/vscode-path/resources';
+import { CancellationToken, Uri } from 'vscode';
 import { Cancellation } from '../../platform/common/cancellation.node';
 import '../../platform/common/extensions';
 import {
@@ -128,7 +129,7 @@ export class JupyterKernelService {
         ) {
             traceInfoIfCI(
                 `updateKernelEnvironment ${kernel.interpreter.displayName}, ${getDisplayPath(
-                    kernel.interpreter.path
+                    Uri.file(kernel.interpreter.path)
                 )} for ${kernel.id}`
             );
             await this.updateKernelEnvironment(resource, kernel.interpreter, kernel.kernelSpec, specFile, cancelToken);
@@ -166,16 +167,19 @@ export class JupyterKernelService {
         }
 
         // Compute a new path for the kernelspec
-        const kernelSpecFilePath = path.join(root, kernel.kernelSpec.name, 'kernel.json');
+        const kernelSpecFilePath = uriPath.joinPath(root, kernel.kernelSpec.name, 'kernel.json');
 
         // If this file already exists, we can just exit
-        if (await this.fs.localFileExists(kernelSpecFilePath)) {
-            return kernelSpecFilePath;
+        if (await this.fs.localFileExists(kernelSpecFilePath.fsPath)) {
+            return kernelSpecFilePath.fsPath;
         }
 
         // If it doesn't exist, see if we had an original spec file that's different.
         const contents = { ...kernel.kernelSpec };
-        if (kernel.kernelSpec.specFile && !this.fs.areLocalPathsSame(kernelSpecFilePath, kernel.kernelSpec.specFile)) {
+        if (
+            kernel.kernelSpec.specFile &&
+            !this.fs.areLocalPathsSame(kernelSpecFilePath.fsPath, kernel.kernelSpec.specFile)
+        ) {
             // Add extra metadata onto the contents. We'll use this
             // when searching for kernels later to remove duplicates.
             contents.metadata = contents.metadata || {};
@@ -202,7 +206,7 @@ export class JupyterKernelService {
 
         // Write out the contents into the new spec file
         try {
-            await this.fs.writeLocalFile(kernelSpecFilePath, JSON.stringify(contents, undefined, 4));
+            await this.fs.writeLocalFile(kernelSpecFilePath.fsPath, JSON.stringify(contents, undefined, 4));
         } catch (ex) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any, true);
@@ -216,7 +220,7 @@ export class JupyterKernelService {
         const originalSpecFile = contents.metadata?.vscode?.originalSpecFile || contents.metadata?.originalSpecFile;
         if (originalSpecFile) {
             const originalSpecDir = path.dirname(originalSpecFile);
-            const newSpecDir = path.dirname(kernelSpecFilePath);
+            const newSpecDir = path.dirname(kernelSpecFilePath.fsPath);
             const otherFiles = await this.fs.searchLocal('*.*[^json]', originalSpecDir);
             await Promise.all(
                 otherFiles.map(async (f) => {
@@ -228,7 +232,7 @@ export class JupyterKernelService {
         }
 
         sendTelemetryEvent(Telemetry.RegisterAndUseInterpreterAsKernel);
-        return kernelSpecFilePath;
+        return kernelSpecFilePath.fsPath;
     }
     private async updateKernelEnvironment(
         resource: Resource,
@@ -245,7 +249,7 @@ export class JupyterKernelService {
             const kernelSpecFilePath =
                 path.basename(specFile).toLowerCase() === kernel.name.toLowerCase()
                     ? specFile
-                    : path.join(kernelSpecRootPath, kernel.name, 'kernel.json');
+                    : uriPath.joinPath(kernelSpecRootPath, kernel.name, 'kernel.json').fsPath;
 
             // Make sure the file exists
             if (!(await this.fs.localFileExists(kernelSpecFilePath))) {
@@ -267,7 +271,9 @@ export class JupyterKernelService {
                     traceInfo(`Spec argv[0], not updated as it is using conda.`);
                 } else {
                     traceInfo(
-                        `Spec argv[0] updated from '${specModel.argv[0]}' to '${getDisplayPath(interpreter.path)}'`
+                        `Spec argv[0] updated from '${specModel.argv[0]}' to '${getDisplayPath(
+                            Uri.file(interpreter.path)
+                        )}'`
                     );
                     specModel.argv[0] = interpreter.path;
                 }
@@ -310,7 +316,7 @@ export class JupyterKernelService {
                 // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
                 // https://docs.python.org/3/library/site.html#site.ENABLE_USER_SITE
                 if (specModel.env && Object.keys(specModel.env).length > 0 && hasActivationCommands) {
-                    traceInfo(`Adding env Variable PYTHONNOUSERSITE to ${getDisplayPath(interpreter.path)}`);
+                    traceInfo(`Adding env Variable PYTHONNOUSERSITE to ${getDisplayPath(Uri.file(interpreter.path))}`);
                     specModel.env.PYTHONNOUSERSITE = 'True';
                 } else {
                     // We don't want to inherit any such env variables from Jupyter server or the like.

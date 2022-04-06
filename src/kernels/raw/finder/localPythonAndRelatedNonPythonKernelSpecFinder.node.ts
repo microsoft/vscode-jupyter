@@ -4,7 +4,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
-import { CancellationToken, Memento } from 'vscode';
+import { CancellationToken, Memento, Uri } from 'vscode';
 import { createInterpreterKernelSpec, getKernelId, getKernelRegistrationInfo } from '../../../kernels/helpers.node';
 import {
     IJupyterKernelSpec,
@@ -18,7 +18,7 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfoIfCI, traceVerbose, traceError } from '../../../platform/logging';
-import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
+import { getDisplayPath, getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IMemento, GLOBAL_MEMENTO, Resource } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
@@ -237,7 +237,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                         traceVerbose(
                             `Hiding default kernel spec '${kernelspec.display_name}', '${
                                 kernelspec.name
-                            }', ${getDisplayPath(kernelspec.argv[0])}`
+                            }', ${getDisplayPath(Uri.file(kernelspec.argv[0]))}`
                         );
                         return false;
                     }
@@ -290,9 +290,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                                 );
                             } catch (ex) {
                                 traceError(
-                                    `Failed to get interpreter details for Kernel Spec ${getDisplayPath(
+                                    `Failed to get interpreter details for Kernel Spec ${getDisplayPathFromLocalFile(
                                         k.specFile
-                                    )} with interpreter path ${getDisplayPath(k.metadata?.interpreter?.path)}`,
+                                    )} with interpreter path ${getDisplayPathFromLocalFile(
+                                        k.metadata?.interpreter?.path
+                                    )}`,
                                     ex
                                 );
                                 return;
@@ -448,7 +450,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             searchResults.map(async (resultPath) => {
                 // Add these into our path cache to speed up later finds
                 const kernelspec = await this.getKernelSpec(
-                    resultPath.kernelSpecFile,
+                    Uri.file(resultPath.kernelSpecFile),
                     resultPath.interpreter,
                     globalSpecRootPath,
                     cancelToken

@@ -5,6 +5,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
+import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken } from 'vscode';
 import { traceWarning } from '../../../platform/logging';
 import {
@@ -133,7 +134,7 @@ export class JupyterInterpreterSubCommandExecutionService
         const jupyterDataPaths = (process.env['JUPYTER_PATH'] || envVars['JUPYTER_PATH'] || '')
             .split(path.delimiter)
             .filter((item) => item.trim().length);
-        jupyterDataPaths.push(path.dirname(await this.jupyterPaths.getKernelSpecTempRegistrationFolder()));
+        jupyterDataPaths.push(uriPath.dirname(await this.jupyterPaths.getKernelSpecTempRegistrationFolder()).fsPath);
         spawnOptions.env = {
             ...envVars,
             JUPYTER_PATH: jupyterDataPaths.join(path.delimiter)

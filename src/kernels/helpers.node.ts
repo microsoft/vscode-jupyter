@@ -573,7 +573,9 @@ export function findPreferredKernel(
     traceInfo(
         `Find preferred kernel for ${getDisplayPath(resource)} with metadata ${JSON.stringify(
             notebookMetadata || {}
-        )} & preferred interpreter ${getDisplayPath(preferredInterpreter?.path)}`
+        )} & preferred interpreter ${getDisplayPath(
+            preferredInterpreter ? Uri.file(preferredInterpreter.path) : undefined
+        )}`
     );
 
     if (kernels.length === 0) {
@@ -1390,7 +1392,9 @@ export async function sendTelemetryForPythonKernelExecutable(
                         traceError(
                             `Interpreter started by kernel does not match expectation, expected ${getDisplayPath(
                                 kernelConnection.interpreter?.path
-                            )}, got ${getDisplayPath(sysExecutable)}`
+                                    ? Uri.file(kernelConnection.interpreter.path)
+                                    : undefined
+                            )}, got ${getDisplayPath(Uri.file(sysExecutable))}`
                         );
                     }
                 }

@@ -2,13 +2,15 @@
 // Licensed under the MIT License.
 
 import * as path from '../../vscode-path/path';
-import { Uri, WorkspaceFolder } from 'vscode';
 import { getOSType, OSType } from '../utils/platform';
 import { IExecutables, IFileSystemPaths, IFileSystemPathUtils } from './types';
+import { getDisplayPath as getDisplayPathCommon } from './fs-paths';
+import { Uri, WorkspaceFolder } from 'vscode';
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const untildify = require('untildify');
 
-export const homePath = untildify('~');
+export const homePath = Uri.file(untildify('~'));
 
 // The parts of node's 'path' module used by FileSystemPaths.
 interface INodePath {
@@ -121,7 +123,7 @@ export class FileSystemPathUtils implements IFileSystemPathUtils {
         }
         return new FileSystemPathUtils(
             // Use the current user's home directory.
-            homePath,
+            homePath.fsPath,
             paths,
             Executables.withDefaults(),
             // Use the actual node "path" module.
@@ -145,49 +147,11 @@ export class FileSystemPathUtils implements IFileSystemPathUtils {
         }
     }
 }
-export function getDisplayPath(
-    filename?: string | Uri,
-    workspaceFolders: readonly WorkspaceFolder[] | WorkspaceFolder[] = []
-) {
-    const relativeToHome = getDisplayPathImpl(filename);
-    const relativeToWorkspaceFolders = workspaceFolders.map((folder) =>
-        getDisplayPathImpl(filename, folder.uri.fsPath)
-    );
-    // Pick the shortest path for display purposes.
-    // As those are most likely relative to some workspace folder.
-    let bestDisplayPath = relativeToHome;
-    [relativeToHome, ...relativeToWorkspaceFolders].forEach((relativePath) => {
-        if (relativePath.length < bestDisplayPath.length) {
-            bestDisplayPath = relativePath;
-        }
-    });
 
-    return bestDisplayPath;
+export function getDisplayPathFromLocalFile(file: string | undefined) {
+    return getDisplayPath(file ? Uri.file(file) : undefined);
 }
 
-function getDisplayPathImpl(filename?: string | Uri, cwd?: string): string {
-    let file = '';
-    if (typeof filename === 'string') {
-        file = filename;
-    } else if (!filename) {
-        file = '';
-    } else if (filename.scheme === 'file') {
-        file = filename.fsPath;
-    } else {
-        file = filename.toString();
-    }
-    if (!file) {
-        return '';
-    } else if (cwd && file.startsWith(cwd)) {
-        const relativePath = `.${path.sep}${path.relative(cwd, file)}`;
-        // On CI the relative path might not work as expected as when testing we might have windows paths
-        // and the code is running on a unix machine.
-        return relativePath === file || relativePath.includes(cwd)
-            ? `.${path.sep}${file.substring(file.indexOf(cwd) + cwd.length)}`
-            : relativePath;
-    } else if (file.startsWith(homePath)) {
-        return `~${path.sep}${path.relative(homePath, file)}`;
-    } else {
-        return file;
-    }
+export function getDisplayPath(file?: Uri, workspaceFolders: readonly WorkspaceFolder[] | WorkspaceFolder[] = []) {
+    return getDisplayPathCommon(file, workspaceFolders, homePath);
 }
