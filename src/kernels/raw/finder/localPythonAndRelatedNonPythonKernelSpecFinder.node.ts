@@ -3,7 +3,7 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import { CancellationToken, Memento } from 'vscode';
 import { createInterpreterKernelSpec, getKernelId, getKernelRegistrationInfo } from '../../../kernels/helpers.node';
 import {

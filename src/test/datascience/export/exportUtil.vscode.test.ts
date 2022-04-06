@@ -5,7 +5,7 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import { Uri } from 'vscode';
 import { IDisposable } from '../../../platform/common/types';
 import { ExportUtil } from '../../../platform/export/exportUtil.node';

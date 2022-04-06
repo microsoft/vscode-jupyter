@@ -5,7 +5,7 @@
 
 import * as os from 'os';
 import { assert } from 'chai';
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import rewiremock from 'rewiremock';
 import { anything, instance, mock, when, verify, capture, deepEqual } from 'ts-mockito';
 import { KernelProcess } from '../../kernels/raw/launcher/kernelProcess.node';

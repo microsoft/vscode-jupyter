@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import type * as nbformat from '@jupyterlab/nbformat';
-import * as path from 'path';
+import * as path from '../platform/vscode-path/path';
 import {
     Event,
     EventEmitter,

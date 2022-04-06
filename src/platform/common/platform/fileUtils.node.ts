@@ -3,7 +3,7 @@
 
 import { IDisposable } from '@fluentui/react';
 import * as fsapi from 'fs-extra';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import * as vscode from 'vscode';
 import { ShellOptions, ExecutionResult, IProcessServiceFactory, SpawnOptions } from '../process/types.node';
 import { IConfigurationService } from '../types';

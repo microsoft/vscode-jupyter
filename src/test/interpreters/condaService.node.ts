@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as glob from 'glob';
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import { parse, SemVer } from 'semver';
 import { promisify } from 'util';
 import { traceError, traceVerbose, traceWarning } from '../../platform/logging';

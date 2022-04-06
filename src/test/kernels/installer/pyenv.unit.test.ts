@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as assert from 'assert';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import * as platformUtilsNode from '../../../platform/common/utils/platform.node';
 import * as platformUtils from '../../../platform/common/utils/platform';

@@ -4,7 +4,7 @@
 import '../../../platform/common/extensions';
 
 import { inject, injectable, named } from 'inversify';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import { EventEmitter, Memento, ViewColumn } from 'vscode';
 
 import { sendTelemetryEvent } from '../../../telemetry';

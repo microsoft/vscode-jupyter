@@ -5,7 +5,7 @@
 
 import { assert, expect } from 'chai';
 import * as fs from 'fs-extra';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import * as tmp from 'tmp';
 import {

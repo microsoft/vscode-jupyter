@@ -1,5 +1,5 @@
 import { inject, injectable, named } from 'inversify';
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import { CancellationToken, NotebookCellData, NotebookData, NotebookDocument, Uri, workspace } from 'vscode';
 import { IApplicationShell } from '../common/application/types';
 import { traceError } from '../logging';

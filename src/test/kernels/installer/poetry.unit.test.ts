@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { assert, expect } from 'chai';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import { TEST_LAYOUT_ROOT } from '../../../test/pythonEnvironments/constants';
 import { ShellOptions, ExecutionResult } from '../../../platform/common/process/types.node';

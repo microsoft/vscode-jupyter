@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import { IPlatformService } from '../platform/types';
 import { IExtensionContext, IPathUtils } from '../types';
 import { OSType } from '../utils/platform';

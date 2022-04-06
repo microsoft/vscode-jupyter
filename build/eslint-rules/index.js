@@ -16,6 +16,10 @@ function reportIfMissing(context, node, allowed, name) {
     ) {
         context.report(node, `Do not import Node.js builtin module "${name}"`);
     }
+    // Special case 'path'. Force everything to use the custom path
+    if (importType.default(name, context) === 'builtin' && name === 'path') {
+        context.report(node, `Do not import path builtin module. Use the custom vscode-path instead.`);
+    }
 }
 
 module.exports = {

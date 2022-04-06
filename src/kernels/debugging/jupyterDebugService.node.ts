@@ -3,7 +3,7 @@
 import { IDisposable } from '@fluentui/react';
 import { inject, injectable } from 'inversify';
 import * as net from 'net';
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import * as uuid from 'uuid/v4';
 import {
     Breakpoint,

@@ -4,7 +4,7 @@
 'use strict';
 
 import { assert } from 'chai';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import * as fsExtra from 'fs-extra';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when, verify } from 'ts-mockito';

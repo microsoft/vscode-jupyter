@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { ChildProcess } from 'child_process';
-import * as path from 'path';
+import * as path from '../../vscode-path/path';
 import {
     createMessageConnection,
     MessageConnection,

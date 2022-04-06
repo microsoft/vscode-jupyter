@@ -1,5 +1,5 @@
 import * as crypto from 'crypto';
-import * as path from 'path';
+import * as path from '../platform/vscode-path/path';
 import { getInterpreterHash } from '../platform/pythonEnvironments/info/interpreter.node';
 
 function doHash(p: string) {

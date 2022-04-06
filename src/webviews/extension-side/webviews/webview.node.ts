@@ -3,7 +3,7 @@
 'use strict';
 import '../../../platform/common/extensions';
 
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import {
     Event,
     EventEmitter,

@@ -3,7 +3,7 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
-import * as path from 'path';
+import * as path from '../../../../platform/vscode-path/path';
 import * as fs from 'fs-extra';
 import * as sinon from 'sinon';
 import { languages } from 'vscode';

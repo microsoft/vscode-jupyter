@@ -40,7 +40,7 @@ import {
     workspace
 } from 'vscode';
 import * as fsExtra from 'fs-extra';
-import * as path from 'path';
+import * as path from './platform/vscode-path/path';
 import { buildApi, IExtensionApi } from './platform/api';
 import { IApplicationEnvironment, ICommandManager } from './platform/common/application/types';
 import { setHomeDirectory, traceError } from './platform/logging';

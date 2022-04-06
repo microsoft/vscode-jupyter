@@ -5,7 +5,7 @@
 
 import type { KernelSpec } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import { CancellationToken } from 'vscode';
 import { Cancellation } from '../../platform/common/cancellation.node';
 import '../../platform/common/extensions';

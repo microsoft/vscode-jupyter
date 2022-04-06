@@ -1,7 +1,7 @@
 import { IDisposable } from '@fluentui/react';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import { CancellationToken, NotebookDocument } from 'vscode';
 import { traceError } from '../../platform/logging';
 import { IFileSystem } from '../../platform/common/platform/types.node';

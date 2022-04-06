@@ -12,7 +12,7 @@ import { captureScreenShot, IExtensionTestApi } from './common.node';
 import * as ts from 'typescript';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
-import * as path from 'path';
+import * as path from '../platform/vscode-path/path';
 
 import { initialize } from './initialize.node';
 import { interfaces } from 'inversify/lib/interfaces/interfaces';

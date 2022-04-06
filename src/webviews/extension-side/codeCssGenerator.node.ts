@@ -4,7 +4,7 @@
 import type { JSONArray, JSONObject } from '@lumino/coreutils';
 import { inject, injectable } from 'inversify';
 import { parse } from 'jsonc-parser';
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { traceInfo, traceError, traceWarning } from '../../platform/logging';
 import { IFileSystem } from '../../platform/common/platform/types.node';

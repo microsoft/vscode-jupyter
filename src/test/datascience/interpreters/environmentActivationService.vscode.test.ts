@@ -15,7 +15,7 @@ import {
     EnvironmentActivationService,
     EnvironmentVariablesCacheInformation
 } from '../../../platform/common/process/environmentActivationService.node';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import { IS_WINDOWS } from '../../../platform/common/platform/constants.node';
 import { IProcessServiceFactory } from '../../../platform/common/process/types.node';
 import { disposeAllDisposables } from '../../../platform/common/helpers.node';

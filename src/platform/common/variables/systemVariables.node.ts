@@ -4,7 +4,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 'use strict';
-import * as Path from 'path';
+import * as path from '../../vscode-path/path';
 import { Uri, Range } from 'vscode';
 import { IWorkspaceService, IDocumentManager } from '../application/types';
 import { AbstractSystemVariables } from './systemVariables';
@@ -26,7 +26,7 @@ export class SystemVariables extends AbstractSystemVariables {
         super();
         const workspaceFolder = workspace && file ? workspace.getWorkspaceFolder(file) : undefined;
         this._workspaceFolder = workspaceFolder ? workspaceFolder.uri.fsPath : rootFolder || __dirname;
-        this._workspaceFolderName = Path.basename(this._workspaceFolder);
+        this._workspaceFolderName = path.basename(this._workspaceFolder);
         this._filePath = file ? file.fsPath : undefined;
         if (documentManager && documentManager.activeTextEditor) {
             this._lineNumber = documentManager.activeTextEditor.selection.anchor.line + 1;
@@ -70,27 +70,27 @@ export class SystemVariables extends AbstractSystemVariables {
     }
 
     public get relativeFile(): string | undefined {
-        return this.file ? Path.relative(this._workspaceFolder, this.file) : undefined;
+        return this.file ? path.relative(this._workspaceFolder, this.file) : undefined;
     }
 
     public get relativeFileDirname(): string | undefined {
-        return this.relativeFile ? Path.dirname(this.relativeFile) : undefined;
+        return this.relativeFile ? path.dirname(this.relativeFile) : undefined;
     }
 
     public get fileBasename(): string | undefined {
-        return this.file ? Path.basename(this.file) : undefined;
+        return this.file ? path.basename(this.file) : undefined;
     }
 
     public get fileBasenameNoExtension(): string | undefined {
-        return this.file ? Path.parse(this.file).name : undefined;
+        return this.file ? path.parse(this.file).name : undefined;
     }
 
     public get fileDirname(): string | undefined {
-        return this.file ? Path.dirname(this.file) : undefined;
+        return this.file ? path.dirname(this.file) : undefined;
     }
 
     public get fileExtname(): string | undefined {
-        return this.file ? Path.extname(this.file) : undefined;
+        return this.file ? path.extname(this.file) : undefined;
     }
 
     public get lineNumber(): number | undefined {

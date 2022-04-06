@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import { CancellationToken, Memento } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';

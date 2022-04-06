@@ -24,7 +24,7 @@ import { KernelMessage } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import fastDeepEqual = require('fast-deep-equal');
-import * as path from 'path';
+import * as path from '../platform/vscode-path/path';
 import { IVSCodeNotebook, IDocumentManager } from '../platform/common/application/types';
 import { PYTHON_LANGUAGE, MARKDOWN_LANGUAGE } from '../platform/common/constants';
 import { traceInfoIfCI, traceError, traceWarning } from '../platform/logging';

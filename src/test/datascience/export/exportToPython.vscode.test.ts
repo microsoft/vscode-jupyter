@@ -3,7 +3,7 @@
 
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, no-invalid-this, @typescript-eslint/no-explicit-any */
 import { assert } from 'chai';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import { CancellationTokenSource, Uri } from 'vscode';
 import { IDocumentManager } from '../../../platform/common/application/types';
 import { IFileSystem } from '../../../platform/common/platform/types.node';

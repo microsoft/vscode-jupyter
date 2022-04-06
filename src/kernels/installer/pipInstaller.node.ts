@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { ExecutionInstallArgs, ModuleInstaller, translateProductToModule } from './moduleInstaller.node';
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { _SCRIPTS_DIR } from '../../platform/common/process/internal/scripts/index.node';
 import { IPythonExecutionFactory } from '../../platform/common/process/types.node';

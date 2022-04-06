@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import { traceError } from '../../platform/logging';
 import { IFileSystem } from '../../platform/common/platform/types.node';
 import { IExtensions } from '../../platform/common/types';

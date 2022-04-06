@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { NotebookCellOutput, NotebookDocument, Uri } from 'vscode';
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
 import { traceError } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths.node';

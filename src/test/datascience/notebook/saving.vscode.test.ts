@@ -5,7 +5,7 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert, expect } from 'chai';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import { NotebookCell, Uri } from 'vscode';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';

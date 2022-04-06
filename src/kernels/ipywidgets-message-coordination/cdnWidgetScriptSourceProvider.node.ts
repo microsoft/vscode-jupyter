@@ -5,7 +5,7 @@
 
 import * as download from 'download';
 import { sha256 } from 'hash.js';
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import { Uri } from 'vscode';
 import { traceError, traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { TemporaryFile } from '../../platform/common/platform/types';

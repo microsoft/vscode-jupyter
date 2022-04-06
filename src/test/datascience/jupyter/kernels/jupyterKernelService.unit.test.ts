@@ -12,7 +12,7 @@ import { IKernelDependencyService, LocalKernelConnectionMetadata } from '../../.
 import { IEnvironmentActivationService } from '../../../../platform/interpreter/activation/types';
 import { EnvironmentType } from '../../../../platform/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR } from '../../../../platform/constants.node';
-import * as path from 'path';
+import * as path from '../../../../platform/vscode-path/path';
 import { getOSType, OSType } from '../../../common.node';
 import { CancellationTokenSource } from 'vscode';
 import { EnvironmentVariablesService } from '../../../../platform/common/variables/environment.node';

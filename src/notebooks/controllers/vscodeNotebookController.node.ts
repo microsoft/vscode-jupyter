@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { join } from 'path';
+import { join } from '../../platform/vscode-path/path';
 import {
     CancellationError,
     CancellationError as VscCancellationError,

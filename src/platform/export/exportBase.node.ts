@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import { CancellationToken, Uri } from 'vscode';
 import { INotebookImporter } from '../../kernels/jupyter/types';
 import { IJupyterSubCommandExecutionService } from '../../kernels/jupyter/types.node';

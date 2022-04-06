@@ -8,7 +8,7 @@ process.env.VSC_JUPYTER_SMOKE_TEST = '1';
 
 import { spawn } from 'child_process';
 import * as fs from 'fs-extra';
-import * as path from 'path';
+import * as path from '../platform/vscode-path/path';
 import { unzip } from './common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, SMOKE_TEST_EXTENSIONS_DIR } from './constants.node';
 

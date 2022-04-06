@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import { cloneDeep } from 'lodash';
 import * as sinon from 'sinon';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import * as vscode from 'vscode';
 import {
     IConfigurationService,

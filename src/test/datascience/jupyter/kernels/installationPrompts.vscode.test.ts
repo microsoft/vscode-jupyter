@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import { EOL } from 'os';
-import * as path from 'path';
+import * as path from '../../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import { commands, Memento, workspace, window, Uri, NotebookCell, NotebookDocument, NotebookCellKind } from 'vscode';
 import { IPythonApiProvider } from '../../../../platform/api/types';

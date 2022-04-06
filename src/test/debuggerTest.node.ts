@@ -3,7 +3,7 @@
 
 /* eslint-disable no-console */
 
-import * as path from 'path';
+import * as path from '../platform/vscode-path/path';
 import { runTests } from '@vscode/test-electron';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants.node';
 

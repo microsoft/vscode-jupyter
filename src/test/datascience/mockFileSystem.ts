@@ -4,7 +4,7 @@
 'use strict';
 
 import * as fsextra from 'fs-extra';
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import { FileStat, FileType, Uri } from 'vscode';
 import { FileSystem } from '../../platform/common/platform/fileSystem.node';
 import { convertStat } from '../../platform/common/platform/fileSystemUtils.node';

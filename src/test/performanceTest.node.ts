@@ -20,7 +20,7 @@ process.env.VSC_JUPYTER_PERF_TEST = '1';
 import { spawn } from 'child_process';
 import * as download from 'download';
 import * as fs from 'fs-extra';
-import * as path from 'path';
+import * as path from '../platform/vscode-path/path';
 import * as request from 'request';
 import { JVSC_EXTENSION_ID } from '../platform/common/constants';
 import { EXTENSION_ROOT_DIR } from '../platform/constants.node';

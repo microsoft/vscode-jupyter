@@ -4,7 +4,7 @@
 'use strict';
 
 // import { assert } from 'chai';
-// import * as path from 'path';
+// import * as path from '../../platform/vscode-path/path';
 // import * as sinon from 'sinon';
 // import { commands, ConfigurationTarget, Uri } from 'vscode';
 // import { IWorkspaceService } from '../../platform/common/application/types';

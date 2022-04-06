@@ -8,7 +8,7 @@ import { CondaService } from '../../platform/common/process/condaService.node';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { ExecutionInstallArgs, ModuleInstaller, translateProductToModule } from './moduleInstaller.node';
 import { ModuleInstallerType, ModuleInstallFlags, Product } from './types';
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 
 /**
  * A Python module installer for a conda environment.

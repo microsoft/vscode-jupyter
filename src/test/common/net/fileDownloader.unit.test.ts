@@ -8,7 +8,7 @@ import * as assert from 'assert';
 import { expect } from 'chai';
 import * as fsExtra from 'fs-extra';
 import * as nock from 'nock';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import rewiremock from 'rewiremock';
 import * as sinon from 'sinon';
 import { Readable } from 'stream';

@@ -4,7 +4,7 @@
 'use strict';
 
 import { expect } from 'chai';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import * as TypeMoq from 'typemoq';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import untildify = require('untildify');

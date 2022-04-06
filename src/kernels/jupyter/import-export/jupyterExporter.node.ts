@@ -4,7 +4,7 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 
 import { Uri } from 'vscode';
 import { createCodeCell } from '../../../interactive-window/editor-integration/cellFactory.node';
