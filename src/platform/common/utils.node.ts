@@ -4,7 +4,7 @@
 
 import type * as nbformat from '@jupyterlab/nbformat';
 import * as os from 'os';
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import * as fsExtra from 'fs-extra';
 import { SemVer, parse } from 'semver';
 import untildify = require('untildify');

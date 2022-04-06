@@ -4,7 +4,7 @@
 'use strict';
 
 import { assert } from 'chai';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import { SemVer } from 'semver';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { ApplicationShell } from '../../../platform/common/application/applicationShell';

@@ -10,7 +10,7 @@ import * as dedent from 'dedent';
 import { EventEmitter } from 'events';
 import * as fs from 'fs-extra';
 import * as os from 'os';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import { Observable } from 'rxjs/Observable';
 import * as sinon from 'sinon';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';

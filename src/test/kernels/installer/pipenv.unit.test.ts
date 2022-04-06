@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import * as pathModule from 'path';
+import * as pathModule from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import * as platformApis from '../../../platform/common/utils/platform.node';
 import * as fileUtils from '../../../platform/common/platform/fileUtils.node';

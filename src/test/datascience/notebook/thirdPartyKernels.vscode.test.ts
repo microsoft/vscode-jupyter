@@ -4,7 +4,7 @@
 // import type * as nbformat from '@jupyterlab/nbformat';
 // import { assert } from 'chai';
 // import * as fs from 'fs-extra';
-// import * as path from 'path';
+// import * as path from '../../platform/vscode-path/path';
 // import * as sinon from 'sinon';
 // import { commands, notebook, NotebookController, workspace, WorkspaceEdit } from 'vscode';
 // import { boolean } from 'yargs';

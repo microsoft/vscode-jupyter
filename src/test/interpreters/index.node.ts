@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import '../../platform/common/extensions';
 import { traceError } from '../../platform/logging';
 import { BufferDecoder } from '../../platform/common/process/decoder.node';

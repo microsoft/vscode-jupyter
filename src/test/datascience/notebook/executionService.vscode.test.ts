@@ -6,7 +6,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert, expect } from 'chai';
 import * as fs from 'fs';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import * as dedent from 'dedent';
 import * as sinon from 'sinon';
 import { commands, NotebookCell, NotebookCellExecutionState, NotebookCellKind, NotebookCellOutput, Uri } from 'vscode';

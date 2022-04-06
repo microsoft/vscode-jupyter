@@ -1,4 +1,4 @@
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../platform/common/utils/platform.node';
 import { arePathsSame, isParentPath, pathExists } from '../../platform/common/platform/fileUtils.node';
 

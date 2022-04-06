@@ -6,7 +6,7 @@ import { ChildProcess } from 'child_process';
 import { kill } from 'process';
 import * as fs from 'fs-extra';
 import * as os from 'os';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import { CancellationError, CancellationToken, Event, EventEmitter } from 'vscode';
 import {
     connectionFilePlaceholder,

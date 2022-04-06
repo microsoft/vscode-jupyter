@@ -7,7 +7,7 @@
 
 import * as assert from 'assert';
 import * as fs from 'fs';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import * as localize from '../../../platform/common/utils/localize';
 

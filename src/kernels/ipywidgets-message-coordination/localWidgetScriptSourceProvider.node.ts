@@ -3,7 +3,7 @@
 
 'use strict';
 
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import { Uri } from 'vscode';
 import { traceError } from '../../platform/logging';
 import { IFileSystem } from '../../platform/common/platform/types.node';

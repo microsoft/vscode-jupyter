@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable, optional } from 'inversify';
-import * as path from 'path';
+import * as path from '../../vscode-path/path';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWatcher, Uri } from 'vscode';
 import { TraceOptions } from '../../logging/types';
 import { sendFileCreationTelemetry } from '../../../telemetry/envFileTelemetry.node';

@@ -17,7 +17,7 @@ import {
     StaticFeature,
     TransportKind
 } from 'vscode-languageclient/node';
-import * as path from 'path';
+import * as path from '../platform/vscode-path/path';
 import * as fs from 'fs-extra';
 import { FileBasedCancellationStrategy } from './fileBasedCancellationStrategy.node';
 import { createNotebookMiddleware, createPylanceMiddleware, NotebookMiddleware } from '@vscode/jupyter-lsp-middleware';

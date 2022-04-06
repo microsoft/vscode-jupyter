@@ -1,5 +1,5 @@
 import { EXTENSION_ROOT_DIR } from '../constants.node';
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 
 export * from './constants';
 

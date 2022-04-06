@@ -9,7 +9,7 @@ import type {
     Session,
     SessionManager
 } from '@jupyterlab/services';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { Cancellation } from '../../../platform/common/cancellation.node';

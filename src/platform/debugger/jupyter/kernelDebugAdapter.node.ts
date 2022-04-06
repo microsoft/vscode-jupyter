@@ -4,7 +4,7 @@
 'use strict';
 
 import { KernelMessage } from '@jupyterlab/services';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import {
     debug,
     DebugAdapter,

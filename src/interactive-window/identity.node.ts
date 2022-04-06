@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import * as path from 'path';
+import * as path from '../platform/vscode-path/path';
 import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
 import '../platform/common/extensions';

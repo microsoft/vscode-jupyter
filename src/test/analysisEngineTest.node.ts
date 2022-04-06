@@ -4,7 +4,7 @@
 'use strict';
 
 /* eslint-disable no-console, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
-import * as path from 'path';
+import * as path from '../platform/vscode-path/path';
 
 process.env.CODE_TESTS_WORKSPACE = path.join(__dirname, '..', '..', 'src', 'test');
 process.env.IS_CI_SERVER_TEST_DEBUGGER = '';

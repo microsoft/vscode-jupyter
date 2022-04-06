@@ -3,7 +3,7 @@
 
 'use strict';
 
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import { traceVerbose, traceError } from '../../platform/logging';
 import { cache } from '../../platform/common/utils/decorators';
 import { getOSType, getUserHomeDir, OSType } from '../../platform/common/utils/platform.node';

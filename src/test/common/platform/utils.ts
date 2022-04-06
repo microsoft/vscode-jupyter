@@ -6,7 +6,7 @@
 import { expect } from 'chai';
 import * as fsextra from 'fs-extra';
 import * as net from 'net';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import * as tmpMod from 'tmp';
 import { CleanupFixture } from '../../fixtures';
 

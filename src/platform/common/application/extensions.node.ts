@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import { Event, Extension, extensions, Uri } from 'vscode';
 import { IExtensions } from '../types';
 import { DataScience } from '../utils/localize';

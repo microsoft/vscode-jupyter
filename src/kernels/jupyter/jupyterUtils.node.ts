@@ -4,7 +4,7 @@
 import '../../platform/common/extensions';
 
 import * as fs from 'fs-extra';
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { Resource } from '../../platform/common/types';

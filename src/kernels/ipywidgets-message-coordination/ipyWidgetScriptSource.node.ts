@@ -4,7 +4,7 @@
 'use strict';
 import type * as jupyterlabService from '@jupyterlab/services';
 import { sha256 } from 'hash.js';
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
 import { traceError, traceInfo, traceVerbose } from '../../platform/logging';

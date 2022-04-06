@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import * as fs from 'fs-extra';
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 
 /**
  * Checks if the given interpreter path belongs to a conda environment. Using

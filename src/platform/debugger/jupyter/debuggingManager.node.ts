@@ -17,7 +17,7 @@ import {
     EventEmitter,
     NotebookEditor
 } from 'vscode';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { IConfigurationService, IDisposable } from '../../common/types';
 import { KernelDebugAdapter } from './kernelDebugAdapter.node';

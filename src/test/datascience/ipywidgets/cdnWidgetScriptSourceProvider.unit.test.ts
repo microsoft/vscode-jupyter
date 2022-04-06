@@ -4,7 +4,7 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import { sha256 } from 'hash.js';
 import * as nock from 'nock';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import { Readable } from 'stream';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { Uri } from 'vscode';

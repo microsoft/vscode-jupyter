@@ -101,7 +101,7 @@ const config = {
             // Definitions...
             BROWSER: JSON.stringify(true),
             process: {
-                platform: 'web'
+                platform: JSON.stringify('web')
             }
         }),
         new CleanTerminalPlugin()

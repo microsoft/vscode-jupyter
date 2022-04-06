@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as path from 'path';
+import * as path from '../../../../vscode-path/path';
 import { _SCRIPTS_DIR } from './index.node';
 
 const SCRIPTS_DIR = path.join(_SCRIPTS_DIR, 'vscode_datascience_helpers');

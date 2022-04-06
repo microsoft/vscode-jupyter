@@ -8,7 +8,7 @@
 import { expect } from 'chai';
 import * as fs from 'fs-extra';
 import { EOL } from 'os';
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import { commands, extensions } from 'vscode';
 import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
 import { StopWatch } from '../../platform/common/utils/stopWatch';

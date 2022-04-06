@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as os from 'os';
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import { Observable } from 'rxjs/Observable';
 import { SemVer } from 'semver';
 import { anything, instance, match, mock, reset, when } from 'ts-mockito';

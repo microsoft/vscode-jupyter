@@ -17,7 +17,7 @@ const nyc = setupCoverage();
 
 import * as glob from 'glob';
 import * as Mocha from 'mocha';
-import * as path from 'path';
+import * as path from '../platform/vscode-path/path';
 import * as v8 from 'v8';
 import { IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER } from './ciConstants.node';
 import {

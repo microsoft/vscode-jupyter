@@ -13,7 +13,7 @@ suite('Dummy9', () => {
 // import * as fs from 'fs-extra';
 // import { injectable } from 'inversify';
 // import * as os from 'os';
-// import * as path from 'path';
+// import * as path from '../../platform/vscode-path/path';
 // import { SemVer } from 'semver';
 // import { Readable, Writable } from 'stream';
 // import { anything, instance, mock, when } from 'ts-mockito';

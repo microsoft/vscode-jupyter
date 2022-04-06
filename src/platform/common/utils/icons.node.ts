@@ -3,7 +3,7 @@
 
 'use strict';
 
-import * as path from 'path';
+import * as path from '../../vscode-path/path';
 import { Uri } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../constants.node';
 

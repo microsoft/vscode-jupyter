@@ -1,4 +1,4 @@
-import * as path from 'path';
+import * as path from '../platform/vscode-path/path';
 import * as vscode from 'vscode';
 import type { IExtensionApi } from '../platform/api';
 import { disposeAllDisposables } from '../platform/common/helpers.node';

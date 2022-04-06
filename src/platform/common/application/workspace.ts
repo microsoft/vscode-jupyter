@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
-import * as path from 'path-browserify';
+import * as path from '../../vscode-path/path';
 import {
     CancellationToken,
     ConfigurationChangeEvent,

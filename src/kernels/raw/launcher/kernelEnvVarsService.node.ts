@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import { traceInfo, traceError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
 import { Resource } from '../../../platform/common/types';

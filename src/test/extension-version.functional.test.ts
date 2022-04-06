@@ -8,7 +8,7 @@
 import { expect } from 'chai';
 import * as fs from 'fs';
 import * as glob from 'glob';
-import * as path from 'path';
+import * as path from '../platform/vscode-path/path';
 import { EXTENSION_ROOT_DIR } from '../platform/constants.node';
 
 suite('Extension localization files', () => {

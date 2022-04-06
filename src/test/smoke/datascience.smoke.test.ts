@@ -7,7 +7,7 @@ import { assert } from 'chai';
 /* eslint-disable , no-invalid-this, @typescript-eslint/no-explicit-any */
 
 import * as fs from 'fs-extra';
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import * as vscode from 'vscode';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { traceInfo } from '../../platform/logging';

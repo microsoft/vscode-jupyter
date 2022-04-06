@@ -5,7 +5,7 @@
 import * as fsextra from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import * as portfinder from 'portfinder';
 import { promisify } from 'util';
 import * as uuid from 'uuid/v4';

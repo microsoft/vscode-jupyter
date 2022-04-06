@@ -3,7 +3,7 @@
 // See https://github.com/microsoft/vscode-python/issues/8542.
 
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
+import * as path from '../../vscode-path/path';
 import { IPathUtils, IsWindows } from '../types';
 import { OSType } from '../utils/platform';
 import { Executables, FileSystemPaths, FileSystemPathUtils, homePath } from './fs-paths.node';

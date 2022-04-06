@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as nodepath from 'path';
+import * as path from '../../vscode-path/path';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { getOSType, OSType } from '../utils/platform';
 import { IExecutables, IFileSystemPaths, IFileSystemPathUtils } from './types';
@@ -39,7 +39,7 @@ export class FileSystemPaths implements IFileSystemPaths {
         return new FileSystemPaths(
             isCaseInsensitive,
             // Use the actual node "path" module.
-            nodepath
+            path
         );
     }
 
@@ -82,7 +82,7 @@ export class Executables {
     public static withDefaults(): Executables {
         return new Executables(
             // Use node's value.
-            nodepath.delimiter,
+            path.delimiter,
             // Use the current OS.
             getOSType()
         );
@@ -125,7 +125,7 @@ export class FileSystemPathUtils implements IFileSystemPathUtils {
             paths,
             Executables.withDefaults(),
             // Use the actual node "path" module.
-            nodepath
+            path
         );
     }
 
@@ -179,14 +179,14 @@ function getDisplayPathImpl(filename?: string | Uri, cwd?: string): string {
     if (!file) {
         return '';
     } else if (cwd && file.startsWith(cwd)) {
-        const relativePath = `.${nodepath.sep}${nodepath.relative(cwd, file)}`;
+        const relativePath = `.${path.sep}${path.relative(cwd, file)}`;
         // On CI the relative path might not work as expected as when testing we might have windows paths
         // and the code is running on a unix machine.
         return relativePath === file || relativePath.includes(cwd)
-            ? `.${nodepath.sep}${file.substring(file.indexOf(cwd) + cwd.length)}`
+            ? `.${path.sep}${file.substring(file.indexOf(cwd) + cwd.length)}`
             : relativePath;
     } else if (file.startsWith(homePath)) {
-        return `~${nodepath.sep}${nodepath.relative(homePath, file)}`;
+        return `~${path.sep}${path.relative(homePath, file)}`;
     } else {
         return file;
     }

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as path from 'path';
+import * as path from '../platform/vscode-path/path';
 import { setSharedProperty } from '.';
 import { IFileSystem } from '../platform/common/platform/types.node';
 import { EXTENSION_ROOT_DIR } from '../platform/constants.node';

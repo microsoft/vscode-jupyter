@@ -3,7 +3,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import * as path from 'path';
+import * as path from '../platform/vscode-path/path';
 import * as url from 'url';
 import type { KernelSpec } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports

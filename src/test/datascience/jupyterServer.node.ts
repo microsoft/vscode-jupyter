@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as getFreePort from 'get-port';
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import * as tcpPortUsed from 'tcp-port-used';
 import { Uri } from 'vscode';
 import { disposeAllDisposables } from '../../platform/common/helpers.node';

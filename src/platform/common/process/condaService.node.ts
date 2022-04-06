@@ -10,7 +10,7 @@ import { traceDecoratorVerbose, traceError, traceVerbose } from '../../logging';
 import { IPlatformService } from '../platform/types';
 import { GLOBAL_MEMENTO, IDisposable, IDisposableRegistry, IMemento } from '../types';
 import { createDeferredFromPromise } from '../utils/async';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import { swallowExceptions } from '../utils/decorators';
 import { IFileSystem } from '../platform/types.node';
 import { homePath } from '../platform/fs-paths.node';

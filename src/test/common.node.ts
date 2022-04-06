@@ -6,7 +6,7 @@
 
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
-import * as path from 'path';
+import * as path from '../platform/vscode-path/path';
 import * as uuid from 'uuid/v4';
 import { coerce, SemVer } from 'semver';
 import type { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';

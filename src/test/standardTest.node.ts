@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 
 import { spawnSync } from 'child_process';
-import * as path from 'path';
+import * as path from '../platform/vscode-path/path';
 import * as fs from 'fs-extra';
 import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from '@vscode/test-electron';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from './constants.node';

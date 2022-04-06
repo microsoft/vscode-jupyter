@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import { SaveDialogOptions, Uri } from 'vscode';
 import { computeWorkingDirectory } from '../../kernels/jupyter/jupyterUtils.node';
 import { IApplicationShell, IWorkspaceService } from '../common/application/types';

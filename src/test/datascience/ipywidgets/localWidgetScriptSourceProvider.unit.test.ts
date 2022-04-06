@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { assert } from 'chai';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';

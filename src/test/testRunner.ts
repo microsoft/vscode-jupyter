@@ -8,7 +8,7 @@
 'use strict';
 import * as glob from 'glob';
 import * as Mocha from 'mocha';
-import * as path from 'path';
+import * as path from '../platform/vscode-path/path';
 import { IS_SMOKE_TEST, MAX_EXTENSION_ACTIVATION_TIME } from './constants.node';
 import { noop } from './core';
 import { stopJupyterServer } from './datascience/notebook/helper';

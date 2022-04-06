@@ -7,7 +7,7 @@
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as v8 from 'v8';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';

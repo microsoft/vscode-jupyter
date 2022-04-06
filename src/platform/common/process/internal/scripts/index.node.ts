@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as path from 'path';
+import * as path from '../../../../vscode-path/path';
 import { EXTENSION_ROOT_DIR } from '../../../../constants.node';
 
 // It is simpler to hard-code it instead of using vscode.ExtensionContext.extensionPath.
