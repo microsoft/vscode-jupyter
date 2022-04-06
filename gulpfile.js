@@ -264,6 +264,9 @@ function getAllowedWarningsForWebPack(buildConfig) {
             ];
         case 'extension':
             return [
+                'WARNING in asset size limit: The following asset(s) exceed the recommended size limit (244 KiB).',
+                'WARNING in entrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.',
+                'WARNING in webpack performance recommendations:',
                 'WARNING in ./node_modules/cacheable-request/node_modules/keyv/src/index.js',
                 'WARNING in ./node_modules/encoding/lib/iconv-loader.js',
                 'WARNING in ./node_modules/keyv/src/index.js',
