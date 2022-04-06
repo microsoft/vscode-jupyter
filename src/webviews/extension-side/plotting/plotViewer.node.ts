@@ -143,7 +143,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
                         break;
 
                     case '.png':
-                        const buffer = new Buffer(payload.png.replace('data:image/png;base64', ''), 'base64');
+                        const buffer = Buffer.from(payload.png.replace('data:image/png;base64', ''), 'base64');
                         await this.fs.writeLocalFile(file.fsPath, buffer);
                         break;
 
