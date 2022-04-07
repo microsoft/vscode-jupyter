@@ -40,7 +40,7 @@ import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/
 import { createDeferred } from '../../../platform/common/utils/async';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
 import { IKernelProvider } from '../../../platform/../kernels/types';
-import { IExtensionTestApi, sleep, waitForCondition } from '../../common.node';
+import { sleep, waitForCondition } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants.node';
 import { noop } from '../../core';
 import { closeActiveWindows, initialize, isInsiders } from '../../initialize.node';
@@ -48,7 +48,6 @@ import { JupyterServer } from '../jupyterServer.node';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebuggingManager, IKernelDebugAdapter } from '../../../platform/debugger/types';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector.node';
 import { LastSavedNotebookCellLanguage } from '../../../intellisense/cellLanguageService.node';
 import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeNotebookController.node';
 import { chainWithPendingUpdates } from '../../../notebooks/execution/notebookUpdater.node';
@@ -383,14 +382,12 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
     return waitForKernelToChange(criteria, timeout);
 }
 
-export async function startJupyterServer(api?: IExtensionTestApi) {
-    const { serviceContainer } = api ? { serviceContainer: api.serviceContainer } : await getServices();
+export async function startJupyterServer(notebook?: NotebookDocument) {
     if (IS_REMOTE_NATIVE_TEST) {
-        const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
         const uri = await JupyterServer.instance.startJupyterWithToken();
         const uriString = decodeURIComponent(uri.toString());
         traceInfo(`Jupyter started and listening at ${uriString}`);
-        await selector.setJupyterURIToRemote(uriString);
+        return commands.executeCommand('jupyter.selectjupyteruri', false, uri, notebook);
     } else {
         traceInfo(`Jupyter not started and set to local`); // This is the default
     }

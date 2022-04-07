@@ -40,7 +40,7 @@ export async function initialize(): Promise<IExtensionTestApi> {
     // Ensure we start jupyter server before opening any notebooks or the like.
     if (!jupyterServerStarted) {
         jupyterServerStarted = true;
-        await startJupyterServer(api as unknown as IExtensionTestApi);
+        await startJupyterServer();
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return api as any as IExtensionTestApi;
