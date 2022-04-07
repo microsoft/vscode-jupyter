@@ -142,7 +142,7 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
                     const output = getCellOutputs(cell2);
                     return (
                         output.includes(kernelCrashFailureMessageInCell) &&
-                        output.includes('https://aka.ms/vscodeJupyterKernelCrashesWhenUsingAPackageModule')
+                        output.includes('https://aka.ms/vscodeJupyterKernelCrash')
                     );
                 },
                 defaultNotebookTestTimeout,
@@ -203,7 +203,7 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
                     const output = getCellOutputs(cell2);
                     return (
                         output.includes(kernelCrashFailureMessageInCell) &&
-                        output.includes('https://aka.ms/vscodeJupyterKernelCrashesWhenUsingAPackageModule')
+                        output.includes('https://aka.ms/vscodeJupyterKernelCrash')
                     );
                 },
                 defaultNotebookTestTimeout,
