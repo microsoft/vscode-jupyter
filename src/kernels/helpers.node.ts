@@ -32,7 +32,7 @@ import {
 } from '../platform/common/application/types';
 import { PYTHON_LANGUAGE, Settings } from '../platform/common/constants';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
-import { getDisplayPath } from '../platform/common/platform/fs-paths.node';
+import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IPythonExecutionFactory } from '../platform/common/process/types.node';
 import {
     IPathUtils,

@@ -8,7 +8,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation.node';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
 import { traceInfo, traceError, traceVerbose, traceWarning } from '../../../platform/logging';
-import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IDisplayOptions, IDisposable, IOutputChannel, Resource } from '../../../platform/common/types';
 import { TimedOutError, createDeferred, sleep } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';

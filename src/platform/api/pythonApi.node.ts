@@ -16,7 +16,7 @@ import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, Uri, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
-import { getDisplayPath } from '../common/platform/fs-paths.node';
+import { getDisplayPath } from '../common/platform/fs-paths';
 import { IDisposableRegistry, IExtensions, InterpreterUri, Resource } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';

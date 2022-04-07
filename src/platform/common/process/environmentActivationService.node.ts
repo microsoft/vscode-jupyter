@@ -20,7 +20,7 @@ import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter.no
 import { IPythonApiProvider } from '../../api/types';
 import { StopWatch } from '../utils/stopWatch';
 import { Memento } from 'vscode';
-import { getDisplayPath } from '../platform/fs-paths.node';
+import { getDisplayPath } from '../platform/fs-paths';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService } from '../../interpreter/contracts.node';
 import { CurrentProcess } from './currentProcess.node';

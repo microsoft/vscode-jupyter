@@ -5,7 +5,7 @@ import { inject, injectable, named } from 'inversify';
 import { cloneDeep } from 'lodash';
 import { Memento, Uri } from 'vscode';
 import { traceInfo } from '../../../platform/logging';
-import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IMemento, GLOBAL_MEMENTO, ICryptoUtils } from '../../../platform/common/types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';

@@ -10,7 +10,7 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../platform/common/constants';
 import { traceInfo, traceVerbose, traceError } from '../../../platform/logging';
-import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,

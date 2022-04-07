@@ -28,7 +28,7 @@ import { JupyterSessionManager } from '../../session/jupyterSessionManager.node'
 import { JupyterNotebook } from '../jupyterNotebook.node';
 import { noop } from '../../../../platform/common/utils/misc';
 import { Cancellation } from '../../../../platform/common/cancellation.node';
-import { getDisplayPath } from '../../../../platform/common/platform/fs-paths.node';
+import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
 import { INotebookServer, IJupyterSessionManagerFactory } from '../../types';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

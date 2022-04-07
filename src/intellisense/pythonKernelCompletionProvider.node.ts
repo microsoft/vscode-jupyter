@@ -17,7 +17,7 @@ import * as lsp from 'vscode-languageclient';
 import { IVSCodeNotebook } from '../platform/common/application/types';
 import { createPromiseFromCancellation } from '../platform/common/cancellation.node';
 import { traceError, traceInfoIfCI, traceVerbose } from '../platform/logging';
-import { getDisplayPath } from '../platform/common/platform/fs-paths.node';
+import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IConfigurationService, IDisposableRegistry } from '../platform/common/types';
 import { waitForPromise } from '../platform/common/utils/async';
 import { isNotebookCell } from '../platform/common/utils/misc';

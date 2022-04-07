@@ -15,7 +15,7 @@ import {
 } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { traceInfoIfCI, traceError, traceWarning, traceInfo, traceDecoratorVerbose } from '../../platform/logging';
-import { getDisplayPath } from '../../platform/common/platform/fs-paths.node';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { CondaService } from '../../platform/common/process/condaService.node';
 import {
     IDisposableRegistry,
