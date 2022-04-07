@@ -10,7 +10,7 @@ import { Telemetry } from '../platform/common/constants';
 import { IDisposableRegistry } from '../platform/common/types';
 import { DataScience } from '../platform/common/utils/localize';
 import { endCellAndDisplayErrorsInCell } from '../platform/errors/errorUtils';
-import { sendTelemetryEvent } from '../telemetry';
+import { sendKernelTelemetryEvent } from '../telemetry/telemetry.node';
 import { getDisplayNameOrNameOfKernelConnection } from './helpers.node';
 import { IKernel, IKernelProvider } from './types';
 
@@ -56,7 +56,7 @@ export class KernelCrashMonitor implements IExtensionSyncActivationService {
         }
 
         // If this kernel is still active & we're using Jupyter kernels,
-        // and the session is auto resarting, then this means the kernel died.
+        // and the session is auto restarting, then this means the kernel died.
         // notify the user of this
         if (kernel.session.kind !== 'localRaw' && kernel.status === 'autorestarting') {
             void this.applicationShell.showErrorMessage(
@@ -70,7 +70,7 @@ export class KernelCrashMonitor implements IExtensionSyncActivationService {
     }
     private async endCellAndDisplayErrorsInCell(kernel: IKernel) {
         const lastExecutedCell = this.lastExecutedCellPerKernel.get(kernel);
-        sendTelemetryEvent(Telemetry.KernelCrash);
+        sendKernelTelemetryEvent(kernel.resourceUri, Telemetry.KernelCrash);
         if (!lastExecutedCell) {
             return;
         }
