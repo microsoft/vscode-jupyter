@@ -1,7 +1,7 @@
 import * as path from '../platform/vscode-path/path';
 import * as vscode from 'vscode';
 import type { IExtensionApi } from '../platform/api';
-import { disposeAllDisposables } from '../platform/common/helpers.node';
+import { disposeAllDisposables } from '../platform/common/helpers';
 import type { IDisposable } from '../platform/common/types';
 import { clearPendingChainedUpdatesForTests } from '../notebooks/execution/notebookUpdater.node';
 import { clearPendingTimers, IExtensionTestApi, PYTHON_PATH, setPythonPathInWorkspaceRoot } from './common.node';

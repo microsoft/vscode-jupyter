@@ -6,7 +6,7 @@
 import { IDisposable } from '@fluentui/react';
 import { inject, injectable } from 'inversify';
 import { CancellationError, CancellationToken } from 'vscode';
-import { disposeAllDisposables } from '../../../platform/common/helpers.node';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceInfo } from '../../../platform/logging';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../../platform/common/types';
 import { testOnlyMethod } from '../../../platform/common/utils/decorators';

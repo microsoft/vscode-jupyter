@@ -15,7 +15,7 @@ import {
     setTestExecution,
     setUnitTestExecution
 } from '../../platform/common/constants';
-import { disposeAllDisposables } from '../../platform/common/helpers.node';
+import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable } from '../../platform/common/types';
 import { EventName } from '../../telemetry/constants';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';

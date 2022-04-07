@@ -34,7 +34,7 @@ import {
 } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook } from '../../../platform/common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { disposeAllDisposables } from '../../../platform/common/helpers.node';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceInfo, traceInfoIfCI } from '../../../platform/logging';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
 import { createDeferred } from '../../../platform/common/utils/async';

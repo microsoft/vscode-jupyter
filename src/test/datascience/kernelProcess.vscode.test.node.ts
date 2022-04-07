@@ -20,7 +20,7 @@ import { IFileSystem } from '../../platform/common/platform/types.node';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { noop } from '../core';
 import { EventEmitter } from 'events';
-import { disposeAllDisposables } from '../../platform/common/helpers.node';
+import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceInfo } from '../../platform/logging';
 import { CancellationTokenSource } from 'vscode';
 import { IKernelConnection } from '../../kernels/raw/types';

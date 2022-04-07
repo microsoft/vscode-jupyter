@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken, Disposable, Progress, ProgressLocation, window } from 'vscode';
 import { IExtensionSyncActivationService } from '../activation/types';
 import { createPromiseFromCancellation } from '../common/cancellation.node';
-import { disposeAllDisposables } from '../common/helpers.node';
+import { disposeAllDisposables } from '../common/helpers';
 import { IDisposable, IDisposableRegistry, Resource } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import { noop } from '../common/utils/misc';

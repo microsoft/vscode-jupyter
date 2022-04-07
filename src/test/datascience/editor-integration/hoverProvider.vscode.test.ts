@@ -15,7 +15,7 @@ import { IExtensionTestApi, openFile, sleep } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
 import { initialize } from '../../initialize.node';
 import { HoverProvider } from '../../../interactive-window/editor-integration/hoverProvider.node';
-import { disposeAllDisposables } from '../../../platform/common/helpers.node';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IKernelProvider } from '../../../platform/../kernels/types';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
