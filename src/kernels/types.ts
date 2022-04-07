@@ -256,6 +256,7 @@ export const IJupyterSession = Symbol('IJupyterSession');
  * Closely represents Jupyter Labs Kernel.IKernelConnection.
  */
 export interface IJupyterSession extends IAsyncDisposable {
+    readonly kind: 'localRaw' | 'remoteJupyter' | 'localJupyter';
     readonly disposed: boolean;
     readonly kernel?: Kernel.IKernelConnection;
     readonly status: KernelMessage.Status;

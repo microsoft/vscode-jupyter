@@ -5,7 +5,7 @@ import { inject, injectable, named } from 'inversify';
 import { Memento, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../activation/types';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../common/application/types';
-import { disposeAllDisposables } from '../common/helpers.node';
+import { disposeAllDisposables } from '../common/helpers';
 import { GLOBAL_MEMENTO, IDisposable, IDisposableRegistry, IExtensions, IMemento } from '../common/types';
 import { Common, DataScience } from './utils/localize';
 import { noop } from './utils/misc';

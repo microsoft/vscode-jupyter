@@ -18,9 +18,9 @@ import {
 } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../platform/common/application/types';
 import { WrappedError } from '../platform/errors/types';
-import { disposeAllDisposables } from '../platform/common/helpers.node';
+import { disposeAllDisposables } from '../platform/common/helpers';
 import { traceInfo, traceInfoIfCI, traceError, traceVerbose, traceWarning } from '../platform/logging';
-import { getDisplayPath } from '../platform/common/platform/fs-paths.node';
+import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IFileSystem } from '../platform/common/platform/types.node';
 import { IPythonExecutionFactory } from '../platform/common/process/types.node';
 import {

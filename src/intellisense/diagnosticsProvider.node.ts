@@ -29,7 +29,7 @@ import {
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IVSCodeNotebook, IDocumentManager } from '../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../platform/common/constants';
-import { disposeAllDisposables } from '../platform/common/helpers.node';
+import { disposeAllDisposables } from '../platform/common/helpers';
 import { IDisposableRegistry } from '../platform/common/types';
 import { DataScience } from '../platform/common/utils/localize';
 import { JupyterNotebookView } from '../notebooks/constants';

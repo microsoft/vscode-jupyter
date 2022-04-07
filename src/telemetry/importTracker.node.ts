@@ -13,7 +13,7 @@ import { IExtensionSingleActivationService } from '../platform/activation/types'
 import { IDocumentManager, IVSCodeNotebook } from '../platform/common/application/types';
 import { isCI, isTestExecution, PYTHON_LANGUAGE } from '../platform/common/constants';
 import '../platform/common/extensions';
-import { disposeAllDisposables } from '../platform/common/helpers.node';
+import { disposeAllDisposables } from '../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { noop } from '../platform/common/utils/misc';
 import { EventName } from './constants';

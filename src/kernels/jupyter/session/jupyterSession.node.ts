@@ -73,7 +73,14 @@ export class JupyterSession extends BaseJupyterSession {
         interruptTimeout: number,
         private readonly fs: IFileSystem
     ) {
-        super(resource, kernelConnectionMetadata, restartSessionUsed, workingDirectory, interruptTimeout);
+        super(
+            connInfo.localLaunch ? 'localJupyter' : 'remoteJupyter',
+            resource,
+            kernelConnectionMetadata,
+            restartSessionUsed,
+            workingDirectory,
+            interruptTimeout
+        );
     }
 
     @captureTelemetry(Telemetry.WaitForIdleJupyter, undefined, true)

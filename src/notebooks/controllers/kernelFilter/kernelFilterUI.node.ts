@@ -4,7 +4,7 @@ import { inject, injectable } from 'inversify';
 import { QuickPickItem } from 'vscode';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { ICommandManager, IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
-import { disposeAllDisposables } from '../../../platform/common/helpers.node';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable, IDisposableRegistry, IPathUtils } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';

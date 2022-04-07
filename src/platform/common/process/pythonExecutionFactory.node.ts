@@ -9,7 +9,7 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { IWorkspaceService } from '../application/types';
 import { ignoreLogging, traceDecoratorVerbose, traceError, traceInfo } from '../../logging';
-import { getDisplayPath } from '../platform/fs-paths.node';
+import { getDisplayPath } from '../platform/fs-paths';
 import { IFileSystem } from '../platform/types.node';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../types';
 import { ProcessService } from './proc.node';

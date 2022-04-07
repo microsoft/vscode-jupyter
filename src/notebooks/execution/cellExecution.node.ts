@@ -29,9 +29,9 @@ import { Kernel } from '@jupyterlab/services';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker.node';
 import { CellExecutionCreator } from './cellExecutionCreator';
 import { IApplicationShell } from '../../platform/common/application/types';
-import { analyzeKernelErrors, KernelFailure } from '../../platform/errors/errorUtils';
+import { analyzeKernelErrors, createOutputWithErrorMessageForDisplay } from '../../platform/errors/errorUtils';
 import { BaseError } from '../../platform/errors/types';
-import { disposeAllDisposables } from '../../platform/common/helpers.node';
+import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceError, traceInfoIfCI, traceWarning } from '../../platform/logging';
 import { RefBool } from '../../platform/common/refBool.node';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
@@ -43,7 +43,6 @@ import { InteractiveWindowView } from '../../notebooks/constants';
 import {
     NotebookCellStateTracker,
     traceCellMessage,
-    translateErrorOutput,
     cellOutputToVSCCellOutput,
     translateCellDisplayOutput,
     isJupyterNotebook
@@ -71,24 +70,6 @@ type ExecuteResult = nbformat.IExecuteResult & {
 type DisplayData = nbformat.IDisplayData & {
     transient?: { display_id?: string };
 };
-
-function createErrorOutput(error: Partial<Error>): nbformat.IError {
-    return {
-        output_type: 'error',
-        ename: error.name || error.message || 'Error',
-        evalue: error.message || error.name || 'Error',
-        traceback: (error.stack || '').splitLines()
-    };
-}
-
-function createErrorOutputFromFailureInfo(info: KernelFailure): nbformat.IError {
-    return {
-        output_type: 'error',
-        ename: info.message || 'Error',
-        evalue: info.message || 'Error',
-        traceback: []
-    };
-}
 
 export class CellExecutionFactory {
     constructor(
@@ -331,9 +312,11 @@ export class CellExecution implements IDisposable {
         this.sendPerceivedCellExecute();
 
         traceCellMessage(this.cell, 'Update with error state & output');
+        let errorMessage: string | undefined;
+        let output: NotebookCellOutput | undefined;
         // If the error doesn't derive from BaseError, it came from execution
         if (!(error instanceof BaseError)) {
-            this.execution?.appendOutput([translateErrorOutput(createErrorOutput(error))]).then(noop, noop);
+            errorMessage = error.message || error.name || error.stack;
         } else {
             // Otherwise it's an error from the kernel itself. Put it into the cell
             const failureInfo = analyzeKernelErrors(
@@ -342,11 +325,11 @@ export class CellExecution implements IDisposable {
                 getDisplayNameOrNameOfKernelConnection(this.kernelConnection),
                 this.kernelConnection.interpreter?.sysPrefix
             );
-            if (failureInfo) {
-                this.execution
-                    ?.appendOutput([translateErrorOutput(createErrorOutputFromFailureInfo(failureInfo))])
-                    .then(noop, noop);
-            }
+            errorMessage = failureInfo?.message;
+        }
+        output = createOutputWithErrorMessageForDisplay(errorMessage || '');
+        if (output) {
+            this.execution?.appendOutput(output).then(noop, noop);
         }
 
         this.endCellTask('failed');
@@ -552,18 +535,19 @@ export class CellExecution implements IDisposable {
             traceCellMessage(this.cell, 'Executed successfully in executeCell');
         } catch (ex) {
             // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
-            // Such an error must be ignored.
+            // Or even when the kernel dies when running a cell with the code `os.kill(os.getpid(), 9)`
+            traceError('Error in waiting for cell to complete', ex);
+            traceCellMessage(this.cell, 'Some other execution error');
             if (
                 ex &&
                 ex instanceof Error &&
                 (ex.message.includes('Canceled') || ex.message.includes(localize.Common.canceled()))
             ) {
-                traceWarning('Error in waiting for cell to complete', ex);
-                traceCellMessage(this.cell, 'Cancellation execution error');
-                this.completedWithErrors(ex);
+                // No point displaying the error stack trace from Jupyter npm package.
+                // Just display the error message and log details in output.
+                // Note: This could be an error from cancellation (interrupt) or due to kernel dying as well.
+                this.completedWithErrors({ message: ex.message });
             } else {
-                traceError('Error in waiting for cell to complete', ex);
-                traceCellMessage(this.cell, 'Some other execution error');
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 this.completedWithErrors(ex as any);
             }

@@ -507,7 +507,8 @@ export enum Telemetry {
     // Sent when we get a jupyter execute_request error reply when running some part of user specified startup code
     UserStartupCodeFailure = 'DATASCIENCE.USER_STARTUP_CODE_FAILURE',
     // Sent when we get a jupyter execute_request error reply when running some part of interactive window debug setup code
-    InteractiveWindowDebugSetupCodeFailure = 'DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE'
+    InteractiveWindowDebugSetupCodeFailure = 'DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE',
+    KernelCrash = 'DATASCIENCE.KERNEL_CRASH'
 }
 
 export enum NativeKeyboardCommandTelemetry {

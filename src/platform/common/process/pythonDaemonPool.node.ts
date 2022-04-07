@@ -4,7 +4,7 @@
 import { IPlatformService } from '../../common/platform/types';
 import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { InterpreterInformation } from '../../pythonEnvironments/info';
-import { getDisplayPath } from '../platform/fs-paths.node';
+import { getDisplayPath } from '../platform/fs-paths';
 import { IDisposableRegistry } from '../types';
 import { sleep } from '../utils/async';
 import { noop } from '../utils/misc';

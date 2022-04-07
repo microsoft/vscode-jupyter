@@ -11,7 +11,7 @@ import * as internalPython from './internal/python.node';
 import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from './types.node';
 import { compare, SemVer } from 'semver';
 import type { PythonEnvironment as PyEnv } from '../../pythonEnvironments/info';
-import { getDisplayPath } from '../platform/fs-paths.node';
+import { getDisplayPath } from '../platform/fs-paths';
 class PythonEnvironment {
     private cachedInterpreterInformation: InterpreterInformation | undefined | null = null;
 

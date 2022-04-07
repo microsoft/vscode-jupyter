@@ -18,7 +18,7 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfoIfCI, traceVerbose, traceError } from '../../../platform/logging';
-import { getDisplayPath, getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
+import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IMemento, GLOBAL_MEMENTO, Resource } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
@@ -237,7 +237,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                         traceVerbose(
                             `Hiding default kernel spec '${kernelspec.display_name}', '${
                                 kernelspec.name
-                            }', ${getDisplayPath(Uri.file(kernelspec.argv[0]))}`
+                            }', ${getDisplayPathFromLocalFile(kernelspec.argv[0])}`
                         );
                         return false;
                     }

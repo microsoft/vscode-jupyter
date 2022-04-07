@@ -18,7 +18,7 @@ import {
 import * as path from '../../../platform/vscode-path/path';
 import { IS_WINDOWS } from '../../../platform/common/platform/constants.node';
 import { IProcessServiceFactory } from '../../../platform/common/process/types.node';
-import { disposeAllDisposables } from '../../../platform/common/helpers.node';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { IPythonApiProvider, PythonApi } from '../../../platform/api/types';

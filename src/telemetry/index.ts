@@ -1530,4 +1530,5 @@ export interface IEventNamePropertyMapping {
         ename: string;
         evalue: string;
     };
+    [Telemetry.KernelCrash]: never | undefined;
 }

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { NotebookEditor, NotebookRendererMessaging, notebooks } from 'vscode';
-import { disposeAllDisposables } from '../../../platform/common/helpers.node';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { createDeferred } from '../../../platform/common/utils/async';

@@ -10,7 +10,7 @@ import { commands, Memento, workspace, window, Uri, NotebookCell, NotebookDocume
 import { IPythonApiProvider } from '../../../../platform/api/types';
 import { ICommandManager, IVSCodeNotebook } from '../../../../platform/common/application/types';
 import { Kernel } from '../../../../platform/../kernels/kernel.node';
-import { getDisplayPath } from '../../../../platform/common/platform/fs-paths.node';
+import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
 import { BufferDecoder } from '../../../../platform/common/process/decoder.node';
 import { ProcessService } from '../../../../platform/common/process/proc.node';
 import {

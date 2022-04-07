@@ -28,7 +28,8 @@ import {
     waitForKernelToGetAutoSelected,
     deleteCell,
     defaultNotebookTestTimeout,
-    waitForExecutionCompletedWithoutChangesToExecutionCount
+    waitForExecutionCompletedWithoutChangesToExecutionCount,
+    getCellOutputs
 } from './helper';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import * as dedent from 'dedent';
@@ -37,7 +38,7 @@ import { createDeferred } from '../../../platform/common/utils/async';
 import { sleep } from '../../core';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../platform/../kernels/helpers.node';
 import { Uri, window, workspace } from 'vscode';
-import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { translateCellErrorOutput } from '../../../notebooks/helpers.node';
 import { INotebookEditorProvider } from '../../../notebooks/types';
 
@@ -54,7 +55,8 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
     let vscodeNotebook: IVSCodeNotebook;
     let kernelProvider: IKernelProvider;
     let config: IConfigurationService;
-
+    const kernelCrashFailureMessageInCell =
+        'The Kernel crashed while executing code in the the current cell or a previous cell. Please review the code in the cell(s) to identify a possible cause of the failure';
     this.timeout(120_000);
     suiteSetup(async function () {
         traceInfo('Suite Setup');
@@ -133,6 +135,19 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
                 Promise.all([restartingEventFired, autoRestartingEventFired]),
                 sleep(10_000).then(() => Promise.reject(new Error('Did not fail')))
             ]);
+
+            // Verify we have output in the cell to indicate the cell crashed.
+            await waitForCondition(
+                async () => {
+                    const output = getCellOutputs(cell2);
+                    return (
+                        output.includes(kernelCrashFailureMessageInCell) &&
+                        output.includes('https://aka.ms/vscodeJupyterKernelCrash')
+                    );
+                },
+                defaultNotebookTestTimeout,
+                () => `Cell did not have kernel crash output, the output is = ${getCellOutputs(cell2)}`
+            );
         });
     });
 
@@ -181,6 +196,19 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
                 sleep(10_000).then(() => Promise.reject(new Error('Did not fail')))
             ]);
             prompt.dispose();
+
+            // Verify we have output in the cell to indicate the cell crashed.
+            await waitForCondition(
+                async () => {
+                    const output = getCellOutputs(cell2);
+                    return (
+                        output.includes(kernelCrashFailureMessageInCell) &&
+                        output.includes('https://aka.ms/vscodeJupyterKernelCrash')
+                    );
+                },
+                defaultNotebookTestTimeout,
+                () => `Cell did not have kernel crash output, the output is = ${getCellOutputs(cell2)}`
+            );
         }
         test('Ensure we get an error message & a status of terminating & dead when kernel dies while executing a cell', async function () {
             await runAndFailWithKernelCrash();
@@ -272,7 +300,7 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
             // If execution order is 1, then we know the kernel restarted.
             assert.strictEqual(cell3.executionSummary?.executionOrder, 1);
         });
-        test('Ensure cell outupt does not have errors when execution fails due to dead kernel', async function () {
+        test('Ensure cell output does not have errors when execution fails due to dead kernel', async function () {
             await runAndFailWithKernelCrash();
             await insertCodeCell('print("123412341234")', { index: 2 });
             const cell3 = vscodeNotebook.activeNotebookEditor!.document.cellAt(2);

@@ -8,7 +8,7 @@ import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 import { WrappedError } from '../../platform/errors/types';
-import { disposeAllDisposables } from '../../platform/common/helpers.node';
+import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceInfo, traceVerbose, traceError, traceWarning, traceInfoIfCI } from '../../platform/logging';
 import { IDisposable, Resource } from '../../platform/common/types';
 import { createDeferred, sleep, waitForPromise } from '../../platform/common/utils/async';
@@ -91,6 +91,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     private chainingExecute = new ChainingExecuteRequester();
 
     constructor(
+        public readonly kind: 'localRaw' | 'remoteJupyter' | 'localJupyter',
         protected resource: Resource,
         protected readonly kernelConnectionMetadata: KernelConnectionMetadata,
         private restartSessionUsed: (id: Kernel.IKernelConnection) => void,

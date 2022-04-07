@@ -17,7 +17,7 @@ import { IS_REMOTE_NATIVE_TEST } from '../constants.node';
 import { initialize } from '../initialize.node';
 import { PortAttributesProviders } from '../../platform/common/net/portAttributeProvider.node';
 import { IDisposable } from '../../platform/common/types';
-import { disposeAllDisposables } from '../../platform/common/helpers.node';
+import { disposeAllDisposables } from '../../platform/common/helpers';
 import { CancellationTokenSource, PortAutoForwardAction } from 'vscode';
 import { createRawKernel } from '../../kernels/raw/session/rawKernel.node';
 import { IKernelConnection, IKernelLauncher } from '../../kernels/raw/types';

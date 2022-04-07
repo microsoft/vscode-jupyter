@@ -13,7 +13,7 @@ import { IExtensionTestApi } from '../../common.node';
 import { initialize } from '../../initialize.node';
 import { traceInfo } from '../../../platform/logging';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter.node';
-import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { ILocalKernelFinder } from '../../../kernels/raw/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
