@@ -391,9 +391,6 @@ export async function startJupyterServer(notebook?: NotebookDocument) {
         return commands.executeCommand('jupyter.selectjupyteruri', false, uri, notebook);
     } else {
         traceInfo(`Jupyter not started and set to local`); // This is the default
-        const { serviceContainer } = await getServices();
-        const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
-        return selector.setJupyterURIToLocal();
     }
 }
 /**
