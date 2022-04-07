@@ -55,7 +55,6 @@ import { NotebookCellStateTracker, hasErrorOutput, getTextOutputValue } from '..
 import { INotebookControllerManager, CellOutputMimeTypes, INotebookEditorProvider } from '../../../notebooks/types';
 import { InteractiveControllerIdSuffix } from '../../../notebooks/controllers/notebookControllerManager.node';
 import { IVSCodeNotebookController } from '../../../notebooks/controllers/types';
-import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector.node';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
