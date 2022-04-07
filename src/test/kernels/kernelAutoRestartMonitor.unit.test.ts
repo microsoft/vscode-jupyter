@@ -7,7 +7,7 @@ import { EventEmitter } from 'vscode';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers.node';
 import { KernelAutoRestartMonitor } from '../../kernels/kernelAutoRestartMonitor.node';
 import { IJupyterSession, IKernel, IKernelProvider, KernelConnectionMetadata } from '../../kernels/types';
-import { disposeAllDisposables } from '../../platform/common/helpers.node';
+import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { IStatusProvider } from '../../platform/progress/types';

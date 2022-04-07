@@ -5,7 +5,7 @@ import * as getFreePort from 'get-port';
 import * as path from '../../platform/vscode-path/path';
 import * as tcpPortUsed from 'tcp-port-used';
 import { Uri } from 'vscode';
-import { disposeAllDisposables } from '../../platform/common/helpers.node';
+import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceError, traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { IPythonExecutionFactory } from '../../platform/common/process/types.node';
 import { IAsyncDisposable, IDisposable, IDisposableRegistry } from '../../platform/common/types';

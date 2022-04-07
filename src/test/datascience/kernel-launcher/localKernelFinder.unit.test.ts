@@ -32,7 +32,7 @@ import { EventEmitter, Memento, Uri } from 'vscode';
 import { IDisposable, IExtensionContext } from '../../../platform/common/types';
 import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/interpreter.node';
 import { OSType } from '../../../platform/common/utils/platform';
-import { disposeAllDisposables } from '../../../platform/common/helpers.node';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../../../platform/../kernels/types';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
 import { arePathsSame } from '../../../platform/common/platform/fileUtils.node';

@@ -4,7 +4,6 @@
 'use strict';
 
 import { ModuleNotInstalledError } from '../../platform/errors/moduleNotInstalledError.node';
-import { IDisposable } from './types';
 
 export function isNotInstalledError(error: Error): boolean {
     const isError = typeof error === 'object' && error !== null;
@@ -19,17 +18,4 @@ export function isNotInstalledError(error: Error): boolean {
 
     const isModuleNoInstalledError = error.message.indexOf('No module named') >= 0;
     return errorObj.code === 'ENOENT' || errorObj.code === 127 || isModuleNoInstalledError;
-}
-
-export function disposeAllDisposables(disposables: IDisposable[] = []) {
-    while (disposables.length) {
-        const disposable = disposables.shift();
-        if (disposable) {
-            try {
-                disposable.dispose();
-            } catch {
-                // Don't care.
-            }
-        }
-    }
 }

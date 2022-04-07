@@ -4,7 +4,7 @@
 import { Disposable, NotebookCell, NotebookController, NotebookControllerAffinity, NotebookDocument } from 'vscode';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IVSCodeNotebook, ICommandManager, IApplicationShell } from '../../platform/common/application/types';
-import { disposeAllDisposables } from '../../platform/common/helpers.node';
+import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { DataScience, Common } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';

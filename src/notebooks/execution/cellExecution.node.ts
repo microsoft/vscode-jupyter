@@ -31,7 +31,7 @@ import { CellExecutionCreator } from './cellExecutionCreator';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { analyzeKernelErrors, createOutputWithErrorMessageForDisplay } from '../../platform/errors/errorUtils';
 import { BaseError } from '../../platform/errors/types';
-import { disposeAllDisposables } from '../../platform/common/helpers.node';
+import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceError, traceInfoIfCI, traceWarning } from '../../platform/logging';
 import { RefBool } from '../../platform/common/refBool.node';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';

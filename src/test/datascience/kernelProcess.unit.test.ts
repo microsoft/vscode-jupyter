@@ -27,7 +27,7 @@ import { IPythonExtensionChecker } from '../../platform/api/types';
 import { KernelEnvironmentVariablesService } from '../../kernels/raw/launcher/kernelEnvVarsService.node';
 import { IDisposable, IJupyterSettings, IOutputChannel } from '../../platform/common/types';
 import { CancellationTokenSource } from 'vscode';
-import { disposeAllDisposables } from '../../platform/common/helpers.node';
+import { disposeAllDisposables } from '../../platform/common/helpers';
 import { noop } from '../core';
 import { Observable, Subject } from 'rxjs';
 import { ChildProcess } from 'child_process';

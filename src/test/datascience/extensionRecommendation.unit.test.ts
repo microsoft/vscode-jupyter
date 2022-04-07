@@ -5,7 +5,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Memento, NotebookDocument } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
-import { disposeAllDisposables } from '../../platform/common/helpers.node';
+import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable, IExtensions } from '../../platform/common/types';
 import { sleep } from '../../platform/common/utils/async';
 import { Common } from '../../platform/common/utils/localize';

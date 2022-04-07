@@ -28,7 +28,7 @@ import {
     IApplicationShell
 } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { disposeAllDisposables } from '../../platform/common/helpers.node';
+import { disposeAllDisposables } from '../../platform/common/helpers';
 import {
     traceInfoIfCI,
     traceInfo,

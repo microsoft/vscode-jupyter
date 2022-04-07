@@ -12,7 +12,7 @@ import {
 } from 'vscode';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { Cancellation } from '../../platform/common/cancellation.node';
-import { disposeAllDisposables } from '../../platform/common/helpers.node';
+import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceInfo, traceVerbose, traceInfoIfCI } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths.node';
 import { IDisposableRegistry, IAsyncDisposableRegistry, IDisposable } from '../../platform/common/types';

@@ -5,7 +5,7 @@ import { SemVer } from 'semver';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { CancellationTokenSource, Disposable, EventEmitter } from 'vscode';
-import { disposeAllDisposables } from '../../../platform/common/helpers.node';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
