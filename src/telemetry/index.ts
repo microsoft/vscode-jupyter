@@ -1546,9 +1546,9 @@ export interface IEventNamePropertyMapping {
          * Whether we've loaded local or remote controllers.
          */
         kind: 'local' | 'remote';
+    };
     [Telemetry.RunTest]: {
         testName: string;
         testResult: string;
-        isCIServer: boolean;
     };
 }
