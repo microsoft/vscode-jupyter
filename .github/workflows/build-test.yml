@@ -767,7 +767,7 @@ jobs:
           retention-days: 1
 
       - name: Build web parts
-        run: npm run compile-web
+        run: npm run compile-web-test
         if: always()
 
       - name: Run web smoke test
