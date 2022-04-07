@@ -74,7 +74,7 @@ import { registerTypes as registerTelemetryTypes } from './telemetry/serviceRegi
 import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry.node';
 import { IExtensionActivationManager } from './platform/activation/types';
 import { isCI, isTestExecution, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants';
-import { getDisplayPath } from './platform/common/platform/fs-paths.node';
+import { getDisplayPath } from './platform/common/platform/fs-paths';
 import { IFileSystem } from './platform/common/platform/types.node';
 import { getJupyterOutputChannel } from './platform/devTools/jupyterOutputChannel';
 import { registerLogger, setLoggingLevel } from './platform/logging';

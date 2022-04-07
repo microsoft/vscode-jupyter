@@ -8,7 +8,7 @@ import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { IPythonApiProvider } from '../../platform/api/types';
 import { traceInfo, traceInfoIfCI } from '../../platform/logging';
-import { getDisplayPath } from '../../platform/common/platform/fs-paths.node';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../platform/common/types';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider.node';
 import { IKernelProvider } from '../../platform/../kernels/types';

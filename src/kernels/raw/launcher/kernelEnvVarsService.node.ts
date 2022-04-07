@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
 import { traceInfo, traceError } from '../../../platform/logging';
-import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { Resource } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { IEnvironmentVariablesService, IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';

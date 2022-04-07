@@ -37,7 +37,7 @@ import {
     traceDecoratorVerbose,
     traceError
 } from '../../platform/logging';
-import { getDisplayPath } from '../../platform/common/platform/fs-paths.node';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import {
     IBrowserService,
     IConfigurationService,

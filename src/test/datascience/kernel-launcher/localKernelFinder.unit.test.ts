@@ -34,7 +34,7 @@ import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/in
 import { OSType } from '../../../platform/common/utils/platform';
 import { disposeAllDisposables } from '../../../platform/common/helpers.node';
 import { KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../../../platform/../kernels/types';
-import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { arePathsSame } from '../../../platform/common/platform/fileUtils.node';
 import { JupyterPaths } from '../../../kernels/raw/finder/jupyterPaths.node';
 import { LocalKernelFinder } from '../../../kernels/raw/finder/localKernelFinder.node';

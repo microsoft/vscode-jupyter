@@ -40,7 +40,7 @@ import {
 } from './types';
 import { getInteractiveWindowTitle } from './identity.node';
 import { createDeferred } from '../platform/common/utils/async';
-import { getDisplayPath } from '../platform/common/platform/fs-paths.node';
+import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { INotebookExporter } from '../kernels/jupyter/types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { IExportDialog } from '../platform/export/types';

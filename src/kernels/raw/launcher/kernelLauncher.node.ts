@@ -14,7 +14,7 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation.node';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
 import { traceInfo, traceWarning } from '../../../platform/logging';
-import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../platform/common/process/types.node';
 import { IDisposableRegistry, IConfigurationService, Resource } from '../../../platform/common/types';

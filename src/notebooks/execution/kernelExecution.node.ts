@@ -25,7 +25,7 @@ import {
     NotebookCellRunState
 } from '../../kernels/types';
 import { traceCellMessage } from '../helpers.node';
-import { getDisplayPath } from '../../platform/common/platform/fs-paths.node';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { getAssociatedNotebookDocument } from '../controllers/kernelSelector.node';
 
 /**

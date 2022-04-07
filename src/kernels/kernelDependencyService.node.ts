@@ -15,7 +15,7 @@ import {
     ignoreLogging,
     logValue
 } from '../platform/logging';
-import { getDisplayPath } from '../platform/common/platform/fs-paths.node';
+import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IMemento, GLOBAL_MEMENTO, IsCodeSpace, Resource, IDisplayOptions } from '../platform/common/types';
 import { DataScience, Common } from '../platform/common/utils/localize';
 import { IServiceContainer } from '../platform/ioc/types';

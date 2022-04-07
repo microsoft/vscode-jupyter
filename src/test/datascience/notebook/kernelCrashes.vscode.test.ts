@@ -38,7 +38,7 @@ import { createDeferred } from '../../../platform/common/utils/async';
 import { sleep } from '../../core';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../platform/../kernels/helpers.node';
 import { Uri, window, workspace } from 'vscode';
-import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { translateCellErrorOutput } from '../../../notebooks/helpers.node';
 import { INotebookEditorProvider } from '../../../notebooks/types';
 
