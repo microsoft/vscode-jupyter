@@ -45,6 +45,18 @@
             }
         },
         {
+            "name": "Extension (web with daemon compilation)",
+            "type": "pwa-extensionHost",
+            "debugWebWorkerHost": true,
+            "request": "launch",
+            "args": ["--extensionDevelopmentPath=${workspaceFolder}", "--extensionDevelopmentKind=web"],
+            "outFiles": ["${workspaceFolder}/out/**/*", "!${workspaceFolder}/**/node_modules**/*"],
+            "presentation": {
+                "group": "1_extension",
+                "order": 1
+            }
+        },
+        {
             "name": "Extension (with daemon compilation)",
             "type": "extensionHost",
             "request": "launch",
@@ -88,6 +100,27 @@
                 "order": 3
             }
         },
+		{
+			"name": "Web Tests",
+			"type": "extensionHost",
+			"debugWebWorkerHost": true,
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+                "--enable-proposed-api",
+				"--extensionDevelopmentKind=web",
+				"--extensionTestsPath=${workspaceFolder}/out/extension.web.bundle"
+			],
+			"outFilesx": [
+				"${workspaceFolder}/out/**/*.*"
+			],
+            "sourceMaps": true,
+            "preLaunchTask": "compile-web-test",
+            "presentation": {
+                "group": "2_tests",
+                "order": 11
+            }
+		},
         {
             // Note, for the smoke test you want to debug, you may need to copy the file,
             // rename it and remove a check for only smoke tests.

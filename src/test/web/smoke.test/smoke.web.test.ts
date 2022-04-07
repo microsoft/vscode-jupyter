@@ -18,9 +18,7 @@ suite('Web Extension Smoke Test Suite', () => {
     });
 
     test('Verify containers', () => {
-        const appShellSymbol = extensionApi.getSymbol<IApplicationShell>('IApplicationShell');
-        assert.ok(appShellSymbol, `Cannot get the symbol for IApplicationShell`);
-        const appShell = extensionApi.serviceManager?.get<IApplicationShell>(appShellSymbol!);
+        const appShell = extensionApi.serviceManager?.get<IApplicationShell>(IApplicationShell);
         assert.ok(appShell, 'Dependency Injection container not initialized in web context');
     });
 });
