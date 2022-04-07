@@ -31,5 +31,5 @@
     "python.experiments.enabled": true,
     "python.defaultInterpreterPath": "python",
     "jupyter.generateSVGPlots": "false",
-    "jupyter.jupyterServerType": "remote"
+    "jupyter.jupyterServerType": "local"
 }
