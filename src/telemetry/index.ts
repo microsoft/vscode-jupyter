@@ -1533,4 +1533,18 @@ export interface IEventNamePropertyMapping {
     [Telemetry.KernelCrash]: never | undefined;
     [Telemetry.JupyterKernelHiddenViaFilter]: never | undefined;
     [Telemetry.JupyterKernelFilterUsed]: never | undefined;
+    /**
+     * Telemetry sent when we have loaded some controllers.
+     */
+    [Telemetry.FetchControllers]: {
+        /**
+         * Whether this is the first time we're loading this (same as not using caches).
+         * In the case of remotes, this is always `true` (as we don't cache anything for remote kernels).
+         */
+        firstTime: boolean;
+        /**
+         * Whether we've loaded local or remote controllers.
+         */
+        kind: 'local' | 'remote';
+    };
 }
