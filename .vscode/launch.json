@@ -111,7 +111,7 @@
 				"--extensionDevelopmentKind=web",
 				"--extensionTestsPath=${workspaceFolder}/out/extension.web.bundle"
 			],
-			"outFilesx": [
+			"outFiles": [
 				"${workspaceFolder}/out/**/*.*"
 			],
             "sourceMaps": true,
