@@ -1531,4 +1531,6 @@ export interface IEventNamePropertyMapping {
         evalue: string;
     };
     [Telemetry.KernelCrash]: never | undefined;
+    [Telemetry.JupyterKernelHiddenViaFilter]: never | undefined;
+    [Telemetry.JupyterKernelFilterUsed]: never | undefined;
 }
