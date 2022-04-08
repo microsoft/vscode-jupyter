@@ -6,22 +6,21 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
-import { IPythonApiProvider } from '../../client/api/types';
-import { traceInfo, traceInfoIfCI } from '../../client/common/logger';
-import { getDisplayPath } from '../../client/common/platform/fs-paths';
-import { IDisposable } from '../../client/common/types';
-import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
-import { getTextOutputValue, translateCellErrorOutput } from '../../client/datascience/notebook/helpers/helpers';
-import { INotebookControllerManager } from '../../client/datascience/notebook/types';
-import { IDataScienceCodeLensProvider, IInteractiveWindowProvider } from '../../client/datascience/types';
-import { captureScreenShot, IExtensionTestApi, sleep, waitForCondition } from '../common';
-import { initialize, IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../initialize';
+import { IPythonApiProvider } from '../../platform/api/types';
+import { traceInfo, traceInfoIfCI } from '../../platform/logging';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { IDisposable } from '../../platform/common/types';
+import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider.node';
+import { IKernelProvider } from '../../platform/../kernels/types';
+import { captureScreenShot, createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../common.node';
+import { initialize, IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../initialize.node';
 import {
     createStandaloneInteractiveWindow,
     insertIntoInputEditor,
     runCurrentFile,
     submitFromPythonFile,
     submitFromPythonFileUsingCodeWatcher,
+    waitForInteractiveWindow,
     waitForLastCellToComplete
 } from './helpers';
 import {
@@ -33,13 +32,15 @@ import {
     waitForExecutionCompletedWithErrors,
     waitForTextOutput
 } from './notebook/helper';
+import { translateCellErrorOutput, getTextOutputValue } from '../../notebooks/helpers.node';
+import { INotebookControllerManager } from '../../notebooks/types';
+import { IInteractiveWindowProvider } from '../../interactive-window/types';
 
 suite('Interactive window', async function () {
     this.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let interactiveWindowProvider: InteractiveWindowProvider;
-    let codeWatcherProvider: IDataScienceCodeLensProvider;
 
     setup(async function () {
         if (IS_REMOTE_NATIVE_TEST) {
@@ -48,7 +49,6 @@ suite('Interactive window', async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         api = await initialize();
         interactiveWindowProvider = api.serviceManager.get(IInteractiveWindowProvider);
-        codeWatcherProvider = api.serviceManager.get(IDataScienceCodeLensProvider);
 
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
@@ -68,9 +68,8 @@ suite('Interactive window', async function () {
         const notebookDocument = vscode.workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
         );
-        const notebookControllerManager = api.serviceManager.get<INotebookControllerManager>(
-            INotebookControllerManager
-        );
+        const notebookControllerManager =
+            api.serviceManager.get<INotebookControllerManager>(INotebookControllerManager);
 
         // Ensure we picked up the active interpreter for use as the kernel
         const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getApi();
@@ -113,9 +112,8 @@ suite('Interactive window', async function () {
         const notebookDocument = vscode.workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
         )!;
-        const notebookControllerManager = api.serviceManager.get<INotebookControllerManager>(
-            INotebookControllerManager
-        );
+        const notebookControllerManager =
+            api.serviceManager.get<INotebookControllerManager>(INotebookControllerManager);
         // Ensure we picked up the active interpreter for use as the kernel
         const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getApi();
 
@@ -152,13 +150,12 @@ suite('Interactive window', async function () {
         await waitForCondition(async () => notebookDocument.cellCount === 0, 5_000, 'Cells not cleared');
 
         // Restart kernel
+        const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
+        const kernel = kernelProvider.get(notebookDocument.uri);
+        const handler = createEventHandler(kernel!, 'onRestarted', disposables);
         await vscode.commands.executeCommand('jupyter.restartkernel');
-        // Wait for first cell to get output.
-        await waitForCondition(
-            async () => notebookDocument.cellCount > 0,
-            defaultNotebookTestTimeout,
-            'Kernel info not printed'
-        );
+        // Wait for restart to finish
+        await handler.assertFiredExactly(1, defaultNotebookTestTimeout);
         await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0);
         await waitForCondition(
             async () => notebookDocument.cellCount > 1,
@@ -171,6 +168,7 @@ suite('Interactive window', async function () {
     test('Execute cell from input box', async () => {
         // Create new interactive window
         const activeInteractiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
+        const notebook = await waitForInteractiveWindow(activeInteractiveWindow);
 
         // Add code to the input box
         await insertIntoInputEditor('print("foo")');
@@ -178,11 +176,16 @@ suite('Interactive window', async function () {
         // Run the code in the input box
         await vscode.commands.executeCommand('interactive.execute');
 
-        // Inspect notebookDocument for output
-        const notebook = vscode.workspace.notebookDocuments.find(
-            (notebookDocument) => notebookDocument.uri.toString() === activeInteractiveWindow.notebookUri?.toString()
-        );
         assert.ok(notebook !== undefined, 'No interactive window found');
+        await waitForCondition(
+            async () => {
+                return notebook.cellCount > 1;
+            },
+            defaultNotebookTestTimeout,
+            'Cell never added'
+        );
+
+        // Inspect notebookDocument for output
         const index = notebook!.cellCount - 1;
         const cell = notebook!.cellAt(index);
         await waitForTextOutput(cell, 'foo');
@@ -276,33 +279,27 @@ for i in range(10):
     });
 
     test('Cells with errors cancel execution for others', async () => {
-        const source = '# %%\nprint(1)\n# %%\nimport time\ntime.sleep(1)\nraise Exception("foo")\n# %%\nprint(2)';
-        const { activeInteractiveWindow } = await submitFromPythonFileUsingCodeWatcher(
-            interactiveWindowProvider,
-            codeWatcherProvider,
-            source,
-            disposables
-        );
+        const source =
+            '# %%\nprint(1)\n# %%\nimport time\ntime.sleep(1)\nraise Exception("foo")\n# %%\nprint(2)\n# %%\nprint(3)';
+        const { activeInteractiveWindow } = await submitFromPythonFileUsingCodeWatcher(source, disposables);
         const notebookDocument = vscode.workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
         );
 
         await waitForCondition(
             async () => {
-                return notebookDocument?.cellCount == 4;
+                return notebookDocument?.cellCount == 5;
             },
             defaultNotebookTestTimeout,
             `Cells should be added`
         );
-        const secondCell = notebookDocument?.cellAt(2);
-        await waitForExecutionCompletedWithErrors(secondCell!);
-        await waitForCondition(
-            async () => {
-                return notebookDocument?.cellCount == 5;
-            },
-            defaultNotebookTestTimeout,
-            `Markdown error didnt appear`
-        );
+        const [, , secondCell, thirdCell, fourthCell] = notebookDocument!.getCells();
+        // Other remaining cells will also fail with errors.
+        await Promise.all([
+            waitForExecutionCompletedWithErrors(secondCell!),
+            waitForExecutionCompletedWithErrors(thirdCell!, undefined, false),
+            waitForExecutionCompletedWithErrors(fourthCell!, undefined, false)
+        ]);
     });
 
     test('Multiple interactive windows', async () => {

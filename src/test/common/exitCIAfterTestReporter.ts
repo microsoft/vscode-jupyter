@@ -10,8 +10,8 @@
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any, no-console, @typescript-eslint/no-extraneous-class, import/no-default-export */
 import * as fs from 'fs-extra';
 import * as net from 'net';
-import * as path from 'path';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
+import * as path from '../../platform/vscode-path/path';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
 import { noop } from '../core';
 
 let client: net.Socket | undefined;

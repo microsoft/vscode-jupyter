@@ -6,23 +6,22 @@ import { assert, use } from 'chai';
 
 import { KernelMessage } from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
-import { createDeferred } from '../../client/common/utils/async';
-import { IKernelConnection, IKernelLauncher } from '../../client/datascience/kernel-launcher/types';
-import { createRawKernel } from '../../client/datascience/raw-kernel/rawKernel';
-import { IJupyterKernelSpec } from '../../client/datascience/types';
-import { createEventHandler, PYTHON_PATH, sleep, waitForCondition } from '../common';
+import { createDeferred } from '../../platform/common/utils/async';
+import { createEventHandler, PYTHON_PATH, sleep, waitForCondition } from '../common.node';
 import { requestExecute } from './raw-kernel/rawKernelTestHelpers';
 
 // Chai as promised is not part of this file
 import * as chaiAsPromised from 'chai-as-promised';
-import { traceInfo } from '../../client/common/logger';
-import { IS_REMOTE_NATIVE_TEST } from '../constants';
-import { initialize } from '../initialize';
-import { PortAttributesProviders } from '../../client/common/net/portAttributeProvider';
-import { IDisposable } from '../../client/common/types';
-import { disposeAllDisposables } from '../../client/common/helpers';
+import { traceInfo } from '../../platform/logging';
+import { IS_REMOTE_NATIVE_TEST } from '../constants.node';
+import { initialize } from '../initialize.node';
+import { PortAttributesProviders } from '../../platform/common/net/portAttributeProvider.node';
+import { IDisposable } from '../../platform/common/types';
+import { disposeAllDisposables } from '../../platform/common/helpers';
 import { CancellationTokenSource, PortAutoForwardAction } from 'vscode';
-import { DisplayOptions } from '../../client/datascience/displayOptions';
+import { createRawKernel } from '../../kernels/raw/session/rawKernel.node';
+import { IKernelConnection, IKernelLauncher } from '../../kernels/raw/types';
+import { IJupyterKernelSpec } from '../../kernels/types';
 use(chaiAsPromised);
 
 const test_Timeout = 30_000;
@@ -68,7 +67,6 @@ suite('DataScience - Kernel Launcher', () => {
             -1,
             undefined,
             process.cwd(),
-            new DisplayOptions(false),
             token.token
         );
         kernel.exited(() => {
@@ -111,7 +109,6 @@ suite('DataScience - Kernel Launcher', () => {
             30_000,
             undefined,
             process.cwd(),
-            new DisplayOptions(false),
             token.token
         );
 
@@ -146,7 +143,6 @@ suite('DataScience - Kernel Launcher', () => {
             30_000,
             undefined,
             process.cwd(),
-            new DisplayOptions(false),
             token.token
         );
 
@@ -199,7 +195,6 @@ suite('DataScience - Kernel Launcher', () => {
             -1,
             undefined,
             process.cwd(),
-            new DisplayOptions(false),
             token.token
         );
 

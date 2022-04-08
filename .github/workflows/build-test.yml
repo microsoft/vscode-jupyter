@@ -32,11 +32,11 @@ on:
         default: 'Do not publish'
         type: choice
         options:
-        - Do not publish
-        - Yes, publish pre-release
+          - Do not publish
+          - Yes, publish pre-release
 
 env:
-  NODE_VERSION: 14.16.0
+  NODE_VERSION: 16.13.0
   PYTHON_VERSION: 3.8
   JULIA_VERSION: 1.5.2
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
@@ -106,13 +106,13 @@ jobs:
           echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
           echo "test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
 
-    #   - name:
-    #       pre-release channel
-    #       # Scheduled builds will publish pre-release builds.
-    #     if: (github.event_name == 'schedule' || github.event.inputs.publishPreRelease == 'Yes, publish pre-release') && github.ref == 'refs/heads/main'
-    #     run: |
-    #       echo "package_command=packagePreRelease" >> $GITHUB_ENV
-    #       echo "release_channel=pre-release" >> $GITHUB_ENV
+      #   - name:
+      #       pre-release channel
+      #       # Scheduled builds will publish pre-release builds.
+      #     if: (github.event_name == 'schedule' || github.event.inputs.publishPreRelease == 'Yes, publish pre-release') && github.ref == 'refs/heads/main'
+      #     run: |
+      #       echo "package_command=packagePreRelease" >> $GITHUB_ENV
+      #       echo "release_channel=pre-release" >> $GITHUB_ENV
 
       - name: release
         if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && contains(github.ref, 'refs/heads/release')
@@ -203,7 +203,7 @@ jobs:
         id: check-ignore-list
 
       - name: Verify Translation files
-        run: npx gulp validateTranslationFiles
+        run: npm run validateTranslationFiles
 
       - name: Run linting on TypeScript code (eslint)
         run: npm run lint
@@ -221,12 +221,13 @@ jobs:
 
       - name: Run Black on Python code
         run: |
+          python -m pip install click==8.0.4
           python -m pip install -U black
           python -m black . --check
         working-directory: pythonFiles
 
       - name: Run gulp prePublishNonBundle
-        run: npx gulp prePublishNonBundle
+        run: npm run prePublishNonBundle
 
       - name: Cache the out/ directory
         uses: actions/cache@v2.1.4
@@ -240,7 +241,7 @@ jobs:
       - name: 'Check for telemetry edit'
         uses: brettcannon/check-for-changed-files@v1.1.0
         with:
-          prereq-pattern: './src/client/telemetry/index.ts'
+          prereq-pattern: './src/telemetry/index.ts'
           file-pattern: 'telemetry.md'
           skip-label: 'skip telemetry'
           failure-message: 'TELEMETRY.md should be updated when adding or removing telemetry. Please run "npm run generateTelemetry"'
@@ -307,7 +308,7 @@ jobs:
         run: npm ci --prefer-offline
 
       - name: Compile if not cached
-        run: npx gulp prePublishNonBundle
+        run: npm run prePublishNonBundle
         env:
           CI_JUPYTER_FAST_COMPILATION: 'true'
 
@@ -325,7 +326,7 @@ jobs:
           check_name: Ts-Unit Test Report
 
       - name: Create coverage folder (if not created)
-        run: npx gulp createNycFolder
+        run: npm run createNycFolder
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
@@ -341,7 +342,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
     env:
-      VSC_FORCE_REAL_JUPYTER: 1
       VSC_PYTHON_FORCE_LOGGING: 1
       VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
     strategy:
@@ -527,12 +527,9 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get install imagemagick
 
-      - name: Install screen capture
-        run: npm i -D screenshot-desktop
-
         # This step is slow.
       - name: Compile if not cached
-        run: npx gulp prePublishNonBundle
+        run: npm run prePublishNonBundle
         env:
           CI_JUPYTER_FAST_COMPILATION: 'true'
 
@@ -598,7 +595,6 @@ jobs:
         with:
           run: ${{ env.xvfbCommand }} npm run testNativeNotebooksInVSCode
         env:
-          VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
@@ -614,7 +610,6 @@ jobs:
         run: |
           npm run testNativeNotebooksInVSCodeWithoutTestSuffix
         env:
-          VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
@@ -623,7 +618,7 @@ jobs:
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
-          TEST_FILES_SUFFIX: '+(interrupt|execut)*.vscode.test'
+          TEST_FILES_SUFFIX: '+(interrupt|execut)*.vscode.test*'
         id: test_notebook_vscode_windows
         if: matrix.python != 'noPython' && matrix.os == 'windows-latest'
 
@@ -640,7 +635,6 @@ jobs:
         with:
           run: ${{ env.xvfbCommand }} npm run testNativeNotebooksWithoutPythonInVSCode
         env:
-          VSC_FORCE_REAL_JUPYTER: 1
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
@@ -656,7 +650,7 @@ jobs:
         if: steps.test_notebookWithoutPythonExt_vscode.outcome == 'failure' && failure()
 
       - name: Create coverage folder (if not created)
-        run: npx gulp createNycFolder
+        run: npm run createNycFolder
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
@@ -746,7 +740,7 @@ jobs:
         run: npx tsc -p ./
         shell: bash
 
-      - name: Run smoke tests
+      - name: Run desktop smoke tests
         env:
           DISPLAY: 10
         uses: GabrielBB/xvfb-action@v1.4
@@ -761,7 +755,7 @@ jobs:
           path: './smoke-test.log'
 
       - name: Create coverage folder (if not created)
-        run: npx gulp createNycFolder
+        run: npm run createNycFolder
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
@@ -771,6 +765,13 @@ jobs:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: .nyc_output
           retention-days: 1
+
+      - name: Build web parts
+        run: npm run compile-web-test
+        if: always()
+
+      - name: Run web smoke test
+        run: npm run testSmokeWeb
 
   coverage:
     name: Coverage reports upload
@@ -797,7 +798,7 @@ jobs:
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
 
       - name: Compile if not cached
-        run: npx gulp prePublishNonBundle
+        run: npm run prePublishNonBundle
         env:
           CI_JUPYTER_FAST_COMPILATION: 'true'
 

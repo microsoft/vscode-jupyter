@@ -6,25 +6,20 @@
 import type { Kernel, Session } from '@jupyterlab/services';
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { IRemoteKernelFinder } from '../../../client/datascience/kernel-launcher/types';
-import { getDisplayNameOrNameOfKernelConnection } from '../../../client/datascience/jupyter/kernels/helpers';
-import { PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { RemoteKernelFinder } from '../../../client/datascience/kernel-launcher/remoteKernelFinder';
+import { getDisplayNameOrNameOfKernelConnection } from '../../../platform/../kernels/helpers.node';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { Disposable, EventEmitter, Uri } from 'vscode';
-import { PreferredRemoteKernelIdProvider } from '../../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
 import { MockMemento } from '../../mocks/mementos';
-import { CryptoUtils } from '../../../client/common/crypto';
-import {
-    IJupyterConnection,
-    IJupyterKernel,
-    IJupyterKernelSpec,
-    IJupyterSessionManager
-} from '../../../client/datascience/types';
-import { JupyterSessionManagerFactory } from '../../../client/datascience/jupyter/jupyterSessionManagerFactory';
-import { JupyterSessionManager } from '../../../client/datascience/jupyter/jupyterSessionManager';
+import { CryptoUtils } from '../../../platform/common/crypto.node';
 import { noop } from '../../core';
-import { LiveKernelConnectionMetadata } from '../../../client/datascience/jupyter/kernels/types';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { IJupyterConnection, IJupyterKernelSpec, LiveKernelConnectionMetadata } from '../../../kernels/types';
+import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import { JupyterSessionManager } from '../../../kernels/jupyter/session/jupyterSessionManager.node';
+import { JupyterSessionManagerFactory } from '../../../kernels/jupyter/session/jupyterSessionManagerFactory.node';
+import { RemoteKernelFinder } from '../../../kernels/raw/finder/remoteKernelFinder.node';
+import { IRemoteKernelFinder } from '../../../kernels/raw/types';
+import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider.node';
+import { IJupyterKernel, IJupyterSessionManager } from '../../../kernels/jupyter/types';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];

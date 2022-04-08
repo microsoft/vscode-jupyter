@@ -7,10 +7,10 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { window } from 'vscode';
-import { traceInfo } from '../../../client/common/logger';
-import { IDisposable } from '../../../client/common/types';
-import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
-import { initialize } from '../../initialize';
+import { traceInfo } from '../../../platform/logging';
+import { IDisposable } from '../../../platform/common/types';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
+import { initialize } from '../../initialize.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
     runAllCellsInActiveNotebook,
@@ -22,10 +22,10 @@ import {
     workAroundVSCodeNotebookStartPages,
     defaultNotebookTestTimeout
 } from './helper';
-import { IS_CONDA_TEST } from '../../constants';
-import { INotebookControllerManager } from '../../../client/datascience/notebook/types';
-import { JupyterNotebookView } from '../../../client/datascience/notebook/constants';
-import { EnvironmentType } from '../../../client/pythonEnvironments/info';
+import { IS_CONDA_TEST } from '../../constants.node';
+import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
+import { JupyterNotebookView } from '../../../notebooks/constants';
+import { INotebookControllerManager } from '../../../notebooks/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Conda Env Detection) (slow)', function () {
@@ -72,8 +72,6 @@ suite('DataScience - VSCode Notebook - (Conda Env Detection) (slow)', function (
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this.currentTest?.title);
         }
-        // Added temporarily to identify why tests are failing.
-        process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = undefined;
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });

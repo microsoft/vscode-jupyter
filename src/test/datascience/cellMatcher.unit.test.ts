@@ -2,26 +2,56 @@
 // Licensed under the MIT License.
 'use strict';
 import { assert } from 'chai';
-import { IJupyterSettings } from '../../client/common/types';
-import { CellMatcher } from '../../client/datascience/cellMatcher';
+import { CellMatcher } from '../../interactive-window/editor-integration/cellMatcher.node';
+import { IJupyterSettings } from '../../platform/common/types';
 import { defaultDataScienceSettings } from './helpers';
 
 suite('DataScience CellMatcher', () => {
-    test('CellMatcher', () => {
-        const settings: IJupyterSettings = defaultDataScienceSettings();
-        const matcher1 = new CellMatcher(settings);
-        assert.ok(matcher1.isCode('# %%'), 'Base code is wrong');
-        assert.ok(matcher1.isMarkdown('# %% [markdown]'), 'Base markdown is wrong');
-        assert.equal(matcher1.exec('# %% TITLE'), 'TITLE', 'Title not found');
+    const settings: IJupyterSettings = defaultDataScienceSettings();
+    const defaultMatcher = new CellMatcher(settings);
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (<any>settings).defaultCellMarker = '# %% CODE HERE';
-        const matcher2 = new CellMatcher(settings);
-        assert.ok(matcher2.isCode('# %%'), 'Code not found');
-        assert.ok(matcher2.isCode('# %% CODE HERE'), 'Code not found');
-        assert.ok(matcher2.isCode('# %% CODE HERE TOO'), 'Code not found');
-        assert.ok(matcher2.isMarkdown('# %% [markdown]'), 'Base markdown is wrong');
-        assert.equal(matcher2.exec('# %% CODE HERE'), '', 'Should not have a title');
-        assert.equal(matcher2.exec('# %% CODE HERE FOO'), 'FOO', 'Should have a title');
+    const codeCellMarkers = ['# %%', '#%%', '#   %%', '# %% extra stuff', '   # %%     '];
+    codeCellMarkers.forEach((cellMarker) => {
+        test('CellMatcher for valid code cell', () => {
+            assert.ok(defaultMatcher.isCell(cellMarker), `${cellMarker} should match as a cell marker`);
+            assert.ok(defaultMatcher.isCode(cellMarker), `${cellMarker} should match as a code cell marker`);
+        });
+    });
+
+    const markdownCellMarkers = [
+        '# %% [markdown]',
+        '#%%[markdown]',
+        '#   %%    [markdown]',
+        '# %% [markdown] extra stuff',
+        //'   # %% [markdown]   ',
+        '# <markdowncell>',
+        '#<markdowncell>',
+        '#    <markdowncell>',
+        '# <markdowncell> extra stuff'
+    ];
+    markdownCellMarkers.forEach((cellMarker) => {
+        test('CellMatcher for valid markdown cell', () => {
+            assert.ok(defaultMatcher.isCell(cellMarker), `${cellMarker} should match as a cell marker`);
+            assert.ok(defaultMatcher.isMarkdown(cellMarker), `${cellMarker} should match as a markdown cell marker`);
+        });
+    });
+
+    const invalidCellMarkers = ['', 'print(1);', '# ! %%'];
+    invalidCellMarkers.forEach((cellMarker) => {
+        test('CellMatcher for valid markdown cell', () => {
+            assert.isFalse(defaultMatcher.isCell(cellMarker), `${cellMarker} should not match as a cell marker`);
+        });
+    });
+
+    const customSettings: IJupyterSettings = defaultDataScienceSettings();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (<any>customSettings).defaultCellMarker = '# CODE HERE';
+    const cusomMatcher = new CellMatcher(customSettings);
+    const customCellMakers = ['# %%', '# CODE HERE', '   # CODE HERE    '];
+    customCellMakers.forEach((cellMarker) => {
+        test('Custom Default cell setting for valid code cell', () => {
+            assert.ok(cusomMatcher.isCell(cellMarker), `${cellMarker} should match as a cell marker`);
+            assert.ok(cusomMatcher.isCode(cellMarker), `${cellMarker} should match as a code cell marker`);
+        });
     });
 });

@@ -9,7 +9,7 @@ import { ChildProcess, spawn, spawnSync } from 'child_process';
 import * as dedent from 'dedent';
 import * as fs from 'fs-extra';
 import * as os from 'os';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import { instance, mock } from 'ts-mockito';
 import {
     createMessageConnection,
@@ -18,14 +18,14 @@ import {
     StreamMessageReader,
     StreamMessageWriter
 } from 'vscode-jsonrpc/node';
-import { IPlatformService } from '../../../client/common/platform/types';
-import { PythonDaemonExecutionService } from '../../../client/common/process/pythonDaemon';
-import { IPythonExecutionService } from '../../../client/common/process/types';
-import { IDisposable } from '../../../client/common/types';
-import { EXTENSION_ROOT_DIR } from '../../../client/constants';
-import { PythonEnvironment, PythonVersionInfo } from '../../../client/pythonEnvironments/info';
-import { parsePythonVersion } from '../../../client/pythonEnvironments/info/pythonVersion';
-import { isPythonVersion, PYTHON_PATH } from '../../common';
+import { IPlatformService } from '../../../platform/common/platform/types';
+import { PythonDaemonExecutionService } from '../../../platform/common/process/pythonDaemon.node';
+import { IPythonExecutionService } from '../../../platform/common/process/types.node';
+import { IDisposable } from '../../../platform/common/types';
+import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
+import { PythonEnvironment, PythonVersionInfo } from '../../../platform/pythonEnvironments/info';
+import { parsePythonVersion } from '../../../platform/pythonEnvironments/info/pythonVersion';
+import { isPythonVersion, PYTHON_PATH } from '../../common.node';
 import { createTemporaryFile } from '../../utils/fs';
 use(chaiPromised);
 

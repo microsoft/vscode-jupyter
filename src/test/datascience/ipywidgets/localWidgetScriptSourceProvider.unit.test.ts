@@ -1,18 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { assert } from 'chai';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { FileSystem } from '../../../client/common/platform/fileSystem';
-import { IFileSystem } from '../../../client/common/platform/types';
-import { IPythonExecutionFactory } from '../../../client/common/process/types';
-import { LocalWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/localWidgetScriptSourceProvider';
-import { IWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/types';
-import { IKernel } from '../../../client/datascience/jupyter/kernels/types';
-import { ILocalResourceUriConverter } from '../../../client/datascience/types';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IPythonExecutionFactory } from '../../../platform/common/process/types.node';
+import { IKernel } from '../../../platform/../kernels/types';
+import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import { LocalWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/localWidgetScriptSourceProvider.node';
+import {
+    ILocalResourceUriConverter,
+    IWidgetScriptSourceProvider
+} from '../../../kernels/ipywidgets-message-coordination/types';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - ipywidget - Local Widget Script Source', () => {

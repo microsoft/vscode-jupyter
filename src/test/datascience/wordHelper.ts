@@ -167,4 +167,5 @@ export function regExpLeadsToEndlessLoop(regexp: RegExp): boolean {
     return !!(match && <any>regexp.lastIndex === 0);
 }
 
-export const DefaultWordPattern = /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g;
+export const DefaultWordPattern =
+    /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g;

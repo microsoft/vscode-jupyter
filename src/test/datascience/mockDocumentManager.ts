@@ -1,7 +1,8 @@
+/* eslint-disable local-rules/dont-use-fspath */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import {
     DecorationRenderOptions,
     Event,
@@ -21,8 +22,8 @@ import {
     WorkspaceEdit
 } from 'vscode';
 
-import { IDocumentManager } from '../../client/common/application/types';
-import { EXTENSION_ROOT_DIR } from '../../client/constants';
+import { IDocumentManager } from '../../platform/common/application/types';
+import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
 import { MockDocument } from './mockDocument';
 import { MockEditor } from './mockTextEditor';
 

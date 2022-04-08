@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as cp from 'child_process';
-import { sleep } from '../client/common/utils/async';
+import { sleep } from '../platform/common/utils/async';
 
 type OutStream = 'stdout' | 'stderr';
 
@@ -51,7 +51,7 @@ export class Proc {
     private readonly output: ProcOutput;
     private result: ProcResult | undefined;
     constructor(raw: cp.ChildProcess, output: ProcOutput) {
-        this.raw = (raw as unknown) as IRawProc;
+        this.raw = raw as unknown as IRawProc;
         this.output = output;
     }
     public get pid(): number {

@@ -5,15 +5,15 @@ import { SemVer } from 'semver';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { CancellationTokenSource, Disposable, EventEmitter } from 'vscode';
-import { disposeAllDisposables } from '../../../client/common/helpers';
-import { IConfigurationService, IWatchableJupyterSettings } from '../../../client/common/types';
-import { DisplayOptions } from '../../../client/datascience/displayOptions';
-import { NotebookServerProvider } from '../../../client/datascience/interactive-common/notebookServerProvider';
-import { JupyterServerSelector } from '../../../client/datascience/jupyter/serverSelector';
-import { JupyterServerUriStorage } from '../../../client/datascience/jupyter/serverUriStorage';
-import { IJupyterExecution, INotebookServer } from '../../../client/datascience/types';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { IConfigurationService, IWatchableJupyterSettings } from '../../../platform/common/types';
+import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { NotebookServerProvider } from '../../../kernels/jupyter/launcher/notebookServerProvider.node';
+import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage.node';
+import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector.node';
+import { DisplayOptions } from '../../../kernels/displayOptions.node';
+import { IJupyterExecution, INotebookServer } from '../../../kernels/jupyter/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 function createTypeMoq<T>(tag: string): typemoq.IMock<T> {

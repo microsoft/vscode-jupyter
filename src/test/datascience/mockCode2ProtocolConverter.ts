@@ -1,3 +1,4 @@
+/* eslint-disable local-rules/dont-use-fspath */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
@@ -42,19 +43,17 @@ export class MockCode2ProtocolConverter implements Code2ProtocolConverter {
                     uri: document.uri.toString(),
                     version: document.version
                 },
-                contentChanges: arg.contentChanges.map(
-                    (change): proto.TextDocumentContentChangeEvent => {
-                        const range = change.range;
-                        return {
-                            range: {
-                                start: { line: range.start.line, character: range.start.character },
-                                end: { line: range.end.line, character: range.end.character }
-                            },
-                            rangeLength: change.rangeLength,
-                            text: change.text
-                        };
-                    }
-                )
+                contentChanges: arg.contentChanges.map((change): proto.TextDocumentContentChangeEvent => {
+                    const range = change.range;
+                    return {
+                        range: {
+                            start: { line: range.start.line, character: range.start.character },
+                            end: { line: range.end.line, character: range.end.character }
+                        },
+                        rangeLength: change.rangeLength,
+                        text: change.text
+                    };
+                })
             };
         } else {
             throw Error('Unsupported text document change parameter');

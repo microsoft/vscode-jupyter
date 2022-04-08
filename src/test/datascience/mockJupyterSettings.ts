@@ -1,5 +1,5 @@
-import { JupyterSettings } from '../../client/common/configSettings';
-import { IJupyterSettings } from '../../client/common/types';
+import { JupyterSettings } from '../../platform/common/configSettings';
+import { IJupyterSettings } from '../../platform/common/types';
 
 export class MockJupyterSettings extends JupyterSettings {
     public fireChangeEvent() {

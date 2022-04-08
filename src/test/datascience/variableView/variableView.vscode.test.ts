@@ -3,12 +3,10 @@
 'use strict';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { ICommandManager, IVSCodeNotebook } from '../../../client/common/application/types';
-import { IDisposable } from '../../../client/common/types';
-import { Commands } from '../../../client/datascience/constants';
-import { IVariableViewProvider } from '../../../client/datascience/variablesView/types';
-import { IExtensionTestApi, waitForCondition } from '../../common';
-import { initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize';
+import { ICommandManager, IVSCodeNotebook } from '../../../platform/common/application/types';
+import { IDisposable } from '../../../platform/common/types';
+import { IExtensionTestApi, waitForCondition } from '../../common.node';
+import { initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
@@ -22,10 +20,12 @@ import {
 import { waitForVariablesToMatch } from './variableViewHelpers';
 import { ITestVariableViewProvider } from './variableViewTestInterfaces';
 import { ITestWebviewHost } from '../testInterfaces';
-import { traceInfo } from '../../../client/common/logger';
-import { DataViewer } from '../../../client/datascience/data-viewing/dataViewer';
-import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { traceInfo } from '../../../platform/logging';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import { Commands } from '../../../platform/common/constants';
+import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataViewer.node';
+import { IVariableViewProvider } from '../../../webviews/extension-side/variablesView/types';
 
 suite('DataScience - VariableView', function () {
     let api: IExtensionTestApi;
@@ -55,7 +55,7 @@ suite('DataScience - VariableView', function () {
         activeInterpreter = interpreter!;
         const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        variableViewProvider = (coreVariableViewProvider as any) as ITestVariableViewProvider; // Cast to expose the test interfaces
+        variableViewProvider = coreVariableViewProvider as any as ITestVariableViewProvider; // Cast to expose the test interfaces
         traceInfo('Suite Setup (completed)');
     });
     setup(async function () {
@@ -81,7 +81,7 @@ suite('DataScience - VariableView', function () {
         // Aquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const variableView = (coreVariableView as any) as ITestWebviewHost;
+        const variableView = coreVariableView as any as ITestWebviewHost;
 
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
@@ -109,7 +109,7 @@ suite('DataScience - VariableView', function () {
         // Aquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const variableView = (coreVariableView as any) as ITestWebviewHost;
+        const variableView = coreVariableView as any as ITestWebviewHost;
 
         // Add cell that overrides print
         await insertCodeCell('def print():\n  x = 1', { index: 0 });
@@ -135,7 +135,7 @@ suite('DataScience - VariableView', function () {
         // Aquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const variableView = (coreVariableView as any) as ITestWebviewHost;
+        const variableView = coreVariableView as any as ITestWebviewHost;
 
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
@@ -182,7 +182,7 @@ suite('DataScience - VariableView', function () {
         // Aquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const variableView = (coreVariableView as any) as ITestWebviewHost;
+        const variableView = coreVariableView as any as ITestWebviewHost;
 
         // Add some basic types
         const code = `import numpy as np
@@ -223,7 +223,7 @@ myClass = MyClass()
         // Aquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const variableView = (coreVariableView as any) as ITestWebviewHost;
+        const variableView = coreVariableView as any as ITestWebviewHost;
 
         // Add some basic types
         const code = `myComplex = complex(1, 1)
@@ -262,7 +262,7 @@ mySet = {1, 2, 3}
         // Aquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const variableView = (coreVariableView as any) as ITestWebviewHost;
+        const variableView = coreVariableView as any as ITestWebviewHost;
 
         // Add one simple cell and execute it
         await insertCodeCell('test = [1, 2, 3]');

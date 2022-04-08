@@ -8,7 +8,7 @@ suite('Dummy10', () => {
     });
 });
 // /* eslint-disable , comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */
-// import '../../client/common/extensions';
+// import '../../platform/common/extensions.node';
 
 // import * as assert from 'assert';
 // import { ComponentClass, mount, ReactWrapper } from 'enzyme';
@@ -16,8 +16,8 @@ suite('Dummy10', () => {
 // import * as React from 'react';
 // import { Disposable } from 'vscode';
 
-// import { IPlotViewerProvider } from '../../client/datascience/types';
-// import { MainPanel } from '../../datascience-ui/plot/mainPanel';
+// import { IPlotViewerProvider } from '../../platform/datascience/types';
+// import { MainPanel } from '../../webviews/webview-side/plot/mainPanel';
 // import { DataScienceIocContainer } from './dataScienceIocContainer';
 
 // // import { asyncDump } from '../common/asyncDump';

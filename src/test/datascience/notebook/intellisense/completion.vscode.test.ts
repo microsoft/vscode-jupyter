@@ -5,15 +5,14 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { commands, CompletionList, Position } from 'vscode';
-import { IVSCodeNotebook } from '../../../../client/common/application/types';
-import { traceInfo } from '../../../../client/common/logger';
-import { IDisposable } from '../../../../client/common/types';
-import { InteractiveWindowProvider } from '../../../../client/datascience/interactive-window/interactiveWindowProvider';
-import { getTextOutputValue } from '../../../../client/datascience/notebook/helpers/helpers';
-import { IInteractiveWindowProvider } from '../../../../client/datascience/types';
-import { captureScreenShot, IExtensionTestApi } from '../../../common';
-import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
-import { initialize } from '../../../initialize';
+import { IVSCodeNotebook } from '../../../../platform/common/application/types';
+import { traceInfo } from '../../../../platform/logging';
+import { IDisposable } from '../../../../platform/common/types';
+import { InteractiveWindowProvider } from '../../../../interactive-window/interactiveWindowProvider.node';
+import { getTextOutputValue } from '../../../../notebooks/helpers.node';
+import { captureScreenShot, IExtensionTestApi } from '../../../common.node';
+import { IS_REMOTE_NATIVE_TEST } from '../../../constants.node';
+import { initialize } from '../../../initialize.node';
 import { createStandaloneInteractiveWindow, insertIntoInputEditor } from '../../helpers';
 import {
     closeNotebooksAndCleanUpAfterTests,
@@ -24,6 +23,9 @@ import {
     prewarmNotebooks,
     createEmptyPythonNotebook
 } from '../helper';
+import { IInteractiveWindowProvider } from '../../../../interactive-window/types';
+import { setIntellisenseTimeout } from '../../../../intellisense/pythonKernelCompletionProvider.node';
+import { Settings } from '../../../../platform/common/constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Intellisense Notebook and Interactive Code Completion (slow)', function () {
@@ -53,12 +55,12 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Code Completio
         sinon.restore();
         await startJupyterServer();
         await createEmptyPythonNotebook(disposables);
-        process.env.VSC_JUPYTER_IntellisenseTimeout = '30000';
+        setIntellisenseTimeout(30000);
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
-        delete process.env.VSC_JUPYTER_IntellisenseTimeout;
+        setIntellisenseTimeout(Settings.IntellisenseTimeout);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this.currentTest?.title);
         }

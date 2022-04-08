@@ -32,6 +32,31 @@
             }
         },
         {
+            "name": "Extension (web)",
+            "type": "pwa-extensionHost",
+            "debugWebWorkerHost": true,
+            "request": "launch",
+            "args": ["--extensionDevelopmentPath=${workspaceFolder}", "--extensionDevelopmentKind=web"],
+            "outFiles": ["${workspaceFolder}/out/**/*", "!${workspaceFolder}/**/node_modules**/*"],
+            "preLaunchTask": "Compile Web Extension",
+            "presentation": {
+                "group": "1_extension",
+                "order": 1
+            }
+        },
+        {
+            "name": "Extension (web with daemon compilation)",
+            "type": "pwa-extensionHost",
+            "debugWebWorkerHost": true,
+            "request": "launch",
+            "args": ["--extensionDevelopmentPath=${workspaceFolder}", "--extensionDevelopmentKind=web"],
+            "outFiles": ["${workspaceFolder}/out/**/*", "!${workspaceFolder}/**/node_modules**/*"],
+            "presentation": {
+                "group": "1_extension",
+                "order": 1
+            }
+        },
+        {
             "name": "Extension (with daemon compilation)",
             "type": "extensionHost",
             "request": "launch",
@@ -75,6 +100,27 @@
                 "order": 3
             }
         },
+		{
+			"name": "Web Tests",
+			"type": "extensionHost",
+			"debugWebWorkerHost": true,
+			"request": "launch",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+                "--enable-proposed-api",
+				"--extensionDevelopmentKind=web",
+				"--extensionTestsPath=${workspaceFolder}/out/extension.web.bundle"
+			],
+			"outFiles": [
+				"${workspaceFolder}/out/**/*.*"
+			],
+            "sourceMaps": true,
+            "preLaunchTask": "compile-web-test",
+            "presentation": {
+                "group": "2_tests",
+                "order": 11
+            }
+		},
         {
             // Note, for the smoke test you want to debug, you may need to copy the file,
             // rename it and remove a check for only smoke tests.
@@ -83,10 +129,10 @@
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": [
-                "${workspaceFolder}/src/testMultiRootWkspc/smokeTests",
+                "${workspaceFolder}/src/test/testMultiRootWkspc/smokeTests",
                 "--enable-proposed-api",
                 "--extensionDevelopmentPath=${workspaceFolder}",
-                "--extensionTestsPath=${workspaceFolder}/out/test"
+                "--extensionTestsPath=${workspaceFolder}/out/test/index.node.js"
             ],
             "env": {
                 "CI_PYTHON_PATH": "<Python Path>",
@@ -136,14 +182,13 @@
                 "${workspaceFolder}/src/test/datascience",
                 "--enable-proposed-api",
                 "--extensionDevelopmentPath=${workspaceFolder}",
-                "--extensionTestsPath=${workspaceFolder}/out/test"
+                "--extensionTestsPath=${workspaceFolder}/out/test/index.node.js"
             ],
             "env": {
                 "VSC_JUPYTER_FORCE_LOGGING": "1",
                 "VSC_JUPYTER_CI_TEST_GREP": "", // Leave as `VSCode Notebook` to run only Notebook tests.
                 "VSC_JUPYTER_CI_TEST_INVERT_GREP": "", // Initialize this to invert the grep (exclude tests with value defined in grep).
                 "CI_PYTHON_PATH": "", // Update with path to real python interpereter used for testing.
-                "VSC_FORCE_REAL_JUPYTER": "true", // Enalbe tests that require Jupyter.
                 "VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST": "", // Initialize this to run tests again Julia & other kernels.
                 "VSC_JUPYTER_WEBVIEW_TEST_MIDDLEWARE": "true", // Initialize to create the webview test middleware
                 "VSC_JUPYTER_LOAD_EXPERIMENTS_FROM_FILE": "true",
@@ -172,7 +217,7 @@
             "stopOnEntry": false,
             "sourceMaps": true,
             "args": [
-                "./out/test/**/*.unit.test.js",
+                "./out/**/*.unit.test.js",
                 "--require=out/test/unittests.js",
                 "--ui=tdd",
                 "--recursive",

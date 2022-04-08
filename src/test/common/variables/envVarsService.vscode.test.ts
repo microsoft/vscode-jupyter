@@ -7,14 +7,24 @@
 
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import * as path from 'path';
-import { FileSystem } from '../../../client/common/platform/fileSystem';
-import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
-import { IEnvironmentVariablesService } from '../../../client/common/variables/types';
+import * as path from '../../../platform/vscode-path/path';
+import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
+import { EnvironmentVariablesService } from '../../../platform/common/variables/environment.node';
+import { IEnvironmentVariablesService } from '../../../platform/common/variables/types';
 
 use(chaiAsPromised);
 
-const envFilesFolderPath = path.join(__dirname, '..', '..', '..', '..', 'src', 'testMultiRootWkspc', 'workspace4');
+const envFilesFolderPath = path.join(
+    __dirname,
+    '..',
+    '..',
+    '..',
+    '..',
+    'src',
+    'test',
+    'testMultiRootWkspc',
+    'workspace4'
+);
 
 // Functional tests that do not run code using the VS Code API are found
 // in envVarsService.test.ts.

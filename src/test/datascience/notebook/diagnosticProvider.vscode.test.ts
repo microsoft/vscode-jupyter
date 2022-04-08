@@ -5,21 +5,21 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
-import { DataScience } from '../../../client/common/utils/localize';
-import { IVSCodeNotebook } from '../../../client/common/application/types';
-import { traceInfo } from '../../../client/common/logger';
-import { IDisposable } from '../../../client/common/types';
-import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
-import { initialize } from '../../initialize';
+import { DataScience } from '../../../platform/common/utils/localize';
+import { IVSCodeNotebook } from '../../../platform/common/application/types';
+import { traceInfo } from '../../../platform/logging';
+import { IDisposable } from '../../../platform/common/types';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
+import { initialize } from '../../initialize.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
     insertCodeCell,
     createEmptyPythonNotebook,
     workAroundVSCodeNotebookStartPages
 } from './helper';
-import { NotebookCellBangInstallDiagnosticsProvider } from '../../../client/datascience/notebook/diagnosticsProvider';
 import { NotebookDocument, Range } from 'vscode';
-import { IExtensionSyncActivationService } from '../../../client/activation/types';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
+import { NotebookCellBangInstallDiagnosticsProvider } from '../../../intellisense/diagnosticsProvider.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {

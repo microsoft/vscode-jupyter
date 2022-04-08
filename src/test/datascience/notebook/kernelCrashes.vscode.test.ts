@@ -4,16 +4,16 @@
 'use strict';
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import * as fs from 'fs-extra';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { DataScience } from '../../../client/common/utils/localize';
-import { IVSCodeNotebook } from '../../../client/common/application/types';
-import { traceInfo } from '../../../client/common/logger';
-import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../client/common/types';
-import { captureScreenShot, IExtensionTestApi } from '../../common';
-import { initialize } from '../../initialize';
+import { DataScience } from '../../../platform/common/utils/localize';
+import { IVSCodeNotebook } from '../../../platform/common/application/types';
+import { traceInfo } from '../../../platform/logging';
+import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../platform/common/types';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
+import { initialize } from '../../initialize.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
     runCell,
@@ -25,17 +25,22 @@ import {
     workAroundVSCodeNotebookStartPages,
     waitForExecutionCompletedSuccessfully,
     runAllCellsInActiveNotebook,
-    waitForKernelToGetAutoSelected
+    waitForKernelToGetAutoSelected,
+    deleteCell,
+    defaultNotebookTestTimeout,
+    waitForExecutionCompletedWithoutChangesToExecutionCount,
+    getCellOutputs
 } from './helper';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import * as dedent from 'dedent';
-import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
-import { createDeferred } from '../../../client/common/utils/async';
+import { IKernelProvider } from '../../../platform/../kernels/types';
+import { createDeferred } from '../../../platform/common/utils/async';
 import { sleep } from '../../core';
-import { getDisplayNameOrNameOfKernelConnection } from '../../../client/datascience/jupyter/kernels/helpers';
-import { INotebookEditorProvider } from '../../../client/datascience/types';
-import { Uri, workspace } from 'vscode';
-import { getDisplayPath } from '../../../client/common/platform/fs-paths';
+import { getDisplayNameOrNameOfKernelConnection } from '../../../platform/../kernels/helpers.node';
+import { Uri, window, workspace } from 'vscode';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
+import { translateCellErrorOutput } from '../../../notebooks/helpers.node';
+import { INotebookEditorProvider } from '../../../notebooks/types';
 
 const codeToKillKernel = dedent`
 import IPython
@@ -50,7 +55,8 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
     let vscodeNotebook: IVSCodeNotebook;
     let kernelProvider: IKernelProvider;
     let config: IConfigurationService;
-
+    const kernelCrashFailureMessageInCell =
+        'The Kernel crashed while executing code in the the current cell or a previous cell. Please review the code in the cell(s) to identify a possible cause of the failure';
     this.timeout(120_000);
     suiteSetup(async function () {
         traceInfo('Suite Setup');
@@ -91,8 +97,6 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
         }
         const settings = config.getSettings() as ReadWrite<IJupyterSettings>;
         settings.disablePythonDaemon = false;
-        // Added temporarily to identify why tests are failing.
-        process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = undefined;
         await closeNotebooksAndCleanUpAfterTests(disposables);
         sinon.restore();
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
@@ -110,7 +114,7 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
             const [cell1, cell2] = vscodeNotebook.activeNotebookEditor!.document.getCells();
 
             await Promise.all([runCell(cell1), waitForExecutionCompletedSuccessfully(cell1)]);
-            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document)!;
+            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document.uri)!;
             const restartingEventFired = createDeferred<boolean>();
             const autoRestartingEventFired = createDeferred<boolean>();
 
@@ -131,6 +135,19 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
                 Promise.all([restartingEventFired, autoRestartingEventFired]),
                 sleep(10_000).then(() => Promise.reject(new Error('Did not fail')))
             ]);
+
+            // Verify we have output in the cell to indicate the cell crashed.
+            await waitForCondition(
+                async () => {
+                    const output = getCellOutputs(cell2);
+                    return (
+                        output.includes(kernelCrashFailureMessageInCell) &&
+                        output.includes('https://aka.ms/vscodeJupyterKernelCrash')
+                    );
+                },
+                defaultNotebookTestTimeout,
+                () => `Cell did not have kernel crash output, the output is = ${getCellOutputs(cell2)}`
+            );
         });
     });
 
@@ -146,7 +163,7 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
             const [cell1, cell2] = vscodeNotebook.activeNotebookEditor!.document.getCells();
 
             await Promise.all([runCell(cell1), waitForExecutionCompletedSuccessfully(cell1)]);
-            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document)!;
+            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document.uri)!;
             const terminatingEventFired = createDeferred<boolean>();
             const deadEventFired = createDeferred<boolean>();
             const expectedErrorMessage = DataScience.kernelDiedWithoutError().format(
@@ -179,6 +196,19 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
                 sleep(10_000).then(() => Promise.reject(new Error('Did not fail')))
             ]);
             prompt.dispose();
+
+            // Verify we have output in the cell to indicate the cell crashed.
+            await waitForCondition(
+                async () => {
+                    const output = getCellOutputs(cell2);
+                    return (
+                        output.includes(kernelCrashFailureMessageInCell) &&
+                        output.includes('https://aka.ms/vscodeJupyterKernelCrash')
+                    );
+                },
+                defaultNotebookTestTimeout,
+                () => `Cell did not have kernel crash output, the output is = ${getCellOutputs(cell2)}`
+            );
         }
         test('Ensure we get an error message & a status of terminating & dead when kernel dies while executing a cell', async function () {
             await runAndFailWithKernelCrash();
@@ -187,7 +217,7 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
             await runAndFailWithKernelCrash();
             await insertCodeCell('print("123412341234")', { index: 2 });
             const cell3 = vscodeNotebook.activeNotebookEditor!.document.cellAt(2);
-            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document)!;
+            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document.uri)!;
 
             const expectedErrorMessage = DataScience.cannotRunCellKernelIsDead().format(
                 getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
@@ -206,11 +236,75 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
             // If execution order is 1, then we know the kernel restarted.
             assert.strictEqual(cell3.executionSummary?.executionOrder, 1);
         });
-        test('Ensure cell outupt does not have errors when execution fails due to dead kernel', async function () {
+        test('Ensure we get a modal prompt to restart kernel when running cells against a dead kernel (dismiss and run again)', async function () {
             await runAndFailWithKernelCrash();
             await insertCodeCell('print("123412341234")', { index: 2 });
             const cell3 = vscodeNotebook.activeNotebookEditor!.document.cellAt(2);
-            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document)!;
+            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document.uri)!;
+
+            const expectedErrorMessage = DataScience.cannotRunCellKernelIsDead().format(
+                getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
+            );
+            let restartPrompt = await hijackPrompt(
+                'showErrorMessage',
+                {
+                    exactMatch: expectedErrorMessage
+                },
+                { dismissPrompt: true },
+                disposables
+            );
+            // Confirm we get a prompt to restart the kernel
+            await Promise.all([
+                restartPrompt.displayed,
+                runCell(cell3, true),
+                waitForExecutionCompletedWithoutChangesToExecutionCount(cell3)
+            ]);
+
+            restartPrompt.dispose();
+
+            // Running cell again should display the prompt and restart the kernel.
+            restartPrompt = await hijackPrompt(
+                'showErrorMessage',
+                {
+                    exactMatch: expectedErrorMessage
+                },
+                { text: DataScience.restartKernel(), clickImmediately: true },
+                disposables
+            );
+            // Confirm we get a prompt to restart the kernel, and it gets restarted.
+            // & also confirm the cell completes execution with an execution count of 1 (thats how we tell kernel restarted).
+            await Promise.all([restartPrompt.displayed, runCell(cell3), waitForExecutionCompletedSuccessfully(cell3)]);
+            // If execution order is 1, then we know the kernel restarted.
+            assert.strictEqual(cell3.executionSummary?.executionOrder, 1);
+        });
+        test('Ensure we get an error displayed in cell output and prompt when user has a file named random.py next to the ipynb file', async function () {
+            await runAndFailWithKernelCrash();
+            await insertCodeCell('print("123412341234")', { index: 2 });
+            const cell3 = vscodeNotebook.activeNotebookEditor!.document.cellAt(2);
+            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document.uri)!;
+
+            const expectedErrorMessage = DataScience.cannotRunCellKernelIsDead().format(
+                getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
+            );
+            const restartPrompt = await hijackPrompt(
+                'showErrorMessage',
+                {
+                    exactMatch: expectedErrorMessage
+                },
+                { text: DataScience.restartKernel(), clickImmediately: true },
+                disposables
+            );
+            // Confirm we get a prompt to restart the kernel, and it gets restarted.
+            // & also confirm the cell completes execution with an execution count of 1 (thats how we tell kernel restarted).
+            await Promise.all([restartPrompt.displayed, runCell(cell3), waitForExecutionCompletedSuccessfully(cell3)]);
+            // If execution order is 1, then we know the kernel restarted.
+            assert.strictEqual(cell3.executionSummary?.executionOrder, 1);
+        });
+        test('Ensure cell output does not have errors when execution fails due to dead kernel', async function () {
+            await runAndFailWithKernelCrash();
+            await insertCodeCell('print("123412341234")', { index: 2 });
+            const cell3 = vscodeNotebook.activeNotebookEditor!.document.cellAt(2);
+            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document.uri)!;
 
             const expectedErrorMessage = DataScience.cannotRunCellKernelIsDead().format(
                 getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
@@ -224,16 +318,14 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
                 disposables
             );
             // Confirm we get a prompt to restart the kernel, dismiss the prompt.
-            // Confirm the cell isn't executed & there's no output (in the past we'd have s stack trace with errors indicating session has been disposed).
             await Promise.all([restartPrompt.displayed, runCell(cell3)]);
             await sleep(1_000);
             assert.isUndefined(cell3.executionSummary?.executionOrder, 'Should not have an execution order');
-            assert.strictEqual(cell3.outputs.length, 0, 'Should not have any outputs');
         });
         test('Ensure we get only one prompt to restart kernel when running all cells against a dead kernel', async function () {
             await runAndFailWithKernelCrash();
             await insertCodeCell('print("123412341234")', { index: 2 });
-            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document)!;
+            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document.uri)!;
 
             const expectedErrorMessage = DataScience.cannotRunCellKernelIsDead().format(
                 getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
@@ -246,6 +338,8 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
                 { dismissPrompt: true, clickImmediately: true },
                 disposables
             );
+            // Delete the killing cell
+            await deleteCell(1);
             // Confirm we get a prompt to restart the kernel, dismiss the prompt.
             // Confirm the cell isn't executed & there's no output (in the past we'd have s stack trace with errors indicating session has been disposed).
             await Promise.all([restartPrompt.displayed, runAllCellsInActiveNotebook()]);
@@ -270,12 +364,8 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
             assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
             await waitForKernelToGetAutoSelected();
         }
-        async function displayErrorAboutOverriddenBuiltInModules(disablePythonDaemon: boolean) {
+        async function displayErrorAboutOverriddenBuiltInModules() {
             await closeNotebooksAndCleanUpAfterTests(disposables);
-
-            const settings = config.getSettings() as ReadWrite<IJupyterSettings>;
-            settings.disablePythonDaemon = disablePythonDaemon;
-
             const randomFile = path.join(
                 EXTENSION_ROOT_DIR_FOR_TESTS,
                 'src/test/datascience/notebook/kernelFailures/overrideBuiltinModule/random.py'
@@ -293,16 +383,25 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
                 disposables
             );
 
-            await createAndOpenTemporaryNotebookForKernelCrash(`nb${disablePythonDaemon}.ipynb`);
+            await createAndOpenTemporaryNotebookForKernelCrash(`nb.ipynb`);
             await insertCodeCell('print("123412341234")');
             await runAllCellsInActiveNotebook();
             // Wait for a max of 1s for error message to be dispalyed.
             await Promise.race([prompt.displayed, sleep(5_000).then(() => Promise.reject('Prompt not displayed'))]);
             prompt.dispose();
+
+            // Verify we have an output in the cell that contains the same information (about overirding built in modules).
+            const cell = window.activeNotebookEditor!.document.cellAt(0);
+            await waitForCondition(async () => cell.outputs.length > 0, defaultNotebookTestTimeout, 'No output');
+            const err = translateCellErrorOutput(cell.outputs[0]);
+            assert.include(err.traceback.join(''), 'random.py');
+            assert.include(
+                err.traceback.join(''),
+                'seems to be overriding built in modules and interfering with the startup of the kernel'
+            );
+            assert.include(err.traceback.join(''), 'Consider renaming the file and starting the kernel again');
         }
-        test.skip('Display error about overriding builtin modules (with Python daemon', () =>
-            displayErrorAboutOverriddenBuiltInModules(false));
         test('Display error about overriding builtin modules (without Python daemon', () =>
-            displayErrorAboutOverriddenBuiltInModules(true));
+            displayErrorAboutOverriddenBuiltInModules());
     });
 });

@@ -4,16 +4,16 @@
 'use strict';
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import { assert } from 'chai';
-import { traceInfo } from '../../../client/common/logger';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
+import { traceInfo } from '../../../platform/logging';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
 import { openNotebook } from '../helpers';
 import { closeNotebooksAndCleanUpAfterTests } from './helper';
 import { window } from 'vscode';
-import { initialize } from '../../initialize';
+import { initialize } from '../../initialize.node';
 import type * as nbformat from '@jupyterlab/nbformat';
-import { cellOutputToVSCCellOutput } from '../../../client/datascience/notebook/helpers/helpers';
+import { cellOutputToVSCCellOutput } from '../../../notebooks/helpers.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Validate Output order)', function () {

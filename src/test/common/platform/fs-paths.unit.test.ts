@@ -4,11 +4,11 @@
 /* eslint-disable  */
 
 import { expect } from 'chai';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import * as TypeMoq from 'typemoq';
-import { FileSystemPathUtils } from '../../../client/common/platform/fs-paths';
+import { FileSystemPathUtils } from '../../../platform/common/platform/fs-paths.node';
 import { getNamesAndValues } from '../../utils/enum';
-import { OSType } from '../../../client/common/utils/platform';
+import { OSType } from '../../../platform/common/utils/platform';
 
 interface IUtilsDeps {
     // executables

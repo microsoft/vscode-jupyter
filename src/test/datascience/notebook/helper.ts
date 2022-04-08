@@ -5,7 +5,7 @@
 
 import { assert, expect } from 'chai';
 import * as fs from 'fs-extra';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import * as tmp from 'tmp';
 import {
@@ -32,33 +32,29 @@ import {
     Hover,
     Diagnostic
 } from 'vscode';
-import { IApplicationShell, IVSCodeNotebook } from '../../../client/common/application/types';
-import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { disposeAllDisposables } from '../../../client/common/helpers';
-import { traceInfo, traceInfoIfCI } from '../../../client/common/logger';
-import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../client/common/types';
-import { createDeferred } from '../../../client/common/utils/async';
-import { swallowExceptions } from '../../../client/common/utils/misc';
-import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
-import { JupyterServerSelector } from '../../../client/datascience/jupyter/serverSelector';
-import {
-    getTextOutputValue,
-    hasErrorOutput,
-    NotebookCellStateTracker
-} from '../../../client/datascience/notebook/helpers/helpers';
-import { LastSavedNotebookCellLanguage } from '../../../client/datascience/notebook/cellLanguageService';
-import { chainWithPendingUpdates } from '../../../client/datascience/notebook/helpers/notebookUpdater';
-import { CellOutputMimeTypes, INotebookControllerManager } from '../../../client/datascience/notebook/types';
-import { INotebookEditorProvider } from '../../../client/datascience/types';
-import { IExtensionTestApi, sleep, waitForCondition } from '../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
+import { IApplicationShell, IVSCodeNotebook } from '../../../platform/common/application/types';
+import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { traceInfo, traceInfoIfCI } from '../../../platform/logging';
+import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
+import { createDeferred } from '../../../platform/common/utils/async';
+import { swallowExceptions } from '../../../platform/common/utils/misc';
+import { IKernelProvider } from '../../../platform/../kernels/types';
+import { sleep, waitForCondition } from '../../common.node';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants.node';
 import { noop } from '../../core';
-import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
-import { JupyterServer } from '../jupyterServer';
-import { VSCodeNotebookController } from '../../../client/datascience/notebook/vscodeNotebookController';
+import { closeActiveWindows, initialize, isInsiders } from '../../initialize.node';
+import { JupyterServer } from '../jupyterServer.node';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IDebuggingManager, IKernelDebugAdapter } from '../../../client/debugger/types';
-import { DataScience } from '../../../client/common/utils/localize';
+import { IDebuggingManager, IKernelDebugAdapter } from '../../../platform/debugger/types';
+import { DataScience } from '../../../platform/common/utils/localize';
+import { LastSavedNotebookCellLanguage } from '../../../intellisense/cellLanguageService.node';
+import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeNotebookController.node';
+import { chainWithPendingUpdates } from '../../../notebooks/execution/notebookUpdater.node';
+import { NotebookCellStateTracker, hasErrorOutput, getTextOutputValue } from '../../../notebooks/helpers.node';
+import { INotebookControllerManager, CellOutputMimeTypes, INotebookEditorProvider } from '../../../notebooks/types';
+import { InteractiveControllerIdSuffix } from '../../../notebooks/controllers/notebookControllerManager.node';
+import { IVSCodeNotebookController } from '../../../notebooks/controllers/types';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -194,7 +190,7 @@ export async function ensureNewNotebooksHavePythonCells() {
 export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposable[] = []) {
     if (!IS_SMOKE_TEST) {
         // When running smoke tests, we won't have access to these.
-        const configSettings = await import('../../../client/common/configSettings');
+        const configSettings = await import('../../../platform/common/configSettings');
         // Dispose any cached python settings (used only in test env).
         configSettings.JupyterSettings.dispose();
     }
@@ -203,6 +199,11 @@ export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposabl
     disposeAllDisposables(disposables);
     await shutdownAllNotebooks();
     await ensureNewNotebooksHavePythonCells();
+    try {
+        await commands.executeCommand('python.clearWorkspaceInterpreter');
+    } catch (ex) {
+        // Python extension may not be installed. Don't fail the test
+    }
     sinon.restore();
 }
 
@@ -218,7 +219,9 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
 let waitForKernelPendingPromise: Promise<void> | undefined;
 
 export async function waitForKernelToChange(
-    criteria: { labelOrId: string } | { interpreterPath: string },
+    criteria:
+        | { labelOrId: string; isInteractiveController?: boolean }
+        | { interpreterPath: string; isInteractiveController?: boolean },
     timeout = defaultNotebookTestTimeout
 ) {
     // Wait for the previous kernel change to finish.
@@ -230,10 +233,11 @@ export async function waitForKernelToChange(
 }
 
 async function waitForKernelToChangeImpl(
-    criteria: { labelOrId: string } | { interpreterPath: string },
+    criteria:
+        | { labelOrId: string; isInteractiveController?: boolean }
+        | { interpreterPath: string; isInteractiveController?: boolean },
     timeout = defaultNotebookTestTimeout
 ) {
-    traceInfoIfCI(`Invoked waitForKernelToChangeImpl with ${JSON.stringify(criteria)}`);
     const { vscodeNotebook, notebookControllerManager } = await getServices();
 
     // Wait for the active editor to come up
@@ -249,14 +253,13 @@ async function waitForKernelToChangeImpl(
     await notebookControllerManager.loadNotebookControllers();
     const notebookControllers = notebookControllerManager.registeredNotebookControllers();
 
-    // Get the list of kernels possible
-    traceInfo(`Controllers found for wait search: ${notebookControllers?.map((k) => `${k.label}:${k.id}`).join('\n')}`);
-
     // Find the kernel id that matches the name we want
     let id: string | undefined;
-    const labelOrId = 'labelOrId' in criteria ? criteria.labelOrId : undefined;
+    let labelOrId = 'labelOrId' in criteria ? criteria.labelOrId : undefined;
     if (labelOrId) {
-        id = notebookControllers?.find((k) => (labelOrId && k.label === labelOrId) || (k.id && k.id == labelOrId))?.id;
+        id = notebookControllers
+            ?.filter((k) => (criteria.isInteractiveController ? k.id.includes(InteractiveControllerIdSuffix) : true))
+            ?.find((k) => (labelOrId && k.label === labelOrId) || (k.id && k.id == labelOrId))?.id;
         if (!id) {
             // Try includes instead
             id = notebookControllers?.find(
@@ -268,6 +271,7 @@ async function waitForKernelToChangeImpl(
     if (interpreterPath && !id) {
         id = notebookControllers
             ?.filter((k) => k.connection.interpreter)
+            ?.filter((k) => (criteria.isInteractiveController ? k.id.includes(InteractiveControllerIdSuffix) : true))
             .find((k) => k.connection.interpreter!.path.toLowerCase().includes(interpreterPath.toLowerCase()))?.id;
     }
     traceInfo(`Switching to kernel id ${id}`);
@@ -335,7 +339,7 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
     }
 
     // We don't have one, try to find the preferred one
-    let preferred: VSCodeNotebookController | undefined;
+    let preferred: IVSCodeNotebookController | undefined;
 
     // Wait for one of them to have affinity as the preferred (this may not happen)
     try {
@@ -378,14 +382,12 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
     return waitForKernelToChange(criteria, timeout);
 }
 
-export async function startJupyterServer(api?: IExtensionTestApi) {
-    const { serviceContainer } = api ? { serviceContainer: api.serviceContainer } : await getServices();
+export async function startJupyterServer(notebook?: NotebookDocument) {
     if (IS_REMOTE_NATIVE_TEST) {
-        const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
         const uri = await JupyterServer.instance.startJupyterWithToken();
         const uriString = decodeURIComponent(uri.toString());
         traceInfo(`Jupyter started and listening at ${uriString}`);
-        await selector.setJupyterURIToRemote(uriString);
+        return commands.executeCommand('jupyter.selectjupyteruri', false, uri, notebook);
     } else {
         traceInfo(`Jupyter not started and set to local`); // This is the default
     }
@@ -474,12 +476,6 @@ function assertHasExecutionCompletedSuccessfully(cell: NotebookCell) {
         !hasErrorOutput(cell.outputs)
     );
 }
-function assertHasEmptyCellExecutionCompleted(cell: NotebookCell) {
-    return (
-        (cell.executionSummary?.executionOrder ?? 0) === 0 &&
-        NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Idle
-    );
-}
 /**
  *  Wait for VSC to perform some last minute clean up of cells.
  * In tests we can end up deleting cells. However if extension is still dealing with the cells, we need to give it some time to finish.
@@ -554,6 +550,17 @@ export async function waitForExecutionCompletedSuccessfully(
         waitForCellExecutionToComplete(cell)
     ]);
 }
+
+export async function waitForCellHavingOutput(cell: NotebookCell) {
+    return waitForCondition(
+        async () => {
+            const cellOutputs = getCellOutputs(cell);
+            return cellOutputs.length > 0 && !cellOutputs.includes('No cell outputs');
+        },
+        defaultNotebookTestTimeout,
+        'No output'
+    );
+}
 /**
  * When a cell is running (in progress), the start time will be > 0.
  */
@@ -604,30 +611,32 @@ export async function waitForQueuedForExecutionOrExecuting(
             )}`
     );
 }
-export async function waitForEmptyCellExecutionCompleted(
+export async function waitForExecutionCompletedWithoutChangesToExecutionCount(
     cell: NotebookCell,
     timeout: number = defaultNotebookTestTimeout
 ) {
     await waitForCondition(
-        async () => assertHasEmptyCellExecutionCompleted(cell),
+        async () =>
+            (cell.executionSummary?.executionOrder ?? 0) === 0 &&
+            (NotebookCellStateTracker.getCellState(cell) ?? NotebookCellExecutionState.Idle) ===
+                NotebookCellExecutionState.Idle,
         timeout,
-        () =>
-            `Cell ${
-                cell.index + 1
-            } did not complete (this is an empty cell), State = ${NotebookCellStateTracker.getCellState(cell)}`
+        () => `Cell ${cell.index + 1} did not complete, State = ${NotebookCellStateTracker.getCellState(cell)}`
     );
-    await waitForCellExecutionToComplete(cell);
 }
 export async function waitForExecutionCompletedWithErrors(
     cell: NotebookCell,
-    timeout: number = defaultNotebookTestTimeout
+    timeout: number = defaultNotebookTestTimeout,
+    executionOderShouldChange: boolean = true
 ) {
     await waitForCondition(
-        async () => assertHasExecutionCompletedWithErrors(cell),
+        async () => assertHasExecutionCompletedWithErrors(cell, executionOderShouldChange),
         timeout,
         () => `Cell ${cell.index + 1} did not fail as expected, State =  ${NotebookCellStateTracker.getCellState(cell)}`
     );
-    await waitForCellExecutionToComplete(cell);
+    if (executionOderShouldChange) {
+        await waitForCellExecutionToComplete(cell);
+    }
 }
 
 export async function waitForDiagnostics(
@@ -672,10 +681,11 @@ export async function waitForHover(
     return hovers;
 }
 
-function assertHasExecutionCompletedWithErrors(cell: NotebookCell) {
+function assertHasExecutionCompletedWithErrors(cell: NotebookCell, executionOderShouldChange = true) {
     return (
-        (cell.executionSummary?.executionOrder ?? 0) > 0 &&
-        NotebookCellStateTracker.getCellState(cell) === NotebookCellExecutionState.Idle &&
+        (executionOderShouldChange ? (cell.executionSummary?.executionOrder ?? 0) > 0 : true) &&
+        (NotebookCellStateTracker.getCellState(cell) || NotebookCellExecutionState.Idle) ===
+            NotebookCellExecutionState.Idle &&
         hasErrorOutput(cell.outputs)
     );
 }
@@ -688,6 +698,7 @@ function getOutputText(output: NotebookCellOutputItem) {
     if (
         output.mime !== CellOutputMimeTypes.stdout &&
         output.mime !== CellOutputMimeTypes.stderr &&
+        output.mime !== CellOutputMimeTypes.error &&
         output.mime !== 'text/plain' &&
         output.mime !== 'text/markdown'
     ) {
@@ -699,6 +710,7 @@ function hasTextOutputValue(output: NotebookCellOutputItem, value: string, isExa
     if (
         output.mime !== CellOutputMimeTypes.stdout &&
         output.mime !== CellOutputMimeTypes.stderr &&
+        output.mime !== CellOutputMimeTypes.error &&
         output.mime !== 'text/plain' &&
         output.mime !== 'text/markdown'
     ) {
@@ -709,7 +721,8 @@ function hasTextOutputValue(output: NotebookCellOutputItem, value: string, isExa
         return isExactMatch
             ? haystack === value || haystack.trim() === value
             : haystack.toLowerCase().includes(value.toLowerCase());
-    } catch {
+    } catch (ex) {
+        traceInfoIfCI(`Looking for value ${value}, but failed with error`, ex);
         return false;
     }
 }
@@ -717,12 +730,10 @@ export function assertHasTextOutputInVSCode(cell: NotebookCell, text: string, in
     const cellOutputs = cell.outputs;
     assert.ok(cellOutputs.length, 'No output');
     const result = cell.outputs[index].items.some((item) => hasTextOutputValue(item, text, isExactMatch));
-    assert.isTrue(
-        result,
-        `${text} not found in outputs of cell ${cell.index} ${cell.outputs[index].items
-            .map((o) => (o.data ? Buffer.from(o.data).toString('utf8') : ''))
-            .join(' ')}`
-    );
+    if (result) {
+        return result;
+    }
+    assert.isTrue(result, `${text} not found in outputs of cell ${cell.index} ${getCellOutputs(cell)}`);
     return result;
 }
 export async function waitForTextOutput(
@@ -736,16 +747,13 @@ export async function waitForTextOutput(
         async () => assertHasTextOutputInVSCode(cell, text, index, isExactMatch),
         timeout,
         () =>
-            `A after ${timeout}ms output does not contain provided text '${text}' for Cell ${
+            `After ${timeout}ms output, does not contain provided text '${text}' for Cell ${
                 cell.index + 1
-            }, it is ${getCellOutputs(cell)}`
-    );
-}
-export async function waitForCellToHaveOutput(cell: NotebookCell, timeout = defaultNotebookTestTimeout) {
-    await waitForCondition(
-        async () => cell.outputs.length > 0,
-        timeout,
-        () => `No outputs for Cell ${cell.index + 1}`
+            } in output index ${index}, it is ${cell.outputs
+                .map(
+                    (output, index) => `Output for Index "${index}" is "${output.items.map(getOutputText).join('\n')}"`
+                )
+                .join('\n')}`
     );
 }
 export function assertNotHasTextOutputInVSCode(cell: NotebookCell, text: string, index: number, isExactMatch = true) {
@@ -784,7 +792,7 @@ export function assertVSCCellHasErrorOutput(cell: NotebookCell) {
 export async function saveActiveNotebook() {
     await commands.executeCommand('workbench.action.files.saveAll');
 }
-export async function runCell(cell: NotebookCell) {
+export async function runCell(cell: NotebookCell, waitForExecutionToComplete = false) {
     const api = await initialize();
     const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     await waitForKernelToGetAutoSelected(undefined, 60_000);
@@ -792,13 +800,17 @@ export async function runCell(cell: NotebookCell) {
         throw new Error('No notebook or document');
     }
 
-    void commands.executeCommand(
+    const promise = commands.executeCommand(
         'notebook.cell.execute',
         { start: cell.index, end: cell.index + 1 },
         vscodeNotebook.activeNotebookEditor.document.uri
     );
+
+    if (waitForExecutionToComplete) {
+        await promise.then(noop, noop);
+    }
 }
-export async function runAllCellsInActiveNotebook() {
+export async function runAllCellsInActiveNotebook(waitForExecutionToComplete = false) {
     const api = await initialize();
     const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     await waitForKernelToGetAutoSelected(undefined, 60_000);
@@ -807,9 +819,31 @@ export async function runAllCellsInActiveNotebook() {
         throw new Error('No editor or document');
     }
 
-    void commands.executeCommand('notebook.execute', vscodeNotebook.activeNotebookEditor.document.uri);
+    const promise = commands
+        .executeCommand('notebook.execute', vscodeNotebook.activeNotebookEditor.document.uri)
+        .then(noop, noop);
+
+    if (waitForExecutionToComplete) {
+        await promise.then(noop, noop);
+    }
 }
 
+export type WindowPromptStub = {
+    dispose: Function;
+    displayed: Promise<boolean>;
+    /**
+     * Gets the messages that were displayed. Access this once the promise `displayed` has resolved to get latest stuff.
+     */
+    messages: string[];
+    clickButton(text?: string | undefined): void;
+    reset(): void;
+    getDisplayCount(): number;
+};
+export type WindowPromptStubButtonClickOptions = {
+    text?: string;
+    clickImmediately?: boolean;
+    dismissPrompt?: boolean;
+};
 /**
  * Ability to stub prompts for VS Code tests.
  * We can confirm prompt was displayed & invoke a button click.
@@ -817,21 +851,14 @@ export async function runAllCellsInActiveNotebook() {
 export async function hijackPrompt(
     promptType: 'showErrorMessage' | 'showInformationMessage',
     message: { exactMatch: string } | { endsWith: string } | { contains: string },
-    buttonToClick?: { text?: string; clickImmediately?: boolean; dismissPrompt?: boolean },
+    buttonToClick?: WindowPromptStubButtonClickOptions,
     disposables: IDisposable[] = []
-): Promise<{
-    dispose: Function;
-    displayed: Promise<boolean>;
-    clickButton(text?: string): void;
-    getDisplayCount(): number;
-}> {
+): Promise<WindowPromptStub> {
     const api = await initialize();
     const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
-    const displayed = createDeferred<boolean>();
-    const clickButton = createDeferred<string>();
-    if (buttonToClick?.clickImmediately && buttonToClick.text) {
-        clickButton.resolve(buttonToClick.text);
-    }
+    let displayed = createDeferred<boolean>();
+    let clickButton = createDeferred<string>();
+    const messageDisplayed: string[] = [];
     let displayCount = 0;
     // eslint-disable-next-line
     const stub = sinon.stub(appShell, promptType).callsFake(function (msg: string) {
@@ -841,10 +868,17 @@ export async function hijackPrompt(
             ('contains' in message && msg.trim().includes(message.contains.trim())) ||
             ('endsWith' in message && msg.endsWith(message.endsWith))
         ) {
+            messageDisplayed.push(msg);
             traceInfo(`Exact Message found '${msg}'`);
             displayCount += 1;
             displayed.resolve(true);
             if (buttonToClick) {
+                if (!buttonToClick.dismissPrompt && buttonToClick?.clickImmediately === true && buttonToClick.text) {
+                    if (clickButton.completed) {
+                        clickButton = createDeferred<string>();
+                    }
+                    clickButton.resolve(buttonToClick.text);
+                }
                 return buttonToClick.dismissPrompt ? undefined : clickButton.promise;
             }
         }
@@ -858,7 +892,17 @@ export async function hijackPrompt(
     return {
         dispose: () => stub.restore(),
         getDisplayCount: () => displayCount,
-        displayed: displayed.promise,
+        get displayed() {
+            return displayed.promise;
+        },
+        get messages() {
+            return messageDisplayed;
+        },
+        reset: () => {
+            messageDisplayed.splice(0, messageDisplayed.length);
+            displayCount = 0;
+            displayed = createDeferred<boolean>();
+        },
         clickButton: (text?: string) => clickButton.resolve(text || buttonToClick?.text)
     };
 }
@@ -897,7 +941,7 @@ export async function waitForDebugEvent<T>(
 }
 
 export async function waitForStoppedEvent(debugAdapter: IKernelDebugAdapter): Promise<DebugProtocol.StoppedEvent> {
-    assert.ok(debugAdapter, `No debug adapter when waiting for stoppped event`);
+    assert.ok(debugAdapter, `No debug adapter when waiting for stopped event`);
     return waitForDebugEvent('stopped', debugAdapter, 10_000);
 }
 

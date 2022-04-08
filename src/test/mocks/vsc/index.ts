@@ -82,11 +82,11 @@ export namespace vscMock {
         protected add = (listener: (e: T) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable => {
             const bound = _thisArgs ? listener.bind(_thisArgs) : listener;
             this.emitter.addListener('evt', bound);
-            return ({
+            return {
                 dispose: () => {
                     this.emitter.removeListener('evt', bound);
                 }
-            } as any) as Disposable;
+            } as any as Disposable;
         };
     }
 

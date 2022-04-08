@@ -56,7 +56,7 @@ import { configure } from 'enzyme';
 import * as Adapter from 'enzyme-adapter-react-16';
 import { DOMWindow, JSDOM } from 'jsdom';
 
-import { noop } from '../../client/common/utils/misc';
+import { noop } from '../../platform/common/utils/misc';
 
 class MockCanvas implements CanvasRenderingContext2D {
     public canvas!: HTMLCanvasElement;
@@ -93,12 +93,15 @@ class MockCanvas implements CanvasRenderingContext2D {
         throw new Error('Method not implemented.');
     }
     public globalAlpha!: number;
-    public globalCompositeOperation!: string;
+    public globalCompositeOperation!: GlobalCompositeOperation;
     public imageSmoothingEnabled!: boolean;
     public imageSmoothingQuality!: ImageSmoothingQuality;
     public fillStyle!: string | CanvasGradient | CanvasPattern;
     public strokeStyle!: string | CanvasGradient | CanvasPattern;
     public createLinearGradient(_x0: number, _y0: number, _x1: number, _y1: number): CanvasGradient {
+        throw new Error('Method not implemented.');
+    }
+    public createConicGradient(_startAngle: number, _x: number, _y: number): CanvasGradient {
         throw new Error('Method not implemented.');
     }
     public createPattern(_image: CanvasImageSource, _repetition: string): CanvasPattern | null {
@@ -405,7 +408,8 @@ export function setUpDomEnvironment() {
 
     // Special case for the node_modules\monaco-editor\esm\vs\editor\browser\config\configuration.js. It doesn't
     // export the function we need to dispose of the timer it's set. So force it to.
-    const configurationRegex = /.*(\\|\/)node_modules(\\|\/)monaco-editor(\\|\/)esm(\\|\/)vs(\\|\/)editor(\\|\/)browser(\\|\/)config(\\|\/)configuration\.js/g;
+    const configurationRegex =
+        /.*(\\|\/)node_modules(\\|\/)monaco-editor(\\|\/)esm(\\|\/)vs(\\|\/)editor(\\|\/)browser(\\|\/)config(\\|\/)configuration\.js/g;
     const _oldLoader = require.extensions['.js'];
     // eslint-disable-next-line
     require.extensions['.js'] = function (mod: any, filename) {
@@ -513,12 +517,12 @@ const keyMap: { [key: string]: { code: number; shift: boolean } } = {
 };
 
 export function createMessageEvent(data: any): MessageEvent {
-    const domWindow = (window as any) as DOMWindow;
+    const domWindow = window as any as DOMWindow;
     return new domWindow.MessageEvent('message', { data });
 }
 
 export function createKeyboardEvent(type: string, options: KeyboardEventInit): KeyboardEvent {
-    const domWindow = (window as any) as DOMWindow;
+    const domWindow = window as any as DOMWindow;
     options.bubbles = true;
     options.cancelable = true;
 
@@ -532,17 +536,17 @@ export function createKeyboardEvent(type: string, options: KeyboardEventInit): K
 
     // JSDOM doesn't support typescript so well. The options are supposed to be flexible to support just about anything, but
     // the type KeyboardEventInit only supports the minimum. Stick in extras with some typecasting hacks
-    return new domWindow.KeyboardEvent(type, ({ ...options, keyCode, shiftKey: shift } as any) as KeyboardEventInit);
+    return new domWindow.KeyboardEvent(type, { ...options, keyCode, shiftKey: shift } as any as KeyboardEventInit);
 }
 
 export function createInputEvent(): Event {
-    const domWindow = (window as any) as DOMWindow;
+    const domWindow = window as any as DOMWindow;
     return new domWindow.Event('input', { bubbles: true, cancelable: false });
 }
 
 export function blurWindow() {
     // blur isn't implemented. We just need to dispatch the blur event
-    const domWindow = (window as any) as DOMWindow;
+    const domWindow = window as any as DOMWindow;
     const blurEvent = new domWindow.Event('blur', { bubbles: true });
     domWindow.dispatchEvent(blurEvent);
 }

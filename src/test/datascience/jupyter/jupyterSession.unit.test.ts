@@ -17,17 +17,23 @@ import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationTokenSource, Uri } from 'vscode';
 
-import { traceInfo } from '../../../client/common/logger';
-import { ReadWrite, Resource } from '../../../client/common/types';
-import { createDeferred, Deferred } from '../../../client/common/utils/async';
-import { DataScience } from '../../../client/common/utils/localize';
-import { noop } from '../../../client/common/utils/misc';
-import { DisplayOptions } from '../../../client/datascience/displayOptions';
-import { JupyterSession } from '../../../client/datascience/jupyter/jupyterSession';
-import { JupyterKernelService } from '../../../client/datascience/jupyter/kernels/jupyterKernelService';
-import { KernelConnectionMetadata, LiveKernelModel } from '../../../client/datascience/jupyter/kernels/types';
-import { IJupyterConnection, ISessionWithSocket } from '../../../client/datascience/types';
+import { traceInfo } from '../../../platform/logging';
+import * as path from '../../../platform/vscode-path/path';
+import { ReadWrite, Resource } from '../../../platform/common/types';
+import { createDeferred, Deferred } from '../../../platform/common/utils/async';
+import { DataScience } from '../../../platform/common/utils/localize';
+import { noop } from '../../../platform/common/utils/misc';
+import {
+    IJupyterConnection,
+    ISessionWithSocket,
+    KernelConnectionMetadata,
+    LiveKernelModel
+} from '../../../platform/../kernels/types';
 import { MockOutputChannel } from '../../mockClasses';
+import { JupyterKernelService } from '../../../kernels/jupyter/jupyterKernelService.node';
+import { JupyterSession } from '../../../kernels/jupyter/session/jupyterSession.node';
+import { DisplayOptions } from '../../../kernels/displayOptions.node';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - JupyterSession', () => {
@@ -100,9 +106,8 @@ suite('DataScience - JupyterSession', () => {
         when(session.kernel).thenReturn(instance(kernel));
         statusChangedSignal = mock<ISignal<ISessionWithSocket, Kernel.Status>>();
         kernelChangedSignal = mock<ISignal<ISessionWithSocket, IKernelChangedArgs>>();
-        const ioPubSignal = mock<
-            ISignal<ISessionWithSocket, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>
-        >();
+        const ioPubSignal =
+            mock<ISignal<ISessionWithSocket, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>>();
         when(session.statusChanged).thenReturn(instance(statusChangedSignal));
         when(session.kernelChanged).thenReturn(instance(kernelChangedSignal));
         when(session.iopubMessage).thenReturn(instance(ioPubSignal));
@@ -111,6 +116,7 @@ suite('DataScience - JupyterSession', () => {
         when(session.isDisposed).thenReturn(false);
         when(kernel.status).thenReturn('idle');
         when(connection.rootDirectory).thenReturn('');
+        when(connection.localLaunch).thenReturn(false);
         const channel = new MockOutputChannel('JUPYTER');
         const kernelService = mock(JupyterKernelService);
         when(kernelService.ensureKernelIsUsable(anything(), anything(), anything(), anything())).thenResolve();
@@ -121,7 +127,11 @@ suite('DataScience - JupyterSession', () => {
         specManager = mock(KernelSpecManager);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(sessionManager.connectTo(anything())).thenReturn(newActiveRemoteKernel.model as any);
-
+        const fs = mock<IFileSystem>();
+        const tmpFile = path.join('tmp', 'tempfile.json');
+        when(fs.createTemporaryLocalFile(anything())).thenResolve({ dispose: noop, filePath: tmpFile });
+        when(fs.deleteLocalFile(anything())).thenResolve();
+        when(fs.ensureLocalDir(anything())).thenResolve();
         jupyterSession = new JupyterSession(
             resource,
             instance(connection),
@@ -139,7 +149,8 @@ suite('DataScience - JupyterSession', () => {
             '',
             1,
             instance(kernelService),
-            1
+            1,
+            instance(fs)
         );
     }
     setup(() => createJupyterSession());
@@ -165,19 +176,31 @@ suite('DataScience - JupyterSession', () => {
     }
     teardown(async () => jupyterSession.dispose().catch(noop));
 
-    test('Start a session when connecting', async () => {
+    test('Start a remote session when connecting', async () => {
+        when(connection.localLaunch).thenReturn(false);
+
         await connect();
 
         assert.isTrue(jupyterSession.isConnected);
         verify(sessionManager.startNew(anything(), anything())).once();
         verify(contentsManager.newUntitled(anything())).once();
     });
+    test('Start a local session when connecting', async () => {
+        when(connection.localLaunch).thenReturn(true);
+
+        await connect();
+
+        assert.isTrue(jupyterSession.isConnected);
+        verify(sessionManager.startNew(anything(), anything())).once();
+        verify(contentsManager.newUntitled(anything())).never();
+    });
 
     suite('After connecting', () => {
-        setup(connect);
+        // setup(connect);
         test('Interrupting will result in kernel being interrupted', async () => {
             when(kernel.interrupt()).thenResolve();
 
+            await connect();
             await jupyterSession.interrupt();
 
             verify(kernel.interrupt()).once();
@@ -235,9 +258,9 @@ suite('DataScience - JupyterSession', () => {
             test('Remote session with Notebook and starting a new session', async () => {
                 // Create jupyter session for Notebooks
                 createJupyterSession(Uri.file('test.ipynb'));
+                when(connection.localLaunch).thenReturn(false);
                 await connect();
 
-                when(connection.localLaunch).thenReturn(false);
                 when(sessionManager.refreshRunning()).thenResolve();
                 when(session.isRemoteSession).thenReturn(true);
                 when(session.kernelConnectionMetadata).thenReturn({
@@ -282,14 +305,17 @@ suite('DataScience - JupyterSession', () => {
                 verify(session.dispose()).once();
             });
             test('Local session', async () => {
+                console.error('Start test');
                 when(connection.localLaunch).thenReturn(true);
                 when(session.isRemoteSession).thenReturn(false);
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();
+
+                await connect();
                 await jupyterSession.dispose();
 
                 verify(sessionManager.refreshRunning()).never();
-                verify(contentsManager.delete(anything())).once();
+                verify(contentsManager.delete(anything())).never();
                 // always kill the sessions.
                 verify(session.shutdown()).once();
                 verify(session.dispose()).once();
@@ -297,13 +323,17 @@ suite('DataScience - JupyterSession', () => {
         });
         suite('Wait for session idle', () => {
             test('Will timeout', async () => {
+                await connect();
+
                 when(kernel.status).thenReturn('unknown');
+                when(connection.localLaunch).thenReturn(true);
 
                 const promise = jupyterSession.waitForIdle(100);
 
                 await assert.isRejected(promise, DataScience.jupyterLaunchTimedOut());
             });
             test('Will succeed', async () => {
+                await connect();
                 when(kernel.status).thenReturn('idle');
 
                 await jupyterSession.waitForIdle(100);
@@ -322,9 +352,10 @@ suite('DataScience - JupyterSession', () => {
                 newKernelConnection = mock(KernelConnection);
                 newStatusChangedSignal = mock<ISignal<Session.ISessionConnection, Kernel.Status>>();
                 newKernelChangedSignal = mock<ISignal<Session.ISessionConnection, IKernelChangedArgs>>();
-                const newIoPubSignal = mock<
-                    ISignal<Session.ISessionConnection, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>
-                >();
+                const newIoPubSignal =
+                    mock<
+                        ISignal<Session.ISessionConnection, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>
+                    >();
                 restartSessionCreatedEvent = createDeferred();
                 restartSessionUsedEvent = createDeferred();
                 when(newSession.statusChanged).thenReturn(instance(newStatusChangedSignal));
@@ -343,6 +374,7 @@ suite('DataScience - JupyterSession', () => {
                     newSessionCreated.resolve();
                     return Promise.resolve(instance(newSession));
                 });
+                await connect();
             });
             teardown(() => {
                 verify(sessionManager.connectTo(anything())).never();
@@ -351,9 +383,8 @@ suite('DataScience - JupyterSession', () => {
                 setup(executeUserCode);
 
                 async function executeUserCode() {
-                    const future = mock<
-                        Kernel.IFuture<KernelMessage.IShellControlMessage, KernelMessage.IShellControlMessage>
-                    >();
+                    const future =
+                        mock<Kernel.IFuture<KernelMessage.IShellControlMessage, KernelMessage.IShellControlMessage>>();
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     when(future.done).thenReturn(Promise.resolve(undefined as any));
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any

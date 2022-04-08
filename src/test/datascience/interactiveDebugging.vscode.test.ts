@@ -6,14 +6,11 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
-import { traceInfo } from '../../client/common/logger';
-import { IDisposable } from '../../client/common/types';
-import { Commands } from '../../client/datascience/constants';
-import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
-import { IDataScienceCodeLensProvider, IInteractiveWindowProvider } from '../../client/datascience/types';
-import { IVariableViewProvider } from '../../client/datascience/variablesView/types';
-import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common';
-import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
+import { traceInfo } from '../../platform/logging';
+import { IDisposable } from '../../platform/common/types';
+import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider.node';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common.node';
+import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize.node';
 import {
     submitFromPythonFile,
     submitFromPythonFileUsingCodeWatcher,
@@ -24,6 +21,9 @@ import { closeNotebooksAndCleanUpAfterTests, defaultNotebookTestTimeout, getCell
 import { ITestWebviewHost } from './testInterfaces';
 import { waitForVariablesToMatch } from './variableView/variableViewHelpers';
 import { ITestVariableViewProvider } from './variableView/variableViewTestInterfaces';
+import { IInteractiveWindowProvider } from '../../interactive-window/types';
+import { Commands } from '../../platform/common/constants';
+import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
 
 suite('Interactive window debugging', async function () {
     this.timeout(120_000);
@@ -31,7 +31,6 @@ suite('Interactive window debugging', async function () {
     const disposables: IDisposable[] = [];
     let interactiveWindowProvider: InteractiveWindowProvider;
     let variableViewProvider: ITestVariableViewProvider;
-    let codeWatcherProvider: IDataScienceCodeLensProvider;
     let debugAdapterTracker: vscode.DebugAdapterTracker | undefined;
     const tracker: vscode.DebugAdapterTrackerFactory = {
         createDebugAdapterTracker: function (
@@ -52,8 +51,7 @@ suite('Interactive window debugging', async function () {
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
         const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        variableViewProvider = (coreVariableViewProvider as any) as ITestVariableViewProvider; // Cast to expose the test interfaces
-        codeWatcherProvider = api.serviceManager.get(IDataScienceCodeLensProvider);
+        variableViewProvider = coreVariableViewProvider as any as ITestVariableViewProvider; // Cast to expose the test interfaces
     });
     teardown(async function () {
         // Make sure that debugging is shut down
@@ -261,7 +259,7 @@ suite('Interactive window debugging', async function () {
         // Aquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const variableView = (coreVariableView as any) as ITestWebviewHost;
+        const variableView = coreVariableView as any as ITestWebviewHost;
 
         // Parse the HTML for our expected variables
         let expectedVariables = [{ name: 'x', type: 'int', length: '', value: '1' }];
@@ -510,8 +508,6 @@ def foo():
 foo()
 `;
         const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFileUsingCodeWatcher(
-            interactiveWindowProvider,
-            codeWatcherProvider,
             source,
             disposables
         );

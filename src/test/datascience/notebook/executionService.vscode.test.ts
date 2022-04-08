@@ -6,16 +6,16 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert, expect } from 'chai';
 import * as fs from 'fs';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import * as dedent from 'dedent';
 import * as sinon from 'sinon';
 import { commands, NotebookCell, NotebookCellExecutionState, NotebookCellKind, NotebookCellOutput, Uri } from 'vscode';
-import { Common } from '../../../client/common/utils/localize';
-import { IVSCodeNotebook } from '../../../client/common/application/types';
-import { traceInfo, traceInfoIfCI } from '../../../client/common/logger';
-import { IDisposable, Product } from '../../../client/common/types';
-import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
+import { Common } from '../../../platform/common/utils/localize';
+import { IVSCodeNotebook } from '../../../platform/common/application/types';
+import { traceInfo, traceInfoIfCI } from '../../../platform/logging';
+import { IDisposable } from '../../../platform/common/types';
+import { captureScreenShot, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common.node';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
     runAllCellsInActiveNotebook,
@@ -40,19 +40,18 @@ import {
     waitForTextOutput,
     defaultNotebookTestTimeout,
     waitForCellExecutionState,
-    getCellOutputs
+    getCellOutputs,
+    waitForCellHavingOutput,
+    waitForCellExecutionToComplete
 } from './helper';
-import { ProductNames } from '../../../client/common/installer/productNames';
 import { openNotebook } from '../helpers';
-import { noop } from '../../../client/common/utils/misc';
-import {
-    getTextOutputValue,
-    hasErrorOutput,
-    translateCellErrorOutput
-} from '../../../client/datascience/notebook/helpers/helpers';
-import { getDisplayPath } from '../../../client/common/platform/fs-paths';
-import { IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../../constants';
-import { areInterpreterPathsSame } from '../../../client/pythonEnvironments/info/interpreter';
+import { noop } from '../../../platform/common/utils/misc';
+import { getTextOutputValue, hasErrorOutput, translateCellErrorOutput } from '../../../notebooks/helpers.node';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
+import { ProductNames } from '../../../kernels/installer/productNames.node';
+import { Product } from '../../../kernels/installer/types';
+import { IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
+import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter.node';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
@@ -115,8 +114,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this.currentTest?.title);
         }
-        // Added temporarily to identify why tests are failing.
-        process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = undefined;
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
@@ -394,7 +391,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell4),
-            waitForCondition(async () => getCellOutputs(cell4).length > 0, defaultNotebookTestTimeout, 'No output')
+            waitForCellHavingOutput(cell4)
         ]);
 
         const pathValue = getCellOutputs(cell3).split(path.delimiter);
@@ -404,6 +401,68 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         assert.ok(
             areInterpreterPathsSame(path.dirname(sysExecutable), pathValue[0].toLowerCase()),
             `First entry in PATH (${pathValue[0]}) does not point to executable (${sysExecutable})`
+        );
+    });
+    test('!python should point to the Environment', async function () {
+        if (IS_REMOTE_NATIVE_TEST) {
+            return this.skip();
+        }
+        await insertCodeCell(getOSType() === OSType.Windows ? '!where python' : '!which python', { index: 0 });
+        await insertCodeCell('import sys', { index: 1 });
+        await insertCodeCell('print(sys.executable)', { index: 2 });
+        const [cell1, , cell3] = vscodeNotebook.activeNotebookEditor!.document.getCells()!;
+
+        // Basically anything such as `!which python` and the like should point to the right executable.
+        // For that to work, the first directory in the PATH must be the Python environment.
+
+        await Promise.all([
+            runAllCellsInActiveNotebook(),
+            waitForCellExecutionToComplete(cell1),
+            waitForCondition(
+                async () => {
+                    // Sometimes the cell can fail execution (IPython can sometimes throw an error).
+                    const output = getCellOutputs(cell1).trim();
+                    if (output !== '<No cell outputs>' && output.length > 0) {
+                        return true;
+                    }
+                    if (hasErrorOutput(cell1.outputs)) {
+                        return true;
+                    }
+                    return false;
+                },
+                defaultNotebookTestTimeout,
+                'Cell did not have output'
+            )
+        ]);
+
+        // Sometimes the IPython can (sometimes) fail with an error of `shell not found`.
+        // For now, we'll ignore these errors
+        // We already have tests that ensures the first path in sys.path points to where the executable is located.
+        // Hence skipping this test in such cases is acceptable.
+        let errorOutput = '';
+        if (hasErrorOutput(cell1.outputs)) {
+            const error = translateCellErrorOutput(cell1.outputs[0]);
+            errorOutput = `${error.evalue}:${error.traceback}`;
+            if (errorOutput.includes('shell not found')) {
+                return this.skip();
+            }
+        }
+
+        // On windows `!where python`, prints multiple items in the output (all executables found).
+        const cell1Output = getCellOutputs(cell1);
+        const shellExecutable = cell1Output
+            .split('\n')
+            .filter((item) => item.length)[0]
+            .trim();
+
+        await Promise.all([waitForCellExecutionToComplete(cell3), waitForCellHavingOutput(cell3)]);
+
+        const sysExecutable = getCellOutputs(cell3).trim();
+
+        // First path in PATH must be the directory where executable is located.
+        assert.ok(
+            areInterpreterPathsSame(shellExecutable.toLowerCase(), sysExecutable.toLowerCase()),
+            `Python paths do not match ${shellExecutable}, ${sysExecutable}. Output is (${cell1Output}), error is ${errorOutput}`
         );
     });
     test('Testing streamed output', async () => {
@@ -696,7 +755,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         if (!vscodeNotebook.activeNotebookEditor) {
             throw new Error('No active document');
         }
-        process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = 'true';
         const cells = vscodeNotebook.activeNotebookEditor!.document.getCells();
         traceInfo('1. Start execution for test of Stderr & stdout outputs');
         traceInfo('2. Start execution for test of Stderr & stdout outputs');
@@ -761,7 +819,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         );
         await insertCodeCell('print("\\rExecute\\rExecute\\nExecute 8\\rExecute 9\\r\\r")', { index: 5 });
 
-        process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = 'true';
         const cells = vscodeNotebook.activeNotebookEditor!.document.getCells();
         await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cells[5])]);
 
@@ -780,7 +837,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await insertCodeCell('raise Error("fail")', { index: 0 });
         await insertCodeCell('print("after fail")', { index: 1 });
 
-        process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = 'true';
         const cells = vscodeNotebook.activeNotebookEditor!.document.getCells();
         await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedWithErrors(cells[0])]);
 

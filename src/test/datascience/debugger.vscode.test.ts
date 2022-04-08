@@ -2,12 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 import * as sinon from 'sinon';
-import { ICommandManager, IVSCodeNotebook } from '../../client/common/application/types';
-import { IDisposable } from '../../client/common/types';
-import { Commands } from '../../client/datascience/constants';
-import { IVariableViewProvider } from '../../client/datascience/variablesView/types';
-import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common';
-import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize';
+import { ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import { IDisposable } from '../../platform/common/types';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common.node';
+import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize.node';
 import {
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
@@ -22,13 +20,15 @@ import {
     getDebugSessionAndAdapter
 } from './notebook/helper';
 import { ITestVariableViewProvider } from './variableView/variableViewTestInterfaces';
-import { traceInfo } from '../../client/common/logger';
-import { IDebuggingManager } from '../../client/debugger/types';
+import { traceInfo } from '../../platform/logging';
+import { IDebuggingManager } from '../../platform/debugger/types';
 import { assert } from 'chai';
 import { debug } from 'vscode';
 import { ITestWebviewHost } from './testInterfaces';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { waitForVariablesToMatch } from './variableView/variableViewHelpers';
+import { Commands } from '../../platform/common/constants';
+import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
 
 suite('VSCode Notebook - Run By Line', function () {
     let api: IExtensionTestApi;
@@ -54,7 +54,7 @@ suite('VSCode Notebook - Run By Line', function () {
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
         const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        variableViewProvider = (coreVariableViewProvider as any) as ITestVariableViewProvider; // Cast to expose the test interfaces
+        variableViewProvider = coreVariableViewProvider as any as ITestVariableViewProvider; // Cast to expose the test interfaces
         debuggingManager = api.serviceContainer.get<IDebuggingManager>(IDebuggingManager);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         traceInfo(`Start Test Suite (completed)`);
@@ -82,6 +82,8 @@ suite('VSCode Notebook - Run By Line', function () {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
     test('Stops at end of cell', async function () {
+        // See issue: https://github.com/microsoft/vscode-jupyter/issues/9130
+        this.skip();
         // Run by line seems to end up on the second line of the function, not the first
         const cell = await insertCodeCell('a=1\na', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.document!;
@@ -100,7 +102,7 @@ suite('VSCode Notebook - Run By Line', function () {
         traceInfo(`Got past first stop event`);
 
         const coreVariableView = await variableViewProvider.activeVariableView;
-        const variableView = (coreVariableView as unknown) as ITestWebviewHost;
+        const variableView = coreVariableView as unknown as ITestWebviewHost;
 
         await commandManager.executeCommand(Commands.RunByLineNext, cell);
         await waitForStoppedEvent(debugAdapter!);
@@ -144,6 +146,8 @@ suite('VSCode Notebook - Run By Line', function () {
     });
 
     test('Stops in same-cell function called from last line', async function () {
+        // See https://github.com/microsoft/vscode-jupyter/issues/9130
+        this.skip();
         const cell = await insertCodeCell('def foo():\n    print(1)\n\nfoo()', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.document!;
 

@@ -22,24 +22,24 @@ suite('Dummy6', () => {
 // import type * as nbformat from '@jupyterlab/nbformat';
 // import { ReactWrapper } from 'enzyme';
 // import { anything, when } from 'ts-mockito';
-// import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
-// import { IFileSystem } from '../../client/common/platform/types';
-// import { GLOBAL_MEMENTO, IJupyterSettings, IMemento } from '../../client/common/types';
-// import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
-// import { noop } from '../../client/common/utils/misc';
-// import { EXTENSION_ROOT_DIR } from '../../client/constants';
-// import { generateCellsFromDocument } from '../../client/datascience/cellFactory';
-// import { AllowedCellOutputKeys } from '../../client/datascience/common';
-// import { EditorContexts } from '../../client/datascience/constants';
-// import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-// import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
-// import { AskedForPerFileSettingKey } from '../../client/datascience/interactive-window/interactiveWindowProvider';
-// import { IInteractiveWindowProvider, IWebviewExtensibility } from '../../client/datascience/types';
-// import { IInterpreterService } from '../../client/interpreter/contracts';
-// import { concatMultilineString } from '../../datascience-ui/common';
-// import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
-// import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
-// import { ImageButton } from '../../datascience-ui/react-common/imageButton';
+// import { IApplicationShell, IDocumentManager } from '../../platform/common/application/types';
+// import { IFileSystem } from '../../platform/common/platform/types';
+// import { GLOBAL_MEMENTO, IJupyterSettings, IMemento } from '../../platform/common/types';
+// import { createDeferred, sleep, waitForPromise } from '../../platform/common/utils/async';
+// import { noop } from '../../platform/common/utils/misc';
+// import { EXTENSION_ROOT_DIR } from '../../platform/constants';
+// import { generateCellsFromDocument } from '../../platform/datascience/cellFactory';
+// import { AllowedCellOutputKeys } from '../../platform/datascience/common';
+// import { EditorContexts } from '../../platform/datascience/constants';
+// import { InteractiveWindowMessages } from '../../platform/datascience/interactive-common/interactiveWindowTypes';
+// import { InteractiveWindow } from '../../platform/datascience/interactive-window/interactiveWindow';
+// import { AskedForPerFileSettingKey } from '../../platform/datascience/interactive-window/interactiveWindowProvider';
+// import { IInteractiveWindowProvider, IWebviewExtensibility } from '../../platform/datascience/types';
+// import { IInterpreterService } from '../../platform/interpreter/contracts';
+// import { concatMultilineString } from '../../webviews/webview-side/common';
+// import { InteractivePanel } from '../../webviews/webview-side/history-react/interactivePanel';
+// import { IKeyboardEvent } from '../../webviews/webview-side/react-common/event';
+// import { ImageButton } from '../../webviews/webview-side/react-common/imageButton';
 // import { InterpreterService } from '../interpreters/interpreterService';
 // import { DataScienceIocContainer } from './dataScienceIocContainer';
 // import { createDocument } from './editor-integration/helpers';
@@ -76,8 +76,8 @@ suite('Dummy6', () => {
 //     verifyLastCellInputState
 // } from './testHelpers';
 // import { ITestInteractiveWindowProvider } from './testInteractiveWindowProvider';
-// import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
-// import { IExportDialog } from '../../client/datascience/export/types';
+// import { InteractiveWindowMessageListener } from '../../platform/datascience/interactive-common/interactiveWindowMessageListener';
+// import { IExportDialog } from '../../platform/datascience/export/types';
 // // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 // const _escape = require('lodash/escape') as typeof import('lodash/escape'); // NOSONAR
 

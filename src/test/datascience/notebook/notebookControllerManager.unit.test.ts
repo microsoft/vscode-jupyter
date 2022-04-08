@@ -3,9 +3,9 @@
 
 import { assert } from 'chai';
 import { when, instance, mock } from 'ts-mockito';
-import { getDisplayNameOrNameOfKernelConnection } from '../../../client/datascience/jupyter/kernels/helpers';
-import { IJupyterKernelSpec } from '../../../client/datascience/types';
-import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers.node';
+import { IJupyterKernelSpec } from '../../../kernels/types';
+import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 
 suite('Notebook Controller Manager', () => {
     test('Live kernels should display the name`', () => {

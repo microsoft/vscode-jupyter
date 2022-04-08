@@ -10,7 +10,7 @@ import {
     Output,
     ShellOptions,
     SpawnOptions
-} from '../../client/common/process/types';
+} from '../../platform/common/process/types.node';
 import { noop } from '../core';
 
 type ExecObservableCallback = (result: Observable<Output<string>> | Output<string>) => void;

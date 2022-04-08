@@ -7,7 +7,7 @@
 /* eslint-disable */
 
 import { CharCode } from './charCode';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 
 export namespace vscUri {
     const isWindows = /^win/.test(process.platform);

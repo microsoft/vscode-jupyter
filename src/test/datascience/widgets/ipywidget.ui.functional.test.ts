@@ -14,12 +14,12 @@ suite('Dummy14', () => {
 // import * as chaiAsPromised from 'chai-as-promised';
 // import * as fs from 'fs-extra';
 // import * as os from 'os';
-// import * as path from 'path';
+// import * as path from '../../platform/vscode-path/path';
 // import * as sinon from 'sinon';
 // import { Disposable } from 'vscode';
-// import { traceInfo } from '../../../client/common/logger';
-// import { sleep } from '../../../client/common/utils/async';
-// import { EXTENSION_ROOT_DIR } from '../../../client/constants';
+// import { traceInfo } from '../../../platform/common/logger.node';
+// import { sleep } from '../../../platform/common/utils/async';
+// import { EXTENSION_ROOT_DIR } from '../../../platform/constants';
 // import { retryIfFail as retryIfFailOriginal } from '../../common';
 // import { mockedVSCodeNamespaces } from '../../vscode-mock';
 // import { DataScienceIocContainer } from '../dataScienceIocContainer';

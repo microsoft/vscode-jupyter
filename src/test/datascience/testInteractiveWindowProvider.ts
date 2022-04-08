@@ -4,8 +4,8 @@
 // import { inject, injectable, named } from 'inversify';
 // import * as uuid from 'uuid/v4';
 // import { Memento, Uri } from 'vscode';
-// import * as types from '../../client/common/application/types';
-// import { IFileSystem } from '../../client/common/platform/types';
+// import * as types from '../../platform/common/application/types';
+// import { IFileSystem } from '../../platform/common/platform/types.node';
 // import {
 //     GLOBAL_MEMENTO,
 //     IAsyncDisposableRegistry,
@@ -14,13 +14,13 @@
 //     IMemento,
 //     InteractiveWindowMode,
 //     Resource
-// } from '../../client/common/types';
-// import { createDeferred, Deferred } from '../../client/common/utils/async';
-// import { resetIdentity } from '../../client/datascience/interactive-window/identity';
-// import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
-// import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
-// import { IInteractiveWindow, IInteractiveWindowProvider } from '../../client/datascience/types';
-// import { IServiceContainer } from '../../client/ioc/types';
+// } from '../../platform/common/types';
+// import { createDeferred, Deferred } from '../../platform/common/utils/async';
+// import { resetIdentity } from '../../platform/datascience/interactive-window/identity';
+// import { InteractiveWindow } from '../../platform/datascience/interactive-window/interactiveWindow';
+// import { InteractiveWindowProvider } from '../../platform/datascience/interactive-window/interactiveWindowProvider';
+// import { IInteractiveWindow, IInteractiveWindowProvider } from '../../platform/datascience/types';
+// import { IServiceContainer } from '../../platform/ioc/types';
 // import { DataScienceIocContainer } from './dataScienceIocContainer';
 // import { IMountedWebView } from './mountedWebView';
 // import { WaitForMessageOptions } from './uiTests/helpers';

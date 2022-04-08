@@ -5,8 +5,8 @@
 
 import { expect, use } from 'chai';
 import * as fs from 'fs-extra';
-import { TemporaryFileSystem } from '../../../client/common/platform/fs-temp';
-import { TemporaryFile } from '../../../client/common/platform/types';
+import { TemporaryFileSystem } from '../../../platform/common/platform/fs-temp.node';
+import { TemporaryFile } from '../../../platform/common/platform/types';
 import { assertDoesNotExist, assertExists, FSFixture, WINDOWS } from './utils';
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */

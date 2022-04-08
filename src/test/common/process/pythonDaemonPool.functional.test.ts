@@ -10,29 +10,29 @@ import * as dedent from 'dedent';
 import { EventEmitter } from 'events';
 import * as fs from 'fs-extra';
 import * as os from 'os';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import { Observable } from 'rxjs/Observable';
 import * as sinon from 'sinon';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { createMessageConnection, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc/node';
-import { IPlatformService } from '../../../client/common/platform/types';
-import { ProcessLogger } from '../../../client/common/process/logger';
-import { PythonDaemonExecutionServicePool } from '../../../client/common/process/pythonDaemonPool';
+import { JupyterDaemonModule } from '../../../platform/common/constants';
+import { IPlatformService } from '../../../platform/common/platform/types';
+import { ProcessLogger } from '../../../platform/common/process/logger.node';
+import { PythonDaemonExecutionServicePool } from '../../../platform/common/process/pythonDaemonPool.node';
 import {
     IProcessLogger,
     IPythonDaemonExecutionService,
     IPythonExecutionService,
     ObservableExecutionResult,
     Output
-} from '../../../client/common/process/types';
-import { IDisposable } from '../../../client/common/types';
-import { sleep } from '../../../client/common/utils/async';
-import { noop } from '../../../client/common/utils/misc';
-import { EXTENSION_ROOT_DIR } from '../../../client/constants';
-import { JupyterDaemonModule } from '../../../client/datascience/constants';
-import { PythonEnvironment, PythonVersionInfo } from '../../../client/pythonEnvironments/info';
-import { parsePythonVersion } from '../../../client/pythonEnvironments/info/pythonVersion';
-import { isPythonVersion, PYTHON_PATH, waitForCondition } from '../../common';
+} from '../../../platform/common/process/types.node';
+import { IDisposable } from '../../../platform/common/types';
+import { sleep } from '../../../platform/common/utils/async';
+import { noop } from '../../../platform/common/utils/misc';
+import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
+import { PythonEnvironment, PythonVersionInfo } from '../../../platform/pythonEnvironments/info';
+import { parsePythonVersion } from '../../../platform/pythonEnvironments/info/pythonVersion';
+import { isPythonVersion, PYTHON_PATH, waitForCondition } from '../../common.node';
 import { createTemporaryFile } from '../../utils/fs';
 use(chaiPromised);
 

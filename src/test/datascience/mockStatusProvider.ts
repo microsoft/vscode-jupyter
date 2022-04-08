@@ -1,5 +1,5 @@
 import { Disposable } from 'vscode';
-import { IStatusProvider } from '../../client/datascience/types';
+import { IStatusProvider } from '../../platform/progress/types';
 import { noop } from '../core';
 export class MockStatusProvider implements IStatusProvider {
     public set(_message: string, _timeout?: number, _cancel?: () => void): Disposable {

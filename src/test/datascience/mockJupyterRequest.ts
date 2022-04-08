@@ -4,11 +4,11 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { CancellationToken } from 'vscode-jsonrpc';
+import { ICell } from '../../platform/common/types';
 
-import { createDeferred, Deferred } from '../../client/common/utils/async';
-import { noop } from '../../client/common/utils/misc';
-import { ICell } from '../../client/datascience/types';
-import { concatMultilineString } from '../../datascience-ui/common';
+import { createDeferred, Deferred } from '../../platform/common/utils/async';
+import { noop } from '../../platform/common/utils/misc';
+import { concatMultilineString } from '../../webviews/webview-side/common';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 interface IMessageResult {
@@ -231,7 +231,7 @@ export class MockJupyterRequestICell implements Kernel.IFuture<any, any> {
                 version: '1.1',
                 session: '1111111111',
                 msg_id: '1.1',
-                msg_type: ('shell' as any) as KernelMessage.ShellMessageType,
+                msg_type: 'shell' as any as KernelMessage.ShellMessageType,
                 date: ''
             },
             parent_header: {},
@@ -377,7 +377,7 @@ export class MockJupyterRequest implements Kernel.IFuture<any, any> {
                 version: '1.1',
                 session: '1111111111',
                 msg_id: '1.1',
-                msg_type: ('shell' as any) as KernelMessage.ShellMessageType,
+                msg_type: 'shell' as any as KernelMessage.ShellMessageType,
                 date: ''
             },
             parent_header: {},

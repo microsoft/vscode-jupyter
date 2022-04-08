@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import { cloneDeep } from 'lodash';
 import * as sinon from 'sinon';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import * as vscode from 'vscode';
 import {
     IConfigurationService,
@@ -10,17 +10,18 @@ import {
     IJupyterSettings,
     IVariableTooltipFields,
     ReadWrite
-} from '../../../client/common/types';
-import { IInteractiveWindowProvider, IJupyterVariables } from '../../../client/datascience/types';
-import { IExtensionTestApi, openFile, sleep } from '../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
-import { initialize } from '../../initialize';
-import { HoverProvider } from '../../../client/datascience/editor-integration/hoverProvider';
-import { Identifiers } from '../../../client/datascience/constants';
-import { disposeAllDisposables } from '../../../client/common/helpers';
-import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
-import { IVSCodeNotebook } from '../../../client/common/application/types';
-import { IFileSystem } from '../../../client/common/platform/types';
+} from '../../../platform/common/types';
+import { IExtensionTestApi, openFile, sleep } from '../../common.node';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
+import { initialize } from '../../initialize.node';
+import { HoverProvider } from '../../../interactive-window/editor-integration/hoverProvider.node';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { IKernelProvider } from '../../../platform/../kernels/types';
+import { IVSCodeNotebook } from '../../../platform/common/application/types';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IInteractiveWindowProvider } from '../../../interactive-window/types';
+import { IJupyterVariables } from '../../../kernels/variables/types';
+import { Identifiers } from '../../../platform/common/constants';
 
 suite('Hover provider', async () => {
     const file = path.join(

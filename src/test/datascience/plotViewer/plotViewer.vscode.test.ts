@@ -5,19 +5,19 @@
 
 import { assert } from 'chai';
 import * as vscode from 'vscode';
-import { IVSCodeNotebook } from '../../../client/common/application/types';
-import { traceInfo } from '../../../client/common/logger';
-import { IDisposable } from '../../../client/common/types';
-import { createJupyterCellFromVSCNotebookCell } from '../../../client/datascience/notebook/helpers/helpers';
-import { IExtensionTestApi, waitForCondition } from '../../common';
-import { closeActiveWindows, initialize } from '../../initialize';
+import { IVSCodeNotebook } from '../../../platform/common/application/types';
+import { traceInfo } from '../../../platform/logging';
+import { IDisposable } from '../../../platform/common/types';
+import { createJupyterCellFromVSCNotebookCell } from '../../../notebooks/helpers.node';
+import { IExtensionTestApi, waitForCondition } from '../../common.node';
+import { closeActiveWindows, initialize } from '../../initialize.node';
 import {
-    closeNotebooksAndCleanUpAfterTests,
-    insertCodeCell,
     startJupyterServer,
-    waitForExecutionCompletedSuccessfully,
+    closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
-    runAllCellsInActiveNotebook
+    insertCodeCell,
+    runAllCellsInActiveNotebook,
+    waitForExecutionCompletedSuccessfully
 } from '../notebook/helper';
 
 suite('VSCode Notebook PlotViewer integration - VSCode Notebook', function () {

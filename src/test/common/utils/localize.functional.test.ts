@@ -7,9 +7,9 @@
 
 import * as assert from 'assert';
 import * as fs from 'fs';
-import * as path from 'path';
-import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
-import * as localize from '../../../client/common/utils/localize';
+import * as path from '../../../platform/vscode-path/path';
+import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
+import * as localize from '../../../platform/common/utils/localize';
 
 const defaultNLSFile = path.join(EXTENSION_ROOT_DIR, 'package.nls.json');
 

@@ -5,21 +5,19 @@
 
 import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
-import { ApplicationShell } from '../../../../client/common/application/applicationShell';
-import { IApplicationShell } from '../../../../client/common/application/types';
-import { ProductInstaller } from '../../../../client/common/installer/productInstaller';
-import { IInstaller, InstallerResponse, Product } from '../../../../client/common/types';
-import { DataScience } from '../../../../client/common/utils/localize';
+import { ApplicationShell } from '../../../../platform/common/application/applicationShell';
+import { IApplicationShell } from '../../../../platform/common/application/types';
+import { DataScience } from '../../../../platform/common/utils/localize';
+import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
+import { ProductInstaller } from '../../../../kernels/installer/productInstaller.node';
+import { IInstaller, Product, InstallerResponse } from '../../../../kernels/installer/types';
 import {
-    InterpreterJupyterKernelSpecCommand,
-    JupyterCommandFactory
-} from '../../../../client/datascience/jupyter/interpreter/jupyterCommand';
-import {
-    JupyterInterpreterDependencyResponse,
-    JupyterInterpreterDependencyService
-} from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
-import { IJupyterCommand, IJupyterCommandFactory } from '../../../../client/datascience/types';
-import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
+    JupyterCommandFactory,
+    InterpreterJupyterKernelSpecCommand
+} from '../../../../kernels/jupyter/interpreter/jupyterCommand.node';
+import { JupyterInterpreterDependencyService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService.node';
+import { JupyterInterpreterDependencyResponse } from '../../../../kernels/jupyter/types';
+import { IJupyterCommand, IJupyterCommandFactory } from '../../../../kernels/jupyter/types.node';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 

@@ -4,14 +4,14 @@
 'use strict';
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import { assert } from 'chai';
 import { NotebookDocument, Uri, window } from 'vscode';
-import { IVSCodeNotebook } from '../../../client/common/application/types';
-import { IDisposable } from '../../../client/common/types';
-import { IExtensionTestApi } from '../../common';
-import { initialize } from '../../initialize';
+import { IVSCodeNotebook } from '../../../platform/common/application/types';
+import { IDisposable } from '../../../platform/common/types';
+import { IExtensionTestApi } from '../../common.node';
+import { initialize } from '../../initialize.node';
 import { openNotebook } from '../helpers';
 import {
     closeNotebooks,
@@ -21,11 +21,11 @@ import {
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected
 } from './helper';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
-import { createDeferred, Deferred } from '../../../client/common/utils/async';
-import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { NotebookIPyWidgetCoordinator } from '../../../client/datascience/ipywidgets/notebookIPyWidgetCoordinator';
-import { INotebookCommunication } from '../../../client/datascience/notebook/types';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
+import { createDeferred, Deferred } from '../../../platform/common/utils/async';
+import { InteractiveWindowMessages } from '../../../platform/messageTypes';
+import { NotebookIPyWidgetCoordinator } from '../../../kernels/ipywidgets-message-coordination/notebookIPyWidgetCoordinator.node';
+import { INotebookCommunication } from '../../../notebooks/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - IPyWidget test', () => {

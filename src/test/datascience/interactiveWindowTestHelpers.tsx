@@ -7,16 +7,16 @@ export const __ = '';
 // import * as React from 'react';
 // import { CodeLens, Uri } from 'vscode';
 
-// import { ICommandManager, IDocumentManager } from '../../client/common/application/types';
-// import { Resource } from '../../client/common/types';
-// import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
+// import { ICommandManager, IDocumentManager } from '../../platform/common/application/types';
+// import { Resource } from '../../platform/common/types';
+// import { InteractiveWindow } from '../../platform/datascience/interactive-window/interactiveWindow';
 // import {
 //     ICodeWatcher,
 //     IDataScienceCodeLensProvider,
 //     IInteractiveWindow,
 //     IInteractiveWindowProvider,
 //     IJupyterExecution
-// } from '../../client/datascience/types';
+// } from '../../platform/datascience/types';
 // import { DataScienceIocContainer } from './dataScienceIocContainer';
 // import { MockDocumentManager } from './mockDocumentManager';
 // import { IMountedWebView } from './mountedWebView';

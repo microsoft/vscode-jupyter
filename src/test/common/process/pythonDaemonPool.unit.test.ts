@@ -12,14 +12,14 @@ import { Observable } from 'rxjs/Observable';
 import * as sinon from 'sinon';
 import { anything, instance, mock, reset, verify, when } from 'ts-mockito';
 import { MessageConnection } from 'vscode-jsonrpc';
-import { IPlatformService } from '../../../client/common/platform/types';
-import { ProcessLogger } from '../../../client/common/process/logger';
-import { PythonDaemonExecutionService } from '../../../client/common/process/pythonDaemon';
-import { PythonDaemonExecutionServicePool } from '../../../client/common/process/pythonDaemonPool';
-import { IProcessLogger, IPythonExecutionService, Output } from '../../../client/common/process/types';
-import { ReadWrite } from '../../../client/common/types';
-import { sleep } from '../../../client/common/utils/async';
-import { InterpreterInformation, PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { IPlatformService } from '../../../platform/common/platform/types';
+import { ProcessLogger } from '../../../platform/common/process/logger.node';
+import { PythonDaemonExecutionService } from '../../../platform/common/process/pythonDaemon.node';
+import { PythonDaemonExecutionServicePool } from '../../../platform/common/process/pythonDaemonPool.node';
+import { IProcessLogger, IPythonExecutionService, Output } from '../../../platform/common/process/types.node';
+import { ReadWrite } from '../../../platform/common/types';
+import { sleep } from '../../../platform/common/utils/async';
+import { InterpreterInformation, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { noop } from '../../core';
 import { asyncDump } from '../asyncDump';
 use(chaiPromised);
@@ -62,7 +62,7 @@ suite('Daemon - Python Daemon Pool', () => {
     });
 
     async function setupDaemon(daemonPoolService: DaemonPool) {
-        const mockMessageConnection = ({
+        const mockMessageConnection = {
             sendRequest: sendRequestStub,
             listen: listenStub,
             onClose: noop,
@@ -70,8 +70,8 @@ suite('Daemon - Python Daemon Pool', () => {
             onError: noop,
             onNotification: noop,
             onUnhandledNotification: noop
-        } as any) as MessageConnection;
-        const daemonProc = (new EventEmitter() as any) as ReadWrite<ChildProcess>;
+        } as any as MessageConnection;
+        const daemonProc = new EventEmitter() as any as ReadWrite<ChildProcess>;
         daemonProc.killed = false;
         daemonProc.pid = process.pid;
         daemonProc.kill = noop as any;

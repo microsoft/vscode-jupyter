@@ -5,31 +5,34 @@
 
 import { assert, expect, use } from 'chai';
 import * as chaiPromise from 'chai-as-promised';
-import * as path from 'path';
+import * as path from '../../../../platform/vscode-path/path';
 import * as fsExtra from 'fs-extra';
 import * as sinon from 'sinon';
 import { Subject } from 'rxjs/Subject';
 import { anything, capture, deepEqual, instance, mock, when } from 'ts-mockito';
-import { ProductNames } from '../../../../client/common/installer/productNames';
-import { PathUtils } from '../../../../client/common/platform/pathUtils';
-import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
+import { PathUtils } from '../../../../platform/common/platform/pathUtils.node';
+import { PythonExecutionFactory } from '../../../../platform/common/process/pythonExecutionFactory.node';
 import {
     IPythonDaemonExecutionService,
     ObservableExecutionResult,
     Output
-} from '../../../../client/common/process/types';
-import { Product } from '../../../../client/common/types';
-import { DataScience } from '../../../../client/common/utils/localize';
-import { noop } from '../../../../client/common/utils/misc';
-import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
-import { JupyterDaemonModule } from '../../../../client/datascience/constants';
-import { JupyterInterpreterDependencyService } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
-import { JupyterInterpreterService } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
-import { JupyterInterpreterSubCommandExecutionService } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService';
-import { JupyterServerInfo } from '../../../../client/datascience/jupyter/jupyterConnection';
-import { IInterpreterService } from '../../../../client/interpreter/contracts';
+} from '../../../../platform/common/process/types.node';
+import { DataScience } from '../../../../platform/common/utils/localize';
+import { noop } from '../../../../platform/common/utils/misc';
+import { EXTENSION_ROOT_DIR } from '../../../../platform/constants.node';
+import { IInterpreterService } from '../../../../platform/interpreter/contracts.node';
 import { MockOutputChannel } from '../../../mockClasses';
 import { createPythonInterpreter } from '../../../utils/interpreters';
+import { ProductNames } from '../../../../kernels/installer/productNames.node';
+import { Product } from '../../../../kernels/installer/types';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants.node';
+import { IEnvironmentActivationService } from '../../../../platform/interpreter/activation/types';
+import { JupyterInterpreterDependencyService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService.node';
+import { JupyterInterpreterService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
+import { JupyterInterpreterSubCommandExecutionService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService.node';
+import { JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths.node';
+import { JupyterDaemonModule } from '../../../../platform/common/constants';
+import { JupyterServerInfo } from '../../../../kernels/jupyter/types';
 use(chaiPromise);
 
 /* eslint-disable  */
@@ -66,13 +69,21 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
             proc: undefined,
             out: new Subject<Output<string>>().asObservable()
         };
+        const jupyterPaths = mock<JupyterPaths>();
+        when(jupyterPaths.getKernelSpecTempRegistrationFolder()).thenResolve(
+            path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'temp', 'jupyter', 'kernels')
+        );
+        const envActivationService = mock<IEnvironmentActivationService>();
+        when(envActivationService.getActivatedEnvironmentVariables(anything(), anything())).thenResolve();
         jupyterInterpreterExecutionService = new JupyterInterpreterSubCommandExecutionService(
             instance(jupyterInterpreter),
             instance(interpreterService),
             instance(jupyterDependencyService),
             instance(execFactory),
             output,
-            instance(pathUtils)
+            instance(pathUtils),
+            instance(jupyterPaths),
+            instance(envActivationService)
         );
 
         when(execService.execModuleObservable('jupyter', anything(), anything())).thenResolve(

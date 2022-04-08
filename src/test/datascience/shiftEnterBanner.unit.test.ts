@@ -5,21 +5,30 @@
 import { expect } from 'chai';
 import rewiremock from 'rewiremock';
 import * as typemoq from 'typemoq';
+import {
+    InteractiveShiftEnterBanner,
+    InteractiveShiftEnterStateKeys
+} from '../../interactive-window/shiftEnterBanner.node';
 
-import { IApplicationShell } from '../../client/common/application/types';
+import { IApplicationShell } from '../../platform/common/application/types';
+import {
+    isTestExecution,
+    isUnitTestExecution,
+    setTestExecution,
+    setUnitTestExecution,
+    Telemetry
+} from '../../platform/common/constants';
 import {
     IConfigurationService,
     IPersistentState,
     IPersistentStateFactory,
     IWatchableJupyterSettings
-} from '../../client/common/types';
-import { Telemetry } from '../../client/datascience/constants';
-import { InteractiveShiftEnterBanner, InteractiveShiftEnterStateKeys } from '../../client/datascience/shiftEnterBanner';
-import { clearTelemetryReporter } from '../../client/telemetry';
+} from '../../platform/common/types';
+import { clearTelemetryReporter } from '../../telemetry';
 
 suite('Interactive Shift Enter Banner', () => {
-    const oldValueOfVSC_JUPYTER_UNIT_TEST = process.env.VSC_JUPYTER_UNIT_TEST;
-    const oldValueOfVSC_JUPYTER_CI_TEST = process.env.VSC_JUPYTER_CI_TEST;
+    const oldValueOfVSC_JUPYTER_UNIT_TEST = isUnitTestExecution();
+    const oldValueOfVSC_JUPYTER_CI_TEST = isTestExecution();
     let appShell: typemoq.IMock<IApplicationShell>;
     let config: typemoq.IMock<IConfigurationService>;
 
@@ -36,17 +45,17 @@ suite('Interactive Shift Enter Banner', () => {
 
     setup(() => {
         clearTelemetryReporter();
-        process.env.VSC_JUPYTER_UNIT_TEST = undefined;
-        process.env.VSC_JUPYTER_CI_TEST = undefined;
+        setUnitTestExecution(false);
+        setTestExecution(false);
         appShell = typemoq.Mock.ofType<IApplicationShell>();
         config = typemoq.Mock.ofType<IConfigurationService>();
         rewiremock.enable();
-        rewiremock('vscode-extension-telemetry').with({ default: Reporter });
+        rewiremock('@vscode/extension-telemetry').with({ default: Reporter });
     });
 
     teardown(() => {
-        process.env.VSC_JUPYTER_UNIT_TEST = oldValueOfVSC_JUPYTER_UNIT_TEST;
-        process.env.VSC_JUPYTER_CI_TEST = oldValueOfVSC_JUPYTER_CI_TEST;
+        setUnitTestExecution(oldValueOfVSC_JUPYTER_UNIT_TEST);
+        setTestExecution(oldValueOfVSC_JUPYTER_CI_TEST);
         Reporter.properties = [];
         Reporter.eventNames = [];
         Reporter.measures = [];

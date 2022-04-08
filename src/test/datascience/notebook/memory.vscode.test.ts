@@ -7,14 +7,14 @@
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as v8 from 'v8';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
-import { IVSCodeNotebook } from '../../../client/common/application/types';
-import { traceInfo } from '../../../client/common/logger';
-import { IDisposable } from '../../../client/common/types';
-import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
+import { IVSCodeNotebook } from '../../../platform/common/application/types';
+import { traceInfo } from '../../../platform/logging';
+import { IDisposable } from '../../../platform/common/types';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
     runCell,
@@ -101,8 +101,6 @@ suite('DataScience - Memory Test', function () {
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this.currentTest?.title);
         }
-        // Added temporarily to identify why tests are failing.
-        process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = undefined;
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });

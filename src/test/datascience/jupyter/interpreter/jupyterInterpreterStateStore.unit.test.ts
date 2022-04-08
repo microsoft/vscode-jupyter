@@ -6,9 +6,9 @@
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { EventEmitter, Memento } from 'vscode';
-import { JupyterInterpreterService } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
-import { JupyterInterpreterStateStore } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterStateStore';
-import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
+import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
+import { JupyterInterpreterService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
+import { JupyterInterpreterStateStore } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterStateStore.node';
 import { MockMemento } from '../../../mocks/mementos';
 
 suite('DataScience - Jupyter Interpreter State', () => {

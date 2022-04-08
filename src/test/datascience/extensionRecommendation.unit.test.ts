@@ -4,16 +4,16 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Memento, NotebookDocument } from 'vscode';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../client/common/application/types';
-import { disposeAllDisposables } from '../../client/common/helpers';
-import { IDisposable, IExtensions } from '../../client/common/types';
-import { sleep } from '../../client/common/utils/async';
-import { Common } from '../../client/common/utils/localize';
-import { ExtensionRecommendationService } from '../../client/datascience/extensionRecommendation';
-import { JupyterNotebookView } from '../../client/datascience/notebook/constants';
-import { INotebookControllerManager } from '../../client/datascience/notebook/types';
-import { VSCodeNotebookController } from '../../client/datascience/notebook/vscodeNotebookController';
-import { IJupyterKernelSpec } from '../../client/datascience/types';
+import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import { disposeAllDisposables } from '../../platform/common/helpers';
+import { IDisposable, IExtensions } from '../../platform/common/types';
+import { sleep } from '../../platform/common/utils/async';
+import { Common } from '../../platform/common/utils/localize';
+import { JupyterNotebookView } from '../../notebooks/constants';
+import { VSCodeNotebookController } from '../../notebooks/controllers/vscodeNotebookController.node';
+import { INotebookControllerManager } from '../../notebooks/types';
+import { IJupyterKernelSpec } from '../../kernels/types';
+import { ExtensionRecommendationService } from '../../platform/common/extensionRecommendation.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 suite('DataScience Extension Recommendation', () => {

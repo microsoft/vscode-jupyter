@@ -3,21 +3,23 @@
 
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import { commands, window } from 'vscode';
-import { IPythonExtensionChecker } from '../../../client/api/types';
-import { IVSCodeNotebook } from '../../../client/common/application/types';
-import { BufferDecoder } from '../../../client/common/process/decoder';
-import { ProcessService } from '../../../client/common/process/proc';
-import { IDisposable } from '../../../client/common/types';
-import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
-import { getTextOutputValue } from '../../../client/datascience/notebook/helpers/helpers';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { getInterpreterHash, getNormalizedInterpreterPath } from '../../../client/pythonEnvironments/info/interpreter';
-import { createEventHandler, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../constants';
-import { closeActiveWindows, initialize, IS_CI_SERVER } from '../../initialize';
+import { IPythonExtensionChecker } from '../../../platform/api/types';
+import { IVSCodeNotebook } from '../../../platform/common/application/types';
+import { BufferDecoder } from '../../../platform/common/process/decoder.node';
+import { ProcessService } from '../../../platform/common/process/proc.node';
+import { IDisposable } from '../../../platform/common/types';
+import { IKernelProvider } from '../../../platform/../kernels/types';
+import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import {
+    getInterpreterHash,
+    getNormalizedInterpreterPath
+} from '../../../platform/pythonEnvironments/info/interpreter.node';
+import { createEventHandler, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common.node';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
+import { closeActiveWindows, initialize, IS_CI_SERVER } from '../../initialize.node';
 import { openNotebook } from '../helpers';
 import {
     closeNotebooksAndCleanUpAfterTests,
@@ -33,6 +35,7 @@ import {
     waitForTextOutput,
     defaultNotebookTestTimeout
 } from './helper';
+import { getTextOutputValue } from '../../../notebooks/helpers.node';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience - VSCode Notebook - Kernel Selection', function () {
@@ -276,7 +279,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         }
 
         // Very this kernel gets disposed when we switch the notebook kernel.
-        const kernel = kernelProvider.get(window.activeNotebookEditor!.document)!;
+        const kernel = kernelProvider.get(window.activeNotebookEditor!.document.uri)!;
         assert.ok(kernel, 'Kernel is not defined');
         const eventListener = createEventHandler(kernel, 'onDisposed');
 
@@ -298,7 +301,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
 
         // Verify the new kernel is not the same as the old.
         assert.isFalse(
-            kernel === kernelProvider.get(window.activeNotebookEditor!.document),
+            kernel === kernelProvider.get(window.activeNotebookEditor!.document.uri),
             'Kernels should not be the same'
         );
     });

@@ -6,17 +6,16 @@ import { JSONObject } from '@lumino/coreutils';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
 import { Observable } from 'rxjs/Observable';
-import { noop } from '../../client/common/utils/misc';
-import { JupyterInvalidKernelError } from '../../client/datascience/errors/jupyterInvalidKernelError';
-import { JupyterWaitForIdleError } from '../../client/datascience/errors/jupyterWaitForIdleError';
-import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
-import { IJupyterSession, KernelSocketInformation } from '../../client/datascience/types';
+import { noop } from '../../platform/common/utils/misc';
+import { JupyterInvalidKernelError } from '../../platform/errors/jupyterInvalidKernelError.node';
+import { JupyterWaitForIdleError } from '../../platform/errors/jupyterWaitForIdleError.node';
+import { IJupyterSession, KernelConnectionMetadata, KernelSocketInformation } from '../../platform/../kernels/types';
 import { sleep } from '../core';
 import { MockJupyterRequest } from './mockJupyterRequest';
-import { Resource } from '../../client/common/types';
+import { Resource } from '../../platform/common/types';
 import type * as nbformat from '@jupyterlab/nbformat';
-import { concatMultilineString } from '../../datascience-ui/common';
-import { KernelInterruptTimeoutError } from '../../client/datascience/errors/kernelInterruptTimeoutError';
+import { concatMultilineString } from '../../webviews/webview-side/common';
+import { KernelInterruptTimeoutError } from '../../platform/errors/kernelInterruptTimeoutError.node';
 
 const LineFeedRegEx = /(\r\n|\n)/g;
 
@@ -45,6 +44,7 @@ export class MockJupyterSession implements IJupyterSession {
     public get kernelId(): string {
         return '1';
     }
+    public readonly kind = 'localRaw';
     constructor(
         cellDictionary: Record<string, nbformat.IBaseCell> | nbformat.IBaseCell[],
         timedelay: number,
@@ -103,7 +103,7 @@ export class MockJupyterSession implements IJupyterSession {
     public waitForIdle(_timeout: number): Promise<void> {
         if (this.pendingIdleFailure) {
             this.pendingIdleFailure = false;
-            return Promise.reject(new JupyterWaitForIdleError('Kernel is dead'));
+            return Promise.reject(new JupyterWaitForIdleError({} as KernelConnectionMetadata));
         }
         return sleep(this.timedelay);
     }

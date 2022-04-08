@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 import * as fastDeepEqual from 'fast-deep-equal';
-import { waitForCondition } from '../../common';
+import { assert } from 'chai';
+import { waitForCondition } from '../../common.node';
 import { defaultNotebookTestTimeout } from '../notebook/helper';
 import { ITestWebviewHost } from '../testInterfaces';
 
@@ -78,6 +79,11 @@ function compareVariableInfos(expected: IVariableInfo, actual: IVariableInfo) {
         // If we don't specify an expected value, then don't check it
         // useful for things like object and sets where the value can vary
         delete actual.value;
-        return fastDeepEqual(expected, actual);
+        try {
+            assert.deepEqual(expected, actual);
+            return true;
+        } catch {
+            return false;
+        }
     }
 }

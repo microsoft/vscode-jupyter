@@ -7,15 +7,15 @@ import { assert } from 'chai';
 /* eslint-disable , no-invalid-this, @typescript-eslint/no-explicit-any */
 
 import * as fs from 'fs-extra';
-import * as path from 'path';
+import * as path from '../../platform/vscode-path/path';
 import * as vscode from 'vscode';
-import { traceInfo } from '../../client/common/logger';
-import { IInteractiveWindowProvider } from '../../client/datascience/types';
-import { IInterpreterService } from '../../client/interpreter/contracts';
-import { IExtensionTestApi, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
+import { IInteractiveWindowProvider } from '../../interactive-window/types';
+import { traceInfo } from '../../platform/logging';
+import { IInterpreterService } from '../../platform/interpreter/contracts.node';
+import { IExtensionTestApi, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common.node';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants.node';
 import { sleep } from '../core';
-import { closeActiveWindows, initialize, initializeTest } from '../initialize';
+import { closeActiveWindows, initialize, initializeTest } from '../initialize.node';
 
 const timeoutForCellToRun = 3 * 60 * 1_000;
 suite('Smoke Tests', () => {

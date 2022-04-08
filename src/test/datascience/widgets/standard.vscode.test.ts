@@ -5,15 +5,15 @@
 
 import { assert } from 'chai';
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import { commands, NotebookCell, Uri } from 'vscode';
-import { IVSCodeNotebook } from '../../../client/common/application/types';
-import { traceInfo } from '../../../client/common/logger';
-import { IDisposable } from '../../../client/common/types';
-import { IKernelProvider } from '../../../client/datascience/jupyter/kernels/types';
-import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
-import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
+import { IVSCodeNotebook } from '../../../platform/common/application/types';
+import { traceInfo } from '../../../platform/logging';
+import { IDisposable } from '../../../platform/common/types';
+import { IKernelProvider } from '../../../platform/../kernels/types';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
+import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize.node';
 import { openNotebook } from '../helpers';
 import {
     closeNotebooks,
@@ -155,7 +155,7 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await testSliderWidget(comms);
 
         // Restart the kernel.
-        const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document)!;
+        const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document.uri)!;
         await kernel.restart();
         await testSliderWidget(comms);
 
@@ -173,7 +173,7 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await testSliderWidget(comms);
 
         // Restart the kernel.
-        const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document)!;
+        const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document.uri)!;
         await kernel.interrupt();
         await testSliderWidget(comms);
 

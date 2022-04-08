@@ -9,14 +9,14 @@ export const __ = '';
 // import { instance, mock, when } from 'ts-mockito';
 // import { EventEmitter, NotebookDocument, Uri } from 'vscode';
 // import { getNamesAndValues } from '../../utils/enum';
-// import { Telemetry } from '../../../client/datascience/constants';
-// import { CellOutputMimeTypeTracker } from '../../../client/datascience/jupyter/jupyterCellOutputMimeTypeTracker';
-// import { NativeEditorNotebookModel } from '../../../client/datascience/notebookStorage/notebookModel';
-// import { CellState, ICell, INotebookEditor } from '../../../client/datascience/types';
-// import { getTelemetrySafeHashedString } from '../../../client/telemetry/helpers';
-// import { IVSCodeNotebook } from '../../../client/common/application/types';
-// import { IDisposable } from '../../../client/common/types';
-// import { disposeAllDisposables } from '../../../client/common/helpers';
+// import { Telemetry } from '../../../platform/datascience/constants';
+// import { CellOutputMimeTypeTracker } from '../../../platform/datascience/jupyter/jupyterCellOutputMimeTypeTracker';
+// import { NativeEditorNotebookModel } from '../../../notebooksStorage/notebookModel';
+// import { CellState, ICell, INotebookEditor } from '../../../platform/datascience/types';
+// import { getTelemetrySafeHashedString } from '../../../telemetry/helpers';
+// import { IVSCodeNotebook } from '../../../platform/common/application/types';
+// import { IDisposable } from '../../../platform/common/types';
+// import { disposeAllDisposables } from '../../../platform/common/helpers';
 
 // suite('DataScience - Cell Output Mimetype Tracker', () => {
 //     const oldValueOfVSC_JUPYTER_UNIT_TEST = process.env.VSC_JUPYTER_UNIT_TEST;

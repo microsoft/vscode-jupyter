@@ -7,10 +7,10 @@ import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
-import { Extensions } from '../../client/common/application/extensions';
-import { FileSystem } from '../../client/common/platform/fileSystem';
-import { JupyterUriProviderRegistration } from '../../client/datascience/jupyterUriProviderRegistration';
-import { IJupyterServerUri, IJupyterUriProvider, JupyterServerUriHandle } from '../../client/datascience/types';
+import { Extensions } from '../../platform/common/application/extensions.node';
+import { FileSystem } from '../../platform/common/platform/fileSystem.node';
+import { JupyterUriProviderRegistration } from '../../kernels/jupyter/jupyterUriProviderRegistration.node';
+import { IJupyterUriProvider, JupyterServerUriHandle, IJupyterServerUri } from '../../kernels/jupyter/types';
 
 class MockProvider implements IJupyterUriProvider {
     public get id() {

@@ -6,11 +6,11 @@
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
-import { IWorkspaceService } from '../../../client/common/application/types';
-import { JupyterSettings } from '../../../client/common/configSettings';
-import { ConfigurationService } from '../../../client/common/configuration/service';
-import { IExperimentService } from '../../../client/common/types';
-import { IServiceContainer } from '../../../client/ioc/types';
+import { IWorkspaceService } from '../../../platform/common/application/types';
+import { JupyterSettings } from '../../../platform/common/configSettings';
+import { ConfigurationService } from '../../../platform/common/configuration/service.node';
+import { IExperimentService } from '../../../platform/common/types';
+import { IServiceContainer } from '../../../platform/ioc/types';
 
 suite('Configuration Service', () => {
     const resource = Uri.parse('a');

@@ -3,8 +3,8 @@
 
 import { expect } from 'chai';
 import { encode, encodingExists } from 'iconv-lite';
-import { BufferDecoder } from '../../../client/common/process/decoder';
-import { initialize } from '../../initialize';
+import { BufferDecoder } from '../../../platform/common/process/decoder.node';
+import { initialize } from '../../initialize.node';
 
 suite('Decoder', () => {
     setup(initialize);

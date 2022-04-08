@@ -13,30 +13,30 @@ suite('Dummy9', () => {
 // import * as fs from 'fs-extra';
 // import { injectable } from 'inversify';
 // import * as os from 'os';
-// import * as path from 'path';
+// import * as path from '../../platform/vscode-path/path';
 // import { SemVer } from 'semver';
 // import { Readable, Writable } from 'stream';
 // import { anything, instance, mock, when } from 'ts-mockito';
 // import * as uuid from 'uuid/v4';
 // import { Disposable, Uri } from 'vscode';
 // import { CancellationToken } from 'vscode-jsonrpc';
-// import { ApplicationShell } from '../../client/common/application/applicationShell';
-// import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
-// import { Cancellation } from '../../client/common/cancellation';
-// import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
-// import { traceError, traceInfo } from '../../client/common/logger';
-// import { IFileSystem } from '../../client/common/platform/types';
-// import { IPythonExecutionFactory } from '../../client/common/process/types';
-// import { Product } from '../../client/common/types';
-// import { createDeferred, waitForPromise } from '../../client/common/utils/async';
-// import { noop } from '../../client/common/utils/misc';
-// import { ExportInterpreterFinder } from '../../client/datascience/export/exportInterpreterFinder';
-// import { ExportFormat } from '../../client/datascience/export/types';
-// import { getDefaultInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
-// import { getMessageForLibrariesNotInstalled } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
-// import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/kernels/jupyterKernelPromiseFailedError';
-// import { HostJupyterExecution } from '../../client/datascience/jupyter/liveshare/hostJupyterExecution';
-// import { HostJupyterNotebook } from '../../client/datascience/jupyter/liveshare/hostJupyterNotebook';
+// import { ApplicationShell } from '../../platform/common/application/applicationShell';
+// import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
+// import { Cancellation } from '../../platform/common/cancellation';
+// import { EXTENSION_ROOT_DIR } from '../../platform/common/constants';
+// import { traceError, traceInfo } from '../../platform/common/logger.node';
+// import { IFileSystem } from '../../platform/common/platform/types.node';
+// import { IPythonExecutionFactory } from '../../platform/common/process/types';
+// import { Product } from '../../platform/common/types';
+// import { createDeferred, waitForPromise } from '../../platform/common/utils/async';
+// import { noop } from '../../platform/common/utils/misc';
+// import { ExportInterpreterFinder } from '../../platform/datascience/export/exportInterpreterFinder';
+// import { ExportFormat } from '../../platform/datascience/export/types';
+// import { getDefaultInteractiveIdentity } from '../../platform/datascience/interactive-window/identity';
+// import { getMessageForLibrariesNotInstalled } from '../../platform/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
+// import { JupyterKernelPromiseFailedError } from '../../platform/../kernels/jupyterKernelPromiseFailedError';
+// import { HostJupyterExecution } from '../../platform/datascience/jupyter/liveshare/hostJupyterExecution';
+// import { HostJupyterNotebook } from '../../platform/datascience/jupyter/liveshare/hostJupyterNotebook';
 // import {
 //     CellState,
 //     ICell,
@@ -49,11 +49,11 @@ suite('Dummy9', () => {
 //     INotebookImporter,
 //     INotebookProvider,
 //     InterruptResult
-// } from '../../client/datascience/types';
-// import { IInterpreterService } from '../../client/interpreter/contracts';
-// import { PythonEnvironment } from '../../client/pythonEnvironments/info';
-// import { concatMultilineString } from '../../datascience-ui/common';
-// import { generateTestState, ICellViewModel } from '../../datascience-ui/interactive-common/mainState';
+// } from '../../platform/datascience/types';
+// import { IInterpreterService } from '../../platform/interpreter/contracts';
+// import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
+// import { concatMultilineString } from '../../webviews/webview-side/common';
+// import { generateTestState, ICellViewModel } from '../../webviews/webview-side/interactive-common/mainState';
 // import { sleep } from '../core';
 // import { DataScienceIocContainer } from './dataScienceIocContainer';
 // import { SupportedCommands } from './mockJupyterManager';
@@ -1210,7 +1210,7 @@ suite('Dummy9', () => {
 //                 const factory = ioc.serviceManager.get<IPythonExecutionFactory>(IPythonExecutionFactory);
 //                 const service = await factory.create({ pythonPath });
 //                 const mockService = service as MockPythonService;
-//                 // Used by commands (can be removed when `src/client/datascience/jupyter/interpreter/jupyterCommand.ts` is deleted).
+//                 // Used by commands (can be removed when `src/platform/datascience/jupyter/interpreter/jupyterCommand.ts` is deleted).
 //                 mockService.addExecResult(['-m', 'jupyter', 'notebook', '--version'], () => {
 //                     return Promise.resolve({
 //                         stdout: '9.9.9.9',
@@ -1218,7 +1218,7 @@ suite('Dummy9', () => {
 //                     });
 //                 });
 
-//                 // Used by commands (can be removed when `src/client/datascience/jupyter/interpreter/jupyterCommand.ts` is deleted).
+//                 // Used by commands (can be removed when `src/platform/datascience/jupyter/interpreter/jupyterCommand.ts` is deleted).
 //                 mockService.addExecResult(['-m', 'notebook', '--version'], () => {
 //                     return Promise.resolve({
 //                         stdout: '',

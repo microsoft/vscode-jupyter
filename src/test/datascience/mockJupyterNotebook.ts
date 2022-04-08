@@ -1,22 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { ICell } from '@jupyterlab/nbformat';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { JSONObject } from '@lumino/coreutils';
 import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
-import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
+import { INotebookCompletion } from '../../intellisense/types';
+import { ICellHashProvider } from '../../interactive-window/editor-integration/types';
 import {
-    ICell,
-    ICellHashProvider,
     IJupyterSession,
     INotebook,
-    INotebookCompletion,
     INotebookProviderConnection,
     InterruptResult,
+    KernelConnectionMetadata,
     KernelSocketInformation
-} from '../../client/datascience/types';
-import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+} from '../../platform/../kernels/types';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { noop } from '../core';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */

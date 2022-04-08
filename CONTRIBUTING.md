@@ -2,10 +2,10 @@
 
 ---
 
-| `main` branch                                                                                                                                                                                                |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| ![Main Build](https://github.com/microsoft/vscode-jupyter/actions/workflows/build-test.yml/badge.svg?branch=main)
----
+| `main` branch |
+| ------------- |
+
+## | ![Main Build](https://github.com/microsoft/vscode-jupyter/actions/workflows/build-test.yml/badge.svg?branch=main)
 
 [For contributing to the [Microsoft Python Language Server](https://github.com/Microsoft/python-language-server) see its own repo; for [Pylance](https://github.com/microsoft/pylance-release) see its own repo; for [debugpy](https://github.com/microsoft/debugpy) see its own repo]
 
@@ -13,8 +13,8 @@
 
 ### Prerequisites
 
-1. [Node.js](https://nodejs.org/) 14.16.0
-2. [npm](https://www.npmjs.com/) 6.14 (but not newer)
+1. [Node.js](https://nodejs.org/) 16.13.0
+2. [npm](https://www.npmjs.com/) 8.3
 3. [Python](https://www.python.org/) 3.6 or later
 4. Windows, macOS, or Linux
 5. [Visual Studio Code](https://code.visualstudio.com/)
@@ -112,7 +112,7 @@ You can run functional tests in a similar way to that for unit tests:
 
 ### Running Integration Tests (with VS Code)
 
-Note: Integration tests are those in files with extension `*.vscode.test.ts`.
+Note: Integration tests are those in files with extension `*.vscode.test*.ts`.
 
 1. Make sure you have compiled all code (done automatically when using incremental building)
 1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests
@@ -214,7 +214,7 @@ Clone the repo into any directory, open that directory in VSCode, and use the `E
 Information on our coding standards can be found [here](https://github.com/Microsoft/vscode-jupyter/blob/main/CODING_STANDARDS.md).
 We have CI tests to ensure the code committed will adhere to the above coding standards.
 
-Messages displayed to the user must be localized using/created constants from/in the [localize.ts](https://github.com/Microsoft/vscode-jupyter/blob/main/src/client/common/utils/localize.ts) file.
+Messages displayed to the user must be localized using/created constants from/in the [localize.ts](https://github.com/Microsoft/vscode-jupyter/blob/main/src/platform/common/utils/localize.ts) file.
 
 ## Development process
 
@@ -287,7 +287,7 @@ Steps to build the extension on your machine once you've cloned the repo:
 > npm install -g vsce
 # Perform the next steps in the vscode-jupyter folder.
 > npm ci
-> python3 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+> python3 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt --no-user
 > npm run clean
 > npm run package # This step takes around 10 minutes.
 ```

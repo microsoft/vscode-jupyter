@@ -4,14 +4,15 @@ import { expect } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import * as vscode from 'vscode';
-import { PythonExtensionChecker } from '../../../client/api/pythonApi';
-import { IWorkspaceService } from '../../../client/common/application/types';
-import { ConfigurationService } from '../../../client/common/configuration/service';
-import { IJupyterSettings } from '../../../client/common/types';
-import { DisplayOptions } from '../../../client/datascience/displayOptions';
-import { NotebookProvider } from '../../../client/datascience/interactive-common/notebookProvider';
-import { KernelConnectionMetadata } from '../../../client/datascience/jupyter/kernels/types';
-import { IJupyterNotebookProvider, INotebook, IRawNotebookProvider } from '../../../client/datascience/types';
+import { PythonExtensionChecker } from '../../../platform/api/pythonApi.node';
+import { IWorkspaceService } from '../../../platform/common/application/types';
+import { ConfigurationService } from '../../../platform/common/configuration/service.node';
+import { IJupyterSettings } from '../../../platform/common/types';
+import { INotebook, KernelConnectionMetadata } from '../../../platform/../kernels/types';
+import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider.node';
+import { DisplayOptions } from '../../../kernels/displayOptions.node';
+import { IJupyterNotebookProvider } from '../../../kernels/jupyter/types';
+import { IRawNotebookProvider } from '../../../kernels/raw/types';
 
 function Uri(filename: string): vscode.Uri {
     return vscode.Uri.file(filename);
@@ -66,7 +67,6 @@ suite('DataScience - NotebookProvider', () => {
         when(doc.uri).thenReturn(Uri('C:\\\\foo.py'));
 
         const notebook = await notebookProvider.createNotebook({
-            document: instance(doc),
             resource: Uri('C:\\\\foo.py'),
             kernelConnection: instance(mock<KernelConnectionMetadata>()),
             ui: new DisplayOptions(false),
@@ -83,7 +83,6 @@ suite('DataScience - NotebookProvider', () => {
         when(doc.uri).thenReturn(Uri('C:\\\\foo.py'));
 
         const notebook = await notebookProvider.createNotebook({
-            document: instance(doc),
             resource: Uri('C:\\\\foo.py'),
             kernelConnection: instance(mock<KernelConnectionMetadata>()),
             ui: new DisplayOptions(false),
@@ -92,7 +91,6 @@ suite('DataScience - NotebookProvider', () => {
         expect(notebook).to.not.equal(undefined, 'Server should return a notebook');
 
         const notebook2 = await notebookProvider.createNotebook({
-            document: instance(doc),
             resource: Uri('C:\\\\foo.py'),
             kernelConnection: instance(mock<KernelConnectionMetadata>()),
             ui: new DisplayOptions(false),

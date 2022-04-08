@@ -30,6 +30,7 @@ languageServer.*/**
 bin/**
 obj/**
 .pytest_cache
+temp/**
 tmp/**
 .python-version
 .vs/
@@ -45,3 +46,5 @@ vscode.proposed.*.d.ts
 nodeLanguageServer/**
 nodeLanguageServer.*/**
 src/test/datascience/.venv*
+!src/test/pythonEnvironments/**/*.*
+.vscode-test-web

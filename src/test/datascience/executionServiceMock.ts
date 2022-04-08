@@ -3,18 +3,18 @@
 'use strict';
 import { SemVer } from 'semver';
 
-import { ErrorUtils } from '../../client/common/errors/errorUtils';
-import { ModuleNotInstalledError } from '../../client/common/errors/moduleNotInstalledError';
-import { BufferDecoder } from '../../client/common/process/decoder';
-import { ProcessService } from '../../client/common/process/proc';
+import { ErrorUtils } from '../../platform/errors/errorUtils';
+import { ModuleNotInstalledError } from '../../platform/errors/moduleNotInstalledError.node';
+import { BufferDecoder } from '../../platform/common/process/decoder.node';
+import { ProcessService } from '../../platform/common/process/proc.node';
 import {
     ExecutionResult,
     IPythonExecutionService,
     ObservableExecutionResult,
     SpawnOptions
-} from '../../client/common/process/types';
-import { buildPythonExecInfo } from '../../client/pythonEnvironments/exec';
-import { InterpreterInformation } from '../../client/pythonEnvironments/info';
+} from '../../platform/common/process/types.node';
+import { buildPythonExecInfo } from '../../platform/pythonEnvironments/exec';
+import { InterpreterInformation } from '../../platform/pythonEnvironments/info';
 
 export class MockPythonExecutionService implements IPythonExecutionService {
     private procService: ProcessService;

@@ -5,14 +5,14 @@
 
 import { assert } from 'chai';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
-import { ApplicationShell } from '../../../../client/common/application/applicationShell';
-import { IApplicationShell, IWorkspaceService } from '../../../../client/common/application/types';
-import { WorkspaceService } from '../../../../client/common/application/workspace';
-import { PathUtils } from '../../../../client/common/platform/pathUtils';
-import { IPathUtils } from '../../../../client/common/types';
-import { JupyterInterpreterSelector } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterSelector';
-import { JupyterInterpreterStateStore } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterStateStore';
-import { IInterpreterSelector } from '../../../../client/interpreter/configuration/types';
+import { ApplicationShell } from '../../../../platform/common/application/applicationShell';
+import { IApplicationShell, IWorkspaceService } from '../../../../platform/common/application/types';
+import { WorkspaceService } from '../../../../platform/common/application/workspace';
+import { PathUtils } from '../../../../platform/common/platform/pathUtils.node';
+import { IPathUtils } from '../../../../platform/common/types';
+import { IInterpreterSelector } from '../../../../platform/interpreter/configuration/types';
+import { JupyterInterpreterSelector } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterSelector.node';
+import { JupyterInterpreterStateStore } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterStateStore.node';
 
 suite('DataScience - Jupyter Interpreter Picker', () => {
     let picker: JupyterInterpreterSelector;

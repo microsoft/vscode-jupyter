@@ -5,19 +5,19 @@
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter } from 'vscode';
-import { IExtensionSingleActivationService } from '../../client/activation/types';
-import { PythonExtensionChecker } from '../../client/api/pythonApi';
-import { IPythonApiProvider, IPythonExtensionChecker } from '../../client/api/types';
-import { IWorkspaceService } from '../../client/common/application/types';
-import { CondaService } from '../../client/common/process/condaService';
-import { createDeferred } from '../../client/common/utils/async';
-import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
-import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
-import { PreWarmActivatedJupyterEnvironmentVariables } from '../../client/datascience/preWarmVariables';
-import { IRawNotebookSupportedService } from '../../client/datascience/types';
-import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
-import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { PythonExtensionChecker } from '../../platform/api/pythonApi.node';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../../platform/api/types';
+import { IWorkspaceService } from '../../platform/common/application/types';
+import { CondaService } from '../../platform/common/process/condaService.node';
+import { createDeferred } from '../../platform/common/utils/async';
+import { IEnvironmentVariablesProvider } from '../../platform/common/variables/types';
+import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
+import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
+import { PreWarmActivatedJupyterEnvironmentVariables } from '../../kernels/variables/preWarmVariables.node';
 import { sleep } from '../core';
+import { IRawNotebookSupportedService } from '../../kernels/raw/types';
 
 suite('DataScience - PreWarm Env Vars', () => {
     let activationService: IExtensionSingleActivationService;

@@ -8,17 +8,23 @@ import { instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { EventEmitter, NotebookDocument, TextDocument } from 'vscode';
 
-import { IDocumentManager, IVSCodeNotebook } from '../../client/common/application/types';
-import { disposeAllDisposables } from '../../client/common/helpers';
-import { IDisposable } from '../../client/common/types';
-import { EventName } from '../../client/telemetry/constants';
-import { getTelemetrySafeHashedString } from '../../client/telemetry/helpers';
-import { ImportTracker } from '../../client/telemetry/importTracker';
+import { IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import {
+    isTestExecution,
+    isUnitTestExecution,
+    setTestExecution,
+    setUnitTestExecution
+} from '../../platform/common/constants';
+import { disposeAllDisposables } from '../../platform/common/helpers';
+import { IDisposable } from '../../platform/common/types';
+import { EventName } from '../../telemetry/constants';
+import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
+import { ImportTracker } from '../../telemetry/importTracker.node';
 import { createDocument } from '../datascience/editor-integration/helpers';
 
 suite('Import Tracker', () => {
-    const oldValueOfVSC_JUPYTER_UNIT_TEST = process.env.VSC_JUPYTER_UNIT_TEST;
-    const oldValueOfVSC_JUPYTER_CI_TEST = process.env.VSC_JUPYTER_CI_TEST;
+    const oldValueOfVSC_JUPYTER_UNIT_TEST = isUnitTestExecution();
+    const oldValueOfVSC_JUPYTER_CI_TEST = isTestExecution();
     let importTracker: ImportTracker;
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let openedEventEmitter: EventEmitter<TextDocument>;
@@ -56,8 +62,8 @@ suite('Import Tracker', () => {
     }
 
     setup(() => {
-        process.env.VSC_JUPYTER_UNIT_TEST = undefined;
-        process.env.VSC_JUPYTER_CI_TEST = undefined;
+        setTestExecution(false);
+        setUnitTestExecution(false);
 
         openedEventEmitter = new EventEmitter<TextDocument>();
         savedEventEmitter = new EventEmitter<TextDocument>();
@@ -67,7 +73,7 @@ suite('Import Tracker', () => {
         documentManager.setup((a) => a.onDidSaveTextDocument).returns(() => savedEventEmitter.event);
 
         rewiremock.enable();
-        rewiremock('vscode-extension-telemetry').with({ default: Reporter });
+        rewiremock('@vscode/extension-telemetry').with({ default: Reporter });
 
         const vscNb = mock<IVSCodeNotebook>();
         const onDidOpenCloseNbEvent = new EventEmitter<NotebookDocument>();
@@ -79,8 +85,8 @@ suite('Import Tracker', () => {
         importTracker = new ImportTracker(documentManager.object, instance(vscNb), disposables);
     });
     teardown(() => {
-        process.env.VSC_JUPYTER_UNIT_TEST = oldValueOfVSC_JUPYTER_UNIT_TEST;
-        process.env.VSC_JUPYTER_CI_TEST = oldValueOfVSC_JUPYTER_CI_TEST;
+        setUnitTestExecution(oldValueOfVSC_JUPYTER_UNIT_TEST);
+        setTestExecution(oldValueOfVSC_JUPYTER_CI_TEST);
         Reporter.properties = [];
         Reporter.eventNames = [];
         Reporter.measures = [];

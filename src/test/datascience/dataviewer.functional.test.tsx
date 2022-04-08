@@ -8,7 +8,7 @@ suite('Dummy1a', () => {
     });
 });
 // /* eslint-disable , comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */
-// import '../../client/common/extensions';
+// import '../../platform/common/extensions.node';
 
 // import type * as nbformat from '@jupyterlab/nbformat';
 // import * as assert from 'assert';
@@ -18,30 +18,30 @@ suite('Dummy1a', () => {
 // import * as React from 'react';
 // import * as uuid from 'uuid/v4';
 // import { Disposable } from 'vscode';
-// const telemetry = require('../../client/telemetry/index');
-// import { Identifiers, Telemetry } from '../../client/datascience/constants';
+// const telemetry = require('../../telemetry/index');
+// import { Identifiers, Telemetry } from '../../platform/datascience/constants';
 // import {
 //     DataViewerMessages,
 //     IDataViewer,
 //     IDataViewerDataProvider,
 //     IDataViewerFactory
-// } from '../../client/datascience/data-viewing/types';
-// import { getDefaultInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
+// } from '../../platform/datascience/data-viewing/types';
+// import { getDefaultInteractiveIdentity } from '../../platform/datascience/interactive-window/identity';
 // import {
 //     IJupyterVariable,
 //     IJupyterVariableDataProviderFactory,
 //     INotebook,
 //     INotebookProvider
-// } from '../../client/datascience/types';
-// import { MainPanel } from '../../datascience-ui/data-explorer/mainPanel';
-// import { ReactSlickGrid } from '../../datascience-ui/data-explorer/reactSlickGrid';
+// } from '../../platform/datascience/types';
+// import { MainPanel } from '../../webviews/webview-side/data-explorer/mainPanel';
+// import { ReactSlickGrid } from '../../webviews/webview-side/data-explorer/reactSlickGrid';
 // import { noop, sleep } from '../core';
 // import { DataScienceIocContainer } from './dataScienceIocContainer';
 // import { takeSnapshot, writeDiffSnapshot } from './helpers';
 // import { IMountedWebView } from './mountedWebView';
-// import { SliceControl } from '../../datascience-ui/data-explorer/sliceControl';
+// import { SliceControl } from '../../webviews/webview-side/data-explorer/sliceControl';
 // import { Dropdown } from '@fluentui/react';
-// import { CheckboxState, SliceOperationSource } from '../../client/telemetry/constants';
+// import { CheckboxState, SliceOperationSource } from '../../telemetry/constants';
 // import { range } from 'lodash';
 
 // interface ISliceControlTestInterface {
@@ -59,18 +59,6 @@ suite('Dummy1a', () => {
 //     const snapshot = takeSnapshot();
 //     let sandbox = sinon.createSandbox();
 //     let sendTelemetryStub: sinon.SinonStub;
-
-//     suiteSetup(function () {
-//         // DataViewer tests require jupyter to run. Othewrise can't
-//         // run any of our variable execution code
-//         const isRollingBuild = process.env ? process.env.VSC_FORCE_REAL_JUPYTER !== undefined : false;
-//         if (!isRollingBuild) {
-//             // eslint-disable-next-line no-console
-//             console.log('Skipping DataViewer tests. Requires python environment');
-//             // eslint-disable-next-line no-invalid-this
-//             this.skip();
-//         }
-//     });
 
 //     suiteTeardown(() => {
 //         writeDiffSnapshot(snapshot, 'DataViewer');

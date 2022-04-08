@@ -7,9 +7,9 @@
 
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { FileSystem } from '../../../client/common/platform/fileSystem';
-import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
-import { IEnvironmentVariablesService } from '../../../client/common/variables/types';
+import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
+import { EnvironmentVariablesService } from '../../../platform/common/variables/environment.node';
+import { IEnvironmentVariablesService } from '../../../platform/common/variables/types';
 
 use(chaiAsPromised);
 

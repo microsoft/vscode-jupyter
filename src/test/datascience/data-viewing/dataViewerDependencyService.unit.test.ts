@@ -4,19 +4,19 @@
 'use strict';
 
 import { assert } from 'chai';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import { SemVer } from 'semver';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
-import { ApplicationShell } from '../../../client/common/application/applicationShell';
-import { IApplicationShell } from '../../../client/common/application/types';
-import { ProductInstaller } from '../../../client/common/installer/productInstaller';
-import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
-import { IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
-import { IInstaller, Product } from '../../../client/common/types';
-import { Common, DataScience } from '../../../client/common/utils/localize';
-import { DataViewerDependencyService } from '../../../client/datascience/data-viewing/dataViewerDependencyService';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { ApplicationShell } from '../../../platform/common/application/applicationShell';
+import { IApplicationShell } from '../../../platform/common/application/types';
+import { PythonExecutionFactory } from '../../../platform/common/process/pythonExecutionFactory.node';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/common/process/types.node';
+import { Common, DataScience } from '../../../platform/common/utils/localize';
+import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { ProductInstaller } from '../../../kernels/installer/productInstaller.node';
+import { IInstaller, Product } from '../../../kernels/installer/types';
+import { DataViewerDependencyService } from '../../../webviews/extension-side/dataviewer/dataViewerDependencyService.node';
 
 suite('DataScience - DataViewerDependencyService', () => {
     let dependencyService: DataViewerDependencyService;

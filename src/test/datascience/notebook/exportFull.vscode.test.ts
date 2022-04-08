@@ -6,15 +6,14 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert, expect } from 'chai';
 import * as os from 'os';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
-import { Common } from '../../../client/common/utils/localize';
-import { IVSCodeNotebook } from '../../../client/common/application/types';
-import { traceInfo } from '../../../client/common/logger';
-import { IDisposable, Product } from '../../../client/common/types';
-import { captureScreenShot, IExtensionTestApi } from '../../common';
-import { initialize } from '../../initialize';
-import { ProductNames } from '../../../client/common/installer/productNames';
+import { Common } from '../../../platform/common/utils/localize';
+import { IVSCodeNotebook } from '../../../platform/common/application/types';
+import { traceInfo } from '../../../platform/logging';
+import { IDisposable } from '../../../platform/common/types';
+import { captureScreenShot, IExtensionTestApi } from '../../common.node';
+import { initialize } from '../../initialize.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
@@ -25,8 +24,10 @@ import {
     workAroundVSCodeNotebookStartPages
 } from './helper';
 import { commands, ConfigurationTarget, Uri, window, workspace } from 'vscode';
-import { createDeferred } from '../../../client/common/utils/async';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
+import { createDeferred } from '../../../platform/common/utils/async';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
+import { ProductNames } from '../../../kernels/installer/productNames.node';
+import { Product } from '../../../kernels/installer/types';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
@@ -82,8 +83,6 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         const settings = workspace.getConfiguration('jupyter', null);
         await settings.update('pythonExportMethod', 'direct', ConfigurationTarget.Global);
 
-        // Added temporarily to identify why tests are failing.
-        process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = undefined;
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
@@ -110,12 +109,10 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         assert(window.activeTextEditor?.document.languageId === 'python', 'Document opened by export was not python');
 
         const text = window.activeTextEditor?.document.getText();
+        const expected = `# %%${os.EOL}print("Hello World")${os.EOL}${os.EOL}# %% [markdown]${os.EOL}# # Markdown Header${os.EOL}# markdown string${os.EOL}${os.EOL}# %%${os.EOL}%whos${os.EOL}${os.EOL}${os.EOL}`;
 
         // Verify text content
-        expect(text).to.equal(
-            `# %%${os.EOL}print("Hello World")${os.EOL}${os.EOL}# %% [markdown]${os.EOL}# # Markdown Header${os.EOL}# markdown string${os.EOL}${os.EOL}# %%${os.EOL}%whos${os.EOL}${os.EOL}`,
-            'Exported text does not match'
-        );
+        expect(text).to.equal(expected, 'Exported text does not match');
 
         // Clean up dispose
         onDidChangeDispose.dispose();
@@ -144,12 +141,10 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         assert(window.activeTextEditor?.document.languageId === 'python', 'Document opened by export was not python');
 
         const text = window.activeTextEditor?.document.getText();
+        const expected = `# %%${os.EOL}print("Hello World")${os.EOL}${os.EOL}# %% [markdown]${os.EOL}# # Markdown Header${os.EOL}# markdown string${os.EOL}${os.EOL}# %%${os.EOL}# %whos${os.EOL}# !shellcmd${os.EOL}${os.EOL}${os.EOL}`;
 
         // Verify text content
-        expect(text).to.equal(
-            `# %%${os.EOL}print("Hello World")${os.EOL}${os.EOL}# %% [markdown]${os.EOL}# # Markdown Header${os.EOL}# markdown string${os.EOL}${os.EOL}# %%${os.EOL}# %whos${os.EOL}# !shellcmd${os.EOL}${os.EOL}`,
-            'Exported text does not match'
-        );
+        expect(text).to.equal(expected, 'Exported text does not match');
 
         // Clean up dispose
         onDidChangeDispose.dispose();
@@ -178,12 +173,10 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         assert(window.activeTextEditor?.document.languageId === 'python', 'Document opened by export was not python');
 
         const text = window.activeTextEditor?.document.getText();
+        const expected = `# To add a new cell, type '# %%'\n# To add a new markdown cell, type '# %% [markdown]'\n# %%\nfrom IPython import get_ipython\n\n# %%\nprint("Hello World")\n\n# %% [markdown]\n# # Markdown Header\n# markdown string\n\n# %%\nget_ipython().run_line_magic('whos', '')\nget_ipython().system('shellcmd')\n\n\n`;
 
         // Verify text content
-        expect(text).to.equal(
-            `# To add a new cell, type '# %%'\n# To add a new markdown cell, type '# %% [markdown]'\n# %%\nfrom IPython import get_ipython\n\n# %%\nprint("Hello World")\n\n# %% [markdown]\n# # Markdown Header\n# markdown string\n\n# %%\nget_ipython().run_line_magic('whos', '')\nget_ipython().system('shellcmd')\n\n`,
-            'Exported text does not match'
-        );
+        expect(text).to.equal(expected, 'Exported text does not match');
 
         // Clean up dispose
         onDidChangeDispose.dispose();
@@ -217,7 +210,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         const text = window.activeTextEditor?.document.getText();
 
         // Verify text content
-        expect(text).to.equal(`# %%${os.EOL}a=1${os.EOL}a${os.EOL}${os.EOL}`, 'Exported text does not match');
+        expect(text).to.equal(`# %%${os.EOL}a=1${os.EOL}a${os.EOL}${os.EOL}${os.EOL}`, 'Exported text does not match');
 
         // Clean up dispose
         onDidChangeDispose.dispose();
@@ -256,7 +249,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
 
         // Verify text content
         expect(text).to.equal(
-            `# To add a new cell, type '# %%'\n# To add a new markdown cell, type '# %% [markdown]'\n# %%\na=1\na\n\n`,
+            `# To add a new cell, type '# %%'\n# To add a new markdown cell, type '# %% [markdown]'\n# %%\na=1\na\n\n\n`,
             'Exported text does not match'
         );
 

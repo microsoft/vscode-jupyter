@@ -27,7 +27,29 @@
                 "kind": "build",
                 "isDefault": true
             },
-            "problemMatcher": ["$tsc-watch", "$ts-checker-webpack-watch"]
+            "problemMatcher": ["$ts-webpack-watch"]
+        },
+        {
+            "label": "Compile Web Extension",
+            "type": "npm",
+            "script": "compile-web-watch",
+            "isBackground": true,
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$ts-webpack-watch"]
+        },
+        {
+            "label": "compile-web-test",
+            "type": "npm",
+            "script": "compile-web-test",
+            "isBackground": true,
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$ts-webpack-watch"]
         },
         {
             "label": "Run Unit Tests",
@@ -49,7 +71,10 @@
             "script": "lint",
             "problemMatcher": ["$eslint-stylish"],
             "label": "npm: lint",
-            "detail": "eslint -c .eslintrc.js --ext .ts src"
+            "detail": "eslint -c .eslintrc.js --ext .ts src",
+            "group": {
+                "kind": "build"
+            }
         }
     ]
 }

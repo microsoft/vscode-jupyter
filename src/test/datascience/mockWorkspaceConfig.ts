@@ -32,9 +32,7 @@ export class MockWorkspaceConfiguration implements WorkspaceConfiguration {
     public has(section: string): boolean {
         return this.values.has(section);
     }
-    public inspect<T>(
-        _section: string
-    ):
+    public inspect<T>(_section: string):
         | {
               key: string;
               defaultValue?: T | undefined;

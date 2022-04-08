@@ -1,10 +1,10 @@
 import { inject, injectable } from 'inversify';
-import { Resource } from '../../client/common/types';
+import { Resource } from '../../platform/common/types';
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IInterpreterQuickPickItem, IInterpreterSelector } from '../../client/interpreter/configuration/types';
-import { IInterpreterService } from '../../client/interpreter/contracts';
+import { IInterpreterQuickPickItem, IInterpreterSelector } from '../../platform/interpreter/configuration/types';
+import { IInterpreterService } from '../../platform/interpreter/contracts.node';
 
 @injectable()
 export class InterpreterSelector implements IInterpreterSelector {

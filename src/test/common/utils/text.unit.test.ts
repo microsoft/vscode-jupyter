@@ -7,7 +7,7 @@
 
 import { expect } from 'chai';
 import { Position, Range } from 'vscode';
-import { parsePosition, parseRange } from '../../../client/common/utils/text';
+import { parsePosition, parseRange } from '../../../platform/common/utils/text.node';
 
 suite('parseRange()', () => {
     test('valid strings', async () => {

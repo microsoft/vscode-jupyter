@@ -6,13 +6,18 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import { commands, Memento, Uri } from 'vscode';
-import { IEncryptedStorage, IVSCodeNotebook } from '../../../client/common/application/types';
-import { traceInfo, traceInfoIfCI } from '../../../client/common/logger';
-import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../client/common/types';
-import { IExtensionTestApi, waitForCondition } from '../../common';
-import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize, IS_REMOTE_NATIVE_TEST } from '../../initialize';
+import { IEncryptedStorage, IVSCodeNotebook } from '../../../platform/common/application/types';
+import { traceInfo, traceInfoIfCI } from '../../../platform/logging';
+import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
+import { IExtensionTestApi, waitForCondition } from '../../common.node';
+import {
+    closeActiveWindows,
+    EXTENSION_ROOT_DIR_FOR_TESTS,
+    initialize,
+    IS_REMOTE_NATIVE_TEST
+} from '../../initialize.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
     runAllCellsInActiveNotebook,
@@ -29,14 +34,13 @@ import {
     createEmptyPythonNotebook
 } from './helper';
 import { openNotebook } from '../helpers';
-import { PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { PreferredRemoteKernelIdProvider } from '../../../client/datascience/notebookStorage/preferredRemoteKernelIdProvider';
-import { Settings } from '../../../client/datascience/constants';
-import { INotebookControllerManager } from '../../../client/datascience/notebook/types';
-import { JupyterServerSelector } from '../../../client/datascience/jupyter/serverSelector';
-import { RemoteKernelSpecConnectionMetadata } from '../../../client/datascience/jupyter/kernels/types';
-import { JupyterServer } from '../jupyterServer';
-import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
+import { PYTHON_LANGUAGE, Settings } from '../../../platform/common/constants';
+import { RemoteKernelSpecConnectionMetadata } from '../../../platform/../kernels/types';
+import { JupyterServer } from '../jupyterServer.node';
+import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants.node';
+import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector.node';
+import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider.node';
+import { INotebookControllerManager } from '../../../notebooks/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function () {
@@ -83,7 +87,9 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
-        await startJupyterServer();
+        if (!this.currentTest?.title.includes('preferred')) {
+            await startJupyterServer();
+        }
         // Don't use same file for this test (files get modified in tests and we might save stuff)
         ipynbFile = Uri.file(await createTemporaryNotebook(templatePythonNb, disposables));
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
@@ -357,5 +363,26 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
             100,
             true
         );
+    });
+
+    test('Selecting URI returns preferred kernel', async function () {
+        // Open the notebook but without a server started
+        const notebook = await openNotebook(ipynbFile.fsPath);
+
+        // Start a server
+        const preferred = await startJupyterServer(notebook);
+        await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
+        let nbEditor = vscodeNotebook.activeNotebookEditor!;
+        assert.isOk(nbEditor, 'No active notebook');
+        // Cell 1 = `a = "Hello World"`
+        // Cell 2 = `print(a)`
+        let cell2 = nbEditor.document.getCells()![1]!;
+        await Promise.all([
+            runAllCellsInActiveNotebook(),
+            waitForExecutionCompletedSuccessfully(cell2),
+            waitForTextOutput(cell2, 'Hello World', 0, false)
+        ]);
+
+        assert.ok(preferred, `No preferred kernel set for selecting a URI`);
     });
 });

@@ -6,10 +6,10 @@
 import { assert } from 'chai';
 import * as vscode from 'vscode';
 import {
-    filterCompletions,
+    JupyterCompletionItem,
     generateSortString,
-    JupyterCompletionItem
-} from '../../../../client/datascience/notebook/intellisense/pythonKernelCompletionProvider';
+    filterCompletions
+} from '../../../../intellisense/pythonKernelCompletionProvider.node';
 import { MockDocument } from '../../mockDocument';
 
 suite('DataScience - Jupyter Completion Unit Tests', () => {

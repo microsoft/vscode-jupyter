@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { assert } from 'chai';
-import * as path from 'path';
-import { traceInfo } from '../../client/common/logger';
-import { IDisposable } from '../../client/common/types';
+import * as path from '../../platform/vscode-path/path';
+import { traceInfo } from '../../platform/logging';
+import { IDisposable } from '../../platform/common/types';
 import {
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
@@ -15,11 +15,11 @@ import {
     waitForTextOutput,
     workAroundVSCodeNotebookStartPages
 } from '../datascience/notebook/helper';
-import { initialize } from '../initialize';
+import { initialize } from '../initialize.node';
 import * as sinon from 'sinon';
-import { captureScreenShot, createEventHandler, IExtensionTestApi } from '../common';
-import { IVSCodeNotebook } from '../../client/common/application/types';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../constants';
+import { captureScreenShot, createEventHandler, IExtensionTestApi } from '../common.node';
+import { IVSCodeNotebook } from '../../platform/common/application/types';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../constants.node';
 import { Uri, workspace } from 'vscode';
 
 // eslint-disable-next-line
@@ -63,7 +63,6 @@ suite('3rd Party Kernel Service API', function () {
             await captureScreenShot(this.currentTest?.title);
         }
         // Added temporarily to identify why tests are failing.
-        process.env.VSC_JUPYTER_LOG_KERNEL_OUTPUT = undefined;
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
@@ -94,13 +93,13 @@ suite('3rd Party Kernel Service API', function () {
         kernels = await kernelService?.getActiveKernels();
         assert.isAtLeast(kernels!.length, 1);
         assert.strictEqual(
-            kernels![0].notebook,
-            vscodeNotebook.activeNotebookEditor?.document,
+            kernels![0].uri.toString(),
+            vscodeNotebook.activeNotebookEditor?.document.uri.toString(),
             'Kernel notebook is not the active notebook'
         );
 
         assert.isObject(kernels![0].metadata, 'Kernel Connection is undefined');
-        const kernel = kernelService?.getKernel(vscodeNotebook.activeNotebookEditor!.document);
+        const kernel = kernelService?.getKernel(vscodeNotebook.activeNotebookEditor!.document!.uri);
         assert.strictEqual(kernels![0].metadata, kernel!.metadata, 'Kernel Connection not same for the document');
 
         await closeNotebooksAndCleanUpAfterTests(disposables);
@@ -130,7 +129,7 @@ suite('3rd Party Kernel Service API', function () {
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
         const nbFile = await createTemporaryNotebook(templatePythonNbFile, disposables);
         const nb = await workspace.openNotebookDocument(Uri.file(nbFile));
-        const kernelInfo = await kernelService?.startKernel(pythonKernel!, nb!);
+        const kernelInfo = await kernelService?.startKernel(pythonKernel!, nb.uri!);
 
         assert.isOk(kernelInfo!.connection, 'Kernel Connection is undefined');
         assert.isOk(kernelInfo!.kernelSocket, 'Kernel Socket is undefined');
@@ -139,10 +138,10 @@ suite('3rd Party Kernel Service API', function () {
 
         let kernels = await kernelService?.getActiveKernels();
         assert.isAtLeast(kernels!.length, 1);
-        assert.strictEqual(kernels![0].notebook, nb, 'Kernel notebook is not the active notebook');
+        assert.strictEqual(kernels![0].uri.toString(), nb.uri.toString(), 'Kernel notebook is not the active notebook');
 
         assert.strictEqual(kernels![0].metadata, pythonKernel, 'Kernel Connection is not the same');
-        const kernel = kernelService?.getKernel(nb);
+        const kernel = kernelService?.getKernel(nb.uri);
         assert.strictEqual(kernels![0].metadata, kernel!.metadata, 'Kernel Connection not same for the document');
 
         await closeNotebooksAndCleanUpAfterTests(disposables);

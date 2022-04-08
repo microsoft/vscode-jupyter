@@ -7,16 +7,16 @@
 // import * as React from 'react';
 
 // import { Uri } from 'vscode';
-// import { IDocumentManager } from '../../client/common/application/types';
-// import { createDeferred } from '../../client/common/utils/async';
-// import { Identifiers } from '../../client/datascience/constants';
-// import { getDefaultInteractiveIdentity } from '../../client/datascience/interactive-window/identity';
+// import { IDocumentManager } from '../../platform/common/application/types';
+// import { createDeferred } from '../../platform/common/utils/async';
+// import { Identifiers } from '../../platform/datascience/constants';
+// import { getDefaultInteractiveIdentity } from '../../platform/datascience/interactive-window/identity';
 // import {
 //     IJupyterDebugService,
 //     IJupyterVariable,
 //     IJupyterVariables,
 //     INotebookProvider
-// } from '../../client/datascience/types';
+// } from '../../platform/datascience/types';
 // import { DataScienceIocContainer } from './dataScienceIocContainer';
 // import { MockDocumentManager } from './mockDocumentManager';
 // import { waitForVariablesUpdated } from './testHelpers';

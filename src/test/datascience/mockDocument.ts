@@ -87,6 +87,7 @@ export class MockDocument implements TextDocument {
         return this._uri;
     }
     public get fileName(): string {
+        // eslint-disable-next-line local-rules/dont-use-fspath
         return this._uri.fsPath;
     }
 

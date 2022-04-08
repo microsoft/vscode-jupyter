@@ -4,21 +4,23 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import { sha256 } from 'hash.js';
 import * as nock from 'nock';
-import * as path from 'path';
+import * as path from '../../../platform/vscode-path/path';
 import { Readable } from 'stream';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { JupyterSettings } from '../../../client/common/configSettings';
-import { ConfigurationService } from '../../../client/common/configuration/service';
-import { FileSystem } from '../../../client/common/platform/fileSystem';
-import { IFileSystem } from '../../../client/common/platform/types';
-import { IConfigurationService, WidgetCDNs } from '../../../client/common/types';
-import { noop } from '../../../client/common/utils/misc';
-import { EXTENSION_ROOT_DIR } from '../../../client/constants';
-import { CDNWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/cdnWidgetScriptSourceProvider';
-import { IPyWidgetScriptSource } from '../../../client/datascience/ipywidgets/ipyWidgetScriptSource';
-import { IWidgetScriptSourceProvider } from '../../../client/datascience/ipywidgets/types';
-import { ILocalResourceUriConverter } from '../../../client/datascience/types';
+import { JupyterSettings } from '../../../platform/common/configSettings';
+import { ConfigurationService } from '../../../platform/common/configuration/service.node';
+import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IConfigurationService, WidgetCDNs } from '../../../platform/common/types';
+import { noop } from '../../../platform/common/utils/misc';
+import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
+import { CDNWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider.node';
+import { IPyWidgetScriptSource } from '../../../kernels/ipywidgets-message-coordination/ipyWidgetScriptSource.node';
+import {
+    ILocalResourceUriConverter,
+    IWidgetScriptSourceProvider
+} from '../../../kernels/ipywidgets-message-coordination/types';
 
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, , @typescript-eslint/no-explicit-any, , no-console */
 const sanitize = require('sanitize-filename');

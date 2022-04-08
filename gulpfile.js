@@ -59,10 +59,9 @@ gulp.task('validateTranslationFiles', (done) => {
 
 gulp.task('output:clean', () => del(['coverage']));
 
-gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out/client', 'out/datascience-ui', 'out/server']));
+gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out', '!out/test']));
 gulp.task('clean:vsix', () => del(['*.vsix']));
 gulp.task('clean:out', () => del(['out/**', '!out', '!out/client_renderer/**']));
-gulp.task('clean:ipywidgets', () => spawnAsync('npm', ['run', 'build-ipywidgets-clean'], webpackEnv));
 
 gulp.task('clean', gulp.parallel('output:clean', 'clean:vsix', 'clean:out'));
 
@@ -138,16 +137,6 @@ gulp.task('installPythonLibs', async () => {
     }
 });
 
-gulp.task('compile-ipywidgets', () => buildIPyWidgets());
-
-async function buildIPyWidgets() {
-    // if the output ipywidgest file exists, then no need to re-build.
-    // Barely changes. If making changes, then re-build manually.
-    if (!isCI && fs.existsSync(path.join(__dirname, 'out/ipywidgets/dist/ipywidgets.js'))) {
-        return;
-    }
-    await spawnAsync('npm', ['run', 'build-ipywidgets'], webpackEnv);
-}
 gulp.task('compile-renderers', async () => {
     console.log('Building renderers');
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-renderers.config.js');
@@ -157,7 +146,10 @@ gulp.task('compile-viewers', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js');
 });
 
-gulp.task('compile-webviews', gulp.series('compile-ipywidgets', gulp.parallel('compile-viewers', 'compile-renderers')));
+gulp.task('compile-webextension', async () => {
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.web.config.js');
+});
+gulp.task('compile-webviews', gulp.parallel('compile-viewers', 'compile-renderers', 'compile-webextension'));
 
 async function buildWebPackForDevOrProduction(configFile, configNameForProductionBuilds) {
     if (configNameForProductionBuilds) {
@@ -172,10 +164,10 @@ gulp.task('webpack', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.dependencies.config.js', 'production');
     // Build DS stuff (separately as it uses far too much memory and slows down CI).
     // Individually is faster on CI.
-    await buildIPyWidgets();
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-renderers.config.js', 'production');
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js', 'production');
-    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.config.js', 'extension');
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.node.config.js', 'extension');
+    await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.web.config.js', 'extension');
 });
 
 gulp.task('updateBuildNumber', async () => {
@@ -272,6 +264,9 @@ function getAllowedWarningsForWebPack(buildConfig) {
             ];
         case 'extension':
             return [
+                'WARNING in asset size limit: The following asset(s) exceed the recommended size limit (244 KiB).',
+                'WARNING in entrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.',
+                'WARNING in webpack performance recommendations:',
                 'WARNING in ./node_modules/cacheable-request/node_modules/keyv/src/index.js',
                 'WARNING in ./node_modules/encoding/lib/iconv-loader.js',
                 'WARNING in ./node_modules/keyv/src/index.js',
@@ -353,6 +348,6 @@ function hasNativeDependencies() {
 }
 
 gulp.task('generateTelemetryMd', async () => {
-    const generator = require('./out/tools/telemetryGenerator');
+    const generator = require('./out/platform/tools/telemetryGenerator.node');
     return generator.default();
 });

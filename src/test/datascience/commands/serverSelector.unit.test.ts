@@ -2,23 +2,30 @@
 // Licensed under the MIT License.
 import { anything, capture, instance, mock, verify } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { CommandManager } from '../../../client/common/application/commandManager';
-import { ICommandManager } from '../../../client/common/application/types';
-import { JupyterServerSelectorCommand } from '../../../client/datascience/commands/serverSelector';
-import { Commands } from '../../../client/datascience/constants';
-import { JupyterServerSelector } from '../../../client/datascience/jupyter/serverSelector';
+import { CommandManager } from '../../../platform/common/application/commandManager';
+import { ICommandManager } from '../../../platform/common/application/types';
+import { JupyterServerSelectorCommand } from '../../../platform/commands/serverSelector.node';
+import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector.node';
+import { Commands } from '../../../platform/common/constants';
+import { INotebookControllerManager } from '../../../notebooks/types';
 
 /* eslint-disable  */
 suite('DataScience - Server Selector Command', () => {
     let serverSelectorCommand: JupyterServerSelectorCommand;
     let commandManager: ICommandManager;
     let serverSelector: JupyterServerSelector;
+    let controllerManager: INotebookControllerManager;
 
     setup(() => {
         commandManager = mock(CommandManager);
         serverSelector = mock(JupyterServerSelector);
+        controllerManager = mock(controllerManager);
 
-        serverSelectorCommand = new JupyterServerSelectorCommand(instance(commandManager), instance(serverSelector));
+        serverSelectorCommand = new JupyterServerSelectorCommand(
+            instance(commandManager),
+            instance(serverSelector),
+            instance(controllerManager)
+        );
     });
 
     test('Register Command', () => {

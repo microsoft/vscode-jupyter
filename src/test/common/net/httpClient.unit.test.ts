@@ -11,9 +11,9 @@ import { expect } from 'chai';
 import rewiremock from 'rewiremock';
 import * as TypeMoq from 'typemoq';
 import { WorkspaceConfiguration } from 'vscode';
-import { IWorkspaceService } from '../../../client/common/application/types';
-import { HttpClient } from '../../../client/common/net/httpClient';
-import { IServiceContainer } from '../../../client/ioc/types';
+import { IWorkspaceService } from '../../../platform/common/application/types';
+import { HttpClient } from '../../../platform/common/net/httpClient.node';
+import { IServiceContainer } from '../../../platform/ioc/types';
 
 // eslint-disable-next-line
 suite('Http Client', () => {
@@ -91,8 +91,7 @@ suite('Http Client', () => {
 
         [
             {
-                name:
-                    "If strict is set to false, and jsonc parsing returns error codes, then log errors and don't throw, return json",
+                name: "If strict is set to false, and jsonc parsing returns error codes, then log errors and don't throw, return json",
                 returnedArgs: [undefined, { statusCode: 200 }, '[{ "strictJSON" : false,, }]'],
                 strict: false,
                 expectedJSON: [{ strictJSON: false }]

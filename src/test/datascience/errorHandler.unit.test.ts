@@ -3,23 +3,30 @@
 // Licensed under the MIT License.
 'use strict';
 import * as dedent from 'dedent';
+import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { Memento, Uri, WorkspaceFolder } from 'vscode';
-import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
-import { getDisplayPath } from '../../client/common/platform/fs-paths';
-import { Common, DataScience } from '../../client/common/utils/localize';
-import { IBrowserService, IConfigurationService } from '../../client/common/types';
-import { DataScienceErrorHandler } from '../../client/datascience/errors/errorHandler';
-import { JupyterInstallError } from '../../client/datascience/errors/jupyterInstallError';
-import { JupyterSelfCertsError } from '../../client/datascience/errors/jupyterSelfCertsError';
-import { KernelDiedError } from '../../client/datascience/errors/kernelDiedError';
-import { KernelConnectionMetadata } from '../../client/datascience/jupyter/kernels/types';
-import { IJupyterInterpreterDependencyManager, IKernelDependencyService } from '../../client/datascience/types';
-import { getOSType, OSType } from '../common';
-import { IServiceContainer } from '../../client/ioc/types';
-import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
-import { JupyterConnectError } from '../../client/datascience/errors/jupyterConnectError';
-import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+import { Uri, WorkspaceFolder } from 'vscode';
+import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { Common, DataScience } from '../../platform/common/utils/localize';
+import { IBrowserService, IConfigurationService } from '../../platform/common/types';
+import {
+    IKernelDependencyService,
+    KernelConnectionMetadata,
+    KernelInterpreterDependencyResponse
+} from '../../platform/../kernels/types';
+import { getOSType, OSType } from '../common.node';
+import { PythonEnvironment, EnvironmentType } from '../../platform/pythonEnvironments/info';
+import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
+import { DataScienceErrorHandler } from '../../platform/errors/errorHandler.node';
+import { JupyterConnectError } from '../../platform/errors/jupyterConnectError';
+import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
+import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError.node';
+import { KernelDiedError } from '../../platform/errors/kernelDiedError.node';
+import {
+    IJupyterInterpreterDependencyManager,
+    JupyterInterpreterDependencyResponse
+} from '../../kernels/jupyter/types';
 
 suite('DataScience Error Handler Unit Tests', () => {
     let applicationShell: IApplicationShell;
@@ -28,9 +35,8 @@ suite('DataScience Error Handler Unit Tests', () => {
     let workspaceService: IWorkspaceService;
     let browser: IBrowserService;
     let configuration: IConfigurationService;
-    let kernelDependencyInstaller: IKernelDependencyService;
-    let svcContainer: IServiceContainer;
     let jupyterInterpreterService: JupyterInterpreterService;
+    let kernelDependencyInstaller: IKernelDependencyService;
     const jupyterInterpreter: PythonEnvironment = {
         displayName: 'Hello',
         path: 'Some Path',
@@ -43,21 +49,18 @@ suite('DataScience Error Handler Unit Tests', () => {
         dependencyManager = mock<IJupyterInterpreterDependencyManager>();
         configuration = mock<IConfigurationService>();
         browser = mock<IBrowserService>();
-        svcContainer = mock<IServiceContainer>();
         jupyterInterpreterService = mock<JupyterInterpreterService>();
-        kernelDependencyInstaller = mock<IKernelDependencyService>();
         when(dependencyManager.installMissingDependencies(anything())).thenResolve();
         when(workspaceService.workspaceFolders).thenReturn([]);
+        kernelDependencyInstaller = mock<IKernelDependencyService>();
+        when(kernelDependencyInstaller.areDependenciesInstalled(anything(), anything(), anything())).thenResolve(true);
         dataScienceErrorHandler = new DataScienceErrorHandler(
             instance(applicationShell),
             instance(dependencyManager),
-            instance(workspaceService),
             instance(browser),
             instance(configuration),
             instance(kernelDependencyInstaller),
-            instance(jupyterInterpreterService),
-            instance(svcContainer),
-            instance(mock<Memento>())
+            instance(workspaceService)
         );
         when(applicationShell.showErrorMessage(anything())).thenResolve();
         when(applicationShell.showErrorMessage(anything(), anything())).thenResolve();
@@ -100,7 +103,7 @@ suite('DataScience Error Handler Unit Tests', () => {
             )
         ).thenResolve(DataScience.jupyterInstall() as any);
 
-        const err = new JupyterInstallError(message, 'test.com');
+        const err = new JupyterInstallError(message);
         await dataScienceErrorHandler.handleError(err);
 
         verify(dependencyManager.installMissingDependencies(err)).once();
@@ -117,7 +120,8 @@ suite('DataScience Error Handler Unit Tests', () => {
                 kind: 'startUsingPythonInterpreter',
                 interpreter: {
                     path: 'Hello There',
-                    sysPrefix: 'Something else'
+                    sysPrefix: 'Something else',
+                    displayName: 'Hello (Some Path)'
                 },
                 kernelSpec: {
                     argv: [],
@@ -214,7 +218,12 @@ suite('DataScience Error Handler Unit Tests', () => {
         };
         test('Unable to import <name> from user overriding module (windows)', async () => {
             await dataScienceErrorHandler.handleKernelError(
-                new KernelDiedError('Hello', stdErrorMessages.userOrverridingRandomPyFile_Windows, undefined),
+                new KernelDiedError(
+                    'Hello',
+                    stdErrorMessages.userOrverridingRandomPyFile_Windows,
+                    undefined,
+                    kernelConnection
+                ),
                 'start',
                 kernelConnection,
                 undefined
@@ -222,7 +231,7 @@ suite('DataScience Error Handler Unit Tests', () => {
 
             const expectedMessage = DataScience.failedToStartKernelDueToImportFailureFromFile().format(
                 'Random',
-                getDisplayPath('c:\\Development\\samples\\pySamples\\sample1\\kernel_issues\\start\\random.py', [])
+                'c:\\Development\\samples\\pySamples\\sample1\\kernel_issues\\start\\random.py'
             );
 
             verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresModuleImportErrFromFile');
@@ -237,7 +246,12 @@ suite('DataScience Error Handler Unit Tests', () => {
             ];
             when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
             await dataScienceErrorHandler.handleKernelError(
-                new KernelDiedError('Hello', stdErrorMessages.userOrverridingRandomPyFile_Windows, undefined),
+                new KernelDiedError(
+                    'Hello',
+                    stdErrorMessages.userOrverridingRandomPyFile_Windows,
+                    undefined,
+                    kernelConnection
+                ),
                 'start',
                 kernelConnection,
                 undefined
@@ -254,7 +268,12 @@ suite('DataScience Error Handler Unit Tests', () => {
         });
         test('Unable to import <name> from user overriding module (linux)', async () => {
             await dataScienceErrorHandler.handleKernelError(
-                new KernelDiedError('Hello', stdErrorMessages.userOrverridingRandomPyFile_Unix, undefined),
+                new KernelDiedError(
+                    'Hello',
+                    stdErrorMessages.userOrverridingRandomPyFile_Unix,
+                    undefined,
+                    kernelConnection
+                ),
                 'start',
                 kernelConnection,
                 undefined
@@ -281,7 +300,12 @@ suite('DataScience Error Handler Unit Tests', () => {
             ];
             when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
             await dataScienceErrorHandler.handleKernelError(
-                new KernelDiedError('Hello', stdErrorMessages.userOrverridingRandomPyFile_Unix, undefined),
+                new KernelDiedError(
+                    'Hello',
+                    stdErrorMessages.userOrverridingRandomPyFile_Unix,
+                    undefined,
+                    kernelConnection
+                ),
                 'start',
                 kernelConnection,
                 undefined
@@ -301,7 +325,8 @@ suite('DataScience Error Handler Unit Tests', () => {
 import win32api
 ImportError: No module named 'win32api'
 `,
-                    undefined
+                    undefined,
+                    kernelConnection
                 ),
                 'start',
                 kernelConnection,
@@ -321,7 +346,8 @@ ImportError: No module named 'win32api'
 import xyz
 ImportError: No module named 'xyz'
 `,
-                    undefined
+                    undefined,
+                    kernelConnection
                 ),
                 'start',
                 kernelConnection,
@@ -337,7 +363,8 @@ ImportError: No module named 'xyz'
                 new KernelDiedError(
                     'Hello',
                     `ImportError: cannot import name 'constants' from partially initialized module 'zmq.backend.cython' (most likely due to a circular import) (C:\\Users\\<user>\\AppData\\Roaming\\Python\\Python38\\site-packages\\zmq\\backend\\cython\\__init__.py)`,
-                    undefined
+                    undefined,
+                    kernelConnection
                 ),
                 'start',
                 kernelConnection,
@@ -350,7 +377,7 @@ ImportError: No module named 'xyz'
         });
         test('Unknown Dll load failure', async () => {
             await dataScienceErrorHandler.handleKernelError(
-                new KernelDiedError('Hello', `ImportError: DLL load failed`, undefined),
+                new KernelDiedError('Hello', `ImportError: DLL load failed`, undefined, kernelConnection),
                 'start',
                 kernelConnection,
                 undefined
@@ -362,7 +389,7 @@ ImportError: No module named 'xyz'
         });
         test('Dll load failure', async () => {
             await dataScienceErrorHandler.handleKernelError(
-                new KernelDiedError('Hello', `import XYZ\nImportError: DLL load failed`, undefined),
+                new KernelDiedError('Hello', `import XYZ\nImportError: DLL load failed`, undefined, kernelConnection),
                 'start',
                 kernelConnection,
                 undefined
@@ -442,7 +469,137 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 'https://aka.ms/kernelFailuresJupyterTrailtletsOutdated'
             );
         });
-
+        test('Check Jupyter dependencies when JupyterInstall error is thrown', async () => {
+            await dataScienceErrorHandler.handleKernelError(
+                new JupyterInstallError('foo'),
+                'start',
+                kernelConnection,
+                undefined
+            );
+            verify(dependencyManager.installMissingDependencies(anything())).once();
+        });
+        test('When JupyterInstall error is thrown and Jupyter dependencies are installed, then return ok', async () => {
+            when(dependencyManager.installMissingDependencies(anything())).thenResolve(
+                JupyterInterpreterDependencyResponse.ok
+            );
+            const result = await dataScienceErrorHandler.handleKernelError(
+                new JupyterInstallError('foo'),
+                'start',
+                kernelConnection,
+                undefined
+            );
+            verify(dependencyManager.installMissingDependencies(anything())).once();
+            assert.strictEqual(result, KernelInterpreterDependencyResponse.ok);
+        });
+        test('When JupyterInstall error is thrown and Jupyter dependencies are not installed, then return cancel', async () => {
+            when(dependencyManager.installMissingDependencies(anything())).thenResolve(
+                JupyterInterpreterDependencyResponse.cancel
+            );
+            const result = await dataScienceErrorHandler.handleKernelError(
+                new JupyterInstallError('foo'),
+                'start',
+                kernelConnection,
+                undefined
+            );
+            verify(dependencyManager.installMissingDependencies(anything())).once();
+            assert.strictEqual(result, KernelInterpreterDependencyResponse.cancel);
+        });
+        test('Verify error message for conda install of ipykernel', async () => {
+            when(kernelDependencyInstaller.areDependenciesInstalled(anything(), anything(), anything())).thenResolve(
+                false
+            );
+            when(dependencyManager.installMissingDependencies(anything())).thenResolve(
+                JupyterInterpreterDependencyResponse.cancel
+            );
+            const result = await dataScienceErrorHandler.getErrorMessageForDisplayInCell(
+                new KernelDiedError('Kaboom', 'hello word does not have attribute named abc', undefined, {
+                    ...kernelConnection,
+                    interpreter: {
+                        ...kernelConnection.interpreter!,
+                        envType: EnvironmentType.Conda,
+                        envName: 'condaEnv1'
+                    }
+                }),
+                'start'
+            );
+            assert.strictEqual(
+                result,
+                [
+                    "Running cells with 'Hello (Some Path)' requires ipykernel package.",
+                    "Run the following command to install 'ipykernel' into the Python environment. ",
+                    `Command: 'conda install -n condaEnv1 ipykernel --update-deps --force-reinstall'`
+                ].join('\n')
+            );
+        });
+        test('Verify error message for pip install of ipykernel', async () => {
+            when(kernelDependencyInstaller.areDependenciesInstalled(anything(), anything(), anything())).thenResolve(
+                false
+            );
+            when(dependencyManager.installMissingDependencies(anything())).thenResolve(
+                JupyterInterpreterDependencyResponse.cancel
+            );
+            const result = await dataScienceErrorHandler.getErrorMessageForDisplayInCell(
+                new KernelDiedError(
+                    'Kaboom',
+                    'hello word does not have attribute named abc',
+                    undefined,
+                    kernelConnection
+                ),
+                'start'
+            );
+            assert.strictEqual(
+                result,
+                [
+                    "Running cells with 'Hello (Some Path)' requires ipykernel package.",
+                    "Run the following command to install 'ipykernel' into the Python environment. ",
+                    `Command: '"Hello There" -m pip install ipykernel -U --force-reinstall'`
+                ].join('\n')
+            );
+        });
+        test('Ensure we provide some context to startup failures', async () => {
+            when(dependencyManager.installMissingDependencies(anything())).thenResolve(
+                JupyterInterpreterDependencyResponse.cancel
+            );
+            const result = await dataScienceErrorHandler.getErrorMessageForDisplayInCell(
+                new KernelDiedError(
+                    'Kaboom',
+                    'hello word does not have attribute named abc',
+                    undefined,
+                    kernelConnection
+                ),
+                'start'
+            );
+            assert.strictEqual(
+                result,
+                [
+                    'Failed to start the Kernel. ',
+                    'hello word does not have attribute named abc. ',
+                    'View Jupyter [log](command:jupyter.viewOutput) for further details.'
+                ].join('\n')
+            );
+        });
+        test('Ensure we provide some context to re-start failures', async () => {
+            when(dependencyManager.installMissingDependencies(anything())).thenResolve(
+                JupyterInterpreterDependencyResponse.cancel
+            );
+            const result = await dataScienceErrorHandler.getErrorMessageForDisplayInCell(
+                new KernelDiedError(
+                    'Kaboom',
+                    'hello word does not have attribute named abc',
+                    undefined,
+                    kernelConnection
+                ),
+                'restart'
+            );
+            assert.strictEqual(
+                result,
+                [
+                    'Failed to restart the Kernel. ',
+                    'hello word does not have attribute named abc. ',
+                    'View Jupyter [log](command:jupyter.viewOutput) for further details.'
+                ].join('\n')
+            );
+        });
         function verifyErrorMessage(message: string, linkInfo?: string) {
             message = message.includes('command:jupyter.viewOutput')
                 ? message

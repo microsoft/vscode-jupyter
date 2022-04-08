@@ -6,32 +6,33 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { traceInfo } from '../../../client/common/logger';
-import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
-import { initialize } from '../../initialize';
-import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { traceInfo } from '../../../platform/logging';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
+import { initialize } from '../../initialize.node';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
 import {
     EnvironmentActivationService,
     EnvironmentVariablesCacheInformation
-} from '../../../client/common/process/environmentActivationService';
-import * as path from 'path';
-import { IS_WINDOWS } from '../../../client/common/platform/constants';
-import { IProcessServiceFactory } from '../../../client/common/process/types';
-import { disposeAllDisposables } from '../../../client/common/helpers';
-import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../client/common/types';
-import { createDeferred } from '../../../client/common/utils/async';
-import { IPythonApiProvider, PythonApi } from '../../../client/api/types';
-import { IServiceContainer } from '../../../client/ioc/types';
-import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
-import { CondaService } from '../../../client/common/process/condaService';
-import { IWorkspaceService } from '../../../client/common/application/types';
-import { CurrentProcess } from '../../../client/common/process/currentProcess';
-import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
-import { IS_CONDA_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
+} from '../../../platform/common/process/environmentActivationService.node';
+import * as path from '../../../platform/vscode-path/path';
+import { IS_WINDOWS } from '../../../platform/common/platform/constants.node';
+import { IProcessServiceFactory } from '../../../platform/common/process/types.node';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
+import { createDeferred } from '../../../platform/common/utils/async';
+import { IPythonApiProvider, PythonApi } from '../../../platform/api/types';
+import { IServiceContainer } from '../../../platform/ioc/types';
+import { IPlatformService } from '../../../platform/common/platform/types';
+import { CondaService } from '../../../platform/common/process/condaService.node';
+import { IWorkspaceService } from '../../../platform/common/application/types';
+import { CurrentProcess } from '../../../platform/common/process/currentProcess.node';
+import { IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
+import { IS_CONDA_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import { Disposable, Memento } from 'vscode';
-import { defaultNotebookTestTimeout } from '../notebook/helper';
 import { instance, mock, verify } from 'ts-mockito';
+import { defaultNotebookTestTimeout } from '../notebook/helper';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
     let api: IExtensionTestApi;

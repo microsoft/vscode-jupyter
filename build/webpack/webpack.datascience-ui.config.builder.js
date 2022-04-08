@@ -22,22 +22,22 @@ function getEntry(bundle) {
     switch (bundle) {
         case 'viewers':
             return {
-                plotViewer: ['babel-polyfill', `./src/datascience-ui/plot/index.tsx`],
-                dataExplorer: ['babel-polyfill', `./src/datascience-ui/data-explorer/index.tsx`],
-                variableView: ['babel-polyfill', `./src/datascience-ui/variable-view/index.tsx`]
+                plotViewer: ['babel-polyfill', `./src/webviews/webview-side/plot/index.tsx`],
+                dataExplorer: ['babel-polyfill', `./src/webviews/webview-side/data-explorer/index.tsx`],
+                variableView: ['babel-polyfill', `./src/webviews/webview-side/variable-view/index.tsx`]
             };
         case 'ipywidgetsKernel':
             return {
-                ipywidgetsKernel: [`./src/datascience-ui/ipywidgets/kernel/index.ts`]
+                ipywidgetsKernel: [`./src/webviews/webview-side/ipywidgets/kernel/index.ts`]
             };
         case 'ipywidgetsRenderer':
             // This is only used in tests (not shipped with extension).
             return {
-                ipywidgetsRenderer: [`./src/datascience-ui/ipywidgets/renderer/index.ts`]
+                ipywidgetsRenderer: [`./src/webviews/webview-side/ipywidgets/renderer/index.ts`]
             };
         case 'errorRenderer':
             return {
-                errorRenderer: [`./src/datascience-ui/error-renderer/index.ts`]
+                errorRenderer: [`./src/webviews/webview-side/error-renderer/index.ts`]
             };
         case 'widgetTester':
             return {
@@ -57,7 +57,7 @@ function getPlugins(bundle) {
         new ForkTsCheckerWebpackPlugin({
             typescript: {
                 configFile: configFileName,
-                reportFiles: ['src/datascience-ui/**/*.{ts,tsx}'],
+                reportFiles: ['src/webviews/webview-side/**/*.{ts,tsx}'],
                 memoryLimit: 9096
             }
         });
@@ -70,7 +70,8 @@ function getPlugins(bundle) {
             env: {
                 NODE_ENV: JSON.stringify(isProdBuild ? 'production' : 'development')
             }
-        }
+        },
+        BROWSER: JSON.stringify(true) // All UI pieces are running in the browser
     });
     switch (bundle) {
         case 'viewers': {
@@ -78,19 +79,19 @@ function getPlugins(bundle) {
                 ...[definePlugin],
                 ...[
                     new HtmlWebpackPlugin({
-                        template: 'src/datascience-ui/plot/index.html',
+                        template: 'src/webviews/webview-side/plot/index.html',
                         indexUrl: `${constants.ExtensionRootDir}/out/1`,
                         chunks: ['commons', 'plotViewer'],
                         filename: 'index.plotViewer.html'
                     }),
                     new HtmlWebpackPlugin({
-                        template: 'src/datascience-ui/data-explorer/index.html',
+                        template: 'src/webviews/webview-side/data-explorer/index.html',
                         indexUrl: `${constants.ExtensionRootDir}/out/1`,
                         chunks: ['commons', 'dataExplorer'],
                         filename: 'index.dataExplorer.html'
                     }),
                     new HtmlWebpackPlugin({
-                        template: 'src/datascience-ui/variable-view/index.html',
+                        template: 'src/webviews/webview-side/variable-view/index.html',
                         indexUrl: `${constants.ExtensionRootDir}/out/1`,
                         chunks: ['commons', 'variableView'],
                         filename: 'index.variableView.html'
@@ -118,7 +119,7 @@ function getPlugins(bundle) {
 
 function buildConfiguration(bundle) {
     // console.error(`Bundle = ${ bundle }`);
-    // Folder inside `datascience-ui` that will be created and where the files will be dumped.
+    // Folder inside `webviews/webview-side` that will be created and where the files will be dumped.
     const bundleFolder = bundle;
     const filesToCopy = [];
     if (bundle === 'ipywidgetsRenderer') {
@@ -134,9 +135,8 @@ function buildConfiguration(bundle) {
                     from: path.join(
                         constants.ExtensionRootDir,
                         'src',
-                        'client',
-                        'datascience',
-                        'notebook',
+                        'notebooks',
+                        'controllers',
                         'fontAwesomeLoader.js'
                     ),
                     to: path.join(constants.ExtensionRootDir, 'out', 'fontAwesome')
@@ -146,15 +146,15 @@ function buildConfiguration(bundle) {
     }
     if (bundle === 'ipywidgetsRenderer' || bundle === 'ipywidgetsKernel') {
         filesToCopy.push({
-            from: path.join(constants.ExtensionRootDir, 'src/datascience-ui/ipywidgets/kernel/require.js'),
-            to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', 'ipywidgetsKernel')
+            from: path.join(constants.ExtensionRootDir, 'src/webviews/webview-side/ipywidgets/kernel/require.js'),
+            to: path.join(constants.ExtensionRootDir, 'out', 'webviews/webview-side', 'ipywidgetsKernel')
         });
     } else if (bundle === 'widgetTester') {
         ///
     } else {
         filesToCopy.push({
             from: path.join(constants.ExtensionRootDir, 'node_modules/requirejs/require.js'),
-            to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
+            to: path.join(constants.ExtensionRootDir, 'out', 'webviews/webview-side', bundleFolder)
         });
     }
     const plugins = [
@@ -178,7 +178,7 @@ function buildConfiguration(bundle) {
             outputModule: true
         },
         output: {
-            path: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder),
+            path: path.join(constants.ExtensionRootDir, 'out', 'webviews/webview-side', bundleFolder),
             filename: '[name].js',
             library: {
                 type: 'module'
@@ -227,7 +227,7 @@ function buildConfiguration(bundle) {
                                 compilerOptions: {
                                     skipLibCheck: true
                                 },
-                                reportFiles: ['src/datascience-ui/**/*.{ts,tsx}']
+                                reportFiles: ['src/webviews/webview-side/**/*.{ts,tsx}']
                             }
                         }
                     ]

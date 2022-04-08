@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import '../../client/common/extensions';
+import '../../platform/common/extensions';
 
 /**
  * Parses output returned by the command `conda env list`.

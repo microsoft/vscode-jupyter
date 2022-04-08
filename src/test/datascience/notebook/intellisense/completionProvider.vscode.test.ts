@@ -3,24 +3,30 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
-import * as path from 'path';
+import * as path from '../../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import {
+    CancellationToken,
     CancellationTokenSource,
+    commands,
     CompletionContext,
     CompletionTriggerKind,
     ConfigurationTarget,
     Position,
+    TextDocument,
     workspace,
     WorkspaceEdit
 } from 'vscode';
-import { IVSCodeNotebook } from '../../../../client/common/application/types';
-import { traceInfo } from '../../../../client/common/logger';
-import { IDisposable } from '../../../../client/common/types';
-import { PythonKernelCompletionProvider } from '../../../../client/datascience/notebook/intellisense/pythonKernelCompletionProvider';
-import { IExtensionTestApi, sleep } from '../../../common';
-import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
-import { initialize } from '../../../initialize';
+import { IVSCodeNotebook } from '../../../../platform/common/application/types';
+import { traceInfo } from '../../../../platform/logging';
+import { IDisposable } from '../../../../platform/common/types';
+import {
+    PythonKernelCompletionProvider,
+    setIntellisenseTimeout
+} from '../../../../intellisense/pythonKernelCompletionProvider.node';
+import { IExtensionTestApi, sleep } from '../../../common.node';
+import { IS_REMOTE_NATIVE_TEST } from '../../../constants.node';
+import { initialize } from '../../../initialize.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
     runCell,
@@ -31,6 +37,7 @@ import {
     createEmptyPythonNotebook,
     getCellOutputs
 } from '../helper';
+import { Settings } from '../../../../platform/common/constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter) (slow)', function () {
@@ -67,12 +74,13 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
         sinon.restore();
         await startJupyterServer();
         await createEmptyPythonNotebook(disposables);
-        process.env.VSC_JUPYTER_IntellisenseTimeout = '30000';
+        setIntellisenseTimeout(30000);
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
+        sinon.restore();
         traceInfo(`Ended Test ${this.currentTest?.title}`);
-        delete process.env.VSC_JUPYTER_IntellisenseTimeout;
+        setIntellisenseTimeout(Settings.IntellisenseTimeout);
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
@@ -228,5 +236,31 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
     test('File path completions with single quotes', async () => {
         const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.document.uri.fsPath);
         await testCompletions(`'${fileName.substring(0, 1)}'`, undefined, fileName);
+    });
+    test('Provider is registered', async () => {
+        await insertCodeCell('print(1)', {
+            index: 0
+        });
+        let stubCalled = false;
+        const stub = sinon.stub(completionProvider, 'provideCompletionItems');
+        stub.callsFake(
+            async (
+                _document: TextDocument,
+                _position: Position,
+                _token: CancellationToken,
+                _context: CompletionContext
+            ) => {
+                stubCalled = true;
+                return [];
+            }
+        );
+        await insertCodeCell('a.', { index: 1 });
+        const cell2 = vscodeNotebook.activeNotebookEditor!.document.cellAt(1);
+
+        const position = new Position(0, 2);
+        traceInfo('Get completions in test');
+        // Executing the command `vscode.executeCompletionItemProvider` to simulate triggering completion
+        await commands.executeCommand('vscode.executeCompletionItemProvider', cell2.document.uri, position);
+        assert.ok(stubCalled, 'Completion provider not registered');
     });
 });
