@@ -14,7 +14,7 @@ import { Common } from '../../../platform/common/utils/localize';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo, traceInfoIfCI } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
-import { captureScreenShot, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common.node';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
@@ -52,6 +52,7 @@ import { ProductNames } from '../../../kernels/installer/productNames.node';
 import { Product } from '../../../kernels/installer/types';
 import { IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter.node';
+import { getOSType, OSType } from '../../../platform/common/utils/platform';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;

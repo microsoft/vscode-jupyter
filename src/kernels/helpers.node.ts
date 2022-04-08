@@ -1323,13 +1323,16 @@ function interpreterMatchesThatInNotebookMetadata(
     notebookMetadata?: nbformat.INotebookMetadata
 ) {
     const interpreterHashInMetadata = getInterpreterHashInMetadata(notebookMetadata);
+    const interpreterHashForKernel = kernelConnection.interpreter
+        ? getInterpreterHash(kernelConnection.interpreter)
+        : undefined;
     return (
         interpreterHashInMetadata &&
         (kernelConnection.kind === 'startUsingLocalKernelSpec' ||
             kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
             kernelConnection.kind === 'startUsingPythonInterpreter') &&
         kernelConnection.interpreter &&
-        getInterpreterHash(kernelConnection.interpreter) === interpreterHashInMetadata
+        interpreterHashForKernel === interpreterHashInMetadata
     );
 }
 

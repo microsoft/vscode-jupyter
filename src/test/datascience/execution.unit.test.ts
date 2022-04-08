@@ -50,7 +50,6 @@ import { JupyterPaths } from '../../kernels/raw/finder/jupyterPaths.node';
 import { LocalKernelFinder } from '../../kernels/raw/finder/localKernelFinder.node';
 import { ILocalKernelFinder } from '../../kernels/raw/types';
 import { IJupyterKernelSpec, LocalKernelConnectionMetadata } from '../../kernels/types';
-import { getOSType, OSType } from '../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
 import { noop } from '../core';
 import { MockOutputChannel } from '../mockClasses';
@@ -60,6 +59,7 @@ import { DisplayOptions } from '../../kernels/displayOptions.node';
 import { INotebookServer } from '../../kernels/jupyter/types';
 import { IJupyterSubCommandExecutionService } from '../../kernels/jupyter/types.node';
 import { SystemVariables } from '../../platform/common/variables/systemVariables.node';
+import { getOSType, OSType } from '../../platform/common/utils/platform';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 class DisposableRegistry implements IAsyncDisposableRegistry {

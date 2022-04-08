@@ -13,13 +13,13 @@ import { IEnvironmentActivationService } from '../../../../platform/interpreter/
 import { EnvironmentType } from '../../../../platform/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR } from '../../../../platform/constants.node';
 import * as path from '../../../../platform/vscode-path/path';
-import { getOSType, OSType } from '../../../common.node';
 import { CancellationTokenSource, Uri } from 'vscode';
 import { EnvironmentVariablesService } from '../../../../platform/common/variables/environment.node';
 import { arePathsSame } from '../../../../platform/common/platform/fileUtils.node';
 import { JupyterKernelService } from '../../../../kernels/jupyter/jupyterKernelService.node';
 import { JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths.node';
 import { DisplayOptions } from '../../../../kernels/displayOptions.node';
+import { getOSType, OSType } from '../../../../platform/common/utils/platform';
 
 // eslint-disable-next-line
 suite('DataScience - JupyterKernelService', () => {

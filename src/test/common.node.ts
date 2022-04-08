@@ -31,13 +31,6 @@ export const PYTHON_PATH = getPythonPath();
 // Useful to see on CI (when working with conda & non-conda, virtual envs & the like).
 console.log(`Python used in tests is ${PYTHON_PATH}`);
 
-export enum OSType {
-    Unknown = 'Unknown',
-    Windows = 'Windows',
-    OSX = 'OSX',
-    Linux = 'Linux'
-}
-
 export type PythonSettingKeys =
     | 'workspaceSymbols.enabled'
     | 'defaultInterpreterPath'
@@ -167,19 +160,6 @@ function getPythonPath(): string {
     // TODO: Change this to python3.
     // See https://github.com/microsoft/vscode-python/issues/10910.
     return 'python';
-}
-
-export function getOSType(): OSType {
-    const platform: string = process.platform;
-    if (/^win/.test(platform)) {
-        return OSType.Windows;
-    } else if (/^darwin/.test(platform)) {
-        return OSType.OSX;
-    } else if (/^linux/.test(platform)) {
-        return OSType.Linux;
-    } else {
-        return OSType.Unknown;
-    }
 }
 
 /**

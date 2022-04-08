@@ -9,10 +9,10 @@ import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
 import { arePathsSame } from '../../platform/common/platform/fileUtils.node';
 import { BufferDecoder } from '../../platform/common/process/decoder.node';
 import { ProcessService } from '../../platform/common/process/proc.node';
-import { getOSType, OSType } from '../common.node';
 import { parseCondaEnvFileContents } from './condaHelper';
 import { isCondaEnvironment } from './condaLocator.node';
 import { Uri } from 'vscode';
+import { getOSType, OSType } from '../../platform/common/utils/platform';
 
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires

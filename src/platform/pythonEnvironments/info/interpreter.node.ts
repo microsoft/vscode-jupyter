@@ -80,7 +80,7 @@ export async function getInterpreterInfo(
 
 export function getInterpreterHash(interpreter: PythonEnvironment | {path: Uri}){
     const interpreterPath = getNormalizedInterpreterPath(interpreter.path);
-    return sha256().update(interpreterPath).digest('hex');
+    return sha256().update(interpreterPath.path).digest('hex');
 }
 
 export function areInterpretersSame(i1: PythonEnvironment | undefined, i2: PythonEnvironment | undefined) {

@@ -30,7 +30,7 @@ import {
     areInterpreterPathsSame,
     getInterpreterHash
 } from '../../../../platform/pythonEnvironments/info/interpreter.node';
-import { captureScreenShot, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../../common.node';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../../common.node';
 import {
     EXTENSION_ROOT_DIR_FOR_TESTS,
     IS_REMOTE_NATIVE_TEST,
@@ -66,6 +66,7 @@ import { noop } from '../../../core';
 import { IInteractiveWindowProvider } from '../../../../interactive-window/types';
 import { Commands } from '../../../../platform/common/constants';
 import { getDisplayPathFromLocalFile } from '../../../../platform/common/platform/fs-paths.node';
+import { getOSType, OSType } from '../../../../platform/common/utils/platform';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience Install IPyKernel (slow) (install)', function () {

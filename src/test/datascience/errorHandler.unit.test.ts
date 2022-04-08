@@ -15,7 +15,6 @@ import {
     KernelConnectionMetadata,
     KernelInterpreterDependencyResponse
 } from '../../platform/../kernels/types';
-import { getOSType, OSType } from '../common.node';
 import { PythonEnvironment, EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
 import { DataScienceErrorHandler } from '../../platform/errors/errorHandler.node';
@@ -29,6 +28,7 @@ import {
 } from '../../kernels/jupyter/types';
 import { setIsWindows } from '../../platform/vscode-path/platform';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers.node';
+import { getOSType, OSType } from '../../platform/common/utils/platform';
 
 suite('DataScience Error Handler Unit Tests', () => {
     let applicationShell: IApplicationShell;

@@ -17,7 +17,7 @@ import {
     getInterpreterHash,
     getNormalizedInterpreterPath
 } from '../../../platform/pythonEnvironments/info/interpreter.node';
-import { createEventHandler, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common.node';
+import { createEventHandler, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import { closeActiveWindows, initialize, IS_CI_SERVER } from '../../initialize.node';
 import { openNotebook } from '../helpers';
@@ -36,6 +36,7 @@ import {
     defaultNotebookTestTimeout
 } from './helper.node';
 import { getTextOutputValue } from '../../../notebooks/helpers.node';
+import { getOSType, OSType } from '../../../platform/common/utils/platform';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience - VSCode Notebook - Kernel Selection', function () {

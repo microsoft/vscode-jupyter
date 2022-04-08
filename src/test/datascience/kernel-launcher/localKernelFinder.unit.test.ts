@@ -26,11 +26,10 @@ import type { KernelSpec } from '@jupyterlab/services';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { getOSType } from '../../common.node';
+import * as platform from '../../../platform/common/utils/platform';
 import { EventEmitter, Memento, Uri } from 'vscode';
 import { IDisposable, IExtensionContext } from '../../../platform/common/types';
 import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/interpreter.node';
-import { OSType } from '../../../platform/common/utils/platform';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../../../platform/../kernels/types';
 import { arePathsSame } from '../../../platform/common/platform/fileUtils.node';
@@ -53,7 +52,7 @@ import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/f
         const disposables: IDisposable[] = [];
         let globalSpecPath: Uri | undefined;
         let tempDirForKernelSpecs: Uri;
-        const pathSeparator = getOSType() === OSType.Windows ? '\\' : '/';
+        const pathSeparator = isWindows ? '\\' : '/';
         let jupyterPaths: JupyterPaths;
         type TestData = {
             interpreters?: (
@@ -77,6 +76,8 @@ import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/f
         async function initialize(testData: TestData, activeInterpreter?: PythonEnvironment) {
             const getRealPathStub = sinon.stub(fsExtra, 'realpath');
             getRealPathStub.returnsArg(0);
+            const getOSTypeStub = sinon.stub(platform, 'getOSType');
+            getOSTypeStub.returns(isWindows ? platform.OSType.Windows : platform.OSType.Linux);
             interpreterService = mock(InterpreterService);
             // Ensure the active Interpreter is in the list of interpreters.
             if (activeInterpreter) {
@@ -146,7 +147,7 @@ import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/f
             tempDirForKernelSpecs = await jupyterPaths.getKernelSpecTempRegistrationFolder();
             await Promise.all(
                 (testData.globalKernelSpecs || []).map(async (kernelSpec) => {
-                    const jsonFile = [globalSpecPath, kernelSpec.name, 'kernel.json'].join(pathSeparator);
+                    const jsonFile = [globalSpecPath?.fsPath, kernelSpec.name, 'kernel.json'].join(pathSeparator);
                     kernelSpecsBySpecFile.set(jsonFile.replace(/\\/g, '/'), kernelSpec);
                 })
             );
@@ -464,7 +465,7 @@ import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/f
             const expectedKernelSpecs: KernelConnectionMetadata[] = [];
             await Promise.all(
                 expectedGlobalKernelSpecs.map(async (kernelSpec) => {
-                    const kernelspecFile = [globalSpecPath, kernelSpec.name, 'kernel.json'].join(pathSeparator);
+                    const kernelspecFile = [globalSpecPath?.fsPath, kernelSpec.name, 'kernel.json'].join(pathSeparator);
                     const interpreter = expectedInterpreters.find(
                         (item) => kernelSpec.language === PYTHON_LANGUAGE && item.path.fsPath === kernelSpec.argv[0]
                     );
