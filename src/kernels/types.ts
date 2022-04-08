@@ -366,7 +366,7 @@ export interface IJupyterKernelSpec {
      * Then you could have kernels in `<sys.prefix folder for this interpreter>\share\jupyter\kernels`
      * Plenty of conda packages ship kernels in this manner (beakerx, etc).
      */
-    interpreterPath?: Uri;
+    interpreterPath?: string; // Has to be a string as old kernelspecs wrote it this way
     readonly interrupt_mode?: 'message' | 'signal';
     /**
      * Whether the kernelspec is registered by VS Code

@@ -12,6 +12,7 @@ import { IEnvironmentActivationService } from '../../../platform/interpreter/act
 import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IJupyterKernelSpec } from '../../types';
+import { Uri } from 'vscode';
 
 @injectable()
 export class KernelEnvironmentVariablesService {
@@ -43,7 +44,7 @@ export class KernelEnvironmentVariablesService {
                 return kernelEnv;
             }
             interpreter = await this.interpreterService
-                .getInterpreterDetails(kernelSpec.interpreterPath)
+                .getInterpreterDetails(Uri.file(kernelSpec.interpreterPath))
                 .catch((ex) => {
                     traceError('Failed to fetch interpreter information for interpreter that owns a kernel', ex);
                     return undefined;

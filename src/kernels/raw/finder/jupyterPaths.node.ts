@@ -16,13 +16,14 @@ import { traceDecoratorVerbose } from '../../../platform/logging';
 import { getUserHomeDir } from '../../../platform/common/utils/platform.node';
 import { fsPathToUri } from '../../../platform/vscode-path/utils';
 
-const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
-const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
-const macJupyterPath = path.join('Library', 'Jupyter', 'kernels');
-const winJupyterRuntimePath = path.join('AppData', 'Roaming', 'jupyter', 'runtime');
-const macJupyterRuntimePath = path.join('Library', 'Jupyter', 'runtime');
+const winJupyterPath = ['AppData', 'Roaming', 'jupyter', 'kernels'].join('\\');
+const linuxJupyterPath = ['.local', 'share', 'jupyter', 'kernels'].join('/');
+const macJupyterPath = ['Library', 'Jupyter', 'kernels'].join('/');
+const winJupyterRuntimePath = ['AppData', 'Roaming', 'jupyter', 'runtime'].join('\\');
+const macJupyterRuntimePath = ['Library', 'Jupyter', 'runtime'].join('/');
 
-export const baseKernelPath = path.join('share', 'jupyter', 'kernels');
+export const baseKernelPathWindows = ['share', 'jupyter', 'kernels'].join('\\');
+export const baseKernelPathLinux = ['share', 'jupyter', 'kernels'].join('/');
 const CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH = 'CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH_2.';
 const CACHE_KEY_FOR_JUPYTER_PATHS = 'CACHE_KEY_FOR_JUPYTER_PATHS_2_.';
 

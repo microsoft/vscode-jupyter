@@ -283,7 +283,7 @@ export async function loadKernelSpec(
         kernelJson as any,
         specPath.fsPath,
         // Interpreter information may be saved in the metadata (if this is a kernel spec created/registered by us).
-        interpreter?.path || kernelJson?.metadata?.interpreter?.path,
+        interpreter?.path.fsPath || kernelJson?.metadata?.interpreter?.path?.fsPath,
         getKernelRegistrationInfo(kernelJson)
     );
 

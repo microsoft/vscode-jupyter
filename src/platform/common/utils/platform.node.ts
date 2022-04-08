@@ -22,5 +22,8 @@ export function getUserHomeDir(): Uri | undefined {
     if (getOSType() === OSType.Windows) {
         return fsPathToUri(getEnvironmentVariable('USERPROFILE'));
     }
-    return fsPathToUri(getEnvironmentVariable('HOME')) || fsPathToUri(getEnvironmentVariable('HOMEPATH'));
+    const homeVar = getEnvironmentVariable('HOME') || getEnvironmentVariable('HOMEPATH');
+
+    // Make sure if linux, it uses linux separators
+    return fsPathToUri(homeVar?.replace(/\\/g, '/'));
 }

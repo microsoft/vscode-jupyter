@@ -176,7 +176,8 @@ export class ExtUri implements IExtUri {
                     extpath.isEqualOrParent(
                         originalFSPath(base),
                         originalFSPath(parentCandidate),
-                        this._ignorePathCasing(base)
+                        this._ignorePathCasing(base),
+                        isWindows ? '\\' : '/'
                     ) &&
                     base.query === parentCandidate.query &&
                     (ignoreFragment || base.fragment === parentCandidate.fragment)

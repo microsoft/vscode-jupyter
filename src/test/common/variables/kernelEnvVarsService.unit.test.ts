@@ -38,7 +38,7 @@ suite('Kernel Environment Variables Service', () => {
         name: 'kernel',
         path: pathFile,
         display_name: 'kernel',
-        interpreterPath: pathFile,
+        interpreterPath: pathFile.fsPath,
         argv: []
     };
 

@@ -41,6 +41,7 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../kernels
 import { ILocalKernelFinder } from '../../../kernels/raw/types';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
+import { setIsWindows } from '../../../platform/vscode-path/platform';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -78,6 +79,7 @@ import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/f
             getRealPathStub.returnsArg(0);
             const getOSTypeStub = sinon.stub(platform, 'getOSType');
             getOSTypeStub.returns(isWindows ? platform.OSType.Windows : platform.OSType.Linux);
+            setIsWindows(isWindows);
             interpreterService = mock(InterpreterService);
             // Ensure the active Interpreter is in the list of interpreters.
             if (activeInterpreter) {
@@ -658,8 +660,8 @@ import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/f
             }
             assert.strictEqual(actual?.kind, 'startUsingLocalKernelSpec');
             assert.strictEqual(
-                actual?.kernelSpec.specFile,
-                [globalSpecPath, expected.name, 'kernel.json'].join(pathSeparator)
+                actual?.kernelSpec.specFile?.replace(/\\/g, pathSeparator),
+                [globalSpecPath?.fsPath, expected.name, 'kernel.json'].join(pathSeparator).replace(/\\/g, pathSeparator)
             );
             Object.keys(expected).forEach((key) => {
                 // We always mess around with the names, hence don't compare names.

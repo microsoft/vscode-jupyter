@@ -80,7 +80,7 @@ import { IStatusProvider } from '../platform/progress/types';
 import { IRawNotebookProvider } from './raw/types';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { isCI } from '../platform/common/constants.node';
-import { uriToFsPath } from '../platform/vscode-path/utils';
+import { fsPathToUri, uriToFsPath } from '../platform/vscode-path/utils';
 import { getOSType } from '../platform/common/utils/platform';
 
 // Helper functions for dealing with kernels and kernelspecs
@@ -143,7 +143,7 @@ export function getKernelId(spec: IJupyterKernelSpec, interpreter?: PythonEnviro
     }
     const prefixForRemoteKernels = remoteBaseUrl ? `${remoteBaseUrl}.` : '';
     return `${prefixForRemoteKernels}${spec.id || ''}.${specName}.${getNormalizedInterpreterPath(
-        spec.interpreterPath || spec.path
+        fsPathToUri(spec.interpreterPath) || spec.path
     )}.${getNormalizedInterpreterPath(interpreter?.path) || ''}.${argsForGenerationOfId}`;
 }
 
@@ -279,12 +279,15 @@ export function getKernelPathFromKernelConnection(kernelConnection?: KernelConne
             kernelConnection.kind === 'startUsingLocalKernelSpec') &&
             kernelConnection.kernelSpec.language === PYTHON_LANGUAGE)
     ) {
-        return kernelSpec?.metadata?.interpreter?.path || kernelSpec?.interpreterPath || kernelSpec?.path;
+        return kernelSpec?.metadata?.interpreter?.path || fsPathToUri(kernelSpec?.interpreterPath) || kernelSpec?.path;
     } else {
         // For non python kernels, give preference to the executable path in the kernelspec
         // E.g. if we have a rust kernel, we should show the path to the rust executable not the interpreter (such as conda env that owns the rust runtime).
         return (
-            model?.path || kernelSpec?.path || kernelSpec?.metadata?.interpreter?.path || kernelSpec?.interpreterPath
+            model?.path ||
+            kernelSpec?.path ||
+            kernelSpec?.metadata?.interpreter?.path ||
+            fsPathToUri(kernelSpec?.interpreterPath)
         );
     }
 }
@@ -500,7 +503,7 @@ export function createInterpreterKernelSpec(
     return new JupyterKernelSpec(
         defaultSpec,
         specFile ? uriToFsPath(specFile, true) : undefined,
-        interpreter?.path,
+        interpreter?.path.fsPath,
         'registeredByNewVersionOfExt'
     );
 }

@@ -21,7 +21,7 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
     constructor(
         specModel: KernelSpec.ISpecModel,
         public readonly specFile?: string,
-        public readonly interpreterPath?: Uri,
+        public readonly interpreterPath?: string,
         public readonly isRegisteredByVSC?:
             | 'registeredByNewVersionOfExt'
             | 'registeredByOldVersionOfExt'

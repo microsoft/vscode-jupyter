@@ -209,9 +209,9 @@ suite('kernel Process', () => {
             path: Uri.file('dotnet')
         };
         const tempFile = path.join('tmp', 'temporary file.json');
-        const jupyterRuntimeDir = path.join('hello', 'jupyter', 'runtime');
-        const expectedConnectionFile = path.join(jupyterRuntimeDir, path.basename(tempFile));
-        when(jupyterPaths.getRuntimeDir()).thenResolve(Uri.file(jupyterRuntimeDir));
+        const jupyterRuntimeDir = Uri.file(path.join('hello', 'jupyter', 'runtime'));
+        const expectedConnectionFile = path.join(jupyterRuntimeDir.fsPath, path.basename(tempFile));
+        when(jupyterPaths.getRuntimeDir()).thenResolve(jupyterRuntimeDir);
         when(connectionMetadata.kind).thenReturn('startUsingLocalKernelSpec');
         when(connectionMetadata.kernelSpec).thenReturn(kernelSpec);
         when(fs.createTemporaryLocalFile(deepEqual(tempFileCreationOptions))).thenResolve({
@@ -278,13 +278,13 @@ suite('kernel Process', () => {
             path: Uri.file('python')
         };
         const tempFile = path.join('tmp', 'temporary file.json');
-        const jupyterRuntimeDir = path.join('hello', 'jupyter', 'runtime');
-        const expectedConnectionFile = path.join(jupyterRuntimeDir, path.basename(tempFile));
+        const jupyterRuntimeDir = Uri.file(path.join('hello', 'jupyter', 'runtime'));
+        const expectedConnectionFile = path.join(jupyterRuntimeDir.fsPath, path.basename(tempFile));
         when(fs.createTemporaryLocalFile(deepEqual(tempFileCreationOptions))).thenResolve({
             dispose: noop,
             filePath: tempFile
         });
-        when(jupyterPaths.getRuntimeDir()).thenResolve(Uri.file(jupyterRuntimeDir));
+        when(jupyterPaths.getRuntimeDir()).thenResolve(jupyterRuntimeDir);
         when(pythonExecFactory.createDaemon(anything())).thenResolve(instance(pythonProcess));
         when(connectionMetadata.kind).thenReturn('startUsingPythonInterpreter');
         when(connectionMetadata.kernelSpec).thenReturn(kernelSpec);

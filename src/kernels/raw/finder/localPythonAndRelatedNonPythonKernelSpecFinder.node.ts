@@ -13,7 +13,7 @@ import {
     PythonKernelConnectionMetadata
 } from '../../../kernels/types';
 import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase.node';
-import { baseKernelPath, JupyterPaths } from './jupyterPaths.node';
+import { baseKernelPathWindows, baseKernelPathLinux, JupyterPaths } from './jupyterPaths.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
@@ -27,6 +27,8 @@ import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/in
 import { captureTelemetry } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { isWindows } from '../../../platform/vscode-path/platform';
+import { fsPathToUri } from '../../../platform/vscode-path/utils';
 
 export const isDefaultPythonKernelSpecName = /^python\d*.?\d*$/;
 
@@ -400,7 +402,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             const matchBasedOnInterpreterPath = interpreters.find((i) => {
                 if (
                     kernelSpec.interpreterPath &&
-                    areInterpreterPathsSame(kernelSpec.interpreterPath, i.path, undefined, true)
+                    areInterpreterPathsSame(fsPathToUri(kernelSpec.interpreterPath), i.path, undefined, true)
                 ) {
                     traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on interpreter path.`);
                     return true;
@@ -509,7 +511,9 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             .map((interpreter) => {
                 return {
                     interpreter,
-                    kernelSearchPath: Uri.file(path.join(interpreter.sysPrefix, baseKernelPath))
+                    kernelSearchPath: Uri.file(
+                        path.join(interpreter.sysPrefix, isWindows ? baseKernelPathWindows : baseKernelPathLinux)
+                    )
                 };
             })
             .filter((item) => {

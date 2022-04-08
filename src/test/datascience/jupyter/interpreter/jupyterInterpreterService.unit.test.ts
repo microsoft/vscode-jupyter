@@ -143,7 +143,7 @@ suite('DataScience - Jupyter Interpreter Service', () => {
         // Make sure we set our saved interpreter to the new active interpreter
         // it should have been cleared to undefined, then set to a new value
         verify(interpreterSelectionState.updateSelectedPythonPath(undefined)).once();
-        verify(interpreterSelectionState.updateSelectedPythonPath(anything())).once();
+        verify(interpreterSelectionState.updateSelectedPythonPath(pythonInterpreter.path)).once();
     });
     test('Install missing dependencies into active interpreter', async () => {
         when(interpreterService.getActiveInterpreter(anything())).thenResolve(pythonInterpreter);

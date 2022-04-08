@@ -12,6 +12,7 @@ import { IInterpreterSelector } from '../../../../platform/interpreter/configura
 import { JupyterInterpreterSelector } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterSelector.node';
 import { JupyterInterpreterStateStore } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterStateStore.node';
 import { Uri } from 'vscode';
+import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
 
 suite('DataScience - Jupyter Interpreter Picker', () => {
     let picker: JupyterInterpreterSelector;
@@ -63,12 +64,13 @@ suite('DataScience - Jupyter Interpreter Picker', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const interpreters = ['something'] as any[];
         const selectedPythonPath = Uri.file('jupyter.exe');
+        const displayPath = getDisplayPath(selectedPythonPath);
         when(interpreterSelectionState.selectedPythonPath).thenReturn(selectedPythonPath);
         when(interpreterSelector.getSuggestions(undefined)).thenResolve(interpreters);
         when(appShell.showQuickPick(anything(), anything())).thenResolve();
 
         await picker.selectInterpreter();
 
-        assert.equal(capture(appShell.showQuickPick).first()[1]?.placeHolder, `current: ${selectedPythonPath.fsPath}`);
+        assert.equal(capture(appShell.showQuickPick).first()[1]?.placeHolder, `current: ${displayPath}`);
     });
 });

@@ -37,7 +37,7 @@ suite('DataScience - JupyterKernelService', () => {
             kind: 'startUsingPythonInterpreter',
             kernelSpec: {
                 specFile: 'python\\share\\jupyter\\kernels\\interpreter.json',
-                interpreterPath: Uri.file('/usr/bin/python3'),
+                interpreterPath: '/usr/bin/python3',
                 name: '70cbf3ad892a7619808baecec09fc6109e05177247350ed666cd97ce04371665',
                 argv: ['python'],
                 language: 'python',
@@ -56,7 +56,7 @@ suite('DataScience - JupyterKernelService', () => {
             kind: 'startUsingPythonInterpreter',
             kernelSpec: {
                 specFile: 'conda\\share\\jupyter\\kernels\\interpreter.json',
-                interpreterPath: Uri.file('/usr/bin/conda/python3'),
+                interpreterPath: '/usr/bin/conda/python3',
                 name: '92d78b5b048d9cbeebb9834099d399dea5384db6f02b0829c247cc4679e7cb5d',
                 argv: ['python'],
                 language: 'python',
@@ -242,7 +242,7 @@ suite('DataScience - JupyterKernelService', () => {
         {
             kind: 'startUsingPythonInterpreter',
             kernelSpec: {
-                interpreterPath: Uri.file('/usr/conda/envs/base/python'),
+                interpreterPath: '/usr/conda/envs/base/python',
                 name: 'e10e222d04b8ec3cc7034c3de1b1269b088e2bcd875030a8acab068e59af3990',
                 argv: ['python', '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
                 language: 'python',
