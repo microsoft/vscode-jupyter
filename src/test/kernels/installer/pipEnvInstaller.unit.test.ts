@@ -21,8 +21,8 @@ suite('PipEnv installer', async () => {
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let pipEnvInstaller: PipEnvInstaller;
-    const interpreterPath = 'path/to/interpreter';
-    const workspaceFolder = 'path/to/folder';
+    const interpreterPath = Uri.file('path/to/interpreter');
+    const workspaceFolder = Uri.file('path/to/folder');
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
@@ -36,7 +36,7 @@ suite('PipEnv installer', async () => {
 
         isPipenvEnvironmentRelatedToFolder = sinon
             .stub(pipEnvHelper, 'isPipenvEnvironmentRelatedToFolder')
-            .callsFake((interpreter: string, folder: string) => {
+            .callsFake((interpreter: Uri, folder: Uri) => {
                 return Promise.resolve(interpreterPath === interpreter && folder === workspaceFolder);
             });
         pipEnvInstaller = new PipEnvInstaller(serviceContainer.object, workspaceService.object);
@@ -79,9 +79,7 @@ suite('PipEnv installer', async () => {
             .setup((p) => p.getActiveInterpreter(resource))
             .returns(() => Promise.resolve({ envType: EnvironmentType.Pipenv, path: interpreterPath } as any));
 
-        workspaceService
-            .setup((w) => w.getWorkspaceFolder(resource))
-            .returns(() => ({ uri: { fsPath: workspaceFolder } } as any));
+        workspaceService.setup((w) => w.getWorkspaceFolder(resource)).returns(() => ({ uri: workspaceFolder } as any));
         const result = await pipEnvInstaller.isSupported(resource);
         expect(result).to.equal(true, 'Should be true');
     });

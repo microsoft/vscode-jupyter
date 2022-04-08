@@ -41,7 +41,9 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../kernels
 import { ILocalKernelFinder } from '../../../kernels/raw/types';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
-import { setIsWindows } from '../../../platform/vscode-path/platform';
+import { isWindows, setIsWindows } from '../../../platform/vscode-path/platform';
+
+const originalIsWindows = isWindows;
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -212,6 +214,7 @@ import { setIsWindows } from '../../../platform/vscode-path/platform';
         }
         teardown(() => {
             disposeAllDisposables(disposables);
+            setIsWindows(originalIsWindows);
             sinon.restore();
         });
 

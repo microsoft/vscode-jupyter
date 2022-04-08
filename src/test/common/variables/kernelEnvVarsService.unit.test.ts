@@ -89,7 +89,7 @@ suite('Kernel Environment Variables Service', () => {
         });
 
         test('KernelSpec interpreterPath used if interpreter is undefined', async () => {
-            when(interpreterService.getInterpreterDetails(pathFile)).thenResolve({
+            when(interpreterService.getInterpreterDetails(anything())).thenResolve({
                 envType: EnvironmentType.Conda,
                 path: Uri.file('foopath'),
                 sysPrefix: 'foosysprefix'
@@ -115,7 +115,7 @@ suite('Kernel Environment Variables Service', () => {
             hasActivatedEnvVariables: boolean,
             hasActivationCommands: boolean
         ) {
-            when(interpreterService.getInterpreterDetails(pathFile)).thenResolve({
+            when(interpreterService.getInterpreterDetails(anything())).thenResolve({
                 envType,
                 path: Uri.file('foopath'),
                 sysPrefix: 'foosysprefix'
