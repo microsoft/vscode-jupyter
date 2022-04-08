@@ -84,7 +84,7 @@ export class CellExecutionCreator {
     static getOrCreate(cell: NotebookCell, controller: NotebookController) {
         let cellExecution: NotebookCellExecutionWrapper | undefined;
         const key = cell.document.uri.toString();
-        cellExecution = CellExecutionCreator._map.get(key);
+        cellExecution = this.get(cell);
         if (!cellExecution) {
             cellExecution = CellExecutionCreator.create(key, cell, controller);
         } else {
@@ -104,6 +104,10 @@ export class CellExecutionCreator {
             }
         }
         return cellExecution;
+    }
+    static get(cell: NotebookCell) {
+        const key = cell.document.uri.toString();
+        return CellExecutionCreator._map.get(key);
     }
 
     private static create(key: string, cell: NotebookCell, controller: NotebookController) {
