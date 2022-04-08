@@ -31,7 +31,7 @@ import {
     waitForExecutionCompletedSuccessfully,
     waitForExecutionCompletedWithErrors,
     waitForTextOutput
-} from './notebook/helper';
+} from './notebook/helper.node';
 import { translateCellErrorOutput, getTextOutputValue } from '../../notebooks/helpers.node';
 import { INotebookControllerManager } from '../../notebooks/types';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';

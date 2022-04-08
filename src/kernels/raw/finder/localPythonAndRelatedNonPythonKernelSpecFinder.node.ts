@@ -4,6 +4,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
+import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken, Memento, Uri } from 'vscode';
 import { createInterpreterKernelSpec, getKernelId, getKernelRegistrationInfo } from '../../../kernels/helpers.node';
 import {
@@ -18,7 +19,7 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfoIfCI, traceVerbose, traceError } from '../../../platform/logging';
-import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
+import { getDisplayPath, getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IMemento, GLOBAL_MEMENTO, Resource } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
@@ -292,9 +293,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                                 traceError(
                                     `Failed to get interpreter details for Kernel Spec ${getDisplayPathFromLocalFile(
                                         k.specFile
-                                    )} with interpreter path ${getDisplayPathFromLocalFile(
-                                        k.metadata?.interpreter?.path
-                                    )}`,
+                                    )} with interpreter path ${getDisplayPath(k.metadata?.interpreter?.path)}`,
                                     ex
                                 );
                                 return;
@@ -362,7 +361,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         const exactMatch = interpreters.find((i) => {
             if (
                 kernelSpec.metadata?.interpreter?.path &&
-                areInterpreterPathsSame(kernelSpec.metadata?.interpreter?.path, i.path, undefined, this.fs)
+                areInterpreterPathsSame(kernelSpec.metadata?.interpreter?.path, i.path, undefined, true)
             ) {
                 traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on metadata path.`);
                 return true;
@@ -377,7 +376,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             kernelSpec && Array.isArray(kernelSpec.argv) && kernelSpec.argv.length > 0 ? kernelSpec.argv[0] : undefined;
         if (pathInArgv && path.basename(pathInArgv) !== pathInArgv) {
             const exactMatchBasedOnArgv = interpreters.find((i) => {
-                if (areInterpreterPathsSame(pathInArgv, i.path, undefined, this.fs)) {
+                if (areInterpreterPathsSame(Uri.file(pathInArgv), i.path, undefined, true)) {
                     traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on path in argv.`);
                     return true;
                 }
@@ -390,7 +389,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             // 3. Sometimes we have path paths such as `/usr/bin/python3.6` in the kernel spec.
             // & in the list of interpreters we have `/usr/bin/python3`, they are both the same.
             // Hence we need to ensure we take that into account (just get the interpreter info from Python extension).
-            const interpreterInArgv = await this.interpreterService.getInterpreterDetails(pathInArgv);
+            const interpreterInArgv = await this.interpreterService.getInterpreterDetails(Uri.file(pathInArgv));
             if (interpreterInArgv) {
                 return interpreterInArgv;
             }
@@ -399,7 +398,10 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         // 4. Check if `interpreterPath` is defined in kernel metadata.
         if (kernelSpec.interpreterPath) {
             const matchBasedOnInterpreterPath = interpreters.find((i) => {
-                if (kernelSpec.interpreterPath && this.fs.areLocalPathsSame(kernelSpec.interpreterPath, i.path)) {
+                if (
+                    kernelSpec.interpreterPath &&
+                    areInterpreterPathsSame(kernelSpec.interpreterPath, i.path, undefined, true)
+                ) {
                     traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on interpreter path.`);
                     return true;
                 }
@@ -442,7 +444,9 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         // But we could have a kernel spec in global path that points to a completely different interpreter.
         // We already have a way of identifying the interpreter associated with a global kernelspec.
         // Hence exclude global paths from the list of interpreter specific paths (as global paths are NOT interpreter specific).
-        const paths = interpreterPaths.filter((item) => !rootSpecPaths.includes(item.kernelSearchPath));
+        const paths = interpreterPaths.filter(
+            (item) => !rootSpecPaths.find((i) => uriPath.isEqual(i, item.kernelSearchPath))
+        );
 
         const searchResults = await this.findKernelSpecsInPaths(paths, cancelToken);
         let results: IJupyterKernelSpec[] = [];
@@ -450,7 +454,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             searchResults.map(async (resultPath) => {
                 // Add these into our path cache to speed up later finds
                 const kernelspec = await this.getKernelSpec(
-                    Uri.file(resultPath.kernelSpecFile),
+                    resultPath.kernelSpecFile,
                     resultPath.interpreter,
                     globalSpecRootPath,
                     cancelToken
@@ -499,13 +503,13 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
      */
     private async findKernelPathsOfAllInterpreters(
         interpreters: PythonEnvironment[]
-    ): Promise<{ interpreter: PythonEnvironment; kernelSearchPath: string }[]> {
-        const kernelSpecPathsAlreadyListed = new Set<string>();
+    ): Promise<{ interpreter: PythonEnvironment; kernelSearchPath: Uri }[]> {
+        const kernelSpecPathsAlreadyListed = new Set<Uri>();
         return interpreters
             .map((interpreter) => {
                 return {
                     interpreter,
-                    kernelSearchPath: path.join(interpreter.sysPrefix, baseKernelPath)
+                    kernelSearchPath: Uri.file(path.join(interpreter.sysPrefix, baseKernelPath))
                 };
             })
             .filter((item) => {

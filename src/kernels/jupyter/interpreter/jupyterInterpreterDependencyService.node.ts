@@ -21,6 +21,8 @@ import { reportAction } from '../../../platform/progress/decorator.node';
 import { ReportableAction } from '../../../platform/progress/types';
 import { JupyterInterpreterDependencyResponse } from '../types';
 import { IJupyterCommandFactory } from '../types.node';
+import { getComparisonKey } from '../../../platform/vscode-path/resources';
+import { uriToFsPath } from '../../../platform/vscode-path/utils';
 
 /**
  * Sorts the given list of products (in place) in the order in which they need to be installed.
@@ -242,7 +244,8 @@ export class JupyterInterpreterDependencyService {
         token?: CancellationToken
     ): Promise<Product[]> {
         // If we know that all modules were available at one point in time, then use that cache.
-        if (this.dependenciesInstalledInInterpreter.has(interpreter.path)) {
+        const key = getComparisonKey(interpreter.path);
+        if (this.dependenciesInstalledInInterpreter.has(key)) {
             return [];
         }
 
@@ -271,7 +274,7 @@ export class JupyterInterpreterDependencyService {
             installed ? [] : [Product.kernelspec]
         );
         if (products.length === 0) {
-            this.dependenciesInstalledInInterpreter.add(interpreter.path);
+            this.dependenciesInstalledInInterpreter.add(key);
         }
         return products;
     }
@@ -326,7 +329,7 @@ export class JupyterInterpreterDependencyService {
             return JupyterInterpreterDependencyResponse.cancel;
         }
         const selectionFromError = await this.applicationShell.showErrorMessage(
-            DataScience.jupyterKernelSpecModuleNotFound().format(interpreter.path),
+            DataScience.jupyterKernelSpecModuleNotFound().format(uriToFsPath(interpreter.path, true)),
             DataScience.selectDifferentJupyterInterpreter(),
             Common.cancel()
         );

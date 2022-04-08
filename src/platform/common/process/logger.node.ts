@@ -6,15 +6,15 @@
 import { inject, injectable, named } from 'inversify';
 import { isCI, isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { traceInfo } from '../../logging';
-import { IOutputChannel, IPathUtils } from '../types';
+import { IOutputChannel } from '../types';
 import { Logging } from '../utils/localize';
 import { IProcessLogger, SpawnOptions } from './types.node';
+import { getDisplayPathFromLocalFile } from '../platform/fs-paths.node';
 
 @injectable()
 export class ProcessLogger implements IProcessLogger {
     constructor(
-        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel,
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel
     ) {}
 
     public logProcess(file: string, args: string[], options?: SpawnOptions) {
@@ -24,17 +24,17 @@ export class ProcessLogger implements IProcessLogger {
             return;
         }
         const argsList = args.reduce((accumulator, current, index) => {
-            let formattedArg = this.pathUtils.getDisplayName(current).toCommandArgument();
+            let formattedArg = getDisplayPathFromLocalFile(current).toCommandArgument();
             if (current[0] === "'" || current[0] === '"') {
-                formattedArg = `${current[0]}${this.pathUtils.getDisplayName(current.substr(1))}`;
+                formattedArg = `${current[0]}${getDisplayPathFromLocalFile(current.substr(1))}`;
             }
 
             return index === 0 ? formattedArg : `${accumulator} ${formattedArg}`;
         }, '');
 
-        const info = [`> ${this.pathUtils.getDisplayName(file)} ${argsList}`];
+        const info = [`> ${getDisplayPathFromLocalFile(file)} ${argsList}`];
         if (options && options.cwd) {
-            info.push(`${Logging.currentWorkingDirectory()} ${this.pathUtils.getDisplayName(options.cwd)}`);
+            info.push(`${Logging.currentWorkingDirectory()} ${getDisplayPathFromLocalFile(options.cwd)}`);
         }
 
         info.forEach((line) => {

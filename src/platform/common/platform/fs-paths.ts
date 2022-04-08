@@ -1,11 +1,12 @@
 import { Uri, WorkspaceFolder } from 'vscode';
 import * as path from '../../vscode-path/path';
 import * as uriPath from '../../vscode-path/resources';
+import { uriToFsPath } from '../../vscode-path/utils';
 
 export function getDisplayPath(
     filename: Uri | undefined,
     workspaceFolders: readonly WorkspaceFolder[] | WorkspaceFolder[] = [],
-    homePath: Uri | undefined
+    homePath: Uri | undefined = undefined
 ) {
     const relativeToHome = getDisplayPathImpl(filename, undefined, homePath);
     const relativeToWorkspaceFolders = workspaceFolders.map((folder) =>
@@ -25,22 +26,21 @@ export function getDisplayPath(
 
 function getDisplayPathImpl(file: Uri | undefined, cwd: Uri | undefined, homePath: Uri | undefined): string {
     if (file && cwd && uriPath.isEqualOrParent(file, cwd, true)) {
-        const relativePath = uriPath.relativePath(file, cwd);
+        const relativePath = uriPath.relativePath(cwd, file);
         if (relativePath) {
             return relativePath;
         }
     }
 
     if (file && homePath && uriPath.isEqualOrParent(file, homePath, true)) {
-        const relativePath = uriPath.relativePath(file, homePath);
+        const relativePath = uriPath.relativePath(homePath, file);
         if (relativePath) {
             return `~${path.sep}${relativePath}`;
         }
     }
 
     if (file) {
-        // eslint-disable-next-line local-rules/dont-use-fspath
-        return file.fsPath || file.path;
+        return uriToFsPath(file, true);
     }
 
     return '';

@@ -15,7 +15,7 @@ import {
     insertCodeCell,
     createEmptyPythonNotebook,
     waitForDiagnostics
-} from '../helper';
+} from '../helper.node';
 import { Settings } from '../../../../platform/common/constants';
 import { setIntellisenseTimeout } from '../../../../intellisense/pythonKernelCompletionProvider.node';
 

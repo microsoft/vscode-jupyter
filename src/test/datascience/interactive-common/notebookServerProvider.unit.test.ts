@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import { SemVer } from 'semver';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
-import { CancellationTokenSource, Disposable, EventEmitter } from 'vscode';
+import { CancellationTokenSource, Disposable, EventEmitter, Uri } from 'vscode';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
@@ -33,7 +33,7 @@ suite('DataScience - NotebookServerProvider', () => {
     let interpreterService: IInterpreterService;
     let pythonSettings: IWatchableJupyterSettings;
     const workingPython: PythonEnvironment = {
-        path: '/foo/bar/python.exe',
+        path: Uri.file('/foo/bar/python.exe'),
         version: new SemVer('3.6.6-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python'

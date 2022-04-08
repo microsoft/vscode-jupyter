@@ -28,7 +28,7 @@ import {
     runCell,
     waitForOutputs,
     clickOKForRestartPrompt
-} from './helper';
+} from './helper.node';
 import { hasErrorOutput, NotebookCellStateTracker, getTextOutputValue } from '../../../notebooks/helpers.node';
 import { Commands } from '../../../platform/common/constants';
 

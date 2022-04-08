@@ -11,7 +11,8 @@ import { BufferDecoder } from '../../platform/common/process/decoder.node';
 import { ProcessService } from '../../platform/common/process/proc.node';
 import { getOSType, OSType } from '../common.node';
 import { parseCondaEnvFileContents } from './condaHelper';
-import { isCondaEnvironment } from './condaLocator';
+import { isCondaEnvironment } from './condaLocator.node';
+import { Uri } from 'vscode';
 
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
@@ -179,14 +180,14 @@ async function getCondaEnvironments(): Promise<CondaEnvironmentInfo[] | undefine
  * Return (env name, interpreter filename) for the interpreter.
  */
 export async function getCondaEnvironment(
-    interpreterPath: string | undefined
-): Promise<{ name: string; path: string } | undefined> {
+    interpreterPath: Uri | undefined
+): Promise<{ name: string; path: Uri } | undefined> {
     const isCondaEnv = await isCondaEnvironment(interpreterPath);
     if (!isCondaEnv || !interpreterPath) {
         return;
     }
     const environments = await getCondaEnvironments();
-    const dir = path.dirname(interpreterPath);
+    const dir = path.dirname(interpreterPath.fsPath);
 
     // If interpreter is in bin or Scripts, then go up one level
     const subDirName = path.basename(dir);
@@ -199,7 +200,7 @@ export async function getCondaEnvironment(
         : [];
 
     if (matchingEnvs.length > 0) {
-        return { name: matchingEnvs[0].name, path: interpreterPathToMatch };
+        return { name: matchingEnvs[0].name, path: Uri.file(interpreterPathToMatch) };
     }
 
     // If still not available, then the user created the env after starting vs code.

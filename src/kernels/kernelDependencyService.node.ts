@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, CancellationTokenSource, Memento, Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Memento } from 'vscode';
 import { IApplicationShell } from '../platform/common/application/types';
 import { createPromiseFromCancellation } from '../platform/common/cancellation.node';
 import {
@@ -35,6 +35,7 @@ import { noop } from '../platform/common/utils/misc';
 import { getResourceType } from '../platform/common/utils.node';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter.node';
 import { IRawNotebookSupportedService } from './raw/types';
+import { getComparisonKey } from '../platform/vscode-path/resources';
 
 /**
  * Responsible for managing dependencies of a Python interpreter required to run as a Jupyter Kernel.
@@ -65,7 +66,7 @@ export class KernelDependencyService implements IKernelDependencyService {
     ): Promise<KernelInterpreterDependencyResponse> {
         traceInfo(
             `installMissingDependencies ${
-                kernelConnection.interpreter?.path ? getDisplayPath(Uri.file(kernelConnection.interpreter?.path)) : ''
+                kernelConnection.interpreter?.path ? getDisplayPath(kernelConnection.interpreter?.path) : ''
             }, ui.disabled=${ui.disableUI} for resource ${getDisplayPath(resource)}`
         );
         if (
@@ -88,7 +89,8 @@ export class KernelDependencyService implements IKernelDependencyService {
         }
 
         // Cache the install run
-        let promise = this.installPromises.get(kernelConnection.interpreter.path);
+        const key = getComparisonKey(kernelConnection.interpreter.path);
+        let promise = this.installPromises.get(key);
         let cancelTokenSource: CancellationTokenSource | undefined;
         if (!promise) {
             const cancelTokenSource = new CancellationTokenSource();
@@ -107,7 +109,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                     cancelTokenSource.dispose();
                 })
                 .catch(noop);
-            this.installPromises.set(kernelConnection.interpreter.path, promise);
+            this.installPromises.set(key, promise);
         }
 
         // Get the result of the question
@@ -124,7 +126,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             dependencyResponse = KernelInterpreterDependencyResponse.failed;
         } finally {
             // Don't need to cache anymore
-            this.installPromises.delete(kernelConnection.interpreter.path);
+            this.installPromises.delete(key);
         }
         return dependencyResponse;
     }
@@ -152,9 +154,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             isModulePresentInEnvironmentCache(this.memento, Product.ipykernel, kernelConnection.interpreter)
         ) {
             traceInfo(
-                `IPyKernel found previously in this environment ${getDisplayPath(
-                    Uri.file(kernelConnection.interpreter.path)
-                )}`
+                `IPyKernel found previously in this environment ${getDisplayPath(kernelConnection.interpreter.path)}`
             );
             return true;
         }
@@ -205,7 +205,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             : DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter();
         const products = isPipAvailableForNonConda === false ? [Product.ipykernel, Product.pip] : [Product.ipykernel];
         const message = messageFormat.format(
-            interpreter.displayName || interpreter.path,
+            interpreter.displayName || interpreter.path.fsPath,
             products.map((product) => ProductNames.get(product)!).join(` ${Common.and()} `)
         );
         const productNameForTelemetry = products.map((product) => ProductNames.get(product)!).join(', ');

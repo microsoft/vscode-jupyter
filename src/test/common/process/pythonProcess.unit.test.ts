@@ -4,6 +4,7 @@
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as TypeMoq from 'typemoq';
+import { Uri } from 'vscode';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { createPythonEnv } from '../../../platform/common/process/pythonEnvironment.node';
 import { createPythonProcessService } from '../../../platform/common/process/pythonProcess.node';
@@ -17,7 +18,7 @@ use(chaiAsPromised);
 suite('PythonProcessService', () => {
     let processService: TypeMoq.IMock<IProcessService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
-    const pythonPath = 'path/to/python';
+    const pythonPath = Uri.file('path/to/python');
 
     setup(() => {
         processService = TypeMoq.Mock.ofType<IProcessService>(undefined, TypeMoq.MockBehavior.Strict);
@@ -35,7 +36,7 @@ suite('PythonProcessService', () => {
                 noop();
             }
         };
-        processService.setup((p) => p.execObservable(pythonPath, args, options)).returns(() => observable);
+        processService.setup((p) => p.execObservable(pythonPath.fsPath, args, options)).returns(() => observable);
         const env = createPythonEnv(
             { path: pythonPath } as PythonEnvironment,
             processService.object,
@@ -45,7 +46,7 @@ suite('PythonProcessService', () => {
 
         const result = procs.execObservable(args, options);
 
-        processService.verify((p) => p.execObservable(pythonPath, args, options), TypeMoq.Times.once());
+        processService.verify((p) => p.execObservable(pythonPath.fsPath, args, options), TypeMoq.Times.once());
         expect(result).to.be.equal(observable, 'execObservable should return an observable');
     });
 
@@ -62,7 +63,9 @@ suite('PythonProcessService', () => {
                 noop();
             }
         };
-        processService.setup((p) => p.execObservable(pythonPath, expectedArgs, options)).returns(() => observable);
+        processService
+            .setup((p) => p.execObservable(pythonPath.fsPath, expectedArgs, options))
+            .returns(() => observable);
         const env = createPythonEnv(
             { path: pythonPath } as PythonEnvironment,
             processService.object,
@@ -72,7 +75,7 @@ suite('PythonProcessService', () => {
 
         const result = procs.execModuleObservable(moduleName, args, options);
 
-        processService.verify((p) => p.execObservable(pythonPath, expectedArgs, options), TypeMoq.Times.once());
+        processService.verify((p) => p.execObservable(pythonPath.fsPath, expectedArgs, options), TypeMoq.Times.once());
         expect(result).to.be.equal(observable, 'execModuleObservable should return an observable');
     });
 
@@ -80,7 +83,9 @@ suite('PythonProcessService', () => {
         const args = ['-a', 'b', '-c'];
         const options = {};
         const stdout = 'foo';
-        processService.setup((p) => p.exec(pythonPath, args, options)).returns(() => Promise.resolve({ stdout }));
+        processService
+            .setup((p) => p.exec(pythonPath.fsPath, args, options))
+            .returns(() => Promise.resolve({ stdout }));
         const env = createPythonEnv(
             { path: pythonPath } as PythonEnvironment,
             processService.object,
@@ -90,7 +95,7 @@ suite('PythonProcessService', () => {
 
         const result = await procs.exec(args, options);
 
-        processService.verify((p) => p.exec(pythonPath, args, options), TypeMoq.Times.once());
+        processService.verify((p) => p.exec(pythonPath.fsPath, args, options), TypeMoq.Times.once());
         expect(result.stdout).to.be.equal(stdout, 'exec should return the content of stdout');
     });
 
@@ -101,7 +106,7 @@ suite('PythonProcessService', () => {
         const options = {};
         const stdout = 'bar';
         processService
-            .setup((p) => p.exec(pythonPath, expectedArgs, options))
+            .setup((p) => p.exec(pythonPath.fsPath, expectedArgs, options))
             .returns(() => Promise.resolve({ stdout }));
         const env = createPythonEnv(
             { path: pythonPath } as PythonEnvironment,
@@ -112,7 +117,7 @@ suite('PythonProcessService', () => {
 
         const result = await procs.execModule(moduleName, args, options);
 
-        processService.verify((p) => p.exec(pythonPath, expectedArgs, options), TypeMoq.Times.once());
+        processService.verify((p) => p.exec(pythonPath.fsPath, expectedArgs, options), TypeMoq.Times.once());
         expect(result.stdout).to.be.equal(stdout, 'exec should return the content of stdout');
     });
 
@@ -122,10 +127,10 @@ suite('PythonProcessService', () => {
         const expectedArgs = ['-m', moduleName, ...args];
         const options = {};
         processService
-            .setup((p) => p.exec(pythonPath, expectedArgs, options))
+            .setup((p) => p.exec(pythonPath.fsPath, expectedArgs, options))
             .returns(() => Promise.resolve({ stdout: 'bar', stderr: `Error: No module named ${moduleName}` }));
         processService
-            .setup((p) => p.exec(pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true }))
+            .setup((p) => p.exec(pythonPath.fsPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true }))
             .returns(() => Promise.reject(new StdErrError('not installed')));
         const env = createPythonEnv(
             { path: pythonPath } as PythonEnvironment,

@@ -7,6 +7,7 @@ import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
+import { Uri } from 'vscode';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import {
     createCondaEnv,
@@ -21,7 +22,7 @@ use(chaiAsPromised);
 suite('PythonEnvironment', () => {
     let processService: TypeMoq.IMock<IProcessService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
-    const pythonPath = 'path/to/python';
+    const pythonPath = Uri.file('path/to/python');
 
     setup(() => {
         processService = TypeMoq.Mock.ofType<IProcessService>(undefined, TypeMoq.MockBehavior.Strict);
@@ -150,7 +151,7 @@ suite('PythonEnvironment', () => {
     });
 
     test('getExecutablePath should return pythonPath if pythonPath is a file', async () => {
-        fileSystem.setup((f) => f.localFileExists(pythonPath)).returns(() => Promise.resolve(true));
+        fileSystem.setup((f) => f.localFileExists(pythonPath.fsPath)).returns(() => Promise.resolve(true));
         const env = createPythonEnv(
             { path: pythonPath } as PythonEnvironment,
             processService.object,
@@ -164,10 +165,10 @@ suite('PythonEnvironment', () => {
 
     test('getExecutablePath should not return pythonPath if pythonPath is not a file', async () => {
         const executablePath = 'path/to/dummy/executable';
-        fileSystem.setup((f) => f.localFileExists(pythonPath)).returns(() => Promise.resolve(false));
+        fileSystem.setup((f) => f.localFileExists(pythonPath.fsPath)).returns(() => Promise.resolve(false));
         const argv = ['-c', 'import sys;print(sys.executable)'];
         processService
-            .setup((p) => p.exec(pythonPath, argv, { throwOnStdErr: true }))
+            .setup((p) => p.exec(pythonPath.fsPath, argv, { throwOnStdErr: true }))
             .returns(() => Promise.resolve({ stdout: executablePath }));
         const env = createPythonEnv(
             { path: pythonPath } as PythonEnvironment,
@@ -182,10 +183,10 @@ suite('PythonEnvironment', () => {
 
     test('getExecutablePath should throw if the result of exec() writes to stderr', async () => {
         const stderr = 'bar';
-        fileSystem.setup((f) => f.localFileExists(pythonPath)).returns(() => Promise.resolve(false));
+        fileSystem.setup((f) => f.localFileExists(pythonPath.fsPath)).returns(() => Promise.resolve(false));
         const argv = ['-c', 'import sys;print(sys.executable)'];
         processService
-            .setup((p) => p.exec(pythonPath, argv, { throwOnStdErr: true }))
+            .setup((p) => p.exec(pythonPath.fsPath, argv, { throwOnStdErr: true }))
             .returns(() => Promise.reject(new StdErrError(stderr)));
         const env = createPythonEnv(
             { path: pythonPath } as PythonEnvironment,
@@ -202,7 +203,7 @@ suite('PythonEnvironment', () => {
         const moduleName = 'foo';
         const argv = ['-c', `import ${moduleName}`];
         processService
-            .setup((p) => p.exec(pythonPath, argv, { throwOnStdErr: true }))
+            .setup((p) => p.exec(pythonPath.fsPath, argv, { throwOnStdErr: true }))
             .returns(() => Promise.resolve({ stdout: '' }))
             .verifiable(TypeMoq.Times.once());
         const env = createPythonEnv(
@@ -220,7 +221,7 @@ suite('PythonEnvironment', () => {
         const moduleName = 'foo';
         const argv = ['-c', `import ${moduleName}`];
         processService
-            .setup((p) => p.exec(pythonPath, argv, { throwOnStdErr: true }))
+            .setup((p) => p.exec(pythonPath.fsPath, argv, { throwOnStdErr: true }))
             .returns(() => Promise.resolve({ stdout: '' }));
         const env = createPythonEnv(
             { path: pythonPath } as PythonEnvironment,
@@ -237,7 +238,7 @@ suite('PythonEnvironment', () => {
         const moduleName = 'foo';
         const argv = ['-c', `import ${moduleName}`];
         processService
-            .setup((p) => p.exec(pythonPath, argv, { throwOnStdErr: true }))
+            .setup((p) => p.exec(pythonPath.fsPath, argv, { throwOnStdErr: true }))
             .returns(() => Promise.reject(new StdErrError('bar')));
         const env = createPythonEnv(
             { path: pythonPath } as PythonEnvironment,
@@ -271,7 +272,7 @@ suite('CondaEnvironment', () => {
     let processService: TypeMoq.IMock<IProcessService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     const args = ['-a', 'b', '-c'];
-    const pythonPath = 'path/to/python';
+    const pythonPath = Uri.file('path/to/python');
     const condaFile = 'path/to/conda';
 
     setup(() => {
@@ -354,7 +355,7 @@ suite('CondaEnvironment', () => {
 
 suite('WindowsStoreEnvironment', () => {
     let processService: TypeMoq.IMock<IProcessService>;
-    const pythonPath = 'foo';
+    const pythonPath = Uri.file('foo');
 
     setup(() => {
         processService = TypeMoq.Mock.ofType<IProcessService>(undefined, TypeMoq.MockBehavior.Strict);

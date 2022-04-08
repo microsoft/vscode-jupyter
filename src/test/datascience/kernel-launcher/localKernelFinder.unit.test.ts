@@ -8,7 +8,6 @@ import * as path from '../../../platform/vscode-path/path';
 import * as fsExtra from 'fs-extra';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when, verify } from 'ts-mockito';
-import { PathUtils } from '../../../platform/common/platform/pathUtils.node';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
 import { WorkspaceService } from '../../../platform/common/application/workspace';
@@ -34,7 +33,6 @@ import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/in
 import { OSType } from '../../../platform/common/utils/platform';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../../../platform/../kernels/types';
-import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { arePathsSame } from '../../../platform/common/platform/fileUtils.node';
 import { JupyterPaths } from '../../../kernels/raw/finder/jupyterPaths.node';
 import { LocalKernelFinder } from '../../../kernels/raw/finder/localKernelFinder.node';
@@ -43,6 +41,7 @@ import { LocalKnownPathKernelSpecFinder } from '../../../kernels/raw/finder/loca
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../kernels/raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { ILocalKernelFinder } from '../../../kernels/raw/types';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -52,8 +51,8 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
         let fs: IFileSystem;
         let extensionChecker: IPythonExtensionChecker;
         const disposables: IDisposable[] = [];
-        let globalSpecPath: string;
-        let tempDirForKernelSpecs: string;
+        let globalSpecPath: Uri | undefined;
+        let tempDirForKernelSpecs: Uri;
         const pathSeparator = getOSType() === OSType.Windows ? '\\' : '/';
         let jupyterPaths: JupyterPaths;
         type TestData = {
@@ -99,7 +98,6 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
             fs = mock(FileSystem);
             when(fs.deleteLocalFile(anything())).thenResolve();
             when(fs.localFileExists(anything())).thenResolve(true);
-            const pathUtils = new PathUtils(isWindows);
             const workspaceService = mock(WorkspaceService);
             const testWorkspaceFolder = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
 
@@ -121,7 +119,6 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
             when(memento.update(anything(), anything())).thenResolve();
             jupyterPaths = new JupyterPaths(
                 instance(platformService),
-                pathUtils,
                 instance(envVarsProvider),
                 disposables,
                 instance(memento),
@@ -145,8 +142,8 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
                     });
                 }
             });
-            globalSpecPath = (await jupyterPaths.getKernelSpecRootPath()) as unknown as string;
-            tempDirForKernelSpecs = (await jupyterPaths.getKernelSpecTempRegistrationFolder()) as unknown as string;
+            globalSpecPath = await jupyterPaths.getKernelSpecRootPath();
+            tempDirForKernelSpecs = await jupyterPaths.getKernelSpecTempRegistrationFolder();
             await Promise.all(
                 (testData.globalKernelSpecs || []).map(async (kernelSpec) => {
                     const jsonFile = [globalSpecPath, kernelSpec.name, 'kernel.json'].join(pathSeparator);
@@ -161,7 +158,7 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
                     : Promise.reject(`File "${f}" not found.`);
             });
             when(fs.searchLocal(anything(), anything(), true)).thenCall((_p, c: string, _d) => {
-                if (c === globalSpecPath) {
+                if (c === globalSpecPath?.fsPath) {
                     return (testData.globalKernelSpecs || []).map((kernelSpec) =>
                         [kernelSpec.name, 'kernel.json'].join(pathSeparator)
                     );
@@ -271,7 +268,7 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
             }
         };
         const python2Global: PythonEnvironment = {
-            path: isWindows ? 'C:/Python/Python2/scripts/python.exe' : '/usr/bin/python27',
+            path: Uri.file(isWindows ? 'C:/Python/Python2/scripts/python.exe' : '/usr/bin/python27'),
             sysPrefix: isWindows ? 'C:/Python/Python2' : '/usr',
             displayName: 'Python 2.7',
             envType: EnvironmentType.Global,
@@ -279,7 +276,7 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
             version: { major: 2, minor: 7, patch: 0, build: [], prerelease: [], raw: '2.7.0' }
         };
         const python36Global: PythonEnvironment = {
-            path: isWindows ? 'C:/Python/Python3.6/scripts/python.exe' : '/usr/bin/python36',
+            path: Uri.file(isWindows ? 'C:/Python/Python3.6/scripts/python.exe' : '/usr/bin/python36'),
             sysPrefix: isWindows ? 'C:/Python/Python3.6' : '/usr',
             displayName: 'Python 3.6',
             envType: EnvironmentType.Global,
@@ -287,7 +284,7 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
             version: { major: 3, minor: 6, patch: 0, build: [], prerelease: [], raw: '3.6.0' }
         };
         const python37Global: PythonEnvironment = {
-            path: isWindows ? 'C:/Python/Python3.7/scripts/python.exe' : '/usr/bin/python37',
+            path: Uri.file(isWindows ? 'C:/Python/Python3.7/scripts/python.exe' : '/usr/bin/python37'),
             sysPrefix: isWindows ? 'C:/Python/Python3.7' : '/usr',
             displayName: 'Python 3.7',
             envType: EnvironmentType.Global,
@@ -295,7 +292,9 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
             version: { major: 3, minor: 7, patch: 0, build: [], prerelease: [], raw: '3.6.0' }
         };
         const python39PyEnv_HelloWorld: PythonEnvironment = {
-            path: isWindows ? 'C:/pyenv/envs/temp/scripts/python.exe' : '/users/username/pyenv/envs/temp/python',
+            path: Uri.file(
+                isWindows ? 'C:/pyenv/envs/temp/scripts/python.exe' : '/users/username/pyenv/envs/temp/python'
+            ),
             sysPrefix: isWindows ? 'C:/pyenv/envs/temp' : '/users/username/pyenv/envs/temp',
             displayName: 'Temporary Python 3.9',
             envName: 'temp',
@@ -304,7 +303,9 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
             version: { major: 3, minor: 9, patch: 0, build: [], prerelease: [], raw: '3.9.0' }
         };
         const python38PyEnv_temp1: PythonEnvironment = {
-            path: isWindows ? 'C:/pyenv/envs/temp1/scripts/python.exe' : '/users/username/pyenv/envs/temp1/bin/python',
+            path: Uri.file(
+                isWindows ? 'C:/pyenv/envs/temp1/scripts/python.exe' : '/users/username/pyenv/envs/temp1/bin/python'
+            ),
             sysPrefix: isWindows ? 'C:/pyenv/envs/temp1' : '/users/username/pyenv/envs/temp1',
             displayName: 'Temporary Python 3.8 64bit Environment',
             envName: 'temp1',
@@ -313,7 +314,9 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
             version: { major: 3, minor: 8, patch: 0, build: [], prerelease: [], raw: '3.8.0' }
         };
         const python38PyEnv_temp2_duplicateNameAsTemp1: PythonEnvironment = {
-            path: isWindows ? 'C:/pyenv/envs/temp2/scripts/python.exe' : '/users/username/pyenv/envs/temp2/bin/python',
+            path: Uri.file(
+                isWindows ? 'C:/pyenv/envs/temp2/scripts/python.exe' : '/users/username/pyenv/envs/temp2/bin/python'
+            ),
             sysPrefix: isWindows ? 'C:/pyenv/envs/temp2' : '/users/username/pyenv/envs/temp2',
             displayName: 'Temporary Python 3.8 64bit Environment',
             envName: 'temp2',
@@ -322,7 +325,9 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
             version: { major: 3, minor: 8, patch: 0, build: [], prerelease: [], raw: '3.8.0' }
         };
         const python38PyEnv_temp3_duplicateNameAsTemp1: PythonEnvironment = {
-            path: isWindows ? 'C:/pyenv/envs/temp3/scripts/python.exe' : '/users/username/pyenv/envs/temp3/bin/python',
+            path: Uri.file(
+                isWindows ? 'C:/pyenv/envs/temp3/scripts/python.exe' : '/users/username/pyenv/envs/temp3/bin/python'
+            ),
             sysPrefix: isWindows ? 'C:/pyenv/envs/temp3' : '/users/username/pyenv/envs/temp3',
             displayName: 'Temporary Python 3.8 64bit Environment',
             envName: 'temp3',
@@ -335,7 +340,9 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
          * Except on unix the executable is not in a bin folder.
          */
         const python38PyEnv_temp4_duplicateNameAsTemp1ButNoBin: PythonEnvironment = {
-            path: isWindows ? 'C:/pyenv/envs/temp4/scripts/python.exe' : '/users/username/pyenv/envs/temp4/python',
+            path: Uri.file(
+                isWindows ? 'C:/pyenv/envs/temp4/scripts/python.exe' : '/users/username/pyenv/envs/temp4/python'
+            ),
             sysPrefix: isWindows ? 'C:/pyenv/envs/temp4' : '/users/username/pyenv/envs/temp4',
             displayName: 'Temporary Python 3.8 64bit Environment',
             envName: 'temp4',
@@ -345,7 +352,9 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
         };
         const duplicate1OfPython38PyEnv_temp1 = python38PyEnv_temp1;
         const python38VenvEnv: PythonEnvironment = {
-            path: isWindows ? 'C:/temp/venv/.venv/scripts/python.exe' : '/users/username/temp/.venv/bin/python',
+            path: Uri.file(
+                isWindows ? 'C:/temp/venv/.venv/scripts/python.exe' : '/users/username/temp/.venv/bin/python'
+            ),
             sysPrefix: isWindows ? 'C:/temp/venv/.venv' : '/users/username/temp/.venv',
             displayName: 'Virtual Env Python 3.8',
             envName: '.venv',
@@ -354,7 +363,7 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
             version: { major: 3, minor: 8, patch: 0, build: [], prerelease: [], raw: '3.8.0' }
         };
         const condaEnv1: PythonEnvironment = {
-            path: isWindows ? 'C:/conda/envs/env1/scripts/python.exe' : '/conda/envs/env1/bin/python',
+            path: Uri.file(isWindows ? 'C:/conda/envs/env1/scripts/python.exe' : '/conda/envs/env1/bin/python'),
             sysPrefix: isWindows ? 'C:/conda/envs/env1' : '/conda/envs/env1',
             envName: 'env1',
             displayName: 'Conda Env1 3.6',
@@ -375,13 +384,13 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
         const python2spec: KernelSpec.ISpecModel = {
             display_name: 'Python 2 on Disk',
             name: 'python2Custom',
-            argv: [python2Global.path, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+            argv: [python2Global.path.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
             language: 'python',
             resources: {}
         };
 
         const fullyQualifiedPythonKernelSpec: KernelSpec.ISpecModel = {
-            argv: [python38VenvEnv.path, '-m', 'ipykernel_launcher', '-f', '{connection_file}', 'moreargs'],
+            argv: [python38VenvEnv.path.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}', 'moreargs'],
             display_name: 'Custom .venv Kernel',
             language: 'python',
             name: 'fullyQualifiedPythonKernelSpec',
@@ -389,21 +398,21 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
         };
 
         const fullyQualifiedPythonKernelSpecForGlobalPython36: KernelSpec.ISpecModel = {
-            argv: [python36Global.path, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+            argv: [python36Global.path.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
             display_name: 'Custom Kernel for Global Python 36',
             language: 'python',
             name: 'fullyQualifiedPythonKernelSpecForGlobalPython36',
             resources: {}
         };
         const fullyQualifiedPythonKernelSpecForGlobalPython36WithCustomEnvVars: KernelSpec.ISpecModel = {
-            argv: [python36Global.path, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+            argv: [python36Global.path.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
             display_name: 'Custom Kernel for Global Python 36 with Custom Env Vars',
             language: 'python',
             name: 'fullyQualifiedPythonKernelSpecForGlobalPython36WithCustomEnvVars',
             resources: {}
         };
         const fullyQualifiedPythonKernelSpecWithEnv: KernelSpec.ISpecModel = {
-            argv: [python38VenvEnv.path, '-m', 'ipykernel_launcher', '-f', '{connection_file}', 'moreargs'],
+            argv: [python38VenvEnv.path.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}', 'moreargs'],
             display_name: 'Custom .venv Kernel with Env Vars',
             language: 'python',
             name: 'fullyQualifiedPythonKernelSpecWithEnv',
@@ -413,7 +422,7 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
             }
         };
         const kernelspecRegisteredByOlderVersionOfExtension: KernelSpec.ISpecModel = {
-            argv: [python38VenvEnv.path, '-m', 'ipykernel_launcher', '-f', '{connection_file}', 'moreargs'],
+            argv: [python38VenvEnv.path.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}', 'moreargs'],
             display_name: 'Kernelspec registered by older version of extension',
             language: 'python',
             // Most recent versions of extensions used a custom prefix in kernelnames.
@@ -424,7 +433,7 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
             }
         };
         const kernelspecRegisteredByVeryOldVersionOfExtension: KernelSpec.ISpecModel = {
-            argv: [python38VenvEnv.path, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+            argv: [python38VenvEnv.path.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
             display_name: 'Kernelspec registered by very old version of extension',
             language: 'python',
             // Initial versions of extensions used a GUID in kernelnames & contained the interpreter in metadata.
@@ -435,7 +444,7 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
                 FOO: 'Bar'
             },
             metadata: {
-                interpreter: { ...python38VenvEnv }
+                interpreter: { ...python38VenvEnv, path: python38VenvEnv.path.fsPath, envPath: undefined }
             }
         };
 
@@ -457,9 +466,9 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
                 expectedGlobalKernelSpecs.map(async (kernelSpec) => {
                     const kernelspecFile = [globalSpecPath, kernelSpec.name, 'kernel.json'].join(pathSeparator);
                     const interpreter = expectedInterpreters.find(
-                        (item) => kernelSpec.language === PYTHON_LANGUAGE && item.path === kernelSpec.argv[0]
+                        (item) => kernelSpec.language === PYTHON_LANGUAGE && item.path.fsPath === kernelSpec.argv[0]
                     );
-                    const spec = await loadKernelSpec(kernelspecFile, instance(fs));
+                    const spec = await loadKernelSpec(Uri.file(kernelspecFile), instance(fs));
                     if (spec) {
                         expectedKernelSpecs.push(<KernelConnectionMetadata>{
                             id: getKernelId(spec!, interpreter),
@@ -480,7 +489,7 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
                         kernelspec.name,
                         'kernel.json'
                     ].join(pathSeparator);
-                    const spec = await loadKernelSpec(kernelSpecFile, instance(fs), interpreter);
+                    const spec = await loadKernelSpec(Uri.file(kernelSpecFile), instance(fs), interpreter);
                     if (spec) {
                         expectedKernelSpecs.push(<KernelConnectionMetadata>{
                             id: getKernelId(spec!, interpreter),
@@ -575,9 +584,9 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
                 const duplicate = ids.get(kernel.id);
                 if (duplicate) {
                     throw new Error(
-                        `Duplicate kernel id found ${kernel.id} (${getDisplayPath(
+                        `Duplicate kernel id found ${kernel.id} (${getDisplayPathFromLocalFile(
                             kernel.kernelSpec.specFile
-                        )}), duplicate of ${duplicate.kernelSpec.display_name} (${getDisplayPath(
+                        )}), duplicate of ${duplicate.kernelSpec.display_name} (${getDisplayPathFromLocalFile(
                             duplicate.kernelSpec.specFile
                         )})`
                     );
@@ -585,7 +594,9 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
                 if (!kernel.kernelSpec.specFile) {
                     // All kernels must have a specFile defined.
                     throw new Error(
-                        `Kernelspec file not defined for ${kernel.id} (${getDisplayPath(kernel.kernelSpec.specFile)})`
+                        `Kernelspec file not defined for ${kernel.id} (${getDisplayPathFromLocalFile(
+                            kernel.kernelSpec.specFile
+                        )})`
                     );
                 }
                 ids.set(kernel.id, kernel);
@@ -726,8 +737,16 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
             // Verify we deleted the old kernelspecs.
             const globalKernelSpecDir = await jupyterPaths.getKernelSpecRootPath();
             const kernelSpecsToBeDeleted = [
-                path.join(globalKernelSpecDir!, kernelspecRegisteredByOlderVersionOfExtension.name, 'kernel.json'),
-                path.join(globalKernelSpecDir!, kernelspecRegisteredByVeryOldVersionOfExtension.name, 'kernel.json')
+                path.join(
+                    globalKernelSpecDir!.fsPath,
+                    kernelspecRegisteredByOlderVersionOfExtension.name,
+                    'kernel.json'
+                ),
+                path.join(
+                    globalKernelSpecDir!.fsPath,
+                    kernelspecRegisteredByVeryOldVersionOfExtension.name,
+                    'kernel.json'
+                )
             ];
 
             // Verify files were copied to some other location before being deleted.

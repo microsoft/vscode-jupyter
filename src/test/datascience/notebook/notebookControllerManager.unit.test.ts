@@ -3,6 +3,7 @@
 
 import { assert } from 'chai';
 import { when, instance, mock } from 'ts-mockito';
+import { Uri } from 'vscode';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers.node';
 import { IJupyterKernelSpec } from '../../../kernels/types';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
@@ -33,7 +34,7 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    path: 'path'
+                    path: Uri.file('path')
                 }
             });
 
@@ -47,7 +48,7 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    path: 'path',
+                    path: Uri.file('path'),
                     language: 'abc'
                 }
             });
@@ -62,10 +63,10 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    path: 'path'
+                    path: Uri.file('path')
                 },
                 interpreter: {
-                    path: 'pyPath',
+                    path: Uri.file('pyPath'),
                     sysPrefix: 'sysPrefix'
                 }
             });
@@ -79,10 +80,10 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    path: 'path'
+                    path: Uri.file('path')
                 },
                 interpreter: {
-                    path: 'pyPath',
+                    path: Uri.file('pyPath'),
                     sysPrefix: 'sysPrefix',
                     envType: EnvironmentType.Global
                 }
@@ -97,10 +98,10 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    path: 'path'
+                    path: Uri.file('path')
                 },
                 interpreter: {
-                    path: 'pyPath',
+                    path: Uri.file('pyPath'),
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     displayName: 'Something',
@@ -117,10 +118,10 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    path: 'path'
+                    path: Uri.file('path')
                 },
                 interpreter: {
-                    path: 'pyPath',
+                    path: Uri.file('pyPath'),
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     displayName: 'Something 64-bit',
@@ -137,10 +138,10 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    path: 'path'
+                    path: Uri.file('path')
                 },
                 interpreter: {
-                    path: 'pyPath',
+                    path: Uri.file('pyPath'),
                     sysPrefix: 'sysPrefix',
                     envName: '.env',
                     displayName: 'Something',
@@ -157,10 +158,10 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    path: 'path'
+                    path: Uri.file('path')
                 },
                 interpreter: {
-                    path: 'pyPath',
+                    path: Uri.file('pyPath'),
                     sysPrefix: 'sysPrefix',
                     envName: '.env',
                     displayName: 'Something 64-bit',
@@ -179,7 +180,7 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    path: 'path',
+                    path: Uri.file('path'),
                     language: 'python'
                 }
             });
@@ -194,11 +195,11 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    path: 'path',
+                    path: Uri.file('path'),
                     language: 'python'
                 },
                 interpreter: {
-                    path: 'pyPath',
+                    path: Uri.file('pyPath'),
                     sysPrefix: 'sysPrefix',
                     envName: '.env',
                     displayName: 'Something 64-bit'
@@ -214,11 +215,11 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    path: 'path',
+                    path: Uri.file('path'),
                     language: 'python'
                 },
                 interpreter: {
-                    path: 'pyPath',
+                    path: Uri.file('pyPath'),
                     sysPrefix: 'sysPrefix',
                     envName: '.env',
                     displayName: 'Something 64-bit',
@@ -235,11 +236,11 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    path: 'path',
+                    path: Uri.file('path'),
                     language: 'python'
                 },
                 interpreter: {
-                    path: 'pyPath',
+                    path: Uri.file('pyPath'),
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     version: undefined,
@@ -257,11 +258,11 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    path: 'path',
+                    path: Uri.file('path'),
                     language: 'python'
                 },
                 interpreter: {
-                    path: 'pyPath',
+                    path: Uri.file('pyPath'),
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     displayName: 'Something 64-bit',
@@ -278,11 +279,11 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    path: 'path',
+                    path: Uri.file('path'),
                     language: 'python'
                 },
                 interpreter: {
-                    path: 'pyPath',
+                    path: Uri.file('pyPath'),
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     displayName: 'Something 64-bit',
@@ -307,11 +308,11 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    path: 'path',
+                    path: Uri.file('path'),
                     language: 'python'
                 },
                 interpreter: {
-                    path: 'pyPath',
+                    path: Uri.file('pyPath'),
                     sysPrefix: 'sysPrefix',
                     envName: '.env',
                     displayName: 'Something 64-bit',
@@ -336,11 +337,11 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    path: 'path',
+                    path: Uri.file('path'),
                     language: 'python'
                 },
                 interpreter: {
-                    path: 'pyPath',
+                    path: Uri.file('pyPath'),
                     sysPrefix: 'sysPrefix',
                     envName: '.env',
                     displayName: 'Something 64-bit',
@@ -367,11 +368,11 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    path: 'path',
+                    path: Uri.file('path'),
                     language: 'python'
                 },
                 interpreter: {
-                    path: 'pyPath',
+                    path: Uri.file('pyPath'),
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     displayName: 'Something 64-bit'
@@ -387,11 +388,11 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    path: 'path',
+                    path: Uri.file('path'),
                     language: 'python'
                 },
                 interpreter: {
-                    path: 'pyPath',
+                    path: Uri.file('pyPath'),
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     displayName: 'Something 64-bit',
@@ -408,11 +409,11 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    path: 'path',
+                    path: Uri.file('path'),
                     language: 'python'
                 },
                 interpreter: {
-                    path: 'pyPath',
+                    path: Uri.file('pyPath'),
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     displayName: 'Something',
@@ -429,11 +430,11 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    path: 'path',
+                    path: Uri.file('path'),
                     language: 'python'
                 },
                 interpreter: {
-                    path: 'pyPath',
+                    path: Uri.file('pyPath'),
                     sysPrefix: 'sysPrefix',
                     envName: '',
                     displayName: 'Something 64-bit',

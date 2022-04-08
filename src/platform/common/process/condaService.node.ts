@@ -3,7 +3,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { SemVer } from 'semver';
-import { EventEmitter, Memento, RelativePattern, Uri, workspace } from 'vscode';
+import { EventEmitter, Memento, RelativePattern, workspace } from 'vscode';
 import { IPythonApiProvider } from '../../api/types';
 import { TraceOptions } from '../../logging/types';
 import { traceDecoratorVerbose, traceError, traceVerbose } from '../../logging';
@@ -11,12 +11,13 @@ import { IPlatformService } from '../platform/types';
 import { GLOBAL_MEMENTO, IDisposable, IDisposableRegistry, IMemento } from '../types';
 import { createDeferredFromPromise } from '../utils/async';
 import * as path from '../../../platform/vscode-path/path';
+import * as uriPath from '../../../platform/vscode-path/resources';
 import { swallowExceptions } from '../utils/decorators';
 import { IFileSystem } from '../platform/types.node';
 import { homePath } from '../platform/fs-paths.node';
 
 const CACHEKEY_FOR_CONDA_INFO = 'CONDA_INFORMATION_CACHE';
-const condaEnvironmentsFile = path.join(homePath, '.conda', 'environments.txt');
+const condaEnvironmentsFile = uriPath.joinPath(homePath, '.conda', 'environments.txt');
 @injectable()
 export class CondaService {
     private isAvailable: boolean | undefined;
@@ -133,7 +134,7 @@ export class CondaService {
     private async monitorCondaEnvFile() {
         this._previousCondaEnvs = await this.getCondaEnvsFromEnvFile();
         const watcher = workspace.createFileSystemWatcher(
-            new RelativePattern(Uri.file(path.dirname(condaEnvironmentsFile)), path.basename(condaEnvironmentsFile))
+            new RelativePattern(uriPath.dirname(condaEnvironmentsFile), uriPath.basename(condaEnvironmentsFile))
         );
         this.disposables.push(watcher);
 
@@ -152,10 +153,10 @@ export class CondaService {
 
     private async getCondaEnvsFromEnvFile(): Promise<string[]> {
         try {
-            const fileContents = await this.fs.readLocalFile(condaEnvironmentsFile);
+            const fileContents = await this.fs.readLocalFile(condaEnvironmentsFile.fsPath);
             return fileContents.split('\n').sort();
         } catch (ex) {
-            if (await this.fs.localFileExists(condaEnvironmentsFile)) {
+            if (await this.fs.localFileExists(condaEnvironmentsFile.fsPath)) {
                 traceError(`Failed to read file ${condaEnvironmentsFile}`, ex);
             }
             return [];

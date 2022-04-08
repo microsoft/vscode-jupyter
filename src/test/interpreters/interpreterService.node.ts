@@ -9,6 +9,7 @@ import { IPythonExtensionChecker } from '../../platform/api/types';
 import { Resource } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts.node';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
+import { fsPathToUri } from '../../platform/vscode-path/utils';
 
 let interpretersCache: Promise<PythonEnvironment[]> | undefined;
 @injectable()
@@ -22,7 +23,7 @@ export class InterpreterService implements IInterpreterService {
     public readonly didChangeInterpreter = new EventEmitter<void>();
     public readonly didChangeInterpreters = new EventEmitter<void>();
 
-    private readonly customInterpretersPerUri = new Map<string, string>();
+    private readonly customInterpretersPerUri = new Map<string, Uri>();
     constructor(@inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker) {}
 
     public async getInterpreters(_resource?: Uri): Promise<PythonEnvironment[]> {
@@ -41,17 +42,17 @@ export class InterpreterService implements IInterpreterService {
         this.validatePythonExtension();
         const pythonPath = this.customInterpretersPerUri.has(resource?.fsPath || '')
             ? this.customInterpretersPerUri.get(resource?.fsPath || '')!
-            : process.env.CI_PYTHON_PATH || 'python';
+            : fsPathToUri(process.env.CI_PYTHON_PATH || 'python');
         return getInterpreterInfo(pythonPath);
     }
 
-    public async getInterpreterDetails(pythonPath: string, _resource?: Uri): Promise<undefined | PythonEnvironment> {
+    public async getInterpreterDetails(pythonPath: Uri, _resource?: Uri): Promise<undefined | PythonEnvironment> {
         this.validatePythonExtension();
         return getInterpreterInfo(pythonPath);
     }
 
-    public updateInterpreter(resource: Resource, pythonPath: string): void {
-        if (pythonPath.trim().length > 0) {
+    public updateInterpreter(resource: Resource, pythonPath: Uri): void {
+        if (pythonPath.fsPath.trim().length > 0) {
             this.customInterpretersPerUri.set(resource?.fsPath || '', pythonPath);
         }
         this.didChangeInterpreter.fire();
@@ -66,12 +67,12 @@ export class InterpreterService implements IInterpreterService {
 
 async function getAllInterpreters(): Promise<PythonEnvironment[]> {
     const allInterpreters = await Promise.all([
-        getInterpreterInfo(process.env.CI_PYTHON_PATH as string),
-        getInterpreterInfo(process.env.CI_PYTHON_PATH2 as string),
-        getInterpreterInfo('python')
+        getInterpreterInfo(fsPathToUri(process.env.CI_PYTHON_PATH)),
+        getInterpreterInfo(fsPathToUri(process.env.CI_PYTHON_PATH2)),
+        getInterpreterInfo(fsPathToUri('python'))
     ]);
     const interpreters: PythonEnvironment[] = [];
-    const items = new Set<string>();
+    const items = new Set<Uri>();
     allInterpreters.forEach((item) => {
         if (item && !items.has(item.path)) {
             items.add(item.path);

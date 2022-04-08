@@ -19,9 +19,10 @@ import { Commands, MARKDOWN_LANGUAGE } from '../common/constants';
 import { traceError } from '../logging';
 import { IPlatformService } from '../common/platform/types';
 import { IFileSystem } from '../common/platform/types.node';
-import { IDataScienceCommandListener, IDisposableRegistry, IExtensionContext, IPathUtils } from '../common/types';
+import { IDataScienceCommandListener, IDisposableRegistry, IExtensionContext } from '../common/types';
 import { GitHubIssue } from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts.node';
+import { getUserHomeDir } from '../common/utils/platform.node';
 
 @injectable()
 export class GitHubIssueCommandListener implements IDataScienceCommandListener {
@@ -31,7 +32,6 @@ export class GitHubIssueCommandListener implements IDataScienceCommandListener {
     private diagnosticCollection: DiagnosticCollection;
     constructor(
         @inject(IFileSystem) private filesystem: IFileSystem,
-        @inject(IPathUtils) private pathUtils: IPathUtils,
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
@@ -177,8 +177,9 @@ ${'```'}
     }
 
     private async getRedactedLogs() {
-        const pathComponents = this.pathUtils.home.split(this.pathUtils.separator);
-        const username = pathComponents[pathComponents.length - 1];
+        const userHomePath = getUserHomeDir()?.path || '';
+        const pathComponents = userHomePath.split('/');
+        const username = pathComponents[pathComponents.length - 1]; // TODO: Need to verify this works. This is the same algorithm as untildify
         const re = RegExp(username, 'gi');
         return (await this.filesystem.readLocalFile(this.logfilePath)).replace(re, '[redacted]');
     }

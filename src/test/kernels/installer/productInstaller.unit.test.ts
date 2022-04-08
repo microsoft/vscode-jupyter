@@ -6,7 +6,7 @@
 
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { CancellationTokenSource } from 'vscode';
+import { CancellationTokenSource, Uri } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { InterpreterUri, IOutputChannel } from '../../../platform/common/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
@@ -36,7 +36,7 @@ suite('DataScienceInstaller install', async () => {
     let outputChannel: TypeMoq.IMock<IOutputChannel>;
     let tokenSource: CancellationTokenSource;
 
-    const interpreterPath = 'path/to/interpreter';
+    const interpreterPath = Uri.file('path/to/interpreter');
 
     setup(() => {
         tokenSource = new CancellationTokenSource();

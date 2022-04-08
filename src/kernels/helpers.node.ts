@@ -4,6 +4,7 @@
 'use strict';
 
 import * as path from '../platform/vscode-path/path';
+import * as uriPath from '../platform/vscode-path/resources';
 import * as url from 'url';
 import type { KernelSpec } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
@@ -35,7 +36,6 @@ import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IPythonExecutionFactory } from '../platform/common/process/types.node';
 import {
-    IPathUtils,
     IConfigurationService,
     Resource,
     IMemento,
@@ -80,6 +80,8 @@ import { IStatusProvider } from '../platform/progress/types';
 import { IRawNotebookProvider } from './raw/types';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { isCI } from '../platform/common/constants.node';
+import { uriToFsPath } from '../platform/vscode-path/utils';
+import { getOSType } from '../platform/common/utils/platform';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -228,7 +230,7 @@ function getPythonEnvironmentName(pythonEnv: PythonEnvironment) {
     // In such cases the envName is empty, but it has a path.
     let envName = pythonEnv.envName;
     if (pythonEnv.envPath && pythonEnv.envType === EnvironmentType.Conda && !pythonEnv.envName) {
-        envName = path.basename(pythonEnv.envPath);
+        envName = uriPath.basename(pythonEnv.envPath);
     }
     return envName;
 }
@@ -263,7 +265,7 @@ export function getNameOfKernelConnection(
         : kernelConnection.kernelSpec?.name;
 }
 
-export function getKernelPathFromKernelConnection(kernelConnection?: KernelConnectionMetadata): string | undefined {
+export function getKernelPathFromKernelConnection(kernelConnection?: KernelConnectionMetadata): Uri | undefined {
     if (!kernelConnection) {
         return;
     }
@@ -302,7 +304,6 @@ export function getRemoteKernelSessionInformation(
 
 export function getKernelConnectionPath(
     kernelConnection: KernelConnectionMetadata | undefined,
-    pathUtils: IPathUtils,
     workspaceService: IWorkspaceService
 ) {
     if (kernelConnection?.kind === 'connectToLiveKernel') {
@@ -311,9 +312,8 @@ export function getKernelConnectionPath(
     const kernelPath = getKernelPathFromKernelConnection(kernelConnection);
     // If we have just one workspace folder opened, then ensure to use relative paths
     // where possible (e.g. for virtual environments).
-    const cwd =
-        workspaceService.workspaceFolders?.length === 1 ? workspaceService.workspaceFolders[0].uri.fsPath : undefined;
-    return kernelPath ? pathUtils.getDisplayName(kernelPath, cwd) : '';
+    const folders = workspaceService.workspaceFolders ? workspaceService.workspaceFolders : [];
+    return kernelPath ? getDisplayPath(kernelPath, folders) : '';
 }
 
 export function getInterpreterFromKernelConnectionMetadata(
@@ -406,7 +406,7 @@ export function getInterpreterWorkspaceFolder(
     interpreter: PythonEnvironment,
     workspaceService: IWorkspaceService
 ): string | undefined {
-    const folder = workspaceService.getWorkspaceFolder(Uri.file(interpreter.path));
+    const folder = workspaceService.getWorkspaceFolder(interpreter.path);
     return folder?.uri.fsPath || workspaceService.rootPath;
 }
 /**
@@ -470,8 +470,13 @@ export function getKernelRegistrationInfo(
  */
 export function createInterpreterKernelSpec(
     interpreter?: PythonEnvironment,
-    rootKernelFilePath?: string
+    rootKernelFilePath?: Uri
 ): IJupyterKernelSpec {
+    const interpreterMetadata = interpreter
+        ? {
+              path: uriToFsPath(interpreter.path, true)
+          }
+        : {};
     // This creates a kernel spec for an interpreter. When launched, 'python' argument will map to using the interpreter
     // associated with the current resource for launching.
     const defaultSpec: KernelSpec.ISpecModel = {
@@ -479,7 +484,7 @@ export function createInterpreterKernelSpec(
         language: 'python',
         display_name: interpreter?.displayName || 'Python 3',
         metadata: {
-            interpreter
+            interpreter: interpreterMetadata
         },
         argv: ['python', '-m', 'ipykernel_launcher', '-f', connectionFilePlaceholder],
         env: {},
@@ -489,10 +494,15 @@ export function createInterpreterKernelSpec(
     // Generate spec file path if we know where kernel files will go
     const specFile =
         rootKernelFilePath && defaultSpec.name
-            ? path.join(rootKernelFilePath, defaultSpec.name, 'kernel.json')
+            ? uriPath.joinPath(rootKernelFilePath, defaultSpec.name, 'kernel.json')
             : undefined;
 
-    return new JupyterKernelSpec(defaultSpec, specFile, interpreter?.path, 'registeredByNewVersionOfExt');
+    return new JupyterKernelSpec(
+        defaultSpec,
+        specFile ? uriToFsPath(specFile, true) : undefined,
+        interpreter?.path,
+        'registeredByNewVersionOfExt'
+    );
 }
 
 export function areKernelConnectionsEqual(
@@ -573,9 +583,7 @@ export function findPreferredKernel(
     traceInfo(
         `Find preferred kernel for ${getDisplayPath(resource)} with metadata ${JSON.stringify(
             notebookMetadata || {}
-        )} & preferred interpreter ${getDisplayPath(
-            preferredInterpreter ? Uri.file(preferredInterpreter.path) : undefined
-        )}`
+        )} & preferred interpreter ${getDisplayPath(preferredInterpreter?.path)}`
     );
 
     if (kernels.length === 0) {
@@ -1207,7 +1215,7 @@ function compareAgainstKernelDisplayNameInNotebookMetadata(
         argv: [],
         display_name: notebookMetadata.kernelspec.display_name,
         name: notebookMetadata.kernelspec.name,
-        path: ''
+        path: Uri.file('')
     });
     if (metadataPointsToADefaultKernelSpec) {
         // If we're dealing with default kernelspec names, then special handling.
@@ -1356,8 +1364,10 @@ export async function sendTelemetryForPythonKernelExecutable(
         }
         const sysExecutable = concatMultilineString(output.text).trim().toLowerCase();
         const match = areInterpreterPathsSame(
-            kernelConnection.interpreter.path.toLowerCase(),
-            sysExecutable.toLowerCase()
+            kernelConnection.interpreter.path,
+            Uri.file(sysExecutable),
+            getOSType(),
+            true
         );
         sendTelemetryEvent(Telemetry.PythonKerneExecutableMatches, undefined, {
             match: match ? 'true' : 'false',
@@ -1382,7 +1392,12 @@ export async function sendTelemetryForPythonKernelExecutable(
                     throwOnStdErr: false
                 });
                 if (execOutput.stdout.trim().length > 0) {
-                    const match = areInterpreterPathsSame(execOutput.stdout.trim().toLowerCase(), sysExecutable);
+                    const match = areInterpreterPathsSame(
+                        Uri.file(execOutput.stdout.trim().toLowerCase()),
+                        Uri.file(sysExecutable),
+                        getOSType(),
+                        true
+                    );
                     sendTelemetryEvent(Telemetry.PythonKerneExecutableMatches, undefined, {
                         match: match ? 'true' : 'false',
                         kernelConnectionType: kernelConnection.kind
@@ -1392,8 +1407,6 @@ export async function sendTelemetryForPythonKernelExecutable(
                         traceError(
                             `Interpreter started by kernel does not match expectation, expected ${getDisplayPath(
                                 kernelConnection.interpreter?.path
-                                    ? Uri.file(kernelConnection.interpreter.path)
-                                    : undefined
                             )}, got ${getDisplayPath(Uri.file(sysExecutable))}`
                         );
                     }

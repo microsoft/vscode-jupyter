@@ -176,7 +176,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             if (activeInterpreter) {
                 const displayName = activeInterpreter.displayName
                     ? activeInterpreter.displayName
-                    : activeInterpreter.path;
+                    : activeInterpreter.path.fsPath;
                 throw new Error(
                     DataScience.jupyterNotSupportedBecauseOfEnvironment().format(displayName, e.toString())
                 );

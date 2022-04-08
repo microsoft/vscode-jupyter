@@ -29,7 +29,7 @@ import {
     waitForKernelToGetAutoSelected,
     workAroundVSCodeNotebookStartPages,
     waitForTextOutput
-} from './helper';
+} from './helper.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi.node';
 import { NotebookCellLanguageService } from '../../../intellisense/cellLanguageService.node';
 import { INotebookEditorProvider } from '../../../notebooks/types';

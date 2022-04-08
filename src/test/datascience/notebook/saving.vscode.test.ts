@@ -29,7 +29,7 @@ import {
     waitForExecutionCompletedSuccessfully,
     waitForExecutionCompletedWithErrors,
     waitForKernelToGetAutoSelected
-} from './helper';
+} from './helper.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {

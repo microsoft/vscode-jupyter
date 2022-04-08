@@ -8,5 +8,5 @@ export interface IInterpreterService {
     refreshInterpreters(): Promise<void>;
     getInterpreters(resource?: Uri): Promise<PythonEnvironment[]>;
     getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined>;
-    getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<undefined | PythonEnvironment>;
+    getInterpreterDetails(pythonPath: Uri, resource?: Uri): Promise<undefined | PythonEnvironment>;
 }

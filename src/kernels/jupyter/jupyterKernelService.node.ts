@@ -7,7 +7,7 @@ import type { KernelSpec } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import * as path from '../../platform/vscode-path/path';
 import * as uriPath from '../../platform/vscode-path/resources';
-import { CancellationToken, Uri } from 'vscode';
+import { CancellationToken } from 'vscode';
 import { Cancellation } from '../../platform/common/cancellation.node';
 import '../../platform/common/extensions';
 import {
@@ -129,7 +129,7 @@ export class JupyterKernelService {
         ) {
             traceInfoIfCI(
                 `updateKernelEnvironment ${kernel.interpreter.displayName}, ${getDisplayPath(
-                    Uri.file(kernel.interpreter.path)
+                    kernel.interpreter.path
                 )} for ${kernel.id}`
             );
             await this.updateKernelEnvironment(resource, kernel.interpreter, kernel.kernelSpec, specFile, cancelToken);
@@ -271,11 +271,9 @@ export class JupyterKernelService {
                     traceInfo(`Spec argv[0], not updated as it is using conda.`);
                 } else {
                     traceInfo(
-                        `Spec argv[0] updated from '${specModel.argv[0]}' to '${getDisplayPath(
-                            Uri.file(interpreter.path)
-                        )}'`
+                        `Spec argv[0] updated from '${specModel.argv[0]}' to '${getDisplayPath(interpreter.path)}'`
                     );
-                    specModel.argv[0] = interpreter.path;
+                    specModel.argv[0] = interpreter.path.fsPath;
                 }
                 // Get the activated environment variables (as a work around for `conda run` and similar).
                 // This ensures the code runs within the context of an activated environment.
@@ -308,7 +306,7 @@ export class JupyterKernelService {
                 // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
                 // Also applies to `!java` where java could be an executable in the conda bin directory.
                 if (specModel.env) {
-                    this.envVarsService.prependPath(specModel.env as {}, path.dirname(interpreter.path));
+                    this.envVarsService.prependPath(specModel.env as {}, path.dirname(interpreter.path.fsPath));
                 }
 
                 // Ensure global site_packages are not in the path.
@@ -316,7 +314,7 @@ export class JupyterKernelService {
                 // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
                 // https://docs.python.org/3/library/site.html#site.ENABLE_USER_SITE
                 if (specModel.env && Object.keys(specModel.env).length > 0 && hasActivationCommands) {
-                    traceInfo(`Adding env Variable PYTHONNOUSERSITE to ${getDisplayPath(Uri.file(interpreter.path))}`);
+                    traceInfo(`Adding env Variable PYTHONNOUSERSITE to ${getDisplayPath(interpreter.path)}`);
                     specModel.env.PYTHONNOUSERSITE = 'True';
                 } else {
                     // We don't want to inherit any such env variables from Jupyter server or the like.

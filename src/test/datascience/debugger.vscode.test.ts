@@ -18,7 +18,7 @@ import {
     waitForStoppedEvent,
     runCell,
     getDebugSessionAndAdapter
-} from './notebook/helper';
+} from './notebook/helper.node';
 import { ITestVariableViewProvider } from './variableView/variableViewTestInterfaces';
 import { traceInfo } from '../../platform/logging';
 import { IDebuggingManager } from '../../platform/debugger/types';

@@ -20,6 +20,7 @@ import { IFileSystem } from './platform/types.node';
 
 import { ICell, IConfigurationService, Resource } from './types';
 import { DataScience } from './utils/localize';
+import { fsPathToUri, uriToFsPath } from '../vscode-path/utils';
 
 export async function calculateWorkingDirectory(
     configService: IConfigurationService,
@@ -194,10 +195,11 @@ export function generateNewNotebookUri(
     }
 }
 
-export async function tryGetRealPath(expectedPath: string): Promise<string | undefined> {
+export async function tryGetRealPath(expectedPath: Uri): Promise<Uri | undefined> {
     try {
         // Real path throws if the expected path is not actually created yet.
-        return await fsExtra.realpath(expectedPath);
+        const realPath = await fsExtra.realpath(uriToFsPath(expectedPath, true));
+        return fsPathToUri(realPath);
     } catch {
         // So if that happens, just return the original path.
         return expectedPath;

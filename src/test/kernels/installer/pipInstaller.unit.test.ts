@@ -10,6 +10,7 @@ import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platf
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { PipInstaller } from '../../../kernels/installer/pipInstaller.node';
+import { Uri } from 'vscode';
 
 suite('Pip installer', async () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
@@ -55,7 +56,7 @@ suite('Pip installer', async () => {
         const pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Global,
-            path: 'foobar',
+            path: Uri.file('foobar'),
             sysPrefix: '0'
         };
 
@@ -74,7 +75,7 @@ suite('Pip installer', async () => {
         const pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Global,
-            path: 'foobar',
+            path: Uri.file('foobar'),
             sysPrefix: '0'
         };
 
@@ -93,7 +94,7 @@ suite('Pip installer', async () => {
         const pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Global,
-            path: 'foobar',
+            path: Uri.file('foobar'),
             sysPrefix: '0'
         };
         pythonExecutionFactory

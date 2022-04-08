@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import { Memento } from 'vscode';
+import { Memento, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../../platform/activation/types';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
 import { IMemento, GLOBAL_MEMENTO, IDisposableRegistry } from '../../../platform/common/types';
@@ -21,7 +21,7 @@ const keySelected = 'INTERPRETER_PATH_WAS_SELECTED_FOR_JUPYTER_SERVER';
  */
 @injectable()
 export class JupyterInterpreterStateStore {
-    private _interpreterPath?: string;
+    private _interpreterPath?: Uri;
     constructor(@inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento) {}
 
     /**
@@ -33,10 +33,10 @@ export class JupyterInterpreterStateStore {
     public get interpreterSetAtleastOnce(): boolean {
         return !!this.selectedPythonPath || this.memento.get<boolean>(keySelected, false);
     }
-    public get selectedPythonPath(): string | undefined {
-        return this._interpreterPath || this.memento.get<string | undefined>(key, undefined);
+    public get selectedPythonPath(): Uri | undefined {
+        return this._interpreterPath || this.memento.get<Uri | undefined>(key, undefined);
     }
-    public updateSelectedPythonPath(value: string | undefined) {
+    public updateSelectedPythonPath(value: Uri | undefined) {
         this._interpreterPath = value;
         this.memento.update(key, value).then(noop, noop);
         this.memento.update(keySelected, true).then(noop, noop);

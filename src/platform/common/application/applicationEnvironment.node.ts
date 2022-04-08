@@ -6,15 +6,17 @@
 import { inject, injectable } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
 import { IPlatformService } from '../platform/types';
-import { IExtensionContext, IPathUtils } from '../types';
+import { IExtensionContext } from '../types';
 import { OSType } from '../utils/platform';
+import { getUserHomeDir } from '../utils/platform.node';
 import { BaseApplicationEnvironment } from './applicationEnvironment.base';
 
 @injectable()
 export class ApplicationEnvironment extends BaseApplicationEnvironment {
+    private homeDir = getUserHomeDir()?.fsPath || '';
+
     constructor(
         @inject(IPlatformService) private readonly platform: IPlatformService,
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(IExtensionContext) private readonly extensionContext: IExtensionContext
     ) {
         super();
@@ -25,7 +27,7 @@ export class ApplicationEnvironment extends BaseApplicationEnvironment {
         switch (this.platform.osType) {
             case OSType.OSX:
                 return path.join(
-                    this.pathUtils.home,
+                    this.homeDir,
                     'Library',
                     'Application Support',
                     vscodeFolderName,
@@ -33,7 +35,7 @@ export class ApplicationEnvironment extends BaseApplicationEnvironment {
                     'settings.json'
                 );
             case OSType.Linux:
-                return path.join(this.pathUtils.home, '.config', vscodeFolderName, 'User', 'settings.json');
+                return path.join(this.homeDir, '.config', vscodeFolderName, 'User', 'settings.json');
             case OSType.Windows:
                 return process.env.APPDATA
                     ? path.join(process.env.APPDATA, vscodeFolderName, 'User', 'settings.json')

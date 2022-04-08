@@ -661,7 +661,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 condaExec,
                 {
                     name: interpreter.envName || '',
-                    path: interpreter.path || '',
+                    path: interpreter.path.fsPath || '',
                     version: condaVersion
                 },
                 interpreter,
@@ -692,7 +692,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             return;
         }
         traceVerbose(`Getting activation commands for ${interpreter.path}`);
-        const key = ENVIRONMENT_ACTIVATION_COMMAND_CACHE_KEY_PREFIX.format(interpreter.path);
+        const key = ENVIRONMENT_ACTIVATION_COMMAND_CACHE_KEY_PREFIX.format(interpreter.path.fsPath);
         const cachedData = this.memento.get<string[]>(key, []);
         if (cachedData && cachedData.length > 0) {
             traceVerbose(`Getting activation commands for ${interpreter.path} are cached.`);

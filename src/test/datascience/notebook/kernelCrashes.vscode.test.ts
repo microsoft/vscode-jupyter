@@ -30,7 +30,7 @@ import {
     defaultNotebookTestTimeout,
     waitForExecutionCompletedWithoutChangesToExecutionCount,
     getCellOutputs
-} from './helper';
+} from './helper.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import * as dedent from 'dedent';
 import { IKernelProvider } from '../../../platform/../kernels/types';
@@ -371,7 +371,7 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
                 'src/test/datascience/notebook/kernelFailures/overrideBuiltinModule/random.py'
             );
             const expectedErrorMessage = `${DataScience.fileSeemsToBeInterferingWithKernelStartup().format(
-                getDisplayPath(randomFile, workspace.workspaceFolders || [])
+                getDisplayPath(Uri.file(randomFile), workspace.workspaceFolders || [])
             )} \n${DataScience.viewJupyterLogForFurtherInfo()}`;
 
             const prompt = await hijackPrompt(

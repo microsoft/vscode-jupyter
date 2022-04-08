@@ -18,7 +18,7 @@ import {
     insertCodeCell,
     runAllCellsInActiveNotebook,
     waitForExecutionCompletedSuccessfully
-} from '../notebook/helper';
+} from '../notebook/helper.node';
 
 suite('VSCode Notebook PlotViewer integration - VSCode Notebook', function () {
     let api: IExtensionTestApi;

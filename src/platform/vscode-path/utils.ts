@@ -1,6 +1,6 @@
 // Miscellaneous functions from other spots in VS code
 
-import { Uri as URI } from 'vscode';
+import { Uri, Uri as URI } from 'vscode';
 import { CharCode } from './charCode';
 import { isWindows } from './platform';
 
@@ -32,6 +32,10 @@ export function uriToFsPath(uri: URI, keepDriveLetterCasing: boolean): string {
         value = value.replace(/\//g, '\\');
     }
     return value;
+}
+
+export function fsPathToUri(path: string | undefined) {
+    return path ? Uri.file(path) : undefined;
 }
 
 export namespace Schemas {

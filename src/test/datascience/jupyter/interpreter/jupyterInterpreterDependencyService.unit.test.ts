@@ -18,6 +18,7 @@ import {
 import { JupyterInterpreterDependencyService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService.node';
 import { JupyterInterpreterDependencyResponse } from '../../../../kernels/jupyter/types';
 import { IJupyterCommand, IJupyterCommandFactory } from '../../../../kernels/jupyter/types.node';
+import { Uri } from 'vscode';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 
@@ -28,7 +29,7 @@ suite('DataScience - Jupyter Interpreter Configuration', () => {
     let commandFactory: IJupyterCommandFactory;
     let command: IJupyterCommand;
     const pythonInterpreter: PythonEnvironment = {
-        path: '',
+        path: Uri.file(''),
         sysPrefix: '',
         sysVersion: ''
     };

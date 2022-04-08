@@ -35,7 +35,6 @@ import { FileDownloader } from './net/fileDownloader.node';
 import { HttpClient } from './net/httpClient.node';
 import { PersistentStateFactory } from './persistentState';
 import { IS_WINDOWS } from './platform/constants.node';
-import { PathUtils } from './platform/pathUtils.node';
 import { ProcessLogger } from './process/logger.node';
 import { IProcessLogger } from './process/types.node';
 import {
@@ -44,7 +43,6 @@ import {
     ICryptoUtils,
     IExtensions,
     IFeatureDeprecationManager,
-    IPathUtils,
     IPersistentStateFactory,
     IsWindows
 } from './types';
@@ -63,7 +61,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
     serviceManager.addSingleton<IExtensions>(IExtensions, Extensions);
     serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
-    serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
     serviceManager.addSingleton<IVSCodeNotebook>(IVSCodeNotebook, VSCodeNotebook);
     serviceManager.addSingleton<IClipboard>(IClipboard, ClipboardService);
     serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);

@@ -88,7 +88,7 @@ suite('Module Installer - Poetry', () => {
     test('Is not supported when there is no workspace', async () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Poetry,
-            path: 'foobar',
+            path: Uri.file('foobar'),
             sysPrefix: '0'
         };
 
@@ -101,7 +101,7 @@ suite('Module Installer - Poetry', () => {
     test('Get Executable info', async () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Poetry,
-            path: 'foobar',
+            path: Uri.file('foobar'),
             sysPrefix: '0'
         };
         const settings = mock(JupyterSettings);
@@ -118,7 +118,7 @@ suite('Module Installer - Poetry', () => {
         const settings = mock(JupyterSettings);
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Poetry,
-            path: path.join(project1, '.venv', 'scripts', 'python.exe'),
+            path: Uri.file(path.join(project1, '.venv', 'scripts', 'python.exe')),
             sysPrefix: '0'
         };
 
@@ -136,7 +136,7 @@ suite('Module Installer - Poetry', () => {
         const settings = mock(JupyterSettings);
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Poetry,
-            path: 'foobar',
+            path: Uri.file('foobar'),
             sysPrefix: '0'
         };
 
@@ -154,7 +154,7 @@ suite('Module Installer - Poetry', () => {
         const settings = mock(JupyterSettings);
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Conda,
-            path: 'foobar',
+            path: Uri.file('foobar'),
             sysPrefix: '0'
         };
 

@@ -158,7 +158,7 @@ suite('Poetry binary is located correctly', async () => {
     });
 
     test('When poetry is not available on PATH, try using the default poetry location if valid', async () => {
-        const home = platformApisNode.getUserHomeDir();
+        const home = platformApisNode.getUserHomeDir()?.fsPath;
         if (!home) {
             assert(true);
             return;

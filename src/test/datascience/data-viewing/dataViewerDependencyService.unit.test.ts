@@ -17,6 +17,7 @@ import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { ProductInstaller } from '../../../kernels/installer/productInstaller.node';
 import { IInstaller, Product } from '../../../kernels/installer/types';
 import { DataViewerDependencyService } from '../../../webviews/extension-side/dataviewer/dataViewerDependencyService.node';
+import { Uri } from 'vscode';
 
 suite('DataScience - DataViewerDependencyService', () => {
     let dependencyService: DataViewerDependencyService;
@@ -29,7 +30,7 @@ suite('DataScience - DataViewerDependencyService', () => {
     setup(async () => {
         interpreter = {
             displayName: '',
-            path: path.join('users', 'python', 'bin', 'python.exe'),
+            path: Uri.file(path.join('users', 'python', 'bin', 'python.exe')),
             sysPrefix: '',
             sysVersion: '',
             version: new SemVer('3.3.3')

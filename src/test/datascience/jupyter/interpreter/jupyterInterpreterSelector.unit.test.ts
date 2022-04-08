@@ -8,11 +8,10 @@ import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { ApplicationShell } from '../../../../platform/common/application/applicationShell';
 import { IApplicationShell, IWorkspaceService } from '../../../../platform/common/application/types';
 import { WorkspaceService } from '../../../../platform/common/application/workspace';
-import { PathUtils } from '../../../../platform/common/platform/pathUtils.node';
-import { IPathUtils } from '../../../../platform/common/types';
 import { IInterpreterSelector } from '../../../../platform/interpreter/configuration/types';
 import { JupyterInterpreterSelector } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterSelector.node';
 import { JupyterInterpreterStateStore } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterStateStore.node';
+import { Uri } from 'vscode';
 
 suite('DataScience - Jupyter Interpreter Picker', () => {
     let picker: JupyterInterpreterSelector;
@@ -20,21 +19,18 @@ suite('DataScience - Jupyter Interpreter Picker', () => {
     let appShell: IApplicationShell;
     let interpreterSelectionState: JupyterInterpreterStateStore;
     let workspace: IWorkspaceService;
-    let pathUtils: IPathUtils;
 
     setup(() => {
         interpreterSelector = mock<IInterpreterSelector>();
         interpreterSelectionState = mock(JupyterInterpreterStateStore);
         appShell = mock(ApplicationShell);
         workspace = mock(WorkspaceService);
-        pathUtils = mock(PathUtils);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         picker = new JupyterInterpreterSelector(
             instance(interpreterSelector),
             instance(appShell),
             instance(interpreterSelectionState),
-            instance(workspace),
-            instance(pathUtils)
+            instance(workspace)
         );
     });
 
@@ -66,8 +62,7 @@ suite('DataScience - Jupyter Interpreter Picker', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const interpreters = ['something'] as any[];
         const displayPath = 'Display Path';
-        when(interpreterSelectionState.selectedPythonPath).thenReturn('jupyter.exe');
-        when(pathUtils.getDisplayName('jupyter.exe', anything())).thenReturn(displayPath);
+        when(interpreterSelectionState.selectedPythonPath).thenReturn(Uri.file('jupyter.exe'));
         when(interpreterSelector.getSuggestions(undefined)).thenResolve(interpreters);
         when(appShell.showQuickPick(anything(), anything())).thenResolve();
 

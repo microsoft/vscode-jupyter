@@ -28,7 +28,7 @@ import {
     TEST_TIMEOUT
 } from './constants.node';
 import { noop } from './core';
-import { stopJupyterServer } from './datascience/notebook/helper';
+import { stopJupyterServer } from './datascience/notebook/helper.node';
 import { initialize } from './initialize.node';
 
 type SetupOptions = Mocha.MochaOptions & {

@@ -10,7 +10,6 @@ import * as fsExtra from 'fs-extra';
 import * as sinon from 'sinon';
 import { Subject } from 'rxjs/Subject';
 import { anything, capture, deepEqual, instance, mock, when } from 'ts-mockito';
-import { PathUtils } from '../../../../platform/common/platform/pathUtils.node';
 import { PythonExecutionFactory } from '../../../../platform/common/process/pythonExecutionFactory.node';
 import {
     IPythonDaemonExecutionService,
@@ -33,6 +32,7 @@ import { JupyterInterpreterSubCommandExecutionService } from '../../../../kernel
 import { JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths.node';
 import { JupyterDaemonModule } from '../../../../platform/common/constants';
 import { JupyterServerInfo } from '../../../../kernels/jupyter/types';
+import { Uri } from 'vscode';
 use(chaiPromise);
 
 /* eslint-disable  */
@@ -63,7 +63,6 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (instance(execService) as any).then = undefined;
         const output = new MockOutputChannel('');
-        const pathUtils = mock(PathUtils);
         notebookStartResult = {
             dispose: noop,
             proc: undefined,
@@ -71,7 +70,7 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
         };
         const jupyterPaths = mock<JupyterPaths>();
         when(jupyterPaths.getKernelSpecTempRegistrationFolder()).thenResolve(
-            path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'temp', 'jupyter', 'kernels')
+            Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'temp', 'jupyter', 'kernels'))
         );
         const envActivationService = mock<IEnvironmentActivationService>();
         when(envActivationService.getActivatedEnvironmentVariables(anything(), anything())).thenResolve();
@@ -81,7 +80,6 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
             instance(jupyterDependencyService),
             instance(execFactory),
             output,
-            instance(pathUtils),
             instance(jupyterPaths),
             instance(envActivationService)
         );
@@ -239,7 +237,10 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
                 undefined
             );
 
-            assert.equal(reason, DataScience.jupyterKernelSpecModuleNotFound().format(selectedJupyterInterpreter.path));
+            assert.equal(
+                reason,
+                DataScience.jupyterKernelSpecModuleNotFound().format(selectedJupyterInterpreter.path.fsPath)
+            );
         });
         test('Can start jupyer notebook', async () => {
             const output = await jupyterInterpreterExecutionService.startNotebook([], {});

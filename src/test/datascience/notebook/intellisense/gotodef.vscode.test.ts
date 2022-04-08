@@ -16,7 +16,7 @@ import {
     prewarmNotebooks,
     createEmptyPythonNotebook,
     defaultNotebookTestTimeout
-} from '../helper';
+} from '../helper.node';
 import { setIntellisenseTimeout } from '../../../../intellisense/pythonKernelCompletionProvider.node';
 import { Settings } from '../../../../platform/common/constants';
 

@@ -44,8 +44,7 @@ import {
     IDisplayOptions,
     IDisposable,
     IDisposableRegistry,
-    IExtensionContext,
-    IPathUtils
+    IExtensionContext
 } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { DataScience, Common } from '../../platform/common/utils/localize';
@@ -145,7 +144,6 @@ export class VSCodeNotebookController implements Disposable {
         private readonly kernelProvider: IKernelProvider,
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
         private readonly context: IExtensionContext,
-        private readonly pathUtils: IPathUtils,
         disposableRegistry: IDisposableRegistry,
         private readonly languageService: NotebookCellLanguageService,
         private readonly workspace: IWorkspaceService,
@@ -173,7 +171,7 @@ export class VSCodeNotebookController implements Disposable {
 
         // Fill in extended info for our controller
         this.controller.interruptHandler = this.handleInterrupt.bind(this);
-        this.controller.description = getKernelConnectionPath(kernelConnection, this.pathUtils, this.workspace);
+        this.controller.description = getKernelConnectionPath(kernelConnection, this.workspace);
         this.controller.detail =
             kernelConnection.kind === 'connectToLiveKernel' ? getRemoteKernelSessionInformation(kernelConnection) : '';
         this.controller.kind = getKernelConnectionCategory(kernelConnection);

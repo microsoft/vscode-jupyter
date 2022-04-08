@@ -7,7 +7,7 @@ import { clearPendingChainedUpdatesForTests } from '../notebooks/execution/noteb
 import { clearPendingTimers, IExtensionTestApi, PYTHON_PATH, setPythonPathInWorkspaceRoot } from './common.node';
 import { IS_SMOKE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from './constants.node';
 import { sleep } from './core';
-import { startJupyterServer } from './datascience/notebook/helper';
+import { startJupyterServer } from './datascience/notebook/helper.node';
 import { PythonExtension, setTestExecution } from '../platform/common/constants';
 
 export * from './constants.node';

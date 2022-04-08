@@ -16,7 +16,7 @@ import {
     insertCodeCell,
     createEmptyPythonNotebook,
     workAroundVSCodeNotebookStartPages
-} from './helper';
+} from './helper.node';
 import { NotebookDocument, Range } from 'vscode';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { NotebookCellBangInstallDiagnosticsProvider } from '../../../intellisense/diagnosticsProvider.node';

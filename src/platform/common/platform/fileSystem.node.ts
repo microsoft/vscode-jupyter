@@ -7,8 +7,9 @@ import * as vscode from 'vscode';
 import { traceError } from '../../logging';
 import { createDirNotEmptyError, isFileNotFoundError } from './errors.node';
 import { convertFileType, convertStat, getHashString } from './fileSystemUtils.node';
-import { FileSystemPathUtils } from './fs-paths.node';
-import { IFileSystemPathUtils, TemporaryFile } from './types';
+import { arePathsSame } from './fileUtils.node';
+import { getDisplayPathFromLocalFile } from './fs-paths.node';
+import { TemporaryFile } from './types';
 import { FileType, IFileSystem } from './types.node';
 
 const ENCODING = 'utf8';
@@ -20,10 +21,8 @@ const ENCODING = 'utf8';
 export class FileSystem implements IFileSystem {
     protected vscfs: vscode.FileSystem;
     private globFiles: (pat: string, options?: { cwd: string; dot?: boolean }) => Promise<string[]>;
-    private fsPathUtils: IFileSystemPathUtils;
     constructor() {
         this.globFiles = promisify(glob);
-        this.fsPathUtils = FileSystemPathUtils.withDefaults();
         this.vscfs = vscode.workspace.fs;
     }
 
@@ -32,7 +31,7 @@ export class FileSystem implements IFileSystem {
     }
 
     public areLocalPathsSame(path1: string, path2: string): boolean {
-        return this.fsPathUtils.arePathsSame(path1, path2);
+        return arePathsSame(path1, path2);
     }
 
     public async createLocalDirectory(path: string): Promise<void> {
@@ -98,7 +97,7 @@ export class FileSystem implements IFileSystem {
     }
 
     public getDisplayName(filename: string, cwd?: string): string {
-        return this.fsPathUtils.getDisplayName(filename, cwd);
+        return getDisplayPathFromLocalFile(filename, cwd);
     }
 
     public async getFileHash(filename: string): Promise<string> {

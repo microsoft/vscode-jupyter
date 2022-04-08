@@ -1,6 +1,7 @@
 import * as path from '../../platform/vscode-path/path';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../platform/common/utils/platform.node';
 import { arePathsSame, isParentPath, pathExists } from '../../platform/common/platform/fileUtils.node';
+import { Uri } from 'vscode';
 
 export function getPyenvDir(): string {
     // Check if the pyenv environment variables exist: PYENV on Windows, PYENV_ROOT on Unix.
@@ -12,9 +13,11 @@ export function getPyenvDir(): string {
     let pyenvDir = getEnvironmentVariable('PYENV_ROOT') ?? getEnvironmentVariable('PYENV');
 
     if (!pyenvDir) {
-        const homeDir = getUserHomeDir() || '';
+        const homeDir = getUserHomeDir() || Uri.file('');
         pyenvDir =
-            getOSType() === OSType.Windows ? path.join(homeDir, '.pyenv', 'pyenv-win') : path.join(homeDir, '.pyenv');
+            getOSType() === OSType.Windows
+                ? path.join(homeDir.fsPath, '.pyenv', 'pyenv-win')
+                : path.join(homeDir.fsPath, '.pyenv');
     }
 
     return pyenvDir;

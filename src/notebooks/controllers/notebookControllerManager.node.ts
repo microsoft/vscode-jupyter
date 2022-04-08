@@ -22,7 +22,6 @@ import {
     IExtensions,
     IConfigurationService,
     IExtensionContext,
-    IPathUtils,
     IBrowserService,
     Resource
 } from '../../platform/common/types';
@@ -130,7 +129,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(PreferredRemoteKernelIdProvider)
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
         @inject(IRemoteKernelFinder) private readonly remoteKernelFinder: IRemoteKernelFinder,
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(NotebookIPyWidgetCoordinator) private readonly widgetCoordinator: NotebookIPyWidgetCoordinator,
         @inject(NotebookCellLanguageService) private readonly languageService: NotebookCellLanguageService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
@@ -762,7 +760,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         this.kernelProvider,
                         this.preferredRemoteKernelIdProvider,
                         this.context,
-                        this.pathUtils,
                         this.disposables,
                         this.languageService,
                         this.workspace,

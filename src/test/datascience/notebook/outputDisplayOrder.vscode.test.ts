@@ -9,7 +9,7 @@ import { assert } from 'chai';
 import { traceInfo } from '../../../platform/logging';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
 import { openNotebook } from '../helpers';
-import { closeNotebooksAndCleanUpAfterTests } from './helper';
+import { closeNotebooksAndCleanUpAfterTests } from './helper.node';
 import { window } from 'vscode';
 import { initialize } from '../../initialize.node';
 import type * as nbformat from '@jupyterlab/nbformat';

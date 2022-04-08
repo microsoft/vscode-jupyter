@@ -39,7 +39,7 @@ import { traceInfo, traceInfoIfCI } from '../../../platform/logging';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
-import { IKernelProvider } from '../../../platform/../kernels/types';
+import { IKernelProvider } from '../../../kernels/types';
 import { IExtensionTestApi, sleep, waitForCondition } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants.node';
 import { noop } from '../../core';
@@ -222,7 +222,7 @@ let waitForKernelPendingPromise: Promise<void> | undefined;
 export async function waitForKernelToChange(
     criteria:
         | { labelOrId: string; isInteractiveController?: boolean }
-        | { interpreterPath: string; isInteractiveController?: boolean },
+        | { interpreterPath: Uri; isInteractiveController?: boolean },
     timeout = defaultNotebookTestTimeout
 ) {
     // Wait for the previous kernel change to finish.
@@ -236,7 +236,7 @@ export async function waitForKernelToChange(
 async function waitForKernelToChangeImpl(
     criteria:
         | { labelOrId: string; isInteractiveController?: boolean }
-        | { interpreterPath: string; isInteractiveController?: boolean },
+        | { interpreterPath: Uri; isInteractiveController?: boolean },
     timeout = defaultNotebookTestTimeout
 ) {
     const { vscodeNotebook, notebookControllerManager } = await getServices();
@@ -273,7 +273,9 @@ async function waitForKernelToChangeImpl(
         id = notebookControllers
             ?.filter((k) => k.connection.interpreter)
             ?.filter((k) => (criteria.isInteractiveController ? k.id.includes(InteractiveControllerIdSuffix) : true))
-            .find((k) => k.connection.interpreter!.path.toLowerCase().includes(interpreterPath.toLowerCase()))?.id;
+            .find((k) =>
+                k.connection.interpreter!.path.fsPath.toLowerCase().includes(interpreterPath.fsPath.toLowerCase())
+            )?.id;
     }
     traceInfo(`Switching to kernel id ${id}`);
     const isRightKernel = () => {

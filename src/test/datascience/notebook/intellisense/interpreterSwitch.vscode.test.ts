@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import * as path from '../../../../platform/vscode-path/path';
 import * as fs from 'fs-extra';
 import * as sinon from 'sinon';
-import { languages } from 'vscode';
+import { languages, Uri } from 'vscode';
 import { traceInfo } from '../../../../platform/logging';
 import { IDisposable } from '../../../../platform/common/types';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts.node';
@@ -22,7 +22,7 @@ import {
     waitForKernelToChange,
     waitForDiagnostics,
     defaultNotebookTestTimeout
-} from '../helper';
+} from '../helper.node';
 import { IVSCodeNotebook } from '../../../../platform/common/application/types';
 import { IPythonExecutionFactory } from '../../../../platform/common/process/types.node';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
@@ -34,14 +34,14 @@ suite('DataScience - Intellisense Switch interpreters in a notebook', function (
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     const executable = getOSType() === OSType.Windows ? 'Scripts/python.exe' : 'bin/python'; // If running locally on Windows box.
-    const venvNoKernelPython = path.join(
-        EXTENSION_ROOT_DIR_FOR_TESTS,
-        'src/test/datascience/.venvnokernel',
-        executable
+    const venvNoKernelPython = Uri.file(
+        path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnokernel', executable)
     );
-    const venvKernelPython = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvkernel', executable);
-    let venvNoKernelPythonPath: string;
-    let venvKernelPythonPath: string;
+    const venvKernelPython = Uri.file(
+        path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvkernel', executable)
+    );
+    let venvNoKernelPythonPath: Uri;
+    let venvKernelPythonPath: Uri;
     let vscodeNotebook: IVSCodeNotebook;
 
     this.timeout(120_000);
@@ -56,8 +56,8 @@ suite('DataScience - Intellisense Switch interpreters in a notebook', function (
         // These are slow tests, hence lets run only on linux on CI.
         if (
             (IS_CI_SERVER && getOSType() !== OSType.Linux) ||
-            !fs.pathExistsSync(venvNoKernelPython) ||
-            !fs.pathExistsSync(venvKernelPython)
+            !fs.pathExistsSync(venvNoKernelPython.fsPath) ||
+            !fs.pathExistsSync(venvKernelPython.fsPath)
         ) {
             // Virtual env does not exist.
             return this.skip();

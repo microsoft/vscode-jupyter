@@ -15,7 +15,7 @@ import {
 } from '../../../kernels/installer/pyenv.node';
 
 suite('Pyenv Identifier Tests', () => {
-    const home = platformUtilsNode.getUserHomeDir() || '';
+    const home = platformUtilsNode.getUserHomeDir()?.fsPath || '';
     let getEnvVariableStub: sinon.SinonStub;
     let pathExistsStub: sinon.SinonStub;
     let getOsTypeStub: sinon.SinonStub;

@@ -13,7 +13,7 @@ import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { ReadWrite } from '../../../platform/common/types';
 import { testOnlyMethod } from '../../../platform/common/utils/decorators';
-import { noop } from '../../../platform/common/utils/misc';
+import { isUri, noop } from '../../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { getInterpreterKernelSpecName, getKernelRegistrationInfo } from '../../../kernels/helpers.node';
 import {
@@ -24,7 +24,7 @@ import {
 import { JupyterKernelSpec } from '../../jupyter/jupyterKernelSpec.node';
 import { getComparisonKey } from '../../../platform/vscode-path/resources';
 
-type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment; kernelSpecFile: string };
+type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment; kernelSpecFile: Uri };
 export const isDefaultPythonKernelSpecSpecName = /python\s\d*.?\d*$/;
 export const oldKernelsSpecFolderName = '__old_vscode_kernelspecs';
 
@@ -157,7 +157,7 @@ export abstract class LocalKernelSpecFinderBase {
 
             // If we failed to get a kernelSpec full path from our cache and loaded list
             this.pathToKernelSpec.delete(key);
-            this.cache = this.cache?.filter((itemPath) => itemPath.kernelSpecFile !== specPath.fsPath);
+            this.cache = this.cache?.filter((itemPath) => uriPath.isEqual(itemPath.kernelSpecFile, specPath));
             return undefined;
         });
     }
@@ -185,17 +185,17 @@ export abstract class LocalKernelSpecFinderBase {
     }
     // Given a set of paths, search for kernel.json files and return back the full paths of all of them that we find
     protected async findKernelSpecsInPaths(
-        paths: (string | { interpreter: PythonEnvironment; kernelSearchPath: string })[],
+        paths: (Uri | { interpreter: PythonEnvironment; kernelSearchPath: Uri })[],
         cancelToken?: CancellationToken
     ): Promise<KernelSpecFileWithContainingInterpreter[]> {
         const searchResults = await Promise.all(
             paths.map(async (searchItem) => {
-                const searchPath = typeof searchItem === 'string' ? searchItem : searchItem.kernelSearchPath;
-                if (await this.fs.localDirectoryExists(searchPath)) {
-                    const files = await this.fs.searchLocal(`**/kernel.json`, searchPath, true);
+                const searchPath = isUri(searchItem) ? searchItem : searchItem.kernelSearchPath;
+                if (await this.fs.localDirectoryExists(searchPath.fsPath)) {
+                    const files = await this.fs.searchLocal(`**/kernel.json`, searchPath.fsPath, true);
                     return {
-                        interpreter: typeof searchItem === 'string' ? undefined : searchItem.interpreter,
-                        kernelSpecFiles: files.map((item) => path.join(searchPath, item))
+                        interpreter: isUri(searchItem) ? undefined : searchItem.interpreter,
+                        kernelSpecFiles: files.map((item) => uriPath.joinPath(searchPath, item))
                     };
                 }
             })
@@ -233,7 +233,7 @@ export async function loadKernelSpec(
     try {
         traceVerbose(
             `Loading kernelspec from ${getDisplayPath(specPath)} for ${
-                interpreter?.path ? getDisplayPath(Uri.file(interpreter.path)) : ''
+                interpreter?.path ? getDisplayPath(interpreter.path) : ''
             }`
         );
         kernelJson = JSON.parse(await fs.readLocalFile(specPath.fsPath));
@@ -292,7 +292,7 @@ export async function loadKernelSpec(
 
     // Possible user deleted the underlying kernel.
     const interpreterPath = interpreter?.path || kernelJson?.metadata?.interpreter?.path;
-    if (interpreterPath && !(await fs.localFileExists(interpreterPath))) {
+    if (interpreterPath && !(await fs.localFileExists(interpreterPath.fsPath))) {
         return;
     }
 

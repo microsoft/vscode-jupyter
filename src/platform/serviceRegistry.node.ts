@@ -27,8 +27,6 @@ import { INotebookWatcher } from '../webviews/extension-side/variablesView/types
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from './activation/types';
 import { ExtensionRecommendationService } from './common/extensionRecommendation.node';
 import { GlobalActivation } from './common/globalActivation.node';
-import { FileSystemPathUtils } from './common/platform/fs-paths.node';
-import { IFileSystemPathUtils } from './common/platform/types';
 import { PreReleaseChecker } from './common/prereleaseChecker.node';
 import { IConfigurationService, IDataScienceCommandListener, IExtensionContext } from './common/types';
 import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFactory.node';
@@ -106,7 +104,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IExport>(IExport, ExportToPythonPlain, ExportFormat.python);
     serviceManager.addSingleton<ExportUtil>(ExportUtil, ExportUtil);
     serviceManager.addSingleton<IExportDialog>(IExportDialog, ExportDialog);
-    serviceManager.addSingleton<IFileSystemPathUtils>(IFileSystemPathUtils, FileSystemPathUtils);
     serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,

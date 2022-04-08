@@ -5,7 +5,7 @@
 
 import { assert } from 'chai';
 import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
-import { Memento } from 'vscode';
+import { Memento, Uri } from 'vscode';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts.node';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
 import { JupyterInterpreterDependencyService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService.node';
@@ -30,12 +30,12 @@ suite('DataScience - Jupyter Interpreter Service', () => {
     let oldVersionCacheStateStore: JupyterInterpreterOldCacheStateStore;
     const selectedJupyterInterpreter = createPythonInterpreter({ displayName: 'JupyterInterpreter' });
     const pythonInterpreter: PythonEnvironment = {
-        path: 'some path',
+        path: Uri.file('some path'),
         sysPrefix: '',
         sysVersion: ''
     };
     const secondPythonInterpreter: PythonEnvironment = {
-        path: 'second interpreter path',
+        path: Uri.file('second interpreter path'),
         sysPrefix: '',
         sysVersion: ''
     };

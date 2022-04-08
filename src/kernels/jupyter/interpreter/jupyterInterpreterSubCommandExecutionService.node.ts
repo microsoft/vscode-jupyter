@@ -14,7 +14,7 @@ import {
     ObservableExecutionResult,
     IPythonDaemonExecutionService
 } from '../../../platform/common/process/types.node';
-import { IOutputChannel, IPathUtils } from '../../../platform/common/types';
+import { IOutputChannel } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
@@ -41,6 +41,7 @@ import {
     JupyterServerInfo
 } from '../types';
 import { IJupyterSubCommandExecutionService } from '../types.node';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
 
 /**
  * Responsible for execution of jupyter sub commands using a single/global interpreter set aside for launching jupyter server.
@@ -60,7 +61,6 @@ export class JupyterInterpreterSubCommandExecutionService
         private readonly jupyterDependencyService: JupyterInterpreterDependencyService,
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private readonly jupyterOutputChannel: IOutputChannel,
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService
     ) {}
@@ -102,7 +102,7 @@ export class JupyterInterpreterSubCommandExecutionService
         }
 
         if (productsNotInstalled.length === 1 && productsNotInstalled[0] === Product.kernelspec) {
-            return DataScience.jupyterKernelSpecModuleNotFound().format(interpreter.path);
+            return DataScience.jupyterKernelSpecModuleNotFound().format(interpreter.path.fsPath);
         }
 
         return getMessageForLibrariesNotInstalled(productsNotInstalled, interpreter.displayName);
@@ -116,10 +116,7 @@ export class JupyterInterpreterSubCommandExecutionService
     ): Promise<ObservableExecutionResult<string>> {
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(options.token);
         this.jupyterOutputChannel.appendLine(
-            DataScience.startingJupyterLogMessage().format(
-                this.pathUtils.getDisplayName(interpreter.path),
-                notebookArgs.join(' ')
-            )
+            DataScience.startingJupyterLogMessage().format(getDisplayPath(interpreter.path), notebookArgs.join(' '))
         );
         const executionService = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
             daemonModule: JupyterDaemonModule,

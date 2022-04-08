@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { Uri } from 'vscode';
 import { PythonVersion } from './pythonVersion';
 
 type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final' | 'unknown';
@@ -40,7 +41,7 @@ export enum EnvironmentType {
  * @prop sysPrefix - the environment's install root (`sys.prefix`)
  */
 export type InterpreterInformation = {
-    path: string;
+    path: Uri;
     version?: PythonVersion;
     sysVersion?: string;
     sysPrefix: string;
@@ -54,5 +55,5 @@ export type PythonEnvironment = InterpreterInformation & {
     displayName?: string;
     envType?: EnvironmentType;
     envName?: string;
-    envPath?: string;
+    envPath?: Uri;
 };

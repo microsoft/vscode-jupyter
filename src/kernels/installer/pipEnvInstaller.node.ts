@@ -50,7 +50,7 @@ export class PipEnvInstaller extends ModuleInstaller {
                 return false;
             }
             // Install using `pipenv install` only if the active environment is related to the current folder.
-            return isPipenvEnvironmentRelatedToFolder(interpreter.path, workspaceFolder.uri.fsPath);
+            return isPipenvEnvironmentRelatedToFolder(interpreter.path.fsPath, workspaceFolder.uri.fsPath);
         } else {
             return resource.envType === EnvironmentType.Pipenv;
         }

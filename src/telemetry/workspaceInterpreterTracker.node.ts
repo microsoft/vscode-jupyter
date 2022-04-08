@@ -13,7 +13,7 @@ import { areInterpreterPathsSame } from '../platform/pythonEnvironments/info/int
 
 @injectable()
 export class WorkspaceInterpreterTracker implements IExtensionSyncActivationService {
-    private static readonly workspaceInterpreters = new Map<string, undefined | string>();
+    private static readonly workspaceInterpreters = new Map<string, undefined | Uri>();
     private trackingInterpreters?: boolean;
     private static getWorkspaceIdentifier: (resource: Resource) => string = () => '';
     constructor(

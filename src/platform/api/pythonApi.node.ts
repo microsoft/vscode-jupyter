@@ -338,10 +338,12 @@ export class InterpreterService implements IInterpreterService {
     }
 
     @traceDecoratorVerbose('Get Interpreter details', TraceOptions.Arguments | TraceOptions.BeforeCall)
-    public async getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<undefined | PythonEnvironment> {
+    public async getInterpreterDetails(pythonPath: Uri, resource?: Uri): Promise<undefined | PythonEnvironment> {
         this.hookupOnDidChangeInterpreterEvent();
         try {
-            return await this.apiProvider.getApi().then((api) => api.getInterpreterDetails(pythonPath, resource));
+            return await this.apiProvider
+                .getApi()
+                .then((api) => api.getInterpreterDetails(pythonPath.fsPath, resource));
         } catch {
             // If the python extension cannot get the details here, don't fail. Just don't use them.
             return undefined;

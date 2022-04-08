@@ -17,6 +17,7 @@ import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvi
 import { anything, instance, mock, when } from 'ts-mockito';
 import { KernelEnvironmentVariablesService } from '../../../kernels/raw/launcher/kernelEnvVarsService.node';
 import { IJupyterKernelSpec } from '../../../kernels/types';
+import { Uri } from 'vscode';
 
 use(chaiAsPromised);
 
@@ -29,14 +30,14 @@ suite('Kernel Environment Variables Service', () => {
     let interpreterService: IInterpreterService;
     const interpreter: PythonEnvironment = {
         envType: EnvironmentType.Conda,
-        path: 'foobar',
+        path: Uri.file('foobar'),
         sysPrefix: '0'
     };
     const kernelSpec: IJupyterKernelSpec = {
         name: 'kernel',
-        path: 'foobar',
+        path: Uri.file('foobar'),
         display_name: 'kernel',
-        interpreterPath: 'foobar',
+        interpreterPath: Uri.file('foobar'),
         argv: []
     };
 
@@ -67,7 +68,7 @@ suite('Kernel Environment Variables Service', () => {
             const processPath = Object.keys(process.env).find((k) => k.toLowerCase() == 'path');
             assert.isOk(processPath);
             assert.isOk(vars);
-            assert.strictEqual(vars![processPath!], `${path.dirname(interpreter.path)}${path.delimiter}foobar`);
+            assert.strictEqual(vars![processPath!], `${path.dirname(interpreter.path.fsPath)}${path.delimiter}foobar`);
         });
 
         test('Paths are merged', async () => {
@@ -82,14 +83,14 @@ suite('Kernel Environment Variables Service', () => {
             assert.isOk(vars);
             assert.strictEqual(
                 vars![processPath!],
-                `${path.dirname(interpreter.path)}${path.delimiter}foobar${path.delimiter}foobaz`
+                `${path.dirname(interpreter.path.fsPath)}${path.delimiter}foobar${path.delimiter}foobaz`
             );
         });
 
         test('KernelSpec interpreterPath used if interpreter is undefined', async () => {
-            when(interpreterService.getInterpreterDetails('foobar')).thenResolve({
+            when(interpreterService.getInterpreterDetails(Uri.file('foobar'))).thenResolve({
                 envType: EnvironmentType.Conda,
-                path: 'foopath',
+                path: Uri.file('foopath'),
                 sysPrefix: 'foosysprefix'
             });
             when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
@@ -104,7 +105,7 @@ suite('Kernel Environment Variables Service', () => {
             assert.isOk(vars);
             assert.strictEqual(
                 vars![processPath!],
-                `${path.dirname(interpreter.path)}${path.delimiter}foobar${path.delimiter}foobaz`
+                `${path.dirname(interpreter.path.fsPath)}${path.delimiter}foobar${path.delimiter}foobaz`
             );
         });
 
@@ -113,9 +114,9 @@ suite('Kernel Environment Variables Service', () => {
             hasActivatedEnvVariables: boolean,
             hasActivationCommands: boolean
         ) {
-            when(interpreterService.getInterpreterDetails('foobar')).thenResolve({
+            when(interpreterService.getInterpreterDetails(Uri.file('foobar'))).thenResolve({
                 envType,
-                path: 'foopath',
+                path: Uri.file('foopath'),
                 sysPrefix: 'foosysprefix'
             });
             when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve(

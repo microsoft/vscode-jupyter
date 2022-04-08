@@ -43,7 +43,7 @@ import {
     getCellOutputs,
     waitForCellHavingOutput,
     waitForCellExecutionToComplete
-} from './helper';
+} from './helper.node';
 import { openNotebook } from '../helpers';
 import { noop } from '../../../platform/common/utils/misc';
 import { getTextOutputValue, hasErrorOutput, translateCellErrorOutput } from '../../../notebooks/helpers.node';
@@ -399,7 +399,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         // First path in PATH must be the directory where executable is located.
         assert.ok(
-            areInterpreterPathsSame(path.dirname(sysExecutable), pathValue[0].toLowerCase()),
+            areInterpreterPathsSame(Uri.file(path.dirname(sysExecutable)), Uri.file(pathValue[0]), undefined, true),
             `First entry in PATH (${pathValue[0]}) does not point to executable (${sysExecutable})`
         );
     });
@@ -461,7 +461,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         // First path in PATH must be the directory where executable is located.
         assert.ok(
-            areInterpreterPathsSame(shellExecutable.toLowerCase(), sysExecutable.toLowerCase()),
+            areInterpreterPathsSame(Uri.file(shellExecutable), Uri.file(sysExecutable), undefined, true),
             `Python paths do not match ${shellExecutable}, ${sysExecutable}. Output is (${cell1Output}), error is ${errorOutput}`
         );
     });

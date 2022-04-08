@@ -3,6 +3,8 @@
 
 'use strict';
 
+import { Uri } from 'vscode';
+import { fsPathToUri } from '../../vscode-path/utils';
 import { EnvironmentVariables } from '../variables/types';
 import { getOSType, OSType } from './platform';
 export * from './platform';
@@ -16,9 +18,9 @@ export function getPathEnvironmentVariable(): string | undefined {
     return getEnvironmentVariable('Path') || getEnvironmentVariable('PATH');
 }
 
-export function getUserHomeDir(): string | undefined {
+export function getUserHomeDir(): Uri | undefined {
     if (getOSType() === OSType.Windows) {
-        return getEnvironmentVariable('USERPROFILE');
+        return fsPathToUri(getEnvironmentVariable('USERPROFILE'));
     }
-    return getEnvironmentVariable('HOME') || getEnvironmentVariable('HOMEPATH');
+    return fsPathToUri(getEnvironmentVariable('HOME')) || fsPathToUri(getEnvironmentVariable('HOMEPATH'));
 }

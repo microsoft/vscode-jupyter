@@ -11,6 +11,7 @@ import { EventEmitter } from 'events';
 import { Observable } from 'rxjs/Observable';
 import * as sinon from 'sinon';
 import { anything, instance, mock, reset, verify, when } from 'ts-mockito';
+import { Uri } from 'vscode';
 import { MessageConnection } from 'vscode-jsonrpc';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { ProcessLogger } from '../../../platform/common/process/logger.node';
@@ -95,7 +96,7 @@ suite('Daemon - Python Daemon Pool', () => {
         const pool = new DaemonPool(
             logger,
             [],
-            { interpreter: { path: 'py.exe' } as PythonEnvironment },
+            { interpreter: { path: Uri.file('py.exe') } as PythonEnvironment },
             instance(pythonExecService),
             instance(platformService),
             undefined
@@ -111,7 +112,11 @@ suite('Daemon - Python Daemon Pool', () => {
         const pool = new DaemonPool(
             logger,
             [],
-            { daemonCount: 5, observableDaemonCount: 3, interpreter: { path: 'py.exe' } as PythonEnvironment },
+            {
+                daemonCount: 5,
+                observableDaemonCount: 3,
+                interpreter: { path: Uri.file('py.exe') } as PythonEnvironment
+            },
             instance(pythonExecService),
             instance(platformService),
             undefined
@@ -130,7 +135,11 @@ suite('Daemon - Python Daemon Pool', () => {
         const pool = new DaemonPool(
             logger,
             [],
-            { daemonCount: 5, observableDaemonCount: 3, interpreter: { path: 'py.exe' } as PythonEnvironment },
+            {
+                daemonCount: 5,
+                observableDaemonCount: 3,
+                interpreter: { path: Uri.file('py.exe') } as PythonEnvironment
+            },
             instance(pythonExecService),
             instance(platformService),
             undefined
@@ -159,7 +168,11 @@ suite('Daemon - Python Daemon Pool', () => {
         const pool = new DaemonPool(
             logger,
             [],
-            { daemonCount: 1, observableDaemonCount: 1, interpreter: { path: 'py.exe' } as PythonEnvironment },
+            {
+                daemonCount: 1,
+                observableDaemonCount: 1,
+                interpreter: { path: Uri.file('py.exe') } as PythonEnvironment
+            },
             instance(pythonExecService),
             instance(platformService),
             undefined
@@ -211,7 +224,11 @@ suite('Daemon - Python Daemon Pool', () => {
             const pool = new DaemonPool(
                 logger,
                 [],
-                { daemonCount: 2, observableDaemonCount: 1, interpreter: { path: 'py.exe' } as PythonEnvironment },
+                {
+                    daemonCount: 2,
+                    observableDaemonCount: 1,
+                    interpreter: { path: Uri.file('py.exe') } as PythonEnvironment
+                },
                 instance(pythonExecService),
                 instance(platformService),
                 undefined
@@ -290,7 +307,11 @@ suite('Daemon - Python Daemon Pool', () => {
         const pool = new DaemonPool(
             logger,
             [],
-            { daemonCount: 1, observableDaemonCount: 1, interpreter: { path: 'py.exe' } as PythonEnvironment },
+            {
+                daemonCount: 1,
+                observableDaemonCount: 1,
+                interpreter: { path: Uri.file('py.exe') } as PythonEnvironment
+            },
             instance(pythonExecService),
             instance(platformService),
             undefined
