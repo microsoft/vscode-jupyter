@@ -178,7 +178,10 @@ suite('PythonEnvironment', () => {
 
         const result = await env.getExecutablePath();
 
-        expect(result).to.equal(executablePath, "getExecutablePath() sbould not return pythonPath if it's not a file");
+        expect(result.path.slice(1)).to.equal(
+            executablePath,
+            "getExecutablePath() sbould not return pythonPath if it's not a file"
+        );
     });
 
     test('getExecutablePath should throw if the result of exec() writes to stderr', async () => {
@@ -262,7 +265,7 @@ suite('PythonEnvironment', () => {
         const result = env.getExecutionInfo(args);
 
         expect(result).to.deep.equal(
-            { command: pythonPath, args, python: [pythonPath], pythonExecutable: pythonPath },
+            { command: pythonPath.fsPath, args, python: [pythonPath.fsPath], pythonExecutable: pythonPath.fsPath },
             'getExecutionInfo should return pythonPath and the command and execution arguments as is'
         );
     });
