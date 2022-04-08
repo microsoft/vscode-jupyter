@@ -567,19 +567,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             return;
         }
 
-        // Keep track of a token per document so that we can cancel the search if the doc is closed
-        const preferredSearchToken = new CancellationTokenSource();
-        const disposable = this.notebook.onDidCloseNotebookDocument(
-            (e) => (e === document ? preferredSearchToken.cancel() : undefined),
-            this,
-            this.disposables
-        );
-
-        // Prep so that we can track the selected controller for this document
-        traceInfoIfCI(`Clear controller mapping for ${getDisplayPath(document.uri)}`);
-        const loadControllersPromise = this.loadNotebookControllers();
+        const updatePromise = this.computePreferredNotebookController(document);
         if (!this.isLocalLaunch) {
-            void loadControllersPromise.finally(() => {
+            void updatePromise.finally(() => {
                 if (this.isLocalLaunch) {
                     return;
                 }
@@ -608,6 +598,20 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // If we know we're dealing with a Python notebook, load the active interpreter as a kernel asap.
             this.createActiveInterpreterController(JupyterNotebookView, document.uri).catch(noop);
         }
+    }
+
+    public async computePreferredNotebookController(
+        document: NotebookDocument
+    ): Promise<IVSCodeNotebookController | undefined> {
+        traceInfoIfCI(`Clear controller mapping for ${getDisplayPath(document.uri)}`);
+        const loadControllersPromise = this.loadNotebookControllers();
+        // Keep track of a token per document so that we can cancel the search if the doc is closed
+        const preferredSearchToken = new CancellationTokenSource();
+        const disposable = this.notebook.onDidCloseNotebookDocument(
+            (e) => (e === document ? preferredSearchToken.cancel() : undefined),
+            this,
+            this.disposables
+        );
 
         try {
             let preferredConnection: KernelConnectionMetadata | undefined;
