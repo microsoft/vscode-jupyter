@@ -66,16 +66,16 @@ async function installPythonExtension(vscodeExecutablePath: string) {
         console.info('Python Extension not required');
         return;
     }
-    console.info(`Installing Python Extension ${pythonVSIX}`);
     const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath);
-    spawnSync(cliPath, ['--install-extension', pythonVSIX], {
+    console.info(`Installing Python Extension ${pythonVSIX} using ${cliPath}`);
+    spawnSync(cliPath, ['--verbose', '--install-extension', pythonVSIX], {
         encoding: 'utf-8',
         stdio: 'inherit'
     });
 
     // Make sure pylance is there too as we'll use it for intellisense tests
     console.info('Installing Pylance Extension');
-    spawnSync(cliPath, ['--install-extension', PylanceExtension], {
+    spawnSync(cliPath, ['--verbose', '--install-extension', PylanceExtension], {
         encoding: 'utf-8',
         stdio: 'inherit'
     });
