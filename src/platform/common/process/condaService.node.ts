@@ -3,7 +3,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { SemVer } from 'semver';
-import { EventEmitter, Memento, RelativePattern, workspace } from 'vscode';
+import { EventEmitter, Memento, RelativePattern, Uri, workspace } from 'vscode';
 import { IPythonApiProvider } from '../../api/types';
 import { TraceOptions } from '../../logging/types';
 import { traceDecoratorVerbose, traceError, traceVerbose } from '../../logging';
@@ -21,12 +21,12 @@ const condaEnvironmentsFile = uriPath.joinPath(homePath, '.conda', 'environments
 @injectable()
 export class CondaService {
     private isAvailable: boolean | undefined;
-    private _file?: string;
-    private _batchFile?: string;
+    private _file?: Uri;
+    private _batchFile?: Uri;
     private _version?: SemVer;
     private _previousVersionCall?: Promise<SemVer | undefined>;
-    private _previousFileCall?: Promise<string | undefined>;
-    private _previousBatchFileCall?: Promise<string | undefined>;
+    private _previousFileCall?: Promise<Uri | undefined>;
+    private _previousBatchFileCall?: Promise<Uri | undefined>;
     private _previousCondaEnvs: string[] = [];
     private readonly _onCondaEnvironmentsChanged = new EventEmitter<void>();
     public readonly onCondaEnvironmentsChanged = this._onCondaEnvironmentsChanged.event;
@@ -77,7 +77,7 @@ export class CondaService {
                 .getApi()
                 .then((api) => (api.getCondaFile ? api.getCondaFile() : undefined));
             void latestInfo.then((file) => {
-                this._file = file;
+                this._file = file ? Uri.file(file) : undefined;
                 void this.updateCache();
             });
             const cachedInfo = createDeferredFromPromise(this.getCachedInformation());
@@ -85,7 +85,7 @@ export class CondaService {
             if (cachedInfo.completed && cachedInfo.value?.file) {
                 return (this._file = cachedInfo.value.file);
             }
-            return latestInfo;
+            return latestInfo.then((v) => (v ? Uri.file(v) : undefined));
         };
         this._previousFileCall = promise();
         return this._previousFileCall;
@@ -102,12 +102,12 @@ export class CondaService {
         const promise = async () => {
             const file = await this.getCondaFile();
             if (file) {
-                const fileDir = path.dirname(file);
+                const fileDir = path.dirname(file.fsPath);
                 // Batch file depends upon OS
                 if (this.ps.isWindows) {
                     const possibleBatch = path.join(fileDir, '..', 'condabin', 'conda.bat');
                     if (await this.fs.localFileExists(possibleBatch)) {
-                        return possibleBatch;
+                        return Uri.file(possibleBatch);
                     }
                 }
             }
@@ -166,7 +166,9 @@ export class CondaService {
         if (!this._file || !this._version) {
             return;
         }
-        const fileHash = this._file.toLowerCase() === 'conda' ? '' : await this.fs.getFileHash(this._file);
+        const fileHash = this._file.fsPath.toLowerCase().endsWith('conda')
+            ? ''
+            : await this.fs.getFileHash(this._file.fsPath);
         await this.globalState.update(CACHEKEY_FOR_CONDA_INFO, {
             version: this._version.raw,
             file: this._file,
@@ -178,15 +180,17 @@ export class CondaService {
      * then we can assume the version is the same.
      * Even if not, we'll update this with the latest information.
      */
-    private async getCachedInformation(): Promise<{ version: SemVer; file: string } | undefined> {
-        const cachedInfo = this.globalState.get<{ version: string; file: string; fileHash: string } | undefined>(
+    private async getCachedInformation(): Promise<{ version: SemVer; file: Uri } | undefined> {
+        const cachedInfo = this.globalState.get<{ version: string; file: Uri; fileHash: string } | undefined>(
             CACHEKEY_FOR_CONDA_INFO,
             undefined
         );
         if (!cachedInfo) {
             return;
         }
-        const fileHash = cachedInfo.file.toLowerCase() === 'conda' ? '' : await this.fs.getFileHash(cachedInfo.file);
+        const fileHash = cachedInfo.file.fsPath.toLowerCase().endsWith('conda')
+            ? ''
+            : await this.fs.getFileHash(cachedInfo.file.fsPath);
         if (cachedInfo.fileHash === fileHash) {
             return {
                 version: new SemVer(cachedInfo.version),

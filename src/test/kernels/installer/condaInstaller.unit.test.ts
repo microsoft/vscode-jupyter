@@ -107,7 +107,7 @@ suite('Common - Conda Installer', () => {
             envName: 'baz'
         };
         const settings = mock(JupyterSettings);
-        const condaPath = 'some Conda Path';
+        const condaPath = Uri.file('some Conda Path');
 
         when(configService.getSettings(undefined)).thenReturn(instance(settings));
         when(condaService.getCondaFile()).thenResolve(condaPath);
@@ -115,7 +115,10 @@ suite('Common - Conda Installer', () => {
 
         const execInfo = await installer.getExecutionArgs('abc', interpreter);
 
-        assert.deepEqual(execInfo, { args: ['install', '--name', interpreter.envName, 'abc', '-y'], exe: condaPath });
+        assert.deepStrictEqual(execInfo, {
+            args: ['install', '--name', interpreter.envName, 'abc', '-y'],
+            exe: condaPath.fsPath
+        });
     });
     test('Include path of environment', async () => {
         const settings = mock(JupyterSettings);
@@ -124,7 +127,7 @@ suite('Common - Conda Installer', () => {
             path: Uri.file('baz/foobar/python.exe'),
             sysPrefix: '0'
         };
-        const condaPath = 'some Conda Path';
+        const condaPath = Uri.file('some Conda Path');
 
         when(configService.getSettings(undefined)).thenReturn(instance(settings));
         when(condaService.getCondaFile()).thenResolve(condaPath);
@@ -132,9 +135,9 @@ suite('Common - Conda Installer', () => {
 
         const execInfo = await installer.getExecutionArgs('abc', interpreter);
 
-        assert.deepEqual(execInfo, {
-            args: ['install', '--prefix', 'baz/foobar'.fileToCommandArgument(), 'abc', '-y'],
-            exe: condaPath
+        assert.deepStrictEqual(execInfo, {
+            args: ['install', '--prefix', '/baz/foobar'.fileToCommandArgument(), 'abc', '-y'],
+            exe: condaPath.fsPath
         });
     });
     test('Include path of environment but skip bin', async () => {
@@ -144,7 +147,7 @@ suite('Common - Conda Installer', () => {
             path: Uri.file('baz/foobar/bin/python.exe'),
             sysPrefix: '0'
         };
-        const condaPath = 'some Conda Path';
+        const condaPath = Uri.file('some Conda Path');
 
         when(configService.getSettings(undefined)).thenReturn(instance(settings));
         when(condaService.getCondaFile()).thenResolve(condaPath);
@@ -152,9 +155,9 @@ suite('Common - Conda Installer', () => {
 
         const execInfo = await installer.getExecutionArgs('abc', interpreter);
 
-        assert.deepEqual(execInfo, {
-            args: ['install', '--prefix', 'baz/foobar'.fileToCommandArgument(), 'abc', '-y'],
-            exe: condaPath
+        assert.deepStrictEqual(execInfo, {
+            args: ['install', '--prefix', '/baz/foobar'.fileToCommandArgument(), 'abc', '-y'],
+            exe: condaPath.fsPath
         });
     });
 });

@@ -321,7 +321,12 @@ suite('CondaEnvironment', () => {
     });
 
     test('getExecutionObservableInfo with a named environment should return execution info using pythonPath only', () => {
-        const expected = { command: pythonPath, args, python: [pythonPath], pythonExecutable: pythonPath };
+        const expected = {
+            command: pythonPath.fsPath,
+            args,
+            python: [pythonPath.fsPath],
+            pythonExecutable: pythonPath.fsPath
+        };
         const condaInfo = { name: 'foo', path: 'bar', version: undefined };
         const env = createCondaEnv(
             condaFile,
@@ -337,7 +342,12 @@ suite('CondaEnvironment', () => {
     });
 
     test('getExecutionObservableInfo with a non-named environment should return execution info using pythonPath only', () => {
-        const expected = { command: pythonPath, args, python: [pythonPath], pythonExecutable: pythonPath };
+        const expected = {
+            command: pythonPath.fsPath,
+            args,
+            python: [pythonPath.fsPath],
+            pythonExecutable: pythonPath.fsPath
+        };
         const condaInfo = { name: '', path: 'bar', version: undefined };
         const env = createCondaEnv(
             condaFile,

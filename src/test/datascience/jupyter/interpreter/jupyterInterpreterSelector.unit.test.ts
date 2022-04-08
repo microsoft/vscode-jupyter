@@ -25,6 +25,7 @@ suite('DataScience - Jupyter Interpreter Picker', () => {
         interpreterSelectionState = mock(JupyterInterpreterStateStore);
         appShell = mock(ApplicationShell);
         workspace = mock(WorkspaceService);
+        when(workspace.workspaceFolders).thenReturn([]);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         picker = new JupyterInterpreterSelector(
             instance(interpreterSelector),
@@ -61,13 +62,13 @@ suite('DataScience - Jupyter Interpreter Picker', () => {
     test('Should display current interpreter path in the picker', async () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const interpreters = ['something'] as any[];
-        const displayPath = 'Display Path';
-        when(interpreterSelectionState.selectedPythonPath).thenReturn(Uri.file('jupyter.exe'));
+        const selectedPythonPath = Uri.file('jupyter.exe');
+        when(interpreterSelectionState.selectedPythonPath).thenReturn(selectedPythonPath);
         when(interpreterSelector.getSuggestions(undefined)).thenResolve(interpreters);
         when(appShell.showQuickPick(anything(), anything())).thenResolve();
 
         await picker.selectInterpreter();
 
-        assert.equal(capture(appShell.showQuickPick).first()[1]?.placeHolder, `current: ${displayPath}`);
+        assert.equal(capture(appShell.showQuickPick).first()[1]?.placeHolder, `current: ${selectedPythonPath.fsPath}`);
     });
 });

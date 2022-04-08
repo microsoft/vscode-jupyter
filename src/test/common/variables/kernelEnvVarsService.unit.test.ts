@@ -28,16 +28,17 @@ suite('Kernel Environment Variables Service', () => {
     let variablesService: EnvironmentVariablesService;
     let kernelVariablesService: KernelEnvironmentVariablesService;
     let interpreterService: IInterpreterService;
+    const pathFile = Uri.file('foobar');
     const interpreter: PythonEnvironment = {
         envType: EnvironmentType.Conda,
-        path: Uri.file('foobar'),
+        path: pathFile,
         sysPrefix: '0'
     };
     const kernelSpec: IJupyterKernelSpec = {
         name: 'kernel',
-        path: Uri.file('foobar'),
+        path: pathFile,
         display_name: 'kernel',
-        interpreterPath: Uri.file('foobar'),
+        interpreterPath: pathFile,
         argv: []
     };
 
@@ -88,7 +89,7 @@ suite('Kernel Environment Variables Service', () => {
         });
 
         test('KernelSpec interpreterPath used if interpreter is undefined', async () => {
-            when(interpreterService.getInterpreterDetails(Uri.file('foobar'))).thenResolve({
+            when(interpreterService.getInterpreterDetails(pathFile)).thenResolve({
                 envType: EnvironmentType.Conda,
                 path: Uri.file('foopath'),
                 sysPrefix: 'foosysprefix'
@@ -114,7 +115,7 @@ suite('Kernel Environment Variables Service', () => {
             hasActivatedEnvVariables: boolean,
             hasActivationCommands: boolean
         ) {
-            when(interpreterService.getInterpreterDetails(Uri.file('foobar'))).thenResolve({
+            when(interpreterService.getInterpreterDetails(pathFile)).thenResolve({
                 envType,
                 path: Uri.file('foopath'),
                 sysPrefix: 'foosysprefix'

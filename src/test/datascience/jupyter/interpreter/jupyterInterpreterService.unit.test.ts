@@ -4,7 +4,7 @@
 'use strict';
 
 import { assert } from 'chai';
-import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Memento, Uri } from 'vscode';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts.node';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
@@ -143,7 +143,7 @@ suite('DataScience - Jupyter Interpreter Service', () => {
         // Make sure we set our saved interpreter to the new active interpreter
         // it should have been cleared to undefined, then set to a new value
         verify(interpreterSelectionState.updateSelectedPythonPath(undefined)).once();
-        verify(interpreterSelectionState.updateSelectedPythonPath(anyString())).once();
+        verify(interpreterSelectionState.updateSelectedPythonPath(anything())).once();
     });
     test('Install missing dependencies into active interpreter', async () => {
         when(interpreterService.getActiveInterpreter(anything())).thenResolve(pythonInterpreter);
