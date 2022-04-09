@@ -40,15 +40,11 @@ suite('Pipenv helper', () => {
             arePathsSame.restore();
 
             getEnvVar.withArgs('PIPENV_MAX_DEPTH').returns('5');
-            const expectedDotProjectFile = path.join(
-                TEST_LAYOUT_ROOT,
-                'pipenv',
-                'globalEnvironments',
-                'project3-2s1eXEJ2',
-                '.project'
+            const expectedDotProjectFile = Uri.file(
+                path.join(TEST_LAYOUT_ROOT, 'pipenv', 'globalEnvironments', 'project3-2s1eXEJ2', '.project')
             );
             const project = path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project3');
-            readFile.withArgs(expectedDotProjectFile).resolves(project);
+            readFile.withArgs(expectedDotProjectFile.fsPath).resolves(project);
             const interpreterPath = Uri.file(
                 path.join(
                     TEST_LAYOUT_ROOT,
