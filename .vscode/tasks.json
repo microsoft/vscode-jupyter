@@ -41,6 +41,17 @@
             "problemMatcher": ["$ts-webpack-watch"]
         },
         {
+            "label": "compile-web-test",
+            "type": "npm",
+            "script": "compile-web-test",
+            "isBackground": true,
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$ts-webpack-watch"]
+        },
+        {
             "label": "Run Unit Tests",
             "type": "npm",
             "script": "test:unittests",

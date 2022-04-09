@@ -87,7 +87,9 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
-        await startJupyterServer();
+        if (!this.currentTest?.title.includes('preferred')) {
+            await startJupyterServer();
+        }
         // Don't use same file for this test (files get modified in tests and we might save stuff)
         ipynbFile = Uri.file(await createTemporaryNotebook(templatePythonNb, disposables));
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
@@ -361,5 +363,26 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
             100,
             true
         );
+    });
+
+    test('Selecting URI returns preferred kernel', async function () {
+        // Open the notebook but without a server started
+        const notebook = await openNotebook(ipynbFile.fsPath);
+
+        // Start a server
+        const preferred = await startJupyterServer(notebook);
+        await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
+        let nbEditor = vscodeNotebook.activeNotebookEditor!;
+        assert.isOk(nbEditor, 'No active notebook');
+        // Cell 1 = `a = "Hello World"`
+        // Cell 2 = `print(a)`
+        let cell2 = nbEditor.document.getCells()![1]!;
+        await Promise.all([
+            runAllCellsInActiveNotebook(),
+            waitForExecutionCompletedSuccessfully(cell2),
+            waitForTextOutput(cell2, 'Hello World', 0, false)
+        ]);
+
+        assert.ok(preferred, `No preferred kernel set for selecting a URI`);
     });
 });

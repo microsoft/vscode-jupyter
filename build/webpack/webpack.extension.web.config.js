@@ -8,16 +8,23 @@ const webpack = require('webpack');
 const constants = require('../constants');
 const CleanTerminalPlugin = require('clean-terminal-webpack-plugin');
 
+const prodEntry = {
+    extension: './src/extension.web.ts',
+    'test/smoke.test/index': './src/test/web/smoke.test/index.ts' // source of the web extension test runner
+};
+const testEntry = {
+    extension: './src/test/web/smoke.test/index.ts' // source of the web extension test runner
+};
+
+// When running web tests, the entry point for the tests and extension are the same.
+const entry = process.env.VSC_TEST_BUNDLE ? testEntry : prodEntry;
+
 // tslint:disable-next-line:no-var-requires no-require-imports
 const configFileName = path.join(constants.ExtensionRootDir, 'tsconfig.extension.web.json');
 const config = {
-    mode: 'none',
+    mode: process.env.VSC_TEST_BUNDLE ? 'development' : 'none',
     target: 'webworker',
-    entry: {
-        extension: './src/extension.web.ts',
-        'test/vscode.test/index': './src/test/web/vscode.test/index.ts', // source of the web extension test runner
-        'test/smoke.test/index': './src/test/web/smoke.test/index.ts' // source of the web extension test runner
-    },
+    entry,
     devtool: 'nosources-source-map', // create a source map that points to the original source file
     node: {
         __dirname: false,

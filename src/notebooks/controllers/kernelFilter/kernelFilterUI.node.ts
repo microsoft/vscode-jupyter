@@ -16,6 +16,8 @@ import {
 import { KernelConnectionMetadata } from '../../../kernels/types';
 import { INotebookControllerManager } from '../../types';
 import { KernelFilterService } from './kernelFilterService.node';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { Telemetry } from '../../../platform/common/constants';
 
 @injectable()
 export class KernelFilterUI implements IExtensionSyncActivationService, IDisposable {
@@ -104,6 +106,7 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
                     .map((item) => item.connection)
                     .filter((item) => !selectedItems.has(item));
                 void this.kernelFilter.storeHiddenKernels(hiddenConnections.map((item) => item));
+                sendTelemetryEvent(Telemetry.JupyterKernelFilterUsed);
             },
             this,
             disposables

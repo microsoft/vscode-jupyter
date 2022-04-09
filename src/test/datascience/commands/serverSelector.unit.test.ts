@@ -7,18 +7,25 @@ import { ICommandManager } from '../../../platform/common/application/types';
 import { JupyterServerSelectorCommand } from '../../../platform/commands/serverSelector.node';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector.node';
 import { Commands } from '../../../platform/common/constants';
+import { INotebookControllerManager } from '../../../notebooks/types';
 
 /* eslint-disable  */
 suite('DataScience - Server Selector Command', () => {
     let serverSelectorCommand: JupyterServerSelectorCommand;
     let commandManager: ICommandManager;
     let serverSelector: JupyterServerSelector;
+    let controllerManager: INotebookControllerManager;
 
     setup(() => {
         commandManager = mock(CommandManager);
         serverSelector = mock(JupyterServerSelector);
+        controllerManager = mock(controllerManager);
 
-        serverSelectorCommand = new JupyterServerSelectorCommand(instance(commandManager), instance(serverSelector));
+        serverSelectorCommand = new JupyterServerSelectorCommand(
+            instance(commandManager),
+            instance(serverSelector),
+            instance(controllerManager)
+        );
     });
 
     test('Register Command', () => {

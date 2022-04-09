@@ -31,6 +31,7 @@ export interface INotebookControllerManager {
         notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
     ): IVSCodeNotebookController | undefined;
     getPreferredNotebookController(document: NotebookDocument): IVSCodeNotebookController | undefined;
+    computePreferredNotebookController(document: NotebookDocument): Promise<IVSCodeNotebookController | undefined>;
 }
 export enum CellOutputMimeTypes {
     error = 'application/vnd.code.notebook.error',

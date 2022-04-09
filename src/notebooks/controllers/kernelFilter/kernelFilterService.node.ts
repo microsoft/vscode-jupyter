@@ -8,6 +8,8 @@ import { traceVerbose } from '../../../platform/logging';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { KernelConnectionMetadata } from '../../../kernels/types';
 import { getDisplayPath, getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { Telemetry } from '../../../platform/common/constants';
 
 @injectable()
 export class KernelFilterService implements IDisposable {
@@ -32,7 +34,7 @@ export class KernelFilterService implements IDisposable {
         if (kernelConnection.kind === 'connectToLiveKernel' || kernelConnection.kind === 'startUsingRemoteKernelSpec') {
             return false;
         }
-        return hiddenList.some((item) => {
+        const hidden = hiddenList.some((item) => {
             if (
                 kernelConnection.kind === 'startUsingLocalKernelSpec' &&
                 item.type === 'jupyterKernelspec' &&
@@ -48,6 +50,11 @@ export class KernelFilterService implements IDisposable {
             }
             return false;
         });
+
+        if (hidden) {
+            sendTelemetryEvent(Telemetry.JupyterKernelHiddenViaFilter);
+        }
+        return hidden;
     }
     private getFilters(): KernelFilter[] {
         // If user opened a mult-root workspace with multiple folders then combine them all.

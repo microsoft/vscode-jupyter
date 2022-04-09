@@ -9,7 +9,6 @@ import { INotebookEditorProvider } from '../notebooks/types';
 import { IDataViewerDataProvider, IDataViewerFactory } from '../webviews/extension-side/dataviewer/types';
 import { IExportedKernelService } from './api/extension';
 import { IExportedKernelServiceFactory, IPythonApiProvider, PythonApi } from './api/types';
-import { IApplicationShell } from './common/application/types';
 import { isTestExecution } from './common/constants';
 import { IExtensionContext } from './common/types';
 import { IServiceContainer, IServiceManager } from './ioc/types';
@@ -102,14 +101,6 @@ export function buildApi(
         /* eslint-disable @typescript-eslint/no-explicit-any */
         (api as any).serviceContainer = serviceContainer;
         (api as any).serviceManager = serviceManager;
-        (api as any).getSymbol = (symbol: String) => {
-            // Needed for web tests. Eval for the extension happens in another web worker so
-            // the symbol objects have different values
-            switch (symbol) {
-                case 'IApplicationShell':
-                    return IApplicationShell;
-            }
-        };
         /* eslint-enable @typescript-eslint/no-explicit-any */
     }
     return api;

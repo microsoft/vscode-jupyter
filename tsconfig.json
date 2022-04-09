@@ -22,7 +22,7 @@
         "resolveJsonModule": true,
         "removeComments": true,
         "useUnknownInCatchVariables": false,
-        "types": ["@types/vscode-notebook-renderer/preload"]
+        "types": ["@types/vscode-notebook-renderer/preload", "webpack-env"]
     },
     "exclude": [
         "node_modules",
@@ -35,7 +35,6 @@
         "src/ipywidgets",
         "src/smoke",
         "src/test/datascience/extensionapi",
-        "src/test/web",
         "build",
         "out",
         "ipywidgets",

@@ -299,6 +299,7 @@ export enum Telemetry {
      */
     ExportNotebookAsFailed = 'DATASCIENCE.EXPORT_NOTEBOOK_AS_FAILED',
     FailedToCreateNotebookController = 'DATASCIENCE.FAILED_TO_CREATE_CONTROLLER',
+    FetchControllers = 'DATASCIENCE.FETCH_CONTROLLERS',
     FailedToFindKernelSpecInterpreterForInteractive = 'DATASCIENCE.FAILED_TO_FIND_INTERPRETER_KERNEL_CONNECTION_FOR_INTERACTIVE',
 
     StartJupyter = 'DS_INTERNAL.JUPYTERSTARTUPCOST',
@@ -369,6 +370,8 @@ export enum Telemetry {
     HashedCellOutputMimeTypePerf = 'DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE_PERF',
     JupyterKernelApiUsage = 'DATASCIENCE.JUPYTER_KERNEL_API_USAGE',
     JupyterKernelApiAccess = 'DATASCIENCE.JUPYTER_KERNEL_API_ACCESS',
+    JupyterKernelHiddenViaFilter = 'DATASCIENCE.JUPYTER_KERNEL_HIDDEN_VIA_FILTER',
+    JupyterKernelFilterUsed = 'DATASCIENCE.JUPYTER_KERNEL_FILTER_USED',
     HashedNotebookCellOutputMimeTypePerf = 'DS_INTERNAL.HASHED_NOTEBOOK_OUTPUT_MIME_TYPE_PERF',
     JupyterInstalledButNotKernelSpecModule = 'DS_INTERNAL.JUPYTER_INTALLED_BUT_NO_KERNELSPEC_MODULE',
     DebugpyPromptToInstall = 'DATASCIENCE.DEBUGPY_PROMPT_TO_INSTALL',

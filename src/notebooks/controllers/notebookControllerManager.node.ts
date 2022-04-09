@@ -111,6 +111,12 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private get isLocalLaunch(): boolean {
         return isLocalLaunch(this.configuration);
     }
+    private startTimeForFetchingControllers?: StopWatch;
+    private readonly controllerLoadingTelemetry = {
+        loadWithoutCacheSent: false,
+        loadWithCacheSent: false,
+        loadRemoteSent: false
+    };
     private wasPythonInstalledWhenFetchingControllers?: boolean;
     private interactiveNoPythonController?: NoPythonKernelsNotebookController;
     private notebookNoPythonController?: NoPythonKernelsNotebookController;
@@ -202,10 +208,24 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     // Find all the notebook controllers that we have registered
     public async loadNotebookControllers(refresh?: boolean): Promise<void> {
         if (!this.controllersPromise || refresh) {
+            this.startTimeForFetchingControllers = this.startTimeForFetchingControllers || new StopWatch();
             const stopWatch = new StopWatch();
 
             // Fetch the list of kernels ignoring the cache.
             this.loadLocalNotebookControllersImpl('ignoreCache')
+                .then(() => {
+                    if (!this.controllerLoadingTelemetry.loadWithoutCacheSent && this.startTimeForFetchingControllers) {
+                        this.controllerLoadingTelemetry.loadWithoutCacheSent = true;
+                        sendTelemetryEvent(
+                            Telemetry.FetchControllers,
+                            this.startTimeForFetchingControllers.elapsedTime,
+                            {
+                                firstTime: true,
+                                kind: 'local'
+                            }
+                        );
+                    }
+                })
                 .catch((ex) => traceError('Failed to fetch controllers without cache', ex))
                 .finally(() => {
                     this._controllersLoaded = true;
@@ -237,9 +257,37 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // Fetch kernel the fastest possible way (local kernels from cache but remote fetch latest).
             // Fetch the list of kernels from the cache (note: if there's nothing in the case, it will fallback to searching).
             // Fetching remote kernels cannot be done from cache.
-            const promises = [this.loadLocalNotebookControllersImpl('useCache')];
+            const promises = [
+                this.loadLocalNotebookControllersImpl('useCache').then(() => {
+                    if (!this.controllerLoadingTelemetry.loadWithCacheSent && this.startTimeForFetchingControllers) {
+                        this.controllerLoadingTelemetry.loadWithCacheSent = true;
+                        sendTelemetryEvent(
+                            Telemetry.FetchControllers,
+                            this.startTimeForFetchingControllers.elapsedTime,
+                            {
+                                firstTime: false,
+                                kind: 'local'
+                            }
+                        );
+                    }
+                })
+            ];
             if (!this.isLocalLaunch) {
-                promises.push(this.loadRemoteNotebookControllersImpl());
+                promises.push(
+                    this.loadRemoteNotebookControllersImpl().then(() => {
+                        if (!this.controllerLoadingTelemetry.loadRemoteSent && this.startTimeForFetchingControllers) {
+                            this.controllerLoadingTelemetry.loadRemoteSent = true;
+                            sendTelemetryEvent(
+                                Telemetry.FetchControllers,
+                                this.startTimeForFetchingControllers.elapsedTime,
+                                {
+                                    firstTime: true,
+                                    kind: 'remote'
+                                }
+                            );
+                        }
+                    })
+                );
             }
             this.controllersPromise = Promise.all(promises)
                 .then(() => noop())
@@ -517,19 +565,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             return;
         }
 
-        // Keep track of a token per document so that we can cancel the search if the doc is closed
-        const preferredSearchToken = new CancellationTokenSource();
-        const disposable = this.notebook.onDidCloseNotebookDocument(
-            (e) => (e === document ? preferredSearchToken.cancel() : undefined),
-            this,
-            this.disposables
-        );
-
-        // Prep so that we can track the selected controller for this document
-        traceInfoIfCI(`Clear controller mapping for ${getDisplayPath(document.uri)}`);
-        const loadControllersPromise = this.loadNotebookControllers();
+        const updatePromise = this.computePreferredNotebookController(document);
         if (!this.isLocalLaunch) {
-            void loadControllersPromise.finally(() => {
+            void updatePromise.finally(() => {
                 if (this.isLocalLaunch) {
                     return;
                 }
@@ -558,6 +596,20 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // If we know we're dealing with a Python notebook, load the active interpreter as a kernel asap.
             this.createActiveInterpreterController(JupyterNotebookView, document.uri).catch(noop);
         }
+    }
+
+    public async computePreferredNotebookController(
+        document: NotebookDocument
+    ): Promise<IVSCodeNotebookController | undefined> {
+        traceInfoIfCI(`Clear controller mapping for ${getDisplayPath(document.uri)}`);
+        const loadControllersPromise = this.loadNotebookControllers();
+        // Keep track of a token per document so that we can cancel the search if the doc is closed
+        const preferredSearchToken = new CancellationTokenSource();
+        const disposable = this.notebook.onDidCloseNotebookDocument(
+            (e) => (e === document ? preferredSearchToken.cancel() : undefined),
+            this,
+            this.disposables
+        );
 
         try {
             let preferredConnection: KernelConnectionMetadata | undefined;
