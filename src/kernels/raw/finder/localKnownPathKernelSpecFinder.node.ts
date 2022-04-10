@@ -18,8 +18,9 @@ import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfo, traceError } from '../../../platform/logging';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
-import { captureTelemetry } from '../../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
+import { getTelemetrySafeLanguage } from '../../../telemetry/helpers';
 
 /**
  * This class searches for kernels on the file system in well known paths documented by Jupyter.
@@ -89,17 +90,21 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
             searchResults.map(async (resultPath) => {
                 try {
                     // Add these into our path cache to speed up later finds
-                    const kernelspec = await this.getKernelSpec(
+                    const kernelSpec = await this.getKernelSpec(
                         resultPath.kernelSpecFile,
                         resultPath.interpreter,
                         globalKernelPath,
                         cancelToken
                     );
-                    if (kernelspec) {
-                        results.push(kernelspec);
+                    if (kernelSpec) {
+                        sendTelemetryEvent(Telemetry.KernelSpecLanguage, undefined, {
+                            language: getTelemetrySafeLanguage(kernelSpec.language),
+                            kind: 'local'
+                        });
+                        results.push(kernelSpec);
                     }
                 } catch (ex) {
-                    traceError(`Failed to load kernelspec for ${resultPath.kernelSpecFile}`, ex);
+                    traceError(`Failed to load kernelSpec for ${resultPath.kernelSpecFile}`, ex);
                 }
             })
         );

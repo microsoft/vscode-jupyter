@@ -68,6 +68,10 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                 // Turn them both into a combined list
                 const mappedSpecs = await Promise.all(
                     specs.map(async (s) => {
+                        sendTelemetryEvent(Telemetry.KernelSpecLanguage, undefined, {
+                            language: getTelemetrySafeLanguage(s.language),
+                            kind: 'remote'
+                        });
                         const kernel: RemoteKernelSpecConnectionMetadata = {
                             kind: 'startUsingRemoteKernelSpec',
                             interpreter: await this.getInterpreter(s, connInfo.baseUrl),

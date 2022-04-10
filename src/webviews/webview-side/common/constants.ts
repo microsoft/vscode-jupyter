@@ -70,7 +70,8 @@ export const VSCodeKnownNotebookLanguages: string[] = [
     'cling',
     'rust',
     'sas',
-    'sos'
+    'sos',
+    'ocaml'
 ];
 
 export namespace Commands {
@@ -406,6 +407,7 @@ export enum Telemetry {
     CompletionTimeFromLS = 'DS_INTERNAL.COMPLETION_TIME_FROM_LS',
     CompletionTimeFromJupyter = 'DS_INTERNAL.COMPLETION_TIME_FROM_JUPYTER',
     NotebookLanguage = 'DATASCIENCE.NOTEBOOK_LANGUAGE',
+    KernelSpecLanguage = 'DATASCIENCE.KERNEL_SPEC_LANGUAGE',
     NumberOfLocalKernelSpecs = 'DS_INTERNAL.LOCAL_KERNEL_SPEC_COUNT',
     NumberOfRemoteKernelSpecs = 'DS_INTERNAL.REMOTE_KERNEL_SPEC_COUNT',
     KernelSpecNotFound = 'DS_INTERNAL.KERNEL_SPEC_NOT_FOUND',

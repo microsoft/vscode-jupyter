@@ -1047,6 +1047,16 @@ export interface IEventNamePropertyMapping {
          */
         language: string;
     };
+    [Telemetry.KernelSpecLanguage]: {
+        /**
+         * Language of the kernelSpec.
+         */
+        language: string;
+        /**
+         * Whether this is a local or remote kernel.
+         */
+        kind: 'local' | 'remote';
+    };
     /**
      * Telemetry event sent to indicate 'jupyter kernelspec' is not possible.
      *
