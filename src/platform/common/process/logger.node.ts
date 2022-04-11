@@ -9,13 +9,13 @@ import { traceInfo } from '../../logging';
 import { IOutputChannel } from '../types';
 import { Logging } from '../utils/localize';
 import { IProcessLogger, SpawnOptions } from './types.node';
-import { getDisplayPathFromLocalFile, removeHomeFromFile } from '../platform/fs-paths.node';
+import { removeHomeFromFile } from '../platform/fs-paths.node';
 
 @injectable()
 export class ProcessLogger implements IProcessLogger {
     constructor(
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel
-    ) { }
+    ) {}
 
     public logProcess(file: string, args: string[], options?: SpawnOptions) {
         if (!isTestExecution() && isCI && process.env.UITEST_DISABLE_PROCESS_LOGGING) {
