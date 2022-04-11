@@ -39,7 +39,7 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
         super(fs, workspaceService, extensionChecker, memento);
         if (this.oldKernelSpecsFolder) {
             traceInfo(
-                `Old kernelspecs (created by Jupyter extension) stored in directory ${this.oldKernelSpecsFolder}`
+                `Old kernelSpecs (created by Jupyter extension) stored in directory ${this.oldKernelSpecsFolder}`
             );
         }
     }
