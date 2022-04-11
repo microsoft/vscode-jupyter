@@ -866,9 +866,9 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         // Second cell should not have been executed.
         assert.isEmpty(cell2.outputs, 'Second cell should not have any output');
-        assert.isEmpty(cell2.executionSummary?.executionOrder, 'Second cell should not have an execution order');
-        assert.isEmpty(cell2.executionSummary?.timing, 'Second cell should not have execution times');
-        assert.isEmpty(cell2.executionSummary?.success, 'Second cell should not have execution result');
+        assert.isUndefined(cell2.executionSummary?.executionOrder, 'Second cell should not have an execution order');
+        assert.isUndefined(cell2.executionSummary?.timing, 'Second cell should not have execution times');
+        assert.isUndefined(cell2.executionSummary?.success, 'Second cell should not have execution result');
     });
     test('Run whole document and test status of cells', async () => {
         const cells = await insertRandomCells({ count: 4, addMarkdownCells: false });
