@@ -9,13 +9,13 @@ import { traceInfo } from '../../logging';
 import { IOutputChannel } from '../types';
 import { Logging } from '../utils/localize';
 import { IProcessLogger, SpawnOptions } from './types.node';
-import { getDisplayPathFromLocalFile } from '../platform/fs-paths.node';
+import { getDisplayPathFromLocalFile, removeHomeFromFile } from '../platform/fs-paths.node';
 
 @injectable()
 export class ProcessLogger implements IProcessLogger {
     constructor(
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel
-    ) {}
+    ) { }
 
     public logProcess(file: string, args: string[], options?: SpawnOptions) {
         if (!isTestExecution() && isCI && process.env.UITEST_DISABLE_PROCESS_LOGGING) {
@@ -24,17 +24,17 @@ export class ProcessLogger implements IProcessLogger {
             return;
         }
         const argsList = args.reduce((accumulator, current, index) => {
-            let formattedArg = getDisplayPathFromLocalFile(current).toCommandArgument();
+            let formattedArg = removeHomeFromFile(current).toCommandArgument();
             if (current[0] === "'" || current[0] === '"') {
-                formattedArg = `${current[0]}${getDisplayPathFromLocalFile(current.substr(1))}`;
+                formattedArg = `${current[0]}${removeHomeFromFile(current.substr(1))}`;
             }
 
             return index === 0 ? formattedArg : `${accumulator} ${formattedArg}`;
         }, '');
 
-        const info = [`> ${getDisplayPathFromLocalFile(file)} ${argsList}`];
+        const info = [`> ${removeHomeFromFile(file)} ${argsList}`];
         if (options && options.cwd) {
-            info.push(`${Logging.currentWorkingDirectory()} ${getDisplayPathFromLocalFile(options.cwd)}`);
+            info.push(`${Logging.currentWorkingDirectory()} ${removeHomeFromFile(options.cwd)}`);
         }
 
         info.forEach((line) => {

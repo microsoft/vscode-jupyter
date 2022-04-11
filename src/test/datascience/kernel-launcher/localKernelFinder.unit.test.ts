@@ -5,6 +5,7 @@
 
 import { assert } from 'chai';
 import * as path from '../../../platform/vscode-path/path';
+import * as uriPath from '../../../platform/vscode-path/resources';
 import * as fsExtra from 'fs-extra';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when, verify } from 'ts-mockito';
@@ -55,20 +56,19 @@ const originalIsWindows = isWindows;
         const disposables: IDisposable[] = [];
         let globalSpecPath: Uri | undefined;
         let tempDirForKernelSpecs: Uri;
-        const pathSeparator = isWindows ? '\\' : '/';
         let jupyterPaths: JupyterPaths;
         type TestData = {
             interpreters?: (
                 | PythonEnvironment
                 | {
-                      interpreter: PythonEnvironment;
-                      /**
-                       * These are all of the kernelspecs found within the Python environment.
-                       * Could be python or non-python kernlespecs.
-                       * Could be default or custom kernelspecs.
-                       */
-                      kernelSpecs?: KernelSpec.ISpecModel[];
-                  }
+                    interpreter: PythonEnvironment;
+                    /**
+                     * These are all of the kernelspecs found within the Python environment.
+                     * Could be python or non-python kernlespecs.
+                     * Could be default or custom kernelspecs.
+                     */
+                    kernelSpecs?: KernelSpec.ISpecModel[];
+                }
             )[];
             /**
              * All of the globally installed KernelSpecs
@@ -135,14 +135,14 @@ const originalIsWindows = isWindows;
             (testData.interpreters || []).forEach((interpreter) => {
                 if ('interpreter' in interpreter) {
                     (interpreter.kernelSpecs || []).forEach((kernelSpec) => {
-                        const jsonFile = [
+                        const jsonFile = path.join(
                             interpreter.interpreter.sysPrefix,
                             'share',
                             'jupyter',
                             'kernels',
                             kernelSpec.name,
                             'kernel.json'
-                        ].join(pathSeparator);
+                        );
                         kernelSpecsBySpecFile.set(jsonFile, kernelSpec);
                     });
                 }
@@ -151,7 +151,7 @@ const originalIsWindows = isWindows;
             tempDirForKernelSpecs = await jupyterPaths.getKernelSpecTempRegistrationFolder();
             await Promise.all(
                 (testData.globalKernelSpecs || []).map(async (kernelSpec) => {
-                    const jsonFile = [globalSpecPath?.fsPath, kernelSpec.name, 'kernel.json'].join(pathSeparator);
+                    const jsonFile = path.join(globalSpecPath!.fsPath, kernelSpec.name, 'kernel.json');
                     kernelSpecsBySpecFile.set(jsonFile.replace(/\\/g, '/'), kernelSpec);
                 })
             );
@@ -165,7 +165,7 @@ const originalIsWindows = isWindows;
             when(fs.searchLocal(anything(), anything(), true)).thenCall((_p, c: string, _d) => {
                 if (c === globalSpecPath?.fsPath) {
                     return (testData.globalKernelSpecs || []).map((kernelSpec) =>
-                        [kernelSpec.name, 'kernel.json'].join(pathSeparator)
+                        path.join(kernelSpec.name, 'kernel.json')
                     );
                 }
                 const interpreter = (testData.interpreters || []).find((item) =>
@@ -173,7 +173,7 @@ const originalIsWindows = isWindows;
                 );
                 if (interpreter && 'interpreter' in interpreter) {
                     return (interpreter.kernelSpecs || []).map((kernelSpec) =>
-                        [kernelSpec.name, 'kernel.json'].join(pathSeparator)
+                        path.join(kernelSpec.name, 'kernel.json')
                     );
                 }
                 return [];
@@ -470,7 +470,7 @@ const originalIsWindows = isWindows;
             const expectedKernelSpecs: KernelConnectionMetadata[] = [];
             await Promise.all(
                 expectedGlobalKernelSpecs.map(async (kernelSpec) => {
-                    const kernelspecFile = [globalSpecPath?.fsPath, kernelSpec.name, 'kernel.json'].join(pathSeparator);
+                    const kernelspecFile = path.join(globalSpecPath!.fsPath, kernelSpec.name, 'kernel.json');
                     const interpreter = expectedInterpreters.find(
                         (item) => kernelSpec.language === PYTHON_LANGUAGE && item.path.fsPath === kernelSpec.argv[0]
                     );
@@ -487,14 +487,14 @@ const originalIsWindows = isWindows;
             );
             await Promise.all(
                 expectedInterpreterKernelSpecFiles.map(async ({ interpreter, kernelspec }) => {
-                    const kernelSpecFile = [
+                    const kernelSpecFile = path.join(
                         interpreter.sysPrefix,
                         'share',
                         'jupyter',
                         'kernels',
                         kernelspec.name,
                         'kernel.json'
-                    ].join(pathSeparator);
+                    );
                     const spec = await loadKernelSpec(Uri.file(kernelSpecFile), instance(fs), interpreter);
                     if (spec) {
                         expectedKernelSpecs.push(<KernelConnectionMetadata>{
@@ -542,20 +542,20 @@ const originalIsWindows = isWindows;
         };
         type ExpectedKernel =
             | {
-                  /**
-                   * Expected global kernelspec.
-                   */
-                  expectedGlobalKernelSpec: KernelSpec.ISpecModel;
-              }
+                /**
+                 * Expected global kernelspec.
+                 */
+                expectedGlobalKernelSpec: KernelSpec.ISpecModel;
+            }
             /**
              * Expected list of kernlespecs that are associated with a Python interpreter.
              */
             | {
-                  expectedInterpreterKernelSpecFile: {
-                      interpreter: PythonEnvironment;
-                      kernelspec: KernelSpec.ISpecModel;
-                  };
-              }
+                expectedInterpreterKernelSpecFile: {
+                    interpreter: PythonEnvironment;
+                    kernelspec: KernelSpec.ISpecModel;
+                };
+            }
             /**
              * Expected Python environment that will be used to start the kernel.
              */
@@ -663,8 +663,8 @@ const originalIsWindows = isWindows;
             }
             assert.strictEqual(actual?.kind, 'startUsingLocalKernelSpec');
             assert.strictEqual(
-                actual?.kernelSpec.specFile?.replace(/\\/g, pathSeparator),
-                [globalSpecPath?.fsPath, expected.name, 'kernel.json'].join(pathSeparator).replace(/\\/g, pathSeparator)
+                actual?.kernelSpec.specFile,
+                path.join(globalSpecPath!.fsPath, expected.name, 'kernel.json')
             );
             Object.keys(expected).forEach((key) => {
                 // We always mess around with the names, hence don't compare names.
@@ -743,29 +743,29 @@ const originalIsWindows = isWindows;
             // Verify we deleted the old kernelspecs.
             const globalKernelSpecDir = await jupyterPaths.getKernelSpecRootPath();
             const kernelSpecsToBeDeleted = [
-                path.join(
-                    globalKernelSpecDir!.fsPath,
+                uriPath.joinPath(
+                    globalKernelSpecDir!,
                     kernelspecRegisteredByOlderVersionOfExtension.name,
                     'kernel.json'
                 ),
-                path.join(
-                    globalKernelSpecDir!.fsPath,
+                uriPath.joinPath(
+                    globalKernelSpecDir!,
                     kernelspecRegisteredByVeryOldVersionOfExtension.name,
                     'kernel.json'
                 )
             ];
 
             // Verify files were copied to some other location before being deleted.
-            verify(fs.copyLocal(kernelSpecsToBeDeleted[0], anything())).calledBefore(
-                fs.deleteLocalFile(kernelSpecsToBeDeleted[0])
+            verify(fs.copyLocal(kernelSpecsToBeDeleted[0].fsPath, anything())).calledBefore(
+                fs.deleteLocalFile(kernelSpecsToBeDeleted[0].fsPath)
             );
-            verify(fs.copyLocal(kernelSpecsToBeDeleted[1], anything())).calledBefore(
-                fs.deleteLocalFile(kernelSpecsToBeDeleted[1])
+            verify(fs.copyLocal(kernelSpecsToBeDeleted[1].fsPath, anything())).calledBefore(
+                fs.deleteLocalFile(kernelSpecsToBeDeleted[1].fsPath)
             );
 
             // Verify files were deleted.
-            verify(fs.deleteLocalFile(kernelSpecsToBeDeleted[0])).atLeast(1);
-            verify(fs.deleteLocalFile(kernelSpecsToBeDeleted[1])).atLeast(1);
+            verify(fs.deleteLocalFile(kernelSpecsToBeDeleted[0].fsPath)).atLeast(1);
+            verify(fs.deleteLocalFile(kernelSpecsToBeDeleted[1].fsPath)).atLeast(1);
         });
 
         [

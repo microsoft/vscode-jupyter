@@ -47,7 +47,7 @@ function getDisplayPathImpl(file: Uri | undefined, cwd: Uri | undefined, homePat
         const fsPath = uriToFsPath(file, true);
 
         // Remove separator on the front
-        if (fsPath.startsWith(path.sep)) {
+        if (fsPath.startsWith(path.sep) && fsPath.includes(':')) {
             return fsPath.slice(1);
         }
         return fsPath;

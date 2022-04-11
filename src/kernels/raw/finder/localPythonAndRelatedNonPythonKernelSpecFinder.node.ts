@@ -13,7 +13,7 @@ import {
     PythonKernelConnectionMetadata
 } from '../../../kernels/types';
 import { LocalKernelSpecFinderBase } from './localKernelSpecFinderBase.node';
-import { baseKernelPathWindows, baseKernelPathLinux, JupyterPaths } from './jupyterPaths.node';
+import { baseKernelPath, JupyterPaths } from './jupyterPaths.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
@@ -27,7 +27,6 @@ import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/in
 import { captureTelemetry } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { isWindows } from '../../../platform/vscode-path/platform';
 import { fsPathToUri } from '../../../platform/vscode-path/utils';
 
 export const isDefaultPythonKernelSpecName = /^python\d*.?\d*$/;
@@ -211,8 +210,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                     const matchingInterpreter = await this.findMatchingInterpreter(item.kernelSpec, interpreters);
                     if (!matchingInterpreter) {
                         traceVerbose(
-                            `Kernel Spec for ${
-                                item.kernelSpec.display_name
+                            `Kernel Spec for ${item.kernelSpec.display_name
                             } ignored as we cannot find a matching interpreter ${JSON.stringify(item)}`
                         );
                         return;
@@ -238,8 +236,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                         isDefaultKernelSpec(kernelspec)
                     ) {
                         traceVerbose(
-                            `Hiding default kernel spec '${kernelspec.display_name}', '${
-                                kernelspec.name
+                            `Hiding default kernel spec '${kernelspec.display_name}', '${kernelspec.name
                             }', ${getDisplayPathFromLocalFile(kernelspec.argv[0])}`
                         );
                         return false;
@@ -512,7 +509,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                 return {
                     interpreter,
                     kernelSearchPath: Uri.file(
-                        path.join(interpreter.sysPrefix, isWindows ? baseKernelPathWindows : baseKernelPathLinux)
+                        path.join(interpreter.sysPrefix, baseKernelPath)
                     )
                 };
             })
