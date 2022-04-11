@@ -13,7 +13,7 @@ import {
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { Cancellation } from '../../platform/common/cancellation.node';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import { traceInfo, traceVerbose, traceInfoIfCI } from '../../platform/logging';
+import { traceVerbose, traceInfoIfCI } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IDisposableRegistry, IAsyncDisposableRegistry, IDisposable } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
@@ -117,7 +117,7 @@ export class NotebookIPyWidgetCoordinator {
             return;
         }
         // Dispost previous message coordinators.
-        traceInfo(`Setting setActiveController for ${getDisplayPath(notebook.uri)}`);
+        traceVerbose(`Setting setActiveController for ${getDisplayPath(notebook.uri)}`);
         const previousCoordinators = this.messageCoordinators.get(notebook);
         if (previousCoordinators) {
             this.messageCoordinators.delete(notebook);

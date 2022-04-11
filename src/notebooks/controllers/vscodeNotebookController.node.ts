@@ -223,7 +223,7 @@ export class VSCodeNotebookController implements Disposable {
     }
 
     public async updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
-        traceInfo(`Setting controller affinity for ${getDisplayPath(notebook.uri)} ${this.id}`);
+        traceVerbose(`Setting controller affinity for ${getDisplayPath(notebook.uri)} ${this.id}`);
         this.controller.updateNotebookAffinity(notebook, affinity);
     }
 
@@ -254,7 +254,6 @@ export class VSCodeNotebookController implements Disposable {
         initializeInteractiveOrNotebookTelemetryBasedOnUserAction(notebook.uri, this.connection);
         sendKernelTelemetryEvent(notebook.uri, Telemetry.ExecuteCell);
         // Notebook is trusted. Continue to execute cells
-        traceInfo(`Execute Cells request ${cells.map((cell) => cell.index).join(', ')}`);
         await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
     }
     private warnWhenUsingOutdatedPython() {
@@ -636,7 +635,7 @@ export class VSCodeNotebookController implements Disposable {
             controller: this.controller,
             resourceUri: document.uri // In the case of interactive window, we cannot pass the Uri of notebook, it must be the Py file or undefined.
         });
-        traceInfo(`KernelProvider switched kernel to id = ${newKernel.kernelConnectionMetadata.id}`);
+        traceVerbose(`KernelProvider switched kernel to id = ${newKernel.kernelConnectionMetadata.id}`);
 
         // If this is a Python notebook and Python isn't installed, then don't auto-start the kernel.
         if (isPythonKernelConnection(this.kernelConnection) && !this.extensionChecker.isPythonExtensionInstalled) {

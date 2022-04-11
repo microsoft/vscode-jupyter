@@ -14,7 +14,7 @@ import {
     IApplicationShell
 } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { traceInfoIfCI, traceError, traceWarning, traceInfo, traceDecoratorVerbose } from '../../platform/logging';
+import { traceInfoIfCI, traceError, traceWarning, traceInfo, traceDecoratorVerbose, traceVerbose } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { CondaService } from '../../platform/common/process/condaService.node';
 import {
@@ -395,7 +395,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             traceWarning(`Unable to create a controller for ${notebookType} without an active interpreter.`);
             return;
         }
-        traceInfo(`Creating controller for ${notebookType} with interpreter ${getDisplayPath(activeInterpreter.path)}`);
+        traceVerbose(`Creating controller for ${notebookType} with interpreter ${getDisplayPath(activeInterpreter.path)}`);
         return this.getOrCreateControllerForActiveInterpreter(activeInterpreter, notebookType);
     }
     @traceDecoratorVerbose('Get default Remote Controller')
@@ -674,7 +674,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 // If the controller doesn't exist, then it means we're still loading them.
                 // However we can create this one as we have all of the necessary info.
                 if (!targetController) {
-                    traceInfo(`Early registration of controller for Kernel connection ${preferredConnection.id}`);
+                    traceVerbose(`Early registration of controller for Kernel connection ${preferredConnection.id}`);
                     this.createNotebookControllers([preferredConnection]);
                 }
             } else {
