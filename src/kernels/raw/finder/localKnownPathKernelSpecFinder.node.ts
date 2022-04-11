@@ -18,9 +18,9 @@ import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfo, traceError } from '../../../platform/logging';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
-import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
+import { captureTelemetry } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
-import { getTelemetrySafeLanguage } from '../../../telemetry/helpers';
+import { sendKernelSpecTelemetry } from './helper';
 
 /**
  * This class searches for kernels on the file system in well known paths documented by Jupyter.
@@ -97,10 +97,7 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
                         cancelToken
                     );
                     if (kernelSpec) {
-                        sendTelemetryEvent(Telemetry.KernelSpecLanguage, undefined, {
-                            language: getTelemetrySafeLanguage(kernelSpec.language),
-                            kind: 'local'
-                        });
+                        sendKernelSpecTelemetry(kernelSpec, 'local');
                         results.push(kernelSpec);
                     }
                 } catch (ex) {

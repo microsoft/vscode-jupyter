@@ -20,6 +20,7 @@ import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { IRemoteKernelFinder } from '../raw/types';
 import { IJupyterSessionManagerFactory, IJupyterSessionManager } from './types';
+import { sendKernelSpecTelemetry } from '../raw/finder/helper';
 
 // This class searches for a kernel that matches the given kernel name.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -68,10 +69,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                 // Turn them both into a combined list
                 const mappedSpecs = await Promise.all(
                     specs.map(async (s) => {
-                        sendTelemetryEvent(Telemetry.KernelSpecLanguage, undefined, {
-                            language: getTelemetrySafeLanguage(s.language),
-                            kind: 'remote'
-                        });
+                        sendKernelSpecTelemetry(s, 'remote');
                         const kernel: RemoteKernelSpecConnectionMetadata = {
                             kind: 'startUsingRemoteKernelSpec',
                             interpreter: await this.getInterpreter(s, connInfo.baseUrl),

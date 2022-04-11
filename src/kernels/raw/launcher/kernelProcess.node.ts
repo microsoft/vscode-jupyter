@@ -344,7 +344,7 @@ export class KernelProcess implements IKernelProcess {
             await this.fileSystem.writeLocalFile(this.connectionFile, JSON.stringify(this._connection));
 
             // Replace the connection file argument with this file
-            // Remmeber, non-python kernels can have argv as `--connection-file={connection_file}`,
+            // Remember, non-python kernels can have argv as `--connection-file={connection_file}`,
             // hence we should not replace the entire entry, but just replace the text `{connection_file}`
             // See https://github.com/microsoft/vscode-jupyter/issues/7203
             if (this.launchKernelSpec.argv[indexOfConnectionFile].includes('--connection-file')) {
