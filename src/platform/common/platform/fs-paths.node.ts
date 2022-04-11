@@ -17,7 +17,7 @@ export class Executables {
         public readonly delimiter: string,
         // the OS type to target
         private readonly osType: OSType
-    ) { }
+    ) {}
     // Create a new object using common-case default values.
     // We do not use an alternate constructor because defaults in the
     // constructor runs counter to our typical approach.
@@ -36,8 +36,14 @@ export class Executables {
 }
 
 export function removeHomeFromFile(file: string | undefined) {
-    if (file && file.startsWith(homePath.fsPath)) {
-        return `~${file.slice(homePath.fsPath.length)}`;
+    if (getOSType() === OSType.Windows) {
+        if (file && file.toLowerCase().startsWith(homePath.fsPath.toLowerCase())) {
+            return `~${file.slice(homePath.fsPath.length)}`;
+        }
+    } else {
+        if (file && file.startsWith(homePath.fsPath)) {
+            return `~${file.slice(homePath.fsPath.length)}`;
+        }
     }
     return file || '';
 }
@@ -45,12 +51,12 @@ export function removeHomeFromFile(file: string | undefined) {
 export function getDisplayPathFromLocalFile(file: string | undefined, cwd?: string | undefined) {
     const folders: WorkspaceFolder[] = cwd
         ? [
-            {
-                uri: Uri.file(cwd),
-                name: '',
-                index: 0
-            }
-        ]
+              {
+                  uri: Uri.file(cwd),
+                  name: '',
+                  index: 0
+              }
+          ]
         : [];
     return getDisplayPath(file ? Uri.file(file) : undefined, folders);
 }
