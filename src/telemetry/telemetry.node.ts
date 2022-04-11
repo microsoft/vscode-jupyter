@@ -209,7 +209,7 @@ export function trackKernelResourceInformation(resource: Resource, information: 
         }
         let language: string | undefined;
         switch (kernelConnection.kind) {
-            case 'connectToLiveKernel':
+            case 'connectToLiveRemoteKernel':
                 language = kernelConnection.kernelModel.language;
                 break;
             case 'startUsingRemoteKernelSpec':

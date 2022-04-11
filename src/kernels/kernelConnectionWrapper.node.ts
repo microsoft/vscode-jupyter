@@ -235,7 +235,7 @@ export class KernelConnectionWrapper implements Kernel.IKernelConnection {
     async shutdown(): Promise<void> {
         if (
             this.kernel.kernelConnectionMetadata.kind === 'startUsingRemoteKernelSpec' ||
-            this.kernel.kernelConnectionMetadata.kind === 'connectToLiveKernel'
+            this.kernel.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel'
         ) {
             await this.kernel.session?.shutdown();
         }

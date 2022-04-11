@@ -533,7 +533,7 @@ export class Kernel implements IKernel {
         }
 
         // If this is a live kernel, we shouldn't be changing anything by running startup code.
-        if (this.kernelConnectionMetadata.kind !== 'connectToLiveKernel') {
+        if (this.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
             // Gather all of the startup code at one time and execute as one cell
             const startupCode = await this.gatherInternalStartupCode();
             await this.executeSilently(notebook, startupCode, {
@@ -572,7 +572,7 @@ export class Kernel implements IKernel {
             };
             promises.push(notebook.session.requestKernelInfo().then((item) => item?.content));
             // If this doesn't complete in 5 seconds for remote kernels, assume the kernel is busy & provide some default content.
-            if (this.kernelConnectionMetadata.kind === 'connectToLiveKernel') {
+            if (this.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel') {
                 promises.push(sleep(5_000).then(() => defaultResponse));
             }
             const content = await Promise.race(promises);
@@ -585,7 +585,7 @@ export class Kernel implements IKernel {
         } catch (ex) {
             traceWarning('Failed to request KernelInfo', ex);
         }
-        if (this.kernelConnectionMetadata.kind !== 'connectToLiveKernel') {
+        if (this.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
             traceVerbose('End running kernel initialization, now waiting for idle');
             await notebook.session.waitForIdle(this.launchTimeout);
             traceVerbose('End running kernel initialization, session is idle');
@@ -716,7 +716,7 @@ export class Kernel implements IKernel {
         if (
             (isLocalConnection(this.kernelConnectionMetadata) ||
                 isLocalHostConnection(this.kernelConnectionMetadata)) &&
-            this.kernelConnectionMetadata.kind !== 'connectToLiveKernel' // Skip for live kernel. Don't change current directory on a kernel that's already running
+            this.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel' // Skip for live kernel. Don't change current directory on a kernel that's already running
         ) {
             let suggestedDir = await calculateWorkingDirectory(
                 this.configService,

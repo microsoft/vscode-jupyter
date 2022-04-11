@@ -226,7 +226,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         disableUI: boolean,
         cancelToken: CancellationToken
     ): Promise<ISessionWithSocket> {
-        if (!this.kernelConnectionMetadata || this.kernelConnectionMetadata.kind === 'connectToLiveKernel') {
+        if (!this.kernelConnectionMetadata || this.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel') {
             throw new Error('Unsupported - unable to restart live kernel sessions using raw kernel.');
         }
         return this.startRawSession({ token: cancelToken, ui: new DisplayOptions(disableUI) });

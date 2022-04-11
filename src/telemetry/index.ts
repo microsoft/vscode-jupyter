@@ -1475,7 +1475,7 @@ export interface IEventNamePropertyMapping {
             | 'startUsingDefaultKernel'
             | 'startUsingLocalKernelSpec'
             | 'startUsingRemoteKernelSpec'
-            | 'connectToLiveKernel';
+            | 'connectToLiveRemoteKernel';
     } & Partial<TelemetryErrorProperties>;
     /*
      * Telemetry sent when we recommend installing an extension.

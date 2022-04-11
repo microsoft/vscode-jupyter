@@ -363,13 +363,13 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
     const language = expectedLower || 'python';
     const match =
         (preferred &&
-            preferred.connection.kind !== 'connectToLiveKernel' &&
+            preferred.connection.kind !== 'connectToLiveRemoteKernel' &&
             (!expectedLanguage || preferred.connection.kernelSpec?.language?.toLowerCase() === expectedLower)) ||
-        preferred?.connection.kind === 'connectToLiveKernel'
+        preferred?.connection.kind === 'connectToLiveRemoteKernel'
             ? preferred
             : notebookControllers.find(
                   (d) =>
-                      d.connection.kind != 'connectToLiveKernel' &&
+                      d.connection.kind != 'connectToLiveRemoteKernel' &&
                       language === d.connection.kernelSpec?.language?.toLowerCase()
               );
 

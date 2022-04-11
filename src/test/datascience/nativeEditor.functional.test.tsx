@@ -508,15 +508,15 @@ suite('Dummy8', () => {
 //                         async (o: IKernelSpecQuickPickItem[]) => {
 //                             const existing = o.filter(
 //                                 (s) =>
-//                                     s.selection.kind === 'connectToLiveKernel' &&
+//                                     s.selection.kind === 'connectToLiveRemoteKernel' &&
 //                                     s.selection.kernelModel.numberOfConnections
 //                             );
 
 //                             // Might be more than one. Get the oldest one. It has the actual activity.
 //                             const sorted = existing.sort((a, b) => {
 //                                 if (
-//                                     a.selection.kind !== 'connectToLiveKernel' ||
-//                                     b.selection.kind !== 'connectToLiveKernel'
+//                                     a.selection.kind !== 'connectToLiveRemoteKernel' ||
+//                                     b.selection.kind !== 'connectToLiveRemoteKernel'
 //                                 ) {
 //                                     return 0;
 //                                 }

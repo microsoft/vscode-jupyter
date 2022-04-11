@@ -432,7 +432,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         shutdownEvenIfRemote?: boolean
     ): boolean {
         // We can never shut down existing (live) kernels.
-        if (session.kernelConnectionMetadata?.kind === 'connectToLiveKernel' && !shutdownEvenIfRemote) {
+        if (session.kernelConnectionMetadata?.kind === 'connectToLiveRemoteKernel' && !shutdownEvenIfRemote) {
             return false;
         }
         // We can always shutdown restart sessions.

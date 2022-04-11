@@ -11,7 +11,7 @@ suite('Notebook Controller Manager', () => {
     test('Live kernels should display the name`', () => {
         const name = getDisplayNameOrNameOfKernelConnection({
             id: '',
-            kind: 'connectToLiveKernel',
+            kind: 'connectToLiveRemoteKernel',
             interpreter: undefined,
             kernelModel: {
                 model: undefined,
