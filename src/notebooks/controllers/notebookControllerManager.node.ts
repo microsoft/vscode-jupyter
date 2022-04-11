@@ -14,7 +14,14 @@ import {
     IApplicationShell
 } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { traceInfoIfCI, traceError, traceWarning, traceInfo, traceDecoratorVerbose, traceVerbose } from '../../platform/logging';
+import {
+    traceInfoIfCI,
+    traceError,
+    traceWarning,
+    traceInfo,
+    traceDecoratorVerbose,
+    traceVerbose
+} from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { CondaService } from '../../platform/common/process/condaService.node';
 import {
@@ -395,7 +402,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             traceWarning(`Unable to create a controller for ${notebookType} without an active interpreter.`);
             return;
         }
-        traceVerbose(`Creating controller for ${notebookType} with interpreter ${getDisplayPath(activeInterpreter.path)}`);
+        traceVerbose(
+            `Creating controller for ${notebookType} with interpreter ${getDisplayPath(activeInterpreter.path)}`
+        );
         return this.getOrCreateControllerForActiveInterpreter(activeInterpreter, notebookType);
     }
     @traceDecoratorVerbose('Get default Remote Controller')
