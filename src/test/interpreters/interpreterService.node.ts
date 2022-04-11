@@ -10,6 +10,7 @@ import { Resource } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts.node';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { fsPathToUri } from '../../platform/vscode-path/utils';
+import { ResourceSet } from '../../platform/vscode-path/map';
 
 let interpretersCache: Promise<PythonEnvironment[]> | undefined;
 @injectable()
@@ -72,7 +73,7 @@ async function getAllInterpreters(): Promise<PythonEnvironment[]> {
         getInterpreterInfo(fsPathToUri('python'))
     ]);
     const interpreters: PythonEnvironment[] = [];
-    const items = new Set<Uri>();
+    const items = new ResourceSet();
     allInterpreters.forEach((item) => {
         if (item && !items.has(item.path)) {
             items.add(item.path);

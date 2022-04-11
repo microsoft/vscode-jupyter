@@ -107,7 +107,7 @@ export function areInterpreterPathsSame(path1: Uri = Uri.file(''), path2:Uri = U
  * This function will take that into account.
  */
  export function getNormalizedInterpreterPath(path:Uri = Uri.file(''), ostype = getOSType(), forceLowerCase: boolean = false){
-    let fsPath = uriPath.originalFSPath(path);
+    let fsPath = path.fsPath;
     if (forceLowerCase) {
         fsPath = fsPath.toLowerCase();
     }

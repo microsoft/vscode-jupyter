@@ -3,7 +3,7 @@
 'use strict';
 import type { KernelSpec } from '@jupyterlab/services';
 import { Uri } from 'vscode';
-import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
+import { PythonEnvironment_PythonApi } from '../../platform/api/types';
 import { IJupyterKernelSpec } from '../types';
 
 export class JupyterKernelSpec implements IJupyterKernelSpec {
@@ -17,7 +17,7 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
     public interrupt_mode?: 'message' | 'signal';
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public metadata?: Record<string, any> & { interpreter?: Partial<PythonEnvironment> };
+    public metadata?: Record<string, any> & { interpreter?: Partial<PythonEnvironment_PythonApi> };
     constructor(
         specModel: KernelSpec.ISpecModel,
         public readonly specFile?: string,

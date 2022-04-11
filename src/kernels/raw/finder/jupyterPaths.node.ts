@@ -15,6 +15,7 @@ import { IEnvironmentVariablesProvider } from '../../../platform/common/variable
 import { traceDecoratorVerbose } from '../../../platform/logging';
 import { getUserHomeDir } from '../../../platform/common/utils/platform.node';
 import { fsPathToUri } from '../../../platform/vscode-path/utils';
+import { ResourceSet } from '../../../platform/vscode-path/map';
 
 const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
@@ -23,8 +24,8 @@ const winJupyterRuntimePath = path.join('AppData', 'Roaming', 'jupyter', 'runtim
 const macJupyterRuntimePath = path.join('Library', 'Jupyter', 'runtime');
 
 export const baseKernelPath = path.join('share', 'jupyter', 'kernels');
-const CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH = 'CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH_2.';
-const CACHE_KEY_FOR_JUPYTER_PATHS = 'CACHE_KEY_FOR_JUPYTER_PATHS_2_.';
+const CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH = 'CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH.';
+const CACHE_KEY_FOR_JUPYTER_PATHS = 'CACHE_KEY_FOR_JUPYTER_PATHS_.';
 
 @injectable()
 export class JupyterPaths {
@@ -79,12 +80,10 @@ export class JupyterPaths {
                 }
             })();
         void this.cachedKernelSpecRootPath.then((value) => {
-            if (value) {
-                void this.globalState.update(CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH, value);
-            }
+            void this.updateCachedRootPath(value);
         });
-        if (this.globalState.get(CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH)) {
-            return this.globalState.get(CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH);
+        if (this.getCachedRootPath()) {
+            return this.getCachedRootPath();
         }
         return this.cachedKernelSpecRootPath;
     }
@@ -130,7 +129,7 @@ export class JupyterPaths {
     @traceDecoratorVerbose('Get Kernelspec root path')
     public async getKernelSpecRootPaths(cancelToken?: CancellationToken): Promise<Uri[]> {
         // Paths specified in JUPYTER_PATH are supposed to come first in searching
-        const paths = new Set<Uri>(await this.getJupyterPathPaths(cancelToken));
+        const paths = new ResourceSet(await this.getJupyterPathPaths(cancelToken));
 
         if (this.platformService.isWindows) {
             const winPath = await this.getKernelSpecRootPath();
@@ -166,15 +165,15 @@ export class JupyterPaths {
         this.cachedJupyterPaths =
             this.cachedJupyterPaths ||
             (async () => {
-                const paths = new Set<Uri>();
+                const paths = new ResourceSet();
                 const vars = await this.envVarsProvider.getEnvironmentVariables();
                 if (cancelToken?.isCancellationRequested) {
                     return [];
                 }
                 const jupyterPathVars = vars.JUPYTER_PATH
                     ? vars.JUPYTER_PATH.split(path.delimiter).map((jupyterPath) => {
-                        return path.join(jupyterPath, 'kernels');
-                    })
+                          return path.join(jupyterPath, 'kernels');
+                      })
                     : [];
 
                 if (jupyterPathVars.length > 0) {
@@ -190,12 +189,37 @@ export class JupyterPaths {
             })();
         void this.cachedJupyterPaths.then((value) => {
             if (value.length > 0) {
-                void this.globalState.update(CACHE_KEY_FOR_JUPYTER_PATHS, value);
+                void this.updateCachedPaths(value);
+            }
+            if (this.getCachedPaths().length > 0) {
+                return this.getCachedPaths();
             }
         });
-        if (this.globalState.get<Uri[]>(CACHE_KEY_FOR_JUPYTER_PATHS, []).length > 0) {
-            return this.globalState.get<Uri[]>(CACHE_KEY_FOR_JUPYTER_PATHS, []);
-        }
         return this.cachedJupyterPaths;
+    }
+
+    private getCachedPaths(): Uri[] {
+        return this.globalState.get<string[]>(CACHE_KEY_FOR_JUPYTER_PATHS, []).map((s) => Uri.parse(s));
+    }
+
+    private updateCachedPaths(paths: Uri[]) {
+        return this.globalState.update(CACHE_KEY_FOR_JUPYTER_PATHS, paths.map(Uri.toString));
+    }
+
+    private getCachedRootPath(): Uri | undefined {
+        if (this.globalState.get(CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH)) {
+            const cached = this.globalState.get<string>(CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH);
+            if (cached) {
+                return Uri.parse(cached);
+            }
+        }
+    }
+
+    private updateCachedRootPath(path: Uri | undefined) {
+        if (path) {
+            void this.globalState.update(CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH, path.toString());
+        } else {
+            void this.globalState.update(CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH, undefined);
+        }
     }
 }

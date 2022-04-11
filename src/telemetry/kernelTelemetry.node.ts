@@ -7,7 +7,7 @@ import { EnvironmentType } from '../platform/pythonEnvironments/info';
 import { KernelConnectionMetadata } from '../platform/../kernels/types';
 import { Telemetry } from '../platform/common/constants';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from './telemetry.node';
-import { Uri } from 'vscode';
+import { ResourceSet } from '../platform/vscode-path/map';
 
 export function sendKernelListTelemetry(
     resource: Resource,
@@ -20,7 +20,7 @@ export function sendKernelListTelemetry(
         kernelLiveCount: 0,
         condaEnvsSharingSameInterpreter: 0
     };
-    const uniqueCondaInterpreterPaths = new Set<Uri>();
+    const uniqueCondaInterpreterPaths = new ResourceSet();
     kernels.forEach((item) => {
         switch (item.kind) {
             case 'connectToLiveKernel':

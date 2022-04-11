@@ -42,9 +42,6 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../kernels
 import { ILocalKernelFinder } from '../../../kernels/raw/types';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
-import { isWindows, setIsWindows } from '../../../platform/vscode-path/platform';
-
-const originalIsWindows = isWindows;
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -61,14 +58,14 @@ const originalIsWindows = isWindows;
             interpreters?: (
                 | PythonEnvironment
                 | {
-                    interpreter: PythonEnvironment;
-                    /**
-                     * These are all of the kernelspecs found within the Python environment.
-                     * Could be python or non-python kernlespecs.
-                     * Could be default or custom kernelspecs.
-                     */
-                    kernelSpecs?: KernelSpec.ISpecModel[];
-                }
+                      interpreter: PythonEnvironment;
+                      /**
+                       * These are all of the kernelspecs found within the Python environment.
+                       * Could be python or non-python kernlespecs.
+                       * Could be default or custom kernelspecs.
+                       */
+                      kernelSpecs?: KernelSpec.ISpecModel[];
+                  }
             )[];
             /**
              * All of the globally installed KernelSpecs
@@ -81,7 +78,6 @@ const originalIsWindows = isWindows;
             getRealPathStub.returnsArg(0);
             const getOSTypeStub = sinon.stub(platform, 'getOSType');
             getOSTypeStub.returns(isWindows ? platform.OSType.Windows : platform.OSType.Linux);
-            setIsWindows(isWindows);
             interpreterService = mock(InterpreterService);
             // Ensure the active Interpreter is in the list of interpreters.
             if (activeInterpreter) {
@@ -214,7 +210,6 @@ const originalIsWindows = isWindows;
         }
         teardown(() => {
             disposeAllDisposables(disposables);
-            setIsWindows(originalIsWindows);
             sinon.restore();
         });
 
@@ -542,20 +537,20 @@ const originalIsWindows = isWindows;
         };
         type ExpectedKernel =
             | {
-                /**
-                 * Expected global kernelspec.
-                 */
-                expectedGlobalKernelSpec: KernelSpec.ISpecModel;
-            }
+                  /**
+                   * Expected global kernelspec.
+                   */
+                  expectedGlobalKernelSpec: KernelSpec.ISpecModel;
+              }
             /**
              * Expected list of kernlespecs that are associated with a Python interpreter.
              */
             | {
-                expectedInterpreterKernelSpecFile: {
-                    interpreter: PythonEnvironment;
-                    kernelspec: KernelSpec.ISpecModel;
-                };
-            }
+                  expectedInterpreterKernelSpecFile: {
+                      interpreter: PythonEnvironment;
+                      kernelspec: KernelSpec.ISpecModel;
+                  };
+              }
             /**
              * Expected Python environment that will be used to start the kernel.
              */

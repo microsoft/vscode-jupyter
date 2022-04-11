@@ -80,8 +80,9 @@ import { IStatusProvider } from '../platform/progress/types';
 import { IRawNotebookProvider } from './raw/types';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { isCI } from '../platform/common/constants.node';
-import { fsPathToUri, uriToFsPath } from '../platform/vscode-path/utils';
+import { fsPathToUri } from '../platform/vscode-path/utils';
 import { getOSType } from '../platform/common/utils/platform';
+import { deserializePythonEnvironment } from '../platform/api/pythonApi.node';
 
 // Helper functions for dealing with kernels and kernelspecs
 
@@ -279,14 +280,14 @@ export function getKernelPathFromKernelConnection(kernelConnection?: KernelConne
             kernelConnection.kind === 'startUsingLocalKernelSpec') &&
             kernelConnection.kernelSpec.language === PYTHON_LANGUAGE)
     ) {
-        return kernelSpec?.metadata?.interpreter?.path || fsPathToUri(kernelSpec?.interpreterPath) || kernelSpec?.path;
+        return fsPathToUri(kernelSpec?.metadata?.interpreter?.path || kernelSpec?.interpreterPath) || kernelSpec?.path;
     } else {
         // For non python kernels, give preference to the executable path in the kernelspec
         // E.g. if we have a rust kernel, we should show the path to the rust executable not the interpreter (such as conda env that owns the rust runtime).
         return (
             model?.path ||
             kernelSpec?.path ||
-            kernelSpec?.metadata?.interpreter?.path ||
+            fsPathToUri(kernelSpec?.metadata?.interpreter?.path) ||
             fsPathToUri(kernelSpec?.interpreterPath)
         );
     }
@@ -330,12 +331,12 @@ export function getInterpreterFromKernelConnectionMetadata(
     }
     const model = kernelConnectionMetadataHasKernelModel(kernelConnection) ? kernelConnection.kernelModel : undefined;
     if (model?.metadata?.interpreter) {
-        return model.metadata.interpreter;
+        return deserializePythonEnvironment(model?.metadata?.interpreter);
     }
     const kernelSpec = kernelConnectionMetadataHasKernelSpec(kernelConnection)
         ? kernelConnection.kernelSpec
         : undefined;
-    return kernelSpec?.metadata?.interpreter;
+    return deserializePythonEnvironment(kernelSpec?.metadata?.interpreter);
 }
 export function isPythonKernelConnection(kernelConnection?: KernelConnectionMetadata): boolean {
     if (!kernelConnection) {
@@ -477,7 +478,7 @@ export function createInterpreterKernelSpec(
 ): IJupyterKernelSpec {
     const interpreterMetadata = interpreter
         ? {
-              path: uriToFsPath(interpreter.path, true)
+              path: interpreter.path.fsPath
           }
         : {};
     // This creates a kernel spec for an interpreter. When launched, 'python' argument will map to using the interpreter
@@ -502,7 +503,7 @@ export function createInterpreterKernelSpec(
 
     return new JupyterKernelSpec(
         defaultSpec,
-        specFile ? uriToFsPath(specFile, true) : undefined,
+        specFile ? specFile.fsPath : undefined,
         interpreter?.path.fsPath,
         'registeredByNewVersionOfExt'
     );

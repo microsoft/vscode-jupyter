@@ -149,7 +149,7 @@ if (_isMacintosh) {
     _platform = Platform.Linux;
 }
 
-export let isWindows = _isWindows;
+export const isWindows = _isWindows;
 export const isMacintosh = _isMacintosh;
 export const isLinux = _isLinux;
 export const isLinuxSnap = _isLinuxSnap;
@@ -165,11 +165,6 @@ export const isIOS = _isIOS;
 export const isCI = _isCI;
 export const platform = _platform;
 export const userAgent = _userAgent;
-
-// For testing
-export function setIsWindows(value: boolean) {
-    isWindows = value;
-}
 
 /**
  * The language used for the user interface. The format of

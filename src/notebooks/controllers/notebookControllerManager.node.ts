@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken, NotebookControllerAffinity, Uri } from 'vscode';
 import { CancellationTokenSource, EventEmitter, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { IPythonExtensionChecker, IPythonApiProvider } from '../../platform/api/types';
+import { IPythonExtensionChecker } from '../../platform/api/types';
 import {
     IVSCodeNotebook,
     ICommandManager,
@@ -140,7 +140,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IDocumentManager) private readonly docManager: IDocumentManager,
-        @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(KernelFilterService) private readonly kernelFilter: KernelFilterService,
@@ -386,8 +385,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         resource: Resource
     ) {
         // Fetch the active interpreter and use the matching controller
-        const api = await this.pythonApi.getApi();
-        const activeInterpreter = await api.getActiveInterpreter(resource);
+        const activeInterpreter = await this.interpreters.getActiveInterpreter(resource);
 
         if (!activeInterpreter) {
             traceWarning(`Unable to create a controller for ${notebookType} without an active interpreter.`);

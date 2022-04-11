@@ -20,6 +20,7 @@ import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { IAsyncDisposable, IDisplayOptions, Resource } from '../platform/common/types';
 import { WebSocketData } from '../platform/api/extension';
 import { IJupyterKernel } from './jupyter/types';
+import { PythonEnvironment_PythonApi } from '../platform/api/types';
 
 export type LiveKernelModel = IJupyterKernel &
     Partial<IJupyterKernelSpec> & { model: Session.IModel | undefined; notebook?: { path?: string } };
@@ -348,7 +349,7 @@ export interface IJupyterKernelSpec {
              */
             originalDisplayName?: string;
         };
-        interpreter?: Partial<PythonEnvironment>;
+        interpreter?: Partial<PythonEnvironment_PythonApi>; // read from disk so has to follow old format
         /**
          * @deprecated (use metadata.jupyter.originalSpecFile)
          */

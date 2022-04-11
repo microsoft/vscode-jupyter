@@ -5,9 +5,8 @@ import { Disposable, Event, Uri } from 'vscode';
 import * as lsp from 'vscode-languageserver-protocol';
 import { InterpreterUri, Resource } from '../common/types';
 import { IInterpreterQuickPickItem } from '../interpreter/configuration/types';
-import { PythonEnvironment } from '../pythonEnvironments/info';
 import type { SemVer } from 'semver';
-import { IExportedKernelService } from './extension';
+import { EnvironmentType, IExportedKernelService, PythonVersion } from './extension';
 export type ILanguageServerConnection = Pick<
     lsp.ProtocolConnection,
     'sendRequest' | 'sendNotification' | 'onProgress' | 'sendProgress' | 'onNotification' | 'onRequest'
@@ -53,6 +52,21 @@ export interface IInterpreterStatusbarVisibilityFilter {
     readonly hidden: boolean;
 }
 
+// Python extension still returns strings for paths
+export type InterpreterInformation_PythonApi = {
+    path: string;
+    version?: PythonVersion;
+    sysVersion?: string;
+    sysPrefix: string;
+};
+
+export type PythonEnvironment_PythonApi = InterpreterInformation_PythonApi & {
+    displayName?: string;
+    envType?: EnvironmentType;
+    envName?: string;
+    envPath?: string;
+};
+
 export type PythonApi = {
     /**
      * IInterpreterService
@@ -62,22 +76,22 @@ export type PythonApi = {
     /**
      * IInterpreterService
      */
-    getInterpreters(resource?: Uri): Promise<PythonEnvironment[]>;
+    getInterpreters(resource?: Uri): Promise<PythonEnvironment_PythonApi[]>;
     /**
      * IInterpreterService
      */
-    getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined>;
+    getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment_PythonApi | undefined>;
     /**
      * IInterpreterService
      */
-    getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<undefined | PythonEnvironment>;
+    getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<undefined | PythonEnvironment_PythonApi>;
 
     /**
      * IEnvironmentActivationService
      */
     getActivatedEnvironmentVariables(
         resource: Resource,
-        interpreter: PythonEnvironment,
+        interpreter: PythonEnvironment_PythonApi,
         allowExceptions?: boolean
     ): Promise<NodeJS.ProcessEnv | undefined>;
     /**
@@ -108,7 +122,7 @@ export type PythonApi = {
     getCondaFile?(): Promise<string | undefined>;
     getEnvironmentActivationShellCommands?(
         resource: Resource,
-        interpreter?: PythonEnvironment
+        interpreter?: PythonEnvironment_PythonApi
     ): Promise<string[] | undefined>;
     /**
      * This API will re-trigger environment discovery. Extensions can wait on the returned

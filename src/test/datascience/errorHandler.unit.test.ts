@@ -26,7 +26,6 @@ import {
     IJupyterInterpreterDependencyManager,
     JupyterInterpreterDependencyResponse
 } from '../../kernels/jupyter/types';
-import { setIsWindows } from '../../platform/vscode-path/platform';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers.node';
 import { getOSType, OSType } from '../../platform/common/utils/platform';
 
@@ -39,7 +38,6 @@ suite('DataScience Error Handler Unit Tests', () => {
     let configuration: IConfigurationService;
     let jupyterInterpreterService: JupyterInterpreterService;
     let kernelDependencyInstaller: IKernelDependencyService;
-    let isWindows = process.platform == 'win32';
     const jupyterInterpreter: PythonEnvironment = {
         displayName: 'Hello',
         path: Uri.file('Some Path'),
@@ -70,10 +68,6 @@ suite('DataScience Error Handler Unit Tests', () => {
         when(applicationShell.showErrorMessage(anything(), anything(), anything())).thenResolve();
     });
     const message = 'Test error message.';
-    teardown(() => {
-        // After a test is finished, reset isWindows
-        setIsWindows(isWindows);
-    });
 
     test('Default error', async () => {
         when(applicationShell.showErrorMessage(anything())).thenResolve();
@@ -224,7 +218,6 @@ suite('DataScience Error Handler Unit Tests', () => {
                 AttributeError: 'Namespace' object has no attribute '_flags'`
         };
         test('Unable to import <name> from user overriding module (windows)', async () => {
-            setIsWindows(true);
             await dataScienceErrorHandler.handleKernelError(
                 new KernelDiedError(
                     'Hello',
@@ -245,7 +238,6 @@ suite('DataScience Error Handler Unit Tests', () => {
             verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresModuleImportErrFromFile');
         });
         test('Unable to import <name> from user overriding module in workspace folder (windows)', async () => {
-            setIsWindows(true);
             const workspaceFolders: WorkspaceFolder[] = [
                 {
                     index: 0,
@@ -276,7 +268,6 @@ suite('DataScience Error Handler Unit Tests', () => {
             verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresOverridingBuiltInModules');
         });
         test('Unable to import <name> from user overriding module (linux)', async () => {
-            setIsWindows(false);
             await dataScienceErrorHandler.handleKernelError(
                 new KernelDiedError(
                     'Hello',
@@ -291,7 +282,7 @@ suite('DataScience Error Handler Unit Tests', () => {
 
             const expectedMessage = DataScience.failedToStartKernelDueToImportFailureFromFile().format(
                 'Template',
-                getDisplayPath(Uri.file('/home/xyz/samples/pySamples/crap/kernel_crash/no_start/string.py'), [])
+                '/home/xyz/samples/pySamples/crap/kernel_crash/no_start/string.py' // Not using getDisplayPath under the covers
             );
 
             verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresModuleImportErrFromFile');

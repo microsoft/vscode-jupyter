@@ -222,16 +222,22 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             | 'failedToGetCustomEnvVariables' = 'emptyVariables';
         let [env, customEnvVars] = await Promise.all([
             this.apiProvider.getApi().then((api) =>
-                api.getActivatedEnvironmentVariables(resource, interpreter, false).catch((ex) => {
-                    traceError(
-                        `Failed to get activated env variables from Python Extension for ${getDisplayPath(
-                            interpreter.path
-                        )}`,
-                        ex
-                    );
-                    reasonForFailure = 'failedToGetActivatedEnvVariablesFromPython';
-                    return undefined;
-                })
+                api
+                    .getActivatedEnvironmentVariables(
+                        resource,
+                        { ...interpreter, path: interpreter.path.fsPath, envPath: interpreter.envPath?.fsPath },
+                        false
+                    )
+                    .catch((ex) => {
+                        traceError(
+                            `Failed to get activated env variables from Python Extension for ${getDisplayPath(
+                                interpreter.path
+                            )}`,
+                            ex
+                        );
+                        reasonForFailure = 'failedToGetActivatedEnvVariablesFromPython';
+                        return undefined;
+                    })
             ),
             this.envVarsService.getCustomEnvironmentVariables(resource).catch((ex) => {
                 traceError(
@@ -714,7 +720,11 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     .then(
                         (api) =>
                             api.getEnvironmentActivationShellCommands &&
-                            api.getEnvironmentActivationShellCommands(resource, interpreter)
+                            api.getEnvironmentActivationShellCommands(resource, {
+                                ...interpreter,
+                                path: interpreter.path.fsPath,
+                                envPath: interpreter.envPath?.fsPath
+                            })
                     );
 
                 if (!activationCommands || activationCommands.length === 0) {

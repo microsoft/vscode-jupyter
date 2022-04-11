@@ -1,38 +1,6 @@
 // Miscellaneous functions from other spots in VS code
 
-import { Uri, Uri as URI } from 'vscode';
-import { CharCode } from './charCode';
-import { isWindows } from './platform';
-
-/**
- * Compute `fsPath` for the given uri
- */
-export function uriToFsPath(uri: URI, keepDriveLetterCasing: boolean): string {
-    let value: string;
-    if (uri.authority && uri.path.length > 1 && uri.scheme === 'file') {
-        // unc path: file://shares/c$/far/boo
-        value = `//${uri.authority}${uri.path}`;
-    } else if (
-        uri.path.charCodeAt(0) === CharCode.Slash &&
-        ((uri.path.charCodeAt(1) >= CharCode.A && uri.path.charCodeAt(1) <= CharCode.Z) ||
-            (uri.path.charCodeAt(1) >= CharCode.a && uri.path.charCodeAt(1) <= CharCode.z)) &&
-        uri.path.charCodeAt(2) === CharCode.Colon
-    ) {
-        if (!keepDriveLetterCasing) {
-            // windows drive letter: file:///c:/far/boo
-            value = uri.path[1].toLowerCase() + uri.path.substr(2);
-        } else {
-            value = uri.path.substr(1);
-        }
-    } else {
-        // other path
-        value = uri.path;
-    }
-    if (isWindows) {
-        value = value.replace(/\//g, '\\');
-    }
-    return value;
-}
+import { Uri } from 'vscode';
 
 export function fsPathToUri(path: string | undefined) {
     return path ? Uri.file(path) : undefined;

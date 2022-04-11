@@ -10,10 +10,10 @@ import * as extpath from './extpath';
 import * as paths from './path';
 import { isLinux, isWindows } from './platform';
 import { compare as strCompare, equalsIgnoreCase } from './strings';
-import { Schemas, uriToFsPath } from './utils';
+import { Schemas } from './utils';
 
-export function originalFSPath(uri: URI): string {
-    return uriToFsPath(uri, true);
+function originalFSPath(uri: URI): string {
+    return uri.fsPath;
 }
 
 //#region IExtUri
@@ -169,7 +169,12 @@ export class ExtUri implements IExtUri {
         return this._ignorePathCasing(uri);
     }
 
-    isEqualOrParent(base: URI, parentCandidate: URI, ignoreFragment: boolean = false): boolean {
+    isEqualOrParent(
+        base: URI,
+        parentCandidate: URI,
+        ignoreFragment: boolean = false,
+        sep: '\\' | '/' = isWindows ? '\\' : '/'
+    ): boolean {
         if (base.scheme === parentCandidate.scheme) {
             if (base.scheme === Schemas.file) {
                 return (
@@ -177,7 +182,7 @@ export class ExtUri implements IExtUri {
                         originalFSPath(base),
                         originalFSPath(parentCandidate),
                         this._ignorePathCasing(base),
-                        isWindows ? '\\' : '/'
+                        sep
                     ) &&
                     base.query === parentCandidate.query &&
                     (ignoreFragment || base.fragment === parentCandidate.fragment)

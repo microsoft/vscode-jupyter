@@ -28,6 +28,7 @@ import { captureTelemetry } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { fsPathToUri } from '../../../platform/vscode-path/utils';
+import { ResourceSet } from '../../../platform/vscode-path/map';
 
 export const isDefaultPythonKernelSpecName = /^python\d*.?\d*$/;
 
@@ -210,7 +211,8 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                     const matchingInterpreter = await this.findMatchingInterpreter(item.kernelSpec, interpreters);
                     if (!matchingInterpreter) {
                         traceVerbose(
-                            `Kernel Spec for ${item.kernelSpec.display_name
+                            `Kernel Spec for ${
+                                item.kernelSpec.display_name
                             } ignored as we cannot find a matching interpreter ${JSON.stringify(item)}`
                         );
                         return;
@@ -236,7 +238,8 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                         isDefaultKernelSpec(kernelspec)
                     ) {
                         traceVerbose(
-                            `Hiding default kernel spec '${kernelspec.display_name}', '${kernelspec.name
+                            `Hiding default kernel spec '${kernelspec.display_name}', '${
+                                kernelspec.name
                             }', ${getDisplayPathFromLocalFile(kernelspec.argv[0])}`
                         );
                         return false;
@@ -282,17 +285,19 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                         if (
                             k.language === PYTHON_LANGUAGE &&
                             k.metadata?.interpreter?.path &&
-                            !areInterpreterPathsSame(k.metadata?.interpreter?.path, activeInterpreter?.path)
+                            !areInterpreterPathsSame(Uri.file(k.metadata?.interpreter?.path), activeInterpreter?.path)
                         ) {
                             try {
                                 interpreter = await this.interpreterService.getInterpreterDetails(
-                                    k.metadata?.interpreter?.path
+                                    Uri.file(k.metadata?.interpreter?.path)
                                 );
                             } catch (ex) {
                                 traceError(
                                     `Failed to get interpreter details for Kernel Spec ${getDisplayPathFromLocalFile(
                                         k.specFile
-                                    )} with interpreter path ${getDisplayPath(k.metadata?.interpreter?.path)}`,
+                                    )} with interpreter path ${getDisplayPath(
+                                        Uri.file(k.metadata?.interpreter?.path)
+                                    )}`,
                                     ex
                                 );
                                 return;
@@ -360,7 +365,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         const exactMatch = interpreters.find((i) => {
             if (
                 kernelSpec.metadata?.interpreter?.path &&
-                areInterpreterPathsSame(kernelSpec.metadata?.interpreter?.path, i.path, undefined, true)
+                areInterpreterPathsSame(Uri.file(kernelSpec.metadata?.interpreter?.path), i.path, undefined, true)
             ) {
                 traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on metadata path.`);
                 return true;
@@ -503,14 +508,12 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
     private async findKernelPathsOfAllInterpreters(
         interpreters: PythonEnvironment[]
     ): Promise<{ interpreter: PythonEnvironment; kernelSearchPath: Uri }[]> {
-        const kernelSpecPathsAlreadyListed = new Set<Uri>();
+        const kernelSpecPathsAlreadyListed = new ResourceSet();
         return interpreters
             .map((interpreter) => {
                 return {
                     interpreter,
-                    kernelSearchPath: Uri.file(
-                        path.join(interpreter.sysPrefix, baseKernelPath)
-                    )
+                    kernelSearchPath: Uri.file(path.join(interpreter.sysPrefix, baseKernelPath))
                 };
             })
             .filter((item) => {

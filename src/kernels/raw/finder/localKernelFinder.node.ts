@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
@@ -38,6 +39,29 @@ import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import { noop } from '../../../platform/common/utils/misc';
 import { getResourceType } from '../../../platform/common/utils.node';
 import { TraceOptions } from '../../../platform/logging/types';
+import { deserializePythonEnvironment, serializePythonEnvironment } from '../../../platform/api/pythonApi.node';
+import { isArray } from '../../../platform/common/utils/sysTypes';
+
+function serializeKernelConnection(kernelConnection: LocalKernelConnectionMetadata) {
+    if (kernelConnection.interpreter) {
+        return {
+            ...kernelConnection,
+            interpreter: serializePythonEnvironment(kernelConnection.interpreter)!
+        };
+    }
+    return kernelConnection;
+}
+
+function deserializeKernelConnection(kernelConnection: any): LocalKernelConnectionMetadata {
+    if (kernelConnection.interpreter) {
+        return {
+            ...kernelConnection,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            interpreter: deserializePythonEnvironment(kernelConnection.interpreter as any)!
+        };
+    }
+    return kernelConnection;
+}
 
 const GlobalKernelSpecsCacheKey = 'JUPYTER_GLOBAL_KERNELSPECS_V2';
 const LocalKernelSpecConnectionsCacheKey = 'LOCAL_KERNEL_SPEC_CONNECTIONS_CACHE_KEY_V2';
@@ -146,12 +170,17 @@ export class LocalKernelFinder implements ILocalKernelFinder {
                     kernelsRetrievedFromCache = true;
                 })
                 .catch(noop);
-            await Promise.race([kernelsFromCachePromise, kernelsWithoutCachePromise]);
-            // If we finish the cache first, and we don't have any items, in the cache, then load without cache.
-            if (Array.isArray(kernelsFromCache) && kernelsFromCache.length > 0) {
-                kernels = kernelsFromCache;
-            } else {
-                kernels = await kernelsWithoutCachePromise;
+
+            try {
+                await Promise.race([kernelsFromCachePromise, kernelsWithoutCachePromise]);
+                // If we finish the cache first, and we don't have any items, in the cache, then load without cache.
+                if (Array.isArray(kernelsFromCache) && kernelsFromCache.length > 0) {
+                    kernels = kernelsFromCache;
+                } else {
+                    kernels = await kernelsWithoutCachePromise;
+                }
+            } catch (ex) {
+                traceError(`Exception loading kernels: ${ex}`);
             }
         }
 
@@ -167,11 +196,11 @@ export class LocalKernelFinder implements ILocalKernelFinder {
 
     @swallowExceptions('CacheLocalKernelConnections')
     private async cacheLocalKernelConnections(kernels: LocalKernelConnectionMetadata[]) {
-        const items = this.globalState.get<LocalKernelConnectionMetadata[]>(LocalKernelSpecConnectionsCacheKey, []);
+        const items = this.getFromCache(LocalKernelSpecConnectionsCacheKey);
         const uniqueItems = new Map<string, LocalKernelConnectionMetadata>();
         items.forEach((item) => uniqueItems.set(item.id, item));
         kernels.forEach((item) => uniqueItems.set(item.id, item));
-        await this.globalState.update(LocalKernelSpecConnectionsCacheKey, Array.from(uniqueItems.values()));
+        await this.updateCache(LocalKernelSpecConnectionsCacheKey, Array.from(uniqueItems.values()));
     }
     public findPreferredLocalKernelConnectionFromCache(
         notebookMetadata?: nbformat.INotebookMetadata
@@ -183,7 +212,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         if (!interpreterHash) {
             return;
         }
-        const items = this.globalState.get<LocalKernelConnectionMetadata[]>(LocalKernelSpecConnectionsCacheKey, []);
+        const items = this.getFromCache(LocalKernelSpecConnectionsCacheKey);
         const preferredKernel = items.find(
             (item) => item.interpreter && getInterpreterHash(item.interpreter) === interpreterHash
         );
@@ -205,10 +234,23 @@ export class LocalKernelFinder implements ILocalKernelFinder {
 
         const kernels = this.filterKernels(nonPythonKernelSpecs.concat(pythonRelatedKernelSpecs));
         this.lastFetchedKernelsWithoutCache = kernels;
-        this.globalState.update(GlobalKernelSpecsCacheKey, kernels).then(noop, (ex) => {
+        this.updateCache(GlobalKernelSpecsCacheKey, kernels).then(noop, (ex) => {
             console.error('Failed to update global kernel cache', ex);
         });
         return kernels;
+    }
+
+    private getFromCache(cacheKey: string): LocalKernelConnectionMetadata[] {
+        const values = this.globalState.get<LocalKernelConnectionMetadata[]>(cacheKey, []);
+        if (values && isArray(values)) {
+            return values.map(deserializeKernelConnection);
+        }
+        return [];
+    }
+
+    private async updateCache(cacheKey: string, values: LocalKernelConnectionMetadata[]) {
+        const serialized = values.map(serializeKernelConnection);
+        return this.globalState.update(cacheKey, serialized);
     }
 
     private async listValidKernelsFromGlobalCache(
@@ -216,13 +258,13 @@ export class LocalKernelFinder implements ILocalKernelFinder {
     ): Promise<LocalKernelConnectionMetadata[]> {
         const values = this.lastFetchedKernelsWithoutCache.length
             ? this.lastFetchedKernelsWithoutCache
-            : this.globalState.get<LocalKernelConnectionMetadata[]>(GlobalKernelSpecsCacheKey, []);
+            : this.getFromCache(GlobalKernelSpecsCacheKey);
         const validValues: LocalKernelConnectionMetadata[] = [];
         const promise = Promise.all(
             values.map(async (item) => {
                 let somethingIsInvalid = false;
                 const promises: Promise<void>[] = [];
-                if (item.interpreter?.path) {
+                if (item.interpreter?.path && item.interpreter?.path.fsPath) {
                     // Possible the interpreter no longer exists, in such cases, exclude this cached kernel from the list.
                     promises.push(
                         this.fs

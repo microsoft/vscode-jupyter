@@ -283,7 +283,7 @@ export async function loadKernelSpec(
         kernelJson as any,
         specPath.fsPath,
         // Interpreter information may be saved in the metadata (if this is a kernel spec created/registered by us).
-        interpreter?.path.fsPath || kernelJson?.metadata?.interpreter?.path?.fsPath,
+        interpreter?.path.fsPath || kernelJson?.metadata?.interpreter?.path,
         getKernelRegistrationInfo(kernelJson)
     );
 
@@ -291,8 +291,8 @@ export async function loadKernelSpec(
     kernelSpec.name = kernelJson?.name || path.basename(path.dirname(specPath.fsPath));
 
     // Possible user deleted the underlying kernel.
-    const interpreterPath = interpreter?.path || kernelJson?.metadata?.interpreter?.path;
-    if (interpreterPath && !(await fs.localFileExists(interpreterPath.fsPath))) {
+    const interpreterPath = interpreter?.path.fsPath || kernelJson?.metadata?.interpreter?.path;
+    if (interpreterPath && !(await fs.localFileExists(interpreterPath))) {
         return;
     }
 

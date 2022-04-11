@@ -203,7 +203,7 @@ export async function tryGetRealPath(expectedPath: Uri): Promise<Uri | undefined
 
         // Make sure on linux we use the correct separator
         if (getOSType() != OSType.Windows) {
-            realPath = realPath.replace(/\\/g, '/')
+            realPath = realPath.replace(/\\/g, '/');
         }
 
         return fsPathToUri(realPath);

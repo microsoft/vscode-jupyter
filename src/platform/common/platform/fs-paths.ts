@@ -1,8 +1,7 @@
 import { Uri, WorkspaceFolder } from 'vscode';
 import * as path from '../../vscode-path/path';
-import { isWindows } from '../../vscode-path/platform';
 import * as uriPath from '../../vscode-path/resources';
-import { uriToFsPath } from '../../vscode-path/utils';
+import { getOSType, OSType } from '../utils/platform';
 
 export function getDisplayPath(
     filename: Uri | undefined,
@@ -26,6 +25,7 @@ export function getDisplayPath(
 }
 
 function getDisplayPathImpl(file: Uri | undefined, cwd: Uri | undefined, homePath: Uri | undefined): string {
+    const isWindows = getOSType() === OSType.Windows;
     if (file && cwd && uriPath.isEqualOrParent(file, cwd, true)) {
         const relativePath = uriPath.relativePath(cwd, file);
         if (relativePath) {
@@ -44,13 +44,14 @@ function getDisplayPathImpl(file: Uri | undefined, cwd: Uri | undefined, homePat
     }
 
     if (file) {
-        const fsPath = uriToFsPath(file, true);
+        // eslint-disable-next-line local-rules/dont-use-fspath
+        const fsPath = file.fsPath || file.path;
 
         // Remove separator on the front
-        if (fsPath.startsWith(path.sep) && fsPath.includes(':')) {
+        if (fsPath && fsPath.startsWith(path.sep) && fsPath.includes(':')) {
             return fsPath.slice(1);
         }
-        return fsPath;
+        return fsPath || '';
     }
 
     return '';

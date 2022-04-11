@@ -57,12 +57,12 @@ export type PythonVersion = {
 };
 export type PythonEnvironment = {
     displayName?: string;
-    path: string;
+    path: Uri;
     version?: PythonVersion;
     sysPrefix: string;
     envType?: EnvironmentType;
     envName?: string;
-    envPath?: string;
+    envPath?: Uri;
 };
 
 /**

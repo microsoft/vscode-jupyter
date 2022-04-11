@@ -6,7 +6,6 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
-import { IPythonApiProvider } from '../../platform/api/types';
 import { traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../platform/common/types';
@@ -35,6 +34,7 @@ import {
 import { translateCellErrorOutput, getTextOutputValue } from '../../notebooks/helpers.node';
 import { INotebookControllerManager } from '../../notebooks/types';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
+import { IInterpreterService } from '../../platform/interpreter/contracts.node';
 
 suite('Interactive window', async function () {
     this.timeout(120_000);
@@ -72,7 +72,7 @@ suite('Interactive window', async function () {
             api.serviceManager.get<INotebookControllerManager>(INotebookControllerManager);
 
         // Ensure we picked up the active interpreter for use as the kernel
-        const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getApi();
+        const interpreterService = await api.serviceManager.get<IInterpreterService>(IInterpreterService);
 
         // Give it a bit to warm up
         await sleep(500);
@@ -80,7 +80,7 @@ suite('Interactive window', async function () {
         const controller = notebookDocument
             ? notebookControllerManager.getSelectedNotebookController(notebookDocument)
             : undefined;
-        const activeInterpreter = await pythonApi.getActiveInterpreter();
+        const activeInterpreter = await interpreterService.getActiveInterpreter();
         assert.equal(
             controller?.connection.interpreter?.path,
             activeInterpreter?.path,
@@ -115,7 +115,7 @@ suite('Interactive window', async function () {
         const notebookControllerManager =
             api.serviceManager.get<INotebookControllerManager>(INotebookControllerManager);
         // Ensure we picked up the active interpreter for use as the kernel
-        const pythonApi = await api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider).getApi();
+        const interpreterService = await api.serviceManager.get<IInterpreterService>(IInterpreterService);
 
         // Give it a bit to warm up
         await sleep(500);
@@ -123,7 +123,7 @@ suite('Interactive window', async function () {
         const controller = notebookDocument
             ? notebookControllerManager.getSelectedNotebookController(notebookDocument)
             : undefined;
-        const activeInterpreter = await pythonApi.getActiveInterpreter();
+        const activeInterpreter = await interpreterService.getActiveInterpreter();
         assert.equal(
             controller?.connection.interpreter?.path,
             activeInterpreter?.path,

@@ -12,9 +12,9 @@ type CacheInfo = {
     /**
      * Cache store (across VSC sessions).
      *
-     * @type {IPersistentState<Uri | undefined>}
+     * @type {IPersistentState<string | undefined>}
      */
-    state: IPersistentState<Uri | undefined>;
+    state: IPersistentState<string | undefined>;
 };
 
 @injectable()
@@ -27,8 +27,8 @@ export class JupyterInterpreterOldCacheStateStore {
     ) {
         // Cache stores to keep track of jupyter interpreters found.
         const workspaceState =
-            persistentStateFactory.createWorkspacePersistentState<Uri>('DS-VSC-JupyterInterpreter-2');
-        const globalState = persistentStateFactory.createGlobalPersistentState<Uri>('DS-VSC-JupyterInterpreter-2');
+            persistentStateFactory.createWorkspacePersistentState<string>('DS-VSC-JupyterInterpreter');
+        const globalState = persistentStateFactory.createGlobalPersistentState<string>('DS-VSC-JupyterInterpreter');
         this.workspaceJupyterInterpreter = { state: workspaceState };
         this.globalJupyterInterpreter = { state: globalState };
     }
@@ -36,7 +36,7 @@ export class JupyterInterpreterOldCacheStateStore {
         return this.workspace.hasWorkspaceFolders ? this.workspaceJupyterInterpreter : this.globalJupyterInterpreter;
     }
     public getCachedInterpreterPath(): Uri | undefined {
-        return this.cacheStore.state.value;
+        return this.cacheStore.state.value ? Uri.parse(this.cacheStore.state.value) : undefined;
     }
     public async clearCache(): Promise<void> {
         await this.cacheStore.state.updateValue(undefined);

@@ -55,7 +55,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
                 path: Uri.file(''),
                 display_name: '',
                 argv: [],
-                metadata: { interpreter: { sysPrefix: 'sysPrefix', path: Uri.file('pythonPath') } }
+                metadata: { interpreter: { sysPrefix: 'sysPrefix', path: 'pythonPath' } }
             },
             id: '',
             kind: 'startUsingLocalKernelSpec'
@@ -79,7 +79,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
                 path: Uri.file(''),
                 display_name: '',
                 argv: [],
-                metadata: { interpreter: { sysPrefix, path: Uri.file('pythonPath') } }
+                metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
             },
             id: '',
             kind: 'startUsingLocalKernelSpec'
@@ -120,7 +120,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
                 path: Uri.file(''),
                 display_name: '',
                 argv: [],
-                metadata: { interpreter: { sysPrefix: 'sysPrefix', path: Uri.file('pythonPath') } }
+                metadata: { interpreter: { sysPrefix: 'sysPrefix', path: 'pythonPath' } }
             },
             id: '',
             kind: 'startUsingLocalKernelSpec'
@@ -146,7 +146,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
                 path: Uri.file(''),
                 display_name: '',
                 argv: [],
-                metadata: { interpreter: { sysPrefix, path: Uri.file('pythonPath') } }
+                metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
             },
             id: '',
             kind: 'startUsingLocalKernelSpec'
@@ -181,7 +181,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
                 path: Uri.file(''),
                 display_name: '',
                 argv: [],
-                metadata: { interpreter: { sysPrefix, path: Uri.file('pythonPath') } }
+                metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
             },
             id: '',
             kind: 'startUsingLocalKernelSpec'
@@ -214,7 +214,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
                 path: Uri.file(''),
                 display_name: '',
                 argv: [],
-                metadata: { interpreter: { sysPrefix, path: Uri.file('pythonPath') } }
+                metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
             },
             id: '',
             kind: 'startUsingLocalKernelSpec'

@@ -38,6 +38,7 @@ import {
     LocalKernelConnectionMetadata
 } from '../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec.node';
+import { serializePythonEnvironment } from '../../platform/api/pythonApi.node';
 
 /**
  * Responsible for registering and updating kernels
@@ -198,7 +199,7 @@ export class JupyterKernelService {
         if (kernel.interpreter) {
             contents.metadata = {
                 ...contents.metadata,
-                interpreter: kernel.interpreter
+                interpreter: serializePythonEnvironment(kernel.interpreter)
             };
         }
 

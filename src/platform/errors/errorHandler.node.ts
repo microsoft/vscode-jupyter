@@ -304,7 +304,7 @@ function getIPyKernelMissingErrorMessageForCell(kernelConnection: KernelConnecti
         if (kernelConnection.interpreter?.envName) {
             installerCommand = `conda install -n ${kernelConnection.interpreter?.envName} ${ipyKernelModuleName} --update-deps --force-reinstall`;
         } else if (kernelConnection.interpreter?.envPath) {
-            installerCommand = `conda install -p ${kernelConnection.interpreter?.envPath} ${ipyKernelModuleName} --update-deps --force-reinstall`;
+            installerCommand = `conda install -p ${kernelConnection.interpreter?.envPath.fsPath} ${ipyKernelModuleName} --update-deps --force-reinstall`;
         }
     } else if (
         kernelConnection.interpreter?.envType === EnvironmentType.Global ||
