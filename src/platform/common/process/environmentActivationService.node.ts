@@ -715,17 +715,15 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         }
         const promise = (async () => {
             try {
-                const activationCommands = await this.apiProvider
-                    .getApi()
-                    .then(
-                        (api) =>
-                            api.getEnvironmentActivationShellCommands &&
-                            api.getEnvironmentActivationShellCommands(resource, {
-                                ...interpreter,
-                                path: interpreter.path.fsPath,
-                                envPath: interpreter.envPath?.fsPath
-                            })
-                    );
+                const activationCommands = await this.apiProvider.getApi().then(
+                    (api) =>
+                        api.getEnvironmentActivationShellCommands &&
+                        api.getEnvironmentActivationShellCommands(resource, {
+                            ...interpreter,
+                            path: interpreter.path.fsPath,
+                            envPath: interpreter.envPath?.fsPath
+                        })
+                );
 
                 if (!activationCommands || activationCommands.length === 0) {
                     return;
