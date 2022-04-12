@@ -142,9 +142,9 @@ export function getKernelId(spec: IJupyterKernelSpec, interpreter?: PythonEnviro
         argsForGenerationOfId = spec.argv.join('#').toLowerCase();
     }
     const prefixForRemoteKernels = remoteBaseUrl ? `${remoteBaseUrl}.` : '';
-    return `${prefixForRemoteKernels}${spec.id || ''}.${specName}.${getNormalizedInterpreterPath(
-        fsPathToUri(spec.interpreterPath) || spec.path
-    )}.${getNormalizedInterpreterPath(interpreter?.path) || ''}.${argsForGenerationOfId}`;
+    return `${prefixForRemoteKernels}${spec.id || ''}.${specName}.${
+        getNormalizedInterpreterPath(fsPathToUri(spec.interpreterPath) || spec.path).fsPath
+    }.${getNormalizedInterpreterPath(interpreter?.path).fsPath || ''}.${argsForGenerationOfId}`;
 }
 
 export function getSysInfoReasonHeader(

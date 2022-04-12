@@ -333,6 +333,7 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
 
     // Get the list of NotebookControllers for this document
     await notebookControllerManager.loadNotebookControllers();
+    traceInfoIfCI(`Wait for kernel - got notebook controllers`);
     const notebookControllers = notebookControllerManager.registeredNotebookControllers();
 
     // Make sure we don't already have a selection (this function gets run even after opening a document)
@@ -359,6 +360,7 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
         // Do nothing for now. Just log it
         traceInfoIfCI(`No preferred controller found during waitForKernelToGetAutoSelected`);
     }
+    traceInfoIfCI(`Wait for kernel - got a preferred notebook controller: ${preferred?.id}`);
 
     // Find one that matches the expected language or the preferred
     const expectedLower = expectedLanguage?.toLowerCase();
