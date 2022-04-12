@@ -46,7 +46,7 @@ import {
 import { Resource, IOutputChannel, IJupyterSettings } from '../../../platform/common/types';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
+import { swallowExceptions } from '../../../platform/common/utils/misc';
 import { KernelDiedError } from '../../../platform/errors/kernelDiedError.node';
 import { KernelPortNotUsedTimeoutError } from '../../../platform/errors/kernelPortNotUsedTimeoutError.node';
 import { KernelProcessExitedError } from '../../../platform/errors/kernelProcessExitedError.node';
@@ -276,9 +276,11 @@ export class KernelProcess implements IKernelProcess {
             this._process?.kill(); // NOSONAR
             this.exitEvent.fire({});
         });
-        swallowExceptions(async () =>
-            this.connectionFile ? this.fileSystem.deleteLocalFile(this.connectionFile) : noop()
-        );
+        swallowExceptions(async () => {
+            if (this.connectionFile && (await this.fileSystem.localFileExists(this.connectionFile))) {
+                await this.fileSystem.deleteLocalFile(this.connectionFile);
+            }
+        });
     }
 
     private sendToOutput(data: string) {

@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, Uri, window, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../platform/common/application/types';
 import { endCellAndDisplayErrorsInCell } from '../platform/errors/errorUtils';
-import { traceInfo } from '../platform/logging';
+import { traceInfo, traceInfoIfCI } from '../platform/logging';
 import { IDisposableRegistry, IConfigurationService, IDataScienceCommandListener } from '../platform/common/types';
 import { DataScience } from '../platform/common/utils/localize';
 import { INotebookControllerManager } from '../notebooks/types';
@@ -88,6 +88,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         if (document === undefined) {
             return;
         }
+        traceInfoIfCI(`Interrupt kernel command handler for ${getDisplayPath(document.uri)}`);
 
         const kernel = this.kernelProvider.get(document.uri);
         if (!kernel) {

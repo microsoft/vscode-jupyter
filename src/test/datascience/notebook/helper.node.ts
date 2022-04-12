@@ -482,8 +482,8 @@ export async function prewarmNotebooks() {
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(0)!;
         traceInfoIfCI(`Running all cells in prewarm notebooks`);
         await Promise.all([waitForExecutionCompletedSuccessfully(cell, 60_000), runAllCellsInActiveNotebook()]);
-        // Wait for Jupyter to start.
         await closeActiveWindows();
+        await shutdownAllNotebooks();
     } finally {
         disposables.forEach((d) => d.dispose());
     }

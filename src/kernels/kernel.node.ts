@@ -113,7 +113,9 @@ export class Kernel extends BaseKernel {
         const status = this.statusProvider.set(DataScience.interruptKernelStatus());
         let result: InterruptResult | undefined;
         try {
-            traceInfo(`Interrupt requested & sent for ${getDisplayPath(this.id)} in notebookEditor.`);
+            traceInfo(
+                `Interrupt requested & sent for ${getDisplayPath(this.resourceUri || this.id)} in notebookEditor.`
+            );
             result = await interruptResultPromise;
             if (result === InterruptResult.TimedOut) {
                 const message = DataScience.restartKernelAfterInterruptMessage();
@@ -129,7 +131,7 @@ export class Kernel extends BaseKernel {
         }
     }
     public async dispose(): Promise<void> {
-        traceInfoIfCI(`Dispose Kernel ${getDisplayPath(this.id)}`);
+        traceInfoIfCI(`Dispose Kernel for ${getDisplayPath(this.resourceUri || this.id)}`);
         this._disposing = true;
         if (this.disposingPromise) {
             return this.disposingPromise;
@@ -137,7 +139,7 @@ export class Kernel extends BaseKernel {
         this._ignoreNotebookDisposedErrors = true;
         this.startCancellation.cancel();
         const disposeImpl = async () => {
-            traceInfo(`Dispose kernel ${(this.resourceUri || this.id).toString()}`);
+            traceInfo(`Dispose kernel for ${getDisplayPath(this.resourceUri || this.id)}`);
             this.restarting = undefined;
             const promises: Promise<void>[] = [];
             promises.push(this.kernelExecution.cancel());
@@ -165,7 +167,7 @@ export class Kernel extends BaseKernel {
             return this.restarting.promise;
         }
         await Promise.all(this.eventHooks.map((h) => h('willRestart')));
-        traceInfo(`Restart requested ${this.id}`);
+        traceInfo(`Restart requested for ${getDisplayPath(this.resourceUri || this.id)}`);
         this.startCancellation.cancel();
         // Set our status
         const status = this.statusProvider.set(DataScience.restartingKernelStatus().format(''));
@@ -184,7 +186,7 @@ export class Kernel extends BaseKernel {
                 : this.start(new DisplayOptions(false)));
             sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime);
         } catch (ex) {
-            traceError(`Restart failed ${getDisplayPath(this.id)}`, ex);
+            traceError(`Restart failed ${getDisplayPath(this.resourceUri || this.id)}`, ex);
             this._ignoreNotebookDisposedErrors = true;
             // If restart fails, kill the associated notebook.
             const notebook = this.notebook;
