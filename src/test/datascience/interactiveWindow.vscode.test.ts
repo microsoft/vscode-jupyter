@@ -124,9 +124,8 @@ suite('Interactive window', async function () {
             ? notebookControllerManager.getSelectedNotebookController(notebookDocument)
             : undefined;
         const activeInterpreter = await interpreterService.getActiveInterpreter();
-        assert.equal(
-            controller?.connection.interpreter?.path,
-            activeInterpreter?.path,
+        assert.ok(
+            areInterpreterPathsSame(controller?.connection.interpreter?.path, activeInterpreter?.path),
             `Controller does not match active interpreter for ${getDisplayPath(notebookDocument?.uri)}`
         );
 

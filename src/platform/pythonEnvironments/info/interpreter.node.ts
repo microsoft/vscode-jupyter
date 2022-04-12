@@ -94,9 +94,9 @@ export function areInterpretersSame(i1: PythonEnvironment | undefined, i2: Pytho
  *  They are both the same.
  * This function will take that into account.
  */
-export function areInterpreterPathsSame(path1: Uri = Uri.file(''), path2:Uri = Uri.file(''), ostype = getOSType()){
-    const norm1 = getNormalizedInterpreterPath(path1, ostype, ostype == OSType.Windows);
-    const norm2 = getNormalizedInterpreterPath(path2, ostype, ostype == OSType.Windows);
+export function areInterpreterPathsSame(path1: Uri = Uri.file(''), path2:Uri = Uri.file(''), ostype = getOSType(), forceLowerCase: boolean = false){
+    const norm1 = getNormalizedInterpreterPath(path1, ostype, ostype == OSType.Windows || forceLowerCase);
+    const norm2 = getNormalizedInterpreterPath(path2, ostype, ostype == OSType.Windows || forceLowerCase);
     return norm1 === norm2 || uriPath.isEqual(norm1, norm2, true);
 }
 /**
@@ -114,7 +114,7 @@ export function areInterpreterPathsSame(path1: Uri = Uri.file(''), path2:Uri = U
 
     // No need to generate hashes, its unnecessarily slow.
     if (!fsPath.endsWith('/bin/python')) {
-        return path;
+        return Uri.file(fsPath);
     }
     // Sometimes on CI, we have paths such as (this could happen on user machines as well)
     // - /opt/hostedtoolcache/Python/3.8.11/x64/python

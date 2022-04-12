@@ -1101,4 +1101,15 @@ suite('Jupyter Execution', async () => {
         when(interpreterService.getActiveInterpreter(anything())).thenResolve(missingNotebookPython);
         await assert.eventually.equal(execution.isNotebookSupported(), false);
     });
+
+    test('Interpreter paths being the same', async () => {
+        assert.ok(
+            areInterpreterPathsSame(
+                Uri.file(`/opt/hostedtoolcache/Python/3.9.12/x64/bin`),
+                Uri.file(`/opt/hostedtoolcache/python/3.9.12/x64/bin`),
+                getOSType(),
+                true
+            )
+        );
+    });
 });

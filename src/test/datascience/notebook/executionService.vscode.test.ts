@@ -400,7 +400,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         // First path in PATH must be the directory where executable is located.
         assert.ok(
-            areInterpreterPathsSame(Uri.file(path.dirname(sysExecutable)), Uri.file(pathValue[0])),
+            areInterpreterPathsSame(Uri.file(path.dirname(sysExecutable)), Uri.file(pathValue[0]), getOSType(), true),
             `First entry in PATH (${pathValue[0]}) does not point to executable (${sysExecutable})`
         );
     });
