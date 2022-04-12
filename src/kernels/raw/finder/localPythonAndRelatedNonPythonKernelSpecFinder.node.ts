@@ -365,7 +365,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         const exactMatch = interpreters.find((i) => {
             if (
                 kernelSpec.metadata?.interpreter?.path &&
-                areInterpreterPathsSame(Uri.file(kernelSpec.metadata?.interpreter?.path), i.path, undefined, true)
+                areInterpreterPathsSame(Uri.file(kernelSpec.metadata?.interpreter?.path), i.path)
             ) {
                 traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on metadata path.`);
                 return true;
@@ -380,7 +380,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             kernelSpec && Array.isArray(kernelSpec.argv) && kernelSpec.argv.length > 0 ? kernelSpec.argv[0] : undefined;
         if (pathInArgv && path.basename(pathInArgv) !== pathInArgv) {
             const exactMatchBasedOnArgv = interpreters.find((i) => {
-                if (areInterpreterPathsSame(Uri.file(pathInArgv), i.path, undefined, true)) {
+                if (areInterpreterPathsSame(Uri.file(pathInArgv), i.path)) {
                     traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on path in argv.`);
                     return true;
                 }
@@ -404,7 +404,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             const matchBasedOnInterpreterPath = interpreters.find((i) => {
                 if (
                     kernelSpec.interpreterPath &&
-                    areInterpreterPathsSame(fsPathToUri(kernelSpec.interpreterPath), i.path, undefined, true)
+                    areInterpreterPathsSame(fsPathToUri(kernelSpec.interpreterPath), i.path)
                 ) {
                     traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on interpreter path.`);
                     return true;

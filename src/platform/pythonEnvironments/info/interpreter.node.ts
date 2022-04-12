@@ -94,9 +94,9 @@ export function areInterpretersSame(i1: PythonEnvironment | undefined, i2: Pytho
  *  They are both the same.
  * This function will take that into account.
  */
-export function areInterpreterPathsSame(path1: Uri = Uri.file(''), path2:Uri = Uri.file(''), ostype = getOSType(), forceLowerCase: boolean = false){
-    const norm1 = getNormalizedInterpreterPath(path1, ostype, forceLowerCase);
-    const norm2 = getNormalizedInterpreterPath(path2, ostype, forceLowerCase);
+export function areInterpreterPathsSame(path1: Uri = Uri.file(''), path2:Uri = Uri.file(''), ostype = getOSType()){
+    const norm1 = getNormalizedInterpreterPath(path1, ostype, ostype == OSType.Windows);
+    const norm2 = getNormalizedInterpreterPath(path2, ostype, ostype == OSType.Windows);
     return norm1 === norm2 || uriPath.isEqual(norm1, norm2, true);
 }
 /**

@@ -400,7 +400,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         // First path in PATH must be the directory where executable is located.
         assert.ok(
-            areInterpreterPathsSame(Uri.file(path.dirname(sysExecutable)), Uri.file(pathValue[0]), undefined, true),
+            areInterpreterPathsSame(Uri.file(path.dirname(sysExecutable)), Uri.file(pathValue[0])),
             `First entry in PATH (${pathValue[0]}) does not point to executable (${sysExecutable})`
         );
     });
@@ -462,7 +462,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         // First path in PATH must be the directory where executable is located.
         assert.ok(
-            areInterpreterPathsSame(Uri.file(shellExecutable), Uri.file(sysExecutable), undefined, true),
+            areInterpreterPathsSame(Uri.file(shellExecutable), Uri.file(sysExecutable)),
             `Python paths do not match ${shellExecutable}, ${sysExecutable}. Output is (${cell1Output}), error is ${errorOutput}`
         );
     });

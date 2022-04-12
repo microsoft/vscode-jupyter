@@ -61,7 +61,7 @@ suite('DataScience - Kernels Finder', () => {
         }
 
         assert.isTrue(
-            areInterpreterPathsSame(kernelSpec.interpreter.path, interpreter?.path, undefined, true),
+            areInterpreterPathsSame(kernelSpec.interpreter.path, interpreter?.path),
             `No interpreter found, kernelspec interpreter is ${getDisplayPath(
                 kernelSpec.interpreter.path
             )} but expected ${getDisplayPath(interpreter?.path)}`
@@ -80,7 +80,7 @@ suite('DataScience - Kernels Finder', () => {
             throw new Error('Kernelspec & interpreter info should not be empty');
         }
         assert.isTrue(
-            areInterpreterPathsSame(kernelSpec.interpreter.path, interpreter?.path, undefined, true),
+            areInterpreterPathsSame(kernelSpec.interpreter.path, interpreter?.path),
             `No interpreter found, kernelspec interpreter is ${getDisplayPath(
                 kernelSpec.interpreter.path
             )} but expected ${getDisplayPath(interpreter?.path)}`

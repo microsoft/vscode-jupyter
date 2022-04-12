@@ -35,6 +35,7 @@ import { translateCellErrorOutput, getTextOutputValue } from '../../notebooks/he
 import { INotebookControllerManager } from '../../notebooks/types';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts.node';
+import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/interpreter.node';
 
 suite('Interactive window', async function () {
     this.timeout(120_000);
@@ -81,9 +82,8 @@ suite('Interactive window', async function () {
             ? notebookControllerManager.getSelectedNotebookController(notebookDocument)
             : undefined;
         const activeInterpreter = await interpreterService.getActiveInterpreter();
-        assert.equal(
-            controller?.connection.interpreter?.path,
-            activeInterpreter?.path,
+        assert.ok(
+            areInterpreterPathsSame(controller?.connection.interpreter?.path, activeInterpreter?.path),
             `Controller does not match active interpreter for ${getDisplayPath(notebookDocument?.uri)}`
         );
 

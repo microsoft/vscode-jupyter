@@ -81,7 +81,6 @@ import { IRawNotebookProvider } from './raw/types';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { isCI } from '../platform/common/constants.node';
 import { fsPathToUri } from '../platform/vscode-path/utils';
-import { getOSType } from '../platform/common/utils/platform';
 import { deserializePythonEnvironment } from '../platform/api/pythonApi.node';
 
 // Helper functions for dealing with kernels and kernelspecs
@@ -1370,12 +1369,7 @@ export async function sendTelemetryForPythonKernelExecutable(
             return;
         }
         const sysExecutable = concatMultilineString(output.text).trim().toLowerCase();
-        const match = areInterpreterPathsSame(
-            kernelConnection.interpreter.path,
-            Uri.file(sysExecutable),
-            getOSType(),
-            true
-        );
+        const match = areInterpreterPathsSame(kernelConnection.interpreter.path, Uri.file(sysExecutable));
         sendTelemetryEvent(Telemetry.PythonKerneExecutableMatches, undefined, {
             match: match ? 'true' : 'false',
             kernelConnectionType: kernelConnection.kind
@@ -1401,9 +1395,7 @@ export async function sendTelemetryForPythonKernelExecutable(
                 if (execOutput.stdout.trim().length > 0) {
                     const match = areInterpreterPathsSame(
                         Uri.file(execOutput.stdout.trim().toLowerCase()),
-                        Uri.file(sysExecutable),
-                        getOSType(),
-                        true
+                        Uri.file(sysExecutable)
                     );
                     sendTelemetryEvent(Telemetry.PythonKerneExecutableMatches, undefined, {
                         match: match ? 'true' : 'false',

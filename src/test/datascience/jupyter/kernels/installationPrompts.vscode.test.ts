@@ -417,7 +417,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         const sysExecutable = getCellOutputs(lastCodeCell).trim().toLowerCase();
 
         assert.ok(
-            areInterpreterPathsSame(venvNoRegPath, Uri.file(sysExecutable), undefined, true),
+            areInterpreterPathsSame(venvNoRegPath, Uri.file(sysExecutable)),
             `Python paths do not match ${venvNoRegPath}, ${sysExecutable}.`
         );
     });
@@ -832,7 +832,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             const output = getCellOutputs(cell).trim();
             const expectedInterpreterPath = interpreterOfNewKernelToSelect || interpreterPath;
             assert.isTrue(
-                areInterpreterPathsSame(expectedInterpreterPath, Uri.file(output), undefined, true),
+                areInterpreterPathsSame(expectedInterpreterPath, Uri.file(output)),
                 `Kernel points to ${getDisplayPathFromLocalFile(output)} but expected ${getDisplayPath(
                     expectedInterpreterPath
                 )}`
