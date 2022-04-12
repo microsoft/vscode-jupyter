@@ -102,7 +102,7 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             if (
                 preferredKernelFromCache &&
                 preferredKernelFromCache.interpreter &&
-                (await this.fs.localFileExists(preferredKernelFromCache.interpreter.path.fsPath))
+                (await this.fs.localFileExists(preferredKernelFromCache.interpreter.uri.fsPath))
             ) {
                 traceInfo(`Preferred kernel connection found in cache ${preferredKernelFromCache.id}`);
                 return preferredKernelFromCache;
@@ -264,11 +264,11 @@ export class LocalKernelFinder implements ILocalKernelFinder {
             values.map(async (item) => {
                 let somethingIsInvalid = false;
                 const promises: Promise<void>[] = [];
-                if (item.interpreter?.path && item.interpreter?.path.fsPath) {
+                if (item.interpreter?.uri && item.interpreter?.uri.fsPath) {
                     // Possible the interpreter no longer exists, in such cases, exclude this cached kernel from the list.
                     promises.push(
                         this.fs
-                            .localFileExists(item.interpreter.path.fsPath)
+                            .localFileExists(item.interpreter.uri.fsPath)
                             .then((exists) => {
                                 if (!exists) {
                                     somethingIsInvalid = true;

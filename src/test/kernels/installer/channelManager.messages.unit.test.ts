@@ -19,7 +19,7 @@ import { Uri } from 'vscode';
 const info: PythonEnvironment = {
     displayName: '',
     envName: '',
-    path: Uri.file(''),
+    uri: Uri.file(''),
     envType: EnvironmentType.Unknown,
     version: new SemVer('0.0.0-alpha'),
     sysPrefix: '',
@@ -140,7 +140,7 @@ suite('Installation - channel messages', () => {
         const activeInterpreter: PythonEnvironment = {
             ...info,
             envType: interpreterType,
-            path: Uri.file('')
+            uri: Uri.file('')
         };
         interpreters
             .setup((x) => x.getActiveInterpreter(TypeMoq.It.isAny()))

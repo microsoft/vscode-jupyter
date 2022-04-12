@@ -239,7 +239,7 @@ suite('DataScience - Jupyter InterpreterSubCommandExecutionService', () => {
 
             assert.equal(
                 reason,
-                DataScience.jupyterKernelSpecModuleNotFound().format(selectedJupyterInterpreter.path.fsPath)
+                DataScience.jupyterKernelSpecModuleNotFound().format(selectedJupyterInterpreter.uri.fsPath)
             );
         });
         test('Can start jupyer notebook', async () => {

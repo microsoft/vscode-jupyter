@@ -77,7 +77,7 @@ suite('PipEnv installer', async () => {
 
         interpreterService
             .setup((p) => p.getActiveInterpreter(resource))
-            .returns(() => Promise.resolve({ envType: EnvironmentType.Pipenv, path: interpreterPath } as any));
+            .returns(() => Promise.resolve({ envType: EnvironmentType.Pipenv, uri: interpreterPath } as any));
 
         workspaceService.setup((w) => w.getWorkspaceFolder(resource)).returns(() => ({ uri: workspaceFolder } as any));
         const result = await pipEnvInstaller.isSupported(resource);
@@ -88,7 +88,7 @@ suite('PipEnv installer', async () => {
         const resource = Uri.parse('a');
         interpreterService
             .setup((p) => p.getActiveInterpreter(resource))
-            .returns(() => Promise.resolve({ envType: EnvironmentType.Conda, path: interpreterPath } as any));
+            .returns(() => Promise.resolve({ envType: EnvironmentType.Conda, uri: interpreterPath } as any));
 
         workspaceService
             .setup((w) => w.getWorkspaceFolder(resource))
@@ -101,7 +101,7 @@ suite('PipEnv installer', async () => {
         const resource = Uri.parse('a');
         interpreterService
             .setup((p) => p.getActiveInterpreter(resource))
-            .returns(() => Promise.resolve({ envType: EnvironmentType.Pipenv, path: 'some random path' } as any));
+            .returns(() => Promise.resolve({ envType: EnvironmentType.Pipenv, uri: 'some random path' } as any));
 
         workspaceService
             .setup((w) => w.getWorkspaceFolder(resource))

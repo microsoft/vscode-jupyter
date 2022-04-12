@@ -102,7 +102,7 @@ export class JupyterInterpreterSubCommandExecutionService
         }
 
         if (productsNotInstalled.length === 1 && productsNotInstalled[0] === Product.kernelspec) {
-            return DataScience.jupyterKernelSpecModuleNotFound().format(interpreter.path.fsPath);
+            return DataScience.jupyterKernelSpecModuleNotFound().format(interpreter.uri.fsPath);
         }
 
         return getMessageForLibrariesNotInstalled(productsNotInstalled, interpreter.displayName);
@@ -116,7 +116,7 @@ export class JupyterInterpreterSubCommandExecutionService
     ): Promise<ObservableExecutionResult<string>> {
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(options.token);
         this.jupyterOutputChannel.appendLine(
-            DataScience.startingJupyterLogMessage().format(getDisplayPath(interpreter.path), notebookArgs.join(' '))
+            DataScience.startingJupyterLogMessage().format(getDisplayPath(interpreter.uri), notebookArgs.join(' '))
         );
         const executionService = await this.pythonExecutionFactory.createDaemon<IPythonDaemonExecutionService>({
             daemonModule: JupyterDaemonModule,

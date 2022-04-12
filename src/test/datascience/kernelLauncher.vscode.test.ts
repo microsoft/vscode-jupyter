@@ -37,7 +37,7 @@ suite('DataScience - Kernel Launcher', () => {
         argv: [PYTHON_PATH, '-m', 'ipykernel_launcher', '-f', `{connection_file}`],
         env: {},
         resources: {},
-        path: Uri.file('')
+        uri: Uri.file('')
     };
     const disposables: IDisposable[] = [];
     suiteSetup(async function () {
@@ -96,7 +96,7 @@ suite('DataScience - Kernel Launcher', () => {
         const spec: IJupyterKernelSpec = {
             name: 'foo',
             language: 'python',
-            path: Uri.file('python'),
+            uri: Uri.file('python'),
             display_name: 'foo',
             argv: [PYTHON_PATH, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
             env: {
@@ -130,7 +130,7 @@ suite('DataScience - Kernel Launcher', () => {
         const spec: IJupyterKernelSpec = {
             name: 'foo',
             language: 'python',
-            path: Uri.file('python'),
+            uri: Uri.file('python'),
             display_name: 'foo',
             argv: [PYTHON_PATH, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
             env: {

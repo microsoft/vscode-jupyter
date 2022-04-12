@@ -37,10 +37,10 @@ export function sendKernelListTelemetry(
                 // Tody we don't support such environments, lets see if people are using these, if they are then
                 // We know kernels will not start correctly for those environments (even if started, packages might not be located correctly).
                 if (item.interpreter.envType === EnvironmentType.Conda) {
-                    if (uniqueCondaInterpreterPaths.has(item.interpreter.path)) {
+                    if (uniqueCondaInterpreterPaths.has(item.interpreter.uri)) {
                         counters.condaEnvsSharingSameInterpreter += 1;
                     } else {
-                        uniqueCondaInterpreterPaths.add(item.interpreter.path);
+                        uniqueCondaInterpreterPaths.add(item.interpreter.uri);
                     }
                 }
                 break;

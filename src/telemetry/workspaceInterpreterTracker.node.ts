@@ -40,7 +40,7 @@ export class WorkspaceInterpreterTracker implements IExtensionSyncActivationServ
         if (!activeInterpreterPath) {
             return;
         }
-        return areInterpreterPathsSame(activeInterpreterPath, interpreter.path);
+        return areInterpreterPathsSame(activeInterpreterPath, interpreter.uri);
     }
     private trackActiveInterpreters() {
         if (this.trackingInterpreters || !this.pythonExtensionChecker.isPythonExtensionActive) {
@@ -57,7 +57,7 @@ export class WorkspaceInterpreterTracker implements IExtensionSyncActivationServ
                         try {
                             const workspaceId = this.workspaceService.getWorkspaceFolderIdentifier(item);
                             const interpreter = await this.interpreterService.getActiveInterpreter(item);
-                            WorkspaceInterpreterTracker.workspaceInterpreters.set(workspaceId, interpreter?.path);
+                            WorkspaceInterpreterTracker.workspaceInterpreters.set(workspaceId, interpreter?.uri);
                         } catch (ex) {
                             // Don't care.
                         }

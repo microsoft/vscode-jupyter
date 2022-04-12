@@ -125,7 +125,7 @@ suite('DataScience - Kernel Process', () => {
                 interrupt_mode: 'message',
                 display_name: '',
                 name: '',
-                path: Uri.file('')
+                uri: Uri.file('')
             },
             kind: 'startUsingLocalKernelSpec'
         };
@@ -162,7 +162,7 @@ suite('DataScience - Kernel Process', () => {
                 interrupt_mode: 'message',
                 display_name: '',
                 name: '',
-                path: Uri.file('')
+                uri: Uri.file('')
             },
             kind: 'startUsingLocalKernelSpec'
         };
@@ -197,7 +197,7 @@ suite('DataScience - Kernel Process', () => {
                 interrupt_mode: 'message',
                 display_name: '',
                 name: '',
-                path: Uri.file('')
+                uri: Uri.file('')
             },
             kind: 'startUsingLocalKernelSpec'
         };
@@ -232,7 +232,7 @@ suite('DataScience - Kernel Process', () => {
                 interrupt_mode: 'message',
                 display_name: '',
                 name: '',
-                path: Uri.file('')
+                uri: Uri.file('')
             },
             kind: 'startUsingLocalKernelSpec'
         };

@@ -18,7 +18,7 @@ export function createPythonInterpreter(info?: Partial<PythonEnvironment>): Pyth
     const rnd = new Date().getTime().toString();
     return {
         displayName: `Something${rnd}`,
-        path: Uri.file(`somePath${rnd}`),
+        uri: Uri.file(`somePath${rnd}`),
         sysPrefix: `someSysPrefix${rnd}`,
         sysVersion: `1.1.1`,
         ...(info || {})

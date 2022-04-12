@@ -27,7 +27,7 @@ export class MockPythonExecutionService implements IPythonExecutionService {
 
     public getInterpreterInformation(): Promise<InterpreterInformation> {
         return Promise.resolve({
-            path: Uri.file(''),
+            uri: Uri.file(''),
             version: new SemVer('3.6.0-beta'),
             sysVersion: '1.0',
             sysPrefix: '1.0'

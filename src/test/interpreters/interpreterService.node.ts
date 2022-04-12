@@ -75,8 +75,8 @@ async function getAllInterpreters(): Promise<PythonEnvironment[]> {
     const interpreters: PythonEnvironment[] = [];
     const items = new ResourceSet();
     allInterpreters.forEach((item) => {
-        if (item && !items.has(item.path)) {
-            items.add(item.path);
+        if (item && !items.has(item.uri)) {
+            items.add(item.uri);
             interpreters.push(item);
         }
     });

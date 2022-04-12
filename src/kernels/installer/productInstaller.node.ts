@@ -54,7 +54,7 @@ export async function trackPackageInstalledIntoInterpreter(
     await memento.update(key, true);
 }
 export async function clearInstalledIntoInterpreterMemento(memento: Memento, product: Product, interpreterPath: Uri) {
-    const key = `${getInterpreterHash({ path: interpreterPath })}#${ProductNames.get(product)}`;
+    const key = `${getInterpreterHash({ uri: interpreterPath })}#${ProductNames.get(product)}`;
     await memento.update(key, undefined);
 }
 export function isModulePresentInEnvironmentCache(memento: Memento, product: Product, interpreter: PythonEnvironment) {

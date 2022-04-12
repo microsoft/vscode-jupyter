@@ -27,7 +27,7 @@ suite('Jupyter Execution', async () => {
             argv: [],
             display_name: 'Hello',
             name: 'hello',
-            path: Uri.file('path')
+            uri: Uri.file('path')
         },
         kind: 'startUsingLocalKernelSpec'
     };

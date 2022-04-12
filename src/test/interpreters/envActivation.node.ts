@@ -15,7 +15,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         interpreter?: PythonEnvironment,
         _allowExceptions?: boolean
     ): Promise<NodeJS.ProcessEnv | undefined> {
-        return getActivatedEnvVariables(interpreter?.path || fsPathToUri(process.env.CI_PYTHON_PATH || 'python')!);
+        return getActivatedEnvVariables(interpreter?.uri || fsPathToUri(process.env.CI_PYTHON_PATH || 'python')!);
     }
     async hasActivationCommands(_resource: Resource, _interpreter?: PythonEnvironment): Promise<boolean> {
         return false;

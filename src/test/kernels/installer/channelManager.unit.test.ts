@@ -23,7 +23,7 @@ suite('InstallationChannelManager - getInstallationChannel()', () => {
     let showNoInstallersMessage: sinon.SinonStub<any>;
     const interpreter: PythonEnvironment = {
         envType: EnvironmentType.Global,
-        path: Uri.file('foobar'),
+        uri: Uri.file('foobar'),
         sysPrefix: '0'
     };
     let installChannelManager: InstallationChannelManager;
@@ -93,7 +93,7 @@ suite('InstallationChannelManager - getInstallationChannels()', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     const interpreter: PythonEnvironment = {
         envType: EnvironmentType.Global,
-        path: Uri.file('foobar'),
+        uri: Uri.file('foobar'),
         sysPrefix: '0'
     };
 
@@ -161,7 +161,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
     test('If active interpreter is Conda, show conda prompt', async () => {
         const activeInterpreter = {
             envType: EnvironmentType.Conda,
-            path: Uri.file('foobar'),
+            uri: Uri.file('foobar'),
             sysPrefix: ''
         };
         appShell
@@ -176,7 +176,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
     test('If active interpreter is not Conda, show pip prompt', async () => {
         const activeInterpreter = {
             envType: EnvironmentType.Pipenv,
-            path: Uri.file('foobar'),
+            uri: Uri.file('foobar'),
             sysPrefix: ''
         };
         appShell
@@ -216,7 +216,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
             }`, async () => {
                 const activeInterpreter = {
                     envType: interpreterType,
-                    path: Uri.file('foobar'),
+                    uri: Uri.file('foobar'),
                     sysPrefix: ''
                 };
                 const platformService = TypeMoq.Mock.ofType<IPlatformService>();
@@ -244,7 +244,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
     test("If 'Search for help' is not selected in error prompt, don't open URL", async () => {
         const activeInterpreter = {
             envType: EnvironmentType.Conda,
-            path: Uri.file('foobar'),
+            uri: Uri.file('foobar'),
             sysPrefix: ''
         };
         const platformService = TypeMoq.Mock.ofType<IPlatformService>();

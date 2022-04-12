@@ -143,8 +143,8 @@ export function getKernelId(spec: IJupyterKernelSpec, interpreter?: PythonEnviro
     }
     const prefixForRemoteKernels = remoteBaseUrl ? `${remoteBaseUrl}.` : '';
     return `${prefixForRemoteKernels}${spec.id || ''}.${specName}.${
-        getNormalizedInterpreterPath(fsPathToUri(spec.interpreterPath) || spec.path).fsPath
-    }.${getNormalizedInterpreterPath(interpreter?.path).fsPath || ''}.${argsForGenerationOfId}`;
+        getNormalizedInterpreterPath(fsPathToUri(spec.interpreterPath) || spec.uri).fsPath
+    }.${getNormalizedInterpreterPath(interpreter?.uri).fsPath || ''}.${argsForGenerationOfId}`;
 }
 
 export function getSysInfoReasonHeader(
@@ -279,13 +279,13 @@ export function getKernelPathFromKernelConnection(kernelConnection?: KernelConne
             kernelConnection.kind === 'startUsingLocalKernelSpec') &&
             kernelConnection.kernelSpec.language === PYTHON_LANGUAGE)
     ) {
-        return fsPathToUri(kernelSpec?.metadata?.interpreter?.path || kernelSpec?.interpreterPath) || kernelSpec?.path;
+        return fsPathToUri(kernelSpec?.metadata?.interpreter?.path || kernelSpec?.interpreterPath) || kernelSpec?.uri;
     } else {
         // For non python kernels, give preference to the executable path in the kernelspec
         // E.g. if we have a rust kernel, we should show the path to the rust executable not the interpreter (such as conda env that owns the rust runtime).
         return (
-            model?.path ||
-            kernelSpec?.path ||
+            model?.uri ||
+            kernelSpec?.uri ||
             fsPathToUri(kernelSpec?.metadata?.interpreter?.path) ||
             fsPathToUri(kernelSpec?.interpreterPath)
         );
@@ -409,7 +409,7 @@ export function getInterpreterWorkspaceFolder(
     interpreter: PythonEnvironment,
     workspaceService: IWorkspaceService
 ): string | undefined {
-    const folder = workspaceService.getWorkspaceFolder(interpreter.path);
+    const folder = workspaceService.getWorkspaceFolder(interpreter.uri);
     return folder?.uri.fsPath || workspaceService.rootPath;
 }
 /**
@@ -477,7 +477,7 @@ export function createInterpreterKernelSpec(
 ): IJupyterKernelSpec {
     const interpreterMetadata = interpreter
         ? {
-              path: interpreter.path.fsPath
+              path: interpreter.uri.fsPath
           }
         : {};
     // This creates a kernel spec for an interpreter. When launched, 'python' argument will map to using the interpreter
@@ -503,7 +503,7 @@ export function createInterpreterKernelSpec(
     return new JupyterKernelSpec(
         defaultSpec,
         specFile ? specFile.fsPath : undefined,
-        interpreter?.path.fsPath,
+        interpreter?.uri.fsPath,
         'registeredByNewVersionOfExt'
     );
 }
@@ -586,7 +586,7 @@ export function findPreferredKernel(
     traceInfo(
         `Find preferred kernel for ${getDisplayPath(resource)} with metadata ${JSON.stringify(
             notebookMetadata || {}
-        )} & preferred interpreter ${getDisplayPath(preferredInterpreter?.path)}`
+        )} & preferred interpreter ${getDisplayPath(preferredInterpreter?.uri)}`
     );
 
     if (kernels.length === 0) {
@@ -1218,7 +1218,7 @@ function compareAgainstKernelDisplayNameInNotebookMetadata(
         argv: [],
         display_name: notebookMetadata.kernelspec.display_name,
         name: notebookMetadata.kernelspec.name,
-        path: Uri.file('')
+        uri: Uri.file('')
     });
     if (metadataPointsToADefaultKernelSpec) {
         // If we're dealing with default kernelspec names, then special handling.
@@ -1311,7 +1311,7 @@ function findKernelSpecMatchingInterpreter(
 
     // if we have more than one match then something is wrong.
     if (result.length > 1) {
-        traceError(`More than one kernel spec matches the interpreter ${interpreter.path}.`, result);
+        traceError(`More than one kernel spec matches the interpreter ${interpreter.uri}.`, result);
         if (isCI) {
             throw new Error('More than one kernelspec matches the intererpreter');
         }
@@ -1369,7 +1369,7 @@ export async function sendTelemetryForPythonKernelExecutable(
             return;
         }
         const sysExecutable = concatMultilineString(output.text).trim().toLowerCase();
-        const match = areInterpreterPathsSame(kernelConnection.interpreter.path, Uri.file(sysExecutable));
+        const match = areInterpreterPathsSame(kernelConnection.interpreter.uri, Uri.file(sysExecutable));
         sendTelemetryEvent(Telemetry.PythonKerneExecutableMatches, undefined, {
             match: match ? 'true' : 'false',
             kernelConnectionType: kernelConnection.kind
@@ -1405,7 +1405,7 @@ export async function sendTelemetryForPythonKernelExecutable(
                     if (!match) {
                         traceError(
                             `Interpreter started by kernel does not match expectation, expected ${getDisplayPath(
-                                kernelConnection.interpreter?.path
+                                kernelConnection.interpreter?.uri
                             )}, got ${getDisplayPath(Uri.file(sysExecutable))}`
                         );
                     }
@@ -1614,7 +1614,7 @@ export async function handleKernelError(
         // If we failed to start the kernel, then clear cache used to track
         // whether we have dependencies installed or not.
         // Possible something is missing.
-        clearInstalledIntoInterpreterMemento(memento, Product.ipykernel, metadata.interpreter.path).ignoreErrors();
+        clearInstalledIntoInterpreterMemento(memento, Product.ipykernel, metadata.interpreter.uri).ignoreErrors();
     }
 
     const handleResult = await errorHandler.handleKernelError(error, 'start', metadata, resource);

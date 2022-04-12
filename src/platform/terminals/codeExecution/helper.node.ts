@@ -42,7 +42,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             const processService = await this.processServiceFactory.create(resource);
 
             const [args, parse] = internalScripts.normalizeSelection();
-            const observable = processService.execObservable(interpreter?.path.fsPath || 'python', args, {
+            const observable = processService.execObservable(interpreter?.uri.fsPath || 'python', args, {
                 throwOnStdErr: true
             });
             const normalizeOutput = createDeferred<string>();

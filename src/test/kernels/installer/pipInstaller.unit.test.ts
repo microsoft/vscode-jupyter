@@ -56,7 +56,7 @@ suite('Pip installer', async () => {
         const pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Global,
-            path: Uri.file('foobar'),
+            uri: Uri.file('foobar'),
             sysPrefix: '0'
         };
 
@@ -75,7 +75,7 @@ suite('Pip installer', async () => {
         const pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Global,
-            path: Uri.file('foobar'),
+            uri: Uri.file('foobar'),
             sysPrefix: '0'
         };
 
@@ -94,7 +94,7 @@ suite('Pip installer', async () => {
         const pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Global,
-            path: Uri.file('foobar'),
+            uri: Uri.file('foobar'),
             sysPrefix: '0'
         };
         pythonExecutionFactory

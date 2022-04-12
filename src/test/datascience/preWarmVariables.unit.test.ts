@@ -29,7 +29,7 @@ suite('DataScience - PreWarm Env Vars', () => {
     let zmqSupported: IRawNotebookSupportedService;
     setup(() => {
         interpreter = {
-            path: Uri.file(''),
+            uri: Uri.file(''),
             sysPrefix: '',
             sysVersion: ''
         };

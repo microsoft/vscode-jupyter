@@ -52,7 +52,7 @@ export class InterpreterPackages {
         );
     }
     public static getPackageVersions(interpreter: PythonEnvironment): Promise<Map<string, string>> {
-        const key = getComparisonKey(interpreter.path);
+        const key = getComparisonKey(interpreter.uri);
         let deferred = InterpreterPackages.interpreterInformation.get(key);
         if (!deferred) {
             deferred = createDeferred<Map<string, string>>();
@@ -101,7 +101,7 @@ export class InterpreterPackages {
         this.trackInterpreterPackages(interpreter, ignoreCache).catch(noop);
     }
     private async trackInterpreterPackages(interpreter: PythonEnvironment, ignoreCache?: boolean) {
-        const key = getComparisonKey(interpreter.path);
+        const key = getComparisonKey(interpreter.uri);
         if (InterpreterPackages.pendingInterpreterInformation.has(key) && !ignoreCache) {
             return;
         }
@@ -149,7 +149,7 @@ export class InterpreterPackages {
                 const version = getTelemetrySafeVersion(rawVersion);
                 packageAndVersions.set(getTelemetrySafeHashedString(packageName), version || '');
             });
-        const key = getComparisonKey(interpreter.path);
+        const key = getComparisonKey(interpreter.uri);
         let deferred = InterpreterPackages.interpreterInformation.get(key);
         if (!deferred) {
             deferred = createDeferred<Map<string, string>>();

@@ -30,12 +30,12 @@ suite('DataScience - Jupyter Interpreter Service', () => {
     let oldVersionCacheStateStore: JupyterInterpreterOldCacheStateStore;
     const selectedJupyterInterpreter = createPythonInterpreter({ displayName: 'JupyterInterpreter' });
     const pythonInterpreter: PythonEnvironment = {
-        path: Uri.file('some path'),
+        uri: Uri.file('some path'),
         sysPrefix: '',
         sysVersion: ''
     };
     const secondPythonInterpreter: PythonEnvironment = {
-        path: Uri.file('second interpreter path'),
+        uri: Uri.file('second interpreter path'),
         sysPrefix: '',
         sysVersion: ''
     };
@@ -54,10 +54,8 @@ suite('DataScience - Jupyter Interpreter Service', () => {
             instance(interpreterConfiguration),
             instance(interpreterService)
         );
-        when(interpreterService.getInterpreterDetails(pythonInterpreter.path, undefined)).thenResolve(
-            pythonInterpreter
-        );
-        when(interpreterService.getInterpreterDetails(secondPythonInterpreter.path, undefined)).thenResolve(
+        when(interpreterService.getInterpreterDetails(pythonInterpreter.uri, undefined)).thenResolve(pythonInterpreter);
+        when(interpreterService.getInterpreterDetails(secondPythonInterpreter.uri, undefined)).thenResolve(
             secondPythonInterpreter
         );
         when(memento.update(anything(), anything())).thenResolve();
@@ -118,7 +116,7 @@ suite('DataScience - Jupyter Interpreter Service', () => {
         assert.equal(selectedInterpreter, secondPythonInterpreter);
     });
     test('setInitialInterpreter if older version is set should use and clear', async () => {
-        when(oldVersionCacheStateStore.getCachedInterpreterPath()).thenReturn(pythonInterpreter.path);
+        when(oldVersionCacheStateStore.getCachedInterpreterPath()).thenReturn(pythonInterpreter.uri);
         when(oldVersionCacheStateStore.clearCache()).thenResolve();
         when(interpreterConfiguration.areDependenciesInstalled(pythonInterpreter, anything())).thenResolve(true);
         const initialInterpreter = await jupyterInterpreterService.setInitialInterpreter(undefined);
@@ -127,14 +125,14 @@ suite('DataScience - Jupyter Interpreter Service', () => {
     });
     test('setInitialInterpreter use saved interpreter if valid', async () => {
         when(oldVersionCacheStateStore.getCachedInterpreterPath()).thenReturn(undefined);
-        when(interpreterSelectionState.selectedPythonPath).thenReturn(pythonInterpreter.path);
+        when(interpreterSelectionState.selectedPythonPath).thenReturn(pythonInterpreter.uri);
         when(interpreterConfiguration.areDependenciesInstalled(pythonInterpreter, anything())).thenResolve(true);
         const initialInterpreter = await jupyterInterpreterService.setInitialInterpreter(undefined);
         assert.equal(initialInterpreter, pythonInterpreter);
     });
     test('setInitialInterpreter saved interpreter invalid, clear it and use active interpreter', async () => {
         when(oldVersionCacheStateStore.getCachedInterpreterPath()).thenReturn(undefined);
-        when(interpreterSelectionState.selectedPythonPath).thenReturn(secondPythonInterpreter.path);
+        when(interpreterSelectionState.selectedPythonPath).thenReturn(secondPythonInterpreter.uri);
         when(interpreterConfiguration.areDependenciesInstalled(secondPythonInterpreter, anything())).thenResolve(false);
         when(interpreterService.getActiveInterpreter(anything())).thenResolve(pythonInterpreter);
         when(interpreterConfiguration.areDependenciesInstalled(pythonInterpreter, anything())).thenResolve(true);
@@ -143,7 +141,7 @@ suite('DataScience - Jupyter Interpreter Service', () => {
         // Make sure we set our saved interpreter to the new active interpreter
         // it should have been cleared to undefined, then set to a new value
         verify(interpreterSelectionState.updateSelectedPythonPath(undefined)).once();
-        verify(interpreterSelectionState.updateSelectedPythonPath(pythonInterpreter.path)).once();
+        verify(interpreterSelectionState.updateSelectedPythonPath(pythonInterpreter.uri)).once();
     });
     test('Install missing dependencies into active interpreter', async () => {
         when(interpreterService.getActiveInterpreter(anything())).thenResolve(pythonInterpreter);

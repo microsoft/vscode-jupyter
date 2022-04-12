@@ -66,7 +66,7 @@ export class KernelDependencyService implements IKernelDependencyService {
     ): Promise<KernelInterpreterDependencyResponse> {
         traceInfo(
             `installMissingDependencies ${
-                kernelConnection.interpreter?.path ? getDisplayPath(kernelConnection.interpreter?.path) : ''
+                kernelConnection.interpreter?.uri ? getDisplayPath(kernelConnection.interpreter?.uri) : ''
             }, ui.disabled=${ui.disableUI} for resource ${getDisplayPath(resource)}`
         );
         if (
@@ -89,7 +89,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         }
 
         // Cache the install run
-        const key = getComparisonKey(kernelConnection.interpreter.path);
+        const key = getComparisonKey(kernelConnection.interpreter.uri);
         let promise = this.installPromises.get(key);
         let cancelTokenSource: CancellationTokenSource | undefined;
         if (!promise) {
@@ -154,7 +154,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             isModulePresentInEnvironmentCache(this.memento, Product.ipykernel, kernelConnection.interpreter)
         ) {
             traceInfo(
-                `IPyKernel found previously in this environment ${getDisplayPath(kernelConnection.interpreter.path)}`
+                `IPyKernel found previously in this environment ${getDisplayPath(kernelConnection.interpreter.uri)}`
             );
             return true;
         }
@@ -205,7 +205,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             : DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter();
         const products = isPipAvailableForNonConda === false ? [Product.ipykernel, Product.pip] : [Product.ipykernel];
         const message = messageFormat.format(
-            interpreter.displayName || interpreter.path.fsPath,
+            interpreter.displayName || interpreter.uri.fsPath,
             products.map((product) => ProductNames.get(product)!).join(` ${Common.and()} `)
         );
         const productNameForTelemetry = products.map((product) => ProductNames.get(product)!).join(', ');

@@ -295,11 +295,11 @@ function getIPyKernelMissingErrorMessageForCell(kernelConnection: KernelConnecti
     ) {
         return;
     }
-    const displayNameOfKernel = kernelConnection.interpreter.displayName || kernelConnection.interpreter.path.fsPath;
+    const displayNameOfKernel = kernelConnection.interpreter.displayName || kernelConnection.interpreter.uri.fsPath;
     const ipyKernelName = ProductNames.get(Product.ipykernel)!;
     const ipyKernelModuleName = translateProductToModule(Product.ipykernel);
 
-    let installerCommand = `${kernelConnection.interpreter.path.fsPath.fileToCommandArgument()} -m pip install ${ipyKernelModuleName} -U --force-reinstall`;
+    let installerCommand = `${kernelConnection.interpreter.uri.fsPath.fileToCommandArgument()} -m pip install ${ipyKernelModuleName} -U --force-reinstall`;
     if (kernelConnection.interpreter?.envType === EnvironmentType.Conda) {
         if (kernelConnection.interpreter?.envName) {
             installerCommand = `conda install -n ${kernelConnection.interpreter?.envName} ${ipyKernelModuleName} --update-deps --force-reinstall`;
@@ -311,7 +311,7 @@ function getIPyKernelMissingErrorMessageForCell(kernelConnection: KernelConnecti
         kernelConnection.interpreter?.envType === EnvironmentType.WindowsStore ||
         kernelConnection.interpreter?.envType === EnvironmentType.System
     ) {
-        installerCommand = `${kernelConnection.interpreter.path.fsPath.fileToCommandArgument()} -m pip install ${ipyKernelModuleName} -U --user --force-reinstall`;
+        installerCommand = `${kernelConnection.interpreter.uri.fsPath.fileToCommandArgument()} -m pip install ${ipyKernelModuleName} -U --user --force-reinstall`;
     }
     const message = DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter().format(
         displayNameOfKernel,

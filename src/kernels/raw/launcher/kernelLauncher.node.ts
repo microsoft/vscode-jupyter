@@ -142,7 +142,7 @@ export class KernelLauncher implements IKernelLauncher {
             ],
             {}
         );
-        const displayInterpreterPath = getDisplayPath(interpreter.path);
+        const displayInterpreterPath = getDisplayPath(interpreter.uri);
         if (output.stdout) {
             const outputs = output.stdout
                 .trim()

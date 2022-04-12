@@ -248,7 +248,7 @@ export function deserializePythonEnvironment(
         return {
             ...pythonVersion,
             sysPrefix: pythonVersion.sysPrefix || '',
-            path: Uri.file(pythonVersion.path || ''),
+            uri: Uri.file(pythonVersion.path || ''),
             envPath: fsPathToUri(pythonVersion.envPath)
         };
     }
@@ -260,7 +260,7 @@ export function serializePythonEnvironment(
     if (jupyterVersion) {
         return {
             ...jupyterVersion,
-            path: jupyterVersion.path.fsPath,
+            path: jupyterVersion.uri.fsPath,
             envPath: jupyterVersion.envPath?.fsPath
         };
     }
@@ -356,7 +356,7 @@ export class InterpreterService implements IInterpreterService {
                         .then((item) =>
                             traceInfo(
                                 `Active Interpreter in Python API for ${resource?.toString()} is ${getDisplayPath(
-                                    item?.path
+                                    item?.uri
                                 )}`
                             )
                         )
@@ -400,7 +400,7 @@ export class InterpreterService implements IInterpreterService {
         const result: PythonEnvironment[] = [];
         all.flat().forEach((p) => {
             const translated = deserializePythonEnvironment(p);
-            if (translated && !result.find((r) => areInterpreterPathsSame(r.path, translated.path))) {
+            if (translated && !result.find((r) => areInterpreterPathsSame(r.uri, translated.uri))) {
                 result.push(translated);
             }
         });

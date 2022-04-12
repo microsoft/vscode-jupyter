@@ -41,7 +41,7 @@ export enum EnvironmentType {
  * @prop sysPrefix - the environment's install root (`sys.prefix`)
  */
 export type InterpreterInformation = {
-    path: Uri;
+    uri: Uri;
     version?: PythonVersion;
     sysVersion?: string;
     sysPrefix: string;

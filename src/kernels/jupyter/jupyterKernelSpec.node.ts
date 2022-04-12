@@ -10,7 +10,7 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
     public name: string;
     public originalName?: string;
     public language: string;
-    public path: Uri;
+    public uri: Uri;
     public readonly env: NodeJS.ProcessEnv | undefined;
     public display_name: string;
     public argv: string[];
@@ -30,7 +30,7 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
         this.name = specModel.name;
         this.argv = specModel.argv;
         this.language = specModel.language;
-        this.path = specModel.argv && specModel.argv.length > 0 ? Uri.file(specModel.argv[0]) : Uri.file('');
+        this.uri = specModel.argv && specModel.argv.length > 0 ? Uri.file(specModel.argv[0]) : Uri.file('');
         this.display_name = specModel.display_name;
         this.metadata = specModel.metadata;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

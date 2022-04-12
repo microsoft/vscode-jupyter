@@ -273,7 +273,7 @@ async function waitForKernelToChangeImpl(
             ?.filter((k) => k.connection.interpreter)
             ?.filter((k) => (criteria.isInteractiveController ? k.id.includes(InteractiveControllerIdSuffix) : true))
             .find((k) =>
-                k.connection.interpreter!.path.fsPath.toLowerCase().includes(interpreterPath.fsPath.toLowerCase())
+                k.connection.interpreter!.uri.fsPath.toLowerCase().includes(interpreterPath.fsPath.toLowerCase())
             )?.id;
     }
     traceInfo(`Switching to kernel id ${id}`);

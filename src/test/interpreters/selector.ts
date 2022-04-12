@@ -14,7 +14,7 @@ export class InterpreterSelector implements IInterpreterSelector {
     public async getSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]> {
         const interpreters = await this.interpreterService.getInterpreters(resource);
         return interpreters.map((item) => {
-            const filePath = getDisplayPath(item.path);
+            const filePath = getDisplayPath(item.uri);
             return {
                 label: item.displayName || filePath,
                 description: item.displayName || filePath,

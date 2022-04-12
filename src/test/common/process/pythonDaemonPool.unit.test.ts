@@ -96,7 +96,7 @@ suite('Daemon - Python Daemon Pool', () => {
         const pool = new DaemonPool(
             logger,
             [],
-            { interpreter: { path: Uri.file('py.exe') } as PythonEnvironment },
+            { interpreter: { uri: Uri.file('py.exe') } as PythonEnvironment },
             instance(pythonExecService),
             instance(platformService),
             undefined
@@ -115,7 +115,7 @@ suite('Daemon - Python Daemon Pool', () => {
             {
                 daemonCount: 5,
                 observableDaemonCount: 3,
-                interpreter: { path: Uri.file('py.exe') } as PythonEnvironment
+                interpreter: { uri: Uri.file('py.exe') } as PythonEnvironment
             },
             instance(pythonExecService),
             instance(platformService),
@@ -138,7 +138,7 @@ suite('Daemon - Python Daemon Pool', () => {
             {
                 daemonCount: 5,
                 observableDaemonCount: 3,
-                interpreter: { path: Uri.file('py.exe') } as PythonEnvironment
+                interpreter: { uri: Uri.file('py.exe') } as PythonEnvironment
             },
             instance(pythonExecService),
             instance(platformService),
@@ -171,7 +171,7 @@ suite('Daemon - Python Daemon Pool', () => {
             {
                 daemonCount: 1,
                 observableDaemonCount: 1,
-                interpreter: { path: Uri.file('py.exe') } as PythonEnvironment
+                interpreter: { uri: Uri.file('py.exe') } as PythonEnvironment
             },
             instance(pythonExecService),
             instance(platformService),
@@ -227,7 +227,7 @@ suite('Daemon - Python Daemon Pool', () => {
                 {
                     daemonCount: 2,
                     observableDaemonCount: 1,
-                    interpreter: { path: Uri.file('py.exe') } as PythonEnvironment
+                    interpreter: { uri: Uri.file('py.exe') } as PythonEnvironment
                 },
                 instance(pythonExecService),
                 instance(platformService),
@@ -310,7 +310,7 @@ suite('Daemon - Python Daemon Pool', () => {
             {
                 daemonCount: 1,
                 observableDaemonCount: 1,
-                interpreter: { path: Uri.file('py.exe') } as PythonEnvironment
+                interpreter: { uri: Uri.file('py.exe') } as PythonEnvironment
             },
             instance(pythonExecService),
             instance(platformService),

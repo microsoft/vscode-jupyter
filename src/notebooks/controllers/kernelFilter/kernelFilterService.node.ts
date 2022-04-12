@@ -49,7 +49,7 @@ export class KernelFilterService implements IDisposable {
                 );
             }
             if (kernelConnection.kind === 'startUsingPythonInterpreter' && item.type === 'pythonEnvironment') {
-                return item.path.toLowerCase() === getDisplayPath(kernelConnection.interpreter.path).toLowerCase();
+                return item.path.toLowerCase() === getDisplayPath(kernelConnection.interpreter.uri).toLowerCase();
             }
             return false;
         });
@@ -111,7 +111,7 @@ export class KernelFilterService implements IDisposable {
             };
         } else if (connection.kind === 'startUsingPythonInterpreter') {
             return <InterpreterFiter>{
-                path: getDisplayPath(connection.interpreter.path),
+                path: getDisplayPath(connection.interpreter.uri),
                 type: 'pythonEnvironment'
             };
         }

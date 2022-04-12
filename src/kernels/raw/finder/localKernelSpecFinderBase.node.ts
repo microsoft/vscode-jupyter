@@ -233,7 +233,7 @@ export async function loadKernelSpec(
     try {
         traceVerbose(
             `Loading kernelspec from ${getDisplayPath(specPath)} for ${
-                interpreter?.path ? getDisplayPath(interpreter.path) : ''
+                interpreter?.uri ? getDisplayPath(interpreter.uri) : ''
             }`
         );
         kernelJson = JSON.parse(await fs.readLocalFile(specPath.fsPath));
@@ -283,7 +283,7 @@ export async function loadKernelSpec(
         kernelJson as any,
         specPath.fsPath,
         // Interpreter information may be saved in the metadata (if this is a kernel spec created/registered by us).
-        interpreter?.path.fsPath || kernelJson?.metadata?.interpreter?.path,
+        interpreter?.uri.fsPath || kernelJson?.metadata?.interpreter?.path,
         getKernelRegistrationInfo(kernelJson)
     );
 
@@ -291,7 +291,7 @@ export async function loadKernelSpec(
     kernelSpec.name = kernelJson?.name || path.basename(path.dirname(specPath.fsPath));
 
     // Possible user deleted the underlying kernel.
-    const interpreterPath = interpreter?.path.fsPath || kernelJson?.metadata?.interpreter?.path;
+    const interpreterPath = interpreter?.uri.fsPath || kernelJson?.metadata?.interpreter?.path;
     if (interpreterPath && !(await fs.localFileExists(interpreterPath))) {
         return;
     }

@@ -30,7 +30,7 @@ suite('DataScience - DataViewerDependencyService', () => {
     setup(async () => {
         interpreter = {
             displayName: '',
-            path: Uri.file(path.join('users', 'python', 'bin', 'python.exe')),
+            uri: Uri.file(path.join('users', 'python', 'bin', 'python.exe')),
             sysPrefix: '',
             sysVersion: '',
             version: new SemVer('3.3.3')

@@ -29,7 +29,7 @@ suite('DataScience - Jupyter Interpreter Configuration', () => {
     let commandFactory: IJupyterCommandFactory;
     let command: IJupyterCommand;
     const pythonInterpreter: PythonEnvironment = {
-        path: Uri.file(''),
+        uri: Uri.file(''),
         sysPrefix: '',
         sysVersion: ''
     };

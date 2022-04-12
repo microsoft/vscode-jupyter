@@ -269,7 +269,7 @@ import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/f
             }
         };
         const python2Global: PythonEnvironment = {
-            path: Uri.file(isWindows ? 'C:/Python/Python2/scripts/python.exe' : '/usr/bin/python27'),
+            uri: Uri.file(isWindows ? 'C:/Python/Python2/scripts/python.exe' : '/usr/bin/python27'),
             sysPrefix: isWindows ? 'C:/Python/Python2' : '/usr',
             displayName: 'Python 2.7',
             envType: EnvironmentType.Global,
@@ -277,7 +277,7 @@ import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/f
             version: { major: 2, minor: 7, patch: 0, build: [], prerelease: [], raw: '2.7.0' }
         };
         const python36Global: PythonEnvironment = {
-            path: Uri.file(isWindows ? 'C:/Python/Python3.6/scripts/python.exe' : '/usr/bin/python36'),
+            uri: Uri.file(isWindows ? 'C:/Python/Python3.6/scripts/python.exe' : '/usr/bin/python36'),
             sysPrefix: isWindows ? 'C:/Python/Python3.6' : '/usr',
             displayName: 'Python 3.6',
             envType: EnvironmentType.Global,
@@ -285,7 +285,7 @@ import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/f
             version: { major: 3, minor: 6, patch: 0, build: [], prerelease: [], raw: '3.6.0' }
         };
         const python37Global: PythonEnvironment = {
-            path: Uri.file(isWindows ? 'C:/Python/Python3.7/scripts/python.exe' : '/usr/bin/python37'),
+            uri: Uri.file(isWindows ? 'C:/Python/Python3.7/scripts/python.exe' : '/usr/bin/python37'),
             sysPrefix: isWindows ? 'C:/Python/Python3.7' : '/usr',
             displayName: 'Python 3.7',
             envType: EnvironmentType.Global,
@@ -293,7 +293,7 @@ import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/f
             version: { major: 3, minor: 7, patch: 0, build: [], prerelease: [], raw: '3.6.0' }
         };
         const python39PyEnv_HelloWorld: PythonEnvironment = {
-            path: Uri.file(
+            uri: Uri.file(
                 isWindows ? 'C:/pyenv/envs/temp/scripts/python.exe' : '/users/username/pyenv/envs/temp/python'
             ),
             sysPrefix: isWindows ? 'C:/pyenv/envs/temp' : '/users/username/pyenv/envs/temp',
@@ -304,7 +304,7 @@ import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/f
             version: { major: 3, minor: 9, patch: 0, build: [], prerelease: [], raw: '3.9.0' }
         };
         const python38PyEnv_temp1: PythonEnvironment = {
-            path: Uri.file(
+            uri: Uri.file(
                 isWindows ? 'C:/pyenv/envs/temp1/scripts/python.exe' : '/users/username/pyenv/envs/temp1/bin/python'
             ),
             sysPrefix: isWindows ? 'C:/pyenv/envs/temp1' : '/users/username/pyenv/envs/temp1',
@@ -315,7 +315,7 @@ import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/f
             version: { major: 3, minor: 8, patch: 0, build: [], prerelease: [], raw: '3.8.0' }
         };
         const python38PyEnv_temp2_duplicateNameAsTemp1: PythonEnvironment = {
-            path: Uri.file(
+            uri: Uri.file(
                 isWindows ? 'C:/pyenv/envs/temp2/scripts/python.exe' : '/users/username/pyenv/envs/temp2/bin/python'
             ),
             sysPrefix: isWindows ? 'C:/pyenv/envs/temp2' : '/users/username/pyenv/envs/temp2',
@@ -326,7 +326,7 @@ import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/f
             version: { major: 3, minor: 8, patch: 0, build: [], prerelease: [], raw: '3.8.0' }
         };
         const python38PyEnv_temp3_duplicateNameAsTemp1: PythonEnvironment = {
-            path: Uri.file(
+            uri: Uri.file(
                 isWindows ? 'C:/pyenv/envs/temp3/scripts/python.exe' : '/users/username/pyenv/envs/temp3/bin/python'
             ),
             sysPrefix: isWindows ? 'C:/pyenv/envs/temp3' : '/users/username/pyenv/envs/temp3',
@@ -341,7 +341,7 @@ import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/f
          * Except on unix the executable is not in a bin folder.
          */
         const python38PyEnv_temp4_duplicateNameAsTemp1ButNoBin: PythonEnvironment = {
-            path: Uri.file(
+            uri: Uri.file(
                 isWindows ? 'C:/pyenv/envs/temp4/scripts/python.exe' : '/users/username/pyenv/envs/temp4/python'
             ),
             sysPrefix: isWindows ? 'C:/pyenv/envs/temp4' : '/users/username/pyenv/envs/temp4',
@@ -353,7 +353,7 @@ import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/f
         };
         const duplicate1OfPython38PyEnv_temp1 = python38PyEnv_temp1;
         const python38VenvEnv: PythonEnvironment = {
-            path: Uri.file(
+            uri: Uri.file(
                 isWindows ? 'C:/temp/venv/.venv/scripts/python.exe' : '/users/username/temp/.venv/bin/python'
             ),
             sysPrefix: isWindows ? 'C:/temp/venv/.venv' : '/users/username/temp/.venv',
@@ -364,7 +364,7 @@ import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/f
             version: { major: 3, minor: 8, patch: 0, build: [], prerelease: [], raw: '3.8.0' }
         };
         const condaEnv1: PythonEnvironment = {
-            path: Uri.file(isWindows ? 'C:/conda/envs/env1/scripts/python.exe' : '/conda/envs/env1/bin/python'),
+            uri: Uri.file(isWindows ? 'C:/conda/envs/env1/scripts/python.exe' : '/conda/envs/env1/bin/python'),
             sysPrefix: isWindows ? 'C:/conda/envs/env1' : '/conda/envs/env1',
             envName: 'env1',
             displayName: 'Conda Env1 3.6',
@@ -385,13 +385,13 @@ import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/f
         const python2spec: KernelSpec.ISpecModel = {
             display_name: 'Python 2 on Disk',
             name: 'python2Custom',
-            argv: [python2Global.path.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+            argv: [python2Global.uri.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
             language: 'python',
             resources: {}
         };
 
         const fullyQualifiedPythonKernelSpec: KernelSpec.ISpecModel = {
-            argv: [python38VenvEnv.path.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}', 'moreargs'],
+            argv: [python38VenvEnv.uri.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}', 'moreargs'],
             display_name: 'Custom .venv Kernel',
             language: 'python',
             name: 'fullyQualifiedPythonKernelSpec',
@@ -399,21 +399,21 @@ import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/f
         };
 
         const fullyQualifiedPythonKernelSpecForGlobalPython36: KernelSpec.ISpecModel = {
-            argv: [python36Global.path.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+            argv: [python36Global.uri.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
             display_name: 'Custom Kernel for Global Python 36',
             language: 'python',
             name: 'fullyQualifiedPythonKernelSpecForGlobalPython36',
             resources: {}
         };
         const fullyQualifiedPythonKernelSpecForGlobalPython36WithCustomEnvVars: KernelSpec.ISpecModel = {
-            argv: [python36Global.path.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+            argv: [python36Global.uri.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
             display_name: 'Custom Kernel for Global Python 36 with Custom Env Vars',
             language: 'python',
             name: 'fullyQualifiedPythonKernelSpecForGlobalPython36WithCustomEnvVars',
             resources: {}
         };
         const fullyQualifiedPythonKernelSpecWithEnv: KernelSpec.ISpecModel = {
-            argv: [python38VenvEnv.path.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}', 'moreargs'],
+            argv: [python38VenvEnv.uri.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}', 'moreargs'],
             display_name: 'Custom .venv Kernel with Env Vars',
             language: 'python',
             name: 'fullyQualifiedPythonKernelSpecWithEnv',
@@ -423,7 +423,7 @@ import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/f
             }
         };
         const kernelspecRegisteredByOlderVersionOfExtension: KernelSpec.ISpecModel = {
-            argv: [python38VenvEnv.path.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}', 'moreargs'],
+            argv: [python38VenvEnv.uri.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}', 'moreargs'],
             display_name: 'Kernelspec registered by older version of extension',
             language: 'python',
             // Most recent versions of extensions used a custom prefix in kernelnames.
@@ -434,7 +434,7 @@ import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/f
             }
         };
         const kernelspecRegisteredByVeryOldVersionOfExtension: KernelSpec.ISpecModel = {
-            argv: [python38VenvEnv.path.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+            argv: [python38VenvEnv.uri.fsPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
             display_name: 'Kernelspec registered by very old version of extension',
             language: 'python',
             // Initial versions of extensions used a GUID in kernelnames & contained the interpreter in metadata.
@@ -445,7 +445,12 @@ import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/f
                 FOO: 'Bar'
             },
             metadata: {
-                interpreter: { ...python38VenvEnv, path: python38VenvEnv.path.fsPath, envPath: undefined }
+                interpreter: {
+                    displayName: python38VenvEnv.displayName,
+                    envName: python38VenvEnv.envName,
+                    path: python38VenvEnv.uri.fsPath,
+                    envPath: undefined
+                }
             }
         };
 
@@ -467,7 +472,7 @@ import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/f
                 expectedGlobalKernelSpecs.map(async (kernelSpec) => {
                     const kernelspecFile = path.join(globalSpecPath!.fsPath, kernelSpec.name, 'kernel.json');
                     const interpreter = expectedInterpreters.find(
-                        (item) => kernelSpec.language === PYTHON_LANGUAGE && item.path.fsPath === kernelSpec.argv[0]
+                        (item) => kernelSpec.language === PYTHON_LANGUAGE && item.uri.fsPath === kernelSpec.argv[0]
                     );
                     const spec = await loadKernelSpec(Uri.file(kernelspecFile), instance(fs));
                     if (spec) {

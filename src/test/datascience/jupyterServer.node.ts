@@ -105,7 +105,7 @@ export class JupyterServer implements IAsyncDisposable {
                 const api = await initialize();
                 const pythonExecFactory = api.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
                 const pythonExecutionService = await pythonExecFactory.create({
-                    interpreter: { path: Uri.file(PYTHON_PATH) } as PythonEnvironment
+                    interpreter: { uri: Uri.file(PYTHON_PATH) } as PythonEnvironment
                 });
                 const notebookArgs = [
                     'notebook',

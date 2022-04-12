@@ -229,7 +229,7 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
             activeCondaInterpreter.sysPrefix,
             `Activated env Prefix not set ${errorMessageSuffix}`
         );
-        const execPath = path.dirname(activeCondaInterpreter.path.fsPath);
+        const execPath = path.dirname(activeCondaInterpreter.uri.fsPath);
         assert.ok(
             envVars[pathEnvVariableName]?.startsWith(execPath),
             `Path for Conda should be at the start of ENV[PATH], expected ${execPath} to be in front of ${envVars[pathEnvVariableName]} ${errorMessageSuffix}`

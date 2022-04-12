@@ -243,7 +243,7 @@ export class JupyterInterpreterDependencyService {
         token?: CancellationToken
     ): Promise<Product[]> {
         // If we know that all modules were available at one point in time, then use that cache.
-        const key = getComparisonKey(interpreter.path);
+        const key = getComparisonKey(interpreter.uri);
         if (this.dependenciesInstalledInInterpreter.has(key)) {
             return [];
         }
@@ -328,7 +328,7 @@ export class JupyterInterpreterDependencyService {
             return JupyterInterpreterDependencyResponse.cancel;
         }
         const selectionFromError = await this.applicationShell.showErrorMessage(
-            DataScience.jupyterKernelSpecModuleNotFound().format(interpreter.path.fsPath),
+            DataScience.jupyterKernelSpecModuleNotFound().format(interpreter.uri.fsPath),
             DataScience.selectDifferentJupyterInterpreter(),
             Common.cancel()
         );

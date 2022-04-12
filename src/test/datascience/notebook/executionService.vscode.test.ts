@@ -71,9 +71,10 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         'emptyCellWithOutput.ipynb'
     );
 
+    this.timeout(120_000);
     suiteSetup(async function () {
         traceInfo('Suite Setup VS Code Notebook - Execution');
-        this.timeout(240_000);
+        this.timeout(120_000);
         try {
             api = await initialize();
             await workAroundVSCodeNotebookStartPages();

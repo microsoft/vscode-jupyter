@@ -95,8 +95,7 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
         if (!isPythonKernelConnection(kernelConnectionMetadata)) {
             return;
         }
-        const interpreterOrKernelPath =
-            interpreter?.path || getKernelPathFromKernelConnection(kernelConnectionMetadata);
+        const interpreterOrKernelPath = interpreter?.uri || getKernelPathFromKernelConnection(kernelConnectionMetadata);
         if (!interpreterOrKernelPath) {
             return;
         }

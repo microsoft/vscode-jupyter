@@ -30,11 +30,11 @@ class PythonEnvironment {
     ) {}
 
     public getExecutionInfo(pythonArgs: string[] = []): PythonExecInfo {
-        const python = this.deps.getPythonArgv(this.interpreter.path);
+        const python = this.deps.getPythonArgv(this.interpreter.uri);
         return buildPythonExecInfo(python, pythonArgs);
     }
     public getExecutionObservableInfo(pythonArgs: string[] = []): PythonExecInfo {
-        const python = this.deps.getObservablePythonArgv(this.interpreter.path);
+        const python = this.deps.getObservablePythonArgv(this.interpreter.uri);
         return buildPythonExecInfo(python, pythonArgs);
     }
 
@@ -48,8 +48,8 @@ class PythonEnvironment {
     public async getExecutablePath(): Promise<Uri> {
         // If we've passed the python file, then return the file.
         // This is because on mac if using the interpreter /usr/bin/python2.7 we can get a different value for the path
-        if (await this.deps.isValidExecutable(this.interpreter.path)) {
-            return this.interpreter.path;
+        if (await this.deps.isValidExecutable(this.interpreter.uri)) {
+            return this.interpreter.uri;
         }
         const python = this.getExecutionInfo();
         return getExecutablePath(python, this.deps.exec);
@@ -72,7 +72,7 @@ class PythonEnvironment {
             const python = this.getExecutionInfo();
             return await getInterpreterInfo(python, this.deps.shellExec, { info: traceInfo, error: traceError });
         } catch (ex) {
-            traceError(`Failed to get interpreter information for '${getDisplayPath(this.interpreter.path)}'`, ex);
+            traceError(`Failed to get interpreter information for '${getDisplayPath(this.interpreter.uri)}'`, ex);
         }
     }
 }

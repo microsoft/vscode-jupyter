@@ -154,7 +154,7 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
     }
 
     private getInterpreterIdFromCache(interpreter: PythonEnvironment) {
-        const key = getComparisonKey(interpreter.path);
+        const key = getComparisonKey(interpreter.uri);
         let id = this.interpreterIdCache.get(key);
         if (!id) {
             // Making an assumption that the id for an interpreter never changes.

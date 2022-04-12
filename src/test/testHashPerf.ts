@@ -4,7 +4,7 @@ import { getInterpreterHash } from '../platform/pythonEnvironments/info/interpre
 import { Uri } from 'vscode';
 
 function doHash(p: string) {
-    return getInterpreterHash({ path: Uri.file(p) });
+    return getInterpreterHash({ uri: Uri.file(p) });
 }
 
 function trivial(p: string) {

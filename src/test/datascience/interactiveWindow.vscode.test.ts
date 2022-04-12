@@ -83,7 +83,7 @@ suite('Interactive window', async function () {
             : undefined;
         const activeInterpreter = await interpreterService.getActiveInterpreter();
         assert.ok(
-            areInterpreterPathsSame(controller?.connection.interpreter?.path, activeInterpreter?.path),
+            areInterpreterPathsSame(controller?.connection.interpreter?.uri, activeInterpreter?.uri),
             `Controller does not match active interpreter for ${getDisplayPath(notebookDocument?.uri)}`
         );
 
@@ -125,7 +125,7 @@ suite('Interactive window', async function () {
             : undefined;
         const activeInterpreter = await interpreterService.getActiveInterpreter();
         assert.ok(
-            areInterpreterPathsSame(controller?.connection.interpreter?.path, activeInterpreter?.path),
+            areInterpreterPathsSame(controller?.connection.interpreter?.uri, activeInterpreter?.uri),
             `Controller does not match active interpreter for ${getDisplayPath(notebookDocument?.uri)}`
         );
 

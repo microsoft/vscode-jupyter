@@ -19,7 +19,7 @@ suite('Installation - installation channels', () => {
     let serviceContainer: IServiceContainer;
     const interpreter: PythonEnvironment = {
         envType: EnvironmentType.Conda,
-        path: Uri.file('foobar'),
+        uri: Uri.file('foobar'),
         sysPrefix: '0'
     };
 

@@ -21,7 +21,7 @@ import { parsePythonVersion } from './pythonVersion';
 export function extractInterpreterInfo(python: Uri, raw: PythonEnvInfo): InterpreterInformation {
     const rawVersion = `${raw.versionInfo.slice(0, 3).join('.')}-${raw.versionInfo[3]}`;
     return {
-        path: python,
+        uri: python,
         version: parsePythonVersion(rawVersion),
         sysVersion: raw.sysVersion,
         sysPrefix: raw.sysPrefix,
@@ -78,13 +78,13 @@ export async function getInterpreterInfo(
     return extractInterpreterInfo(Uri.file(python.pythonExecutable), json);
 }
 
-export function getInterpreterHash(interpreter: PythonEnvironment | {path: Uri}){
-    const interpreterPath = getNormalizedInterpreterPath(interpreter.path);
+export function getInterpreterHash(interpreter: PythonEnvironment | {uri: Uri}){
+    const interpreterPath = getNormalizedInterpreterPath(interpreter.uri);
     return sha256().update(interpreterPath.path).digest('hex');
 }
 
 export function areInterpretersSame(i1: PythonEnvironment | undefined, i2: PythonEnvironment | undefined) {
-    return areInterpreterPathsSame(i1?.path, i2?.path) && i1?.displayName == i2?.displayName;
+    return areInterpreterPathsSame(i1?.uri, i2?.uri) && i1?.displayName == i2?.displayName;
 }
 
 /**

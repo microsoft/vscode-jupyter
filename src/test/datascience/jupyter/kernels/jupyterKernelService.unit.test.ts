@@ -41,12 +41,12 @@ suite('DataScience - JupyterKernelService', () => {
                 name: '70cbf3ad892a7619808baecec09fc6109e05177247350ed666cd97ce04371665',
                 argv: ['python'],
                 language: 'python',
-                path: Uri.file('python'),
+                uri: Uri.file('python'),
                 display_name: 'Python 3 Environment'
             },
             interpreter: {
                 displayName: 'Python 3 Environment',
-                path: Uri.file('/usr/bin/python3'),
+                uri: Uri.file('/usr/bin/python3'),
                 sysPrefix: 'python',
                 version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
             },
@@ -60,12 +60,12 @@ suite('DataScience - JupyterKernelService', () => {
                 name: '92d78b5b048d9cbeebb9834099d399dea5384db6f02b0829c247cc4679e7cb5d',
                 argv: ['python'],
                 language: 'python',
-                path: Uri.file('python'),
+                uri: Uri.file('python'),
                 display_name: 'Conda Environment'
             },
             interpreter: {
                 displayName: 'Conda Environment',
-                path: Uri.file('/usr/bin/conda/python3'),
+                uri: Uri.file('/usr/bin/conda/python3'),
                 sysPrefix: 'conda',
                 envType: EnvironmentType.Conda
             },
@@ -78,7 +78,7 @@ suite('DataScience - JupyterKernelService', () => {
                 name: 'python3',
                 argv: ['/usr/bin/python3'],
                 language: 'python',
-                path: Uri.file('/usr/bin/python3'),
+                uri: Uri.file('/usr/bin/python3'),
                 display_name: 'Python 3 on Disk',
                 metadata: {
                     interpreter: {
@@ -91,7 +91,7 @@ suite('DataScience - JupyterKernelService', () => {
             },
             interpreter: {
                 displayName: 'Python 3 Environment',
-                path: Uri.file('/usr/bin/python3'),
+                uri: Uri.file('/usr/bin/python3'),
                 sysPrefix: 'python',
                 version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
             },
@@ -104,7 +104,7 @@ suite('DataScience - JupyterKernelService', () => {
                 name: 'julia',
                 argv: ['/usr/bin/julia'],
                 language: 'julia',
-                path: Uri.file('/usr/bin/julia'),
+                uri: Uri.file('/usr/bin/julia'),
                 display_name: 'Julia on Disk'
             },
             id: '3'
@@ -116,12 +116,12 @@ suite('DataScience - JupyterKernelService', () => {
                 name: 'python2',
                 argv: ['/usr/bin/python'],
                 language: 'python',
-                path: Uri.file('/usr/bin/python'),
+                uri: Uri.file('/usr/bin/python'),
                 display_name: 'Python 2 on Disk'
             },
             interpreter: {
                 displayName: 'Python 2 Environment',
-                path: Uri.file('/usr/bin/python'),
+                uri: Uri.file('/usr/bin/python'),
                 sysPrefix: 'python',
                 version: { major: 2, minor: 7, raw: '2.7', build: ['0'], patch: 0, prerelease: ['0'] }
             },
@@ -134,7 +134,7 @@ suite('DataScience - JupyterKernelService', () => {
                 name: 'python3',
                 argv: ['/usr/bin/python3'],
                 language: 'python',
-                path: Uri.file('/usr/bin/python3'),
+                uri: Uri.file('/usr/bin/python3'),
                 display_name: 'Python 3 on Disk',
                 metadata: {
                     interpreter: {
@@ -147,7 +147,7 @@ suite('DataScience - JupyterKernelService', () => {
             },
             interpreter: {
                 displayName: 'Python 3 Environment',
-                path: Uri.file('/usr/bin/python3'),
+                uri: Uri.file('/usr/bin/python3'),
                 sysPrefix: 'python',
                 version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
             },
@@ -160,7 +160,7 @@ suite('DataScience - JupyterKernelService', () => {
                 name: 'julia',
                 argv: ['/usr/bin/julia'],
                 language: 'julia',
-                path: Uri.file('/usr/bin/julia'),
+                uri: Uri.file('/usr/bin/julia'),
                 display_name: 'Julia on Disk'
             },
             id: '6'
@@ -172,12 +172,12 @@ suite('DataScience - JupyterKernelService', () => {
                 name: 'python2',
                 argv: ['/usr/bin/python'],
                 language: 'python',
-                path: Uri.file('/usr/bin/python'),
+                uri: Uri.file('/usr/bin/python'),
                 display_name: 'Python 2 on Disk'
             },
             interpreter: {
                 displayName: 'Python 2 Environment',
-                path: Uri.file('/usr/bin/python'),
+                uri: Uri.file('/usr/bin/python'),
                 sysPrefix: 'python',
                 version: { major: 2, minor: 7, raw: '2.7', build: ['0'], patch: 0, prerelease: ['0'] }
             },
@@ -190,7 +190,7 @@ suite('DataScience - JupyterKernelService', () => {
                 name: 'python3',
                 argv: ['/usr/bin/python3'],
                 language: 'python',
-                path: Uri.file('/usr/bin/python3'),
+                uri: Uri.file('/usr/bin/python3'),
                 display_name: 'Python 3 on Disk',
                 metadata: {
                     interpreter: {
@@ -203,7 +203,7 @@ suite('DataScience - JupyterKernelService', () => {
             },
             interpreter: {
                 displayName: 'Python 3 Environment',
-                path: Uri.file('/usr/bin/python3'),
+                uri: Uri.file('/usr/bin/python3'),
                 sysPrefix: 'python',
                 version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
             },
@@ -216,7 +216,7 @@ suite('DataScience - JupyterKernelService', () => {
                 name: 'julia',
                 argv: ['/usr/bin/julia'],
                 language: 'julia',
-                path: Uri.file('/usr/bin/julia'),
+                uri: Uri.file('/usr/bin/julia'),
                 display_name: 'Julia on Disk'
             },
             id: '9'
@@ -228,12 +228,12 @@ suite('DataScience - JupyterKernelService', () => {
                 name: 'python2',
                 argv: ['/usr/bin/python'],
                 language: 'python',
-                path: Uri.file('/usr/bin/python'),
+                uri: Uri.file('/usr/bin/python'),
                 display_name: 'Python 2 on Disk'
             },
             interpreter: {
                 displayName: 'Python 2 Environment',
-                path: Uri.file('/usr/bin/python'),
+                uri: Uri.file('/usr/bin/python'),
                 sysPrefix: 'python',
                 version: { major: 2, minor: 7, raw: '2.7', build: ['0'], patch: 0, prerelease: ['0'] }
             },
@@ -246,7 +246,7 @@ suite('DataScience - JupyterKernelService', () => {
                 name: 'e10e222d04b8ec3cc7034c3de1b1269b088e2bcd875030a8acab068e59af3990',
                 argv: ['python', '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
                 language: 'python',
-                path: Uri.file('python'),
+                uri: Uri.file('python'),
                 display_name: 'Conda base environment',
                 metadata: {
                     interpreter: {
@@ -262,7 +262,7 @@ suite('DataScience - JupyterKernelService', () => {
             },
             interpreter: {
                 displayName: 'Conda base environment',
-                path: Uri.file('/usr/conda/envs/base/python'),
+                uri: Uri.file('/usr/conda/envs/base/python'),
                 sysPrefix: 'conda',
                 envType: EnvironmentType.Conda
             },
@@ -275,7 +275,7 @@ suite('DataScience - JupyterKernelService', () => {
                 name: 'sampleEnv',
                 argv: ['/usr/don/home/envs/sample/bin/python'],
                 language: 'python',
-                path: Uri.file('/usr/don/home/envs/sample/bin/python'),
+                uri: Uri.file('/usr/don/home/envs/sample/bin/python'),
                 display_name: 'Kernel with custom env Variable',
                 metadata: {
                     interpreter: {
@@ -291,7 +291,7 @@ suite('DataScience - JupyterKernelService', () => {
             },
             interpreter: {
                 displayName: 'Python 3 Environment',
-                path: Uri.file('/usr/don/home/envs/sample/bin/python'),
+                uri: Uri.file('/usr/don/home/envs/sample/bin/python'),
                 sysPrefix: 'python',
                 version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
             },
@@ -304,7 +304,7 @@ suite('DataScience - JupyterKernelService', () => {
                 name: 'sampleEnvJulia',
                 argv: ['/usr/don/home/envs/sample/bin/julia'],
                 language: 'julia',
-                path: Uri.file('/usr/don/home/envs/sample/bin/python'),
+                uri: Uri.file('/usr/don/home/envs/sample/bin/python'),
                 display_name: 'Julia Kernel with custom env Variable',
                 metadata: {
                     interpreter: {
@@ -320,7 +320,7 @@ suite('DataScience - JupyterKernelService', () => {
             },
             interpreter: {
                 displayName: 'Python 3 Environment',
-                path: Uri.file('/usr/don/home/envs/sample/bin/python'),
+                uri: Uri.file('/usr/don/home/envs/sample/bin/python'),
                 sysPrefix: 'python',
                 version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
             },
@@ -333,7 +333,7 @@ suite('DataScience - JupyterKernelService', () => {
                 name: 'nameGeneratedByUsWhenRegisteringKernelSpecs',
                 argv: ['/usr/don/home/envs/sample/bin/julia'],
                 language: 'julia',
-                path: Uri.file('/usr/don/home/envs/sample/bin/python'),
+                uri: Uri.file('/usr/don/home/envs/sample/bin/python'),
                 display_name: 'Julia Kernel with custom env Variable',
                 metadata: {
                     interpreter: {
@@ -349,7 +349,7 @@ suite('DataScience - JupyterKernelService', () => {
             },
             interpreter: {
                 displayName: 'Python 3 Environment',
-                path: Uri.file('/usr/don/home/envs/sample/bin/python'),
+                uri: Uri.file('/usr/don/home/envs/sample/bin/python'),
                 sysPrefix: 'python',
                 version: { major: 3, minor: 8, raw: '3.8', build: ['0'], patch: 0, prerelease: ['0'] }
             },
@@ -473,7 +473,7 @@ suite('DataScience - JupyterKernelService', () => {
         // Python path must be the first in PATH env variable.
         assert.strictEqual(
             kernelJson.env[pathVariable],
-            `${path.dirname(spec.interpreter!.path.fsPath)}${path.delimiter}Path1${path.delimiter}Path2`
+            `${path.dirname(spec.interpreter!.uri.fsPath)}${path.delimiter}Path1${path.delimiter}Path2`
         );
     });
     test('Kernel environment preserves env variables from original non-python kernelspec', async () => {
@@ -496,7 +496,7 @@ suite('DataScience - JupyterKernelService', () => {
         // Python path must be the first in PATH env variable.
         assert.strictEqual(
             kernelJson.env[pathVariable],
-            `${path.dirname(spec.interpreter!.path.fsPath)}${path.delimiter}Path1${path.delimiter}Path2`
+            `${path.dirname(spec.interpreter!.uri.fsPath)}${path.delimiter}Path1${path.delimiter}Path2`
         );
     });
     test('Verify registration of the kernelspec', async () => {
@@ -523,7 +523,7 @@ suite('DataScience - JupyterKernelService', () => {
         // Python path must be the first in PATH env variable.
         assert.strictEqual(
             kernelJson.env[pathVariable],
-            `${path.dirname(spec.interpreter!.path.fsPath)}${path.delimiter}Path1${path.delimiter}Path2`
+            `${path.dirname(spec.interpreter!.uri.fsPath)}${path.delimiter}Path1${path.delimiter}Path2`
         );
         // capture(fs.localFileExists)
     });
@@ -552,7 +552,7 @@ suite('DataScience - JupyterKernelService', () => {
         // Python path must be the first in PATH env variable.
         assert.strictEqual(
             kernelJson.env[pathVariable],
-            `${path.dirname(spec.interpreter!.path.fsPath)}${path.delimiter}Path1${path.delimiter}Path2`
+            `${path.dirname(spec.interpreter!.uri.fsPath)}${path.delimiter}Path1${path.delimiter}Path2`
         );
         // capture(fs.localFileExists)
     });

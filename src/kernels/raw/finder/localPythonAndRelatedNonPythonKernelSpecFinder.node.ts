@@ -285,7 +285,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                         if (
                             k.language === PYTHON_LANGUAGE &&
                             k.metadata?.interpreter?.path &&
-                            !areInterpreterPathsSame(Uri.file(k.metadata?.interpreter?.path), activeInterpreter?.path)
+                            !areInterpreterPathsSame(Uri.file(k.metadata?.interpreter?.path), activeInterpreter?.uri)
                         ) {
                             try {
                                 interpreter = await this.interpreterService.getInterpreterDetails(
@@ -342,7 +342,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             if (a.kernelSpec.display_name.toUpperCase() === b.kernelSpec.display_name.toUpperCase()) {
                 return 0;
             } else if (
-                areInterpreterPathsSame(a.interpreter?.path, activeInterpreter?.path) &&
+                areInterpreterPathsSame(a.interpreter?.uri, activeInterpreter?.uri) &&
                 a.kernelSpec.display_name.toUpperCase() === activeInterpreter?.displayName?.toUpperCase()
             ) {
                 return -1;
@@ -365,7 +365,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         const exactMatch = interpreters.find((i) => {
             if (
                 kernelSpec.metadata?.interpreter?.path &&
-                areInterpreterPathsSame(Uri.file(kernelSpec.metadata?.interpreter?.path), i.path)
+                areInterpreterPathsSame(Uri.file(kernelSpec.metadata?.interpreter?.path), i.uri)
             ) {
                 traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on metadata path.`);
                 return true;
@@ -380,7 +380,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             kernelSpec && Array.isArray(kernelSpec.argv) && kernelSpec.argv.length > 0 ? kernelSpec.argv[0] : undefined;
         if (pathInArgv && path.basename(pathInArgv) !== pathInArgv) {
             const exactMatchBasedOnArgv = interpreters.find((i) => {
-                if (areInterpreterPathsSame(Uri.file(pathInArgv), i.path)) {
+                if (areInterpreterPathsSame(Uri.file(pathInArgv), i.uri)) {
                     traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on path in argv.`);
                     return true;
                 }
@@ -404,7 +404,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             const matchBasedOnInterpreterPath = interpreters.find((i) => {
                 if (
                     kernelSpec.interpreterPath &&
-                    areInterpreterPathsSame(fsPathToUri(kernelSpec.interpreterPath), i.path)
+                    areInterpreterPathsSame(fsPathToUri(kernelSpec.interpreterPath), i.uri)
                 ) {
                     traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on interpreter path.`);
                     return true;
@@ -436,7 +436,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         interpreters: PythonEnvironment[],
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec[]> {
-        traceInfoIfCI(`Finding kernel specs for interpreters: ${interpreters.map((i) => i.path).join('\n')}`);
+        traceInfoIfCI(`Finding kernel specs for interpreters: ${interpreters.map((i) => i.uri).join('\n')}`);
         // Find all the possible places to look for this resource
         const [interpreterPaths, rootSpecPaths, globalSpecRootPath] = await Promise.all([
             this.findKernelPathsOfAllInterpreters(interpreters),
@@ -488,7 +488,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         const byDisplayName = new Map<string, IJupyterKernelSpec>();
         results.forEach((r) => {
             const existing = byDisplayName.get(r.display_name);
-            if (existing && existing.path !== r.path) {
+            if (existing && existing.uri !== r.uri) {
                 // This item is a dupe but has a different path to start the exe
                 unique.push(r);
             } else if (!existing) {

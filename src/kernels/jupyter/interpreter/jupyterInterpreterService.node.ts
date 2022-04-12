@@ -156,7 +156,7 @@ export class JupyterInterpreterService {
     private changeSelectedInterpreterProperty(interpreter: PythonEnvironment) {
         this._selectedInterpreter = interpreter;
         this._onDidChangeInterpreter.fire(interpreter);
-        this.interpreterSelectionState.updateSelectedPythonPath(interpreter.path);
+        this.interpreterSelectionState.updateSelectedPythonPath(interpreter.uri);
         sendTelemetryEvent(Telemetry.SelectJupyterInterpreter, undefined, { result: 'selected' });
     }
 

@@ -399,7 +399,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             return;
         }
         traceVerbose(
-            `Creating controller for ${notebookType} with interpreter ${getDisplayPath(activeInterpreter.path)}`
+            `Creating controller for ${notebookType} with interpreter ${getDisplayPath(activeInterpreter.uri)}`
         );
         return this.getOrCreateControllerForActiveInterpreter(activeInterpreter, notebookType);
     }

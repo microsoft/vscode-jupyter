@@ -320,7 +320,7 @@ export interface IJupyterKernelSpec {
     id?: string;
     name: string;
     language?: string;
-    path: Uri;
+    uri: Uri;
     env?: NodeJS.ProcessEnv | undefined;
     /**
      * Kernel display name.

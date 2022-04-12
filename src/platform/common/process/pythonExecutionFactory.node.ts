@@ -72,7 +72,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     public async createDaemon<T extends IPythonDaemonExecutionService | IDisposable>(
         options: DaemonExecutionFactoryCreationOptions
     ): Promise<T | IPythonExecutionService> {
-        const daemonPoolKey = `${options.interpreter.path}#${options.daemonClass || ''}#${options.daemonModule || ''}`;
+        const daemonPoolKey = `${options.interpreter.uri}#${options.daemonClass || ''}#${options.daemonModule || ''}`;
         const interpreter = options.interpreter;
         const activatedProcPromise = this.createActivatedEnvironment({
             allowEnvironmentFetchExceptions: true,
@@ -81,7 +81,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         });
         // No daemon support in Python 2.7 or during shutdown
         if ((interpreter?.version && interpreter.version.major < 3) || this.config.getSettings().disablePythonDaemon) {
-            traceInfo(`Not using daemon support for ${getDisplayPath(options.interpreter.path)}`);
+            traceInfo(`Not using daemon support for ${getDisplayPath(options.interpreter.uri)}`);
             return activatedProcPromise;
         }
 
@@ -95,7 +95,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
 
             if (isDaemonPoolCreationOption(options)) {
                 traceInfo(
-                    `Creating daemon pool for ${getDisplayPath(options.interpreter.path)} with env variables count ${
+                    `Creating daemon pool for ${getDisplayPath(options.interpreter.uri)} with env variables count ${
                         Object.keys(activatedEnvVars || {}).length
                     }`
                 );
@@ -112,7 +112,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                 return daemon as unknown as T;
             } else {
                 traceInfo(
-                    `Creating daemon process for ${getDisplayPath(options.interpreter.path)} with env variables count ${
+                    `Creating daemon process for ${getDisplayPath(options.interpreter.uri)} with env variables count ${
                         Object.keys(activatedEnvVars || {}).length
                     }`
                 );

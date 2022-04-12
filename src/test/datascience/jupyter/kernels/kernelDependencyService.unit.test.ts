@@ -41,7 +41,7 @@ suite('DataScience - Kernel Dependency Service', () => {
     const interpreter = createPythonInterpreter({
         displayName: 'name',
         envType: EnvironmentType.Conda,
-        path: Uri.file('abc')
+        uri: Uri.file('abc')
     });
     const metadata: PythonKernelConnectionMetadata = {
         interpreter,

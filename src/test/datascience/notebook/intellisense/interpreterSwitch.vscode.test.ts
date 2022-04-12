@@ -75,12 +75,12 @@ suite('DataScience - Intellisense Switch interpreters in a notebook', function (
         if (!activeInterpreter || !interpreter1 || !interpreter2) {
             throw new Error('Unable to get information for interpreter 1');
         }
-        venvNoKernelPythonPath = interpreter1.path;
-        venvKernelPythonPath = interpreter2.path;
+        venvNoKernelPythonPath = interpreter1.uri;
+        venvKernelPythonPath = interpreter2.uri;
 
         // Make sure to remove pandas from the venvnokernel. This test relies on it.
         const factory = api.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-        const process = await factory.create({ interpreter: { path: venvNoKernelPythonPath } as PythonEnvironment });
+        const process = await factory.create({ interpreter: { uri: venvNoKernelPythonPath } as PythonEnvironment });
         await process.execModule('pip', ['uninstall', 'pandas'], { throwOnStdErr: false });
 
         await startJupyterServer();

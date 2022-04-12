@@ -33,7 +33,7 @@ suite('DataScience - NotebookServerProvider', () => {
     let interpreterService: IInterpreterService;
     let pythonSettings: IWatchableJupyterSettings;
     const workingPython: PythonEnvironment = {
-        path: Uri.file('/foo/bar/python.exe'),
+        uri: Uri.file('/foo/bar/python.exe'),
         version: new SemVer('3.6.6-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python'

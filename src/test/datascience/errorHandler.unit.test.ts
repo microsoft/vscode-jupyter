@@ -40,7 +40,7 @@ suite('DataScience Error Handler Unit Tests', () => {
     let kernelDependencyInstaller: IKernelDependencyService;
     const jupyterInterpreter: PythonEnvironment = {
         displayName: 'Hello',
-        path: Uri.file('Some Path'),
+        uri: Uri.file('Some Path'),
         sysPrefix: ''
     };
 
@@ -120,7 +120,7 @@ suite('DataScience Error Handler Unit Tests', () => {
                 id: '',
                 kind: 'startUsingPythonInterpreter',
                 interpreter: {
-                    path: Uri.file('Hello There'),
+                    uri: Uri.file('Hello There'),
                     sysPrefix: 'Something else',
                     displayName: 'Hello (Some Path)'
                 },
@@ -128,7 +128,7 @@ suite('DataScience Error Handler Unit Tests', () => {
                     argv: [],
                     display_name: '',
                     name: '',
-                    path: Uri.file('')
+                    uri: Uri.file('')
                 }
             };
         });

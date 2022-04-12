@@ -67,6 +67,7 @@ import { IInteractiveWindowProvider } from '../../../../interactive-window/types
 import { Commands } from '../../../../platform/common/constants';
 import { getDisplayPathFromLocalFile } from '../../../../platform/common/platform/fs-paths.node';
 import { getOSType, OSType } from '../../../../platform/common/utils/platform';
+import { isUri } from '../../../../platform/common/utils/misc';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience Install IPyKernel (slow) (install)', function () {
@@ -136,9 +137,9 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         if (!interpreter1 || !interpreter2 || !interpreter3) {
             throw new Error('Unable to get information for interpreter 1');
         }
-        venvPythonPath = interpreter1.path;
-        venvNoRegPath = interpreter2.path;
-        venvKernelPath = interpreter3.path;
+        venvPythonPath = interpreter1.uri;
+        venvNoRegPath = interpreter2.uri;
+        venvKernelPath = interpreter3.uri;
     });
     setup(async function () {
         console.log(`Start test ${this.currentTest?.title}`);
@@ -155,7 +156,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             fs
                 .readFileSync(nbFile)
                 .toString('utf8')
-                .replace('<hash>', getInterpreterHash({ path: venvPythonPath }))
+                .replace('<hash>', getInterpreterHash({ uri: venvPythonPath }))
         );
         await Promise.all([
             installIPyKernel(venvKernelPath.fsPath),
@@ -848,8 +849,8 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
                             .getCalls()
                             .map((call) => {
                                 const args: Parameters<IInstaller['install']> = call.args as any;
-                                return `${ProductNames.get(args[0])} ${getDisplayPathFromLocalFile(
-                                    args[1]?.path.toString()
+                                return `${ProductNames.get(args[0])} ${getDisplayPath(
+                                    isUri(args[1]) ? args[1] : args[1]?.uri
                                 )}`;
                             })
                             .join('\n')}`
@@ -899,7 +900,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
                 (item) =>
                     item.controller.notebookType === JupyterNotebookView &&
                     item.connection.kind === 'startUsingPythonInterpreter' &&
-                    areInterpreterPathsSame(item.connection.interpreter.path, pythonPathToNewKernel)
+                    areInterpreterPathsSame(item.connection.interpreter.uri, pythonPathToNewKernel)
             );
         if (!controller) {
             const registeredControllers = controllerManager

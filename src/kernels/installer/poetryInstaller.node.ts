@@ -54,7 +54,7 @@ export class PoetryInstaller extends ModuleInstaller {
         if (folder) {
             // Install using poetry CLI only if the active poetry environment is related to the current folder.
             return isPoetryEnvironmentRelatedToFolder(
-                interpreter.path.fsPath,
+                interpreter.uri.fsPath,
                 folder,
                 this.configurationService.getSettings(undefined).poetryPath
             );

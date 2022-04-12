@@ -31,12 +31,12 @@ suite('Kernel Environment Variables Service', () => {
     const pathFile = Uri.file('foobar');
     const interpreter: PythonEnvironment = {
         envType: EnvironmentType.Conda,
-        path: pathFile,
+        uri: pathFile,
         sysPrefix: '0'
     };
     const kernelSpec: IJupyterKernelSpec = {
         name: 'kernel',
-        path: pathFile,
+        uri: pathFile,
         display_name: 'kernel',
         interpreterPath: pathFile.fsPath,
         argv: []
@@ -69,7 +69,7 @@ suite('Kernel Environment Variables Service', () => {
             const processPath = Object.keys(process.env).find((k) => k.toLowerCase() == 'path');
             assert.isOk(processPath);
             assert.isOk(vars);
-            assert.strictEqual(vars![processPath!], `${path.dirname(interpreter.path.fsPath)}${path.delimiter}foobar`);
+            assert.strictEqual(vars![processPath!], `${path.dirname(interpreter.uri.fsPath)}${path.delimiter}foobar`);
         });
 
         test('Paths are merged', async () => {
@@ -84,14 +84,14 @@ suite('Kernel Environment Variables Service', () => {
             assert.isOk(vars);
             assert.strictEqual(
                 vars![processPath!],
-                `${path.dirname(interpreter.path.fsPath)}${path.delimiter}foobar${path.delimiter}foobaz`
+                `${path.dirname(interpreter.uri.fsPath)}${path.delimiter}foobar${path.delimiter}foobaz`
             );
         });
 
         test('KernelSpec interpreterPath used if interpreter is undefined', async () => {
             when(interpreterService.getInterpreterDetails(anything())).thenResolve({
                 envType: EnvironmentType.Conda,
-                path: Uri.file('foopath'),
+                uri: Uri.file('foopath'),
                 sysPrefix: 'foosysprefix'
             });
             when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
@@ -106,7 +106,7 @@ suite('Kernel Environment Variables Service', () => {
             assert.isOk(vars);
             assert.strictEqual(
                 vars![processPath!],
-                `${path.dirname(interpreter.path.fsPath)}${path.delimiter}foobar${path.delimiter}foobaz`
+                `${path.dirname(interpreter.uri.fsPath)}${path.delimiter}foobar${path.delimiter}foobaz`
             );
         });
 
@@ -117,7 +117,7 @@ suite('Kernel Environment Variables Service', () => {
         ) {
             when(interpreterService.getInterpreterDetails(anything())).thenResolve({
                 envType,
-                path: Uri.file('foopath'),
+                uri: Uri.file('foopath'),
                 sysPrefix: 'foosysprefix'
             });
             when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve(
