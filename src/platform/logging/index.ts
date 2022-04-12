@@ -35,9 +35,9 @@ const logLevelMap: Map<string | undefined, LogLevel> = new Map([
     [undefined, LogLevel.Error]
 ]);
 
-let globalLoggingLevel: LogLevel;
-export function setLoggingLevel(level?: LoggingLevelSettingType): void {
-    globalLoggingLevel = logLevelMap.get(level) ?? LogLevel.Error;
+let globalLoggingLevel: LogLevel = LogLevel.Debug;
+export function setLoggingLevel(level?: LoggingLevelSettingType | number): void {
+    globalLoggingLevel = typeof level === 'number' ? level : logLevelMap.get(level) ?? LogLevel.Error;
 }
 
 export function setHomeDirectory(homeDir: string) {
