@@ -67,7 +67,7 @@ export function traceInfo(message: string, ...args: Arguments): void {
 }
 
 export function traceVerbose(message: string, ...args: Arguments): void {
-    if (globalLoggingLevel >= LogLevel.Debug) {
+    if (globalLoggingLevel <= LogLevel.Debug) {
         loggers.forEach((l) => l.traceVerbose(message, ...args));
     }
 }
@@ -80,7 +80,7 @@ export function traceInfoIfCI(message: string, ...args: Arguments): void {
 /** Logging Decorators go here */
 
 export function traceDecoratorVerbose(message: string, opts: TraceOptions = DEFAULT_OPTS): TraceDecoratorType {
-    return createTracingDecorator({ message, opts, level: LogLevel.Debug });
+    return createTracingDecorator({ message, opts, level: LogLevel.Trace });
 }
 export function traceDecoratorError(message: string): TraceDecoratorType {
     return createTracingDecorator({ message, opts: DEFAULT_OPTS, level: LogLevel.Error });

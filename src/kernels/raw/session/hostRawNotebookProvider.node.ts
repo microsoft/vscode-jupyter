@@ -5,16 +5,14 @@ import '../../../platform/common/extensions';
 
 import * as vscode from 'vscode';
 import * as uuid from 'uuid/v4';
-import { injectable, inject, named } from 'inversify';
+import { injectable, inject } from 'inversify';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../../platform/common/constants';
 import { traceInfo, traceVerbose, traceError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
-    IOutputChannel,
     IDisposableRegistry,
     Resource,
     IDisplayOptions
@@ -56,7 +54,6 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IKernelLauncher) private readonly kernelLauncher: IKernelLauncher,
-        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel,
         @inject(IRawNotebookSupportedService)
         private readonly rawNotebookSupportedService: IRawNotebookSupportedService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
@@ -95,7 +92,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         this.trackDisposable(notebookPromise.promise);
         let rawSession: RawJupyterSession | undefined;
 
-        traceInfo(`Getting preferred kernel for ${getDisplayPath(resource)}`);
+        traceVerbose(`Getting preferred kernel for ${getDisplayPath(resource)}`);
         try {
             const kernelConnectionProvided = !!kernelConnection;
             if (
@@ -117,7 +114,6 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
             rawSession = new RawJupyterSession(
                 this.kernelLauncher,
                 resource,
-                this.outputChannel,
                 noop,
                 workingDirectory,
                 interruptTimeout,
