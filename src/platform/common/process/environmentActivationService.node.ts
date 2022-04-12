@@ -45,6 +45,7 @@ import {
     traceWarning
 } from '../../logging';
 import { TraceOptions } from '../../logging/types';
+import { serializePythonEnvironment } from '../../api/pythonApi.node';
 
 const ENVIRONMENT_PREFIX = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const ENVIRONMENT_TIMEOUT = 30000;
@@ -223,11 +224,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         let [env, customEnvVars] = await Promise.all([
             this.apiProvider.getApi().then((api) =>
                 api
-                    .getActivatedEnvironmentVariables(
-                        resource,
-                        { ...interpreter, path: interpreter.path.fsPath, envPath: interpreter.envPath?.fsPath },
-                        false
-                    )
+                    .getActivatedEnvironmentVariables(resource, serializePythonEnvironment(interpreter)!, false)
                     .catch((ex) => {
                         traceError(
                             `Failed to get activated env variables from Python Extension for ${getDisplayPath(
@@ -715,15 +712,13 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         }
         const promise = (async () => {
             try {
-                const activationCommands = await this.apiProvider.getApi().then(
-                    (api) =>
-                        api.getEnvironmentActivationShellCommands &&
-                        api.getEnvironmentActivationShellCommands(resource, {
-                            ...interpreter,
-                            path: interpreter.path.fsPath,
-                            envPath: interpreter.envPath?.fsPath
-                        })
-                );
+                const activationCommands = await this.apiProvider
+                    .getApi()
+                    .then(
+                        (api) =>
+                            api.getEnvironmentActivationShellCommands &&
+                            api.getEnvironmentActivationShellCommands(resource, serializePythonEnvironment(interpreter))
+                    );
 
                 if (!activationCommands || activationCommands.length === 0) {
                     return;
