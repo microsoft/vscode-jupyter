@@ -36,7 +36,7 @@ export class JupyterInterpreterOldCacheStateStore {
         return this.workspace.hasWorkspaceFolders ? this.workspaceJupyterInterpreter : this.globalJupyterInterpreter;
     }
     public getCachedInterpreterPath(): Uri | undefined {
-        return this.cacheStore.state.value ? Uri.parse(this.cacheStore.state.value) : undefined;
+        return this.cacheStore.state.value ? Uri.file(this.cacheStore.state.value) : undefined;
     }
     public async clearCache(): Promise<void> {
         await this.cacheStore.state.updateValue(undefined);
