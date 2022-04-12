@@ -57,6 +57,7 @@ env:
   VSIX_NAME_PYTHON: 'ms-python-insiders.vsix'
   VSC_JUPTYER_PYTHON_EXTENSION_VERSION: 'stable'
   VSC_JUPYTER_LOG_KERNEL_OUTPUT: true
+  VSC_PYTHON_LOG_FILE: true
   DOTNET_VERSION: 6.0.x
 
 jobs:
@@ -618,6 +619,7 @@ jobs:
           VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+          VSC_PYTHON_LOG_FILE: ${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/python.log
           TEST_FILES_SUFFIX: '+(interrupt|execut)*.vscode.test*'
         id: test_notebook_vscode_windows
         if: matrix.python != 'noPython' && matrix.os == 'windows-latest'
