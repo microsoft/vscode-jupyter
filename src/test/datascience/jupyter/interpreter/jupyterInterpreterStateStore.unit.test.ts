@@ -5,12 +5,11 @@
 
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { EventEmitter, Memento } from 'vscode';
+import { EventEmitter, Memento, Uri } from 'vscode';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
 import { JupyterInterpreterService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
 import { JupyterInterpreterStateStore } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterStateStore.node';
 import { MockMemento } from '../../../mocks/mementos';
-import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
 
 suite('DataScience - Jupyter Interpreter State', () => {
     let selected: JupyterInterpreterStateStore;
@@ -42,6 +41,6 @@ suite('DataScience - Jupyter Interpreter State', () => {
         const uri = 'jupyter.exe';
         when(memento.get<string | undefined>(anything(), undefined)).thenReturn(uri);
 
-        assert.equal(getDisplayPath(selected.selectedPythonPath), uri);
+        assert.equal(selected.selectedPythonPath?.fsPath, Uri.file(uri).fsPath);
     });
 });
