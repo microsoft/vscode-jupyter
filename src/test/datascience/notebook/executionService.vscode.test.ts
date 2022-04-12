@@ -850,6 +850,26 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             waitForTextOutput(cell, 'after fail', 0, false)
         ]);
     });
+    test('Raw cells should not get executed', async () => {
+        await insertCodeCell('print(1234)', { index: 0 });
+        await insertCodeCell('Hello World', { index: 1, language: 'raw' });
+        await insertCodeCell('print(5678)', { index: 2 });
+
+        const [cell1, cell2, cell3] = vscodeNotebook.activeNotebookEditor!.document.getCells();
+        await Promise.all([
+            runAllCellsInActiveNotebook(),
+            waitForCellExecutionToComplete(cell1),
+            waitForTextOutput(cell1, '1234', 0, false),
+            waitForCellExecutionToComplete(cell3),
+            waitForTextOutput(cell3, '5678', 0, false)
+        ]);
+
+        // Second cell should not have been executed.
+        assert.isEmpty(cell2.outputs, 'Second cell should not have any output');
+        assert.isUndefined(cell2.executionSummary?.executionOrder, 'Second cell should not have an execution order');
+        assert.isUndefined(cell2.executionSummary?.timing, 'Second cell should not have execution times');
+        assert.isUndefined(cell2.executionSummary?.success, 'Second cell should not have execution result');
+    });
     test('Run whole document and test status of cells', async () => {
         const cells = await insertRandomCells({ count: 4, addMarkdownCells: false });
 
