@@ -45,7 +45,7 @@ export class ExportUtil {
     }
 
     public async removeSvgs(source: Uri) {
-        const model = await this.fs.readLocalFile(source.fsPath);
+        const model = await this.fs.readFile(source);
         const content = JSON.parse(model) as nbformat.INotebookContent;
         for (const cell of content.cells) {
             const outputs = 'outputs' in cell ? (cell.outputs as nbformat.IOutput[]) : undefined;
