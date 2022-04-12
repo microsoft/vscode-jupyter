@@ -57,7 +57,6 @@ env:
   VSIX_NAME_PYTHON: 'ms-python-insiders.vsix'
   VSC_JUPTYER_PYTHON_EXTENSION_VERSION: 'stable'
   VSC_JUPYTER_LOG_KERNEL_OUTPUT: true
-  VSC_PYTHON_LOG_FILE: true
   DOTNET_VERSION: 6.0.x
 
 jobs:
