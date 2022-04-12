@@ -12,7 +12,7 @@ import {
     IJupyterKernelSpec,
     INotebookProviderConnection,
     KernelConnectionMetadata,
-    LiveKernelConnectionMetadata,
+    LiveRemoteKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../../../kernels/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
@@ -142,8 +142,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                     const matchingSpec: Partial<IJupyterKernelSpec> =
                         specs.find((spec) => spec.name === s.kernel?.name) || {};
 
-                    const kernel: LiveKernelConnectionMetadata = {
-                        kind: 'connectToLiveKernel',
+                    const kernel: LiveRemoteKernelConnectionMetadata = {
+                        kind: 'connectToLiveRemoteKernel',
                         kernelModel: {
                             ...s.kernel,
                             ...matchingSpec,

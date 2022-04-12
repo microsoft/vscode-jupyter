@@ -58,7 +58,7 @@ import { JupyterServerSelector } from '../../kernels/jupyter/serverSelector.node
 import { PreferredRemoteKernelIdProvider } from '../../kernels/raw/finder/preferredRemoteKernelIdProvider.node';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../../kernels/raw/types';
 import {
-    LiveKernelConnectionMetadata,
+    LiveRemoteKernelConnectionMetadata,
     IKernelProvider,
     KernelConnectionMetadata,
     PythonKernelConnectionMetadata,
@@ -129,7 +129,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private interactiveNoPythonController?: NoPythonKernelsNotebookController;
     private notebookNoPythonController?: NoPythonKernelsNotebookController;
     private handlerAddedForChangesToRemoteKernelUri?: boolean;
-    private remoteRefreshedEmitter = new EventEmitter<LiveKernelConnectionMetadata[]>();
+    private remoteRefreshedEmitter = new EventEmitter<LiveRemoteKernelConnectionMetadata[]>();
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -551,9 +551,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
             // Indicate a refresh of the remote connections
             const allLiveKernelConnections = this.allKernelConnections.filter(
-                (item) => item.kind === 'connectToLiveKernel'
+                (item) => item.kind === 'connectToLiveRemoteKernel'
             );
-            this.remoteRefreshedEmitter.fire(allLiveKernelConnections as LiveKernelConnectionMetadata[]);
+            this.remoteRefreshedEmitter.fire(allLiveKernelConnections as LiveRemoteKernelConnectionMetadata[]);
         };
         this.serverUriStorage.onDidChangeUri(refreshRemoteKernels, this, this.disposables);
         this.kernelProvider.onDidStartKernel(refreshRemoteKernels, this, this.disposables);
@@ -802,7 +802,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 })
                 .forEach(([id, viewType]) => {
                     let hideController = false;
-                    if (kernelConnection.kind === 'connectToLiveKernel') {
+                    if (kernelConnection.kind === 'connectToLiveRemoteKernel') {
                         if (viewType === InteractiveWindowView && doNotHideInteractiveKernel) {
                             hideController = false;
                         } else {
@@ -921,11 +921,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // Update total number of connection & the like for existing controllers.
         connections.forEach((connection) => {
             const controller = this.registeredControllers.get(connection.id);
-            if (controller && connection.kind === 'connectToLiveKernel') {
+            if (controller && connection.kind === 'connectToLiveRemoteKernel') {
                 controller.updateRemoteKernelDetails(connection);
             }
             const iwController = this.registeredControllers.get(`${connection.id}${InteractiveControllerIdSuffix}`);
-            if (iwController && connection.kind === 'connectToLiveKernel') {
+            if (iwController && connection.kind === 'connectToLiveRemoteKernel') {
                 iwController.updateRemoteKernelDetails(connection);
             }
         });

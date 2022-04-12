@@ -15,7 +15,7 @@ import {
     IKernel,
     KernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
-    LiveKernelConnectionMetadata,
+    LiveRemoteKernelConnectionMetadata,
     PythonKernelConnectionMetadata,
     IKernelProvider,
     isLocalConnection,
@@ -95,12 +95,12 @@ type ConnectionWithKernelSpec = LocalKernelSpecConnectionMetadata | PythonKernel
 export function kernelConnectionMetadataHasKernelSpec(
     connectionMetadata: KernelConnectionMetadata
 ): connectionMetadata is ConnectionWithKernelSpec {
-    return connectionMetadata.kind !== 'connectToLiveKernel';
+    return connectionMetadata.kind !== 'connectToLiveRemoteKernel';
 }
 export function kernelConnectionMetadataHasKernelModel(
     connectionMetadata: KernelConnectionMetadata
-): connectionMetadata is LiveKernelConnectionMetadata {
-    return connectionMetadata.kind === 'connectToLiveKernel';
+): connectionMetadata is LiveRemoteKernelConnectionMetadata {
+    return connectionMetadata.kind === 'connectToLiveRemoteKernel';
 }
 export function getKernelId(spec: IJupyterKernelSpec, interpreter?: PythonEnvironment, remoteBaseUrl?: string) {
     // Non-Python kernels cannot contain an interpreter (even in their id).
@@ -172,7 +172,7 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
         return oldDisplayName;
     }
     switch (kernelConnection.kind) {
-        case 'connectToLiveKernel': {
+        case 'connectToLiveRemoteKernel': {
             const notebookPath = removeNotebookSuffixAddedByExtension(
                 kernelConnection.kernelModel?.notebook?.path || kernelConnection.kernelModel?.model?.path || ''
             );
@@ -237,11 +237,11 @@ function getOldFormatDisplayNameOrNameOfKernelConnection(kernelConnection: Kerne
         return '';
     }
     const displayName =
-        kernelConnection.kind === 'connectToLiveKernel'
+        kernelConnection.kind === 'connectToLiveRemoteKernel'
             ? kernelConnection.kernelModel.display_name
             : kernelConnection.kernelSpec?.display_name;
     const name =
-        kernelConnection.kind === 'connectToLiveKernel'
+        kernelConnection.kind === 'connectToLiveRemoteKernel'
             ? kernelConnection.kernelModel.name
             : kernelConnection.kernelSpec?.name;
 
@@ -258,7 +258,7 @@ export function getNameOfKernelConnection(
     if (!kernelConnection) {
         return defaultValue;
     }
-    return kernelConnection.kind === 'connectToLiveKernel'
+    return kernelConnection.kind === 'connectToLiveRemoteKernel'
         ? kernelConnection.kernelModel.name
         : kernelConnection.kernelSpec?.name;
 }
@@ -291,7 +291,7 @@ export function getRemoteKernelSessionInformation(
     kernelConnection: KernelConnectionMetadata | undefined,
     defaultValue: string = ''
 ): string {
-    if (kernelConnection?.kind === 'connectToLiveKernel') {
+    if (kernelConnection?.kind === 'connectToLiveRemoteKernel') {
         return DataScience.jupyterSelectURIRunningDetailFormat().format(
             kernelConnection.kernelModel.lastActivityTime.toLocaleString(),
             kernelConnection.kernelModel.numberOfConnections.toString()
@@ -305,7 +305,7 @@ export function getKernelConnectionPath(
     pathUtils: IPathUtils,
     workspaceService: IWorkspaceService
 ) {
-    if (kernelConnection?.kind === 'connectToLiveKernel') {
+    if (kernelConnection?.kind === 'connectToLiveRemoteKernel') {
         return undefined;
     }
     const kernelPath = getKernelPathFromKernelConnection(kernelConnection);
@@ -586,7 +586,7 @@ export function findPreferredKernel(
         // Find the kernel that matches
         const kernel =
             preferredKernelId &&
-            kernels.find((k) => k.kind === 'connectToLiveKernel' && k.kernelModel.id === preferredKernelId);
+            kernels.find((k) => k.kind === 'connectToLiveRemoteKernel' && k.kernelModel.id === preferredKernelId);
         if (kernel) {
             return kernel;
         }
@@ -649,7 +649,7 @@ export function findPreferredKernel(
         possibleNbMetadataLanguage &&
         possibleNbMetadataLanguage !== PYTHON_LANGUAGE &&
         !notebookMetadata?.kernelspec &&
-        preferredKernel.kind !== 'connectToLiveKernel' &&
+        preferredKernel.kind !== 'connectToLiveRemoteKernel' &&
         preferredKernel.kernelSpec.language &&
         preferredKernel.kernelSpec.language !== possibleNbMetadataLanguage
     ) {
@@ -672,13 +672,13 @@ export function compareKernels(
     b: KernelConnectionMetadata
 ) {
     // Do not sort live kernel connections (they are at the bottom);
-    if (a.kind === b.kind && b.kind === 'connectToLiveKernel') {
+    if (a.kind === b.kind && b.kind === 'connectToLiveRemoteKernel') {
         return 0;
     }
-    if (a.kind === 'connectToLiveKernel') {
+    if (a.kind === 'connectToLiveRemoteKernel') {
         return -1;
     }
-    if (b.kind === 'connectToLiveKernel') {
+    if (b.kind === 'connectToLiveRemoteKernel') {
         return 1;
     }
 
@@ -927,10 +927,10 @@ export function compareKernels(
 }
 
 function givePreferenceToStartingWithoutCustomKernelSpec(a: KernelConnectionMetadata, b: KernelConnectionMetadata) {
-    if (a.kind === 'connectToLiveKernel' || b.kind === 'connectToLiveKernel') {
-        if (a.kind !== 'connectToLiveKernel') {
+    if (a.kind === 'connectToLiveRemoteKernel' || b.kind === 'connectToLiveRemoteKernel') {
+        if (a.kind !== 'connectToLiveRemoteKernel') {
             return 1;
-        } else if (b.kind !== 'connectToLiveKernel') {
+        } else if (b.kind !== 'connectToLiveRemoteKernel') {
             return -1;
         } else {
             return 0;
@@ -963,8 +963,8 @@ function compareKernelSpecOrEnvNames(
     if (!notebookMetadata?.kernelspec?.name) {
         //
     } else if (notebookMetadata.kernelspec.name.toLowerCase().match(isDefaultPythonKernelSpecName)) {
-        const kernelRegA = a.kind !== 'connectToLiveKernel' ? getKernelRegistrationInfo(a.kernelSpec) : '';
-        const kernelRegB = b.kind !== 'connectToLiveKernel' ? getKernelRegistrationInfo(b.kernelSpec) : '';
+        const kernelRegA = a.kind !== 'connectToLiveRemoteKernel' ? getKernelRegistrationInfo(a.kernelSpec) : '';
+        const kernelRegB = b.kind !== 'connectToLiveRemoteKernel' ? getKernelRegistrationInfo(b.kernelSpec) : '';
         // Almost all Python kernels match kernel name `python`, `python2` or `python3`.
         // When we start kernels using Python interpreter, we store `python` or `python3` in the nb metadata.
         // Thus it could match any kernel.
@@ -1114,11 +1114,11 @@ function compareAgainstInterpreterInNotebookMetadata(
     b: KernelConnectionMetadata,
     notebookMetadata?: nbformat.INotebookMetadata
 ) {
-    if (a.kind === 'connectToLiveKernel' && b.kind === 'connectToLiveKernel') {
+    if (a.kind === 'connectToLiveRemoteKernel' && b.kind === 'connectToLiveRemoteKernel') {
         return 0;
-    } else if (a.kind === 'connectToLiveKernel') {
+    } else if (a.kind === 'connectToLiveRemoteKernel') {
         return -1;
-    } else if (b.kind === 'connectToLiveKernel') {
+    } else if (b.kind === 'connectToLiveRemoteKernel') {
         return 1;
     }
 
@@ -1191,11 +1191,11 @@ function compareAgainstKernelDisplayNameInNotebookMetadata(
     b: KernelConnectionMetadata,
     notebookMetadata?: nbformat.INotebookMetadata
 ) {
-    if (a.kind === 'connectToLiveKernel' && b.kind === 'connectToLiveKernel') {
+    if (a.kind === 'connectToLiveRemoteKernel' && b.kind === 'connectToLiveRemoteKernel') {
         return 0;
-    } else if (a.kind === 'connectToLiveKernel') {
+    } else if (a.kind === 'connectToLiveRemoteKernel') {
         return -1;
-    } else if (b.kind === 'connectToLiveKernel') {
+    } else if (b.kind === 'connectToLiveRemoteKernel') {
         return 1;
     }
     if (!notebookMetadata?.kernelspec?.display_name) {
@@ -1881,7 +1881,10 @@ export async function connectToKernel(
 }
 
 export function isLocalHostConnection(kernelConnection: KernelConnectionMetadata): boolean {
-    if (kernelConnection.kind === 'connectToLiveKernel' || kernelConnection.kind === 'startUsingRemoteKernelSpec') {
+    if (
+        kernelConnection.kind === 'connectToLiveRemoteKernel' ||
+        kernelConnection.kind === 'startUsingRemoteKernelSpec'
+    ) {
         const parsed = new url.URL(kernelConnection.baseUrl);
         return parsed.hostname.toLocaleLowerCase() === 'localhost' || parsed.hostname === '127.0.0.1';
     }

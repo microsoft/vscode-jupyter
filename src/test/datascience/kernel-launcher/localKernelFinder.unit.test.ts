@@ -641,7 +641,7 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
         });
         function verifyGlobalKernelSpec(actual: KernelConnectionMetadata | undefined, expected: KernelSpec.ISpecModel) {
             assert.ok(actual, `${expected.display_name} Kernelspec not found`);
-            if (actual?.kind === 'connectToLiveKernel') {
+            if (actual?.kind === 'connectToLiveRemoteKernel') {
                 throw new Error('Incorrect value');
             }
             assert.strictEqual(actual?.kind, 'startUsingLocalKernelSpec');

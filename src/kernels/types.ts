@@ -33,14 +33,14 @@ export enum NotebookCellRunState {
  * Connection metadata for Live Kernels.
  * With this we are able connect to an existing kernel (instead of starting a new session).
  */
-export type LiveKernelConnectionMetadata = Readonly<{
+export type LiveRemoteKernelConnectionMetadata = Readonly<{
     kernelModel: LiveKernelModel;
     /**
      * Python interpreter will be used for intellisense & the like.
      */
     interpreter?: PythonEnvironment;
     baseUrl: string;
-    kind: 'connectToLiveKernel';
+    kind: 'connectToLiveRemoteKernel';
     id: string;
 }>;
 /**
@@ -91,7 +91,7 @@ export type PythonKernelConnectionMetadata = Readonly<{
  * Unexpected as connections are defined once & not changed, if we need to change then user needs to create a new connection.
  */
 export type KernelConnectionMetadata =
-    | Readonly<LiveKernelConnectionMetadata>
+    | Readonly<LiveRemoteKernelConnectionMetadata>
     | Readonly<LocalKernelSpecConnectionMetadata>
     | Readonly<RemoteKernelSpecConnectionMetadata>
     | Readonly<PythonKernelConnectionMetadata>;

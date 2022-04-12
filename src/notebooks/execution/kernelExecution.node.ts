@@ -106,7 +106,7 @@ export class KernelExecution implements IDisposable {
         trackKernelResourceInformation(this.kernel.resourceUri, { interruptKernel: true });
         const notebook = getAssociatedNotebookDocument(this.kernel);
         const executionQueue = notebook ? this.documentExecutions.get(notebook) : undefined;
-        if (notebook && !executionQueue && this.kernel.kernelConnectionMetadata.kind !== 'connectToLiveKernel') {
+        if (notebook && !executionQueue && this.kernel.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
             return InterruptResult.Success;
         }
         // Possible we don't have a notebook.

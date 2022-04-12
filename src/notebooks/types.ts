@@ -3,7 +3,7 @@
 import { Event, NotebookDocument, NotebookEditor, Uri } from 'vscode';
 import type * as vsc from 'vscode-languageclient/node';
 import { Resource } from '../platform/common/types';
-import { KernelConnectionMetadata, LiveKernelConnectionMetadata } from '../kernels/types';
+import { KernelConnectionMetadata, LiveRemoteKernelConnectionMetadata } from '../kernels/types';
 import { IVSCodeNotebookController } from './controllers/types';
 import { InteractiveWindowView, JupyterNotebookView } from './constants';
 
@@ -14,7 +14,7 @@ export interface INotebookControllerManager {
     readonly onNotebookControllerSelected: Event<{ notebook: NotebookDocument; controller: IVSCodeNotebookController }>;
     readonly onNotebookControllerSelectionChanged: Event<void>;
     readonly kernelConnections: Promise<Readonly<KernelConnectionMetadata>[]>;
-    readonly remoteRefreshed: Event<LiveKernelConnectionMetadata[]>;
+    readonly remoteRefreshed: Event<LiveRemoteKernelConnectionMetadata[]>;
     /**
      * @param {boolean} [refresh] Optionally forces a refresh of all local/remote kernels.
      */

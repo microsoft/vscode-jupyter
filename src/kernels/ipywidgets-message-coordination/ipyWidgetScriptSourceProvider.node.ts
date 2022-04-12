@@ -172,7 +172,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             );
         }
         switch (this.kernel.kernelConnectionMetadata.kind) {
-            case 'connectToLiveKernel':
+            case 'connectToLiveRemoteKernel':
             case 'startUsingRemoteKernelSpec':
                 scriptProviders.push(
                     new RemoteWidgetScriptSourceProvider(this.kernel.kernelConnectionMetadata.baseUrl, this.httpClient)
