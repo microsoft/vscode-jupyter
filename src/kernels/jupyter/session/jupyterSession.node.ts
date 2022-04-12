@@ -117,7 +117,7 @@ export class JupyterSession extends BaseJupyterSession {
             // Don't immediately assume this kernel is valid. Try creating a session with it first.
             if (
                 this.kernelConnectionMetadata &&
-                this.kernelConnectionMetadata.kind === 'connectToLiveKernel' &&
+                this.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel' &&
                 this.kernelConnectionMetadata.kernelModel.id &&
                 this.kernelConnectionMetadata.kernelModel.model
             ) {

@@ -195,6 +195,7 @@ export class CellExecution implements IDisposable {
             this.disposables
         );
         NotebookCellStateTracker.setCellState(cell, NotebookCellExecutionState.Idle);
+        const execution = CellExecutionCreator.get(cell);
         if (this.canExecuteCell()) {
             // This has been queued for execution, hence clear all the output.
             // (possible solution for ) https://github.com/microsoft/vscode-jupyter/issues/7123
@@ -207,6 +208,9 @@ export class CellExecution implements IDisposable {
             // void tempTask.end(undefined);
             this.execution = CellExecutionCreator.getOrCreate(cell, this.controller);
             NotebookCellStateTracker.setCellState(cell, NotebookCellExecutionState.Pending);
+        } else if (execution) {
+            execution.start();
+            execution.end(undefined);
         }
     }
 

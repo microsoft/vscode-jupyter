@@ -9,7 +9,7 @@ import { Cancellation, createPromiseFromCancellation } from '../../../platform/c
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
 import { traceInfo, traceError, traceVerbose, traceWarning } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
-import { IDisplayOptions, IDisposable, IOutputChannel, Resource } from '../../../platform/common/types';
+import { IDisplayOptions, IDisposable, Resource } from '../../../platform/common/types';
 import { TimedOutError, createDeferred, sleep } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
@@ -52,7 +52,6 @@ export class RawJupyterSession extends BaseJupyterSession {
     constructor(
         private readonly kernelLauncher: IKernelLauncher,
         resource: Resource,
-        private readonly outputChannel: IOutputChannel,
         restartSessionUsed: (id: Kernel.IKernelConnection) => void,
         workingDirectory: string,
         interruptTimeout: number,
@@ -83,17 +82,15 @@ export class RawJupyterSession extends BaseJupyterSession {
             // Only connect our session if we didn't cancel or timeout
             sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStartSuccess);
             sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStart, stopWatch.elapsedTime);
-            traceInfo('Raw session started and connected');
+            traceInfo(
+                `${DataScience.kernelStarted().format(
+                    getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
+                )}, (Raw session started and connected)`
+            );
             this.setSession(newSession);
 
             // Listen for session status changes
             this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
-
-            this.outputChannel.appendLine(
-                DataScience.kernelStarted().format(
-                    getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
-                )
-            );
         } catch (error) {
             this.connected = false;
             if (error instanceof CancellationError) {
@@ -226,7 +223,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         disableUI: boolean,
         cancelToken: CancellationToken
     ): Promise<ISessionWithSocket> {
-        if (!this.kernelConnectionMetadata || this.kernelConnectionMetadata.kind === 'connectToLiveKernel') {
+        if (!this.kernelConnectionMetadata || this.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel') {
             throw new Error('Unsupported - unable to restart live kernel sessions using raw kernel.');
         }
         return this.startRawSession({ token: cancelToken, ui: new DisplayOptions(disableUI) });

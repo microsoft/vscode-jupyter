@@ -71,7 +71,7 @@ export class JupyterKernelService {
         traceVerbose('Check if a kernel is usable');
         // If we have an interpreter, make sure it has the correct dependencies installed
         if (
-            kernel.kind !== 'connectToLiveKernel' &&
+            kernel.kind !== 'connectToLiveRemoteKernel' &&
             kernel.interpreter &&
             kernel.kind !== 'startUsingRemoteKernelSpec'
         ) {
@@ -97,7 +97,7 @@ export class JupyterKernelService {
 
         // If the spec file doesn't exist or is not defined, we need to register this kernel
         if (
-            kernel.kind !== 'connectToLiveKernel' &&
+            kernel.kind !== 'connectToLiveRemoteKernel' &&
             kernel.kind !== 'startUsingRemoteKernelSpec' &&
             kernel.kernelSpec &&
             kernel.interpreter
@@ -122,7 +122,7 @@ export class JupyterKernelService {
 
         // Update the kernel environment to use the interpreter's latest
         if (
-            kernel.kind !== 'connectToLiveKernel' &&
+            kernel.kind !== 'connectToLiveRemoteKernel' &&
             kernel.kind !== 'startUsingRemoteKernelSpec' &&
             kernel.kernelSpec &&
             kernel.interpreter &&

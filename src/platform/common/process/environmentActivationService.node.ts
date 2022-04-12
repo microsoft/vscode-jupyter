@@ -732,7 +732,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             }
         })();
         this.envActivationCommands.set(key, promise);
-        traceInfo(`Getting activation commands for ${interpreter.path} are not cached. May take a while.`);
+        traceVerbose(`Getting activation commands for ${interpreter.path} are not cached. May take a while.`);
         return promise;
     }
     protected fixActivationCommands(commands: string[]): string[] {

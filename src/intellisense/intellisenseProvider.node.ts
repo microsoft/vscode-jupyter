@@ -181,7 +181,7 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
         if (
             interpreterId !== notebookId &&
             (controller?.connection.kind === 'startUsingRemoteKernelSpec' ||
-                controller?.connection.kind === 'connectToLiveKernel')
+                controller?.connection.kind === 'connectToLiveRemoteKernel')
         ) {
             const activeInterpreter = this.getActiveInterpreterSync(uri.fsPath);
             notebookId = activeInterpreter ? this.getInterpreterIdFromCache(activeInterpreter) : undefined;

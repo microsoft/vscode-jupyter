@@ -77,7 +77,7 @@ import {
     isLocalConnection,
     KernelConnectionMetadata,
     KernelSocketInformation,
-    LiveKernelConnectionMetadata,
+    LiveRemoteKernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../../kernels/types';
@@ -173,14 +173,16 @@ export class VSCodeNotebookController implements Disposable {
         this.controller.interruptHandler = this.handleInterrupt.bind(this);
         this.controller.description = getKernelConnectionPath(kernelConnection, this.workspace);
         this.controller.detail =
-            kernelConnection.kind === 'connectToLiveKernel' ? getRemoteKernelSessionInformation(kernelConnection) : '';
+            kernelConnection.kind === 'connectToLiveRemoteKernel'
+                ? getRemoteKernelSessionInformation(kernelConnection)
+                : '';
         this.controller.kind = getKernelConnectionCategory(kernelConnection);
         this.controller.supportsExecutionOrder = true;
         this.controller.supportedLanguages = this.languageService.getSupportedLanguages(kernelConnection);
         // Hook up to see when this NotebookController is selected by the UI
         this.controller.onDidChangeSelectedNotebooks(this.onDidChangeSelectedNotebooks, this, this.disposables);
     }
-    public updateRemoteKernelDetails(kernelConnection: LiveKernelConnectionMetadata) {
+    public updateRemoteKernelDetails(kernelConnection: LiveRemoteKernelConnectionMetadata) {
         this.controller.detail = getRemoteKernelSessionInformation(kernelConnection);
     }
     public updateInterpreterDetails(
@@ -214,14 +216,14 @@ export class VSCodeNotebookController implements Disposable {
         if (kernelConnectionMetadata.id === this.kernelConnection.id) {
             this.kernelConnection = kernelConnectionMetadata;
             this.controller.detail =
-                this.kernelConnection.kind === 'connectToLiveKernel'
+                this.kernelConnection.kind === 'connectToLiveRemoteKernel'
                     ? getRemoteKernelSessionInformation(this.kernelConnection)
                     : '';
         }
     }
 
     public async updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
-        traceInfo(`Setting controller affinity for ${getDisplayPath(notebook.uri)} ${this.id}`);
+        traceVerbose(`Setting controller affinity for ${getDisplayPath(notebook.uri)} ${this.id}`);
         this.controller.updateNotebookAffinity(notebook, affinity);
     }
 
@@ -252,7 +254,6 @@ export class VSCodeNotebookController implements Disposable {
         initializeInteractiveOrNotebookTelemetryBasedOnUserAction(notebook.uri, this.connection);
         sendKernelTelemetryEvent(notebook.uri, Telemetry.ExecuteCell);
         // Notebook is trusted. Continue to execute cells
-        traceInfo(`Execute Cells request ${cells.map((cell) => cell.index).join(', ')}`);
         await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
     }
     private warnWhenUsingOutdatedPython() {
@@ -583,7 +584,7 @@ export class VSCodeNotebookController implements Disposable {
             case 'startUsingPythonInterpreter':
                 sendNotebookOrKernelLanguageTelemetry(Telemetry.SwitchToExistingKernel, PYTHON_LANGUAGE);
                 break;
-            case 'connectToLiveKernel':
+            case 'connectToLiveRemoteKernel':
                 sendNotebookOrKernelLanguageTelemetry(
                     Telemetry.SwitchToExistingKernel,
                     this.connection.kernelModel.language
@@ -634,7 +635,7 @@ export class VSCodeNotebookController implements Disposable {
             controller: this.controller,
             resourceUri: document.uri // In the case of interactive window, we cannot pass the Uri of notebook, it must be the Py file or undefined.
         });
-        traceInfo(`KernelProvider switched kernel to id = ${newKernel.kernelConnectionMetadata.id}`);
+        traceVerbose(`KernelProvider switched kernel to id = ${newKernel.kernelConnectionMetadata.id}`);
 
         // If this is a Python notebook and Python isn't installed, then don't auto-start the kernel.
         if (isPythonKernelConnection(this.kernelConnection) && !this.extensionChecker.isPythonExtensionInstalled) {
@@ -653,7 +654,7 @@ export class VSCodeNotebookController implements Disposable {
 
 function getKernelConnectionCategory(kernelConnection: KernelConnectionMetadata) {
     switch (kernelConnection.kind) {
-        case 'connectToLiveKernel':
+        case 'connectToLiveRemoteKernel':
             return DataScience.kernelCategoryForJupyterSession();
         case 'startUsingRemoteKernelSpec':
             return DataScience.kernelCategoryForRemoteJupyterKernel();

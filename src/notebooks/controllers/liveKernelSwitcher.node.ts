@@ -7,7 +7,7 @@ import { IExtensionSingleActivationService } from '../../platform/activation/typ
 import { IVSCodeNotebook, ICommandManager } from '../../platform/common/application/types';
 import { traceError } from '../../platform/logging';
 import { IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../platform/common/types';
-import { IKernelProvider, LiveKernelConnectionMetadata } from '../../kernels/types';
+import { IKernelProvider, LiveRemoteKernelConnectionMetadata } from '../../kernels/types';
 import { INotebookControllerManager } from '../types';
 import { switchKernel } from './kernelSelector.node';
 
@@ -61,7 +61,7 @@ export class LiveKernelSwitcher implements IExtensionSingleActivationService {
         }
     }
 
-    private onLiveRefresh(liveConnections: LiveKernelConnectionMetadata[]) {
+    private onLiveRefresh(liveConnections: LiveRemoteKernelConnectionMetadata[]) {
         // When a refresh happens, remember the live connection id for all notebooks
         this.vscNotebook.notebookDocuments.forEach(async (n) => {
             const kernel = this.kernelProvider.get(n.uri);

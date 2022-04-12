@@ -289,7 +289,7 @@ function getCombinedErrorMessage(prefix?: string, message?: string) {
 }
 function getIPyKernelMissingErrorMessageForCell(kernelConnection: KernelConnectionMetadata) {
     if (
-        kernelConnection.kind === 'connectToLiveKernel' ||
+        kernelConnection.kind === 'connectToLiveRemoteKernel' ||
         kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
         !kernelConnection.interpreter
     ) {

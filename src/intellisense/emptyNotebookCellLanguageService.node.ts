@@ -63,7 +63,7 @@ export class EmptyNotebookCellLanguageService implements IExtensionSingleActivat
         let language: string | undefined;
         const kernelKind = connection.kind;
         switch (connection.kind) {
-            case 'connectToLiveKernel': {
+            case 'connectToLiveRemoteKernel': {
                 language = connection.kernelModel.language;
                 break;
             }

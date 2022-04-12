@@ -30,6 +30,7 @@ import {
 import { noop } from './core';
 import { stopJupyterServer } from './datascience/notebook/helper.node';
 import { initialize } from './initialize.node';
+import { rootHooks } from './testHooks';
 
 type SetupOptions = Mocha.MochaOptions & {
     testFilesSuffix: string;
@@ -75,7 +76,8 @@ function configure(): SetupOptions {
 
     const options: SetupOptions & { retries: number; invert: boolean } = {
         ui: 'tdd',
-        useColors: true,
+        color: true,
+        rootHooks: rootHooks,
         invert,
         timeout: TEST_TIMEOUT,
         retries: IS_CI_SERVER ? TEST_RETRYCOUNT : 0,

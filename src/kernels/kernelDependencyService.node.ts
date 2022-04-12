@@ -70,7 +70,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             }, ui.disabled=${ui.disableUI} for resource ${getDisplayPath(resource)}`
         );
         if (
-            kernelConnection.kind === 'connectToLiveKernel' ||
+            kernelConnection.kind === 'connectToLiveRemoteKernel' ||
             kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
             kernelConnection.interpreter === undefined
         ) {
@@ -137,7 +137,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         ignoreCache?: boolean
     ): Promise<boolean> {
         if (
-            kernelConnection.kind === 'connectToLiveKernel' ||
+            kernelConnection.kind === 'connectToLiveRemoteKernel' ||
             kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
             kernelConnection.interpreter === undefined
         ) {

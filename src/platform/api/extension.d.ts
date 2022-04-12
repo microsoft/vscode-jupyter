@@ -177,14 +177,14 @@ export type LiveKernelModel = IJupyterKernel &
  * Connection metadata for Live Kernels.
  * With this we are able connect to an existing kernel (instead of starting a new session).
  */
-export type LiveKernelConnectionMetadata = Readonly<{
+export type LiveRemoteKernelConnectionMetadata = Readonly<{
     kernelModel: LiveKernelModel;
     /**
      * Python interpreter will be used for intellisense & the like.
      */
     interpreter?: PythonEnvironment;
     baseUrl: string;
-    kind: 'connectToLiveKernel';
+    kind: 'connectToLiveRemoteKernel';
     id: string;
 }>;
 
@@ -193,9 +193,7 @@ export type KernelConnectionMetadata =
     | RemoteKernelSpecConnectionMetadata
     | PythonKernelConnectionMetadata
     | LiveRemoteKernelConnectionMetadata;
-
-export type LiveRemoteKernelConnectionMetadata = LiveKernelConnectionMetadata;
-export type ActiveKernel = LiveKernelConnectionMetadata;
+export type ActiveKernel = LiveRemoteKernelConnectionMetadata;
 
 export interface IKernelSocket {
     /**

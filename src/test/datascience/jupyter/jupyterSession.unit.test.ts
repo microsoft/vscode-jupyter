@@ -154,7 +154,9 @@ suite('DataScience - JupyterSession', () => {
         );
     }
     setup(() => createJupyterSession());
-    async function connect(kind: 'startUsingLocalKernelSpec' | 'connectToLiveKernel' = 'startUsingLocalKernelSpec') {
+    async function connect(
+        kind: 'startUsingLocalKernelSpec' | 'connectToLiveRemoteKernel' = 'startUsingLocalKernelSpec'
+    ) {
         const nbFile = 'file path';
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(contentsManager.newUntitled(anything())).thenResolve({ path: nbFile } as any);
@@ -240,7 +242,7 @@ suite('DataScience - JupyterSession', () => {
                 when(session.isRemoteSession).thenReturn(true);
                 when(session.kernelConnectionMetadata).thenReturn({
                     id: '',
-                    kind: 'connectToLiveKernel',
+                    kind: 'connectToLiveRemoteKernel',
                     kernelModel: {} as any,
                     baseUrl: ''
                 });
@@ -289,7 +291,7 @@ suite('DataScience - JupyterSession', () => {
                 when(session.isRemoteSession).thenReturn(true);
                 when(session.kernelConnectionMetadata).thenReturn({
                     id: '',
-                    kind: 'connectToLiveKernel',
+                    kind: 'connectToLiveRemoteKernel',
                     kernelModel: {} as any,
                     baseUrl: ''
                 });
@@ -453,7 +455,7 @@ suite('DataScience - JupyterSession', () => {
                     )
                 );
 
-                await connect('connectToLiveKernel');
+                await connect('connectToLiveRemoteKernel');
             });
             test('Restart should restart the new remote kernel', async () => {
                 when(remoteKernel.restart()).thenResolve();

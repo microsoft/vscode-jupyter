@@ -23,7 +23,7 @@ export function sendKernelListTelemetry(
     const uniqueCondaInterpreterPaths = new ResourceSet();
     kernels.forEach((item) => {
         switch (item.kind) {
-            case 'connectToLiveKernel':
+            case 'connectToLiveRemoteKernel':
                 counters.kernelLiveCount += 1;
                 break;
             case 'startUsingRemoteKernelSpec':

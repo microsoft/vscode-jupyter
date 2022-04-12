@@ -66,7 +66,10 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
                             label: getDisplayNameOrNameOfKernelConnection(item),
                             picked: !this.kernelFilter.isKernelHidden(item),
                             description: getKernelConnectionPath(item, this.workspace),
-                            detail: item.kind === 'connectToLiveKernel' ? getRemoteKernelSessionInformation(item) : '',
+                            detail:
+                                item.kind === 'connectToLiveRemoteKernel'
+                                    ? getRemoteKernelSessionInformation(item)
+                                    : '',
                             connection: item
                         };
                     });

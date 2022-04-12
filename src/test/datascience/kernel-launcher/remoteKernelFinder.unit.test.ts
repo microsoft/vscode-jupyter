@@ -12,7 +12,7 @@ import { Disposable, EventEmitter, Uri } from 'vscode';
 import { MockMemento } from '../../mocks/mementos';
 import { CryptoUtils } from '../../../platform/common/crypto.node';
 import { noop } from '../../core';
-import { IJupyterConnection, IJupyterKernelSpec, LiveKernelConnectionMetadata } from '../../../kernels/types';
+import { IJupyterConnection, IJupyterKernelSpec, LiveRemoteKernelConnectionMetadata } from '../../../kernels/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
 import { JupyterSessionManager } from '../../../kernels/jupyter/session/jupyterSessionManager.node';
 import { JupyterSessionManagerFactory } from '../../../kernels/jupyter/session/jupyterSessionManagerFactory.node';
@@ -154,7 +154,7 @@ suite(`Remote Kernel Finder`, () => {
             interpreterSpec
         ]);
         const kernels = await kernelFinder.listKernels(undefined, connInfo);
-        const liveKernels = kernels.filter((k) => k.kind === 'connectToLiveKernel');
+        const liveKernels = kernels.filter((k) => k.kind === 'connectToLiveRemoteKernel');
         assert.equal(liveKernels.length, 3, 'Live kernels not found');
     });
 
@@ -169,7 +169,7 @@ suite(`Remote Kernel Finder`, () => {
         ]);
         sessionCreatedEvent.fire({ id: python3Kernels[0].id, clientId: python3Kernels[0].id } as any);
         let kernels = await kernelFinder.listKernels(undefined, connInfo);
-        let liveKernels = kernels.filter((k) => k.kind === 'connectToLiveKernel');
+        let liveKernels = kernels.filter((k) => k.kind === 'connectToLiveRemoteKernel');
 
         // Should skip one
         assert.equal(liveKernels.length, 2, 'Restart session was included');
@@ -177,7 +177,7 @@ suite(`Remote Kernel Finder`, () => {
         // Mark it as used
         sessionUsedEvent.fire({ id: python3Kernels[0].id, clientId: python3Kernels[0].id } as any);
         kernels = await kernelFinder.listKernels(undefined, connInfo);
-        liveKernels = kernels.filter((k) => k.kind === 'connectToLiveKernel');
+        liveKernels = kernels.filter((k) => k.kind === 'connectToLiveRemoteKernel');
         assert.equal(liveKernels.length, 3, 'Restart session was not included');
     });
 
@@ -230,9 +230,9 @@ suite(`Remote Kernel Finder`, () => {
 
         const kernel = await kernelFinder.findKernel(uri, connInfo);
         assert.ok(kernel, 'Kernel not found for uri');
-        assert.equal(kernel?.kind, 'connectToLiveKernel', 'Live kernel not found');
+        assert.equal(kernel?.kind, 'connectToLiveRemoteKernel', 'Live kernel not found');
         assert.equal(
-            (kernel as LiveKernelConnectionMetadata).kernelModel.name,
+            (kernel as LiveRemoteKernelConnectionMetadata).kernelModel.name,
             python3Kernels[1].name,
             'Wrong live kernel returned'
         );
