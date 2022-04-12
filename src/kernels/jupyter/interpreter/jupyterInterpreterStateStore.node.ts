@@ -34,11 +34,17 @@ export class JupyterInterpreterStateStore {
         return !!this.selectedPythonPath || this.memento.get<boolean>(keySelected, false);
     }
     public get selectedPythonPath(): Uri | undefined {
-        return this._interpreterPath || this.memento.get<Uri | undefined>(key, undefined);
+        if (this._interpreterPath) {
+            return this._interpreterPath;
+        }
+        const memento = this.memento.get<string | undefined>(key, undefined);
+        if (memento) {
+            return Uri.file(memento);
+        }
     }
     public updateSelectedPythonPath(value: Uri | undefined) {
         this._interpreterPath = value;
-        this.memento.update(key, value).then(noop, noop);
+        this.memento.update(key, value?.toString()).then(noop, noop);
         this.memento.update(keySelected, true).then(noop, noop);
     }
 }
