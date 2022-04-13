@@ -2087,7 +2087,6 @@
         "notebookMime",
         "notebookCellExecutionState",
         "portsAttributes",
-        "textDocumentNotebook",
         "quickPickSortByLabel"
     ],
     "scripts": {
