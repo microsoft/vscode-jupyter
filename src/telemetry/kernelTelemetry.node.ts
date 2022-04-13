@@ -7,6 +7,7 @@ import { EnvironmentType } from '../platform/pythonEnvironments/info';
 import { KernelConnectionMetadata } from '../platform/../kernels/types';
 import { Telemetry } from '../platform/common/constants';
 import { sendKernelTelemetryEvent, trackKernelResourceInformation } from './telemetry.node';
+import { ResourceSet } from '../platform/vscode-path/map';
 
 export function sendKernelListTelemetry(
     resource: Resource,
@@ -19,7 +20,7 @@ export function sendKernelListTelemetry(
         kernelLiveCount: 0,
         condaEnvsSharingSameInterpreter: 0
     };
-    const uniqueCondaInterpreterPaths = new Set<string>();
+    const uniqueCondaInterpreterPaths = new ResourceSet();
     kernels.forEach((item) => {
         switch (item.kind) {
             case 'connectToLiveRemoteKernel':
@@ -36,10 +37,10 @@ export function sendKernelListTelemetry(
                 // Tody we don't support such environments, lets see if people are using these, if they are then
                 // We know kernels will not start correctly for those environments (even if started, packages might not be located correctly).
                 if (item.interpreter.envType === EnvironmentType.Conda) {
-                    if (uniqueCondaInterpreterPaths.has(item.interpreter.path)) {
+                    if (uniqueCondaInterpreterPaths.has(item.interpreter.uri)) {
                         counters.condaEnvsSharingSameInterpreter += 1;
                     } else {
-                        uniqueCondaInterpreterPaths.add(item.interpreter.path);
+                        uniqueCondaInterpreterPaths.add(item.interpreter.uri);
                     }
                 }
                 break;

@@ -5,7 +5,7 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
-import { commands, window } from 'vscode';
+import { commands, Uri, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { BufferDecoder } from '../../../platform/common/process/decoder.node';
@@ -17,7 +17,7 @@ import {
     getInterpreterHash,
     getNormalizedInterpreterPath
 } from '../../../platform/pythonEnvironments/info/interpreter.node';
-import { createEventHandler, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common.node';
+import { createEventHandler, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import { closeActiveWindows, initialize, IS_CI_SERVER } from '../../initialize.node';
 import { openNotebook } from '../helpers';
@@ -34,8 +34,9 @@ import {
     waitForOutputs,
     waitForTextOutput,
     defaultNotebookTestTimeout
-} from './helper';
+} from './helper.node';
 import { getTextOutputValue } from '../../../notebooks/helpers.node';
+import { getOSType, OSType } from '../../../platform/common/utils/platform';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience - VSCode Notebook - Kernel Selection', function () {
@@ -45,20 +46,22 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         'src/test/datascience/notebook/nbWithKernel.ipynb'
     );
     const executable = getOSType() === OSType.Windows ? 'Scripts/python.exe' : 'bin/python'; // If running locally on Windows box.
-    const venvNoKernelPython = path.join(
-        EXTENSION_ROOT_DIR_FOR_TESTS,
-        'src/test/datascience/.venvnokernel',
-        executable
+    const venvNoKernelPython = Uri.file(
+        path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnokernel', executable)
     );
-    const venvKernelPython = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvkernel', executable);
-    const venvNoRegPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnoreg', executable);
+    const venvKernelPython = Uri.file(
+        path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvkernel', executable)
+    );
+    const venvNoRegPath = Uri.file(
+        path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnoreg', executable)
+    );
 
     let nbFile1: string;
     let api: IExtensionTestApi;
-    let activeInterpreterPath: string;
-    let venvNoKernelPythonPath: string;
-    let venvKernelPythonPath: string;
-    let venvNoRegPythonPath: string;
+    let activeInterpreterPath: Uri;
+    let venvNoKernelPythonPath: Uri;
+    let venvKernelPythonPath: Uri;
+    let venvNoRegPythonPath: Uri;
     let venvNoKernelDisplayName: string;
     let kernelProvider: IKernelProvider;
     const venvNoKernelSearchString = '.venvnokernel';
@@ -76,9 +79,9 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         // These are slow tests, hence lets run only on linux on CI.
         if (
             (IS_CI_SERVER && getOSType() !== OSType.Linux) ||
-            !fs.pathExistsSync(venvNoKernelPython) ||
-            !fs.pathExistsSync(venvKernelPython) ||
-            !fs.pathExistsSync(venvNoRegPath)
+            !fs.pathExistsSync(venvNoKernelPython.fsPath) ||
+            !fs.pathExistsSync(venvKernelPython.fsPath) ||
+            !fs.pathExistsSync(venvNoRegPath.fsPath)
         ) {
             // Virtual env does not exist.
             return this.skip();
@@ -105,10 +108,10 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         if (!activeInterpreter || !interpreter1 || !interpreter2 || !interpreter3) {
             throw new Error('Unable to get information for interpreter 1');
         }
-        activeInterpreterPath = activeInterpreter?.path;
-        venvNoKernelPythonPath = interpreter1.path;
-        venvKernelPythonPath = interpreter2.path;
-        venvNoRegPythonPath = interpreter3.path;
+        activeInterpreterPath = activeInterpreter?.uri;
+        venvNoKernelPythonPath = interpreter1.uri;
+        venvKernelPythonPath = interpreter2.uri;
+        venvNoRegPythonPath = interpreter3.uri;
         venvNoKernelDisplayName = interpreter1.displayName || '.venvnokernel';
         activeInterpreterSearchString =
             activeInterpreter.displayName === interpreter1.displayName
@@ -117,14 +120,14 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
                 ? venvKernelSearchString
                 : activeInterpreter.displayName === interpreter3.displayName
                 ? venvNoRegSearchString
-                : activeInterpreterPath;
+                : activeInterpreterPath.fsPath;
 
         // Ensure IPykernel is in all environments.
         const proc = new ProcessService(new BufferDecoder());
         await Promise.all([
-            proc.exec(venvNoKernelPython, ['-m', 'pip', 'install', 'ipykernel']),
-            proc.exec(venvKernelPython, ['-m', 'pip', 'install', 'ipykernel']),
-            proc.exec(venvNoRegPythonPath, ['-m', 'pip', 'install', 'ipykernel'])
+            proc.exec(venvNoKernelPython.fsPath, ['-m', 'pip', 'install', 'ipykernel']),
+            proc.exec(venvKernelPython.fsPath, ['-m', 'pip', 'install', 'ipykernel']),
+            proc.exec(venvNoRegPythonPath.fsPath, ['-m', 'pip', 'install', 'ipykernel'])
         ]);
 
         await startJupyterServer();
@@ -142,7 +145,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
             fs
                 .readFileSync(nbFile1)
                 .toString('utf8')
-                .replace('<hash>', getInterpreterHash({ path: venvNoKernelPythonPath }))
+                .replace('<hash>', getInterpreterHash({ uri: venvNoKernelPythonPath }))
         );
         await closeActiveWindows();
         sinon.restore();
@@ -171,8 +174,8 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
                 const output = getTextOutputValue(cell.outputs[0]);
                 if (
                     !output.includes(activeInterpreterSearchString) &&
-                    !output.includes(getNormalizedInterpreterPath(activeInterpreterPath)) &&
-                    !output.includes(activeInterpreterPath)
+                    !output.includes(getNormalizedInterpreterPath(activeInterpreterPath).fsPath) &&
+                    !output.includes(activeInterpreterPath.fsPath)
                 ) {
                     assert.fail(
                         output,

@@ -234,7 +234,7 @@ export function trackKernelResourceInformation(resource: Resource, information: 
             );
             currentData.pythonEnvironmentType = interpreter.envType;
             currentData.pythonEnvironmentPath = getTelemetrySafeHashedString(
-                getNormalizedInterpreterPath(interpreter.path)
+                getNormalizedInterpreterPath(interpreter.uri).fsPath
             );
             pythonEnvironmentsByHash.set(currentData.pythonEnvironmentPath, interpreter);
             if (interpreter.version) {

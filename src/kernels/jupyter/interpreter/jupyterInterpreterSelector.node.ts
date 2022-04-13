@@ -8,7 +8,7 @@ import { QuickPickOptions } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
 import { Cancellation } from '../../../platform/common/cancellation.node';
-import { IPathUtils } from '../../../platform/common/types';
+import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IInterpreterSelector } from '../../../platform/interpreter/configuration/types';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
@@ -26,8 +26,7 @@ export class JupyterInterpreterSelector {
         @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(JupyterInterpreterStateStore) private readonly interpreterSelectionState: JupyterInterpreterStateStore,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {}
     /**
      * Displays interpreter selector and returns the selection.
@@ -37,9 +36,8 @@ export class JupyterInterpreterSelector {
      * @memberof JupyterInterpreterSelector
      */
     public async selectInterpreter(token?: CancellationToken): Promise<PythonEnvironment | undefined> {
-        const workspace = this.workspace.getWorkspaceFolder(undefined);
         const currentPythonPath = this.interpreterSelectionState.selectedPythonPath
-            ? this.pathUtils.getDisplayName(this.interpreterSelectionState.selectedPythonPath, workspace?.uri.fsPath)
+            ? getDisplayPath(this.interpreterSelectionState.selectedPythonPath, this.workspace.workspaceFolders)
             : undefined;
 
         const suggestions = await this.interpreterSelector.getSuggestions(undefined);

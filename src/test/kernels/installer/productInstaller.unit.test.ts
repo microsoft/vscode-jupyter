@@ -6,7 +6,7 @@
 
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { CancellationTokenSource } from 'vscode';
+import { CancellationTokenSource, Uri } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { InterpreterUri, IOutputChannel } from '../../../platform/common/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
@@ -36,7 +36,7 @@ suite('DataScienceInstaller install', async () => {
     let outputChannel: TypeMoq.IMock<IOutputChannel>;
     let tokenSource: CancellationTokenSource;
 
-    const interpreterPath = 'path/to/interpreter';
+    const interpreterPath = Uri.file('path/to/interpreter');
 
     setup(() => {
         tokenSource = new CancellationTokenSource();
@@ -63,7 +63,7 @@ suite('DataScienceInstaller install', async () => {
             envType: EnvironmentType.VirtualEnv,
             envName: 'test',
             envPath: interpreterPath,
-            path: interpreterPath,
+            uri: interpreterPath,
             sysPrefix: ''
         };
         installationChannelManager
@@ -78,7 +78,7 @@ suite('DataScienceInstaller install', async () => {
             envType: EnvironmentType.VirtualEnv,
             envName: 'test',
             envPath: interpreterPath,
-            path: interpreterPath,
+            uri: interpreterPath,
             sysPrefix: ''
         };
         const testInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
@@ -108,7 +108,7 @@ suite('DataScienceInstaller install', async () => {
             envType: EnvironmentType.Conda,
             envName: 'test',
             envPath: interpreterPath,
-            path: interpreterPath,
+            uri: interpreterPath,
             sysPrefix: ''
         };
         const testInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
@@ -138,7 +138,7 @@ suite('DataScienceInstaller install', async () => {
             envType: EnvironmentType.VirtualEnv,
             envName: 'test',
             envPath: interpreterPath,
-            path: interpreterPath,
+            uri: interpreterPath,
             sysPrefix: ''
         };
         const testInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
@@ -169,7 +169,7 @@ suite('DataScienceInstaller install', async () => {
             envType: EnvironmentType.Poetry,
             envName: 'test',
             envPath: interpreterPath,
-            path: interpreterPath,
+            uri: interpreterPath,
             sysPrefix: ''
         };
         const testInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
@@ -200,7 +200,7 @@ suite('DataScienceInstaller install', async () => {
             envType: EnvironmentType.Pipenv,
             envName: 'test',
             envPath: interpreterPath,
-            path: interpreterPath,
+            uri: interpreterPath,
             sysPrefix: ''
         };
         const testInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();

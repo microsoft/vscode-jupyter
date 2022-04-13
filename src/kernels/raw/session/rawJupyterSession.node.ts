@@ -243,7 +243,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         traceInfo(
             `Starting raw kernel ${getDisplayNameOrNameOfKernelConnection(
                 this.kernelConnectionMetadata
-            )} for interpreter ${getDisplayPath(this.kernelConnectionMetadata.interpreter?.path)}`
+            )} for interpreter ${getDisplayPath(this.kernelConnectionMetadata.interpreter?.uri)}`
         );
 
         this.terminatingStatus = undefined;

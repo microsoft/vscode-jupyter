@@ -1,7 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { NotebookCell, NotebookCellOutput, NotebookCellOutputItem, NotebookController, WorkspaceFolder } from 'vscode';
+import {
+    NotebookCell,
+    NotebookCellOutput,
+    NotebookCellOutputItem,
+    NotebookController,
+    Uri,
+    WorkspaceFolder
+} from 'vscode';
 import { CellExecutionCreator } from '../../notebooks/execution/cellExecutionCreator';
 import { getDisplayPath } from '../common/platform/fs-paths';
 import { DataScience } from '../common/utils/localize';
@@ -561,7 +568,7 @@ function isBuiltInModuleOverwritten(
         fileName,
         moduleName,
         message: DataScience.fileSeemsToBeInterferingWithKernelStartup().format(
-            getDisplayPath(fileName, workspaceFolders || [])
+            getDisplayPath(Uri.file(fileName), workspaceFolders || [])
         ),
         moreInfoLink: 'https://aka.ms/kernelFailuresOverridingBuiltInModules',
         telemetrySafeTags: ['import.error', 'override.modules']

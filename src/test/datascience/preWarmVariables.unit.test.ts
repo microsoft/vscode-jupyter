@@ -4,7 +4,7 @@
 'use strict';
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { EventEmitter } from 'vscode';
+import { EventEmitter, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { PythonExtensionChecker } from '../../platform/api/pythonApi.node';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../platform/api/types';
@@ -29,7 +29,7 @@ suite('DataScience - PreWarm Env Vars', () => {
     let zmqSupported: IRawNotebookSupportedService;
     setup(() => {
         interpreter = {
-            path: '',
+            uri: Uri.file(''),
             sysPrefix: '',
             sysVersion: ''
         };

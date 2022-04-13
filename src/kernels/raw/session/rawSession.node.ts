@@ -201,7 +201,7 @@ export class RawSession implements ISessionWithSocket {
         return {
             id: this._id,
             name: this._kernel.name,
-            path: this.kernelProcess.kernelConnectionMetadata.interpreter?.path || 'kernel_path',
+            path: this.kernelProcess.kernelConnectionMetadata.interpreter?.uri.fsPath || 'kernel_path',
             type: 'notebook',
             kernel: this._kernel.model
         };

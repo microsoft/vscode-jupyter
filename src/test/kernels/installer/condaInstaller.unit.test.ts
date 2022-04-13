@@ -15,6 +15,7 @@ import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvi
 import { CondaInstaller } from '../../../kernels/installer/condaInstaller.node';
 import { ExecutionInstallArgs } from '../../../kernels/installer/moduleInstaller.node';
 import { ModuleInstallFlags } from '../../../kernels/installer/types';
+import { Uri } from 'vscode';
 
 suite('Common - Conda Installer', () => {
     let installer: CondaInstallerTest;
@@ -46,7 +47,7 @@ suite('Common - Conda Installer', () => {
     test('Installer is not supported when conda is available variable is set to false', async () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Conda,
-            path: 'foobar',
+            uri: Uri.file('foobar'),
             sysPrefix: '0'
         };
 
@@ -59,7 +60,7 @@ suite('Common - Conda Installer', () => {
     test('Installer is not supported when conda is not available', async () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Conda,
-            path: 'foobar',
+            uri: Uri.file('foobar'),
             sysPrefix: '0'
         };
         when(condaService.isCondaAvailable()).thenResolve(false);
@@ -71,7 +72,7 @@ suite('Common - Conda Installer', () => {
     test('Installer is not supported when current env is not a conda env', async () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Global,
-            path: 'foobar',
+            uri: Uri.file('foobar'),
             sysPrefix: '0'
         };
         const settings = mock(JupyterSettings);
@@ -86,7 +87,7 @@ suite('Common - Conda Installer', () => {
     test('Installer is supported when current env is a conda env', async () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Conda,
-            path: 'foobar',
+            uri: Uri.file('foobar'),
             sysPrefix: '0'
         };
         const settings = mock(JupyterSettings);
@@ -101,12 +102,12 @@ suite('Common - Conda Installer', () => {
     test('Include name of environment', async () => {
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Conda,
-            path: 'foobar',
+            uri: Uri.file('foobar'),
             sysPrefix: '0',
             envName: 'baz'
         };
         const settings = mock(JupyterSettings);
-        const condaPath = 'some Conda Path';
+        const condaPath = Uri.file('some Conda Path');
 
         when(configService.getSettings(undefined)).thenReturn(instance(settings));
         when(condaService.getCondaFile()).thenResolve(condaPath);
@@ -114,16 +115,19 @@ suite('Common - Conda Installer', () => {
 
         const execInfo = await installer.getExecutionArgs('abc', interpreter);
 
-        assert.deepEqual(execInfo, { args: ['install', '--name', interpreter.envName, 'abc', '-y'], exe: condaPath });
+        assert.deepStrictEqual(execInfo, {
+            args: ['install', '--name', interpreter.envName, 'abc', '-y'],
+            exe: condaPath.fsPath
+        });
     });
     test('Include path of environment', async () => {
         const settings = mock(JupyterSettings);
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Conda,
-            path: 'baz/foobar/python.exe',
+            uri: Uri.file('baz/foobar/python.exe'),
             sysPrefix: '0'
         };
-        const condaPath = 'some Conda Path';
+        const condaPath = Uri.file('some Conda Path');
 
         when(configService.getSettings(undefined)).thenReturn(instance(settings));
         when(condaService.getCondaFile()).thenResolve(condaPath);
@@ -131,19 +135,19 @@ suite('Common - Conda Installer', () => {
 
         const execInfo = await installer.getExecutionArgs('abc', interpreter);
 
-        assert.deepEqual(execInfo, {
-            args: ['install', '--prefix', 'baz/foobar'.fileToCommandArgument(), 'abc', '-y'],
-            exe: condaPath
+        assert.deepStrictEqual(execInfo, {
+            args: ['install', '--prefix', '/baz/foobar'.fileToCommandArgument(), 'abc', '-y'],
+            exe: condaPath.fsPath
         });
     });
     test('Include path of environment but skip bin', async () => {
         const settings = mock(JupyterSettings);
         const interpreter: PythonEnvironment = {
             envType: EnvironmentType.Conda,
-            path: 'baz/foobar/bin/python.exe',
+            uri: Uri.file('baz/foobar/bin/python.exe'),
             sysPrefix: '0'
         };
-        const condaPath = 'some Conda Path';
+        const condaPath = Uri.file('some Conda Path');
 
         when(configService.getSettings(undefined)).thenReturn(instance(settings));
         when(condaService.getCondaFile()).thenResolve(condaPath);
@@ -151,9 +155,9 @@ suite('Common - Conda Installer', () => {
 
         const execInfo = await installer.getExecutionArgs('abc', interpreter);
 
-        assert.deepEqual(execInfo, {
-            args: ['install', '--prefix', 'baz/foobar'.fileToCommandArgument(), 'abc', '-y'],
-            exe: condaPath
+        assert.deepStrictEqual(execInfo, {
+            args: ['install', '--prefix', '/baz/foobar'.fileToCommandArgument(), 'abc', '-y'],
+            exe: condaPath.fsPath
         });
     });
 });

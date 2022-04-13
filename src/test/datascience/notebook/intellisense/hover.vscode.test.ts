@@ -11,7 +11,12 @@ import { IDisposable } from '../../../../platform/common/types';
 import { IExtensionTestApi } from '../../../common.node';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants.node';
 import { initialize } from '../../../initialize.node';
-import { closeNotebooksAndCleanUpAfterTests, insertCodeCell, createEmptyPythonNotebook, waitForHover } from '../helper';
+import {
+    closeNotebooksAndCleanUpAfterTests,
+    insertCodeCell,
+    createEmptyPythonNotebook,
+    waitForHover
+} from '../helper.node';
 import { setIntellisenseTimeout } from '../../../../intellisense/pythonKernelCompletionProvider.node';
 import { Settings } from '../../../../platform/common/constants';
 

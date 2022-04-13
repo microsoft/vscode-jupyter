@@ -21,7 +21,7 @@ import {
     createEmptyPythonNotebook,
     workAroundVSCodeNotebookStartPages,
     defaultNotebookTestTimeout
-} from './helper';
+} from './helper.node';
 import { IS_CONDA_TEST } from '../../constants.node';
 import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 import { JupyterNotebookView } from '../../../notebooks/constants';

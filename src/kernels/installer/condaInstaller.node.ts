@@ -103,13 +103,13 @@ export class CondaInstaller extends ModuleInstaller {
         args.push(moduleName);
         args.push('-y');
         return {
-            exe: condaFile,
+            exe: condaFile?.fsPath,
             args
         };
     }
 
     private getEnvironmentPath(interpreter: PythonEnvironment) {
-        const dir = path.dirname(interpreter.path);
+        const dir = path.dirname(interpreter.uri.fsPath);
 
         // If interpreter is in bin or Scripts, then go up one level
         const subDirName = path.basename(dir);

@@ -119,7 +119,7 @@ export class LanguageServer implements Disposable {
     public static async createLanguageServer(
         middlewareType: 'pylance' | 'jupyter',
         interpreter: PythonEnvironment,
-        shouldAllowIntellisense: (uri: Uri, interpreterId: string, interpreterPath: string) => boolean,
+        shouldAllowIntellisense: (uri: Uri, interpreterId: string, interpreterPath: Uri) => boolean,
         getNotebookHeader: (uri: Uri) => string
     ): Promise<LanguageServer | undefined> {
         const cancellationStrategy = new FileBasedCancellationStrategy();
@@ -134,15 +134,15 @@ export class LanguageServer implements Disposable {
                           () => languageClient,
                           () => noop, // Don't trace output. Slows things down too much
                           NOTEBOOK_SELECTOR,
-                          interpreter.path,
-                          (uri) => shouldAllowIntellisense(uri, interpreterId, interpreter.path),
+                          interpreter.uri.fsPath || interpreter.uri.path,
+                          (uri) => shouldAllowIntellisense(uri, interpreterId, interpreter.uri),
                           getNotebookHeader
                       )
                     : createPylanceMiddleware(
                           () => languageClient,
                           NOTEBOOK_SELECTOR,
-                          interpreter.path,
-                          (uri) => shouldAllowIntellisense(uri, interpreterId, interpreter.path),
+                          interpreter.uri.fsPath || interpreter.uri.path,
+                          (uri) => shouldAllowIntellisense(uri, interpreterId, interpreter.uri),
                           getNotebookHeader
                       );
 
@@ -228,7 +228,7 @@ export class LanguageServer implements Disposable {
             const runJediPath = path.join(python.extensionPath, 'pythonFiles', 'run-jedi-language-server.py');
             if (await fs.pathExists(runJediPath)) {
                 const serverOptions: ServerOptions = {
-                    command: interpreter.path || 'python',
+                    command: interpreter.uri.fsPath || 'python',
                     args: [runJediPath]
                 };
                 return serverOptions;

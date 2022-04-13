@@ -3,6 +3,7 @@
 
 import * as assert from 'assert';
 import * as path from '../../../platform/vscode-path/path';
+import * as uriPath from '../../../platform/vscode-path/resources';
 import * as sinon from 'sinon';
 import * as platformUtilsNode from '../../../platform/common/utils/platform.node';
 import * as platformUtils from '../../../platform/common/utils/platform';
@@ -13,9 +14,10 @@ import {
     parsePyenvVersion,
     isPyenvShimDir
 } from '../../../kernels/installer/pyenv.node';
+import { Uri } from 'vscode';
 
 suite('Pyenv Identifier Tests', () => {
-    const home = platformUtilsNode.getUserHomeDir() || '';
+    const home = platformUtilsNode.getUserHomeDir() || Uri.file('');
     let getEnvVariableStub: sinon.SinonStub;
     let pathExistsStub: sinon.SinonStub;
     let getOsTypeStub: sinon.SinonStub;
@@ -38,7 +40,7 @@ suite('Pyenv Identifier Tests', () => {
 
     type PyenvUnitTestData = {
         testTitle: string;
-        interpreterPath: string;
+        interpreterPath: Uri;
         pyenvEnvVar?: string;
         osType: platformUtils.OSType;
     };
@@ -46,35 +48,37 @@ suite('Pyenv Identifier Tests', () => {
     const testData: PyenvUnitTestData[] = [
         {
             testTitle: 'undefined',
-            interpreterPath: path.join(home, '.pyenv', 'versions', '3.8.0', 'bin', 'python'),
+            interpreterPath: uriPath.joinPath(home, '.pyenv', 'versions', '3.8.0', 'bin', 'python'),
             osType: platformUtils.OSType.Linux
         },
         {
             testTitle: 'undefined',
-            interpreterPath: path.join(home, '.pyenv', 'pyenv-win', 'versions', '3.8.0', 'bin', 'python'),
+            interpreterPath: uriPath.joinPath(home, '.pyenv', 'pyenv-win', 'versions', '3.8.0', 'bin', 'python'),
             osType: platformUtils.OSType.Windows
         },
         {
             testTitle: 'its default value',
-            interpreterPath: path.join(home, '.pyenv', 'versions', '3.8.0', 'bin', 'python'),
-            pyenvEnvVar: path.join(home, '.pyenv'),
+            interpreterPath: uriPath.joinPath(home, '.pyenv', 'versions', '3.8.0', 'bin', 'python'),
+            pyenvEnvVar: path.join(home.fsPath, '.pyenv'),
             osType: platformUtils.OSType.Linux
         },
         {
             testTitle: 'its default value',
-            interpreterPath: path.join(home, '.pyenv', 'pyenv-win', 'versions', '3.8.0', 'bin', 'python'),
-            pyenvEnvVar: path.join(home, '.pyenv', 'pyenv-win'),
+            interpreterPath: uriPath.joinPath(home, '.pyenv', 'pyenv-win', 'versions', '3.8.0', 'bin', 'python'),
+            pyenvEnvVar: path.join(home.fsPath, '.pyenv', 'pyenv-win'),
             osType: platformUtils.OSType.Windows
         },
         {
             testTitle: 'a custom value',
-            interpreterPath: path.join('path', 'to', 'mypyenv', 'versions', '3.8.0', 'bin', 'python'),
+            interpreterPath: Uri.file(path.join('path', 'to', 'mypyenv', 'versions', '3.8.0', 'bin', 'python')),
             pyenvEnvVar: path.join('path', 'to', 'mypyenv'),
             osType: platformUtils.OSType.Linux
         },
         {
             testTitle: 'a custom value',
-            interpreterPath: path.join('path', 'to', 'mypyenv', 'pyenv-win', 'versions', '3.8.0', 'bin', 'python'),
+            interpreterPath: Uri.file(
+                path.join('path', 'to', 'mypyenv', 'pyenv-win', 'versions', '3.8.0', 'bin', 'python')
+            ),
             pyenvEnvVar: path.join('path', 'to', 'mypyenv', 'pyenv-win'),
             osType: platformUtils.OSType.Windows
         }
@@ -94,7 +98,7 @@ suite('Pyenv Identifier Tests', () => {
     });
 
     test('The pyenv directory does not exist', async () => {
-        const interpreterPath = path.join('path', 'to', 'python');
+        const interpreterPath = Uri.file(path.join('path', 'to', 'python'));
 
         pathExistsStub.resolves(false);
 
@@ -104,7 +108,7 @@ suite('Pyenv Identifier Tests', () => {
     });
 
     test('The interpreter path is not in a subfolder of the pyenv folder', async () => {
-        const interpreterPath = path.join('path', 'to', 'python');
+        const interpreterPath = Uri.file(path.join('path', 'to', 'python'));
 
         pathExistsStub.resolves(true);
 
@@ -302,9 +306,9 @@ suite('Pyenv Shims Dir filter tests', () => {
     });
 
     test('isPyenvShimDir: valid case', () => {
-        assert.deepStrictEqual(isPyenvShimDir(path.join(pyenvRoot, 'shims')), true);
+        assert.deepStrictEqual(isPyenvShimDir(Uri.file(path.join(pyenvRoot, 'shims'))), true);
     });
     test('isPyenvShimDir: invalid case', () => {
-        assert.deepStrictEqual(isPyenvShimDir(__dirname), false);
+        assert.deepStrictEqual(isPyenvShimDir(Uri.file(__dirname)), false);
     });
 });

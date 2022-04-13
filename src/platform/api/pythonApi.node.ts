@@ -34,10 +34,12 @@ import {
     IPythonExtensionChecker,
     IPythonProposedApi,
     PythonApi,
+    PythonEnvironment_PythonApi,
     RefreshInterpretersOptions
 } from './types';
 import { traceInfo, traceVerbose, traceError, traceDecoratorVerbose } from '../logging';
 import { TraceOptions } from '../logging/types';
+import { fsPathToUri } from '../vscode-path/utils';
 
 /* eslint-disable max-classes-per-file */
 @injectable()
@@ -239,6 +241,31 @@ export class InterpreterSelector implements IInterpreterSelector {
     }
 }
 
+export function deserializePythonEnvironment(
+    pythonVersion: Partial<PythonEnvironment_PythonApi> | undefined
+): PythonEnvironment | undefined {
+    if (pythonVersion) {
+        return {
+            ...pythonVersion,
+            sysPrefix: pythonVersion.sysPrefix || '',
+            uri: Uri.file(pythonVersion.path || ''),
+            envPath: fsPathToUri(pythonVersion.envPath)
+        };
+    }
+}
+
+export function serializePythonEnvironment(
+    jupyterVersion: PythonEnvironment | undefined
+): PythonEnvironment_PythonApi | undefined {
+    if (jupyterVersion) {
+        return {
+            ...jupyterVersion,
+            path: jupyterVersion.uri.fsPath,
+            envPath: jupyterVersion.envPath?.fsPath
+        };
+    }
+}
+
 // eslint-disable-next-line max-classes-per-file
 @injectable()
 export class InterpreterService implements IInterpreterService {
@@ -311,7 +338,10 @@ export class InterpreterService implements IInterpreterService {
         const workspaceId = this.workspace.getWorkspaceFolderIdentifier(resource);
         let promise = this.workspaceCachedActiveInterpreter.get(workspaceId);
         if (!promise) {
-            promise = this.apiProvider.getApi().then((api) => api.getActiveInterpreter(resource));
+            promise = this.apiProvider
+                .getApi()
+                .then((api) => api.getActiveInterpreter(resource))
+                .then(deserializePythonEnvironment);
 
             if (promise) {
                 this.workspaceCachedActiveInterpreter.set(workspaceId, promise);
@@ -326,7 +356,7 @@ export class InterpreterService implements IInterpreterService {
                         .then((item) =>
                             traceInfo(
                                 `Active Interpreter in Python API for ${resource?.toString()} is ${getDisplayPath(
-                                    item?.path
+                                    item?.uri
                                 )}`
                             )
                         )
@@ -338,10 +368,13 @@ export class InterpreterService implements IInterpreterService {
     }
 
     @traceDecoratorVerbose('Get Interpreter details', TraceOptions.Arguments | TraceOptions.BeforeCall)
-    public async getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<undefined | PythonEnvironment> {
+    public async getInterpreterDetails(pythonPath: Uri, resource?: Uri): Promise<undefined | PythonEnvironment> {
         this.hookupOnDidChangeInterpreterEvent();
         try {
-            return await this.apiProvider.getApi().then((api) => api.getInterpreterDetails(pythonPath, resource));
+            return await this.apiProvider
+                .getApi()
+                .then((api) => api.getInterpreterDetails(pythonPath.fsPath, resource))
+                .then(deserializePythonEnvironment);
         } catch {
             // If the python extension cannot get the details here, don't fail. Just don't use them.
             return undefined;
@@ -361,13 +394,14 @@ export class InterpreterService implements IInterpreterService {
                       this.apiProvider.getApi().then((api) => api.getInterpreters(f?.uri))
                   )
               )
-            : await Promise.all([this.apiProvider.getApi().then((api) => api.getInterpreters(undefined))]);
+            : await Promise.all([await this.apiProvider.getApi().then((api) => api.getInterpreters(undefined))]);
 
         // Remove dupes
         const result: PythonEnvironment[] = [];
         all.flat().forEach((p) => {
-            if (!result.find((r) => areInterpreterPathsSame(r.path, p.path))) {
-                result.push(p);
+            const translated = deserializePythonEnvironment(p);
+            if (translated && !result.find((r) => areInterpreterPathsSame(r.uri, translated.uri))) {
+                result.push(translated);
             }
         });
         return result;

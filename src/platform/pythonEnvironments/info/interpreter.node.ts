@@ -2,8 +2,9 @@
 // Licensed under the MIT License.
 
 import { sha256 } from 'hash.js';
+import { Uri } from 'vscode';
+import * as uriPath from '../../vscode-path/resources';
 import { InterpreterInformation, PythonEnvironment } from '.';
-import { IFileSystem } from '../../common/platform/types.node';
 import { interpreterInfo as getInterpreterInfoCommand, PythonEnvInfo } from '../../common/process/internal/scripts/index.node';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { copyPythonExecInfo, PythonExecInfo } from '../exec';
@@ -17,10 +18,10 @@ import { parsePythonVersion } from './pythonVersion';
  * @param python - the path to the Python executable
  * @param raw - the information returned by the `interpreterInfo.py` script
  */
-export function extractInterpreterInfo(python: string, raw: PythonEnvInfo): InterpreterInformation {
+export function extractInterpreterInfo(python: Uri, raw: PythonEnvInfo): InterpreterInformation {
     const rawVersion = `${raw.versionInfo.slice(0, 3).join('.')}-${raw.versionInfo[3]}`;
     return {
-        path: python,
+        uri: python,
         version: parsePythonVersion(rawVersion),
         sysVersion: raw.sysVersion,
         sysPrefix: raw.sysPrefix,
@@ -74,16 +75,16 @@ export async function getInterpreterInfo(
     if (logger) {
         logger.info(`Found interpreter for ${argv}`);
     }
-    return extractInterpreterInfo(python.pythonExecutable, json);
+    return extractInterpreterInfo(Uri.file(python.pythonExecutable), json);
 }
 
-export function getInterpreterHash(interpreter: PythonEnvironment | {path: string}){
-    const interpreterPath = getNormalizedInterpreterPath(interpreter.path);
-    return sha256().update(interpreterPath).digest('hex');
+export function getInterpreterHash(interpreter: PythonEnvironment | {uri: Uri}){
+    const interpreterPath = getNormalizedInterpreterPath(interpreter.uri);
+    return sha256().update(interpreterPath.path).digest('hex');
 }
 
 export function areInterpretersSame(i1: PythonEnvironment | undefined, i2: PythonEnvironment | undefined) {
-    return areInterpreterPathsSame(i1?.path, i2?.path) && i1?.displayName == i2?.displayName;
+    return areInterpreterPathsSame(i1?.uri, i2?.uri) && i1?.displayName == i2?.displayName;
 }
 
 /**
@@ -93,10 +94,10 @@ export function areInterpretersSame(i1: PythonEnvironment | undefined, i2: Pytho
  *  They are both the same.
  * This function will take that into account.
  */
-export function areInterpreterPathsSame(path1: string = '', path2:string = '', ostype = getOSType(), fs?: IFileSystem){
-    const norm1 = getNormalizedInterpreterPath(path1, ostype);
-    const norm2 = getNormalizedInterpreterPath(path2, ostype);
-    return norm1 === norm2 || (fs ? fs.areLocalPathsSame(norm1, norm2) : false);
+export function areInterpreterPathsSame(path1: Uri = Uri.file(''), path2:Uri = Uri.file(''), ostype = getOSType(), forceLowerCase: boolean = false){
+    const norm1 = getNormalizedInterpreterPath(path1, ostype, ostype == OSType.Windows || forceLowerCase);
+    const norm2 = getNormalizedInterpreterPath(path2, ostype, ostype == OSType.Windows || forceLowerCase);
+    return norm1 === norm2 || uriPath.isEqual(norm1, norm2, true);
 }
 /**
  * Sometimes on CI, we have paths such as (this could happen on user machines as well)
@@ -105,10 +106,15 @@ export function areInterpreterPathsSame(path1: string = '', path2:string = '', o
  *  They are both the same.
  * This function will take that into account.
  */
- export function getNormalizedInterpreterPath(path:string = '', ostype = getOSType()){
+ export function getNormalizedInterpreterPath(path:Uri = Uri.file(''), ostype = getOSType(), forceLowerCase: boolean = false){
+    let fsPath = path.fsPath;
+    if (forceLowerCase) {
+        fsPath = fsPath.toLowerCase();
+    }
+
     // No need to generate hashes, its unnecessarily slow.
-    if (!path.endsWith('/bin/python')) {
-        return path;
+    if (!fsPath.endsWith('/bin/python')) {
+        return Uri.file(fsPath);
     }
     // Sometimes on CI, we have paths such as (this could happen on user machines as well)
     // - /opt/hostedtoolcache/Python/3.8.11/x64/python
@@ -117,9 +123,9 @@ export function areInterpreterPathsSame(path1: string = '', path2:string = '', o
     // To ensure we treat them as the same, lets drop the `bin` on unix.
     if ([OSType.Linux, OSType.OSX].includes(ostype)){
         // We need to exclude paths such as `/usr/bin/python`
-        return path.endsWith('/bin/python') && path.split('/').length > 4 ? path.replace('/bin/python', '/python') : path;
+        return fsPath.endsWith('/bin/python') && fsPath.split('/').length > 4 ? Uri.file(fsPath.replace('/bin/python', '/python')) : Uri.file(fsPath);
     }
-    return path;
+    return Uri.file(fsPath);
 }
 
 /**

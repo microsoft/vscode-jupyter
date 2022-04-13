@@ -14,7 +14,7 @@ import { Common } from '../../../platform/common/utils/localize';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo, traceInfoIfCI } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
-import { captureScreenShot, getOSType, IExtensionTestApi, OSType, waitForCondition } from '../../common.node';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
@@ -43,7 +43,7 @@ import {
     getCellOutputs,
     waitForCellHavingOutput,
     waitForCellExecutionToComplete
-} from './helper';
+} from './helper.node';
 import { openNotebook } from '../helpers';
 import { noop } from '../../../platform/common/utils/misc';
 import { getTextOutputValue, hasErrorOutput, translateCellErrorOutput } from '../../../notebooks/helpers.node';
@@ -52,6 +52,7 @@ import { ProductNames } from '../../../kernels/installer/productNames.node';
 import { Product } from '../../../kernels/installer/types';
 import { IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter.node';
+import { getOSType, OSType } from '../../../platform/common/utils/platform';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
@@ -399,7 +400,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         // First path in PATH must be the directory where executable is located.
         assert.ok(
-            areInterpreterPathsSame(path.dirname(sysExecutable), pathValue[0].toLowerCase()),
+            areInterpreterPathsSame(Uri.file(path.dirname(sysExecutable)), Uri.file(pathValue[0]), getOSType(), true),
             `First entry in PATH (${pathValue[0]}) does not point to executable (${sysExecutable})`
         );
     });
@@ -461,7 +462,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         // First path in PATH must be the directory where executable is located.
         assert.ok(
-            areInterpreterPathsSame(shellExecutable.toLowerCase(), sysExecutable.toLowerCase()),
+            areInterpreterPathsSame(Uri.file(shellExecutable), Uri.file(sysExecutable)),
             `Python paths do not match ${shellExecutable}, ${sysExecutable}. Output is (${cell1Output}), error is ${errorOutput}`
         );
     });

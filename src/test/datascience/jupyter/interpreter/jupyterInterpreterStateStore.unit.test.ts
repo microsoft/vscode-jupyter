@@ -5,7 +5,7 @@
 
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { EventEmitter, Memento } from 'vscode';
+import { EventEmitter, Memento, Uri } from 'vscode';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
 import { JupyterInterpreterService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
 import { JupyterInterpreterStateStore } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterStateStore.node';
@@ -32,13 +32,15 @@ suite('DataScience - Jupyter Interpreter State', () => {
         assert.isFalse(selected.interpreterSetAtleastOnce);
     });
     test('If memento is set (for subsequent sesssions), return true', async () => {
-        when(memento.get<string | undefined>(anything(), undefined)).thenReturn('jupyter.exe');
+        const uri = 'jupyter.exe';
+        when(memento.get<string | undefined>(anything(), undefined)).thenReturn(uri);
 
         assert.isOk(selected.interpreterSetAtleastOnce);
     });
     test('Get python path from memento', async () => {
-        when(memento.get<string | undefined>(anything(), undefined)).thenReturn('jupyter.exe');
+        const uri = 'jupyter.exe';
+        when(memento.get<string | undefined>(anything(), undefined)).thenReturn(uri);
 
-        assert.equal(selected.selectedPythonPath, 'jupyter.exe');
+        assert.equal(selected.selectedPythonPath?.fsPath, Uri.file(uri).fsPath);
     });
 });

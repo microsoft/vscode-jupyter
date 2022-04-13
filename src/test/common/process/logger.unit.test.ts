@@ -9,21 +9,17 @@ import * as TypeMoq from 'typemoq';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import untildify = require('untildify');
 
-import { PathUtils } from '../../../platform/common/platform/pathUtils.node';
 import { ProcessLogger } from '../../../platform/common/process/logger.node';
 import { IOutputChannel } from '../../../platform/common/types';
 import { Logging } from '../../../platform/common/utils/localize';
-import { getOSType, OSType } from '../../common.node';
 
 /* eslint-disable  */
 suite('ProcessLogger suite', () => {
     let outputChannel: TypeMoq.IMock<IOutputChannel>;
-    let pathUtils: PathUtils;
     let outputResult: string;
 
     suiteSetup(() => {
         outputChannel = TypeMoq.Mock.ofType<IOutputChannel>();
-        pathUtils = new PathUtils(getOSType() === OSType.Windows);
     });
 
     setup(() => {
@@ -39,7 +35,7 @@ suite('ProcessLogger suite', () => {
 
     test('Logger displays the process command, arguments and current working directory in the output channel', async () => {
         const options = { cwd: path.join('debug', 'path') };
-        const logger = new ProcessLogger(outputChannel.object, pathUtils);
+        const logger = new ProcessLogger(outputChannel.object);
         logger.logProcess('test', ['--foo', '--bar'], options);
 
         const expectedResult = `> test --foo --bar\n${Logging.currentWorkingDirectory()} ${options.cwd}\n`;
@@ -50,7 +46,7 @@ suite('ProcessLogger suite', () => {
 
     test('Logger adds quotes around arguments if they contain spaces', async () => {
         const options = { cwd: path.join('debug', 'path') };
-        const logger = new ProcessLogger(outputChannel.object, pathUtils);
+        const logger = new ProcessLogger(outputChannel.object);
         logger.logProcess('test', ['--foo', '--bar', 'import test'], options);
 
         const expectedResult = `> test --foo --bar "import test"\n${Logging.currentWorkingDirectory()} ${path.join(
@@ -62,7 +58,7 @@ suite('ProcessLogger suite', () => {
 
     test('Logger preserves quotes around arguments if they contain spaces', async () => {
         const options = { cwd: path.join('debug', 'path') };
-        const logger = new ProcessLogger(outputChannel.object, pathUtils);
+        const logger = new ProcessLogger(outputChannel.object);
         logger.logProcess('test', ['--foo', '--bar', "'import test'"], options);
 
         const expectedResult = `> test --foo --bar \'import test\'\n${Logging.currentWorkingDirectory()} ${path.join(
@@ -74,7 +70,7 @@ suite('ProcessLogger suite', () => {
 
     test('Logger replaces the path/to/home with ~ in the current working directory', async () => {
         const options = { cwd: path.join(untildify('~'), 'debug', 'path') };
-        const logger = new ProcessLogger(outputChannel.object, pathUtils);
+        const logger = new ProcessLogger(outputChannel.object);
         logger.logProcess('test', ['--foo', '--bar'], options);
 
         const expectedResult = `> test --foo --bar\n${Logging.currentWorkingDirectory()} ${path.join(
@@ -87,7 +83,7 @@ suite('ProcessLogger suite', () => {
 
     test('Logger replaces the path/to/home with ~ in the command path', async () => {
         const options = { cwd: path.join('debug', 'path') };
-        const logger = new ProcessLogger(outputChannel.object, pathUtils);
+        const logger = new ProcessLogger(outputChannel.object);
         logger.logProcess(path.join(untildify('~'), 'test'), ['--foo', '--bar'], options);
 
         const expectedResult = `> ${path.join('~', 'test')} --foo --bar\n${Logging.currentWorkingDirectory()} ${
@@ -97,7 +93,7 @@ suite('ProcessLogger suite', () => {
     });
 
     test("Logger doesn't display the working directory line if there is no options parameter", async () => {
-        const logger = new ProcessLogger(outputChannel.object, pathUtils);
+        const logger = new ProcessLogger(outputChannel.object);
         logger.logProcess(path.join(untildify('~'), 'test'), ['--foo', '--bar']);
 
         const expectedResult = `> ${path.join('~', 'test')} --foo --bar\n`;
@@ -109,7 +105,7 @@ suite('ProcessLogger suite', () => {
 
     test("Logger doesn't display the working directory line if there is no cwd key in the options parameter", async () => {
         const options = {};
-        const logger = new ProcessLogger(outputChannel.object, pathUtils);
+        const logger = new ProcessLogger(outputChannel.object);
         logger.logProcess(path.join(untildify('~'), 'test'), ['--foo', '--bar'], options);
 
         const expectedResult = `> ${path.join('~', 'test')} --foo --bar\n`;

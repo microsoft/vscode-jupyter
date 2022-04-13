@@ -12,13 +12,14 @@ import { IServiceContainer } from '../../../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { InstallationChannelManager } from '../../../kernels/installer/channelManager.node';
 import { Product, IModuleInstaller } from '../../../kernels/installer/types';
+import { Uri } from 'vscode';
 
 suite('Installation - installation channels', () => {
     let serviceManager: ServiceManager;
     let serviceContainer: IServiceContainer;
     const interpreter: PythonEnvironment = {
         envType: EnvironmentType.Conda,
-        path: 'foobar',
+        uri: Uri.file('foobar'),
         sysPrefix: '0'
     };
 

@@ -20,7 +20,7 @@ import {
     runCell,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected
-} from './helper';
+} from './helper.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { InteractiveWindowMessages } from '../../../platform/messageTypes';

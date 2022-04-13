@@ -14,7 +14,7 @@ import {
     startJupyterServer,
     waitForExecutionCompletedSuccessfully,
     waitForTextOutput
-} from './notebook/helper';
+} from './notebook/helper.node';
 
 suite('Interactive window (remote)', async () => {
     let interactiveWindowProvider: IInteractiveWindowProvider;

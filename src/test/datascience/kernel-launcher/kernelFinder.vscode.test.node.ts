@@ -61,10 +61,10 @@ suite('DataScience - Kernels Finder', () => {
         }
 
         assert.isTrue(
-            areInterpreterPathsSame(kernelSpec.interpreter.path.toLowerCase(), interpreter?.path.toLocaleLowerCase()),
+            areInterpreterPathsSame(kernelSpec.interpreter.uri, interpreter?.uri),
             `No interpreter found, kernelspec interpreter is ${getDisplayPath(
-                kernelSpec.interpreter.path
-            )} but expected ${getDisplayPath(interpreter?.path)}`
+                kernelSpec.interpreter.uri
+            )} but expected ${getDisplayPath(interpreter?.uri)}`
         );
     });
     test('Interpreter kernel returned if kernelspec metadata not provided', async () => {
@@ -80,10 +80,10 @@ suite('DataScience - Kernels Finder', () => {
             throw new Error('Kernelspec & interpreter info should not be empty');
         }
         assert.isTrue(
-            areInterpreterPathsSame(kernelSpec.interpreter.path.toLowerCase(), interpreter?.path.toLocaleLowerCase()),
+            areInterpreterPathsSame(kernelSpec.interpreter.uri, interpreter?.uri),
             `No interpreter found, kernelspec interpreter is ${getDisplayPath(
-                kernelSpec.interpreter.path
-            )} but expected ${getDisplayPath(interpreter?.path)}`
+                kernelSpec.interpreter.uri
+            )} but expected ${getDisplayPath(interpreter?.uri)}`
         );
     });
     test('Can find a Python kernel based on language', async () => {

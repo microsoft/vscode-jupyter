@@ -15,6 +15,7 @@ import { INotebookLanguageClientProvider, INotebookControllerManager } from '../
 import { LanguageServer } from './languageServer.node';
 import { IInteractiveWindowProvider } from '../interactive-window/types';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
+import { getComparisonKey } from '../platform/vscode-path/resources';
 
 const EmptyWorkspaceKey = '';
 
@@ -153,16 +154,17 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
     }
 
     private getInterpreterIdFromCache(interpreter: PythonEnvironment) {
-        let id = this.interpreterIdCache.get(interpreter.path);
+        const key = getComparisonKey(interpreter.uri);
+        let id = this.interpreterIdCache.get(key);
         if (!id) {
             // Making an assumption that the id for an interpreter never changes.
             id = getInterpreterId(interpreter);
-            this.interpreterIdCache.set(interpreter.path, id);
+            this.interpreterIdCache.set(key, id);
         }
         return id;
     }
 
-    private shouldAllowIntellisense(uri: Uri, interpreterId: string, _interpreterPath: string) {
+    private shouldAllowIntellisense(uri: Uri, interpreterId: string, _interpreterPath: Uri) {
         // We should allow intellisense for a URI when the interpreter matches
         // the controller for the uri
         const notebook = findAssociatedNotebookDocument(uri, this.notebooks, this.interactiveWindowProvider);

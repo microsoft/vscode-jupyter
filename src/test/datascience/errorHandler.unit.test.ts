@@ -15,7 +15,6 @@ import {
     KernelConnectionMetadata,
     KernelInterpreterDependencyResponse
 } from '../../platform/../kernels/types';
-import { getOSType, OSType } from '../common.node';
 import { PythonEnvironment, EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
 import { DataScienceErrorHandler } from '../../platform/errors/errorHandler.node';
@@ -27,6 +26,8 @@ import {
     IJupyterInterpreterDependencyManager,
     JupyterInterpreterDependencyResponse
 } from '../../kernels/jupyter/types';
+import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers.node';
+import { getOSType, OSType } from '../../platform/common/utils/platform';
 
 suite('DataScience Error Handler Unit Tests', () => {
     let applicationShell: IApplicationShell;
@@ -39,7 +40,7 @@ suite('DataScience Error Handler Unit Tests', () => {
     let kernelDependencyInstaller: IKernelDependencyService;
     const jupyterInterpreter: PythonEnvironment = {
         displayName: 'Hello',
-        path: 'Some Path',
+        uri: Uri.file('Some Path'),
         sysPrefix: ''
     };
 
@@ -119,7 +120,7 @@ suite('DataScience Error Handler Unit Tests', () => {
                 id: '',
                 kind: 'startUsingPythonInterpreter',
                 interpreter: {
-                    path: 'Hello There',
+                    uri: Uri.file('Hello There'),
                     sysPrefix: 'Something else',
                     displayName: 'Hello (Some Path)'
                 },
@@ -127,7 +128,7 @@ suite('DataScience Error Handler Unit Tests', () => {
                     argv: [],
                     display_name: '',
                     name: '',
-                    path: ''
+                    uri: Uri.file('')
                 }
             };
         });
@@ -259,7 +260,7 @@ suite('DataScience Error Handler Unit Tests', () => {
 
             const expectedMessage = DataScience.fileSeemsToBeInterferingWithKernelStartup().format(
                 getDisplayPath(
-                    'c:\\Development\\samples\\pySamples\\sample1\\kernel_issues\\start\\random.py',
+                    Uri.file('c:\\Development\\samples\\pySamples\\sample1\\kernel_issues\\start\\random.py'),
                     workspaceFolders
                 )
             );
@@ -281,7 +282,7 @@ suite('DataScience Error Handler Unit Tests', () => {
 
             const expectedMessage = DataScience.failedToStartKernelDueToImportFailureFromFile().format(
                 'Template',
-                getDisplayPath('/home/xyz/samples/pySamples/crap/kernel_crash/no_start/string.py', [])
+                '/home/xyz/samples/pySamples/crap/kernel_crash/no_start/string.py' // Not using getDisplayPath under the covers
             );
 
             verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresModuleImportErrFromFile');
@@ -312,7 +313,10 @@ suite('DataScience Error Handler Unit Tests', () => {
             );
 
             const expectedMessage = DataScience.fileSeemsToBeInterferingWithKernelStartup().format(
-                getDisplayPath('/home/xyz/samples/pySamples/crap/kernel_crash/no_start/string.py', workspaceFolders)
+                getDisplayPath(
+                    Uri.file('/home/xyz/samples/pySamples/crap/kernel_crash/no_start/string.py'),
+                    workspaceFolders
+                )
             );
 
             verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresOverridingBuiltInModules');
@@ -413,12 +417,12 @@ ImportError: No module named 'xyz'
             verifyErrorMessage(expectedMessage, expectedLink);
         }
         test('Failure to start Jupyter Server (unable to extract python error message)', async () => {
-            const envDisplayName = `${jupyterInterpreter.displayName} (${jupyterInterpreter.path})`;
+            const envDisplayName = getDisplayNameOrNameOfKernelConnection(kernelConnection);
             const expectedMessage = DataScience.failedToStartJupyter().format(envDisplayName);
             await verifyJupyterErrors('Kaboom', expectedMessage);
         });
         test('Failure to start Jupyter Server (unable to extract python error message), (without failure about jupyter error, without daemon)', async () => {
-            const envDisplayName = `${jupyterInterpreter.displayName} (${jupyterInterpreter.path})`;
+            const envDisplayName = getDisplayNameOrNameOfKernelConnection(kernelConnection);
             const expectedMessage = DataScience.failedToStartJupyter().format(envDisplayName);
             await verifyJupyterErrors('kaboom', expectedMessage);
         });
@@ -426,14 +430,14 @@ ImportError: No module named 'xyz'
             const stdError = `${stdErrorMessages.failureToStartJupyter}
 
 Failed to run jupyter as observable with args notebook --no-browser --notebook-dir="/home/don/samples/pySamples/crap" --config=/tmp/40aa74ae-d668-4225-8201-4570c9a0ac4a/jupyter_notebook_config.py --NotebookApp.iopub_data_rate_limit=10000000000.0`;
-            const envDisplayName = `${jupyterInterpreter.displayName} (${jupyterInterpreter.path})`;
+            const envDisplayName = getDisplayNameOrNameOfKernelConnection(kernelConnection);
             const pythonError = 'NotImplementedError: subclasses must implement __call__';
             const expectedMessage = DataScience.failedToStartJupyterWithErrorInfo().format(envDisplayName, pythonError);
             await verifyJupyterErrors(stdError, expectedMessage);
         });
         test('Failure to start Jupyter Server (without failure about jupyter error, without daemon)', async () => {
             const stdError = stdErrorMessages.failureToStartJupyter;
-            const envDisplayName = `${jupyterInterpreter.displayName} (${jupyterInterpreter.path})`;
+            const envDisplayName = getDisplayNameOrNameOfKernelConnection(kernelConnection);
             const pythonError = 'NotImplementedError: subclasses must implement __call__';
             const expectedMessage = DataScience.failedToStartJupyterWithErrorInfo().format(envDisplayName, pythonError);
             await verifyJupyterErrors(stdError, expectedMessage);
@@ -442,7 +446,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             const stdError = `${stdErrorMessages.failureToStartJupyterDueToOutdatedTraitlets}
 
 Failed to run jupyter as observable with args notebook --no-browser --notebook-dir="/home/don/samples/pySamples/crap" --config=/tmp/40aa74ae-d668-4225-8201-4570c9a0ac4a/jupyter_notebook_config.py --NotebookApp.iopub_data_rate_limit=10000000000.0`;
-            const envDisplayName = `${jupyterInterpreter.displayName} (${jupyterInterpreter.path})`;
+            const envDisplayName = getDisplayNameOrNameOfKernelConnection(kernelConnection);
             const pythonError = "AttributeError: 'Namespace' object has no attribute '_flags'";
             const expectedMessage = DataScience.failedToStartJupyterDueToOutdatedTraitlets().format(
                 envDisplayName,
@@ -457,7 +461,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
         });
         test('Failure to start Jupyter Server due to outdated traitlets (without failure about jupyter error, without daemon)', async () => {
             const stdError = stdErrorMessages.failureToStartJupyterDueToOutdatedTraitlets;
-            const envDisplayName = `${jupyterInterpreter.displayName} (${jupyterInterpreter.path})`;
+            const envDisplayName = getDisplayNameOrNameOfKernelConnection(kernelConnection);
             const pythonError = "AttributeError: 'Namespace' object has no attribute '_flags'";
             const expectedMessage = DataScience.failedToStartJupyterDueToOutdatedTraitlets().format(
                 envDisplayName,
@@ -552,7 +556,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 [
                     "Running cells with 'Hello (Some Path)' requires ipykernel package.",
                     "Run the following command to install 'ipykernel' into the Python environment. ",
-                    `Command: '"Hello There" -m pip install ipykernel -U --force-reinstall'`
+                    `Command: '"/Hello There" -m pip install ipykernel -U --force-reinstall'`
                 ].join('\n')
             );
         });

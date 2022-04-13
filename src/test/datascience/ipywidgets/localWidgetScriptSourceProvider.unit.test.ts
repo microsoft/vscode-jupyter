@@ -52,7 +52,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
         when(kernel.kernelConnectionMetadata).thenReturn({
             kernelSpec: {
                 name: '',
-                path: '',
+                uri: Uri.file(''),
                 display_name: '',
                 argv: [],
                 metadata: { interpreter: { sysPrefix: 'sysPrefix', path: 'pythonPath' } }
@@ -76,7 +76,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
         when(kernel.kernelConnectionMetadata).thenReturn({
             kernelSpec: {
                 name: '',
-                path: '',
+                uri: Uri.file(''),
                 display_name: '',
                 argv: [],
                 metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
@@ -95,12 +95,12 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
     });
     test('Look for widgets in sysPath of kernel', async () => {
         const sysPrefix = 'sysPrefix Of Kernel';
-        const kernelPath = 'kernel Path.exe';
+        const kernelPath = Uri.file('kernel Path.exe');
         when(interpreterService.getInterpreterDetails(kernelPath)).thenResolve({ sysPrefix } as any);
         const searchDirectory = path.join(sysPrefix, 'share', 'jupyter', 'nbextensions');
 
         when(kernel.kernelConnectionMetadata).thenReturn({
-            kernelSpec: { name: '', display_name: '', argv: [], path: kernelPath, language: PYTHON_LANGUAGE },
+            kernelSpec: { name: '', display_name: '', argv: [], uri: kernelPath, language: PYTHON_LANGUAGE },
             id: '',
             kind: 'startUsingLocalKernelSpec'
         });
@@ -117,7 +117,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
         when(kernel.kernelConnectionMetadata).thenReturn({
             kernelSpec: {
                 name: '',
-                path: '',
+                uri: Uri.file(''),
                 display_name: '',
                 argv: [],
                 metadata: { interpreter: { sysPrefix: 'sysPrefix', path: 'pythonPath' } }
@@ -143,7 +143,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
         when(kernel.kernelConnectionMetadata).thenReturn({
             kernelSpec: {
                 name: '',
-                path: '',
+                uri: Uri.file(''),
                 display_name: '',
                 argv: [],
                 metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
@@ -178,7 +178,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
         when(kernel.kernelConnectionMetadata).thenReturn({
             kernelSpec: {
                 name: '',
-                path: '',
+                uri: Uri.file(''),
                 display_name: '',
                 argv: [],
                 metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }
@@ -211,7 +211,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
         when(kernel.kernelConnectionMetadata).thenReturn({
             kernelSpec: {
                 name: '',
-                path: '',
+                uri: Uri.file(''),
                 display_name: '',
                 argv: [],
                 metadata: { interpreter: { sysPrefix, path: 'pythonPath' } }

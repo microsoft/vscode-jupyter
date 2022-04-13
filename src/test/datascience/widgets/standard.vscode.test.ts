@@ -26,7 +26,7 @@ import {
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected,
     workAroundVSCodeNotebookStartPages
-} from '../notebook/helper';
+} from '../notebook/helper.node';
 import { initializeWidgetComms, Utils } from './commUtils';
 import { WidgetRenderingTimeoutForTests } from './constants';
 

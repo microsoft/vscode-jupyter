@@ -1,4 +1,5 @@
 import { inject, injectable } from 'inversify';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { Resource } from '../../platform/common/types';
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
@@ -12,12 +13,15 @@ export class InterpreterSelector implements IInterpreterSelector {
 
     public async getSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]> {
         const interpreters = await this.interpreterService.getInterpreters(resource);
-        return interpreters.map((item) => ({
-            label: item.displayName || item.path,
-            description: item.displayName || item.path,
-            detail: item.displayName || item.path,
-            path: item.path,
-            interpreter: item
-        }));
+        return interpreters.map((item) => {
+            const filePath = getDisplayPath(item.uri);
+            return {
+                label: item.displayName || filePath,
+                description: item.displayName || filePath,
+                detail: item.displayName || filePath,
+                path: filePath,
+                interpreter: item
+            };
+        });
     }
 }

@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import * as fs from 'fs-extra';
-import * as path from '../../platform/vscode-path/path';
+import { Uri } from 'vscode';
+import * as uriPath from '../../platform/vscode-path/resources';
 
 /**
  * Checks if the given interpreter path belongs to a conda environment. Using
@@ -33,7 +34,7 @@ import * as path from '../../platform/vscode-path/path';
  *   ]
  * }
  */
-export async function isCondaEnvironment(interpreterPath: string | undefined): Promise<boolean> {
+export async function isCondaEnvironment(interpreterPath: Uri | undefined): Promise<boolean> {
     // This can be undefined on some machines.
     if (!interpreterPath) {
         return false;
@@ -46,7 +47,7 @@ export async function isCondaEnvironment(interpreterPath: string | undefined): P
     // env
     // |__ conda-meta  <--- check if this directory exists
     // |__ python.exe  <--- interpreterPath
-    const condaEnvDir1 = path.join(path.dirname(interpreterPath), condaMetaDir);
+    const condaEnvDir1 = uriPath.joinPath(uriPath.dirname(interpreterPath), condaMetaDir);
 
     // Check if the conda-meta directory is in the parent directory relative to the interpreter.
     // This layout is common on linux/Mac.
@@ -54,7 +55,7 @@ export async function isCondaEnvironment(interpreterPath: string | undefined): P
     // |__ conda-meta  <--- check if this directory exists
     // |__ bin
     //     |__ python  <--- interpreterPath
-    const condaEnvDir2 = path.join(path.dirname(path.dirname(interpreterPath)), condaMetaDir);
+    const condaEnvDir2 = uriPath.joinPath(uriPath.dirname(uriPath.dirname(interpreterPath)), condaMetaDir);
 
-    return [await fs.pathExists(condaEnvDir1), await fs.pathExists(condaEnvDir2)].includes(true);
+    return [await fs.pathExists(condaEnvDir1.fsPath), await fs.pathExists(condaEnvDir2.fsPath)].includes(true);
 }

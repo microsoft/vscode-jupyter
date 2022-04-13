@@ -32,7 +32,7 @@ import {
     waitForTextOutput,
     defaultNotebookTestTimeout,
     createEmptyPythonNotebook
-} from './helper';
+} from './helper.node';
 import { openNotebook } from '../helpers';
 import { PYTHON_LANGUAGE, Settings } from '../../../platform/common/constants';
 import { RemoteKernelSpecConnectionMetadata } from '../../../platform/../kernels/types';

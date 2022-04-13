@@ -25,7 +25,7 @@ import {
     workAroundVSCodeNotebookStartPages,
     waitForTextOutput,
     defaultNotebookTestTimeout
-} from './helper';
+} from './helper.node';
 
 // Force GC to be available
 require('expose-gc');

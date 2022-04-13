@@ -9,6 +9,7 @@ import { createDeferred, Deferred } from '../platform/common/utils/async';
 import { isResource, noop } from '../platform/common/utils/misc';
 import { IInterpreterService } from '../platform/interpreter/contracts.node';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
+import { getComparisonKey } from '../platform/vscode-path/resources';
 import { getTelemetrySafeHashedString, getTelemetrySafeVersion } from './helpers';
 
 const interestedPackages = new Set(
@@ -51,10 +52,11 @@ export class InterpreterPackages {
         );
     }
     public static getPackageVersions(interpreter: PythonEnvironment): Promise<Map<string, string>> {
-        let deferred = InterpreterPackages.interpreterInformation.get(interpreter.path);
+        const key = getComparisonKey(interpreter.uri);
+        let deferred = InterpreterPackages.interpreterInformation.get(key);
         if (!deferred) {
             deferred = createDeferred<Map<string, string>>();
-            InterpreterPackages.interpreterInformation.set(interpreter.path, deferred);
+            InterpreterPackages.interpreterInformation.set(key, deferred);
 
             if (InterpreterPackages.instance) {
                 InterpreterPackages.instance.trackInterpreterPackages(interpreter).catch(noop);
@@ -99,7 +101,7 @@ export class InterpreterPackages {
         this.trackInterpreterPackages(interpreter, ignoreCache).catch(noop);
     }
     private async trackInterpreterPackages(interpreter: PythonEnvironment, ignoreCache?: boolean) {
-        const key = interpreter.path;
+        const key = getComparisonKey(interpreter.uri);
         if (InterpreterPackages.pendingInterpreterInformation.has(key) && !ignoreCache) {
             return;
         }
@@ -147,10 +149,11 @@ export class InterpreterPackages {
                 const version = getTelemetrySafeVersion(rawVersion);
                 packageAndVersions.set(getTelemetrySafeHashedString(packageName), version || '');
             });
-        let deferred = InterpreterPackages.interpreterInformation.get(interpreter.path);
+        const key = getComparisonKey(interpreter.uri);
+        let deferred = InterpreterPackages.interpreterInformation.get(key);
         if (!deferred) {
             deferred = createDeferred<Map<string, string>>();
-            InterpreterPackages.interpreterInformation.set(interpreter.path, deferred);
+            InterpreterPackages.interpreterInformation.set(key, deferred);
         }
         deferred.resolve(packageAndVersions);
     }

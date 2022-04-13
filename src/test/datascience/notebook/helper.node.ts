@@ -221,7 +221,7 @@ let waitForKernelPendingPromise: Promise<void> | undefined;
 export async function waitForKernelToChange(
     criteria:
         | { labelOrId: string; isInteractiveController?: boolean }
-        | { interpreterPath: string; isInteractiveController?: boolean },
+        | { interpreterPath: Uri; isInteractiveController?: boolean },
     timeout = defaultNotebookTestTimeout
 ) {
     // Wait for the previous kernel change to finish.
@@ -235,7 +235,7 @@ export async function waitForKernelToChange(
 async function waitForKernelToChangeImpl(
     criteria:
         | { labelOrId: string; isInteractiveController?: boolean }
-        | { interpreterPath: string; isInteractiveController?: boolean },
+        | { interpreterPath: Uri; isInteractiveController?: boolean },
     timeout = defaultNotebookTestTimeout
 ) {
     const { vscodeNotebook, notebookControllerManager } = await getServices();
@@ -272,7 +272,9 @@ async function waitForKernelToChangeImpl(
         id = notebookControllers
             ?.filter((k) => k.connection.interpreter)
             ?.filter((k) => (criteria.isInteractiveController ? k.id.includes(InteractiveControllerIdSuffix) : true))
-            .find((k) => k.connection.interpreter!.path.toLowerCase().includes(interpreterPath.toLowerCase()))?.id;
+            .find((k) =>
+                k.connection.interpreter!.uri.fsPath.toLowerCase().includes(interpreterPath.fsPath.toLowerCase())
+            )?.id;
     }
     traceInfo(`Switching to kernel id ${id}`);
     const isRightKernel = () => {
@@ -331,6 +333,7 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
 
     // Get the list of NotebookControllers for this document
     await notebookControllerManager.loadNotebookControllers();
+    traceInfoIfCI(`Wait for kernel - got notebook controllers`);
     const notebookControllers = notebookControllerManager.registeredNotebookControllers();
 
     // Make sure we don't already have a selection (this function gets run even after opening a document)
@@ -357,6 +360,7 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
         // Do nothing for now. Just log it
         traceInfoIfCI(`No preferred controller found during waitForKernelToGetAutoSelected`);
     }
+    traceInfoIfCI(`Wait for kernel - got a preferred notebook controller: ${preferred?.id}`);
 
     // Find one that matches the expected language or the preferred
     const expectedLower = expectedLanguage?.toLowerCase();

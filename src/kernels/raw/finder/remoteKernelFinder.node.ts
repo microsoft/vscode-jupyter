@@ -6,7 +6,7 @@ import { Kernel } from '@jupyterlab/services';
 import type * as nbformat from '@jupyterlab/nbformat';
 import * as url from 'url';
 import { injectable, inject } from 'inversify';
-import { CancellationToken } from 'vscode';
+import { CancellationToken, Uri } from 'vscode';
 import { findPreferredKernel, getKernelId, getLanguageInNotebookMetadata } from '../../../kernels/helpers.node';
 import {
     IJupyterKernelSpec,
@@ -194,7 +194,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
         const parsed = new url.URL(baseUrl);
         if (parsed.hostname.toLocaleLowerCase() === 'localhost' || parsed.hostname === '127.0.0.1') {
             // Interpreter is possible. Same machine as VS code
-            return this.interpreterService.getInterpreterDetails(spec.argv[0]);
+            return this.interpreterService.getInterpreterDetails(Uri.file(spec.argv[0]));
         }
     }
 }

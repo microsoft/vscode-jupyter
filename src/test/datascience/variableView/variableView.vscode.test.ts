@@ -16,7 +16,7 @@ import {
     workAroundVSCodeNotebookStartPages,
     startJupyterServer,
     defaultNotebookTestTimeout
-} from '../notebook/helper';
+} from '../notebook/helper.node';
 import { waitForVariablesToMatch } from './variableViewHelpers';
 import { ITestVariableViewProvider } from './variableViewTestInterfaces';
 import { ITestWebviewHost } from '../testInterfaces';

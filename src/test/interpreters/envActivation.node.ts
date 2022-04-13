@@ -6,6 +6,7 @@ import { getActivatedEnvVariables } from './index.node';
 import { Resource } from '../../platform/common/types';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
+import { fsPathToUri } from '../../platform/vscode-path/utils';
 
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService {
@@ -14,7 +15,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         interpreter?: PythonEnvironment,
         _allowExceptions?: boolean
     ): Promise<NodeJS.ProcessEnv | undefined> {
-        return getActivatedEnvVariables(interpreter?.path || process.env.CI_PYTHON_PATH || 'python');
+        return getActivatedEnvVariables(interpreter?.uri || fsPathToUri(process.env.CI_PYTHON_PATH || 'python')!);
     }
     async hasActivationCommands(_resource: Resource, _interpreter?: PythonEnvironment): Promise<boolean> {
         return false;

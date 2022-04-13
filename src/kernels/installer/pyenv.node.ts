@@ -1,8 +1,10 @@
 import * as path from '../../platform/vscode-path/path';
+import * as uriPath from '../../platform/vscode-path/resources';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../platform/common/utils/platform.node';
-import { arePathsSame, isParentPath, pathExists } from '../../platform/common/platform/fileUtils.node';
+import { pathExists } from '../../platform/common/platform/fileUtils.node';
+import { Uri } from 'vscode';
 
-export function getPyenvDir(): string {
+export function getPyenvDir(): Uri {
     // Check if the pyenv environment variables exist: PYENV on Windows, PYENV_ROOT on Unix.
     // They contain the path to pyenv's installation folder.
     // If they don't exist, use the default path: ~/.pyenv/pyenv-win on Windows, ~/.pyenv on Unix.
@@ -12,39 +14,41 @@ export function getPyenvDir(): string {
     let pyenvDir = getEnvironmentVariable('PYENV_ROOT') ?? getEnvironmentVariable('PYENV');
 
     if (!pyenvDir) {
-        const homeDir = getUserHomeDir() || '';
+        const homeDir = getUserHomeDir() || Uri.file('');
         pyenvDir =
-            getOSType() === OSType.Windows ? path.join(homeDir, '.pyenv', 'pyenv-win') : path.join(homeDir, '.pyenv');
+            getOSType() === OSType.Windows
+                ? path.join(homeDir.fsPath, '.pyenv', 'pyenv-win')
+                : path.join(homeDir.fsPath, '.pyenv');
     }
 
-    return pyenvDir;
+    return Uri.file(pyenvDir);
 }
 /**
  * Checks if a given directory path is same as `pyenv` shims path. This checks
  * `~/.pyenv/shims` on posix and `~/.pyenv/pyenv-win/shims` on windows.
- * @param {string} dirPath: Absolute path to any directory
+ * @param {Uri} dirPath: Absolute path to any directory
  * @returns {boolean}: Returns true if the patch is same as `pyenv` shims directory.
  */
 
-export function isPyenvShimDir(dirPath: string): boolean {
-    const shimPath = path.join(getPyenvDir(), 'shims');
-    return arePathsSame(shimPath, dirPath) || arePathsSame(`${shimPath}${path.sep}`, dirPath);
+export function isPyenvShimDir(dirPath: Uri): boolean {
+    const shimPath = uriPath.joinPath(getPyenvDir(), 'shims');
+    return uriPath.isEqual(shimPath, dirPath, true);
 }
 /**
  * Checks if the given interpreter belongs to a pyenv based environment.
- * @param {string} interpreterPath: Absolute path to the python interpreter.
+ * @param {Uri} interpreterPath: Absolute path to the python interpreter.
  * @returns {boolean}: Returns true if the interpreter belongs to a pyenv environment.
  */
 
-export async function isPyenvEnvironment(interpreterPath: string): Promise<boolean> {
+export async function isPyenvEnvironment(interpreterPath: Uri): Promise<boolean> {
     const pathToCheck = interpreterPath;
     const pyenvDir = getPyenvDir();
 
-    if (!(await pathExists(pyenvDir))) {
+    if (!(await pathExists(pyenvDir.fsPath))) {
         return false;
     }
 
-    return isParentPath(pathToCheck, pyenvDir);
+    return uriPath.isEqualOrParent(pathToCheck, pyenvDir);
 }
 
 export interface IPyenvVersionStrings {

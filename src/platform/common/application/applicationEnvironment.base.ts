@@ -7,8 +7,8 @@ import * as vscode from 'vscode';
 import { Channel, IApplicationEnvironment } from './types';
 
 export abstract class BaseApplicationEnvironment implements IApplicationEnvironment {
-    public abstract get userSettingsFile(): string | undefined;
-    public abstract get userCustomKeybindingsFile(): string | undefined;
+    public abstract get userSettingsFile(): vscode.Uri | undefined;
+    public abstract get userCustomKeybindingsFile(): vscode.Uri | undefined;
     public get appName(): string {
         return vscode.env.appName;
     }

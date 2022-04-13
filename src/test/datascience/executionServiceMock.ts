@@ -15,6 +15,7 @@ import {
 } from '../../platform/common/process/types.node';
 import { buildPythonExecInfo } from '../../platform/pythonEnvironments/exec';
 import { InterpreterInformation } from '../../platform/pythonEnvironments/info';
+import { Uri } from 'vscode';
 
 export class MockPythonExecutionService implements IPythonExecutionService {
     private procService: ProcessService;
@@ -26,7 +27,7 @@ export class MockPythonExecutionService implements IPythonExecutionService {
 
     public getInterpreterInformation(): Promise<InterpreterInformation> {
         return Promise.resolve({
-            path: '',
+            uri: Uri.file(''),
             version: new SemVer('3.6.0-beta'),
             sysVersion: '1.0',
             sysPrefix: '1.0'

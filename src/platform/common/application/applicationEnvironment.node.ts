@@ -4,28 +4,32 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import { Uri } from 'vscode';
 import * as path from '../../../platform/vscode-path/path';
+import * as uriPath from '../../../platform/vscode-path/resources';
 import { IPlatformService } from '../platform/types';
-import { IExtensionContext, IPathUtils } from '../types';
+import { IExtensionContext } from '../types';
 import { OSType } from '../utils/platform';
+import { getUserHomeDir } from '../utils/platform.node';
 import { BaseApplicationEnvironment } from './applicationEnvironment.base';
 
 @injectable()
 export class ApplicationEnvironment extends BaseApplicationEnvironment {
+    private homeDir = getUserHomeDir() || Uri.file('');
+
     constructor(
         @inject(IPlatformService) private readonly platform: IPlatformService,
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(IExtensionContext) private readonly extensionContext: IExtensionContext
     ) {
         super();
     }
 
-    public get userSettingsFile(): string | undefined {
+    public get userSettingsFile(): Uri | undefined {
         const vscodeFolderName = this.channel === 'insiders' ? 'Code - Insiders' : 'Code';
         switch (this.platform.osType) {
             case OSType.OSX:
-                return path.join(
-                    this.pathUtils.home,
+                return uriPath.joinPath(
+                    this.homeDir,
                     'Library',
                     'Application Support',
                     vscodeFolderName,
@@ -33,16 +37,16 @@ export class ApplicationEnvironment extends BaseApplicationEnvironment {
                     'settings.json'
                 );
             case OSType.Linux:
-                return path.join(this.pathUtils.home, '.config', vscodeFolderName, 'User', 'settings.json');
+                return uriPath.joinPath(this.homeDir, '.config', vscodeFolderName, 'User', 'settings.json');
             case OSType.Windows:
                 return process.env.APPDATA
-                    ? path.join(process.env.APPDATA, vscodeFolderName, 'User', 'settings.json')
+                    ? uriPath.joinPath(Uri.file(process.env.APPDATA), vscodeFolderName, 'User', 'settings.json')
                     : undefined;
             default:
                 return;
         }
     }
-    public get userCustomKeybindingsFile(): string | undefined {
-        return path.resolve(this.extensionContext.globalStorageUri.fsPath, '..', '..', 'keybindings.json');
+    public get userCustomKeybindingsFile(): Uri | undefined {
+        return uriPath.resolvePath(this.extensionContext.globalStorageUri, path.join('..', '..', 'keybindings.json'));
     }
 }

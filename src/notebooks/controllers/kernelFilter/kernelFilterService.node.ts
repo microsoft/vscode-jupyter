@@ -5,8 +5,9 @@ import { ConfigurationTarget, EventEmitter } from 'vscode';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceVerbose } from '../../../platform/logging';
-import { IConfigurationService, IDisposable, IDisposableRegistry, IPathUtils } from '../../../platform/common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { KernelConnectionMetadata } from '../../../kernels/types';
+import { getDisplayPath, getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../platform/common/constants';
 
@@ -20,8 +21,7 @@ export class KernelFilterService implements IDisposable {
     constructor(
         @inject(IConfigurationService) private readonly config: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IDisposableRegistry) disposales: IDisposableRegistry,
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils
+        @inject(IDisposableRegistry) disposales: IDisposableRegistry
     ) {
         disposales.push(this);
     }
@@ -45,14 +45,11 @@ export class KernelFilterService implements IDisposable {
             ) {
                 return (
                     item.path.toLowerCase() ===
-                    this.pathUtils.getDisplayName(kernelConnection.kernelSpec.specFile).toLowerCase()
+                    getDisplayPathFromLocalFile(kernelConnection.kernelSpec.specFile).toLowerCase()
                 );
             }
             if (kernelConnection.kind === 'startUsingPythonInterpreter' && item.type === 'pythonEnvironment') {
-                return (
-                    item.path.toLowerCase() ===
-                    this.pathUtils.getDisplayName(kernelConnection.interpreter.path).toLowerCase()
-                );
+                return item.path.toLowerCase() === getDisplayPath(kernelConnection.interpreter.uri).toLowerCase();
             }
             return false;
         });
@@ -109,12 +106,12 @@ export class KernelFilterService implements IDisposable {
         }
         if (connection.kind === 'startUsingLocalKernelSpec' && connection.kernelSpec.specFile) {
             return <KernelSpecFiter>{
-                path: this.pathUtils.getDisplayName(connection.kernelSpec.specFile),
+                path: getDisplayPathFromLocalFile(connection.kernelSpec.specFile),
                 type: 'jupyterKernelspec'
             };
         } else if (connection.kind === 'startUsingPythonInterpreter') {
             return <InterpreterFiter>{
-                path: this.pathUtils.getDisplayName(connection.interpreter.path),
+                path: getDisplayPath(connection.interpreter.uri),
                 type: 'pythonEnvironment'
             };
         }

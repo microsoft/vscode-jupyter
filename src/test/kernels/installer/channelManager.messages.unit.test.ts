@@ -14,11 +14,12 @@ import { IServiceContainer } from '../../../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { InstallationChannelManager } from '../../../kernels/installer/channelManager.node';
 import { IModuleInstaller, Product } from '../../../kernels/installer/types';
+import { Uri } from 'vscode';
 
 const info: PythonEnvironment = {
     displayName: '',
     envName: '',
-    path: '',
+    uri: Uri.file(''),
     envType: EnvironmentType.Unknown,
     version: new SemVer('0.0.0-alpha'),
     sysPrefix: '',
@@ -139,7 +140,7 @@ suite('Installation - channel messages', () => {
         const activeInterpreter: PythonEnvironment = {
             ...info,
             envType: interpreterType,
-            path: ''
+            uri: Uri.file('')
         };
         interpreters
             .setup((x) => x.getActiveInterpreter(TypeMoq.It.isAny()))

@@ -39,7 +39,7 @@ export class PythonDaemonExecutionService extends BasePythonDaemon implements IP
             if (response.error) {
                 throw Error(response.error);
             }
-            return extractInterpreterInfo(this.interpreter.path, response);
+            return extractInterpreterInfo(this.interpreter.uri, response);
         } catch (ex) {
             traceWarning('Falling back to Python Execution Service due to failure in daemon', ex);
             return this.pythonExecutionService.getInterpreterInformation();

@@ -44,23 +44,6 @@ export interface IPersistentStateFactory {
     createWorkspacePersistentState<T>(key: string, defaultValue?: T, expiryDurationMs?: number): IPersistentState<T>;
 }
 
-// eslint-disable-next-line
-// TODO: Drop IPathUtils in favor of IFileSystemPathUtils.
-// See https://github.com/microsoft/vscode-python/issues/8542.
-export const IPathUtils = Symbol('IPathUtils');
-export interface IPathUtils {
-    readonly delimiter: string;
-    readonly home: string;
-    /**
-     * The platform-specific file separator. '\\' or '/'.
-     * @type {string}
-     * @memberof IPathUtils
-     */
-    readonly separator: string;
-    basename(pathValue: string, ext?: string): string;
-    getDisplayName(pathValue: string, cwd?: string): string;
-}
-
 export const IRandom = Symbol('IRandom');
 export interface IRandom {
     getRandomInt(min?: number, max?: number): number;

@@ -14,7 +14,7 @@ import {
     startJupyterServer,
     waitForTextOutput,
     workAroundVSCodeNotebookStartPages
-} from '../datascience/notebook/helper';
+} from '../datascience/notebook/helper.node';
 import { initialize } from '../initialize.node';
 import * as sinon from 'sinon';
 import { captureScreenShot, createEventHandler, IExtensionTestApi } from '../common.node';

@@ -295,23 +295,23 @@ function getIPyKernelMissingErrorMessageForCell(kernelConnection: KernelConnecti
     ) {
         return;
     }
-    const displayNameOfKernel = kernelConnection.interpreter.displayName || kernelConnection.interpreter.path;
+    const displayNameOfKernel = kernelConnection.interpreter.displayName || kernelConnection.interpreter.uri.fsPath;
     const ipyKernelName = ProductNames.get(Product.ipykernel)!;
     const ipyKernelModuleName = translateProductToModule(Product.ipykernel);
 
-    let installerCommand = `${kernelConnection.interpreter.path.fileToCommandArgument()} -m pip install ${ipyKernelModuleName} -U --force-reinstall`;
+    let installerCommand = `${kernelConnection.interpreter.uri.fsPath.fileToCommandArgument()} -m pip install ${ipyKernelModuleName} -U --force-reinstall`;
     if (kernelConnection.interpreter?.envType === EnvironmentType.Conda) {
         if (kernelConnection.interpreter?.envName) {
             installerCommand = `conda install -n ${kernelConnection.interpreter?.envName} ${ipyKernelModuleName} --update-deps --force-reinstall`;
         } else if (kernelConnection.interpreter?.envPath) {
-            installerCommand = `conda install -p ${kernelConnection.interpreter?.envPath} ${ipyKernelModuleName} --update-deps --force-reinstall`;
+            installerCommand = `conda install -p ${kernelConnection.interpreter?.envPath.fsPath} ${ipyKernelModuleName} --update-deps --force-reinstall`;
         }
     } else if (
         kernelConnection.interpreter?.envType === EnvironmentType.Global ||
         kernelConnection.interpreter?.envType === EnvironmentType.WindowsStore ||
         kernelConnection.interpreter?.envType === EnvironmentType.System
     ) {
-        installerCommand = `${kernelConnection.interpreter.path.fileToCommandArgument()} -m pip install ${ipyKernelModuleName} -U --user --force-reinstall`;
+        installerCommand = `${kernelConnection.interpreter.uri.fsPath.fileToCommandArgument()} -m pip install ${ipyKernelModuleName} -U --user --force-reinstall`;
     }
     const message = DataScience.libraryRequiredToLaunchJupyterKernelNotInstalledInterpreter().format(
         displayNameOfKernel,

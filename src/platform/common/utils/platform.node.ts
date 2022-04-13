@@ -3,9 +3,15 @@
 
 'use strict';
 
+import { Uri } from 'vscode';
+import { fsPathToUri } from '../../vscode-path/utils';
 import { EnvironmentVariables } from '../variables/types';
 import { getOSType, OSType } from './platform';
 export * from './platform';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+const untildify = require('untildify');
+const homePath = untildify('~');
 
 export function getEnvironmentVariable(key: string): string | undefined {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -16,9 +22,12 @@ export function getPathEnvironmentVariable(): string | undefined {
     return getEnvironmentVariable('Path') || getEnvironmentVariable('PATH');
 }
 
-export function getUserHomeDir(): string | undefined {
+export function getUserHomeDir(): Uri | undefined {
     if (getOSType() === OSType.Windows) {
-        return getEnvironmentVariable('USERPROFILE');
+        return fsPathToUri(getEnvironmentVariable('USERPROFILE') || homePath);
     }
-    return getEnvironmentVariable('HOME') || getEnvironmentVariable('HOMEPATH');
+    const homeVar = getEnvironmentVariable('HOME') || getEnvironmentVariable('HOMEPATH') || homePath;
+
+    // Make sure if linux, it uses linux separators
+    return fsPathToUri(homeVar?.replace(/\\/g, '/'));
 }

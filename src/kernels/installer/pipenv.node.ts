@@ -5,6 +5,7 @@ import * as path from '../../platform/vscode-path/path';
 import { traceError } from '../../platform/logging';
 import { getEnvironmentVariable } from '../../platform/common/utils/platform.node';
 import { pathExists, readFile, arePathsSame, normCasePath } from '../../platform/common/platform/fileUtils.node';
+import { Uri } from 'vscode';
 
 function getSearchHeight() {
     // PIPENV_MAX_DEPTH tells pipenv the maximum number of directories to recursively search for
@@ -49,7 +50,7 @@ export async function _getAssociatedPipfile(
  * otherwise return `undefined`.
  * @param interpreterPath Absolute path to any python interpreter.
  */
-async function getPipfileIfLocal(interpreterPath: string): Promise<string | undefined> {
+async function getPipfileIfLocal(interpreterPath: Uri): Promise<string | undefined> {
     // Local pipenv environments are created by setting PIPENV_VENV_IN_PROJECT to 1, which always names the environment
     // folder '.venv': https://pipenv.pypa.io/en/latest/advanced/#pipenv.environments.PIPENV_VENV_IN_PROJECT
     // This is the layout we wish to verify.
@@ -58,7 +59,7 @@ async function getPipfileIfLocal(interpreterPath: string): Promise<string | unde
     // |__ .venv    <--- check if name of the folder is '.venv'
     //     |__ Scripts/bin
     //         |__ python  <--- interpreterPath
-    const venvFolder = path.dirname(path.dirname(interpreterPath));
+    const venvFolder = path.dirname(path.dirname(interpreterPath.fsPath));
     if (path.basename(venvFolder) !== '.venv') {
         return undefined;
     }
@@ -97,8 +98,8 @@ async function getProjectDir(envFolder: string): Promise<string | undefined> {
  * If interpreter path belongs to a global pipenv environment, return associated Pipfile, otherwise return `undefined`.
  * @param interpreterPath Absolute path to any python interpreter.
  */
-async function getPipfileIfGlobal(interpreterPath: string): Promise<string | undefined> {
-    const envFolder = path.dirname(path.dirname(interpreterPath));
+async function getPipfileIfGlobal(interpreterPath: Uri): Promise<string | undefined> {
+    const envFolder = path.dirname(path.dirname(interpreterPath.fsPath));
     const projectDir = await getProjectDir(envFolder);
     if (projectDir === undefined) {
         return undefined;
@@ -121,7 +122,7 @@ async function getPipfileIfGlobal(interpreterPath: string): Promise<string | und
  * create the environment.
  * @param interpreterPath: Absolute path to any python interpreter.
  */
-export async function isPipenvEnvironment(interpreterPath: string): Promise<boolean> {
+export async function isPipenvEnvironment(interpreterPath: Uri): Promise<boolean> {
     if (await getPipfileIfLocal(interpreterPath)) {
         return true;
     }
@@ -136,7 +137,7 @@ export async function isPipenvEnvironment(interpreterPath: string): Promise<bool
  * false otherwise.
  * @param interpreterPath Absolute path to any python interpreter.
  */
-export async function isPipenvEnvironmentRelatedToFolder(interpreterPath: string, folder: string): Promise<boolean> {
+export async function isPipenvEnvironmentRelatedToFolder(interpreterPath: Uri, folder: Uri): Promise<boolean> {
     const pipFileAssociatedWithEnvironment = await getPipfileIfGlobal(interpreterPath);
     if (!pipFileAssociatedWithEnvironment) {
         return false;
@@ -145,7 +146,7 @@ export async function isPipenvEnvironmentRelatedToFolder(interpreterPath: string
     // PIPENV_NO_INHERIT is used to tell pipenv not to look for Pipfile in parent directories
     // https://pipenv.pypa.io/en/latest/advanced/#pipenv.environments.PIPENV_NO_INHERIT
     const lookIntoParentDirectories = getEnvironmentVariable('PIPENV_NO_INHERIT') === undefined;
-    const pipFileAssociatedWithFolder = await _getAssociatedPipfile(folder, { lookIntoParentDirectories });
+    const pipFileAssociatedWithFolder = await _getAssociatedPipfile(folder.fsPath, { lookIntoParentDirectories });
     if (!pipFileAssociatedWithFolder) {
         return false;
     }

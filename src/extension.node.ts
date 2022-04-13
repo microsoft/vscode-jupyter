@@ -255,13 +255,11 @@ function addOutputChannel(context: IExtensionContext, serviceManager: IServiceMa
     if (!workspace.workspaceFolders || workspace.workspaceFolders.length === 0) {
         standardOutputChannel.appendLine(`No workspace folder opened.`);
     } else if (workspace.workspaceFolders.length === 1) {
-        standardOutputChannel.appendLine(
-            `Workspace folder ${getDisplayPath(workspace.workspaceFolders[0].uri.fsPath)}`
-        );
+        standardOutputChannel.appendLine(`Workspace folder ${getDisplayPath(workspace.workspaceFolders[0].uri)}`);
     } else {
         standardOutputChannel.appendLine(
             `Multiple Workspace folders opened ${workspace.workspaceFolders
-                .map((item) => getDisplayPath(item.uri.fsPath))
+                .map((item) => getDisplayPath(item.uri))
                 .join(', ')}`
         );
     }

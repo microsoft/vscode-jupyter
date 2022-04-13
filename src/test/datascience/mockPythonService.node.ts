@@ -24,7 +24,7 @@ export class MockPythonService implements IPythonExecutionService {
     }
 
     public getExecutablePath(): Promise<string> {
-        return Promise.resolve(this.interpreter.path);
+        return Promise.resolve(this.interpreter.uri.fsPath);
     }
 
     public isModuleInstalled(_moduleName: string): Promise<boolean> {
@@ -32,25 +32,25 @@ export class MockPythonService implements IPythonExecutionService {
     }
 
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
-        return this.procService.execObservable(this.interpreter.path, args, options);
+        return this.procService.execObservable(this.interpreter.uri.fsPath, args, options);
     }
     public execModuleObservable(
         moduleName: string,
         args: string[],
         options: SpawnOptions
     ): ObservableExecutionResult<string> {
-        return this.procService.execObservable(this.interpreter.path, ['-m', moduleName, ...args], options);
+        return this.procService.execObservable(this.interpreter.uri.fsPath, ['-m', moduleName, ...args], options);
     }
     public exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
-        return this.procService.exec(this.interpreter.path, args, options);
+        return this.procService.exec(this.interpreter.uri.fsPath, args, options);
     }
 
     public execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
-        return this.procService.exec(this.interpreter.path, ['-m', moduleName, ...args], options);
+        return this.procService.exec(this.interpreter.uri.fsPath, ['-m', moduleName, ...args], options);
     }
 
     public addExecResult(args: (string | RegExp)[], result: () => Promise<ExecutionResult<string>>) {
-        this.procService.addExecResult(this.interpreter.path, args, result);
+        this.procService.addExecResult(this.interpreter.uri.fsPath, args, result);
     }
 
     public addExecModuleResult(
@@ -58,11 +58,11 @@ export class MockPythonService implements IPythonExecutionService {
         args: (string | RegExp)[],
         result: () => Promise<ExecutionResult<string>>
     ) {
-        this.procService.addExecResult(this.interpreter.path, ['-m', moduleName, ...args], result);
+        this.procService.addExecResult(this.interpreter.uri.fsPath, ['-m', moduleName, ...args], result);
     }
 
     public addExecObservableResult(args: (string | RegExp)[], result: () => ObservableExecutionResult<string>) {
-        this.procService.addExecObservableResult(this.interpreter.path, args, result);
+        this.procService.addExecObservableResult(this.interpreter.uri.fsPath, args, result);
     }
 
     public addExecModuleObservableResult(
@@ -70,7 +70,7 @@ export class MockPythonService implements IPythonExecutionService {
         args: (string | RegExp)[],
         result: () => ObservableExecutionResult<string>
     ) {
-        this.procService.addExecObservableResult(this.interpreter.path, ['-m', moduleName, ...args], result);
+        this.procService.addExecObservableResult(this.interpreter.uri.fsPath, ['-m', moduleName, ...args], result);
     }
 
     public setDelay(timeout: number | undefined) {
@@ -78,6 +78,6 @@ export class MockPythonService implements IPythonExecutionService {
     }
 
     public getExecutionInfo(args: string[]) {
-        return buildPythonExecInfo(this.interpreter.path, args);
+        return buildPythonExecInfo(this.interpreter.uri.fsPath, args);
     }
 }

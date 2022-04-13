@@ -369,7 +369,9 @@ export class KernelProcess implements IKernelProcess {
         // Note: We have to dispose the temp file and recreate it else the file
         // system will hold onto the file with an open handle. THis doesn't work so well when
         // a different process tries to open it.
-        const connectionFile = runtimeDir ? path.join(runtimeDir, path.basename(tempFile.filePath)) : tempFile.filePath;
+        const connectionFile = runtimeDir
+            ? path.join(runtimeDir.fsPath, path.basename(tempFile.filePath))
+            : tempFile.filePath;
         // Ensure we dispose this, and don't maintain a handle on this file.
         await tempFile.dispose(); // Do not remove this line.
         return connectionFile;

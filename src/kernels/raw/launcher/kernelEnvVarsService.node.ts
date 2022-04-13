@@ -12,6 +12,7 @@ import { IEnvironmentActivationService } from '../../../platform/interpreter/act
 import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IJupyterKernelSpec } from '../../types';
+import { Uri } from 'vscode';
 
 @injectable()
 export class KernelEnvironmentVariablesService {
@@ -43,7 +44,7 @@ export class KernelEnvironmentVariablesService {
                 return kernelEnv;
             }
             interpreter = await this.interpreterService
-                .getInterpreterDetails(kernelSpec.interpreterPath)
+                .getInterpreterDetails(Uri.file(kernelSpec.interpreterPath))
                 .catch((ex) => {
                     traceError('Failed to fetch interpreter information for interpreter that owns a kernel', ex);
                     return undefined;
@@ -69,7 +70,7 @@ export class KernelEnvironmentVariablesService {
             // Also applies to `!java` where java could be an executable in the conda bin directory.
             if (interpreter) {
                 const env = kernelEnv || process.env;
-                this.envVarsService.prependPath(env, path.dirname(interpreter.path));
+                this.envVarsService.prependPath(env, path.dirname(interpreter.uri.fsPath));
                 return env;
             }
             return kernelEnv;
@@ -114,7 +115,7 @@ export class KernelEnvironmentVariablesService {
         // This way shell commands such as `!pip`, `!python` end up pointing to the right executables.
         // Also applies to `!java` where java could be an executable in the conda bin directory.
         if (interpreter) {
-            this.envVarsService.prependPath(mergedVars, path.dirname(interpreter.path));
+            this.envVarsService.prependPath(mergedVars, path.dirname(interpreter.uri.fsPath));
         }
 
         // Ensure global site_packages are not in the path for non global environments
@@ -122,7 +123,7 @@ export class KernelEnvironmentVariablesService {
         // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
         // https://docs.python.org/3/library/site.html#site.ENABLE_USER_SITE
         if (interpreter && hasInterpreterEnv && hasActivationCommands) {
-            traceInfo(`Adding env Variable PYTHONNOUSERSITE to ${getDisplayPath(interpreter.path)}`);
+            traceInfo(`Adding env Variable PYTHONNOUSERSITE to ${getDisplayPath(interpreter.uri)}`);
             mergedVars.PYTHONNOUSERSITE = 'True';
         } else {
             // Ensure this is not set (nor should this be inherited).

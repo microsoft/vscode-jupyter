@@ -33,6 +33,7 @@ import { KernelEnvironmentVariablesService } from './kernelEnvVarsService.node';
 import { KernelProcess } from './kernelProcess.node';
 import { JupyterPaths } from '../finder/jupyterPaths.node';
 import { isTestExecution } from '../../../platform/common/constants.node';
+import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.
@@ -141,7 +142,7 @@ export class KernelLauncher implements IKernelLauncher {
             ],
             {}
         );
-        const displayInterpreterPath = getDisplayPath(interpreter.path);
+        const displayInterpreterPath = getDisplayPath(interpreter.uri);
         if (output.stdout) {
             const outputs = output.stdout
                 .trim()
@@ -150,7 +151,9 @@ export class KernelLauncher implements IKernelLauncher {
                 .filter((s) => s.length > 0);
             if (outputs.length === 2) {
                 traceInfo(`ipykernel version ${outputs[0]} for ${displayInterpreterPath}`);
-                traceInfo(`ipykernel location ${getDisplayPath(outputs[1])} for ${displayInterpreterPath}`);
+                traceInfo(
+                    `ipykernel location ${getDisplayPathFromLocalFile(outputs[1])} for ${displayInterpreterPath}`
+                );
             } else {
                 traceInfo(`ipykernel version & path ${output.stdout.trim()} for ${displayInterpreterPath}`);
             }

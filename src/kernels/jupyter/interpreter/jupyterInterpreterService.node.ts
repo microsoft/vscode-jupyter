@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter } from 'vscode';
+import { Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { createPromiseFromCancellation } from '../../../platform/common/cancellation.node';
 import '../../../platform/common/extensions';
@@ -142,7 +142,7 @@ export class JupyterInterpreterService {
 
     // Check the location that we stored jupyter launch path in the old version
     // if it's there, return it and clear the location
-    private getInterpreterFromChangeOfOlderVersionOfExtension(): string | undefined {
+    private getInterpreterFromChangeOfOlderVersionOfExtension(): Uri | undefined {
         const pythonPath = this.oldVersionCacheStateStore.getCachedInterpreterPath();
         if (!pythonPath) {
             return;
@@ -156,14 +156,14 @@ export class JupyterInterpreterService {
     private changeSelectedInterpreterProperty(interpreter: PythonEnvironment) {
         this._selectedInterpreter = interpreter;
         this._onDidChangeInterpreter.fire(interpreter);
-        this.interpreterSelectionState.updateSelectedPythonPath(interpreter.path);
+        this.interpreterSelectionState.updateSelectedPythonPath(interpreter.uri);
         sendTelemetryEvent(Telemetry.SelectJupyterInterpreter, undefined, { result: 'selected' });
     }
 
     // For a given python path check if it can run jupyter for us
     // if so, return the interpreter
     private async validateInterpreterPath(
-        pythonPath: string,
+        pythonPath: Uri,
         token?: CancellationToken
     ): Promise<PythonEnvironment | undefined> {
         try {

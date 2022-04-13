@@ -151,7 +151,7 @@ export class Poetry {
             yield 'poetry';
             const home = getUserHomeDir();
             if (home) {
-                const defaultPoetryPath = path.join(home, '.poetry', 'bin', 'poetry');
+                const defaultPoetryPath = path.join(home.fsPath, '.poetry', 'bin', 'poetry');
                 if (pathExistsSync(defaultPoetryPath)) {
                     yield defaultPoetryPath;
                 }

@@ -36,7 +36,7 @@ import {
     prewarmNotebooks,
     createEmptyPythonNotebook,
     getCellOutputs
-} from '../helper';
+} from '../helper.node';
 import { Settings } from '../../../../platform/common/constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */

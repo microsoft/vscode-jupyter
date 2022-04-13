@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { IPersistentState, IPersistentStateFactory } from '../../../platform/common/types';
 
@@ -34,8 +35,8 @@ export class JupyterInterpreterOldCacheStateStore {
     private get cacheStore(): CacheInfo {
         return this.workspace.hasWorkspaceFolders ? this.workspaceJupyterInterpreter : this.globalJupyterInterpreter;
     }
-    public getCachedInterpreterPath(): string | undefined {
-        return this.cacheStore.state.value;
+    public getCachedInterpreterPath(): Uri | undefined {
+        return this.cacheStore.state.value ? Uri.file(this.cacheStore.state.value) : undefined;
     }
     public async clearCache(): Promise<void> {
         await this.cacheStore.state.updateValue(undefined);

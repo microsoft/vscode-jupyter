@@ -17,7 +17,7 @@ import {
     waitForCodeLenses,
     waitForLastCellToComplete
 } from './helpers';
-import { closeNotebooksAndCleanUpAfterTests, defaultNotebookTestTimeout, getCellOutputs } from './notebook/helper';
+import { closeNotebooksAndCleanUpAfterTests, defaultNotebookTestTimeout, getCellOutputs } from './notebook/helper.node';
 import { ITestWebviewHost } from './testInterfaces';
 import { waitForVariablesToMatch } from './variableView/variableViewHelpers';
 import { ITestVariableViewProvider } from './variableView/variableViewTestInterfaces';

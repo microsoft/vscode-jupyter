@@ -7,15 +7,10 @@
 import { createHash } from 'crypto';
 import * as fs from 'fs-extra';
 import { ReadStream, WriteStream } from 'fs-extra';
-import * as glob from 'glob';
-import { promisify } from 'util';
+import * as path from '../../vscode-path/path';
 import * as vscode from 'vscode';
 import '../extensions';
-import { traceError } from '../../logging';
-import { createDirNotEmptyError, isFileExistsError, isFileNotFoundError, isNoPermissionsError } from './errors.node';
-import { FileSystemPaths, FileSystemPathUtils } from './fs-paths.node';
-import { TemporaryFileSystem } from './fs-temp.node';
-import { IFileSystemPaths, IFileSystemPathUtils, ITempFileSystem } from './types';
+import { createDirNotEmptyError, isFileExistsError } from './errors.node';
 import { IRawFileSystem } from './types.node';
 
 const ENCODING = 'utf8';
@@ -50,22 +45,6 @@ export function convertStat(old: fs.Stats, filetype: vscode.FileType): vscode.Fi
     };
 }
 
-function filterByFileType(
-    files: [string, vscode.FileType][], // the files to filter
-    fileType: vscode.FileType // the file type to look for
-): [string, vscode.FileType][] {
-    // We preserve the pre-existing behavior of following symlinks.
-    if (fileType === vscode.FileType.Unknown) {
-        // FileType.Unknown == 0 so we can't just use bitwise
-        // operations blindly here.
-        return files.filter(([_file, ft]) => {
-            return ft === vscode.FileType.Unknown || ft === (vscode.FileType.SymbolicLink & vscode.FileType.Unknown);
-        });
-    } else {
-        return files.filter(([_file, ft]) => (ft & fileType) > 0);
-    }
-}
-
 //==========================================
 // "raw" filesystem
 
@@ -97,19 +76,12 @@ interface IRawFSExtra {
     createWriteStream(filename: string): WriteStream;
 }
 
-interface IRawPath {
-    dirname(path: string): string;
-    join(...paths: string[]): string;
-}
-
 // Later we will drop "FileSystem", switching usage to
 // "FileSystemUtils" and then rename "RawFileSystem" to "FileSystem".
 
 // The low-level filesystem operations used by the extension.
 export class RawFileSystem implements IRawFileSystem {
     constructor(
-        // the low-level FS path operations to use
-        protected readonly paths: IRawPath,
         // the VS Code FS API to use
         protected readonly vscfs: IVSCodeFileSystemAPI,
         // the node FS API to use
@@ -118,12 +90,10 @@ export class RawFileSystem implements IRawFileSystem {
 
     // Create a new object using common-case default values.
     public static withDefaults(
-        paths?: IRawPath, // default: a new FileSystemPaths object (using defaults)
         vscfs?: IVSCodeFileSystemAPI, // default: the actual "vscode.workspace.fs" namespace
         fsExtra?: IRawFSExtra // default: the "fs-extra" module
     ): RawFileSystem {
         return new RawFileSystem(
-            paths || FileSystemPaths.withDefaults(),
             vscfs || vscode.workspace.fs,
             // The "fs-extra" module is effectively equivalent to node's "fs"
             // module (but is a bit more async-friendly).  So we use that
@@ -164,7 +134,7 @@ export class RawFileSystem implements IRawFileSystem {
         // otherwise).  So we have to manually stat, just to be sure.
         // Note that this behavior was reported, but won't be changing.
         // See: https://github.com/microsoft/vscode/issues/84177
-        await this.vscfs.stat(vscode.Uri.file(this.paths.dirname(tgt)));
+        await this.vscfs.stat(vscode.Uri.file(path.dirname(tgt)));
         // We stick with the pre-existing behavior where files are
         // overwritten and directories are not.
         const options = { overwrite: false };
@@ -216,7 +186,7 @@ export class RawFileSystem implements IRawFileSystem {
         // otherwise).  So we have to manually stat, just to be sure.
         // Note that this behavior was reported, but won't be changing.
         // See: https://github.com/microsoft/vscode/issues/84177
-        await this.vscfs.stat(vscode.Uri.file(this.paths.dirname(dest)));
+        await this.vscfs.stat(vscode.Uri.file(path.dirname(dest)));
         await this.vscfs.copy(srcURI, destURI, {
             overwrite: true
         });
@@ -266,7 +236,7 @@ export class RawFileSystem implements IRawFileSystem {
         const uri = vscode.Uri.file(dirname);
         const files = await this.vscfs.readDirectory(uri);
         return files.map(([basename, filetype]) => {
-            const filename = this.paths.join(dirname, basename);
+            const filename = path.join(dirname, basename);
             return [filename, filetype] as [string, vscode.FileType];
         });
     }
@@ -305,170 +275,6 @@ export class RawFileSystem implements IRawFileSystem {
         // TODO (https://github.com/microsoft/vscode/issues/84515):
         //   This functionality has been requested for the VS Code API.
         return this.fsExtra.createWriteStream(filename);
-    }
-}
-
-//==========================================
-// filesystem "utils"
-
-// High-level filesystem operations used by the extension.
-export class FileSystemUtils {
-    constructor(
-        public readonly raw: IRawFileSystem,
-        public readonly pathUtils: IFileSystemPathUtils,
-        public readonly paths: IFileSystemPaths,
-        public readonly tmp: ITempFileSystem,
-        private readonly getHash: (data: string) => string,
-        private readonly globFiles: (pat: string, options?: { cwd: string; dot?: boolean }) => Promise<string[]>
-    ) {}
-    // Create a new object using common-case default values.
-    public static withDefaults(
-        raw?: IRawFileSystem,
-        pathUtils?: IFileSystemPathUtils,
-        tmp?: ITempFileSystem,
-        getHash?: (data: string) => string,
-        globFiles?: (pat: string, options?: { cwd: string }) => Promise<string[]>
-    ): FileSystemUtils {
-        pathUtils = pathUtils || FileSystemPathUtils.withDefaults();
-        return new FileSystemUtils(
-            raw || RawFileSystem.withDefaults(pathUtils.paths),
-            pathUtils,
-            pathUtils.paths,
-            tmp || TemporaryFileSystem.withDefaults(),
-            getHash || getHashString,
-            globFiles || promisify(glob)
-        );
-    }
-
-    //****************************
-    // aliases
-
-    public async createDirectory(directoryPath: string): Promise<void> {
-        return this.raw.mkdirp(directoryPath);
-    }
-
-    public async deleteDirectory(directoryPath: string): Promise<void> {
-        return this.raw.rmdir(directoryPath);
-    }
-
-    public async deleteFile(filename: string): Promise<void> {
-        return this.raw.rmfile(filename);
-    }
-
-    //****************************
-    // helpers
-
-    public async pathExists(
-        // the "file" to look for
-        filename: string,
-        // the file type to expect; if not provided then any file type
-        // matches; otherwise a mismatch results in a "false" value
-        fileType?: vscode.FileType
-    ): Promise<boolean> {
-        let stat: vscode.FileStat;
-        try {
-            // Note that we are using stat() rather than lstat().  This
-            // means that any symlinks are getting resolved.
-            stat = await this.raw.stat(filename);
-        } catch (err) {
-            if (isFileNotFoundError(err)) {
-                return false;
-            }
-            traceError(`stat() failed for "${filename}"`, err);
-            return false;
-        }
-
-        if (fileType === undefined) {
-            return true;
-        }
-        if (fileType === vscode.FileType.Unknown) {
-            // FileType.Unknown == 0, hence do not use bitwise operations.
-            return stat.type === vscode.FileType.Unknown;
-        }
-        return (stat.type & fileType) === fileType;
-    }
-    public async fileExists(filename: string): Promise<boolean> {
-        return this.pathExists(filename, vscode.FileType.File);
-    }
-    public async directoryExists(dirname: string): Promise<boolean> {
-        return this.pathExists(dirname, vscode.FileType.Directory);
-    }
-
-    public async listdir(dirname: string): Promise<[string, vscode.FileType][]> {
-        try {
-            return await this.raw.listdir(dirname);
-        } catch (err) {
-            // We're only preserving pre-existng behavior here...
-            if (!(await this.pathExists(dirname))) {
-                return [];
-            }
-            throw err; // re-throw
-        }
-    }
-    public async getSubDirectories(dirname: string): Promise<string[]> {
-        const files = await this.listdir(dirname);
-        const filtered = filterByFileType(files, vscode.FileType.Directory);
-        return filtered.map(([filename, _fileType]) => filename);
-    }
-    public async getFiles(dirname: string): Promise<string[]> {
-        // Note that only "regular" files are returned.
-        const files = await this.listdir(dirname);
-        const filtered = filterByFileType(files, vscode.FileType.File);
-        return filtered.map(([filename, _fileType]) => filename);
-    }
-
-    public async isDirReadonly(dirname: string): Promise<boolean> {
-        const filePath = `${dirname}${this.paths.sep}___vscpTest___`;
-        try {
-            await this.raw.stat(dirname);
-            await this.raw.writeText(filePath, '');
-        } catch (err) {
-            if (isNoPermissionsError(err)) {
-                return true;
-            }
-            throw err; // re-throw
-        }
-        this.raw
-            .rmfile(filePath)
-            // Clean resources in the background.
-            .ignoreErrors();
-        return false;
-    }
-
-    public async getFileHash(filename: string): Promise<string> {
-        // The reason for lstat rather than stat is not clear...
-        const stat = await this.raw.lstat(filename);
-        const data = `${stat.ctime}-${stat.mtime}`;
-        return this.getHash(data);
-    }
-
-    public async search(globPattern: string, cwd?: string, dot?: boolean): Promise<string[]> {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let options: any;
-        if (cwd) {
-            options = { ...options, cwd };
-        }
-        if (dot) {
-            options = { ...options, dot };
-        }
-
-        const found = await this.globFiles(globPattern, options);
-        return Array.isArray(found) ? found : [];
-    }
-
-    //****************************
-    // helpers (non-async)
-
-    public fileExistsSync(filePath: string): boolean {
-        try {
-            this.raw.statSync(filePath);
-        } catch (err) {
-            if (isFileNotFoundError(err)) {
-                return false;
-            }
-            throw err; // re-throw
-        }
-        return true;
     }
 }
 

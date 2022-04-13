@@ -9,6 +9,7 @@ import {
     isPipenvEnvironment,
     _getAssociatedPipfile
 } from '../../../kernels/installer/pipenv.node';
+import { Uri } from 'vscode';
 
 const path = platformApis.getOSType() === platformApis.OSType.Windows ? pathModule.win32 : pathModule.posix;
 
@@ -39,24 +40,22 @@ suite('Pipenv helper', () => {
             arePathsSame.restore();
 
             getEnvVar.withArgs('PIPENV_MAX_DEPTH').returns('5');
-            const expectedDotProjectFile = path.join(
-                TEST_LAYOUT_ROOT,
-                'pipenv',
-                'globalEnvironments',
-                'project3-2s1eXEJ2',
-                '.project'
+            const expectedDotProjectFile = Uri.file(
+                path.join(TEST_LAYOUT_ROOT, 'pipenv', 'globalEnvironments', 'project3-2s1eXEJ2', '.project')
             );
             const project = path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project3');
-            readFile.withArgs(expectedDotProjectFile).resolves(project);
-            const interpreterPath: string = path.join(
-                TEST_LAYOUT_ROOT,
-                'pipenv',
-                'globalEnvironments',
-                'project3-2s1eXEJ2',
-                'Scripts',
-                'python.exe'
+            readFile.withArgs(expectedDotProjectFile.fsPath).resolves(project);
+            const interpreterPath = Uri.file(
+                path.join(
+                    TEST_LAYOUT_ROOT,
+                    'pipenv',
+                    'globalEnvironments',
+                    'project3-2s1eXEJ2',
+                    'Scripts',
+                    'python.exe'
+                )
             );
-            const folder = path.join(project, 'parent', 'child', 'folder');
+            const folder = Uri.file(path.join(project, 'parent', 'child', 'folder'));
 
             const isRelated = await isPipenvEnvironmentRelatedToFolder(interpreterPath, folder);
 
@@ -67,9 +66,9 @@ suite('Pipenv helper', () => {
             const expectedDotProjectFile = path.join('environments', 'project-2s1eXEJ2', '.project');
             // Dot project file doesn't exist
             pathExists.withArgs(expectedDotProjectFile).resolves(false);
-            const interpreterPath = path.join('environments', 'project-2s1eXEJ2', 'Scripts', 'python.exe');
-            pathExists.withArgs(interpreterPath).resolves(true);
-            const folder = path.join('path', 'to', 'folder');
+            const interpreterPath = Uri.file(path.join('environments', 'project-2s1eXEJ2', 'Scripts', 'python.exe'));
+            pathExists.withArgs(interpreterPath.fsPath).resolves(true);
+            const folder = Uri.file(path.join('path', 'to', 'folder'));
 
             const isRelated = await isPipenvEnvironmentRelatedToFolder(interpreterPath, folder);
 
@@ -85,10 +84,10 @@ suite('Pipenv helper', () => {
             const pipFileAssociatedWithEnvironment = path.join(project, 'Pipfile');
             // Pipfile associated with environment exists
             pathExists.withArgs(pipFileAssociatedWithEnvironment).resolves(true);
-            const interpreterPath = path.join('environments', 'project-2s1eXEJ2', 'Scripts', 'python.exe');
-            pathExists.withArgs(interpreterPath).resolves(true);
-            const folder = path.join('path', 'to', 'folder');
-            const pipFileAssociatedWithFolder = path.join(folder, 'Pipfile');
+            const interpreterPath = Uri.file(path.join('environments', 'project-2s1eXEJ2', 'Scripts', 'python.exe'));
+            pathExists.withArgs(interpreterPath.fsPath).resolves(true);
+            const folder = Uri.file(path.join('path', 'to', 'folder'));
+            const pipFileAssociatedWithFolder = path.join(folder.fsPath, 'Pipfile');
             // Pipfile associated with folder doesn't exist
             pathExists.withArgs(pipFileAssociatedWithFolder).resolves(false);
 
@@ -106,10 +105,10 @@ suite('Pipenv helper', () => {
             const pipFileAssociatedWithEnvironment = path.join(project, 'Pipfile');
             // Pipfile associated with environment exists
             pathExists.withArgs(pipFileAssociatedWithEnvironment).resolves(true);
-            const interpreterPath = path.join('environments', 'project-2s1eXEJ2', 'Scripts', 'python.exe');
-            pathExists.withArgs(interpreterPath).resolves(true);
-            const folder = path.join('path', 'to', 'folder');
-            const pipFileAssociatedWithFolder = path.join(folder, 'Pipfile');
+            const interpreterPath = Uri.file(path.join('environments', 'project-2s1eXEJ2', 'Scripts', 'python.exe'));
+            pathExists.withArgs(interpreterPath.fsPath).resolves(true);
+            const folder = Uri.file(path.join('path', 'to', 'folder'));
+            const pipFileAssociatedWithFolder = path.join(folder.fsPath, 'Pipfile');
             // Pipfile associated with folder exists
             pathExists.withArgs(pipFileAssociatedWithFolder).resolves(true);
             // But the paths to both Pipfiles aren't the same
@@ -121,22 +120,24 @@ suite('Pipenv helper', () => {
         });
 
         test('If a Pipfile is associated with the environment and another is associated with the folder, and the path to both Pipfiles are same, return true', async () => {
-            const expectedDotProjectFile = path.join('environments', 'project-2s1eXEJ2', '.project');
-            pathExists.withArgs(expectedDotProjectFile).resolves(true);
-            const project = path.join('path', 'to', 'project');
-            readFile.withArgs(expectedDotProjectFile).resolves(project);
-            pathExists.withArgs(project).resolves(true);
-            const pipFileAssociatedWithEnvironment = path.join(project, 'Pipfile');
+            const expectedDotProjectFile = Uri.file(path.join('environments', 'project-2s1eXEJ2', '.project'));
+            pathExists.withArgs(expectedDotProjectFile.fsPath).resolves(true);
+            const project = Uri.file(path.join('path', 'to', 'project'));
+            readFile.withArgs(expectedDotProjectFile.fsPath).resolves(project.fsPath);
+            pathExists.withArgs(project.fsPath).resolves(true);
+            const pipFileAssociatedWithEnvironment = Uri.file(path.join(project.fsPath, 'Pipfile'));
             // Pipfile associated with environment exists
-            pathExists.withArgs(pipFileAssociatedWithEnvironment).resolves(true);
-            const interpreterPath = path.join('environments', 'project-2s1eXEJ2', 'Scripts', 'python.exe');
-            pathExists.withArgs(interpreterPath).resolves(true);
-            const folder = path.join('path', 'to', 'folder');
-            const pipFileAssociatedWithFolder = path.join(folder, 'Pipfile');
+            pathExists.withArgs(pipFileAssociatedWithEnvironment.fsPath).resolves(true);
+            const interpreterPath = Uri.file(path.join('environments', 'project-2s1eXEJ2', 'Scripts', 'python.exe'));
+            pathExists.withArgs(interpreterPath.fsPath).resolves(true);
+            const folder = Uri.file(path.join('path', 'to', 'folder'));
+            const pipFileAssociatedWithFolder = Uri.file(path.join(folder.fsPath, 'Pipfile'));
             // Pipfile associated with folder exists
-            pathExists.withArgs(pipFileAssociatedWithFolder).resolves(true);
+            pathExists.withArgs(pipFileAssociatedWithFolder.fsPath).resolves(true);
             // The paths to both Pipfiles are also the same
-            arePathsSame.withArgs(pipFileAssociatedWithEnvironment, pipFileAssociatedWithFolder).resolves(true);
+            arePathsSame
+                .withArgs(pipFileAssociatedWithEnvironment.fsPath, pipFileAssociatedWithFolder.fsPath)
+                .resolves(true);
 
             const isRelated = await isPipenvEnvironmentRelatedToFolder(interpreterPath, folder);
 
@@ -161,13 +162,13 @@ suite('Pipenv helper', () => {
         });
 
         test('If the project layout matches that of a local pipenv environment, return true', async () => {
-            const project = path.join('path', 'to', 'project');
-            pathExists.withArgs(project).resolves(true);
-            const pipFile = path.join(project, 'Pipfile');
+            const project = Uri.file(path.join('path', 'to', 'project'));
+            pathExists.withArgs(project.fsPath).resolves(true);
+            const pipFile = Uri.file(path.join(project.fsPath, 'Pipfile'));
             // Pipfile associated with environment exists
-            pathExists.withArgs(pipFile).resolves(true);
+            pathExists.withArgs(pipFile.fsPath).resolves(true);
             // Environment is inside the project
-            const interpreterPath = path.join(project, '.venv', 'Scripts', 'python.exe');
+            const interpreterPath = Uri.file(path.join(project.fsPath, '.venv', 'Scripts', 'python.exe'));
 
             const result = await isPipenvEnvironment(interpreterPath);
 
@@ -175,7 +176,7 @@ suite('Pipenv helper', () => {
         });
 
         test('If not local & dotProject file is missing, return false', async () => {
-            const interpreterPath = path.join('environments', 'project-2s1eXEJ2', 'Scripts', 'python.exe');
+            const interpreterPath = Uri.file(path.join('environments', 'project-2s1eXEJ2', 'Scripts', 'python.exe'));
             const project = path.join('path', 'to', 'project');
             pathExists.withArgs(project).resolves(true);
             const pipFile = path.join(project, 'Pipfile');
@@ -191,7 +192,7 @@ suite('Pipenv helper', () => {
         });
 
         test('If not local & dotProject contains invalid path to project, return false', async () => {
-            const interpreterPath = path.join('environments', 'project-2s1eXEJ2', 'Scripts', 'python.exe');
+            const interpreterPath = Uri.file(path.join('environments', 'project-2s1eXEJ2', 'Scripts', 'python.exe'));
             const project = path.join('path', 'to', 'project');
             // Project doesn't exist
             pathExists.withArgs(project).resolves(false);
@@ -207,7 +208,7 @@ suite('Pipenv helper', () => {
         });
 
         test("If not local & the name of the project isn't used as a prefix in the environment folder, return false", async () => {
-            const interpreterPath = path.join('environments', 'project-2s1eXEJ2', 'Scripts', 'python.exe');
+            const interpreterPath = Uri.file(path.join('environments', 'project-2s1eXEJ2', 'Scripts', 'python.exe'));
             // The project name (someProjectName) isn't used as a prefix in environment folder name (project-2s1eXEJ2)
             const project = path.join('path', 'to', 'someProjectName');
             pathExists.withArgs(project).resolves(true);
@@ -224,15 +225,15 @@ suite('Pipenv helper', () => {
         });
 
         test('If the project layout matches that of a global pipenv environment, return true', async () => {
-            const interpreterPath = path.join('environments', 'project-2s1eXEJ2', 'Scripts', 'python.exe');
-            const project = path.join('path', 'to', 'project');
-            pathExists.withArgs(project).resolves(true);
-            const pipFile = path.join(project, 'Pipfile');
+            const interpreterPath = Uri.file(path.join('environments', 'project-2s1eXEJ2', 'Scripts', 'python.exe'));
+            const project = Uri.file(path.join('path', 'to', 'project'));
+            pathExists.withArgs(project.fsPath).resolves(true);
+            const pipFile = Uri.file(path.join(project.fsPath, 'Pipfile'));
             // Pipfile associated with environment exists
-            pathExists.withArgs(pipFile).resolves(true);
-            const expectedDotProjectFile = path.join('environments', 'project-2s1eXEJ2', '.project');
-            pathExists.withArgs(expectedDotProjectFile).resolves(true);
-            readFile.withArgs(expectedDotProjectFile).resolves(project);
+            pathExists.withArgs(pipFile.fsPath).resolves(true);
+            const expectedDotProjectFile = Uri.file(path.join('environments', 'project-2s1eXEJ2', '.project'));
+            pathExists.withArgs(expectedDotProjectFile.fsPath).resolves(true);
+            readFile.withArgs(expectedDotProjectFile.fsPath).resolves(project.fsPath);
 
             const result = await isPipenvEnvironment(interpreterPath);
 

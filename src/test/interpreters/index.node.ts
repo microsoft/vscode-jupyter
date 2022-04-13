@@ -9,10 +9,12 @@ import { PythonEnvInfo } from '../../platform/common/process/internal/scripts/in
 import { ProcessService } from '../../platform/common/process/proc.node';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { parsePythonVersion } from '../../platform/pythonEnvironments/info/pythonVersion';
-import { getOSType, OSType } from '../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
-import { isCondaEnvironment } from './condaLocator';
+import { isCondaEnvironment } from './condaLocator.node';
 import { getCondaEnvironment, getCondaFile, isCondaAvailable } from './condaService.node';
+import { getComparisonKey } from '../../platform/vscode-path/resources';
+import { Uri } from 'vscode';
+import { getOSType, OSType } from '../../platform/common/utils/platform';
 
 const executionTimeout = 30_000;
 const SCRIPTS_DIR = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles');
@@ -26,12 +28,13 @@ const defaultShells = {
 const defaultShell = defaultShells[getOSType()];
 
 const interpreterInfoCache = new Map<string, Promise<PythonEnvironment | undefined>>();
-export async function getInterpreterInfo(pythonPath: string | undefined): Promise<PythonEnvironment | undefined> {
+export async function getInterpreterInfo(pythonPath: Uri | undefined): Promise<PythonEnvironment | undefined> {
     if (!pythonPath) {
         return undefined;
     }
-    if (interpreterInfoCache.has(pythonPath)) {
-        return interpreterInfoCache.get(pythonPath);
+    const key = getComparisonKey(pythonPath);
+    if (interpreterInfoCache.has(key)) {
+        return interpreterInfoCache.get(key);
     }
 
     const promise = (async () => {
@@ -52,7 +55,7 @@ export async function getInterpreterInfo(pythonPath: string | undefined): Promis
             const json: PythonEnvInfo = JSON.parse(result.stdout.trim());
             const rawVersion = `${json.versionInfo.slice(0, 3).join('.')}-${json.versionInfo[3]}`;
             return {
-                path: json.exe,
+                uri: Uri.file(json.exe),
                 displayName: `Python${rawVersion}`,
                 version: parsePythonVersion(rawVersion),
                 sysVersion: json.sysVersion,
@@ -63,14 +66,15 @@ export async function getInterpreterInfo(pythonPath: string | undefined): Promis
             return undefined;
         }
     })();
-    interpreterInfoCache.set(pythonPath, promise);
+    interpreterInfoCache.set(key, promise);
     return promise;
 }
 
 const envVariables = new Map<string, Promise<NodeJS.ProcessEnv | undefined>>();
-export async function getActivatedEnvVariables(pythonPath: string): Promise<NodeJS.ProcessEnv | undefined> {
-    if (envVariables.has(pythonPath)) {
-        return envVariables.get(pythonPath);
+export async function getActivatedEnvVariables(pythonPath: Uri): Promise<NodeJS.ProcessEnv | undefined> {
+    const key = getComparisonKey(pythonPath);
+    if (envVariables.has(key)) {
+        return envVariables.get(key);
     }
     const promise = (async () => {
         const cli = await getPythonCli(pythonPath);
@@ -98,11 +102,11 @@ export async function getActivatedEnvVariables(pythonPath: string): Promise<Node
             traceError(`Failed to parse interpreter information for ${argv}`, ex);
         }
     })();
-    envVariables.set(pythonPath, promise);
+    envVariables.set(key, promise);
     return promise;
 }
 
-async function getPythonCli(pythonPath: string | undefined) {
+async function getPythonCli(pythonPath: Uri | undefined) {
     const isConda = await isCondaEnvironment(pythonPath);
     if (isConda) {
         try {
@@ -115,7 +119,7 @@ async function getPythonCli(pythonPath: string | undefined) {
             if (!condaInfo) {
                 throw new Error('No conda info');
             } else if (condaInfo.name === '') {
-                runArgs.push('-p', condaInfo.path);
+                runArgs.push('-p', condaInfo.path.fsPath);
             } else {
                 runArgs.push('-n', condaInfo.name);
             }
@@ -127,5 +131,5 @@ async function getPythonCli(pythonPath: string | undefined) {
         }
         traceError('Using Conda Interpreter, but no conda');
     }
-    return pythonPath ? [pythonPath.fileToCommandArgument()] : [];
+    return pythonPath ? [pythonPath.fsPath.fileToCommandArgument()] : [];
 }

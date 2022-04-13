@@ -122,7 +122,7 @@ export class PythonDaemonExecutionServicePool extends PythonDaemonFactory implem
             // When using the daemon, log the message ourselves.
             if (daemon instanceof PythonDaemonExecutionService) {
                 this.logger.logProcess(
-                    `${getDisplayPath(this.interpreter.path)} (daemon)`,
+                    `${getDisplayPath(this.interpreter.uri)} (daemon)`,
                     daemonLogMessage.args,
                     daemonLogMessage.options
                 );
@@ -153,7 +153,7 @@ export class PythonDaemonExecutionServicePool extends PythonDaemonFactory implem
         // When using the daemon, log the message ourselves.
         if (daemonProc) {
             this.logger.logProcess(
-                `${getDisplayPath(this.interpreter.path)} (daemon)`,
+                `${getDisplayPath(this.interpreter.uri)} (daemon)`,
                 daemonLogMessage.args,
                 daemonLogMessage.options
             );

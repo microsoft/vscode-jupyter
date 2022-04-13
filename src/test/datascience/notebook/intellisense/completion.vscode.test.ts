@@ -22,7 +22,7 @@ import {
     waitForExecutionCompletedSuccessfully,
     prewarmNotebooks,
     createEmptyPythonNotebook
-} from '../helper';
+} from '../helper.node';
 import { IInteractiveWindowProvider } from '../../../../interactive-window/types';
 import { setIntellisenseTimeout } from '../../../../intellisense/pythonKernelCompletionProvider.node';
 import { Settings } from '../../../../platform/common/constants';

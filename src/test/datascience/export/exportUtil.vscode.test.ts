@@ -12,7 +12,7 @@ import { ExportUtil } from '../../../platform/export/exportUtil.node';
 import { IExtensionTestApi } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
 import { closeActiveWindows, initialize } from '../../initialize.node';
-import { createTemporaryNotebook } from '../notebook/helper';
+import { createTemporaryNotebook } from '../notebook/helper.node';
 
 suite('DataScience - Export Util', () => {
     let api: IExtensionTestApi;

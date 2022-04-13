@@ -8,6 +8,7 @@ import { SemVer } from 'semver';
 import { CancellationToken } from 'vscode';
 import { parseSemVer } from '../../../platform/common/utils.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { ResourceSet } from '../../../platform/vscode-path/map';
 import { JupyterCommands } from '../../../webviews/webview-side/common/constants';
 import { IInstaller, Product } from '../../installer/types';
 import { INbConvertInterpreterDependencyChecker } from '../types';
@@ -16,7 +17,7 @@ import { IJupyterCommandFactory } from '../types.node';
 @injectable()
 export class NbConvertInterpreterDependencyChecker implements INbConvertInterpreterDependencyChecker {
     // Track interpreters that nbconvert has been installed into
-    private readonly nbconvertInstalledInInterpreter = new Set<string>();
+    private readonly nbconvertInstalledInInterpreter = new ResourceSet();
     constructor(
         @inject(IInstaller) private readonly installer: IInstaller,
         @inject(IJupyterCommandFactory) private readonly commandFactory: IJupyterCommandFactory
@@ -25,14 +26,14 @@ export class NbConvertInterpreterDependencyChecker implements INbConvertInterpre
     // Check to see if nbconvert is installed in the given interpreter, note that we also need jupyter since that supplies the needed
     // template files for conversion
     public async isNbConvertInstalled(interpreter: PythonEnvironment, _token?: CancellationToken): Promise<boolean> {
-        if (this.nbconvertInstalledInInterpreter.has(interpreter.path)) {
+        if (this.nbconvertInstalledInInterpreter.has(interpreter.uri)) {
             return true;
         }
         const isInstalled: boolean =
             !!(await this.installer.isInstalled(Product.nbconvert, interpreter)) &&
             !!(await this.installer.isInstalled(Product.jupyter, interpreter));
         if (isInstalled === true) {
-            this.nbconvertInstalledInInterpreter.add(interpreter.path);
+            this.nbconvertInstalledInInterpreter.add(interpreter.uri);
         }
         return isInstalled;
     }

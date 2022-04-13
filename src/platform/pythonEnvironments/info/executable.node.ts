@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { Uri } from 'vscode';
 import { getExecutable as getPythonExecutableCommand } from '../../common/process/internal/python.node';
 import { copyPythonExecInfo, PythonExecInfo } from '../exec';
 
@@ -17,9 +18,9 @@ type ExecFunc = (command: string, args: string[]) => Promise<ExecResult>;
  * @param python - the information to use when running Python
  * @param exec - the function to use to run Python
  */
-export async function getExecutablePath(python: PythonExecInfo, exec: ExecFunc): Promise<string> {
+export async function getExecutablePath(python: PythonExecInfo, exec: ExecFunc): Promise<Uri> {
     const [args, parse] = getPythonExecutableCommand();
     const info = copyPythonExecInfo(python, args);
     const result = await exec(info.command, info.args);
-    return parse(result.stdout);
+    return Uri.file(parse(result.stdout));
 }

@@ -17,7 +17,7 @@ import {
     defaultNotebookTestTimeout,
     waitForCellExecutionToComplete,
     waitForExecutionCompletedSuccessfully
-} from './notebook/helper';
+} from './notebook/helper.node';
 import { initialize } from '../initialize.node';
 import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../interactive-window/types';
@@ -113,7 +113,7 @@ export async function submitFromPythonFile(
     source: string,
     disposables: vscode.Disposable[],
     apiProvider?: IPythonApiProvider,
-    activeInterpreterPath?: string
+    activeInterpreterPath?: vscode.Uri
 ) {
     const tempFile = await createTemporaryFile({ contents: source, extension: '.py' });
     disposables.push(tempFile);
@@ -121,7 +121,7 @@ export async function submitFromPythonFile(
     await vscode.window.showTextDocument(untitledPythonFile);
     if (apiProvider && activeInterpreterPath) {
         const pythonApi = await apiProvider.getApi();
-        await pythonApi.setActiveInterpreter(activeInterpreterPath, untitledPythonFile.uri);
+        await pythonApi.setActiveInterpreter(activeInterpreterPath.fsPath, untitledPythonFile.uri);
     }
     const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(
         untitledPythonFile.uri
@@ -134,7 +134,7 @@ export async function submitFromPythonFile(
 export async function submitFromPythonFileUsingCodeWatcher(
     source: string,
     disposables: vscode.Disposable[],
-    activeInterpreterPath?: string
+    activeInterpreterPath?: vscode.Uri
 ) {
     const api = await initialize();
     const interactiveWindowProvider = api.serviceManager.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
@@ -146,7 +146,7 @@ export async function submitFromPythonFileUsingCodeWatcher(
     if (activeInterpreterPath) {
         const pythonApiProvider = api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider);
         const pythonApi = await pythonApiProvider.getApi();
-        await pythonApi.setActiveInterpreter(activeInterpreterPath, untitledPythonFile.uri);
+        await pythonApi.setActiveInterpreter(activeInterpreterPath.fsPath, untitledPythonFile.uri);
     }
     const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(
         untitledPythonFile.uri

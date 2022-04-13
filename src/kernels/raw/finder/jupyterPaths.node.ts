@@ -4,20 +4,18 @@
 
 import { inject, injectable, named } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
-import { CancellationToken, Memento } from 'vscode';
+import * as uriPath from '../../../platform/vscode-path/resources';
+import { CancellationToken, Memento, Uri } from 'vscode';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { traceError } from '../../../platform/logging';
-import {
-    IPathUtils,
-    IDisposableRegistry,
-    IMemento,
-    GLOBAL_MEMENTO,
-    IExtensionContext
-} from '../../../platform/common/types';
+import { IDisposableRegistry, IMemento, GLOBAL_MEMENTO, IExtensionContext } from '../../../platform/common/types';
 import { tryGetRealPath } from '../../../platform/common/utils.node';
 import { IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
 import { traceDecoratorVerbose } from '../../../platform/logging';
+import { getUserHomeDir } from '../../../platform/common/utils/platform.node';
+import { fsPathToUri } from '../../../platform/vscode-path/utils';
+import { ResourceSet } from '../../../platform/vscode-path/map';
 
 const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
@@ -31,11 +29,10 @@ const CACHE_KEY_FOR_JUPYTER_PATHS = 'CACHE_KEY_FOR_JUPYTER_PATHS_.';
 
 @injectable()
 export class JupyterPaths {
-    private cachedKernelSpecRootPath?: Promise<string | undefined>;
-    private cachedJupyterPaths?: Promise<string[]>;
+    private cachedKernelSpecRootPath?: Promise<Uri | undefined>;
+    private cachedJupyterPaths?: Promise<Uri[]>;
     constructor(
         @inject(IPlatformService) private platformService: IPlatformService,
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
@@ -56,8 +53,8 @@ export class JupyterPaths {
      * (this way we don't register kernels in global path).
      */
     public async getKernelSpecTempRegistrationFolder() {
-        const dir = path.join(this.context.extensionUri.fsPath, 'temp', 'jupyter', 'kernels');
-        await this.fs.ensureLocalDir(dir);
+        const dir = uriPath.joinPath(this.context.extensionUri, 'temp', 'jupyter', 'kernels');
+        await this.fs.ensureLocalDir(dir.fsPath);
         return dir;
     }
     /**
@@ -65,27 +62,28 @@ export class JupyterPaths {
      * here: https://jupyter-client.readthedocs.io/en/stable/kernels.html#kernel-specs
      */
     @traceDecoratorVerbose('Getting Jupyter KernelSpec Root Path')
-    public async getKernelSpecRootPath(): Promise<string | undefined> {
+    public async getKernelSpecRootPath(): Promise<Uri | undefined> {
         this.cachedKernelSpecRootPath =
             this.cachedKernelSpecRootPath ||
             (async () => {
-                if (this.platformService.isWindows) {
-                    // On windows the path is not correct if we combine those variables.
-                    // It won't point to a path that you can actually read from.
-                    return tryGetRealPath(path.join(this.pathUtils.home, winJupyterPath));
-                } else if (this.platformService.isMac) {
-                    return path.join(this.pathUtils.home, macJupyterPath);
-                } else {
-                    return path.join(this.pathUtils.home, linuxJupyterPath);
+                const userHomeDir = getUserHomeDir();
+                if (userHomeDir) {
+                    if (this.platformService.isWindows) {
+                        // On windows the path is not correct if we combine those variables.
+                        // It won't point to a path that you can actually read from.
+                        return tryGetRealPath(uriPath.joinPath(userHomeDir, winJupyterPath));
+                    } else if (this.platformService.isMac) {
+                        return uriPath.joinPath(userHomeDir, macJupyterPath);
+                    } else {
+                        return uriPath.joinPath(userHomeDir, linuxJupyterPath);
+                    }
                 }
             })();
         void this.cachedKernelSpecRootPath.then((value) => {
-            if (value) {
-                void this.globalState.update(CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH, value);
-            }
+            void this.updateCachedRootPath(value);
         });
-        if (this.globalState.get(CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH)) {
-            return this.globalState.get(CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH);
+        if (this.getCachedRootPath()) {
+            return this.getCachedRootPath();
         }
         return this.cachedKernelSpecRootPath;
     }
@@ -93,18 +91,21 @@ export class JupyterPaths {
      * Returns the value for `JUPYTER_RUNTIME_DIR`, location where Jupyter stores runtime files.
      * Such as kernel connection files.
      */
-    public async getRuntimeDir() {
-        let runtimeDir: string | undefined = '';
-        if (this.platformService.isWindows) {
-            // On windows the path is not correct if we combine those variables.
-            // It won't point to a path that you can actually read from.
-            runtimeDir = await tryGetRealPath(path.join(this.pathUtils.home, winJupyterRuntimePath));
-        } else if (this.platformService.isMac) {
-            runtimeDir = path.join(this.pathUtils.home, macJupyterRuntimePath);
-        } else {
-            runtimeDir = process.env['$XDG_RUNTIME_DIR']
-                ? path.join(process.env['$XDG_RUNTIME_DIR'], 'jupyter')
-                : path.join(this.pathUtils.home, '.local', 'share', 'jupyter');
+    public async getRuntimeDir(): Promise<Uri | undefined> {
+        let runtimeDir: Uri | undefined;
+        const userHomeDir = getUserHomeDir();
+        if (userHomeDir) {
+            if (this.platformService.isWindows) {
+                // On windows the path is not correct if we combine those variables.
+                // It won't point to a path that you can actually read from.
+                runtimeDir = await tryGetRealPath(uriPath.joinPath(userHomeDir, winJupyterRuntimePath));
+            } else if (this.platformService.isMac) {
+                runtimeDir = uriPath.joinPath(userHomeDir, macJupyterRuntimePath);
+            } else {
+                runtimeDir = process.env['$XDG_RUNTIME_DIR']
+                    ? fsPathToUri(path.join(process.env['$XDG_RUNTIME_DIR'], 'jupyter'))
+                    : uriPath.joinPath(userHomeDir, '.local', 'share', 'jupyter');
+            }
         }
         if (!runtimeDir) {
             traceError(`Failed to determine Jupyter runtime directory`);
@@ -112,8 +113,9 @@ export class JupyterPaths {
         }
 
         try {
-            if (!(await this.fs.localDirectoryExists(runtimeDir))) {
-                await this.fs.ensureLocalDir(runtimeDir);
+            // Make sure the local file exists
+            if (!(await this.fs.localDirectoryExists(runtimeDir.fsPath))) {
+                await this.fs.ensureLocalDir(runtimeDir.fsPath);
             }
             return runtimeDir;
         } catch (ex) {
@@ -125,9 +127,9 @@ export class JupyterPaths {
      * https://jupyter-client.readthedocs.io/en/stable/kernels.html#kernel-specs
      */
     @traceDecoratorVerbose('Get Kernelspec root path')
-    public async getKernelSpecRootPaths(cancelToken?: CancellationToken): Promise<string[]> {
+    public async getKernelSpecRootPaths(cancelToken?: CancellationToken): Promise<Uri[]> {
         // Paths specified in JUPYTER_PATH are supposed to come first in searching
-        const paths = new Set<string>(await this.getJupyterPathPaths(cancelToken));
+        const paths = new ResourceSet(await this.getJupyterPathPaths(cancelToken));
 
         if (this.platformService.isWindows) {
             const winPath = await this.getKernelSpecRootPath();
@@ -136,15 +138,18 @@ export class JupyterPaths {
             }
 
             if (process.env.ALLUSERSPROFILE) {
-                paths.add(path.join(process.env.ALLUSERSPROFILE, 'jupyter', 'kernels'));
+                paths.add(Uri.file(path.join(process.env.ALLUSERSPROFILE, 'jupyter', 'kernels')));
             }
         } else {
             // Unix based
             const secondPart = this.platformService.isMac ? macJupyterPath : linuxJupyterPath;
 
-            paths.add(path.join('/', 'usr', 'share', 'jupyter', 'kernels'));
-            paths.add(path.join('/', 'usr', 'local', 'share', 'jupyter', 'kernels'));
-            paths.add(path.join(this.pathUtils.home, secondPart));
+            paths.add(Uri.file(path.join('/', 'usr', 'share', 'jupyter', 'kernels')));
+            paths.add(Uri.file(path.join('/', 'usr', 'local', 'share', 'jupyter', 'kernels')));
+            const userHome = getUserHomeDir();
+            if (userHome) {
+                paths.add(uriPath.joinPath(userHome, secondPart));
+            }
         }
 
         return Array.from(paths);
@@ -156,11 +161,11 @@ export class JupyterPaths {
      * https://jupyter.readthedocs.io/en/latest/projects/jupyter-directories.html#envvar-JUPYTER_PATH
      */
     @traceDecoratorVerbose('Get Jupyter Paths')
-    private async getJupyterPathPaths(cancelToken?: CancellationToken): Promise<string[]> {
+    private async getJupyterPathPaths(cancelToken?: CancellationToken): Promise<Uri[]> {
         this.cachedJupyterPaths =
             this.cachedJupyterPaths ||
             (async () => {
-                const paths = new Set<string>();
+                const paths = new ResourceSet();
                 const vars = await this.envVarsProvider.getEnvironmentVariables();
                 if (cancelToken?.isCancellationRequested) {
                     return [];
@@ -173,7 +178,7 @@ export class JupyterPaths {
 
                 if (jupyterPathVars.length > 0) {
                     jupyterPathVars.forEach(async (jupyterPath) => {
-                        const realPath = await tryGetRealPath(jupyterPath);
+                        const realPath = await tryGetRealPath(Uri.file(jupyterPath));
                         if (realPath) {
                             paths.add(realPath);
                         }
@@ -184,12 +189,37 @@ export class JupyterPaths {
             })();
         void this.cachedJupyterPaths.then((value) => {
             if (value.length > 0) {
-                void this.globalState.update(CACHE_KEY_FOR_JUPYTER_PATHS, value);
+                void this.updateCachedPaths(value);
+            }
+            if (this.getCachedPaths().length > 0) {
+                return this.getCachedPaths();
             }
         });
-        if (this.globalState.get<string[]>(CACHE_KEY_FOR_JUPYTER_PATHS, []).length > 0) {
-            return this.globalState.get<string[]>(CACHE_KEY_FOR_JUPYTER_PATHS, []);
-        }
         return this.cachedJupyterPaths;
+    }
+
+    private getCachedPaths(): Uri[] {
+        return this.globalState.get<string[]>(CACHE_KEY_FOR_JUPYTER_PATHS, []).map((s) => Uri.parse(s));
+    }
+
+    private updateCachedPaths(paths: Uri[]) {
+        return this.globalState.update(CACHE_KEY_FOR_JUPYTER_PATHS, paths.map(Uri.toString));
+    }
+
+    private getCachedRootPath(): Uri | undefined {
+        if (this.globalState.get(CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH)) {
+            const cached = this.globalState.get<string>(CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH);
+            if (cached) {
+                return Uri.parse(cached);
+            }
+        }
+    }
+
+    private updateCachedRootPath(path: Uri | undefined) {
+        if (path) {
+            void this.globalState.update(CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH, path.toString());
+        } else {
+            void this.globalState.update(CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH, undefined);
+        }
     }
 }

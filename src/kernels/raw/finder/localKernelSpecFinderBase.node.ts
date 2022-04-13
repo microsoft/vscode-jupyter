@@ -3,7 +3,8 @@
 'use strict';
 
 import * as path from '../../../platform/vscode-path/path';
-import { CancellationToken, Memento } from 'vscode';
+import * as uriPath from '../../../platform/vscode-path/resources';
+import { CancellationToken, Memento, Uri } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
@@ -12,7 +13,7 @@ import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { ReadWrite } from '../../../platform/common/types';
 import { testOnlyMethod } from '../../../platform/common/utils/decorators';
-import { noop } from '../../../platform/common/utils/misc';
+import { isUri, noop } from '../../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { getInterpreterKernelSpecName, getKernelRegistrationInfo } from '../../../kernels/helpers.node';
 import {
@@ -21,8 +22,9 @@ import {
     PythonKernelConnectionMetadata
 } from '../../../kernels/types';
 import { JupyterKernelSpec } from '../../jupyter/jupyterKernelSpec.node';
+import { getComparisonKey } from '../../../platform/vscode-path/resources';
 
-type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment; kernelSpecFile: string };
+type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment; kernelSpecFile: Uri };
 export const isDefaultPythonKernelSpecSpecName = /python\s\d*.?\d*$/;
 export const oldKernelsSpecFolderName = '__old_vscode_kernelspecs';
 
@@ -121,28 +123,29 @@ export abstract class LocalKernelSpecFinderBase {
      * Load the IJupyterKernelSpec for a given spec path, check the ones that we have already loaded first
      */
     protected async getKernelSpec(
-        specPath: string,
+        specPath: Uri,
         interpreter?: PythonEnvironment,
-        globalSpecRootPath?: string,
+        globalSpecRootPath?: Uri,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined> {
         // This is a backup folder for old kernels created by us.
-        if (specPath.includes(oldKernelsSpecFolderName)) {
+        if (specPath.fsPath.includes(oldKernelsSpecFolderName)) {
             return;
         }
+        const key = getComparisonKey(specPath);
         // If we have not already loaded this kernel spec, then load it
-        if (!this.pathToKernelSpec.has(specPath)) {
-            this.pathToKernelSpec.set(specPath, this.loadKernelSpec(specPath, interpreter, cancelToken));
+        if (!this.pathToKernelSpec.has(key)) {
+            this.pathToKernelSpec.set(key, this.loadKernelSpec(specPath, interpreter, cancelToken));
         }
         // ! as the has and set above verify that we have a return here
-        return this.pathToKernelSpec.get(specPath)!.then((kernelSpec) => {
+        return this.pathToKernelSpec.get(key)!.then((kernelSpec) => {
             // Delete old kernelSpecs that we created in the global kernelSpecs folder.
             const shouldDeleteKernelSpec =
                 kernelSpec &&
                 globalSpecRootPath &&
                 getKernelRegistrationInfo(kernelSpec) &&
                 kernelSpec.specFile &&
-                path.dirname(path.dirname(kernelSpec.specFile)) === globalSpecRootPath;
+                uriPath.isEqualOrParent(Uri.file(kernelSpec.specFile), globalSpecRootPath);
             if (kernelSpec && !shouldDeleteKernelSpec) {
                 return kernelSpec;
             }
@@ -153,8 +156,8 @@ export abstract class LocalKernelSpecFinderBase {
             }
 
             // If we failed to get a kernelSpec full path from our cache and loaded list
-            this.pathToKernelSpec.delete(specPath);
-            this.cache = this.cache?.filter((itemPath) => itemPath.kernelSpecFile !== specPath);
+            this.pathToKernelSpec.delete(key);
+            this.cache = this.cache?.filter((itemPath) => uriPath.isEqual(itemPath.kernelSpecFile, specPath));
             return undefined;
         });
     }
@@ -174,7 +177,7 @@ export abstract class LocalKernelSpecFinderBase {
      * Load kernelspec json from disk
      */
     private async loadKernelSpec(
-        specPath: string,
+        specPath: Uri,
         interpreter?: PythonEnvironment,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined> {
@@ -182,17 +185,17 @@ export abstract class LocalKernelSpecFinderBase {
     }
     // Given a set of paths, search for kernel.json files and return back the full paths of all of them that we find
     protected async findKernelSpecsInPaths(
-        paths: (string | { interpreter: PythonEnvironment; kernelSearchPath: string })[],
+        paths: (Uri | { interpreter: PythonEnvironment; kernelSearchPath: Uri })[],
         cancelToken?: CancellationToken
     ): Promise<KernelSpecFileWithContainingInterpreter[]> {
         const searchResults = await Promise.all(
             paths.map(async (searchItem) => {
-                const searchPath = typeof searchItem === 'string' ? searchItem : searchItem.kernelSearchPath;
-                if (await this.fs.localDirectoryExists(searchPath)) {
-                    const files = await this.fs.searchLocal(`**/kernel.json`, searchPath, true);
+                const searchPath = isUri(searchItem) ? searchItem : searchItem.kernelSearchPath;
+                if (await this.fs.localDirectoryExists(searchPath.fsPath)) {
+                    const files = await this.fs.searchLocal(`**/kernel.json`, searchPath.fsPath, true);
                     return {
-                        interpreter: typeof searchItem === 'string' ? undefined : searchItem.interpreter,
-                        kernelSpecFiles: files.map((item) => path.join(searchPath, item))
+                        interpreter: isUri(searchItem) ? undefined : searchItem.interpreter,
+                        kernelSpecFiles: files.map((item) => uriPath.joinPath(searchPath, item))
                     };
                 }
             })
@@ -217,19 +220,23 @@ export abstract class LocalKernelSpecFinderBase {
  * Load kernelspec json from disk
  */
 export async function loadKernelSpec(
-    specPath: string,
+    specPath: Uri,
     fs: IFileSystem,
     interpreter?: PythonEnvironment,
     cancelToken?: CancellationToken
 ): Promise<IJupyterKernelSpec | undefined> {
     // This is a backup folder for old kernels created by us.
-    if (specPath.includes(oldKernelsSpecFolderName)) {
+    if (specPath.fsPath.includes(oldKernelsSpecFolderName)) {
         return;
     }
     let kernelJson: ReadWrite<IJupyterKernelSpec>;
     try {
-        traceVerbose(`Loading kernelspec from ${getDisplayPath(specPath)} for ${getDisplayPath(interpreter?.path)}`);
-        kernelJson = JSON.parse(await fs.readLocalFile(specPath));
+        traceVerbose(
+            `Loading kernelspec from ${getDisplayPath(specPath)} for ${
+                interpreter?.uri ? getDisplayPath(interpreter.uri) : ''
+            }`
+        );
+        kernelJson = JSON.parse(await fs.readLocalFile(specPath.fsPath));
     } catch (ex) {
         traceError(`Failed to parse kernelspec ${specPath}`, ex);
         return;
@@ -261,7 +268,7 @@ export async function loadKernelSpec(
     kernelJson.metadata = kernelJson.metadata || {};
     kernelJson.metadata.vscode = kernelJson.metadata.vscode || {};
     if (!kernelJson.metadata.vscode.originalSpecFile) {
-        kernelJson.metadata.vscode.originalSpecFile = specPath;
+        kernelJson.metadata.vscode.originalSpecFile = specPath.fsPath;
     }
     if (!kernelJson.metadata.vscode.originalDisplayName) {
         kernelJson.metadata.vscode.originalDisplayName = kernelJson.display_name;
@@ -274,17 +281,17 @@ export async function loadKernelSpec(
     const kernelSpec: IJupyterKernelSpec = new JupyterKernelSpec(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         kernelJson as any,
-        specPath,
+        specPath.fsPath,
         // Interpreter information may be saved in the metadata (if this is a kernel spec created/registered by us).
-        interpreter?.path || kernelJson?.metadata?.interpreter?.path,
+        interpreter?.uri.fsPath || kernelJson?.metadata?.interpreter?.path,
         getKernelRegistrationInfo(kernelJson)
     );
 
     // Some registered kernel specs do not have a name, in this case use the last part of the path
-    kernelSpec.name = kernelJson?.name || path.basename(path.dirname(specPath));
+    kernelSpec.name = kernelJson?.name || path.basename(path.dirname(specPath.fsPath));
 
     // Possible user deleted the underlying kernel.
-    const interpreterPath = interpreter?.path || kernelJson?.metadata?.interpreter?.path;
+    const interpreterPath = interpreter?.uri.fsPath || kernelJson?.metadata?.interpreter?.path;
     if (interpreterPath && !(await fs.localFileExists(interpreterPath))) {
         return;
     }

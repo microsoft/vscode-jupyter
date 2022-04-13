@@ -5,7 +5,7 @@ import { QuickPickItem } from 'vscode';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { ICommandManager, IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { IDisposable, IDisposableRegistry, IPathUtils } from '../../../platform/common/types';
+import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import {
@@ -28,7 +28,6 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IDisposableRegistry) disposales: IDisposableRegistry,
         @inject(KernelFilterService) private readonly kernelFilter: KernelFilterService,
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
         disposales.push(this);
@@ -66,7 +65,7 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
                         return <QuickPickType>{
                             label: getDisplayNameOrNameOfKernelConnection(item),
                             picked: !this.kernelFilter.isKernelHidden(item),
-                            description: getKernelConnectionPath(item, this.pathUtils, this.workspace),
+                            description: getKernelConnectionPath(item, this.workspace),
                             detail:
                                 item.kind === 'connectToLiveRemoteKernel'
                                     ? getRemoteKernelSessionInformation(item)

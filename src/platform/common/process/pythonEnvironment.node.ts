@@ -12,6 +12,7 @@ import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from './
 import { compare, SemVer } from 'semver';
 import type { PythonEnvironment as PyEnv } from '../../pythonEnvironments/info';
 import { getDisplayPath } from '../platform/fs-paths';
+import { Uri } from 'vscode';
 class PythonEnvironment {
     private cachedInterpreterInformation: InterpreterInformation | undefined | null = null;
 
@@ -19,9 +20,9 @@ class PythonEnvironment {
         protected readonly interpreter: PyEnv,
         // "deps" is the externally defined functionality used by the class.
         protected readonly deps: {
-            getPythonArgv(python: string): string[];
-            getObservablePythonArgv(python: string): string[];
-            isValidExecutable(python: string): Promise<boolean>;
+            getPythonArgv(python: Uri): string[];
+            getObservablePythonArgv(python: Uri): string[];
+            isValidExecutable(python: Uri): Promise<boolean>;
             // from ProcessService:
             exec(file: string, args: string[]): Promise<ExecutionResult<string>>;
             shellExec(command: string, timeout: number): Promise<ExecutionResult<string>>;
@@ -29,11 +30,11 @@ class PythonEnvironment {
     ) {}
 
     public getExecutionInfo(pythonArgs: string[] = []): PythonExecInfo {
-        const python = this.deps.getPythonArgv(this.interpreter.path);
+        const python = this.deps.getPythonArgv(this.interpreter.uri);
         return buildPythonExecInfo(python, pythonArgs);
     }
     public getExecutionObservableInfo(pythonArgs: string[] = []): PythonExecInfo {
-        const python = this.deps.getObservablePythonArgv(this.interpreter.path);
+        const python = this.deps.getObservablePythonArgv(this.interpreter.uri);
         return buildPythonExecInfo(python, pythonArgs);
     }
 
@@ -44,11 +45,11 @@ class PythonEnvironment {
         return this.cachedInterpreterInformation;
     }
 
-    public async getExecutablePath(): Promise<string> {
+    public async getExecutablePath(): Promise<Uri> {
         // If we've passed the python file, then return the file.
         // This is because on mac if using the interpreter /usr/bin/python2.7 we can get a different value for the path
-        if (await this.deps.isValidExecutable(this.interpreter.path)) {
-            return this.interpreter.path;
+        if (await this.deps.isValidExecutable(this.interpreter.uri)) {
+            return this.interpreter.uri;
         }
         const python = this.getExecutionInfo();
         return getExecutablePath(python, this.deps.exec);
@@ -71,13 +72,13 @@ class PythonEnvironment {
             const python = this.getExecutionInfo();
             return await getInterpreterInfo(python, this.deps.shellExec, { info: traceInfo, error: traceError });
         } catch (ex) {
-            traceError(`Failed to get interpreter information for '${getDisplayPath(this.interpreter.path)}'`, ex);
+            traceError(`Failed to get interpreter information for '${getDisplayPath(this.interpreter.uri)}'`, ex);
         }
     }
 }
 
 function createDeps(
-    isValidExecutable: (filename: string) => Promise<boolean>,
+    isValidExecutable: (filename: Uri) => Promise<boolean>,
     pythonArgv: string[] | undefined,
     observablePythonArgv: string[] | undefined,
     // from ProcessService:
@@ -85,8 +86,8 @@ function createDeps(
     shellExec: (command: string, options?: ShellOptions) => Promise<ExecutionResult<string>>
 ) {
     return {
-        getPythonArgv: (python: string) => pythonArgv || [python],
-        getObservablePythonArgv: (python: string) => observablePythonArgv || [python],
+        getPythonArgv: (python: Uri) => pythonArgv || [python.fsPath],
+        getObservablePythonArgv: (python: Uri) => observablePythonArgv || [python.fsPath],
         isValidExecutable,
         exec: async (cmd: string, args: string[]) => exec(cmd, args, { throwOnStdErr: true }),
         shellExec: async (text: string, timeout: number) => shellExec(text, { timeout })
@@ -100,7 +101,7 @@ export function createPythonEnv(
     fs: IFileSystem
 ): PythonEnvironment {
     const deps = createDeps(
-        async (filename) => fs.localFileExists(filename),
+        async (filename: Uri) => fs.localFileExists(filename.fsPath),
         // We use the default: [pythonPath].
         undefined,
         undefined,
@@ -136,7 +137,7 @@ export function createCondaEnv(
     }
     const pythonArgv = [condaFile, ...runArgs, 'python'];
     const deps = createDeps(
-        async (filename) => fs.localFileExists(filename),
+        async (filename) => fs.localFileExists(filename.fsPath),
         pythonArgv,
         // eslint-disable-next-line
         // TODO: Use pythonArgv here once 'conda run' can be
@@ -163,7 +164,7 @@ export function createWindowsStoreEnv(
          * executable using sys.executable for windows store python
          * interpreters.
          */
-        async (_f: string) => true,
+        async (_f: Uri) => true,
         // We use the default: [pythonPath].
         undefined,
         undefined,

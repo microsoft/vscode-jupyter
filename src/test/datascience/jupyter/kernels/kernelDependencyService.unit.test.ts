@@ -38,11 +38,15 @@ suite('DataScience - Kernel Dependency Service', () => {
     let memento: Memento;
     let editor: NotebookEditor;
 
-    const interpreter = createPythonInterpreter({ displayName: 'name', envType: EnvironmentType.Conda, path: 'abc' });
+    const interpreter = createPythonInterpreter({
+        displayName: 'name',
+        envType: EnvironmentType.Conda,
+        uri: Uri.file('abc')
+    });
     const metadata: PythonKernelConnectionMetadata = {
         interpreter,
         kind: 'startUsingPythonInterpreter',
-        kernelSpec: createInterpreterKernelSpec(interpreter, ''),
+        kernelSpec: createInterpreterKernelSpec(interpreter, Uri.file('')),
         id: '1'
     };
     setup(() => {
