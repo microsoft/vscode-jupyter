@@ -38,7 +38,6 @@ module.exports = {
         'src/test/mocks/vsc/strings.ts',
         'src/test/mocks/vsc/charCode.ts',
         'src/test/mocks/vsc/htmlContent.ts',
-        'src/test/mocks/vsc/selection.ts',
         'src/test/mocks/vsc/position.ts',
         'src/test/mocks/vsc/telemetryReporter.ts',
         'src/test/mocks/vsc/range.ts',
