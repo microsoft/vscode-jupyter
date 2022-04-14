@@ -44,6 +44,7 @@ import { IJupyterKernelSpec, KernelConnectionMetadata } from '../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from './constants';
 import { CellOutputMimeTypes } from './types';
 import { IInteractiveWindowProvider } from '../interactive-window/types';
+import { getOSType, OSType } from '../platform/common/utils/platform';
 
 /**
  * Whether this is a Notebook we created/manage/use.
@@ -824,7 +825,11 @@ export function findAssociatedNotebookDocument(
     vscodeNotebook: IVSCodeNotebook,
     iwp: IInteractiveWindowProvider
 ) {
-    let notebook = vscodeNotebook.notebookDocuments.find((n) => uriPath.isEqual(n.uri, uri));
+    const ignoreCase = getOSType() === OSType.Windows;
+    let notebook = vscodeNotebook.notebookDocuments.find((n) => {
+        // Use the path part of the URI. It should match the path for the notebook
+        return ignoreCase ? n.uri.path.toLowerCase() === uri.path.toLowerCase() : n.uri.path === uri.path;
+    });
     if (!notebook) {
         // Might be an interactive window input
         const interactiveWindow = iwp.windows.find((w) => w.inputUri?.toString() === uri.toString());

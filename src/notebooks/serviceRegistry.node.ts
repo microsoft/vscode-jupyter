@@ -21,6 +21,7 @@ import { RendererCommunication } from './outputs/rendererCommunication.node';
 import { INotebookLanguageClientProvider, INotebookControllerManager, INotebookEditorProvider } from './types';
 import { NotebookUsageTracker } from './notebookUsageTracker';
 import { IDataScienceCommandListener } from '../platform/common/types';
+import { CondaControllerRefresher } from './controllers/condaControllerRefresher.node';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
@@ -39,6 +40,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelFilterUI);
     serviceManager.addBinding(INotebookControllerManager, IExtensionSyncActivationService);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        CondaControllerRefresher
+    );
 
     serviceManager.addSingleton<KernelFilterService>(KernelFilterService, KernelFilterService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
