@@ -38,6 +38,7 @@ import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants';
 import { sleep } from '../../platform/common/utils/async';
 import { trackPackageInstalledIntoInterpreter } from './productInstaller';
+import { IInterpreterPackages } from '../../telemetry/types';
 
 export async function isModulePresentInEnvironment(memento: Memento, product: Product, interpreter: PythonEnvironment) {
     const key = `${getInterpreterHash(interpreter)}#${ProductNames.get(product)}`;
@@ -217,7 +218,7 @@ export class ProductInstaller implements IInstaller {
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(InterpreterPackages) private readonly interpreterPackages: InterpreterPackages,
+        @inject(IInterpreterPackages) private readonly interpreterPackages: IInterpreterPackages,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel
     ) {
