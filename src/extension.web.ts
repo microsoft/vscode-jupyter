@@ -66,6 +66,7 @@ import { registerTypes as registerPlatformTypes } from './platform/serviceRegist
 import { registerTypes as registerTelemetryTypes } from './telemetry/serviceRegistry.web';
 import { registerTypes as registerKernelTypes } from './kernels/serviceRegistry.web';
 import { registerTypes as registerNotebookTypes } from './notebooks/serviceRegistry.web';
+import { registerTypes as registerInteractiveTypes } from './interactive-window/serviceRegistry.web';
 import { IExtensionActivationManager } from './platform/activation/types';
 import { isCI, isTestExecution, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants';
 import { getJupyterOutputChannel } from './platform/devTools/jupyterOutputChannel';
@@ -278,6 +279,7 @@ async function activateLegacy(
     registerTelemetryTypes(serviceManager);
     registerNotebookTypes(serviceManager);
     registerKernelTypes(serviceManager, isDevMode);
+    registerInteractiveTypes(serviceManager);
 
     // Load the two data science experiments that we need to register types
     // Await here to keep the register method sync
