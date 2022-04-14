@@ -10,11 +10,7 @@ interface IInformationMessagesProps {
 }
 
 export class InformationMessages extends React.Component<IInformationMessagesProps> {
-    constructor(prop: IInformationMessagesProps) {
-        super(prop);
-    }
-
-    public render() {
+    public override render() {
         const output = this.props.messages.join('\n');
         const wrapperClassName = 'messages-wrapper';
         const outerClassName = 'messages-outer';

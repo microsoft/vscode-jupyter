@@ -36,17 +36,17 @@ import { NbConvertExportToPythonService } from './jupyter/interpreter/nbconvertE
 import { NbConvertInterpreterDependencyChecker } from './jupyter/interpreter/nbconvertInterpreterDependencyChecker.node';
 import { CellOutputMimeTypeTracker } from './jupyter/jupyterCellOutputMimeTypeTracker.node';
 import { JupyterKernelService } from './jupyter/jupyterKernelService.node';
-import { JupyterUriProviderRegistration } from './jupyter/jupyterUriProviderRegistration.node';
+import { JupyterUriProviderRegistration } from './jupyter/jupyterUriProviderRegistration';
 import { JupyterCommandLineSelector } from './jupyter/launcher/commandLineSelector.node';
 import { JupyterNotebookProvider } from './jupyter/launcher/jupyterNotebookProvider.node';
 import { JupyterPasswordConnect } from './jupyter/launcher/jupyterPasswordConnect.node';
 import { HostJupyterExecution } from './jupyter/launcher/liveshare/hostJupyterExecution.node';
 import { HostJupyterServer } from './jupyter/launcher/liveshare/hostJupyterServer.node';
-import { NotebookProvider } from './jupyter/launcher/notebookProvider.node';
+import { NotebookProvider } from './jupyter/launcher/notebookProvider';
 import { NotebookServerProvider } from './jupyter/launcher/notebookServerProvider.node';
 import { NotebookStarter } from './jupyter/launcher/notebookStarter.node';
 import { ServerPreload } from './jupyter/launcher/serverPreload.node';
-import { JupyterServerUriStorage } from './jupyter/launcher/serverUriStorage.node';
+import { JupyterServerUriStorage } from './jupyter/launcher/serverUriStorage';
 import { JupyterServerSelector } from './jupyter/serverSelector';
 import { JupyterSessionManagerFactory } from './jupyter/session/jupyterSessionManagerFactory.node';
 import { KernelCommandListener } from './kernelCommandListener.node';
@@ -56,7 +56,7 @@ import { LocalKernelFinder } from './raw/finder/localKernelFinder.node';
 import { LocalKnownPathKernelSpecFinder } from './raw/finder/localKnownPathKernelSpecFinder.node';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKernelIdProvider';
-import { RemoteKernelFinder } from './raw/finder/remoteKernelFinder.node';
+import { RemoteKernelFinder } from './jupyter/remoteKernelFinder.node';
 import { KernelEnvironmentVariablesService } from './raw/launcher/kernelEnvVarsService.node';
 import { KernelLauncher } from './raw/launcher/kernelLauncher.node';
 import { HostRawNotebookProvider } from './raw/session/hostRawNotebookProvider.node';
@@ -99,12 +99,13 @@ import {
     IJupyterUriProviderRegistration,
     IJupyterServerUriStorage
 } from './jupyter/types';
-import { IKernelDependencyService, INotebookProvider } from './types';
+import { IKernelDependencyService, IKernelProvider, INotebookProvider } from './types';
 import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
 import { IJupyterCommandFactory, IJupyterSubCommandExecutionService } from './jupyter/types.node';
 import { KernelCrashMonitor } from './kernelCrashMonitor';
 import { KernelAutoRestartMonitor } from './kernelAutoRestartMonitor.node';
 import { registerTypes as registerWidgetTypes } from './ipywidgets-message-coordination/serviceRegistry.node';
+import { KernelProvider } from './kernelProvider.node';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IRawNotebookSupportedService>(
@@ -273,6 +274,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         IExtensionSyncActivationService,
         KernelAutoRestartMonitor
     );
+    serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
 
     // Subdirectories
     registerInstallerTypes(serviceManager);

@@ -10,7 +10,7 @@ import { IConfigurationService, IWatchableJupyterSettings } from '../../../platf
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { NotebookServerProvider } from '../../../kernels/jupyter/launcher/notebookServerProvider.node';
-import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage.node';
+import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { DisplayOptions } from '../../../kernels/displayOptions';
 import { IJupyterExecution, INotebookServer } from '../../../kernels/jupyter/types';

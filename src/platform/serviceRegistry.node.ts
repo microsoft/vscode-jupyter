@@ -46,7 +46,7 @@ import { ExportUtil } from './export/exportUtil.node';
 import { FileConverter } from './export/fileConverter.node';
 import { IFileConverter, INbConvertExport, ExportFormat, IExport, IExportDialog } from './export/types';
 import { GitHubIssueCommandListener } from './logging/gitHubIssueCommandListener.node';
-import { KernelProgressReporter } from './progress/kernelProgressReporter.node';
+import { KernelProgressReporter } from './progress/kernelProgressReporter';
 import { ProgressReporter } from './progress/progressReporter.node';
 import { StatusProvider } from './progress/statusProvider.node';
 import { IStatusProvider } from './progress/types';

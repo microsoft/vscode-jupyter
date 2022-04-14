@@ -24,7 +24,7 @@ export class Flyout extends React.Component<IFlyoutProps, IFlyoutState> {
         this.state = { visible: false };
     }
 
-    public render() {
+    public override render() {
         const innerFilter = this.props.disabled ? 'flyout-inner-disabled-filter' : '';
         const ariaDisabled = this.props.disabled ? 'true' : 'false';
         const buttonClassName = this.props.buttonClassName;

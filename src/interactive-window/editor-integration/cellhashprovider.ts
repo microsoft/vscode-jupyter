@@ -247,7 +247,7 @@ export class CellHashProvider implements ICellHashProvider {
             // exceptions in output. Track backs only work on local files.
             if (!this.traceBackRegexes.has(uristring)) {
                 const uri = Uri.parse(uristring);
-                const fileMatchRegex = new RegExp(`\\[.*?;32m${_escapeRegExp(uri.fsPath)}`);
+                const fileMatchRegex = new RegExp(`\\[.*?;32m${_escapeRegExp(originalFSPath(uri))}`);
                 const fileDisplayNameMatchRegex = new RegExp(`\\[.*?;32m${_escapeRegExp(getDisplayPath(uri))}`);
                 this.traceBackRegexes.set(uristring, [fileMatchRegex, fileDisplayNameMatchRegex]);
             }
@@ -503,7 +503,7 @@ export class CellHashProvider implements ICellHashProvider {
                 // Then replace the input line with our uri for this cell
                 return afterLineReplace.replace(
                     /.*?\n/,
-                    `\u001b[1;32m${matchUri.fsPath}\u001b[0m in \u001b[0;36m${inputMatch[2]}\n`
+                    `\u001b[1;32m${originalFSPath(matchUri)}\u001b[0m in \u001b[0;36m${inputMatch[2]}\n`
                 );
             } else if (this.kernel && notebook && notebook.notebookType !== InteractiveWindowView) {
                 const matchingCellUri = this.executionCounts.get(executionCount);
@@ -522,7 +522,7 @@ export class CellHashProvider implements ICellHashProvider {
                     return afterLineReplace.replace(
                         /.*?\n/,
                         `\u001b[1;32m${localize.DataScience.cellAtFormat().format(
-                            matchUri.fsPath,
+                            originalFSPath(matchUri),
                             (cellIndex + 1).toString()
                         )}\u001b[0m in \u001b[0;36m${inputMatch[2]}\n`
                     );
@@ -572,7 +572,7 @@ export class CellHashProvider implements ICellHashProvider {
         } else {
             const matchingFile = regexes.find((e) => {
                 const uri = Uri.parse(e[0]);
-                return traceFrame.includes(uri.fsPath);
+                return traceFrame.includes(originalFSPath(uri));
             });
             if (matchingFile) {
                 const offset = this.findCellOffset(this.hashes.get(matchingFile[0]), traceFrame);

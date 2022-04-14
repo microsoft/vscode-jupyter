@@ -189,7 +189,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     }
 
     // eslint-disable-next-line
-    public componentDidMount = () => {
+    public override componentDidMount = () => {
         window.addEventListener('resize', this.windowResized);
 
         if (this.containerRef.current) {
@@ -289,7 +289,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         this.windowResized();
     };
 
-    public componentWillUnmount = () => {
+    public override componentWillUnmount = () => {
         if (this.resizeTimer) {
             window.clearTimeout(this.resizeTimer);
         }
@@ -299,7 +299,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         }
     };
 
-    public componentDidUpdate = (_prevProps: ISlickGridProps) => {
+    public override componentDidUpdate = (_prevProps: ISlickGridProps) => {
         if (this.state.showingFilters && this.state.grid) {
             this.state.grid.setHeaderRowVisibility(true);
         } else if (this.state.showingFilters === false && this.state.grid) {
@@ -312,7 +312,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         }
     };
 
-    public render() {
+    public override render() {
         const style: React.CSSProperties = this.props.forceHeight
             ? {
                   height: `${this.props.forceHeight}px`,

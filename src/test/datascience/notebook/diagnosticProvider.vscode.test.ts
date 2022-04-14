@@ -19,7 +19,7 @@ import {
 } from './helper.node';
 import { NotebookDocument, Range } from 'vscode';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
-import { NotebookCellBangInstallDiagnosticsProvider } from '../../../intellisense/diagnosticsProvider.node';
+import { NotebookCellBangInstallDiagnosticsProvider } from '../../../intellisense/diagnosticsProvider';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {

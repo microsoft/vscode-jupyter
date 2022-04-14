@@ -163,13 +163,13 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         this.variableExplorerMenuBarRef = React.createRef<HTMLDivElement>();
     }
 
-    public componentDidMount() {
+    public override componentDidMount() {
         if (this.state.containerHeight === 0) {
             this.setInitialHeight();
         }
     }
 
-    public shouldComponentUpdate(nextProps: IVariableExplorerProps, prevState: IVariableState): boolean {
+    public override shouldComponentUpdate(nextProps: IVariableExplorerProps, prevState: IVariableState): boolean {
         if (this.props.fontSize !== nextProps.fontSize) {
             // Size has changed, recompute page size
             this.pageSize = -1;
@@ -193,7 +193,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         return false;
     }
 
-    public render() {
+    public override render() {
         const contentClassName = `variable-explorer-content`;
         let variableExplorerStyles: React.CSSProperties = { fontSize: `${this.props.fontSize.toString()}px` };
         if (this.props.viewHeight !== 0) {

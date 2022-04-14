@@ -32,7 +32,7 @@ import { ProcessService } from './proc.node';
 import { BufferDecoder } from './decoder.node';
 import { testOnlyMethod } from '../utils/decorators';
 import { DataScience } from '../utils/localize';
-import { KernelProgressReporter } from '../../progress/kernelProgressReporter.node';
+import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
 import { Telemetry } from '../constants';
 import { IFileSystem } from '../platform/types.node';
 import {

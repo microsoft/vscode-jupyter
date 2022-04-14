@@ -221,7 +221,7 @@ export class DebuggerVariables
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public onWillReceiveMessage(message: any) {
+    public override onWillReceiveMessage(message: any) {
         super.onWillReceiveMessage(message);
         if (
             message.type === 'request' &&
@@ -235,7 +235,7 @@ export class DebuggerVariables
 
     // This special DebugAdapterTracker function listens to messages sent from the debug adapter to VS Code
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public onDidSendMessage(message: any) {
+    public override onDidSendMessage(message: any) {
         super.onDidSendMessage(message);
         // When the initialize response comes back, indicate we have started.
         if (message.type === 'response' && message.command === 'initialize') {

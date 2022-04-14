@@ -37,7 +37,7 @@ import { MockJupyterSettings } from '../mockJupyterSettings';
 import { MockEditor } from '../mockTextEditor';
 import { createDocument } from './helpers';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { CellHashProviderFactory } from '../../../interactive-window/editor-integration/cellHashProviderFactory.node';
+import { CellHashProviderFactory } from '../../../interactive-window/editor-integration/cellHashProviderFactory';
 import { IKernel, IKernelProvider } from '../../../platform/../kernels/types';
 import { InteractiveCellResultError } from '../../../platform/errors/interactiveCellResultError.node';
 import { ICodeWatcher } from '../../../interactive-window/editor-integration/types';

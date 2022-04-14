@@ -7,26 +7,26 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import * as url from 'url';
 import { injectable, inject } from 'inversify';
 import { CancellationToken, Uri } from 'vscode';
-import { findPreferredKernel, getKernelId, getLanguageInNotebookMetadata } from '../../../kernels/helpers';
+import { findPreferredKernel, getKernelId, getLanguageInNotebookMetadata } from '../helpers';
 import {
     IJupyterKernelSpec,
     INotebookProviderConnection,
     KernelConnectionMetadata,
     LiveRemoteKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
-} from '../../../kernels/types';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { ignoreLogging, traceDecoratorVerbose, traceError } from '../../../platform/logging';
-import { IDisposableRegistry, Resource } from '../../../platform/common/types';
-import { sendKernelListTelemetry } from '../../../telemetry/kernelTelemetry';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
-import { getTelemetrySafeLanguage } from '../../../telemetry/helpers';
-import { Telemetry } from '../../../webviews/webview-side/common/constants';
-import { IRemoteKernelFinder } from '../types';
-import { PreferredRemoteKernelIdProvider } from './preferredRemoteKernelIdProvider';
-import { getResourceType } from '../../../platform/common/utils';
-import { IJupyterSessionManagerFactory, IJupyterSessionManager } from '../../jupyter/types';
+} from '../types';
+import { PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { ignoreLogging, traceDecoratorVerbose, traceError } from '../../platform/logging';
+import { IDisposableRegistry, Resource } from '../../platform/common/types';
+import { sendKernelListTelemetry } from '../../telemetry/kernelTelemetry';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
+import { Telemetry } from '../../webviews/webview-side/common/constants';
+import { IRemoteKernelFinder } from '../raw/types';
+import { PreferredRemoteKernelIdProvider } from '../raw/finder/preferredRemoteKernelIdProvider';
+import { getResourceType } from '../../platform/common/utils';
+import { IJupyterSessionManagerFactory, IJupyterSessionManager } from './types';
 
 // This class searches for a kernel that matches the given kernel name.
 // First it searches on a global persistent state, then on the installed python interpreters,

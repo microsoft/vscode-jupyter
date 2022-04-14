@@ -163,7 +163,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         this.postMessage(DataViewerMessages.InitializeData, dataFrameInfo).ignoreErrors();
     }
 
-    public dispose(): void {
+    public override dispose(): void {
         super.dispose();
 
         if (this.dataProvider) {
@@ -173,7 +173,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         }
     }
 
-    protected async onViewStateChanged(args: WebViewViewChangeEventArgs) {
+    protected override async onViewStateChanged(args: WebViewViewChangeEventArgs) {
         if (args.current.active && args.current.visible && args.previous.active && args.current.visible) {
             await this.globalMemento.update(PREFERRED_VIEWGROUP, this.webPanel?.viewColumn);
         }
@@ -185,7 +185,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    protected onMessage(message: string, payload: any) {
+    protected override onMessage(message: string, payload: any) {
         switch (message) {
             case DataViewerMessages.GetAllRowsRequest:
                 this.getAllRows(payload as string).ignoreErrors();

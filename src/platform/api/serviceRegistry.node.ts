@@ -10,16 +10,10 @@ import { IInterpreterSelector } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { InterpreterStatusBarVisibility } from '../interpreter/display/visibilityFilter.node';
 import { IServiceManager } from '../ioc/types';
-import { ApiAccessService } from './apiAccessService.node';
+import { ApiAccessService } from './apiAccessService';
 import { JupyterKernelServiceFactory } from './kernelApi.node';
-import {
-    InterpreterSelector,
-    InterpreterService,
-    LanguageServerProvider,
-    PythonApiProvider,
-    PythonDebuggerPathProvider,
-    PythonExtensionChecker
-} from './pythonApi.node';
+import { InterpreterSelector, InterpreterService, PythonApiProvider, PythonExtensionChecker } from './pythonApi';
+import { LanguageServerProvider, PythonDebuggerPathProvider } from './pythonApi.node';
 import {
     IExportedKernelServiceFactory,
     ILanguageServerProvider,

@@ -23,7 +23,7 @@ import { sleep } from '../../core';
 
 class AlwaysInstalledDataScienceInstaller extends DataScienceInstaller {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, class-methods-use-this
-    public async isInstalled(_product: Product, _resource?: InterpreterUri): Promise<boolean> {
+    public override async isInstalled(_product: Product, _resource?: InterpreterUri): Promise<boolean> {
         return true;
     }
 }

@@ -9,10 +9,21 @@ import { JVSC_EXTENSION_ID } from '../platform/common/constants';
 
 import { IServiceManager } from '../platform/ioc/types';
 import { setSharedProperty } from '../telemetry';
-import { IRawNotebookSupportedService } from './raw/types';
+import { ILocalKernelFinder, IRawNotebookSupportedService, IRemoteKernelFinder } from './raw/types';
 import { KernelCrashMonitor } from './kernelCrashMonitor';
 import { registerTypes as registerWidgetTypes } from './ipywidgets-message-coordination/serviceRegistry.web';
+import { injectable } from 'inversify';
+import { JupyterServerUriStorage } from './jupyter/launcher/serverUriStorage';
+import { IJupyterServerUriStorage, IJupyterUriProviderRegistration } from './jupyter/types';
+import { JupyterServerSelector } from './jupyter/serverSelector';
+import { JupyterUriProviderRegistration } from './jupyter/jupyterUriProviderRegistration';
+import { RemoteKernelFinder } from './jupyter/remoteKernelFinder.web';
+import { LocalKernelFinder } from './raw/finder/localKernelFinder.web';
+import { NotebookProvider } from './jupyter/launcher/notebookProvider';
+import { IKernelProvider, INotebookProvider } from './types';
+import { KernelProvider } from './kernelProvider.web';
 
+@injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
     isSupported: boolean = false;
 }
@@ -41,6 +52,16 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     setSharedProperty('rawKernelSupported', rawService.isSupported ? 'true' : 'false');
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelCrashMonitor);
+    serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
+    serviceManager.addSingleton<JupyterServerSelector>(JupyterServerSelector, JupyterServerSelector);
+    serviceManager.addSingleton<IJupyterUriProviderRegistration>(
+        IJupyterUriProviderRegistration,
+        JupyterUriProviderRegistration
+    );
+    serviceManager.addSingleton<ILocalKernelFinder>(ILocalKernelFinder, LocalKernelFinder);
+    serviceManager.addSingleton<IRemoteKernelFinder>(IRemoteKernelFinder, RemoteKernelFinder);
+    serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
+    serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
 
     // Subdirectories
     registerWidgetTypes(serviceManager, isDevMode);

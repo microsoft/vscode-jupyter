@@ -159,10 +159,10 @@ suite('Jupyter Execution', async () => {
             super();
             this.func = func;
         }
-        public match(value: Object): boolean {
+        public override match(value: Object): boolean {
             return this.func(value);
         }
-        public toString(): string {
+        public override toString(): string {
             return 'FunctionMatcher';
         }
     }

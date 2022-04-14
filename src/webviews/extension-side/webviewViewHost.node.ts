@@ -29,10 +29,10 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
     private messageListener: IWebviewViewMessageListener;
 
     constructor(
-        protected configService: IConfigurationService,
+        protected override configService: IConfigurationService,
         cssGenerator: ICodeCssGenerator,
-        protected themeFinder: IThemeFinder,
-        protected workspaceService: IWorkspaceService,
+        protected override themeFinder: IThemeFinder,
+        protected override workspaceService: IWorkspaceService,
         messageListenerCtor: (
             callback: (message: string, payload: {}) => void,
             disposed: () => void

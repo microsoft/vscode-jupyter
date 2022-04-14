@@ -13,7 +13,7 @@ import { IPlatformService } from '../../../platform/common/platform/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { WorkspaceService } from '../../../platform/common/application/workspace';
 import { EnvironmentVariablesProvider } from '../../../platform/common/variables/environmentVariablesProvider.node';
-import { InterpreterService, PythonExtensionChecker } from '../../../platform/api/pythonApi.node';
+import { InterpreterService } from '../../../platform/api/pythonApi';
 import {
     createInterpreterKernelSpec,
     getInterpreterKernelSpecName,
@@ -42,6 +42,7 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../kernels
 import { ILocalKernelFinder } from '../../../kernels/raw/types';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
+import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {

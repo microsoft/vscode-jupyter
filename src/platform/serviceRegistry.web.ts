@@ -13,6 +13,7 @@ import {
 } from './common/application/types';
 import { WorkspaceService } from './common/application/workspace';
 import { ConfigurationService } from './common/configuration/service.web';
+import { registerTypes as registerApiTypes } from './api/serviceRegistry.web';
 import { registerTypes as registerCommonTypes } from './common/serviceRegistry.web';
 import { registerTypes as registerActivationTypes } from './activation/serviceRegistry.web';
 import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
@@ -27,6 +28,7 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
 
     registerCommonTypes(serviceManager);
+    registerApiTypes(serviceManager);
     registerActivationTypes(serviceManager);
     registerDevToolTypes(context, serviceManager, isDevMode);
 }

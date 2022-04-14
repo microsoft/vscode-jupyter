@@ -15,14 +15,14 @@ export class ErrorBoundary extends React.Component<{}, IErrorState> {
         this.state = { hasError: false, errorMessage: '' };
     }
 
-    public componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    public override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
         const stack = errorInfo.componentStack;
 
         // Display fallback UI
         this.setState({ hasError: true, errorMessage: `${error} at \n  ${stack}` });
     }
 
-    public render() {
+    public override render() {
         if (this.state.hasError) {
             // Render our error message;
             const style: React.CSSProperties = {};

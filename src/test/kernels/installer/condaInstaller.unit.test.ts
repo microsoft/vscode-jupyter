@@ -23,7 +23,7 @@ suite('Common - Conda Installer', () => {
     let condaService: CondaService;
     let configService: IConfigurationService;
     class CondaInstallerTest extends CondaInstaller {
-        public async getExecutionArgs(
+        public override async getExecutionArgs(
             moduleName: string,
             interpreter: PythonEnvironment,
             flags?: ModuleInstallFlags

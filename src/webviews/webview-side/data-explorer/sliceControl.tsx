@@ -59,7 +59,7 @@ export class SliceControl extends React.Component<ISliceControlProps, ISliceCont
         this.handleSubmit = this.handleSubmit.bind(this);
     }
 
-    public render() {
+    public override render() {
         const isDisabled = !this.state.isEnabled || this.props.loadingData;
         return (
             <div className="control-container">

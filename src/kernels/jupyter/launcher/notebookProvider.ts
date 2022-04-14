@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, optional } from 'inversify';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IConfigurationService } from '../../../platform/common/types';
 import { trackKernelResourceInformation, sendKernelTelemetryWhenDone } from '../../../telemetry/telemetry';
@@ -15,7 +15,7 @@ import {
     INotebookProviderConnection,
     isLocalConnection,
     NotebookCreationOptions
-} from '../../../kernels/types';
+} from '../../types';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { Settings } from '../../../platform/common/constants';
 import { DisplayOptions } from '../../displayOptions';
@@ -26,8 +26,12 @@ import { IJupyterNotebookProvider } from '../types';
 export class NotebookProvider implements INotebookProvider {
     private readonly startupUi = new DisplayOptions(true);
     constructor(
-        @inject(IRawNotebookProvider) private readonly rawNotebookProvider: IRawNotebookProvider,
-        @inject(IJupyterNotebookProvider) private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
+        @inject(IRawNotebookProvider)
+        @optional()
+        private readonly rawNotebookProvider: IRawNotebookProvider | undefined,
+        @inject(IJupyterNotebookProvider)
+        @optional()
+        private readonly jupyterNotebookProvider: IJupyterNotebookProvider | undefined,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}
@@ -46,13 +50,13 @@ export class NotebookProvider implements INotebookProvider {
             }
         });
         options.ui = this.startupUi;
-        if (this.rawNotebookProvider.isSupported && options.kind === 'localJupyter') {
+        if (this.rawNotebookProvider?.isSupported && options.kind === 'localJupyter') {
             throw new Error('Connect method should not be invoked for local Connections when Raw is supported');
         } else if (
             this.extensionChecker.isPythonExtensionInstalled ||
             serverType === Settings.JupyterServerRemoteLaunch
         ) {
-            return this.jupyterNotebookProvider.connect(options).finally(() => handler.dispose());
+            return this.jupyterNotebookProvider?.connect(options).finally(() => handler.dispose());
         } else {
             handler.dispose();
             await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
@@ -60,14 +64,14 @@ export class NotebookProvider implements INotebookProvider {
     }
     public async createNotebook(options: NotebookCreationOptions): Promise<INotebook | undefined> {
         const isLocal = isLocalConnection(options.kernelConnection);
-        const rawLocalKernel = this.rawNotebookProvider.isSupported && isLocal;
+        const rawLocalKernel = this.rawNotebookProvider?.isSupported && isLocal;
 
         // We want to cache a Promise<INotebook> from the create functions
         // but jupyterNotebookProvider.createNotebook can be undefined if the server is not available
         // so check for our connection here first
         if (!rawLocalKernel) {
             if (
-                !(await this.jupyterNotebookProvider.connect({
+                !(await this.jupyterNotebookProvider?.connect({
                     resource: options.resource,
                     token: options.token,
                     ui: options.ui,
@@ -80,17 +84,23 @@ export class NotebookProvider implements INotebookProvider {
         Cancellation.throwIfCanceled(options.token);
         trackKernelResourceInformation(options.resource, { kernelConnection: options.kernelConnection });
         const promise = rawLocalKernel
-            ? this.rawNotebookProvider.createNotebook(
+            ? this.rawNotebookProvider?.createNotebook(
                   options.resource,
                   options.kernelConnection,
                   options.ui,
                   options.token
               )
-            : this.jupyterNotebookProvider.createNotebook(options);
+            : this.jupyterNotebookProvider?.createNotebook(options);
 
-        sendKernelTelemetryWhenDone(options.resource, Telemetry.NotebookStart, promise, undefined, {
-            disableUI: options.ui.disableUI === true
-        });
+        sendKernelTelemetryWhenDone(
+            options.resource,
+            Telemetry.NotebookStart,
+            promise || Promise.resolve(undefined),
+            undefined,
+            {
+                disableUI: options.ui.disableUI === true
+            }
+        );
 
         return promise;
     }

@@ -10,7 +10,8 @@ import { IDisposable, IDisposableRegistry, Resource } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import { noop } from '../common/utils/misc';
 import { traceError } from '../logging';
-import { getUserMessageForAction } from './messages.node';
+import { getComparisonKey } from '../vscode-path/resources';
+import { getUserMessageForAction } from './messages';
 import { ReportableAction } from './types';
 
 type ProgressReporter = IDisposable & { show?: () => void };
@@ -67,7 +68,7 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
         }
 
         // If we have a progress reporter, then use it.
-        const key = resource ? resource.fsPath : '';
+        const key = resource ? getComparisonKey(resource) : '';
         if (KernelProgressReporter.instance.kernelResourceProgressReporter.has(key)) {
             return KernelProgressReporter.reportProgress(resource, title);
         } else {
@@ -81,7 +82,7 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
      * Behavior is identical to that of `reportProgress`
      */
     public static wrapAndReportProgress<T>(resource: Resource, title: string, cb: () => Promise<T>): Promise<T> {
-        const key = resource ? resource.fsPath : '';
+        const key = resource ? getComparisonKey(resource) : '';
         if (!KernelProgressReporter.instance) {
             return cb();
         }
@@ -98,7 +99,7 @@ export class KernelProgressReporter implements IExtensionSyncActivationService {
     public static reportProgress(resource: Resource, title: string): IDisposable;
     public static reportProgress(resource: Resource, option: string | ReportableAction): IDisposable {
         const progressMessage = getUserMessageForAction(option as unknown as ReportableAction) || option;
-        const key = resource ? resource.fsPath : '';
+        const key = resource ? getComparisonKey(resource) : '';
         if (!progressMessage) {
             return new Disposable(() => noop);
         }

@@ -31,17 +31,17 @@ export class StyleInjector
         this.state = { rootCss: undefined, theme: undefined };
     }
 
-    public componentWillMount() {
+    public override componentWillMount() {
         // Add ourselves as a handler for the post office
         this.props.postOffice.addHandler(this);
     }
 
-    public componentWillUnmount() {
+    public override componentWillUnmount() {
         // Remove ourselves as a handler for the post office
         this.props.postOffice.removeHandler(this);
     }
 
-    public componentDidMount() {
+    public override componentDidMount() {
         if (!this.state.rootCss) {
             // Set to a temporary value.
             this.setState({ rootCss: ' ' });
@@ -49,7 +49,7 @@ export class StyleInjector
         }
     }
 
-    public render() {
+    public override render() {
         return (
             <div className="styleSetter">
                 <style>{this.state.rootCss}</style>

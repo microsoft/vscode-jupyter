@@ -16,7 +16,7 @@ import { IDisposable, IDisposableRegistry, IExtensions } from '../common/types';
 import { PromiseChain } from '../common/utils/async';
 import { IKernelSocket as ExtensionKernelSocket } from '../../kernels/types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { ApiAccessService } from './apiAccessService.node';
+import { ApiAccessService } from './apiAccessService';
 import {
     ActiveKernel,
     IExportedKernelService,

@@ -31,14 +31,14 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
         this.panelRef = React.createRef<HTMLDivElement>();
     }
 
-    public componentDidMount() {
+    public override componentDidMount() {
         window.addEventListener('resize', this.windowResized);
         document.addEventListener('click', this.linkClick, true);
         this.props.variableViewLoaded();
         this.updateSize(); // Update our initial size after mount
     }
 
-    public componentWillUnmount() {
+    public override componentWillUnmount() {
         if (this.resizeTimer) {
             window.clearTimeout(this.resizeTimer);
         }
@@ -46,7 +46,7 @@ export class VariableViewPanel extends React.Component<IVariableViewPanelProps> 
         document.removeEventListener('click', this.linkClick);
     }
 
-    public render() {
+    public override render() {
         const dynamicFont: React.CSSProperties = {
             fontSize: this.props.font.size,
             fontFamily: this.props.font.family

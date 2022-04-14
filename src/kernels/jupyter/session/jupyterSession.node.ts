@@ -47,7 +47,7 @@ export class JupyterSession extends BaseJupyterSession {
         private readonly outputChannel: IOutputChannel,
         private readonly restartSessionCreated: (id: Kernel.IKernelConnection) => void,
         restartSessionUsed: (id: Kernel.IKernelConnection) => void,
-        readonly workingDirectory: string,
+        override readonly workingDirectory: string,
         private readonly idleTimeout: number,
         private readonly kernelService: JupyterKernelService,
         interruptTimeout: number,
@@ -69,7 +69,7 @@ export class JupyterSession extends BaseJupyterSession {
         return this.waitForIdleOnSession(this.session, timeout);
     }
 
-    public get kernel(): Kernel.IKernelConnection | undefined {
+    public override get kernel(): Kernel.IKernelConnection | undefined {
         return this.session?.kernel || undefined;
     }
 

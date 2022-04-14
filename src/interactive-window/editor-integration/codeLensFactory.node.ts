@@ -22,7 +22,7 @@ import * as localize from '../../platform/common/utils/localize';
 import { getInteractiveCellMetadata } from '../helpers';
 import { IKernelProvider } from '../../kernels/types';
 import { InteractiveWindowView } from '../../notebooks/constants';
-import { CellHashProviderFactory } from './cellHashProviderFactory.node';
+import { CellHashProviderFactory } from './cellHashProviderFactory';
 import { CodeLensCommands, Commands } from '../../platform/common/constants';
 import { generateCellRangesFromDocument } from './cellFactory';
 import { ICodeLensFactory, ICellHashProvider, IFileHashes } from './types';

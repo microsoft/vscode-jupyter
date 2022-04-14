@@ -41,11 +41,7 @@ interface IFilterProps {
 }
 
 export class ReactSlickGridFilterBox extends React.Component<IFilterProps> {
-    constructor(props: IFilterProps) {
-        super(props);
-    }
-
-    public render() {
+    public override render() {
         return (
             <SearchBox
                 iconProps={filterIcon}

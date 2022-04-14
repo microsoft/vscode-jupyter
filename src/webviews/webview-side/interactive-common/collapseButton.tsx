@@ -15,11 +15,7 @@ interface ICollapseButtonProps {
 }
 
 export class CollapseButton extends React.Component<ICollapseButtonProps> {
-    constructor(props: ICollapseButtonProps) {
-        super(props);
-    }
-
-    public render() {
+    public override render() {
         const collapseInputPolygonClassNames = `collapse-input-svg ${
             this.props.open ? ' collapse-input-svg-rotate' : ''
         } collapse-input-svg-${this.props.theme}`;

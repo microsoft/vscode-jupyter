@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 'use strict';
-import * as path from 'path';
+import * as path from 'path-browserify';
 import * as React from 'react';
 
 // This special function finds relative paths when loading inside of vscode. It's not defined
@@ -15,11 +15,7 @@ interface IRelativeImageProps {
 }
 
 export class RelativeImage extends React.Component<IRelativeImageProps> {
-    constructor(props: IRelativeImageProps) {
-        super(props);
-    }
-
-    public render() {
+    public override render() {
         return <img src={this.getImageSource()} className={this.props.class} alt={path.basename(this.props.path)} />;
     }
 

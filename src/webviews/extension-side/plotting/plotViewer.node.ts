@@ -62,7 +62,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
         return this.removedEvent.event;
     }
 
-    public async show(): Promise<void> {
+    public override async show(): Promise<void> {
         if (!this.isDisposed) {
             // Then show our web panel.
             return super.show(true);
@@ -79,7 +79,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
         }
     };
 
-    public dispose() {
+    public override dispose() {
         super.dispose();
         if (this.closedEvent) {
             this.closedEvent.fire(this);
@@ -91,7 +91,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    protected onMessage(message: string, payload: any) {
+    protected override onMessage(message: string, payload: any) {
         switch (message) {
             case PlotViewerMessages.CopyPlot:
                 this.copyPlot(payload.toString()).ignoreErrors();

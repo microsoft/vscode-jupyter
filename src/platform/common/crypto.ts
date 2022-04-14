@@ -4,10 +4,10 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { createHash } from 'crypto';
 import { injectable } from 'inversify';
 import { traceError } from '../logging';
 import { ICryptoUtils, IHashFormat } from './types';
+import * as hashjs from 'hash.js';
 
 /**
  * Implements tools related to cryptography
@@ -25,9 +25,9 @@ export class CryptoUtils implements ICryptoUtils {
             const fnv = require('@enonic/fnv-plus');
             hash = fnv.fast1a32hex(data) as string;
         } else if (algorithm === 'SHA256') {
-            hash = createHash('sha256').update(data).digest('hex');
+            hash = hashjs.sha256().update(data).digest('hex');
         } else {
-            hash = createHash('sha512').update(data).digest('hex');
+            hash = hashjs.sha512().update(data).digest('hex');
         }
         if (hashFormat === 'number') {
             const result = parseInt(hash, 16);

@@ -65,6 +65,7 @@ import { JUPYTER_OUTPUT_CHANNEL, PythonExtension } from './webviews/webview-side
 import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.web';
 import { registerTypes as registerTelemetryTypes } from './telemetry/serviceRegistry.web';
 import { registerTypes as registerKernelTypes } from './kernels/serviceRegistry.web';
+import { registerTypes as registerNotebookTypes } from './notebooks/serviceRegistry.web';
 import { IExtensionActivationManager } from './platform/activation/types';
 import { isCI, isTestExecution, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants';
 import { getJupyterOutputChannel } from './platform/devTools/jupyterOutputChannel';
@@ -275,6 +276,7 @@ async function activateLegacy(
     // Register the rest of the types (platform is first because it's needed by others)
     registerPlatformTypes(context, serviceManager, isDevMode);
     registerTelemetryTypes(serviceManager);
+    registerNotebookTypes(serviceManager);
     registerKernelTypes(serviceManager, isDevMode);
 
     // Load the two data science experiments that we need to register types

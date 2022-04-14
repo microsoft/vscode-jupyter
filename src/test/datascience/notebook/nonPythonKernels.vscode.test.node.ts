@@ -30,7 +30,7 @@ import {
     workAroundVSCodeNotebookStartPages,
     waitForTextOutput
 } from './helper.node';
-import { PythonExtensionChecker } from '../../../platform/api/pythonApi.node';
+import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { NotebookCellLanguageService } from '../../../intellisense/cellLanguageService';
 import { INotebookEditorProvider } from '../../../notebooks/types';
 

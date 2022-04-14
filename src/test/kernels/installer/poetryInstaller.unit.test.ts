@@ -25,7 +25,7 @@ import { ModuleInstallFlags } from '../../../kernels/installer/types';
 
 suite('Module Installer - Poetry', () => {
     class TestInstaller extends PoetryInstaller {
-        public async getExecutionArgs(
+        public override async getExecutionArgs(
             moduleName: string,
             interpreter: PythonEnvironment,
             _flags?: ModuleInstallFlags

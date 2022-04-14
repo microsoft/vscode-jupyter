@@ -145,7 +145,7 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
      * @returns {Promise<ExecutionResult<string>>}
      * @memberof InterpreterJupyterKernelSpecCommand
      */
-    public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
+    public override async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
         let exception: Error | undefined;
         let output: ExecutionResult<string> = { stdout: '' };
         try {

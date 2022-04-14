@@ -51,7 +51,7 @@ class DelayedReadMemoryStream extends Readable {
     public get readableLength() {
         return 1024 * 10;
     }
-    public _read() {
+    public override _read() {
         // Delay reading data, mimicking slow file downloads.
         setTimeout(() => this.sendMesage(), this.delayMs);
     }

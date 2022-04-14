@@ -24,11 +24,11 @@ interface IVariableExplorerButtonCellFormatterProps {
 }
 
 export class VariableExplorerButtonCellFormatter extends React.Component<IVariableExplorerButtonCellFormatterProps> {
-    public shouldComponentUpdate(nextProps: IVariableExplorerButtonCellFormatterProps) {
+    public override shouldComponentUpdate(nextProps: IVariableExplorerButtonCellFormatterProps) {
         return nextProps.value !== this.props.value;
     }
 
-    public render() {
+    public override render() {
         const className = 'variable-explorer-button-cell';
         if (this.props.value !== null && this.props.value !== undefined) {
             if (this.props.value.supportsDataExplorer) {

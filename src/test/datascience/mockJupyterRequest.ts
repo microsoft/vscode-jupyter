@@ -138,7 +138,7 @@ class OutputMessageProducer extends SimpleMessageProducer {
         this.cancelToken = cancelToken;
     }
 
-    public async produceNextMessage(): Promise<IMessageResult> {
+    public override async produceNextMessage(): Promise<IMessageResult> {
         // Special case the 'generator' cell that returns a function
         // to generate output.
         if (this.output.output_type === 'generator') {
@@ -179,7 +179,7 @@ class OutputMessageProducer extends SimpleMessageProducer {
         return super.produceNextMessage();
     }
 
-    public receiveInput(value: string) {
+    public override receiveInput(value: string) {
         if (this.waitingForInput) {
             this.waitingForInput.resolve(value);
         }

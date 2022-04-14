@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, optional } from 'inversify';
 import { NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker, IPythonApiProvider } from '../platform/api/types';
@@ -19,7 +19,7 @@ export class InterpreterPackageTracker implements IExtensionSingleActivationServ
     private activeInterpreterTrackedUponActivation?: boolean;
     constructor(
         @inject(IInterpreterPackages) private readonly packages: IInterpreterPackages,
-        @inject(IInstaller) private readonly installer: IInstaller,
+        @inject(IInstaller) @optional() private readonly installer: IInstaller | undefined,
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IPythonExtensionChecker) private readonly pythonExtensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -34,7 +34,7 @@ export class InterpreterPackageTracker implements IExtensionSingleActivationServ
             this.disposables
         );
         this.interpreterService.onDidChangeInterpreter(this.trackPackagesOfActiveInterpreter, this, this.disposables);
-        this.installer.onInstalled(this.onDidInstallPackage, this, this.disposables);
+        this.installer?.onInstalled(this.onDidInstallPackage, this, this.disposables); // Not supported in Web
         this.extensions.onDidChange(this.trackUponActivation, this, this.disposables);
         this.trackUponActivation().catch(noop);
         this.apiProvider.onDidActivatePythonExtension(this.trackUponActivation, this, this.disposables);

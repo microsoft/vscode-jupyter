@@ -24,7 +24,7 @@ import { suppressShutdownErrors } from '../raw/session/rawKernel.node';
 import { IJupyterSession, ISessionWithSocket, KernelConnectionMetadata, KernelSocketInformation } from '../types';
 import { ChainingExecuteRequester } from './chainingExecuteRequester.node';
 import { getResourceType } from '../../platform/common/utils';
-import { KernelProgressReporter } from '../../platform/progress/kernelProgressReporter.node';
+import { KernelProgressReporter } from '../../platform/progress/kernelProgressReporter';
 
 /**
  * Exception raised when starting a Jupyter Session fails.

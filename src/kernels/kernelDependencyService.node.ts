@@ -29,7 +29,7 @@ import { IInstaller, Product, InstallerResponse } from './installer/types';
 import { IKernelDependencyService, KernelConnectionMetadata, KernelInterpreterDependencyResponse } from './types';
 import { noop } from '../platform/common/utils/misc';
 import { getResourceType } from '../platform/common/utils';
-import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter.node';
+import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
 import { IRawNotebookSupportedService } from './raw/types';
 import { getComparisonKey } from '../platform/vscode-path/resources';
 import { isModulePresentInEnvironment } from './installer/productInstaller.node';

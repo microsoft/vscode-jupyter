@@ -12,7 +12,7 @@ interface IVariableExplorerHeaderCellFormatterProps {
 
 // Our formatter for cells in the variable explorer. Allow for different styles per column type
 export class VariableExplorerHeaderCellFormatter extends React.Component<IVariableExplorerHeaderCellFormatterProps> {
-    public render() {
+    public override render() {
         if (this.props.column) {
             return (
                 <div role="columnheader">

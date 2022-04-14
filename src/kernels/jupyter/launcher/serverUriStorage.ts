@@ -9,6 +9,7 @@ import {
 } from '../../../platform/common/application/types';
 import { Settings } from '../../../platform/common/constants';
 import { IConfigurationService, ICryptoUtils, IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
+import { originalFSPath } from '../../../platform/vscode-path/resources';
 import { IJupyterServerUriStorage } from '../types';
 
 /**
@@ -186,10 +187,10 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
     private getUriAccountKey(): string {
         if (this.workspaceService.rootFolder) {
             // Folder situation
-            return this.crypto.createHash(this.workspaceService.rootFolder.fsPath, 'string', 'SHA512');
+            return this.crypto.createHash(originalFSPath(this.workspaceService.rootFolder), 'string', 'SHA512');
         } else if (this.workspaceService.workspaceFile) {
             // Workspace situation
-            return this.crypto.createHash(this.workspaceService.workspaceFile.fsPath, 'string', 'SHA512');
+            return this.crypto.createHash(originalFSPath(this.workspaceService.workspaceFile), 'string', 'SHA512');
         }
         return this.appEnv.machineId; // Global key when no folder or workspace file
     }

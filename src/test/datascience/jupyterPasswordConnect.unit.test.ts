@@ -8,7 +8,7 @@ import * as typemoq from 'typemoq';
 
 import { anything, instance, mock, when } from 'ts-mockito';
 import { ApplicationShell } from '../../platform/common/application/applicationShell';
-import { AsyncDisposableRegistry } from '../../platform/common/asyncDisposableRegistry.node';
+import { AsyncDisposableRegistry } from '../../platform/common/asyncDisposableRegistry';
 import { ConfigurationService } from '../../platform/common/configuration/service.node';
 import { MultiStepInputFactory } from '../../platform/common/utils/multiStepInput';
 import { MockInputBox } from './mockInputBox';

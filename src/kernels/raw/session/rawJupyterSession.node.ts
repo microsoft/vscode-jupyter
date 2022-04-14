@@ -21,7 +21,7 @@ import { ISessionWithSocket, KernelConnectionMetadata } from '../../../kernels/t
 import { BaseJupyterSession } from '../../common/baseJupyterSession.node';
 import { IKernelLauncher, IKernelProcess } from '../types';
 import { RawSession } from './rawSession.node';
-import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter.node';
+import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { DisplayOptions } from '../../displayOptions';
 
 /*
@@ -40,7 +40,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         }
         return false;
     }
-    public get status(): KernelMessage.Status {
+    public override get status(): KernelMessage.Status {
         if (this.terminatingStatus && super.status !== 'dead') {
             return this.terminatingStatus;
         }
@@ -144,7 +144,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         this.connected = true;
     }
 
-    protected shutdownSession(
+    protected override shutdownSession(
         session: RawSession | undefined,
         statusHandler: Slot<ISessionWithSocket, KernelMessage.Status> | undefined,
         isRequestToShutdownRestartSession: boolean | undefined
@@ -166,7 +166,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         });
     }
 
-    protected setSession(session: RawSession | undefined) {
+    protected override setSession(session: RawSession | undefined) {
         super.setSession(session);
         if (!session) {
             return;

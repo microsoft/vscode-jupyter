@@ -6,7 +6,7 @@ import { IDocumentManager, IDebugService } from '../../platform/common/applicati
 import { IConfigurationService } from '../../platform/common/types';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { IKernel, IKernelProvider } from '../../kernels/types';
-import { CellHashProvider } from './cellhashprovider.node';
+import { CellHashProvider } from './cellhashprovider';
 import { ICellHashListener } from './types';
 import { IPlatformService } from '../../platform/common/platform/types';
 

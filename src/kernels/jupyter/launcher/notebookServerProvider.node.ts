@@ -15,7 +15,7 @@ import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { JupyterServerSelector } from '../serverSelector';
 import { Settings } from '../../../platform/common/constants';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
-import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter.node';
+import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { DisplayOptions } from '../../displayOptions';
 import { GetServerOptions } from '../../types';
 import {

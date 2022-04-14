@@ -6,6 +6,7 @@ import { notebooks, NotebookCellExecutionStateChangeEvent, NotebookDocument, Not
 import { IExtensionSingleActivationService } from '../platform/activation/types';
 import { IVSCodeNotebook } from '../platform/common/application/types';
 import { IDisposableRegistry } from '../platform/common/types';
+import { ResourceSet } from '../platform/vscode-path/map';
 import { sendTelemetryEvent } from '../telemetry';
 import { Telemetry } from '../webviews/webview-side/common/constants';
 import { isJupyterNotebook } from './helpers';
@@ -15,7 +16,7 @@ import { isJupyterNotebook } from './helpers';
  */
 @injectable()
 export class NotebookUsageTracker implements IExtensionSingleActivationService {
-    private readonly executedNotebooksIndexedByUri = new Set<string>();
+    private readonly executedNotebooksIndexedByUri = new ResourceSet();
     private openedNotebookCount: number = 0;
     constructor(
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
@@ -27,7 +28,7 @@ export class NotebookUsageTracker implements IExtensionSingleActivationService {
         this.vscNotebook.onDidChangeNotebookCellExecutionState(
             (e) => {
                 if (isJupyterNotebook(e.cell.notebook) && e.state !== NotebookCellExecutionState.Idle) {
-                    this.executedNotebooksIndexedByUri.add(e.cell.notebook.uri.fsPath);
+                    this.executedNotebooksIndexedByUri.add(e.cell.notebook.uri);
                 }
             },
             this,
@@ -57,6 +58,6 @@ export class NotebookUsageTracker implements IExtensionSingleActivationService {
         this.openedNotebookCount += 1;
     }
     private onDidChangeNotebookCellExecutionState(e: NotebookCellExecutionStateChangeEvent): void {
-        this.executedNotebooksIndexedByUri.add(e.cell.notebook.uri.fsPath);
+        this.executedNotebooksIndexedByUri.add(e.cell.notebook.uri);
     }
 }

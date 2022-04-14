@@ -7,7 +7,7 @@ import { NotebookCell, NotebookCellKind, Position, Range, Uri } from 'vscode';
 
 import { IDebugService } from '../../../platform/common/application/types';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../../platform/common/types';
-import { CellHashProvider } from '../../../interactive-window/editor-integration/cellhashprovider.node';
+import { CellHashProvider } from '../../../interactive-window/editor-integration/cellhashprovider';
 import { IKernel } from '../../../platform/../kernels/types';
 import { MockDocument } from '../mockDocument';
 import { MockDocumentManager } from '../mockDocumentManager';

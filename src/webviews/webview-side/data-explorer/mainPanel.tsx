@@ -124,7 +124,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    public componentWillMount() {
+    public override componentWillMount() {
         // Add ourselves as a handler for the post office
         this.postOffice.addHandler(this);
 
@@ -132,12 +132,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.postOffice.sendMessage<IDataViewerMapping>(DataViewerMessages.Started);
     }
 
-    public componentWillUnmount() {
+    public override componentWillUnmount() {
         this.postOffice.removeHandler(this);
         this.postOffice.dispose();
     }
 
-    public render = () => {
+    public override render = () => {
         if (!this.state.settings) {
             return <div className="main-panel" />;
         }

@@ -25,7 +25,7 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../../../webviews/webview-side/common/constants';
 import { JupyterConnectionWaiter } from './jupyterConnection.node';
 import { WrappedError } from '../../../platform/errors/types';
-import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter.node';
+import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { ReportableAction } from '../../../platform/progress/types';
 import { IJupyterConnection } from '../../types';
 import { IJupyterSubCommandExecutionService } from '../types.node';

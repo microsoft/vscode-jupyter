@@ -7,7 +7,7 @@ import { WrappedKernelError } from './types';
 export class KernelDiedError extends WrappedKernelError {
     constructor(
         message: string,
-        public readonly stdErr: string,
+        public override readonly stdErr: string,
         originalException: Error | undefined,
         kernelConnectionMetadata: KernelConnectionMetadata
     ) {

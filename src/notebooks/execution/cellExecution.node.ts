@@ -38,7 +38,7 @@ import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { Deferred, createDeferred } from '../../platform/common/utils/async';
 import * as localize from '../../platform/common/utils/localize';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { CellHashProviderFactory } from '../../interactive-window/editor-integration/cellHashProviderFactory.node';
+import { CellHashProviderFactory } from '../../interactive-window/editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../../notebooks/constants';
 import {
     NotebookCellStateTracker,

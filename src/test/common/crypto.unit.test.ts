@@ -6,7 +6,7 @@
 import { assert, expect } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from '../../platform/vscode-path/path';
-import { CryptoUtils } from '../../platform/common/crypto.node';
+import { CryptoUtils } from '../../platform/common/crypto';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
 
 const RANDOM_WORDS = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'common', 'randomWords.txt');
