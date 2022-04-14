@@ -16,7 +16,6 @@ import {
     WorkspaceFoldersChangeEvent
 } from 'vscode';
 import { Resource } from '../types';
-import { isWeb } from '../utils/misc';
 import { getOSType, OSType } from '../utils/platform';
 import { IWorkspaceService } from './types';
 
@@ -25,14 +24,13 @@ export class WorkspaceService implements IWorkspaceService {
     public get onDidChangeConfiguration(): Event<ConfigurationChangeEvent> {
         return workspace.onDidChangeConfiguration;
     }
-    public get rootPath(): string | undefined {
+    public get rootFolder(): Uri | undefined {
         const firstWorkspace =
             Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0
                 ? workspace.workspaceFolders[0]
                 : undefined;
         if (firstWorkspace) {
-            // eslint-disable-next-line local-rules/dont-use-fspath
-            return isWeb() ? firstWorkspace.uri.path : firstWorkspace.uri.fsPath;
+            return firstWorkspace.uri;
         }
     }
     public get workspaceFolders(): readonly WorkspaceFolder[] | undefined {

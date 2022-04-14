@@ -8,12 +8,12 @@ import { Uri as URI } from 'vscode';
 import { CharCode } from './charCode';
 import * as extpath from './extpath';
 import * as paths from './path';
-import { isLinux, isWindows } from './platform';
+import { isLinux, isWeb, isWindows } from './platform';
 import { compare as strCompare, equalsIgnoreCase } from './strings';
 import { Schemas } from './utils';
 
-function originalFSPath(uri: URI): string {
-    return uri.fsPath;
+export function originalFSPath(uri: URI | undefined): string {
+    return isWeb ? uri?.path || '' : uri?.fsPath || '';
 }
 
 //#region IExtUri

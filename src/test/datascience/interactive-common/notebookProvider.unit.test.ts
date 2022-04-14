@@ -10,7 +10,7 @@ import { ConfigurationService } from '../../../platform/common/configuration/ser
 import { IJupyterSettings } from '../../../platform/common/types';
 import { INotebook, KernelConnectionMetadata } from '../../../platform/../kernels/types';
 import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider.node';
-import { DisplayOptions } from '../../../kernels/displayOptions.node';
+import { DisplayOptions } from '../../../kernels/displayOptions';
 import { IJupyterNotebookProvider } from '../../../kernels/jupyter/types';
 import { IRawNotebookProvider } from '../../../kernels/raw/types';
 

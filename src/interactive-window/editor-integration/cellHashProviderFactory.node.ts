@@ -3,12 +3,12 @@
 
 import { inject, injectable, multiInject, optional } from 'inversify';
 import { IDocumentManager, IDebugService } from '../../platform/common/application/types';
-import { IFileSystem } from '../../platform/common/platform/types.node';
 import { IConfigurationService } from '../../platform/common/types';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { IKernel, IKernelProvider } from '../../kernels/types';
 import { CellHashProvider } from './cellhashprovider.node';
 import { ICellHashListener } from './types';
+import { IPlatformService } from '../../platform/common/platform/types';
 
 @injectable()
 export class CellHashProviderFactory {
@@ -25,7 +25,6 @@ export class CellHashProviderFactory {
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IDebugService) private readonly debugService: IDebugService,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IServiceContainer) private readonly svcContainer: IServiceContainer,
         @multiInject(ICellHashListener) @optional() private readonly listeners: ICellHashListener[] | undefined
     ) {}
@@ -48,8 +47,8 @@ export class CellHashProviderFactory {
             this.documentManager,
             this.configService,
             this.debugService,
-            this.fs,
             this.listeners,
+            this.svcContainer.get<IPlatformService>(IPlatformService),
             kernel
         );
         this.cellHashProvidersIndexedByKernels.set(kernel, cellHashProvider);

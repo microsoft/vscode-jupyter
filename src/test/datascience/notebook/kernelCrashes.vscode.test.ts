@@ -39,7 +39,7 @@ import { sleep } from '../../core';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../platform/../kernels/helpers.node';
 import { Uri, window, workspace } from 'vscode';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
-import { translateCellErrorOutput } from '../../../notebooks/helpers.node';
+import { translateCellErrorOutput } from '../../../notebooks/helpers';
 import { INotebookEditorProvider } from '../../../notebooks/types';
 
 const codeToKillKernel = dedent`

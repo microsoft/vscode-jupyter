@@ -7,7 +7,7 @@ import { IExtensionSingleActivationService } from '../activation/types';
 import { EnvironmentActivationService } from '../common/process/environmentActivationService.node';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterSelector } from '../interpreter/configuration/types';
-import { IInterpreterService } from '../interpreter/contracts.node';
+import { IInterpreterService } from '../interpreter/contracts';
 import { InterpreterStatusBarVisibility } from '../interpreter/display/visibilityFilter.node';
 import { IServiceManager } from '../ioc/types';
 import { ApiAccessService } from './apiAccessService.node';

@@ -13,12 +13,12 @@ import { MockMemento } from '../../mocks/mementos';
 import { CryptoUtils } from '../../../platform/common/crypto.node';
 import { noop } from '../../core';
 import { IJupyterConnection, IJupyterKernelSpec, LiveRemoteKernelConnectionMetadata } from '../../../kernels/types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { JupyterSessionManager } from '../../../kernels/jupyter/session/jupyterSessionManager.node';
 import { JupyterSessionManagerFactory } from '../../../kernels/jupyter/session/jupyterSessionManagerFactory.node';
 import { RemoteKernelFinder } from '../../../kernels/raw/finder/remoteKernelFinder.node';
 import { IRemoteKernelFinder } from '../../../kernels/raw/types';
-import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider.node';
+import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider';
 import { IJupyterKernel, IJupyterSessionManager } from '../../../kernels/jupyter/types';
 
 suite(`Remote Kernel Finder`, () => {

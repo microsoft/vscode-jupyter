@@ -4,14 +4,14 @@
 'use strict';
 
 import { Uri } from 'vscode';
+import * as os from 'os';
 import { fsPathToUri } from '../../vscode-path/utils';
 import { EnvironmentVariables } from '../variables/types';
 import { getOSType, OSType } from './platform';
 export * from './platform';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const untildify = require('untildify');
-const homePath = untildify('~');
+// Home path depends upon OS
+const homePath = os.homedir();
 
 export function getEnvironmentVariable(key: string): string | undefined {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

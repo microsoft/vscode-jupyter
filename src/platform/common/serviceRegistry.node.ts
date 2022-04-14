@@ -11,8 +11,8 @@ import { ApplicationEnvironment } from './application/applicationEnvironment.nod
 import { ClipboardService } from './application/clipboard.node';
 import { ReloadVSCodeCommandHandler } from './application/commands/reloadCommand.node';
 import { DebugService } from './application/debugService.node';
-import { DocumentManager } from './application/documentManager.node';
-import { EncryptedStorage } from './application/encryptedStorage.node';
+import { DocumentManager } from './application/documentManager';
+import { EncryptedStorage } from './application/encryptedStorage';
 import { Extensions } from './application/extensions.node';
 import { LanguageService } from './application/languageService.node';
 import { VSCodeNotebook } from './application/notebook.node';
@@ -46,9 +46,9 @@ import {
     IPersistentStateFactory,
     IsWindows
 } from './types';
-import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput.node';
+import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
 import { PortAttributesProviders } from './net/portAttributeProvider.node';
-import { LanguageInitializer } from '../../telemetry/languageInitializer.node';
+import { LanguageInitializer } from '../../telemetry/languageInitializer';
 import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.node';
 import { registerTypes as processRegisterTypes } from './process/serviceRegistry.node';
 import { registerTypes as variableRegisterTypes } from './variables/serviceRegistry.node';

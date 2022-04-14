@@ -19,19 +19,19 @@ import * as localize from '../../platform/common/utils/localize';
 import { splitMultilineString } from '../../webviews/webview-side/common';
 import { IDebugService, IDocumentManager } from '../../platform/common/application/types';
 import { traceInfo, traceInfoIfCI } from '../../platform/logging';
-import { IFileSystem } from '../../platform/common/platform/types.node';
-
 import { IConfigurationService } from '../../platform/common/types';
-import { getInteractiveCellMetadata } from '../interactiveWindow.node';
 import { IKernel } from '../../kernels/types';
 import { InteractiveWindowView } from '../../notebooks/constants';
-import { stripAnsi } from '../../platform/common/utils/regexp.node';
-import { getCellResource, uncommentMagicCommands } from './cellFactory.node';
-import { CellMatcher } from './cellMatcher.node';
+import { stripAnsi } from '../../platform/common/utils/regexp';
+import { getCellResource, uncommentMagicCommands } from './cellFactory';
+import { CellMatcher } from './cellMatcher';
 import { ICellHash, ICellHashProvider, ICellHashListener, IFileHashes } from './types';
-import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector.node';
-// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
-const untildify = require('untildify');
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
+import { getInteractiveCellMetadata } from '../helpers';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { IPlatformService } from '../../platform/common/platform/types';
+import { untildify } from '../../platform/common/utils/platform';
+import { originalFSPath } from '../../platform/vscode-path/resources';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp'); // NOSONAR
@@ -68,8 +68,8 @@ export class CellHashProvider implements ICellHashProvider {
         private documentManager: IDocumentManager,
         private configService: IConfigurationService,
         private debugService: IDebugService,
-        private fs: IFileSystem,
         private listeners: ICellHashListener[] | undefined,
+        private platformService: IPlatformService,
         private readonly kernel: IKernel
     ) {
         // Watch document changes so we can update our hashes
@@ -248,9 +248,7 @@ export class CellHashProvider implements ICellHashProvider {
             if (!this.traceBackRegexes.has(uristring)) {
                 const uri = Uri.parse(uristring);
                 const fileMatchRegex = new RegExp(`\\[.*?;32m${_escapeRegExp(uri.fsPath)}`);
-                const fileDisplayNameMatchRegex = new RegExp(
-                    `\\[.*?;32m${_escapeRegExp(this.fs.getDisplayName(uri.fsPath))}`
-                );
+                const fileDisplayNameMatchRegex = new RegExp(`\\[.*?;32m${_escapeRegExp(getDisplayPath(uri))}`);
                 this.traceBackRegexes.set(uristring, [fileMatchRegex, fileDisplayNameMatchRegex]);
             }
 
@@ -535,7 +533,7 @@ export class CellHashProvider implements ICellHashProvider {
         const fileMatch = /^File.*?\[\d;32m(.*):\d+.*\u001b.*\n/.exec(traceFrame);
         if (fileMatch && fileMatch.length > 1) {
             // We need to untilde the file path here for the link to work in VS Code
-            const detildePath = untildify(fileMatch[1]);
+            const detildePath = untildify(fileMatch[1], originalFSPath(this.platformService.homeDir));
             const fileUri = Uri.file(detildePath);
             // We have a match, replace source lines with hrefs
             return traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {

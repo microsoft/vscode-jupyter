@@ -31,10 +31,10 @@ import {
     waitForExecutionCompletedWithErrors,
     waitForTextOutput
 } from './notebook/helper.node';
-import { translateCellErrorOutput, getTextOutputValue } from '../../notebooks/helpers.node';
+import { translateCellErrorOutput, getTextOutputValue } from '../../notebooks/helpers';
 import { INotebookControllerManager } from '../../notebooks/types';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
-import { IInterpreterService } from '../../platform/interpreter/contracts.node';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/interpreter.node';
 
 suite('Interactive window', async function () {

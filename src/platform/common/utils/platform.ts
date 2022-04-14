@@ -22,3 +22,7 @@ export function getOSType(platform: string = process.platform): OSType {
         return OSType.Unknown;
     }
 }
+
+export function untildify(path: string, home: string) {
+    return path.replace(/^~(?=$|\/|\\)/, home);
+}

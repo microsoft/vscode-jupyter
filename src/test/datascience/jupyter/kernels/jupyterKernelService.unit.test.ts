@@ -18,7 +18,7 @@ import { EnvironmentVariablesService } from '../../../../platform/common/variabl
 import { arePathsSame } from '../../../../platform/common/platform/fileUtils.node';
 import { JupyterKernelService } from '../../../../kernels/jupyter/jupyterKernelService.node';
 import { JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths.node';
-import { DisplayOptions } from '../../../../kernels/displayOptions.node';
+import { DisplayOptions } from '../../../../kernels/displayOptions';
 import { getOSType, OSType } from '../../../../platform/common/utils/platform';
 
 // eslint-disable-next-line

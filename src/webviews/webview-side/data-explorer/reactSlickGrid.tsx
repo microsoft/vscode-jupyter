@@ -38,7 +38,7 @@ import 'slickgrid/slick.grid.css';
 import './reactSlickGrid.css';
 import { generateDisplayValue } from './cellFormatter';
 import { getLocString } from '../react-common/locReactSide';
-import { buildDataViewerFilterRegex } from '../../../platform/common/utils/regexp.node';
+import { buildDataViewerFilterRegex } from '../../../platform/common/utils/regexp';
 import { IGetSliceRequest, ColumnType, MaxStringCompare } from '../../extension-side/dataviewer/types';
 /*
 WARNING: Do not change the order of these imports.

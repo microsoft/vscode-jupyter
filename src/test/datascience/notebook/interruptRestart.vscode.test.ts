@@ -29,7 +29,7 @@ import {
     waitForOutputs,
     clickOKForRestartPrompt
 } from './helper.node';
-import { hasErrorOutput, NotebookCellStateTracker, getTextOutputValue } from '../../../notebooks/helpers.node';
+import { hasErrorOutput, NotebookCellStateTracker, getTextOutputValue } from '../../../notebooks/helpers';
 import { Commands } from '../../../platform/common/constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this,  */

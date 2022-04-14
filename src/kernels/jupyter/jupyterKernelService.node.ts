@@ -8,7 +8,7 @@ import { inject, injectable } from 'inversify';
 import * as path from '../../platform/vscode-path/path';
 import * as uriPath from '../../platform/vscode-path/resources';
 import { CancellationToken } from 'vscode';
-import { Cancellation } from '../../platform/common/cancellation.node';
+import { Cancellation } from '../../platform/common/cancellation';
 import '../../platform/common/extensions';
 import {
     traceInfoIfCI,
@@ -37,7 +37,7 @@ import {
     KernelInterpreterDependencyResponse,
     LocalKernelConnectionMetadata
 } from '../types';
-import { JupyterKernelSpec } from './jupyterKernelSpec.node';
+import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { serializePythonEnvironment } from '../../platform/api/pythonApi.node';
 
 /**

@@ -20,7 +20,7 @@ import { EnvironmentType } from '../../../../platform/pythonEnvironments/info';
 import { IInstaller, Product, InstallerResponse } from '../../../../kernels/installer/types';
 import { createPythonInterpreter } from '../../../utils/interpreters';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../../../interactive-window/types';
-import { DisplayOptions } from '../../../../kernels/displayOptions.node';
+import { DisplayOptions } from '../../../../kernels/displayOptions';
 import { IRawNotebookSupportedService } from '../../../../kernels/raw/types';
 import { getResourceType } from '../../../../platform/common/utils.node';
 

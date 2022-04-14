@@ -13,10 +13,10 @@ import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { createDeferred, waitForPromise } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { CellHashProviderFactory } from '../../interactive-window/editor-integration/cellHashProviderFactory.node';
-import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../telemetry/telemetry.node';
+import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../telemetry/telemetry';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
-import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker.node';
+import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import {
     IJupyterSession,
     IKernel,
@@ -24,9 +24,9 @@ import {
     KernelConnectionMetadata,
     NotebookCellRunState
 } from '../../kernels/types';
-import { traceCellMessage } from '../helpers.node';
+import { traceCellMessage } from '../helpers';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
-import { getAssociatedNotebookDocument } from '../controllers/kernelSelector.node';
+import { getAssociatedNotebookDocument } from '../controllers/kernelSelector';
 
 /**
  * Separate class that deals just with kernel execution.

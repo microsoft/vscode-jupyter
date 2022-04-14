@@ -10,7 +10,7 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { ApplicationShell } from '../../platform/common/application/applicationShell';
 import { AsyncDisposableRegistry } from '../../platform/common/asyncDisposableRegistry.node';
 import { ConfigurationService } from '../../platform/common/configuration/service.node';
-import { MultiStepInputFactory } from '../../platform/common/utils/multiStepInput.node';
+import { MultiStepInputFactory } from '../../platform/common/utils/multiStepInput';
 import { MockInputBox } from './mockInputBox';
 import { MockQuickPick } from './mockQuickPick';
 import { JupyterPasswordConnect } from '../../kernels/jupyter/launcher/jupyterPasswordConnect.node';

@@ -11,12 +11,12 @@ import {
     getDisplayNameOrNameOfKernelConnection,
     getInterpreterHashInMetadata,
     getLanguageInNotebookMetadata
-} from '../../../kernels/helpers.node';
+} from '../../../kernels/helpers';
 import { LocalKernelConnectionMetadata } from '../../../kernels/types';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { createPromiseFromCancellation } from '../../../platform/common/cancellation.node';
+import { createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import {
     traceInfo,
@@ -27,19 +27,19 @@ import {
 } from '../../../platform/logging';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IMemento, GLOBAL_MEMENTO, Resource } from '../../../platform/common/types';
-import { isPythonNotebook } from '../../../notebooks/helpers.node';
-import { sendKernelListTelemetry } from '../../../telemetry/kernelTelemetry.node';
-import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
-import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/interpreter.node';
+import { isPythonNotebook } from '../../../notebooks/helpers';
+import { sendKernelListTelemetry } from '../../../telemetry/kernelTelemetry';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/interpreter';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { getTelemetrySafeLanguage } from '../../../telemetry/helpers';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { ILocalKernelFinder } from '../types';
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import { noop } from '../../../platform/common/utils/misc';
-import { getResourceType } from '../../../platform/common/utils.node';
+import { getResourceType } from '../../../platform/common/utils';
 import { TraceOptions } from '../../../platform/logging/types';
-import { deserializePythonEnvironment, serializePythonEnvironment } from '../../../platform/api/pythonApi.node';
+import { deserializePythonEnvironment, serializePythonEnvironment } from '../../../platform/api/pythonApi';
 import { isArray } from '../../../platform/common/utils/sysTypes';
 
 function serializeKernelConnection(kernelConnection: LocalKernelConnectionMetadata) {

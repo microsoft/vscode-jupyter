@@ -669,7 +669,7 @@ export interface IWorkspaceService {
      *
      * @readonly
      */
-    readonly rootPath: string | undefined;
+    readonly rootFolder: Uri | undefined;
 
     /**
      * List of workspace folders or `undefined` when no folder is open.

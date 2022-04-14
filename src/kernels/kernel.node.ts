@@ -41,19 +41,18 @@ import {
     sendKernelTelemetryEvent,
     trackKernelResourceInformation,
     initializeInteractiveOrNotebookTelemetryBasedOnUserAction
-} from '../telemetry/telemetry.node';
+} from '../telemetry/telemetry';
 import { calculateWorkingDirectory } from '../platform/common/utils.node';
 import { sendTelemetryEvent } from '../telemetry';
 import { concatMultilineString } from '../webviews/webview-side/common';
 import { Telemetry, Identifiers, CodeSnippets } from '../webviews/webview-side/common/constants';
-import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker.node';
+import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
 import {
     executeSilently,
     getDisplayNameOrNameOfKernelConnection,
     isLocalHostConnection,
-    isPythonKernelConnection,
-    sendTelemetryForPythonKernelExecutable
-} from './helpers.node';
+    isPythonKernelConnection
+} from './helpers';
 import { expandWorkingDir } from './jupyter/jupyterUtils.node';
 import {
     IJupyterSession,
@@ -68,13 +67,15 @@ import {
     NotebookCellRunState
 } from './types';
 import { KernelExecution } from '../notebooks/execution/kernelExecution.node';
-import { traceCellMessage } from '../notebooks/helpers.node';
-import { Cancellation } from '../platform/common/cancellation.node';
+import { traceCellMessage } from '../notebooks/helpers';
+import { Cancellation } from '../platform/common/cancellation';
 import { AddRunCellHook } from '../platform/common/constants.node';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter.node';
 import { IStatusProvider } from '../platform/progress/types';
-import { DisplayOptions } from './displayOptions.node';
-import { getAssociatedNotebookDocument } from '../notebooks/controllers/kernelSelector.node';
+import { DisplayOptions } from './displayOptions';
+import { getAssociatedNotebookDocument } from '../notebooks/controllers/kernelSelector';
+import { SilentExecutionErrorOptions } from './helpers';
+import { sendTelemetryForPythonKernelExecutable } from './helpers.node';
 
 export class Kernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -800,13 +801,3 @@ export function getPlainTextOrStreamOutput(outputs: nbformat.IOutput[]) {
     }
     return;
 }
-
-// Options for error reporting from kernel silent execution
-export type SilentExecutionErrorOptions = {
-    // Setting this will log jupyter errors from silent execution as errors as opposed to warnings
-    traceErrors?: boolean;
-    // This optional message will be displayed as a prefix for the error or warning message
-    traceErrorsMessage?: string;
-    // Setting this will log telemetry on the given name
-    telemetryName?: Telemetry;
-};

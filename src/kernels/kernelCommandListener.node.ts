@@ -9,7 +9,7 @@ import { traceInfo } from '../platform/logging';
 import { IDisposableRegistry, IConfigurationService, IDataScienceCommandListener } from '../platform/common/types';
 import { DataScience } from '../platform/common/utils/localize';
 import { INotebookControllerManager } from '../notebooks/types';
-import { trackKernelResourceInformation } from '../telemetry/telemetry.node';
+import { trackKernelResourceInformation } from '../telemetry/telemetry';
 import { IServiceContainer } from '../platform/ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { Commands, Telemetry } from '../webviews/webview-side/common/constants';
@@ -17,8 +17,8 @@ import { wrapKernelMethod } from './helpers.node';
 import { IKernel, IKernelProvider } from './types';
 import { IInteractiveWindowProvider } from '../interactive-window/types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
-import { getAssociatedNotebookDocument } from '../notebooks/controllers/kernelSelector.node';
-import { DisplayOptions } from './displayOptions.node';
+import { getAssociatedNotebookDocument } from '../notebooks/controllers/kernelSelector';
+import { DisplayOptions } from './displayOptions';
 
 @injectable()
 export class KernelCommandListener implements IDataScienceCommandListener {

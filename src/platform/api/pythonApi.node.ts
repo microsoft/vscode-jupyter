@@ -22,9 +22,9 @@ import { createDeferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
-import { IInterpreterService } from '../interpreter/contracts.node';
+import { IInterpreterService } from '../interpreter/contracts';
 import { PythonEnvironment } from '../pythonEnvironments/info';
-import { areInterpreterPathsSame } from '../pythonEnvironments/info/interpreter.node';
+import { areInterpreterPathsSame } from '../pythonEnvironments/info/interpreter';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import {
     ILanguageServer,
@@ -34,12 +34,11 @@ import {
     IPythonExtensionChecker,
     IPythonProposedApi,
     PythonApi,
-    PythonEnvironment_PythonApi,
     RefreshInterpretersOptions
 } from './types';
 import { traceInfo, traceVerbose, traceError, traceDecoratorVerbose } from '../logging';
 import { TraceOptions } from '../logging/types';
-import { fsPathToUri } from '../vscode-path/utils';
+import { deserializePythonEnvironment } from './pythonApi';
 
 /* eslint-disable max-classes-per-file */
 @injectable()
@@ -238,31 +237,6 @@ export class InterpreterSelector implements IInterpreterSelector {
 
     public async getSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]> {
         return this.apiProvider.getApi().then((api) => api.getSuggestions(resource));
-    }
-}
-
-export function deserializePythonEnvironment(
-    pythonVersion: Partial<PythonEnvironment_PythonApi> | undefined
-): PythonEnvironment | undefined {
-    if (pythonVersion) {
-        return {
-            ...pythonVersion,
-            sysPrefix: pythonVersion.sysPrefix || '',
-            uri: Uri.file(pythonVersion.path || ''),
-            envPath: fsPathToUri(pythonVersion.envPath)
-        };
-    }
-}
-
-export function serializePythonEnvironment(
-    jupyterVersion: PythonEnvironment | undefined
-): PythonEnvironment_PythonApi | undefined {
-    if (jupyterVersion) {
-        return {
-            ...jupyterVersion,
-            path: jupyterVersion.uri.fsPath,
-            envPath: jupyterVersion.envPath?.fsPath
-        };
     }
 }
 

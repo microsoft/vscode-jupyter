@@ -7,7 +7,7 @@ import { PYTHON_LANGUAGE } from '../common/constants';
 import { IFileSystem } from '../common/platform/types.node';
 import { IDisposable, Resource } from '../common/types';
 import { Deferred } from '../common/utils/async';
-import { IInterpreterService } from '../interpreter/contracts.node';
+import { IInterpreterService } from '../interpreter/contracts';
 import { traceDecoratorError } from '../logging';
 import { IExtensionSingleActivationService } from './types';
 

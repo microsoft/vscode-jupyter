@@ -9,7 +9,7 @@ import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../platform/common/application/types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 import { PipEnvInstaller } from '../../../kernels/installer/pipEnvInstaller.node';

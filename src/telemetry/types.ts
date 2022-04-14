@@ -2,8 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { EnvironmentType } from '../platform/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { KernelConnectionMetadata } from '../kernels/types';
+import { InterpreterUri } from '../platform/common/types';
 
 export const IImportTracker = Symbol('IImportTracker');
 export interface IImportTracker {}
@@ -87,3 +88,10 @@ export type ResourceSpecificTelemetryProperties = Partial<{
      */
     kernelLiveCount: number;
 }>;
+
+export const IInterpreterPackages = Symbol('IInterpreterPackages');
+export interface IInterpreterPackages {
+    getPackageVersions(interpreter: PythonEnvironment): Promise<Map<string, string>>;
+    getPackageVersion(interpreter: PythonEnvironment, packageName: string): Promise<string | undefined>;
+    trackPackages(interpreterUri: InterpreterUri, ignoreCache?: boolean): void;
+}

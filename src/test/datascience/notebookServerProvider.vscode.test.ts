@@ -11,7 +11,7 @@ import { initialize } from '../initialize.node';
 import { closeNotebooksAndCleanUpAfterTests, startJupyterServer } from './notebook/helper.node';
 import * as getFreePort from 'get-port';
 import { IPythonExecutionFactory } from '../../platform/common/process/types.node';
-import { IInterpreterService } from '../../platform/interpreter/contracts.node';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IConfigurationService } from '../../platform/common/types';
 import { JupyterSettings } from '../../platform/common/configSettings';
@@ -19,7 +19,7 @@ import { IServiceContainer } from '../../platform/ioc/types';
 import { HostJupyterExecution } from '../../kernels/jupyter/launcher/liveshare/hostJupyterExecution.node';
 import { NotebookServerProvider } from '../../kernels/jupyter/launcher/notebookServerProvider.node';
 import { IJupyterExecution, IJupyterServerProvider } from '../../kernels/jupyter/types';
-import { DisplayOptions } from '../../kernels/displayOptions.node';
+import { DisplayOptions } from '../../kernels/displayOptions';
 
 suite('Jupyter CLI Tests', async () => {
     let jupyterServerProvider: NotebookServerProvider;

@@ -7,7 +7,7 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CommandManager } from '../../platform/common/application/commandManager';
-import { DocumentManager } from '../../platform/common/application/documentManager.node';
+import { DocumentManager } from '../../platform/common/application/documentManager';
 import { IDocumentManager, IWorkspaceService } from '../../platform/common/application/types';
 import { WorkspaceService } from '../../platform/common/application/workspace';
 import { JupyterSettings } from '../../platform/common/configSettings';

@@ -12,7 +12,7 @@ import {
     isLocalConnection,
     NotebookCreationOptions
 } from '../../types';
-import { Cancellation } from '../../../platform/common/cancellation.node';
+import { Cancellation } from '../../../platform/common/cancellation';
 import { IJupyterNotebookProvider, IJupyterServerProvider, IJupyterServerUriStorage } from '../types';
 
 // When the NotebookProvider looks to create a notebook it uses this class to create a Jupyter notebook

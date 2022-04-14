@@ -6,7 +6,7 @@
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, CancellationTokenSource, Memento } from 'vscode';
 import { IApplicationShell } from '../platform/common/application/types';
-import { createPromiseFromCancellation } from '../platform/common/cancellation.node';
+import { createPromiseFromCancellation } from '../platform/common/cancellation';
 import {
     traceInfo,
     traceError,
@@ -28,7 +28,7 @@ import {
     trackPackageInstalledIntoInterpreter,
     isModulePresentInEnvironment
 } from './installer/productInstaller.node';
-import { ProductNames } from './installer/productNames.node';
+import { ProductNames } from './installer/productNames';
 import { IInstaller, Product, InstallerResponse } from './installer/types';
 import { IKernelDependencyService, KernelConnectionMetadata, KernelInterpreterDependencyResponse } from './types';
 import { noop } from '../platform/common/utils/misc';

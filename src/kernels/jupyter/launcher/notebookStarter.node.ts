@@ -11,7 +11,7 @@ import * as path from '../../../platform/vscode-path/path';
 import * as uuid from 'uuid/v4';
 import { CancellationError, CancellationToken, Disposable } from 'vscode';
 import { IDisposable } from '@fluentui/react';
-import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation.node';
+import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceInfo, traceError } from '../../../platform/logging';
 import { TemporaryDirectory } from '../../../platform/common/platform/types';

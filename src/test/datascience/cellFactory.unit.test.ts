@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import { removeLinesFromFrontAndBack, stripComments } from '../../webviews/webview-side/common';
 import * as vscode from 'vscode';
-import { generateCells } from '../../interactive-window/editor-integration/cellFactory.node';
+import { generateCells } from '../../interactive-window/editor-integration/cellFactory';
 
 /* eslint-disable  */
 suite('DataScience CellFactory', () => {

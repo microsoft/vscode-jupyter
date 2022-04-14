@@ -19,7 +19,7 @@ import {
 import { noop } from '../platform/common/utils/misc';
 import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory.node';
 import { InteractiveWindowView } from '../notebooks/constants';
-import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker.node';
+import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
 import { Kernel } from './kernel.node';
 import { IKernel, IKernelProvider, INotebookProvider, KernelOptions } from './types';
 import { IStatusProvider } from '../platform/progress/types';

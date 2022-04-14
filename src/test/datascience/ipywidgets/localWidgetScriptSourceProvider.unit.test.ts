@@ -9,7 +9,7 @@ import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IPythonExecutionFactory } from '../../../platform/common/process/types.node';
 import { IKernel } from '../../../platform/../kernels/types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { LocalWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/localWidgetScriptSourceProvider.node';
 import {
     ILocalResourceUriConverter,

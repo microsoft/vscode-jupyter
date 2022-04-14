@@ -22,7 +22,7 @@ import { StopWatch } from '../utils/stopWatch';
 import { Memento } from 'vscode';
 import { getDisplayPath } from '../platform/fs-paths';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
-import { IInterpreterService } from '../../interpreter/contracts.node';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { CurrentProcess } from './currentProcess.node';
 import { getTelemetrySafeHashedString } from '../../../telemetry/helpers';
 import { CondaService } from './condaService.node';

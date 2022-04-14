@@ -6,7 +6,7 @@ import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnviron
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { InterpreterUri } from '../../platform/common/types';
 import { isResource } from '../../platform/common/utils/misc';
-import { IInterpreterService } from '../../platform/interpreter/contracts.node';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { ExecutionInstallArgs, ModuleInstaller } from './moduleInstaller.node';
 import { ModuleInstallerType, ModuleInstallFlags } from './types';
 import { isPipenvEnvironmentRelatedToFolder } from './pipenv.node';

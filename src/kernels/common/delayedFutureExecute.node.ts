@@ -3,7 +3,7 @@
 'use strict';
 import type { JSONObject } from '@lumino/coreutils';
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
-import { CancellationError } from '../../platform/common/cancellation.node';
+import { CancellationError } from '../../platform/common/cancellation';
 import { traceInfoIfCI } from '../../platform/logging';
 import { createDeferred } from '../../platform/common/utils/async';
 

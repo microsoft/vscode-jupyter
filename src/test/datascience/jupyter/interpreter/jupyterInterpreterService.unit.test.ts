@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Memento, Uri } from 'vscode';
-import { IInterpreterService } from '../../../../platform/interpreter/contracts.node';
+import { IInterpreterService } from '../../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
 import { JupyterInterpreterDependencyService } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService.node';
 import { JupyterInterpreterOldCacheStateStore } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterOldCacheStateStore.node';

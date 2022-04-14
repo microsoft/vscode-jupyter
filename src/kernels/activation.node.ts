@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
 import { ActiveEditorContextService } from '../interactive-window/commands/activeEditorContext.node';
-import { isJupyterNotebook } from '../notebooks/helpers.node';
+import { isJupyterNotebook } from '../notebooks/helpers';
 import { IExtensionSingleActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { IVSCodeNotebook } from '../platform/common/application/types';

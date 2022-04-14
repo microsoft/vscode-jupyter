@@ -33,7 +33,7 @@ import { disposeAllDisposables } from '../platform/common/helpers';
 import { IDisposableRegistry } from '../platform/common/types';
 import { DataScience } from '../platform/common/utils/localize';
 import { JupyterNotebookView } from '../notebooks/constants';
-import { getAssociatedJupyterNotebook } from '../notebooks/helpers.node';
+import { getAssociatedJupyterNotebook } from '../notebooks/helpers';
 
 type CellUri = string;
 type CellVersion = number;

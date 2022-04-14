@@ -31,7 +31,7 @@ import {
     waitForTextOutput
 } from './helper.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi.node';
-import { NotebookCellLanguageService } from '../../../intellisense/cellLanguageService.node';
+import { NotebookCellLanguageService } from '../../../intellisense/cellLanguageService';
 import { INotebookEditorProvider } from '../../../notebooks/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */

@@ -4,7 +4,7 @@ import { inject, injectable, named } from 'inversify';
 import * as semver from 'semver';
 import { CancellationTokenSource, Event, EventEmitter, Memento, Uri } from 'vscode';
 import { translateProductToModule } from './moduleInstaller.node';
-import { ProductNames } from './productNames.node';
+import { ProductNames } from './productNames';
 import {
     IInstallationChannelManager,
     IInstaller,
@@ -29,47 +29,28 @@ import {
     IOutputChannel,
     InterpreterUri
 } from '../../platform/common/types';
-import { isResource, noop } from '../../platform/common/utils/misc';
+import { noop } from '../../platform/common/utils/misc';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { InterpreterPackages } from '../../telemetry/interpreterPackages.node';
-import { getInterpreterHash } from '../../platform/pythonEnvironments/info/interpreter.node';
+import { getInterpreterHash } from '../../platform/pythonEnvironments/info/interpreter';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants';
 import { sleep } from '../../platform/common/utils/async';
+import { trackPackageInstalledIntoInterpreter } from './productInstaller';
 
-/**
- * Keep track of the fact that we attempted to install a package into an interpreter.
- * (don't care whether it was successful or not).
- */
-export async function trackPackageInstalledIntoInterpreter(
-    memento: Memento,
-    product: Product,
-    interpreter: InterpreterUri
-) {
-    if (isResource(interpreter)) {
-        return;
-    }
-    const key = `${getInterpreterHash(interpreter)}#${ProductNames.get(product)}`;
-    await memento.update(key, true);
-}
-export async function clearInstalledIntoInterpreterMemento(memento: Memento, product: Product, interpreterPath: Uri) {
-    const key = `${getInterpreterHash({ uri: interpreterPath })}#${ProductNames.get(product)}`;
-    await memento.update(key, undefined);
-}
-export function isModulePresentInEnvironmentCache(memento: Memento, product: Product, interpreter: PythonEnvironment) {
-    const key = `${getInterpreterHash(interpreter)}#${ProductNames.get(product)}`;
-    return memento.get<boolean>(key, false);
-}
 export async function isModulePresentInEnvironment(memento: Memento, product: Product, interpreter: PythonEnvironment) {
     const key = `${getInterpreterHash(interpreter)}#${ProductNames.get(product)}`;
     if (memento.get(key, false)) {
         return true;
     }
     const packageName = translateProductToModule(product);
-    const packageVersionPromise = InterpreterPackages.getPackageVersion(interpreter, packageName)
-        .then((version) => (typeof version === 'string' ? 'found' : 'notfound'))
-        .catch((ex) => traceError('Failed to get interpreter package version', ex));
+    const packageVersionPromise = InterpreterPackages.instance
+        ? InterpreterPackages.instance
+              .getPackageVersion(interpreter, packageName)
+              .then((version) => (typeof version === 'string' ? 'found' : 'notfound'))
+              .catch((ex) => traceError('Failed to get interpreter package version', ex))
+        : Promise.resolve(500);
     try {
         // Dont wait for too long we don't want to delay installation prompt.
         const version = await Promise.race([sleep(500), packageVersionPromise]);

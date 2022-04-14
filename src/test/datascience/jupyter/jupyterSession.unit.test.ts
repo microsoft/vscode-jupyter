@@ -32,7 +32,7 @@ import {
 import { MockOutputChannel } from '../../mockClasses';
 import { JupyterKernelService } from '../../../kernels/jupyter/jupyterKernelService.node';
 import { JupyterSession } from '../../../kernels/jupyter/session/jupyterSession.node';
-import { DisplayOptions } from '../../../kernels/displayOptions.node';
+import { DisplayOptions } from '../../../kernels/displayOptions';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */

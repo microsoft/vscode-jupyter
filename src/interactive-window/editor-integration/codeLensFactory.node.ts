@@ -19,14 +19,14 @@ import { traceWarning, traceInfoIfCI } from '../../platform/logging';
 
 import { ICellRange, IConfigurationService, IDisposableRegistry, Resource } from '../../platform/common/types';
 import * as localize from '../../platform/common/utils/localize';
-import { getInteractiveCellMetadata } from '../interactiveWindow.node';
+import { getInteractiveCellMetadata } from '../helpers';
 import { IKernelProvider } from '../../kernels/types';
 import { InteractiveWindowView } from '../../notebooks/constants';
 import { CellHashProviderFactory } from './cellHashProviderFactory.node';
 import { CodeLensCommands, Commands } from '../../platform/common/constants';
-import { generateCellRangesFromDocument } from './cellFactory.node';
+import { generateCellRangesFromDocument } from './cellFactory';
 import { ICodeLensFactory, ICellHashProvider, IFileHashes } from './types';
-import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector.node';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 
 type CodeLensCacheData = {
     cachedDocumentVersion: number | undefined;

@@ -26,7 +26,7 @@ import {
 import { commands, ConfigurationTarget, Uri, window, workspace } from 'vscode';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
-import { ProductNames } from '../../../kernels/installer/productNames.node';
+import { ProductNames } from '../../../kernels/installer/productNames';
 import { Product } from '../../../kernels/installer/types';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports

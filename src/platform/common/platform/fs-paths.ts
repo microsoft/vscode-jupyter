@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { Uri, WorkspaceFolder } from 'vscode';
 import * as path from '../../vscode-path/path';
 import * as uriPath from '../../vscode-path/resources';
@@ -44,8 +47,7 @@ function getDisplayPathImpl(file: Uri | undefined, cwd: Uri | undefined, homePat
     }
 
     if (file) {
-        // eslint-disable-next-line local-rules/dont-use-fspath
-        const fsPath = file.fsPath || file.path;
+        const fsPath = uriPath.originalFSPath(file);
 
         // Remove separator on the front
         if (fsPath && fsPath.startsWith(path.sep) && isWindows) {

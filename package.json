@@ -2287,6 +2287,7 @@
         "@types/temp": "^0.8.32",
         "@types/tmp": "0.0.33",
         "@types/untildify": "^3.0.0",
+        "@types/url-parse": "^1.4.8",
         "@types/uuid": "^3.4.3",
         "@types/vscode-notebook-renderer": "^1.60.0",
         "@types/webpack-bundle-analyzer": "^2.13.0",

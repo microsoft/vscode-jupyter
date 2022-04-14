@@ -8,7 +8,7 @@ import { assert } from 'chai';
 import { Uri, workspace } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { getKernelConnectionLanguage } from '../../../kernels/helpers.node';
-import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IExtensionTestApi } from '../../common.node';
 import { initialize } from '../../initialize.node';
 import { traceInfo } from '../../../platform/logging';

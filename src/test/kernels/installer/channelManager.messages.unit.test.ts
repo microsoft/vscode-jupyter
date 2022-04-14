@@ -7,7 +7,7 @@ import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { IPlatformService } from '../../../platform/common/platform/types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { ServiceContainer } from '../../../platform/ioc/container';
 import { ServiceManager } from '../../../platform/ioc/serviceManager';
 import { IServiceContainer } from '../../../platform/ioc/types';

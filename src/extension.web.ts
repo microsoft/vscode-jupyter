@@ -63,6 +63,8 @@ import { sendErrorTelemetry, sendStartupTelemetry } from './platform/startupTele
 import { noop } from './platform/common/utils/misc';
 import { JUPYTER_OUTPUT_CHANNEL, PythonExtension } from './webviews/webview-side/common/constants';
 import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.web';
+import { registerTypes as registerTelemetryTypes } from './telemetry/serviceRegistry.web';
+import { registerTypes as registerKernelTypes } from './kernels/serviceRegistry.web';
 import { IExtensionActivationManager } from './platform/activation/types';
 import { isCI, isTestExecution, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants';
 import { getJupyterOutputChannel } from './platform/devTools/jupyterOutputChannel';
@@ -72,6 +74,7 @@ import { ServiceContainer } from './platform/ioc/container';
 import { ServiceManager } from './platform/ioc/serviceManager';
 import { OutputChannelLogger } from './platform/logging/outputChannelLogger';
 import { ConsoleLogger } from './platform/logging/consoleLogger';
+import { initializeGlobals as initializeTelemetryGlobals } from './telemetry/telemetry';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -146,6 +149,7 @@ async function activateUnsafe(
 
         const [serviceManager, serviceContainer] = initializeGlobals(context);
         activatedServiceContainer = serviceContainer;
+        initializeTelemetryGlobals(serviceContainer);
         const activationPromise = activateComponents(context, serviceManager, serviceContainer);
 
         //===============================================
@@ -270,6 +274,8 @@ async function activateLegacy(
 
     // Register the rest of the types (platform is first because it's needed by others)
     registerPlatformTypes(context, serviceManager, isDevMode);
+    registerTelemetryTypes(serviceManager);
+    registerKernelTypes(serviceManager, isDevMode);
 
     // Load the two data science experiments that we need to register types
     // Await here to keep the register method sync

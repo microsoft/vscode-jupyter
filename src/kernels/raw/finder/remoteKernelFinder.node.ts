@@ -18,13 +18,13 @@ import {
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { ignoreLogging, traceDecoratorVerbose, traceError } from '../../../platform/logging';
 import { IDisposableRegistry, Resource } from '../../../platform/common/types';
-import { sendKernelListTelemetry } from '../../../telemetry/kernelTelemetry.node';
-import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import { sendKernelListTelemetry } from '../../../telemetry/kernelTelemetry';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { getTelemetrySafeLanguage } from '../../../telemetry/helpers';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { IRemoteKernelFinder } from '../types';
-import { PreferredRemoteKernelIdProvider } from './preferredRemoteKernelIdProvider.node';
+import { PreferredRemoteKernelIdProvider } from './preferredRemoteKernelIdProvider';
 import { getResourceType } from '../../../platform/common/utils.node';
 import { IJupyterSessionManagerFactory, IJupyterSessionManager } from '../../jupyter/types';
 

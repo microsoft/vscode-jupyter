@@ -30,7 +30,7 @@ import { InteractiveCellResultError } from '../../platform/errors/interactiveCel
 import { Telemetry, Commands, Identifiers } from '../../platform/common/constants';
 import { IDataScienceErrorHandler } from '../../platform/errors/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../types';
-import { CellMatcher } from './cellMatcher.node';
+import { CellMatcher } from './cellMatcher';
 import { ICodeWatcher, ICodeLensFactory } from './types';
 import { traceDecoratorVerbose } from '../../platform/logging';
 import { TraceOptions } from '../../platform/logging/types';

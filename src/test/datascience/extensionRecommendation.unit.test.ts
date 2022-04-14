@@ -10,7 +10,7 @@ import { IDisposable, IExtensions } from '../../platform/common/types';
 import { sleep } from '../../platform/common/utils/async';
 import { Common } from '../../platform/common/utils/localize';
 import { JupyterNotebookView } from '../../notebooks/constants';
-import { VSCodeNotebookController } from '../../notebooks/controllers/vscodeNotebookController.node';
+import { VSCodeNotebookController } from '../../notebooks/controllers/vscodeNotebookController';
 import { INotebookControllerManager } from '../../notebooks/types';
 import { IJupyterKernelSpec } from '../../kernels/types';
 import { ExtensionRecommendationService } from '../../platform/common/extensionRecommendation.node';

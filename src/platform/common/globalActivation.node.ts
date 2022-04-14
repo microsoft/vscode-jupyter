@@ -18,7 +18,7 @@ import { EditorContexts, Telemetry } from './constants';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
 import { IRawNotebookSupportedService } from '../../kernels/raw/types';
-import { hasCells } from '../../interactive-window/editor-integration/cellFactory.node';
+import { hasCells } from '../../interactive-window/editor-integration/cellFactory';
 
 @injectable()
 export class GlobalActivation implements IExtensionSingleActivationService {

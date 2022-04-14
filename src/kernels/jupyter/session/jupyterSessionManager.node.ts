@@ -29,7 +29,7 @@ import { SessionDisposedError } from '../../../platform/errors/sessionDisposedEr
 import { createInterpreterKernelSpec } from '../../helpers.node';
 import { IJupyterConnection, IJupyterKernelSpec, KernelConnectionMetadata } from '../../types';
 import { JupyterKernelService } from '../jupyterKernelService.node';
-import { JupyterKernelSpec } from '../jupyterKernelSpec.node';
+import { JupyterKernelSpec } from '../jupyterKernelSpec';
 import { createAuthorizingRequest } from './jupyterRequest.node';
 import { JupyterSession } from './jupyterSession.node';
 import { createJupyterWebSocket } from './jupyterWebSocket.node';

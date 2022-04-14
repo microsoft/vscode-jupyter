@@ -6,7 +6,7 @@ import { inject, injectable, named } from 'inversify';
 import * as vscode from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
-import { Cancellation } from '../../platform/common/cancellation.node';
+import { Cancellation } from '../../platform/common/cancellation';
 import { Identifiers, PYTHON, Telemetry } from '../../platform/common/constants';
 import { traceError } from '../../platform/logging';
 import { IFileSystem } from '../../platform/common/platform/types.node';

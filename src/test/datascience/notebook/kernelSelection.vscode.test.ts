@@ -12,7 +12,7 @@ import { BufferDecoder } from '../../../platform/common/process/decoder.node';
 import { ProcessService } from '../../../platform/common/process/proc.node';
 import { IDisposable } from '../../../platform/common/types';
 import { IKernelProvider } from '../../../platform/../kernels/types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import {
     getInterpreterHash,
     getNormalizedInterpreterPath
@@ -35,7 +35,7 @@ import {
     waitForTextOutput,
     defaultNotebookTestTimeout
 } from './helper.node';
-import { getTextOutputValue } from '../../../notebooks/helpers.node';
+import { getTextOutputValue } from '../../../notebooks/helpers';
 import { getOSType, OSType } from '../../../platform/common/utils/platform';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */

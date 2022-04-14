@@ -7,8 +7,8 @@ import * as os from 'os';
 import * as path from '../../../platform/vscode-path/path';
 
 import { Uri } from 'vscode';
-import { createCodeCell } from '../../../interactive-window/editor-integration/cellFactory.node';
-import { CellMatcher } from '../../../interactive-window/editor-integration/cellMatcher.node';
+import { createCodeCell } from '../../../interactive-window/editor-integration/cellFactory';
+import { CellMatcher } from '../../../interactive-window/editor-integration/cellMatcher';
 import { INotebookEditorProvider } from '../../../notebooks/types';
 import { IWorkspaceService, IApplicationShell } from '../../../platform/common/application/types';
 import { traceError } from '../../../platform/logging';

@@ -12,7 +12,7 @@ import { IClipboard } from '../../../platform/common/application/types';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { IJupyterSettings } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { MultiStepInput, MultiStepInputFactory } from '../../../platform/common/utils/multiStepInput.node';
+import { MultiStepInput, MultiStepInputFactory } from '../../../platform/common/utils/multiStepInput';
 import { MockInputBox } from '../mockInputBox';
 import { MockQuickPick } from '../mockQuickPick';
 import { MockMemento } from '../../mocks/mementos';
@@ -21,7 +21,7 @@ import { CryptoUtils } from '../../../platform/common/crypto.node';
 import { ApplicationEnvironment } from '../../../platform/common/application/applicationEnvironment.node';
 import { MockEncryptedStorage } from '../mockEncryptedStorage';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage.node';
-import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector.node';
+import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { JupyterUriProviderRegistration } from '../../../kernels/jupyter/jupyterUriProviderRegistration.node';
 import { Settings } from '../../../platform/common/constants';
 
