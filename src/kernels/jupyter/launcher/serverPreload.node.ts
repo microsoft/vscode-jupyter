@@ -14,7 +14,7 @@ import {
     WORKSPACE_MEMENTO
 } from '../../../platform/common/types';
 import { isJupyterNotebook } from '../../../notebooks/helpers';
-import { getKernelConnectionLanguage } from '../../helpers.node';
+import { getKernelConnectionLanguage } from '../../helpers';
 import { IKernel, IKernelProvider, INotebookProvider } from '../../types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../../interactive-window/types';
 import { DisplayOptions } from '../../displayOptions';

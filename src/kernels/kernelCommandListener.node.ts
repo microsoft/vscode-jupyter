@@ -13,12 +13,12 @@ import { trackKernelResourceInformation } from '../telemetry/telemetry';
 import { IServiceContainer } from '../platform/ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { Commands, Telemetry } from '../webviews/webview-side/common/constants';
-import { wrapKernelMethod } from './helpers.node';
 import { IKernel, IKernelProvider } from './types';
 import { IInteractiveWindowProvider } from '../interactive-window/types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { getAssociatedNotebookDocument } from '../notebooks/controllers/kernelSelector';
 import { DisplayOptions } from './displayOptions';
+import { KernelConnector } from './kernelConnector';
 
 @injectable()
 export class KernelCommandListener implements IDataScienceCommandListener {
@@ -161,7 +161,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                     throw new Error('No kernel associated with the notebook');
                 }
                 // Wrap the restart/interrupt in a loop that allows the user to switch
-                await wrapKernelMethod(
+                await KernelConnector.wrapKernelMethod(
                     controller.controller,
                     controller.connection,
                     currentContext,

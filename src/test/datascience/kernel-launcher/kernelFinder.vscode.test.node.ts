@@ -7,12 +7,12 @@ import * as path from '../../../platform/vscode-path/path';
 import { assert } from 'chai';
 import { Uri, workspace } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { getKernelConnectionLanguage } from '../../../kernels/helpers.node';
+import { getKernelConnectionLanguage } from '../../../kernels/helpers';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IExtensionTestApi } from '../../common.node';
 import { initialize } from '../../initialize.node';
 import { traceInfo } from '../../../platform/logging';
-import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter.node';
+import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { ILocalKernelFinder } from '../../../kernels/raw/types';
 

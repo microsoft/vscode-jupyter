@@ -10,8 +10,9 @@ import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { ExecutionInstallArgs, ModuleInstaller } from './moduleInstaller.node';
 import { ModuleInstallerType, ModuleInstallFlags } from './types';
 import { isPipenvEnvironmentRelatedToFolder } from './pipenv.node';
-import { getInterpreterWorkspaceFolder } from '../../platform/../kernels/helpers.node';
+import { getInterpreterWorkspaceFolder } from '../helpers';
 import { IServiceContainer } from '../../platform/ioc/types';
+import { originalFSPath } from '../../platform/vscode-path/resources';
 
 export const pipenvName = 'pipenv';
 
@@ -69,7 +70,7 @@ export class PipEnvInstaller extends ModuleInstaller {
         return {
             args,
             exe: pipenvName,
-            cwd: getInterpreterWorkspaceFolder(interpreter, this.workspaceService)
+            cwd: originalFSPath(getInterpreterWorkspaceFolder(interpreter, this.workspaceService))
         };
     }
 }

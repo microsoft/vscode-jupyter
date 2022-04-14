@@ -20,7 +20,7 @@ import { DataScienceCodeLensProvider } from '../../interactive-window/editor-int
 import { RawNotebookSupportedService } from '../../kernels/raw/session/rawNotebookSupportedService.node';
 import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
 import { IRawNotebookSupportedService } from '../../kernels/raw/types';
-import { pruneCell } from '../../platform/common/utils.node';
+import { pruneCell } from '../../platform/common/utils';
 
 /* eslint-disable  */
 suite('DataScience Tests', () => {

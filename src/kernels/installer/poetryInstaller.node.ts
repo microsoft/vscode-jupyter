@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { IConfigurationService } from '../../platform/common/types';
-import { getInterpreterWorkspaceFolder } from '../../platform/../kernels/helpers.node';
+import { getInterpreterWorkspaceFolder } from '../helpers';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { ExecutionInstallArgs, ModuleInstaller } from './moduleInstaller.node';
 import { isPoetryEnvironmentRelatedToFolder } from './poetry.node';
@@ -55,7 +55,7 @@ export class PoetryInstaller extends ModuleInstaller {
             // Install using poetry CLI only if the active poetry environment is related to the current folder.
             return isPoetryEnvironmentRelatedToFolder(
                 interpreter.uri.fsPath,
-                folder,
+                folder.fsPath,
                 this.configurationService.getSettings(undefined).poetryPath
             );
         }
@@ -69,6 +69,7 @@ export class PoetryInstaller extends ModuleInstaller {
     ): Promise<ExecutionInstallArgs> {
         const execPath = this.configurationService.getSettings(undefined).poetryPath;
         const args = [execPath, 'add', '--dev', moduleName];
+        const cwd = getInterpreterWorkspaceFolder(interpreter, this.workspaceService)?.fsPath;
 
         // TODO: We have to shell exec this because child_process.spawn will die
         // for poetry.
@@ -77,7 +78,7 @@ export class PoetryInstaller extends ModuleInstaller {
         return {
             useShellExec: true,
             args,
-            cwd: getInterpreterWorkspaceFolder(interpreter, this.workspaceService)
+            cwd
         };
     }
 }

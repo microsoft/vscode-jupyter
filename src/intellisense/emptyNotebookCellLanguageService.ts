@@ -12,7 +12,7 @@ import { noop } from '../platform/common/utils/misc';
 import { chainWithPendingUpdates } from '../notebooks/execution/notebookUpdater';
 import { isJupyterNotebook } from '../notebooks/helpers';
 import { INotebookControllerManager } from '../notebooks/types';
-import { translateKernelLanguageToMonaco } from '../platform/common/utils.node';
+import { translateKernelLanguageToMonaco } from '../platform/common/utils';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 /**
  * If user creates a blank notebook, then they'll mostl likely end up with a blank cell with language, lets assume `Python`.

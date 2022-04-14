@@ -19,7 +19,7 @@ import {
     getInterpreterKernelSpecName,
     getKernelId,
     getKernelRegistrationInfo
-} from '../../../platform/../kernels/helpers.node';
+} from '../../../platform/../kernels/helpers';
 import { PlatformService } from '../../../platform/common/platform/platformService.node';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
@@ -30,7 +30,7 @@ import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import * as platform from '../../../platform/common/utils/platform';
 import { EventEmitter, Memento, Uri } from 'vscode';
 import { IDisposable, IExtensionContext } from '../../../platform/common/types';
-import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/interpreter.node';
+import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/interpreter';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../../../platform/../kernels/types';
 import { arePathsSame } from '../../../platform/common/platform/fileUtils.node';
@@ -100,12 +100,12 @@ import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/f
             when(fs.deleteLocalFile(anything())).thenResolve();
             when(fs.localFileExists(anything())).thenResolve(true);
             const workspaceService = mock(WorkspaceService);
-            const testWorkspaceFolder = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
+            const testWorkspaceFolder = Uri.file(path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience'));
 
             when(workspaceService.getWorkspaceFolderIdentifier(anything(), anything())).thenCall((_a, b) => {
                 return Promise.resolve(b);
             });
-            when(workspaceService.rootPath).thenReturn(testWorkspaceFolder);
+            when(workspaceService.rootFolder).thenReturn(testWorkspaceFolder);
             const envVarsProvider = mock(EnvironmentVariablesProvider);
             when(envVarsProvider.getEnvironmentVariables()).thenResolve({});
             const event = new EventEmitter<Uri | undefined>();

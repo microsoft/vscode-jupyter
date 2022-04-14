@@ -16,7 +16,7 @@ import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import {
     getInterpreterHash,
     getNormalizedInterpreterPath
-} from '../../../platform/pythonEnvironments/info/interpreter.node';
+} from '../../../platform/pythonEnvironments/info/interpreter';
 import { createEventHandler, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import { closeActiveWindows, initialize, IS_CI_SERVER } from '../../initialize.node';

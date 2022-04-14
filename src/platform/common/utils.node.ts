@@ -4,13 +4,14 @@
 
 import * as path from '../../platform/vscode-path/path';
 import * as fsExtra from 'fs-extra';
-import untildify from 'untildify';
 import { Uri } from 'vscode';
 import { fsPathToUri } from '../vscode-path/utils';
 import { IWorkspaceService } from './application/types';
 import { IFileSystem } from './platform/types.node';
 import { IConfigurationService, Resource } from './types';
 import { getOSType, OSType } from './utils/platform';
+// eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
+const untildify = require('untildify');
 
 export async function tryGetRealPath(expectedPath: Uri): Promise<Uri | undefined> {
     try {

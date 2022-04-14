@@ -1,6 +1,6 @@
 import * as crypto from 'crypto';
 import * as path from '../platform/vscode-path/path';
-import { getInterpreterHash } from '../platform/pythonEnvironments/info/interpreter.node';
+import { getInterpreterHash } from '../platform/pythonEnvironments/info/interpreter';
 import { Uri } from 'vscode';
 
 function doHash(p: string) {

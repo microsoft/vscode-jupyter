@@ -15,11 +15,11 @@ import { IDisposableRegistry } from '../../platform/common/types';
 import { sleep } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
-import { getInteractiveCellMetadata } from '../interactiveWindow.node';
 import { IKernel, IKernelProvider } from '../../kernels/types';
 import { InteractiveWindowView } from '../../notebooks/constants';
 import { IJupyterVariables } from '../../kernels/variables/types';
 import { IInteractiveWindowProvider } from '../types';
+import { getInteractiveCellMetadata } from '../helpers';
 @injectable()
 export class HoverProvider implements IExtensionSyncActivationService, vscode.HoverProvider {
     private runFiles = new Set<string>();

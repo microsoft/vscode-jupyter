@@ -20,7 +20,7 @@ import { IBrowserService, IConfigurationService, Resource } from '../../platform
 import { DataScience, Common } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry, Commands } from '../../webviews/webview-side/common/constants';
-import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers.node';
+import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { translateProductToModule } from '../../kernels/installer/moduleInstaller.node';
 import { ProductNames } from '../../kernels/installer/productNames';
 import { Product } from '../../kernels/installer/types';

@@ -23,19 +23,16 @@ import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironmen
 import { sendTelemetryEvent } from '../telemetry';
 import { getTelemetrySafeHashedString } from '../telemetry/helpers';
 import { Telemetry } from '../webviews/webview-side/common/constants';
-import {
-    isModulePresentInEnvironmentCache,
-    trackPackageInstalledIntoInterpreter,
-    isModulePresentInEnvironment
-} from './installer/productInstaller.node';
+import { isModulePresentInEnvironmentCache, trackPackageInstalledIntoInterpreter } from './installer/productInstaller';
 import { ProductNames } from './installer/productNames';
 import { IInstaller, Product, InstallerResponse } from './installer/types';
 import { IKernelDependencyService, KernelConnectionMetadata, KernelInterpreterDependencyResponse } from './types';
 import { noop } from '../platform/common/utils/misc';
-import { getResourceType } from '../platform/common/utils.node';
+import { getResourceType } from '../platform/common/utils';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter.node';
 import { IRawNotebookSupportedService } from './raw/types';
 import { getComparisonKey } from '../platform/vscode-path/resources';
+import { isModulePresentInEnvironment } from './installer/productInstaller.node';
 
 /**
  * Responsible for managing dependencies of a Python interpreter required to run as a Jupyter Kernel.

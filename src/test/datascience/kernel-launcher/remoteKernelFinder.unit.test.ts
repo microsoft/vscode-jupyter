@@ -6,7 +6,7 @@
 import type { Kernel, Session } from '@jupyterlab/services';
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { getDisplayNameOrNameOfKernelConnection } from '../../../platform/../kernels/helpers.node';
+import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { Disposable, EventEmitter, Uri } from 'vscode';
 import { MockMemento } from '../../mocks/mementos';

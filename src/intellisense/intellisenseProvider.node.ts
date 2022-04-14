@@ -9,7 +9,7 @@ import { IVSCodeNotebook, IWorkspaceService } from '../platform/common/applicati
 import { IDisposableRegistry, IConfigurationService, IsPreRelease } from '../platform/common/types';
 import { IInterpreterService } from '../platform/interpreter/contracts';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { getInterpreterId } from '../platform/pythonEnvironments/info/interpreter.node';
+import { getInterpreterId } from '../platform/pythonEnvironments/info/interpreter';
 import { isJupyterNotebook, findAssociatedNotebookDocument } from '../notebooks/helpers';
 import { INotebookLanguageClientProvider, INotebookControllerManager } from '../notebooks/types';
 import { LanguageServer } from './languageServer.node';
@@ -84,7 +84,7 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
         }
         const folder =
             this.workspaceService.getWorkspaceFolder(fsPath ? Uri.file(fsPath) : undefined)?.uri ||
-            (this.workspaceService.rootPath ? Uri.file(this.workspaceService.rootPath) : undefined);
+            (this.workspaceService.rootFolder ? this.workspaceService.rootFolder : undefined);
         const key = folder ? folder.fsPath : EmptyWorkspaceKey;
         if (!this.activeInterpreterCache.has(key)) {
             this.interpreterService

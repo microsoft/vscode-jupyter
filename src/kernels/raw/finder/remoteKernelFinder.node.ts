@@ -7,7 +7,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import * as url from 'url';
 import { injectable, inject } from 'inversify';
 import { CancellationToken, Uri } from 'vscode';
-import { findPreferredKernel, getKernelId, getLanguageInNotebookMetadata } from '../../../kernels/helpers.node';
+import { findPreferredKernel, getKernelId, getLanguageInNotebookMetadata } from '../../../kernels/helpers';
 import {
     IJupyterKernelSpec,
     INotebookProviderConnection,
@@ -25,7 +25,7 @@ import { getTelemetrySafeLanguage } from '../../../telemetry/helpers';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { IRemoteKernelFinder } from '../types';
 import { PreferredRemoteKernelIdProvider } from './preferredRemoteKernelIdProvider';
-import { getResourceType } from '../../../platform/common/utils.node';
+import { getResourceType } from '../../../platform/common/utils';
 import { IJupyterSessionManagerFactory, IJupyterSessionManager } from '../../jupyter/types';
 
 // This class searches for a kernel that matches the given kernel name.

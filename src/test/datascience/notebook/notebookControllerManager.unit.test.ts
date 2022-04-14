@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import { when, instance, mock } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers.node';
+import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
 import { IJupyterKernelSpec } from '../../../kernels/types';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 

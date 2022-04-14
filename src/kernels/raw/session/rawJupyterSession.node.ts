@@ -16,7 +16,7 @@ import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../../telemetry/telemetry';
 import { sendTelemetryEvent, captureTelemetry } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
-import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers.node';
+import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
 import { ISessionWithSocket, KernelConnectionMetadata } from '../../../kernels/types';
 import { BaseJupyterSession } from '../../common/baseJupyterSession.node';
 import { IKernelLauncher, IKernelProcess } from '../types';

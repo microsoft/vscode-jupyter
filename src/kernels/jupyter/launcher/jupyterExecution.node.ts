@@ -208,7 +208,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             // Expand the working directory. Create a dummy launching file in the root path (so we expand correctly)
             const workingDirectory = expandWorkingDir(
                 options.workingDir,
-                this.workspace.rootPath ? path.join(this.workspace.rootPath, `${uuid()}.txt`) : undefined,
+                this.workspace.rootFolder ? path.join(this.workspace.rootFolder.fsPath, `${uuid()}.txt`) : undefined,
                 this.workspace
             );
 

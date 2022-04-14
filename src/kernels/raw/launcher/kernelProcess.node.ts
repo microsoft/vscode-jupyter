@@ -12,7 +12,7 @@ import {
     connectionFilePlaceholder,
     findIndexOfConnectionFile,
     isPythonKernelConnection
-} from '../../../kernels/helpers.node';
+} from '../../../kernels/helpers';
 import {
     IJupyterKernelSpec,
     LocalKernelSpecConnectionMetadata,

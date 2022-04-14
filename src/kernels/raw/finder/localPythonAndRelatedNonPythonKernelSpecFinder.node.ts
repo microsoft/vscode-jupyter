@@ -6,7 +6,12 @@ import { inject, injectable, named } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken, Memento, Uri } from 'vscode';
-import { createInterpreterKernelSpec, getKernelId, getKernelRegistrationInfo } from '../../../kernels/helpers.node';
+import {
+    createInterpreterKernelSpec,
+    getKernelId,
+    getKernelRegistrationInfo,
+    isDefaultKernelSpec
+} from '../../../kernels/helpers';
 import {
     IJupyterKernelSpec,
     LocalKernelSpecConnectionMetadata,
@@ -23,7 +28,7 @@ import { getDisplayPath, getDisplayPathFromLocalFile } from '../../../platform/c
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IMemento, GLOBAL_MEMENTO, Resource } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter.node';
+import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 import { captureTelemetry } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
@@ -58,7 +63,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         const workspaceFolderId =
             this.workspaceService.getWorkspaceFolderIdentifier(
                 resource,
-                resource?.fsPath || this.workspaceService.rootPath
+                resource?.fsPath || this.workspaceService.rootFolder?.fsPath
             ) || 'root';
         return this.listKernelsWithCache(
             workspaceFolderId,

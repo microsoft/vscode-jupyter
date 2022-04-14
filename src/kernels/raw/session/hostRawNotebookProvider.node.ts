@@ -22,7 +22,7 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { trackKernelResourceInformation } from '../../../telemetry/telemetry';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
-import { isPythonKernelConnection } from '../../helpers.node';
+import { isPythonKernelConnection } from '../../helpers';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils.node';
 import { JupyterNotebook } from '../../jupyter/launcher/jupyterNotebook.node';
 import { ConnectNotebookProviderOptions, INotebook, IRawConnection, KernelConnectionMetadata } from '../../types';

@@ -8,7 +8,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationTokenSource, Memento, NotebookDocument, NotebookEditor, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../../platform/common/application/types';
 import { Common, DataScience } from '../../../../platform/common/utils/localize';
-import { createInterpreterKernelSpec } from '../../../../platform/../kernels/helpers.node';
+import { createInterpreterKernelSpec } from '../../../../platform/../kernels/helpers';
 import { KernelDependencyService } from '../../../../platform/../kernels/kernelDependencyService.node';
 import {
     IKernelProvider,
@@ -22,7 +22,7 @@ import { createPythonInterpreter } from '../../../utils/interpreters';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../../../interactive-window/types';
 import { DisplayOptions } from '../../../../kernels/displayOptions';
 import { IRawNotebookSupportedService } from '../../../../kernels/raw/types';
-import { getResourceType } from '../../../../platform/common/utils.node';
+import { getResourceType } from '../../../../platform/common/utils';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

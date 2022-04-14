@@ -8,7 +8,7 @@ import { IServiceManager } from '../platform/ioc/types';
 import { GitHubIssueCodeLensProvider } from '../platform/logging/gitHubIssueCodeLensProvider.node';
 import { NotebookCellLanguageService } from '../intellisense/cellLanguageService';
 import { NotebookCellBangInstallDiagnosticsProvider } from '../intellisense/diagnosticsProvider.node';
-import { EmptyNotebookCellLanguageService } from '../intellisense/emptyNotebookCellLanguageService.node';
+import { EmptyNotebookCellLanguageService } from '../intellisense/emptyNotebookCellLanguageService';
 import { IntellisenseProvider } from '../intellisense/intellisenseProvider.node';
 import { KernelProvider } from '../kernels/kernelProvider.node';
 import { IKernelProvider } from '../kernels/types';

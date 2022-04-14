@@ -13,7 +13,7 @@ import { Cancellation, createPromiseFromCancellation } from '../../../platform/c
 import { traceWarning } from '../../../platform/logging';
 import { IPythonExecutionFactory } from '../../../platform/common/process/types.node';
 import { IsCodeSpace } from '../../../platform/common/types';
-import { parseSemVer } from '../../../platform/common/utils.node';
+import { parseSemVer } from '../../../platform/common/utils';
 import { DataScience, Common } from '../../../platform/common/utils/localize';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';

@@ -35,7 +35,7 @@ import { translateCellErrorOutput, getTextOutputValue } from '../../notebooks/he
 import { INotebookControllerManager } from '../../notebooks/types';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/interpreter.node';
+import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/interpreter';
 
 suite('Interactive window', async function () {
     this.timeout(120_000);

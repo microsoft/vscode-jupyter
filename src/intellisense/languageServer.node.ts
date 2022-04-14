@@ -24,7 +24,7 @@ import { createNotebookMiddleware, createPylanceMiddleware, NotebookMiddleware }
 import * as uuid from 'uuid/v4';
 import { NOTEBOOK_SELECTOR, PYTHON_LANGUAGE } from '../platform/common/constants';
 import { traceInfo } from '../platform/logging';
-import { getInterpreterId } from '../platform/pythonEnvironments/info/interpreter.node';
+import { getInterpreterId } from '../platform/pythonEnvironments/info/interpreter';
 import { noop } from '../platform/common/utils/misc';
 import { sleep } from '../platform/common/utils/async';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';

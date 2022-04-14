@@ -51,7 +51,7 @@ import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { ProductNames } from '../../../kernels/installer/productNames';
 import { Product } from '../../../kernels/installer/types';
 import { IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
-import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter.node';
+import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 import { getOSType, OSType } from '../../../platform/common/utils/platform';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports

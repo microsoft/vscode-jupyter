@@ -184,9 +184,9 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
      * Returns a unique identifier for the current workspace
      */
     private getUriAccountKey(): string {
-        if (this.workspaceService.rootPath) {
+        if (this.workspaceService.rootFolder) {
             // Folder situation
-            return this.crypto.createHash(this.workspaceService.rootPath, 'string', 'SHA512');
+            return this.crypto.createHash(this.workspaceService.rootFolder.fsPath, 'string', 'SHA512');
         } else if (this.workspaceService.workspaceFile) {
             // Workspace situation
             return this.crypto.createHash(this.workspaceService.workspaceFile.fsPath, 'string', 'SHA512');

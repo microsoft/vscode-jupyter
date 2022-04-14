@@ -37,8 +37,8 @@ import { IEnvironmentActivationService } from '../../platform/interpreter/activa
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { ServiceContainer } from '../../platform/ioc/container';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/interpreter.node';
-import { getKernelId } from '../../kernels/helpers.node';
+import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/interpreter';
+import { getKernelId } from '../../kernels/helpers';
 import { Product } from '../../kernels/installer/types';
 import { JupyterInterpreterDependencyService } from '../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService.node';
 import { JupyterInterpreterOldCacheStateStore } from '../../kernels/jupyter/interpreter/jupyterInterpreterOldCacheStateStore.node';

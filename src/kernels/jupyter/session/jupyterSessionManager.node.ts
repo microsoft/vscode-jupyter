@@ -26,7 +26,7 @@ import {
 } from '../../../platform/common/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError.node';
-import { createInterpreterKernelSpec } from '../../helpers.node';
+import { createInterpreterKernelSpec } from '../../helpers';
 import { IJupyterConnection, IJupyterKernelSpec, KernelConnectionMetadata } from '../../types';
 import { JupyterKernelService } from '../jupyterKernelService.node';
 import { JupyterKernelSpec } from '../jupyterKernelSpec';

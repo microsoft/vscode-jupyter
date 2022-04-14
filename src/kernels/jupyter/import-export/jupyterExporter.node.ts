@@ -15,7 +15,7 @@ import { traceError } from '../../../platform/logging';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { ICell, IConfigurationService } from '../../../platform/common/types';
-import { pruneCell } from '../../../platform/common/utils.node';
+import { pruneCell } from '../../../platform/common/utils';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IDataScienceErrorHandler } from '../../../platform/errors/types';
 import { concatMultilineString } from '../../../webviews/webview-side/common';

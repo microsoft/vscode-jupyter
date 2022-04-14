@@ -23,7 +23,7 @@ import { SessionDisposedError } from '../../../platform/errors/sessionDisposedEr
 import { captureTelemetry } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { BaseJupyterSession, JupyterSessionStartError } from '../../common/baseJupyterSession.node';
-import { getNameOfKernelConnection } from '../../helpers.node';
+import { getNameOfKernelConnection, jvscIdentifier } from '../../helpers';
 import { KernelConnectionMetadata, isLocalConnection, IJupyterConnection, ISessionWithSocket } from '../../types';
 import { JupyterKernelService } from '../jupyterKernelService.node';
 import { JupyterWebSockets } from './jupyterWebSocket.node';

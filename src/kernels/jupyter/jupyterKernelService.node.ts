@@ -28,7 +28,7 @@ import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { JupyterKernelDependencyError } from '../../platform/errors/jupyterKernelDependencyError.node';
-import { getKernelRegistrationInfo, cleanEnvironment } from '../helpers.node';
+import { getKernelRegistrationInfo, cleanEnvironment } from '../helpers';
 import { JupyterPaths } from '../raw/finder/jupyterPaths.node';
 import {
     IJupyterKernelSpec,
@@ -38,7 +38,7 @@ import {
     LocalKernelConnectionMetadata
 } from '../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
-import { serializePythonEnvironment } from '../../platform/api/pythonApi.node';
+import { serializePythonEnvironment } from '../../platform/api/pythonApi';
 
 /**
  * Responsible for registering and updating kernels

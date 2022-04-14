@@ -226,7 +226,7 @@ export class KernelConnector {
         return kernel;
     }
 
-    private static async wrapKernelMethod(
+    public static async wrapKernelMethod(
         controller: NotebookController,
         metadata: KernelConnectionMetadata,
         initialContext: 'start' | 'interrupt' | 'restart',

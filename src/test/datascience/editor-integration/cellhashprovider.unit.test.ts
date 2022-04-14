@@ -6,7 +6,6 @@ import * as TypeMoq from 'typemoq';
 import { NotebookCell, NotebookCellKind, Position, Range, Uri } from 'vscode';
 
 import { IDebugService } from '../../../platform/common/application/types';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../../platform/common/types';
 import { CellHashProvider } from '../../../interactive-window/editor-integration/cellhashprovider.node';
 import { IKernel } from '../../../platform/../kernels/types';
@@ -14,6 +13,7 @@ import { MockDocument } from '../mockDocument';
 import { MockDocumentManager } from '../mockDocumentManager';
 import { JupyterNotebookView } from '../../../notebooks/constants';
 import { ICellHashListener, IFileHashes } from '../../../interactive-window/editor-integration/types';
+import { IPlatformService } from '../../../platform/common/platform/types';
 
 class HashListener implements ICellHashListener {
     public lastHashes: IFileHashes[] = [];
@@ -30,27 +30,24 @@ suite('CellHashProvider Unit Tests', () => {
     let configurationService: TypeMoq.IMock<IConfigurationService>;
     let pythonSettings: TypeMoq.IMock<IWatchableJupyterSettings>;
     let debugService: TypeMoq.IMock<IDebugService>;
-    let fileSystem: TypeMoq.IMock<IFileSystem>;
+    let platformService: TypeMoq.IMock<IPlatformService>;
     let kernel: TypeMoq.IMock<IKernel>;
     const hashListener: HashListener = new HashListener();
     setup(() => {
         configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
         pythonSettings = TypeMoq.Mock.ofType<IWatchableJupyterSettings>();
         debugService = TypeMoq.Mock.ofType<IDebugService>();
-        fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
+        platformService = TypeMoq.Mock.ofType<IPlatformService>();
         kernel = TypeMoq.Mock.ofType<IKernel>();
         configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         debugService.setup((d) => d.activeDebugSession).returns(() => undefined);
-        fileSystem
-            .setup((d) => d.areLocalPathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
-            .returns(() => true);
         documentManager = new MockDocumentManager();
         hashProvider = new CellHashProvider(
             documentManager,
             configurationService.object,
             debugService.object,
-            fileSystem.object,
             [hashListener],
+            platformService.object,
             kernel.object
         );
     });

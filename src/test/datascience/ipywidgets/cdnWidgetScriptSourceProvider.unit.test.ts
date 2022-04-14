@@ -16,7 +16,6 @@ import { IConfigurationService, WidgetCDNs } from '../../../platform/common/type
 import { noop } from '../../../platform/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { CDNWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider.node';
-import { IPyWidgetScriptSource } from '../../../kernels/ipywidgets-message-coordination/ipyWidgetScriptSource';
 import {
     ILocalResourceUriConverter,
     IWidgetScriptSourceProvider
@@ -45,7 +44,7 @@ suite('DataScience - ipywidget - CDN', () => {
     setup(() => {
         configService = mock(ConfigurationService);
         fileSystem = mock(FileSystem);
-        webviewUriConverter = mock(IPyWidgetScriptSource);
+        webviewUriConverter = mock(ILocalResourceUriConverter);
         settings = { widgetScriptSources: [] } as any;
         when(configService.getSettings(anything())).thenReturn(settings as any);
         when(fileSystem.localFileExists(anything())).thenCall((f) => fs.pathExists(f));
