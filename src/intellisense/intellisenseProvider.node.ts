@@ -73,19 +73,18 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
     }
 
     private handleInterpreterChange() {
-        const folders = [...this.activeInterpreterCache.keys()];
         this.activeInterpreterCache.clear();
-        folders.forEach((f) => this.getActiveInterpreterSync(f));
+        this.getActiveInterpreterSync(undefined);
     }
 
-    private getActiveInterpreterSync(fsPath: string | undefined): PythonEnvironment | undefined {
+    private getActiveInterpreterSync(uri: Uri | undefined): PythonEnvironment | undefined {
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             return;
         }
         const folder =
-            this.workspaceService.getWorkspaceFolder(fsPath ? Uri.file(fsPath) : undefined)?.uri ||
+            this.workspaceService.getWorkspaceFolder(uri)?.uri ||
             (this.workspaceService.rootFolder ? this.workspaceService.rootFolder : undefined);
-        const key = folder ? folder.fsPath : EmptyWorkspaceKey;
+        const key = folder ? getComparisonKey(folder) : EmptyWorkspaceKey;
         if (!this.activeInterpreterCache.has(key)) {
             this.interpreterService
                 .getActiveInterpreter(folder)
@@ -105,7 +104,7 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
         const oldController = this.knownControllers.get(e.notebook);
         const oldInterpreter = oldController
             ? oldController.connection.interpreter
-            : this.getActiveInterpreterSync(e.notebook.uri.fsPath);
+            : this.getActiveInterpreterSync(e.notebook.uri);
         const oldInterpreterId = oldInterpreter ? this.getInterpreterIdFromCache(oldInterpreter) : undefined;
         const oldLanguageServer = oldInterpreterId ? await this.servers.get(oldInterpreterId) : undefined;
 
@@ -134,7 +133,7 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
             }
 
             // Make sure the active interpreter cache is up to date
-            this.getActiveInterpreterSync(n.uri.fsPath);
+            this.getActiveInterpreterSync(n.uri);
 
             // If the controller is empty, default to the active interpreter
             const interpreter =
@@ -171,9 +170,7 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
         const controller = notebook
             ? this.notebookControllerManager.getSelectedNotebookController(notebook)
             : undefined;
-        const notebookInterpreter = controller
-            ? controller.connection.interpreter
-            : this.getActiveInterpreterSync(uri.fsPath);
+        const notebookInterpreter = controller ? controller.connection.interpreter : this.getActiveInterpreterSync(uri);
         let notebookId = notebookInterpreter ? this.getInterpreterIdFromCache(notebookInterpreter) : undefined;
 
         // Special case. For remote use the active interpreter as the controller's interpreter isn't
@@ -183,7 +180,7 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
             (controller?.connection.kind === 'startUsingRemoteKernelSpec' ||
                 controller?.connection.kind === 'connectToLiveRemoteKernel')
         ) {
-            const activeInterpreter = this.getActiveInterpreterSync(uri.fsPath);
+            const activeInterpreter = this.getActiveInterpreterSync(uri);
             notebookId = activeInterpreter ? this.getInterpreterIdFromCache(activeInterpreter) : undefined;
         }
 

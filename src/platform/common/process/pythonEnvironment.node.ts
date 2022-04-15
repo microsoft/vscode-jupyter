@@ -86,8 +86,8 @@ function createDeps(
     shellExec: (command: string, options?: ShellOptions) => Promise<ExecutionResult<string>>
 ) {
     return {
-        getPythonArgv: (python: Uri) => pythonArgv || [python.fsPath],
-        getObservablePythonArgv: (python: Uri) => observablePythonArgv || [python.fsPath],
+        getPythonArgv: (python: Uri) => pythonArgv || [getDisplayPath(python)],
+        getObservablePythonArgv: (python: Uri) => observablePythonArgv || [getDisplayPath(python)],
         isValidExecutable,
         exec: async (cmd: string, args: string[]) => exec(cmd, args, { throwOnStdErr: true }),
         shellExec: async (text: string, timeout: number) => shellExec(text, { timeout })

@@ -24,7 +24,7 @@ export class CellHashProviderFactory {
     constructor(
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
-        @inject(IDebugService) private readonly debugService: IDebugService,
+        @inject(IDebugService) @optional() private readonly debugService: IDebugService | undefined,
         @inject(IServiceContainer) private readonly svcContainer: IServiceContainer,
         @multiInject(ICellHashListener) @optional() private readonly listeners: ICellHashListener[] | undefined
     ) {}

@@ -67,7 +67,7 @@ export class CellHashProvider implements ICellHashProvider {
     constructor(
         private documentManager: IDocumentManager,
         private configService: IConfigurationService,
-        private debugService: IDebugService,
+        private debugService: IDebugService | undefined,
         private listeners: ICellHashListener[] | undefined,
         private platformService: IPlatformService,
         private readonly kernel: IKernel
@@ -401,7 +401,7 @@ export class CellHashProvider implements ICellHashProvider {
         firstNonBlankLineIndex: number
     ): { runtimeLine: number; debuggerStartLine: number } {
         if (
-            this.debugService.activeDebugSession &&
+            this.debugService?.activeDebugSession &&
             this.configService.getSettings(getCellResource(cell)).stopOnFirstLineWhileDebugging
         ) {
             // Inject the breakpoint line
