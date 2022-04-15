@@ -248,7 +248,7 @@ export interface INotebook {
 export type ConnectNotebookProviderOptions = {
     ui: IDisplayOptions;
     kind: 'localJupyter' | 'remoteJupyter';
-    token: CancellationToken;
+    token: CancellationToken | undefined;
     resource: Resource;
 };
 
@@ -384,7 +384,7 @@ export type GetServerOptions = {
      * Whether we're only interested in local Jupyter Servers.
      */
     localJupyter: boolean;
-    token: CancellationToken;
+    token: CancellationToken | undefined;
     resource: Resource;
 };
 
@@ -509,4 +509,19 @@ export interface IKernelDependencyService {
         token?: CancellationToken,
         ignoreCache?: boolean
     ): Promise<boolean>;
+}
+
+export const IKernelFinder = Symbol('IKernelFinder');
+
+export interface IKernelFinder {
+    findKernel(
+        resource: Resource,
+        option?: nbformat.INotebookMetadata,
+        cancelToken?: CancellationToken
+    ): Promise<KernelConnectionMetadata | undefined>;
+    listKernels(
+        resource: Resource,
+        cancelToken?: CancellationToken,
+        useCache?: 'useCache' | 'ignoreCache'
+    ): Promise<KernelConnectionMetadata[]>;
 }

@@ -11,7 +11,7 @@ export enum LogLevel {
     Info = 20,
     Debug = 10,
     Trace = 5,
-    Off = 0
+    Off = 100
 }
 
 export type Arguments = unknown[];

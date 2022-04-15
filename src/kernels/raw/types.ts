@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-import type * as nbformat from '@jupyterlab/nbformat';
 import { CancellationToken, Event } from 'vscode';
 import { IAsyncDisposable, IDisplayOptions, IDisposable, Resource } from '../../platform/common/types';
 import {
@@ -61,14 +60,6 @@ export interface IKernelProcess extends IAsyncDisposable {
 
 export const ILocalKernelFinder = Symbol('ILocalKernelFinder');
 export interface ILocalKernelFinder {
-    findKernel(
-        resource: Resource,
-        option?: nbformat.INotebookMetadata,
-        cancelToken?: CancellationToken
-    ): Promise<LocalKernelConnectionMetadata | undefined>;
-    findPreferredLocalKernelConnectionFromCache(
-        notebookMetadata?: nbformat.INotebookMetadata
-    ): LocalKernelConnectionMetadata | undefined;
     /**
      * Finds all kernel specs including Python.
      */
@@ -81,16 +72,11 @@ export interface ILocalKernelFinder {
 
 export const IRemoteKernelFinder = Symbol('IRemoteKernelFinder');
 export interface IRemoteKernelFinder {
-    findKernel(
-        resource: Resource,
-        connInfo: INotebookProviderConnection | undefined,
-        option?: nbformat.INotebookMetadata,
-        cancelToken?: CancellationToken
-    ): Promise<KernelConnectionMetadata | undefined>;
     listKernels(
         resource: Resource,
         connInfo: INotebookProviderConnection | undefined,
-        cancelToken?: CancellationToken
+        cancelToken?: CancellationToken,
+        useCache?: 'useCache' | 'ignoreCache'
     ): Promise<KernelConnectionMetadata[]>;
 }
 /**

@@ -12,19 +12,31 @@ import { Disposable, EventEmitter, Uri } from 'vscode';
 import { MockMemento } from '../../mocks/mementos';
 import { CryptoUtils } from '../../../platform/common/crypto';
 import { noop } from '../../core';
-import { IJupyterConnection, IJupyterKernelSpec, LiveRemoteKernelConnectionMetadata } from '../../../kernels/types';
+import {
+    IJupyterConnection,
+    IJupyterKernelSpec,
+    IKernelFinder,
+    LiveRemoteKernelConnectionMetadata
+} from '../../../kernels/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { JupyterSessionManager } from '../../../kernels/jupyter/session/jupyterSessionManager.node';
 import { JupyterSessionManagerFactory } from '../../../kernels/jupyter/session/jupyterSessionManagerFactory.node';
 import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder.node';
-import { IRemoteKernelFinder } from '../../../kernels/raw/types';
+import { ILocalKernelFinder, IRemoteKernelFinder } from '../../../kernels/raw/types';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider';
 import { IJupyterKernel, IJupyterSessionManager } from '../../../kernels/jupyter/types';
+import { KernelFinder } from '../../../kernels/kernelFinder.node';
+import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
+import { ConfigurationService } from '../../../platform/common/configuration/service.node';
+import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
+import { LocalKernelFinder } from '../../../kernels/raw/finder/localKernelFinder.node';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];
     let preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider;
-    let kernelFinder: IRemoteKernelFinder;
+    let remoteKernelFinder: IRemoteKernelFinder;
+    let localKernelFinder: ILocalKernelFinder;
+    let kernelFinder: IKernelFinder;
     let jupyterSessionManager: IJupyterSessionManager;
     const dummyEvent = new EventEmitter<number>();
     let interpreterService: IInterpreterService;
@@ -106,12 +118,32 @@ suite(`Remote Kernel Finder`, () => {
         when(jupyterSessionManagerFactory.onRestartSessionCreated).thenReturn(sessionCreatedEvent.event);
         when(jupyterSessionManagerFactory.onRestartSessionUsed).thenReturn(sessionUsedEvent.event);
         interpreterService = mock<IInterpreterService>();
+        localKernelFinder = mock(LocalKernelFinder);
+        when(localKernelFinder.listKernels(anything(), anything(), anything())).thenResolve([]);
 
-        kernelFinder = new RemoteKernelFinder(
+        remoteKernelFinder = new RemoteKernelFinder(
             disposables,
-            preferredRemoteKernelIdProvider,
             instance(jupyterSessionManagerFactory),
             instance(interpreterService)
+        );
+
+        const extensionChecker = mock(PythonExtensionChecker);
+        const configService = mock(ConfigurationService);
+        const dsSettings = {
+            jupyterServerType: 'remote'
+        } as any;
+        when(configService.getSettings(anything())).thenReturn(dsSettings as any);
+        const notebookProvider = mock(NotebookProvider);
+        when(notebookProvider.connect(anything())).thenResolve(connInfo);
+
+        kernelFinder = new KernelFinder(
+            instance(localKernelFinder),
+            remoteKernelFinder,
+            instance(extensionChecker),
+            instance(interpreterService),
+            preferredRemoteKernelIdProvider,
+            instance(notebookProvider),
+            instance(configService)
         );
     });
     teardown(() => {
@@ -126,7 +158,7 @@ suite(`Remote Kernel Finder`, () => {
             juliaSpec,
             interpreterSpec
         ]);
-        const kernels = await kernelFinder.listKernels(undefined, connInfo);
+        const kernels = await remoteKernelFinder.listKernels(undefined, connInfo);
         assert.equal(kernels.length, 4, 'Not enough kernels returned');
         assert.equal(
             getDisplayNameOrNameOfKernelConnection(kernels[0]),
@@ -153,7 +185,7 @@ suite(`Remote Kernel Finder`, () => {
             juliaSpec,
             interpreterSpec
         ]);
-        const kernels = await kernelFinder.listKernels(undefined, connInfo);
+        const kernels = await remoteKernelFinder.listKernels(undefined, connInfo);
         const liveKernels = kernels.filter((k) => k.kind === 'connectToLiveRemoteKernel');
         assert.equal(liveKernels.length, 3, 'Live kernels not found');
     });
@@ -168,7 +200,7 @@ suite(`Remote Kernel Finder`, () => {
             interpreterSpec
         ]);
         sessionCreatedEvent.fire({ id: python3Kernels[0].id, clientId: python3Kernels[0].id } as any);
-        let kernels = await kernelFinder.listKernels(undefined, connInfo);
+        let kernels = await remoteKernelFinder.listKernels(undefined, connInfo);
         let liveKernels = kernels.filter((k) => k.kind === 'connectToLiveRemoteKernel');
 
         // Should skip one
@@ -176,7 +208,7 @@ suite(`Remote Kernel Finder`, () => {
 
         // Mark it as used
         sessionUsedEvent.fire({ id: python3Kernels[0].id, clientId: python3Kernels[0].id } as any);
-        kernels = await kernelFinder.listKernels(undefined, connInfo);
+        kernels = await remoteKernelFinder.listKernels(undefined, connInfo);
         liveKernels = kernels.filter((k) => k.kind === 'connectToLiveRemoteKernel');
         assert.equal(liveKernels.length, 3, 'Restart session was not included');
     });
@@ -192,21 +224,21 @@ suite(`Remote Kernel Finder`, () => {
         ]);
 
         // Try python
-        let kernel = await kernelFinder.findKernel(undefined, connInfo, {
+        let kernel = await kernelFinder.findKernel(undefined, {
             language_info: { name: PYTHON_LANGUAGE },
             orig_nbformat: 4
         });
         assert.ok(kernel, 'No python kernel found matching notebook metadata');
 
         // Julia
-        kernel = await kernelFinder.findKernel(undefined, connInfo, {
+        kernel = await kernelFinder.findKernel(undefined, {
             language_info: { name: 'julia' },
             orig_nbformat: 4
         });
         assert.ok(kernel, 'No julia kernel found matching notebook metadata');
 
         // Python 2
-        kernel = await kernelFinder.findKernel(undefined, connInfo, {
+        kernel = await kernelFinder.findKernel(undefined, {
             kernelspec: {
                 display_name: 'Python 2 on Disk',
                 name: 'python2'
@@ -228,7 +260,7 @@ suite(`Remote Kernel Finder`, () => {
         const uri = Uri.file('/usr/foobar/foo.ipynb');
         await preferredRemoteKernelIdProvider.storePreferredRemoteKernelId(uri, '2');
 
-        const kernel = await kernelFinder.findKernel(uri, connInfo);
+        const kernel = await kernelFinder.findKernel(uri);
         assert.ok(kernel, 'Kernel not found for uri');
         assert.equal(kernel?.kind, 'connectToLiveRemoteKernel', 'Live kernel not found');
         assert.equal(

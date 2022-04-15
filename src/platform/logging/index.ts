@@ -71,6 +71,12 @@ export function traceVerbose(message: string, ...args: Arguments): void {
         loggers.forEach((l) => l.traceVerbose(message, ...args));
     }
 }
+
+export function traceWithLevel(level: number, message: string, ...args: Arguments): void {
+    if (globalLoggingLevel <= level) {
+        loggers.forEach((l) => l.traceVerbose(message, ...args));
+    }
+}
 export function traceInfoIfCI(message: string, ...args: Arguments): void {
     if (isCI) {
         traceInfo(message, ...args);

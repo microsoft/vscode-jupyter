@@ -3,11 +3,10 @@
 'use strict';
 
 import { Kernel } from '@jupyterlab/services';
-import type * as nbformat from '@jupyterlab/nbformat';
 import * as url from 'url';
 import { injectable, inject } from 'inversify';
 import { CancellationToken, Uri } from 'vscode';
-import { findPreferredKernel, getKernelId, getLanguageInNotebookMetadata } from '../helpers';
+import { getKernelId } from '../helpers';
 import {
     IJupyterKernelSpec,
     INotebookProviderConnection,
@@ -15,17 +14,11 @@ import {
     LiveRemoteKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../types';
-import { PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { ignoreLogging, traceDecoratorVerbose, traceError } from '../../platform/logging';
 import { IDisposableRegistry, Resource } from '../../platform/common/types';
-import { sendKernelListTelemetry } from '../../telemetry/kernelTelemetry';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
+import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { IRemoteKernelFinder } from '../raw/types';
-import { PreferredRemoteKernelIdProvider } from '../raw/finder/preferredRemoteKernelIdProvider';
-import { getResourceType } from '../../platform/common/utils';
 import { IJupyterSessionManagerFactory, IJupyterSessionManager } from './types';
 
 // This class searches for a kernel that matches the given kernel name.
@@ -39,8 +32,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
     private readonly kernelIdsToHide = new Set<string>();
     constructor(
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
-        @inject(PreferredRemoteKernelIdProvider)
-        private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
         @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IInterpreterService) private interpreterService: IInterpreterService
     ) {
@@ -51,55 +42,14 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
             this.jupyterSessionManagerFactory.onRestartSessionUsed(this.removeKernelFromIgnoreList.bind(this))
         );
     }
-    @traceDecoratorVerbose('Find remote kernel spec')
-    @captureTelemetry(Telemetry.KernelFinderPerf)
-    @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'remote' })
-    public async findKernel(
-        resource: Resource,
-        connInfo: INotebookProviderConnection | undefined,
-        notebookMetadata?: nbformat.INotebookMetadata,
-        @ignoreLogging() _cancelToken?: CancellationToken
-    ): Promise<KernelConnectionMetadata | undefined> {
-        const resourceType = getResourceType(resource);
-        const telemetrySafeLanguage =
-            resourceType === 'interactive'
-                ? PYTHON_LANGUAGE
-                : getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata) || '');
-        try {
-            // Get list of all of the specs
-            const kernels = await this.listKernels(resource, connInfo);
-
-            // Find the preferred kernel index from the list.
-            const preferred = findPreferredKernel(
-                kernels,
-                resource,
-                notebookMetadata,
-                undefined,
-                this.preferredRemoteKernelIdProvider
-            );
-            sendTelemetryEvent(Telemetry.PreferredKernel, undefined, {
-                result: preferred ? 'found' : 'notfound',
-                resourceType,
-                language: telemetrySafeLanguage
-            });
-            return preferred;
-        } catch (ex) {
-            sendTelemetryEvent(
-                Telemetry.PreferredKernel,
-                undefined,
-                { result: 'failed', resourceType, language: telemetrySafeLanguage },
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                ex as any,
-                true
-            );
-            traceError(`findKernel crashed`, ex);
-        }
-    }
 
     // Talk to the remote server to determine sessions
+    @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'remote' })
     public async listKernels(
-        resource: Resource,
-        connInfo: INotebookProviderConnection | undefined
+        _resource: Resource,
+        connInfo: INotebookProviderConnection | undefined,
+        _cancelToken: CancellationToken,
+        _useCache?: 'useCache' | 'ignoreCache'
     ): Promise<KernelConnectionMetadata[]> {
         // Get a jupyter session manager to talk to
         let sessionManager: IJupyterSessionManager | undefined;
@@ -162,8 +112,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                 // Filter out excluded ids
                 const filtered = mappedLive.filter((k) => !this.kernelIdsToHide.has(k.kernelModel.id || ''));
                 const items = [...filtered, ...mappedSpecs];
-
-                sendKernelListTelemetry(resource, items);
                 return items;
             } finally {
                 if (sessionManager) {
@@ -171,7 +119,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                 }
             }
         }
-        sendKernelListTelemetry(resource, []);
         return [];
     }
 

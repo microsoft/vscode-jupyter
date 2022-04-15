@@ -9,7 +9,7 @@ import { JVSC_EXTENSION_ID } from '../platform/common/constants';
 
 import { IServiceManager } from '../platform/ioc/types';
 import { setSharedProperty } from '../telemetry';
-import { ILocalKernelFinder, IRawNotebookSupportedService, IRemoteKernelFinder } from './raw/types';
+import { IRawNotebookSupportedService, IRemoteKernelFinder } from './raw/types';
 import { KernelCrashMonitor } from './kernelCrashMonitor';
 import { registerTypes as registerWidgetTypes } from './ipywidgets-message-coordination/serviceRegistry.web';
 import { injectable } from 'inversify';
@@ -18,10 +18,10 @@ import { IJupyterServerUriStorage, IJupyterUriProviderRegistration } from './jup
 import { JupyterServerSelector } from './jupyter/serverSelector';
 import { JupyterUriProviderRegistration } from './jupyter/jupyterUriProviderRegistration';
 import { RemoteKernelFinder } from './jupyter/remoteKernelFinder.web';
-import { LocalKernelFinder } from './raw/finder/localKernelFinder.web';
 import { NotebookProvider } from './jupyter/launcher/notebookProvider';
-import { IKernelProvider, INotebookProvider } from './types';
+import { IKernelFinder, IKernelProvider, INotebookProvider } from './types';
 import { KernelProvider } from './kernelProvider.web';
+import { KernelFinder } from './kernelFinder.web';
 import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKernelIdProvider';
 
 @injectable()
@@ -59,7 +59,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         IJupyterUriProviderRegistration,
         JupyterUriProviderRegistration
     );
-    serviceManager.addSingleton<ILocalKernelFinder>(ILocalKernelFinder, LocalKernelFinder);
     serviceManager.addSingleton<IRemoteKernelFinder>(IRemoteKernelFinder, RemoteKernelFinder);
     serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
@@ -67,6 +66,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         PreferredRemoteKernelIdProvider,
         PreferredRemoteKernelIdProvider
     );
+    serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
 
     // Subdirectories
     registerWidgetTypes(serviceManager, isDevMode);

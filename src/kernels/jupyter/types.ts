@@ -79,7 +79,7 @@ export interface IJupyterExecution extends IAsyncDisposable {
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
     connectToNotebookServer(
         options: INotebookServerOptions,
-        cancelToken: CancellationToken
+        cancelToken?: CancellationToken
     ): Promise<INotebookServer | undefined>;
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined>;
     getServer(options: INotebookServerOptions): Promise<INotebookServer | undefined>;

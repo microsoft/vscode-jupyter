@@ -86,7 +86,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         try {
             const value = await this.serverPromise[property];
             // If we cancelled starting of the server, then don't cache the result.
-            if (!value && options.token.isCancellationRequested) {
+            if (!value && options.token?.isCancellationRequested) {
                 delete this.serverPromise[property];
             }
             return value;
@@ -99,7 +99,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
 
     private async startServer(
         resource: Resource,
-        token: CancellationToken,
+        token: CancellationToken | undefined,
         forLocal: boolean
     ): Promise<INotebookServer | undefined> {
         const serverOptions = await this.getNotebookServerOptions(resource, forLocal);
@@ -148,7 +148,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         } catch (e) {
             disposeAllDisposables(disposables);
             // If user cancelled, then do nothing.
-            if (token.isCancellationRequested && e instanceof CancellationError) {
+            if (token?.isCancellationRequested && e instanceof CancellationError) {
                 return;
             }
 

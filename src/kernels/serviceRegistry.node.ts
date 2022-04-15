@@ -99,13 +99,14 @@ import {
     IJupyterUriProviderRegistration,
     IJupyterServerUriStorage
 } from './jupyter/types';
-import { IKernelDependencyService, IKernelProvider, INotebookProvider } from './types';
+import { IKernelDependencyService, IKernelFinder, IKernelProvider, INotebookProvider } from './types';
 import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
 import { IJupyterCommandFactory, IJupyterSubCommandExecutionService } from './jupyter/types.node';
 import { KernelCrashMonitor } from './kernelCrashMonitor';
 import { KernelAutoRestartMonitor } from './kernelAutoRestartMonitor.node';
 import { registerTypes as registerWidgetTypes } from './ipywidgets-message-coordination/serviceRegistry.node';
 import { KernelProvider } from './kernelProvider.node';
+import { KernelFinder } from './kernelFinder.node';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IRawNotebookSupportedService>(
@@ -275,6 +276,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         KernelAutoRestartMonitor
     );
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
+    serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
 
     // Subdirectories
     registerInstallerTypes(serviceManager);

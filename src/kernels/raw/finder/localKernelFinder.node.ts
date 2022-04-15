@@ -3,42 +3,20 @@
 // Licensed under the MIT License.
 'use strict';
 
-import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Memento } from 'vscode';
-import {
-    findPreferredKernel,
-    getDisplayNameOrNameOfKernelConnection,
-    getInterpreterHashInMetadata,
-    getLanguageInNotebookMetadata
-} from '../../../kernels/helpers';
 import { LocalKernelConnectionMetadata } from '../../../kernels/types';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
-import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { createPromiseFromCancellation } from '../../../platform/common/cancellation';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import {
-    traceInfo,
-    traceError,
-    traceDecoratorVerbose,
-    ignoreLogging,
-    traceDecoratorError
-} from '../../../platform/logging';
+import { traceInfo, traceError, ignoreLogging, traceDecoratorError } from '../../../platform/logging';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IMemento, GLOBAL_MEMENTO, Resource } from '../../../platform/common/types';
-import { isPythonNotebook } from '../../../notebooks/helpers';
-import { sendKernelListTelemetry } from '../../../telemetry/kernelTelemetry';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/interpreter';
-import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
-import { getTelemetrySafeLanguage } from '../../../telemetry/helpers';
+import { captureTelemetry } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { ILocalKernelFinder } from '../types';
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import { noop } from '../../../platform/common/utils/misc';
-import { getResourceType } from '../../../platform/common/utils';
-import { TraceOptions } from '../../../platform/logging/types';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../../../platform/api/pythonApi';
 import { isArray } from '../../../platform/common/utils/sysTypes';
 
@@ -72,80 +50,12 @@ const LocalKernelSpecConnectionsCacheKey = 'LOCAL_KERNEL_SPEC_CONNECTIONS_CACHE_
 export class LocalKernelFinder implements ILocalKernelFinder {
     private lastFetchedKernelsWithoutCache: LocalKernelConnectionMetadata[] = [];
     constructor(
-        @inject(IInterpreterService) private interpreterService: IInterpreterService,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(LocalKnownPathKernelSpecFinder) private readonly nonPythonKernelFinder: LocalKnownPathKernelSpecFinder,
         @inject(LocalPythonAndRelatedNonPythonKernelSpecFinder)
         private readonly pythonKernelFinder: LocalPythonAndRelatedNonPythonKernelSpecFinder,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
         @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}
-    @traceDecoratorVerbose('Find kernel spec', TraceOptions.BeforeCall | TraceOptions.Arguments)
-    @captureTelemetry(Telemetry.KernelFinderPerf)
-    public async findKernel(
-        resource: Resource,
-        notebookMetadata?: nbformat.INotebookMetadata,
-        @ignoreLogging() cancelToken?: CancellationToken
-    ): Promise<LocalKernelConnectionMetadata | undefined> {
-        const resourceType = getResourceType(resource);
-        const telemetrySafeLanguage =
-            resourceType === 'interactive'
-                ? PYTHON_LANGUAGE
-                : getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata) || '');
-        try {
-            const preferredKernelFromCache = this.findPreferredLocalKernelConnectionFromCache(notebookMetadata);
-            // Get list of all of the specs
-            const kernelsPromise = this.listKernels(resource, cancelToken, 'useCache');
-
-            // If we have a value from cache, return that.
-            // Check if this is still valid (i.e. the interpreter is still installed).
-            if (
-                preferredKernelFromCache &&
-                preferredKernelFromCache.interpreter &&
-                (await this.fs.localFileExists(preferredKernelFromCache.interpreter.uri.fsPath))
-            ) {
-                traceInfo(`Preferred kernel connection found in cache ${preferredKernelFromCache.id}`);
-                return preferredKernelFromCache;
-            }
-
-            const kernels = await kernelsPromise;
-            const isPythonNbOrInteractiveWindow = isPythonNotebook(notebookMetadata) || resourceType === 'interactive';
-            // Always include the interpreter in the search if we can
-            const preferredInterpreter =
-                isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
-                    ? await this.interpreterService.getActiveInterpreter(resource)
-                    : undefined;
-
-            // Find the preferred kernel index from the list.
-            const preferred = findPreferredKernel(kernels, resource, notebookMetadata, preferredInterpreter, undefined);
-            sendTelemetryEvent(Telemetry.PreferredKernel, undefined, {
-                result: preferred ? 'found' : 'notfound',
-                resourceType,
-                language: telemetrySafeLanguage,
-                hasActiveInterpreter: !!preferredInterpreter
-            });
-            if (preferred) {
-                traceInfo(`findKernel found ${getDisplayNameOrNameOfKernelConnection(preferred)}`);
-                return preferred as LocalKernelConnectionMetadata;
-            }
-        } catch (ex) {
-            sendTelemetryEvent(
-                Telemetry.PreferredKernel,
-                undefined,
-                {
-                    result: 'failed',
-                    resourceType,
-                    language: telemetrySafeLanguage
-                },
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                ex as any,
-                true
-            );
-            traceError(`findKernel crashed`, ex);
-            return undefined;
-        }
-    }
-
     /**
      * Search all our local file system locations for installed kernel specs and return them
      */
@@ -186,7 +96,6 @@ export class LocalKernelFinder implements ILocalKernelFinder {
 
         //
         kernels = this.filterKernels(kernels);
-        sendKernelListTelemetry(resource, kernels);
         // Do not update the cache if we got kernels from the cache.
         if (!kernelsRetrievedFromCache) {
             void this.cacheLocalKernelConnections(kernels);
@@ -202,26 +111,6 @@ export class LocalKernelFinder implements ILocalKernelFinder {
         kernels.forEach((item) => uniqueItems.set(item.id, item));
         await this.updateCache(LocalKernelSpecConnectionsCacheKey, Array.from(uniqueItems.values()));
     }
-    public findPreferredLocalKernelConnectionFromCache(
-        notebookMetadata?: nbformat.INotebookMetadata
-    ): LocalKernelConnectionMetadata | undefined {
-        if (!notebookMetadata) {
-            return;
-        }
-        const interpreterHash = getInterpreterHashInMetadata(notebookMetadata);
-        if (!interpreterHash) {
-            return;
-        }
-        const items = this.getFromCache(LocalKernelSpecConnectionsCacheKey);
-        const preferredKernel = items.find(
-            (item) => item.interpreter && getInterpreterHash(item.interpreter) === interpreterHash
-        );
-        if (!preferredKernel?.interpreter) {
-            return;
-        }
-        return preferredKernel;
-    }
-
     @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'local' })
     private async listKernelsWithoutCache(
         resource: Resource,
