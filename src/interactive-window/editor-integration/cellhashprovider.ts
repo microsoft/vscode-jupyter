@@ -28,10 +28,9 @@ import { CellMatcher } from './cellMatcher';
 import { ICellHash, ICellHashProvider, ICellHashListener, IFileHashes } from './types';
 import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 import { getInteractiveCellMetadata } from '../helpers';
-import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { untildify } from '../../platform/common/utils/platform';
-import { originalFSPath } from '../../platform/vscode-path/resources';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp'); // NOSONAR
@@ -247,7 +246,7 @@ export class CellHashProvider implements ICellHashProvider {
             // exceptions in output. Track backs only work on local files.
             if (!this.traceBackRegexes.has(uristring)) {
                 const uri = Uri.parse(uristring);
-                const fileMatchRegex = new RegExp(`\\[.*?;32m${_escapeRegExp(originalFSPath(uri))}`);
+                const fileMatchRegex = new RegExp(`\\[.*?;32m${_escapeRegExp(getFilePath(uri))}`);
                 const fileDisplayNameMatchRegex = new RegExp(`\\[.*?;32m${_escapeRegExp(getDisplayPath(uri))}`);
                 this.traceBackRegexes.set(uristring, [fileMatchRegex, fileDisplayNameMatchRegex]);
             }
@@ -503,7 +502,7 @@ export class CellHashProvider implements ICellHashProvider {
                 // Then replace the input line with our uri for this cell
                 return afterLineReplace.replace(
                     /.*?\n/,
-                    `\u001b[1;32m${originalFSPath(matchUri)}\u001b[0m in \u001b[0;36m${inputMatch[2]}\n`
+                    `\u001b[1;32m${getFilePath(matchUri)}\u001b[0m in \u001b[0;36m${inputMatch[2]}\n`
                 );
             } else if (this.kernel && notebook && notebook.notebookType !== InteractiveWindowView) {
                 const matchingCellUri = this.executionCounts.get(executionCount);
@@ -522,7 +521,7 @@ export class CellHashProvider implements ICellHashProvider {
                     return afterLineReplace.replace(
                         /.*?\n/,
                         `\u001b[1;32m${localize.DataScience.cellAtFormat().format(
-                            originalFSPath(matchUri),
+                            getFilePath(matchUri),
                             (cellIndex + 1).toString()
                         )}\u001b[0m in \u001b[0;36m${inputMatch[2]}\n`
                     );
@@ -533,7 +532,7 @@ export class CellHashProvider implements ICellHashProvider {
         const fileMatch = /^File.*?\[\d;32m(.*):\d+.*\u001b.*\n/.exec(traceFrame);
         if (fileMatch && fileMatch.length > 1) {
             // We need to untilde the file path here for the link to work in VS Code
-            const detildePath = untildify(fileMatch[1], originalFSPath(this.platformService.homeDir));
+            const detildePath = untildify(fileMatch[1], getFilePath(this.platformService.homeDir));
             const fileUri = Uri.file(detildePath);
             // We have a match, replace source lines with hrefs
             return traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
@@ -572,7 +571,7 @@ export class CellHashProvider implements ICellHashProvider {
         } else {
             const matchingFile = regexes.find((e) => {
                 const uri = Uri.parse(e[0]);
-                return traceFrame.includes(originalFSPath(uri));
+                return traceFrame.includes(getFilePath(uri));
             });
             if (matchingFile) {
                 const offset = this.findCellOffset(this.hashes.get(matchingFile[0]), traceFrame);

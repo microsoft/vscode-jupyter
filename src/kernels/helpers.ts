@@ -22,7 +22,7 @@ import { Uri } from 'vscode';
 import { IWorkspaceService } from '../platform/common/application/types';
 import { isCI, PYTHON_LANGUAGE, Settings, Telemetry } from '../platform/common/constants';
 import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../platform/logging';
-import { getDisplayPath } from '../platform/common/platform/fs-paths';
+import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
 import { DataScience } from '../platform/common/utils/localize';
 import { SysInfoReason } from '../platform/messageTypes';
 import { getNormalizedInterpreterPath, getInterpreterHash } from '../platform/pythonEnvironments/info/interpreter';
@@ -58,7 +58,7 @@ export function createInterpreterKernelSpec(
 ): IJupyterKernelSpec {
     const interpreterMetadata = interpreter
         ? {
-              path: uriPath.originalFSPath(interpreter.uri)
+              path: getFilePath(interpreter.uri)
           }
         : {};
     // This creates a kernel spec for an interpreter. When launched, 'python' argument will map to using the interpreter
@@ -83,8 +83,8 @@ export function createInterpreterKernelSpec(
 
     return new JupyterKernelSpec(
         defaultSpec,
-        specFile ? uriPath.originalFSPath(specFile) : undefined,
-        uriPath.originalFSPath(interpreter?.uri),
+        specFile ? getFilePath(specFile) : undefined,
+        getFilePath(interpreter?.uri),
         'registeredByNewVersionOfExt'
     );
 }
@@ -992,10 +992,8 @@ export function getKernelId(spec: IJupyterKernelSpec, interpreter?: PythonEnviro
         argsForGenerationOfId = spec.argv.join('#').toLowerCase();
     }
     const prefixForRemoteKernels = remoteBaseUrl ? `${remoteBaseUrl}.` : '';
-    const specPath = uriPath.originalFSPath(
-        getNormalizedInterpreterPath(fsPathToUri(spec.interpreterPath) || spec.uri)
-    );
-    const interpreterPath = uriPath.originalFSPath(getNormalizedInterpreterPath(interpreter?.uri)) || '';
+    const specPath = getFilePath(getNormalizedInterpreterPath(fsPathToUri(spec.interpreterPath) || spec.uri));
+    const interpreterPath = getFilePath(getNormalizedInterpreterPath(interpreter?.uri)) || '';
     return `${prefixForRemoteKernels}${
         spec.id || ''
     }.${specName}.${specPath}.${interpreterPath}.${argsForGenerationOfId}`;

@@ -11,7 +11,8 @@ import {
     IPersistentStateFactory,
     IExtensions,
     ICryptoUtils,
-    IAsyncDisposableRegistry
+    IAsyncDisposableRegistry,
+    IBrowserService
 } from './types';
 import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.web';
 import { Extensions } from './application/extensions.web';
@@ -23,6 +24,7 @@ import { VSCodeNotebook } from './application/notebook';
 import { ClipboardService } from './application/clipboard';
 import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
 import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
+import { BrowserService } from './net/browser';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingletonInstance<boolean>(IsWindows, false);
@@ -37,6 +39,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IClipboard>(IClipboard, ClipboardService);
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
+    serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
 
     registerPlatformTypes(serviceManager);
 }

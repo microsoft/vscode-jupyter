@@ -10,7 +10,7 @@ import { IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../platform
 import { IKernelProvider, LiveRemoteKernelConnectionMetadata } from '../../kernels/types';
 import { INotebookControllerManager } from '../types';
 import { switchKernel } from './kernelSelector';
-import { originalFSPath } from '../../platform/vscode-path/resources';
+import { getFilePath } from '../../platform/common/platform/fs-paths';
 
 const MEMENTO_BASE_KEY = 'jupyter-notebook-remote-session-';
 
@@ -38,7 +38,7 @@ export class LiveKernelSwitcher implements IExtensionSingleActivationService {
     }
 
     private getKey(notebookUri: Uri) {
-        return `${MEMENTO_BASE_KEY}${originalFSPath(notebookUri)}`;
+        return `${MEMENTO_BASE_KEY}${getFilePath(notebookUri)}`;
     }
 
     private onDidOpenNotebook(n: NotebookDocument) {

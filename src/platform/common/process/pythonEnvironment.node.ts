@@ -11,7 +11,7 @@ import * as internalPython from './internal/python.node';
 import { ExecutionResult, IProcessService, ShellOptions, SpawnOptions } from './types.node';
 import { compare, SemVer } from 'semver';
 import type { PythonEnvironment as PyEnv } from '../../pythonEnvironments/info';
-import { getDisplayPath } from '../platform/fs-paths';
+import { getDisplayPath, getFilePath } from '../platform/fs-paths';
 import { Uri } from 'vscode';
 class PythonEnvironment {
     private cachedInterpreterInformation: InterpreterInformation | undefined | null = null;
@@ -86,8 +86,8 @@ function createDeps(
     shellExec: (command: string, options?: ShellOptions) => Promise<ExecutionResult<string>>
 ) {
     return {
-        getPythonArgv: (python: Uri) => pythonArgv || [getDisplayPath(python)],
-        getObservablePythonArgv: (python: Uri) => observablePythonArgv || [getDisplayPath(python)],
+        getPythonArgv: (python: Uri) => pythonArgv || [getFilePath(python)],
+        getObservablePythonArgv: (python: Uri) => observablePythonArgv || [getFilePath(python)],
         isValidExecutable,
         exec: async (cmd: string, args: string[]) => exec(cmd, args, { throwOnStdErr: true }),
         shellExec: async (text: string, timeout: number) => shellExec(text, { timeout })
@@ -101,7 +101,7 @@ export function createPythonEnv(
     fs: IFileSystem
 ): PythonEnvironment {
     const deps = createDeps(
-        async (filename: Uri) => fs.localFileExists(filename.fsPath),
+        async (filename: Uri) => fs.localFileExists(getFilePath(filename)),
         // We use the default: [pythonPath].
         undefined,
         undefined,
@@ -137,7 +137,7 @@ export function createCondaEnv(
     }
     const pythonArgv = [condaFile, ...runArgs, 'python'];
     const deps = createDeps(
-        async (filename) => fs.localFileExists(filename.fsPath),
+        async (filename) => fs.localFileExists(getFilePath(filename)),
         pythonArgv,
         // eslint-disable-next-line
         // TODO: Use pythonArgv here once 'conda run' can be

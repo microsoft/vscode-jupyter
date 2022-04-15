@@ -6,6 +6,7 @@ import { Uri } from 'vscode';
 import * as uriPath from '../../vscode-path/resources';
 import { PythonEnvironment } from '.';
 import { getOSType, OSType } from '../../common/utils/platform';
+import { getFilePath } from '../../common/platform/fs-paths';
 
 export function getInterpreterHash(interpreter: PythonEnvironment | {uri: Uri}){
     const interpreterPath = getNormalizedInterpreterPath(interpreter.uri);
@@ -36,7 +37,7 @@ export function areInterpreterPathsSame(path1: Uri = Uri.file(''), path2:Uri = U
  * This function will take that into account.
  */
  export function getNormalizedInterpreterPath(path:Uri = Uri.file(''), ostype = getOSType(), forceLowerCase: boolean = false){
-    let fsPath = uriPath.originalFSPath(path);
+    let fsPath = getFilePath(path);
     if (forceLowerCase) {
         fsPath = fsPath.toLowerCase();
     }

@@ -11,14 +11,13 @@ import { LiveKernelSwitcher } from './controllers/liveKernelSwitcher';
 import { NotebookControllerManager } from './controllers/notebookControllerManager';
 import { RemoteSwitcher } from './controllers/remoteSwitcher';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
-import { INotebookLanguageClientProvider, INotebookControllerManager, INotebookEditorProvider } from './types';
+import { INotebookControllerManager, INotebookEditorProvider } from './types';
 import { NotebookUsageTracker } from './notebookUsageTracker';
 import { NotebookEditorProvider } from './notebookEditorProvider';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
     serviceManager.addSingleton<CellOutputDisplayIdTracker>(CellOutputDisplayIdTracker, CellOutputDisplayIdTracker);
-    serviceManager.addBinding(INotebookLanguageClientProvider, IExtensionSingleActivationService);
     serviceManager.addSingleton<INotebookControllerManager>(INotebookControllerManager, NotebookControllerManager);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelFilterUI);
     serviceManager.addBinding(INotebookControllerManager, IExtensionSyncActivationService);

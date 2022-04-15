@@ -57,6 +57,7 @@ import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { DisplayOptions } from '../kernels/displayOptions';
 import { getInteractiveCellMetadata, InteractiveCellMetadata } from './helpers';
 import { KernelConnector } from '../kernels/kernelConnector';
+import { getFilePath } from '../platform/common/platform/fs-paths';
 
 export class InteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
@@ -431,7 +432,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
     public async debugCode(code: string, fileUri: Uri, line: number): Promise<boolean> {
         let saved = true;
-        const file = fileUri.fsPath;
+        const file = getFilePath(fileUri);
         // Make sure the file is saved before debugging
         const doc = this.documentManager.textDocuments.find((d) => this.fs.areLocalPathsSame(d.fileName, file));
         if (doc && doc.isUntitled) {
@@ -607,7 +608,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
 
         // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
-        await this.setFileInKernel(fileUri.fsPath, kernel!);
+        await this.setFileInKernel(getFilePath(fileUri), kernel!);
         traceInfoIfCI('file in kernel set for IW');
     }
 
@@ -799,7 +800,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             // Bring up the export file dialog box
             const uri = await this.exportDialog.showDialog(ExportFormat.ipynb, this.owningResource);
             if (uri) {
-                await this.jupyterExporter.exportToFile(cells, uri.fsPath);
+                await this.jupyterExporter.exportToFile(cells, getFilePath(uri));
             }
         }
     }

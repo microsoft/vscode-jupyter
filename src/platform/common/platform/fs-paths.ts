@@ -6,6 +6,20 @@ import * as path from '../../vscode-path/path';
 import * as uriPath from '../../vscode-path/resources';
 import { getOSType, OSType } from '../utils/platform';
 
+export function getFilePath(file: Uri | undefined) {
+    const isWindows = getOSType() === OSType.Windows;
+    if (file) {
+        const fsPath = uriPath.originalFSPath(file);
+
+        // Remove separator on the front
+        if (fsPath && fsPath.startsWith(path.sep) && isWindows) {
+            return fsPath.slice(1);
+        }
+        return fsPath || '';
+    }
+    return '';
+}
+
 export function getDisplayPath(
     filename: Uri | undefined,
     workspaceFolders: readonly WorkspaceFolder[] | WorkspaceFolder[] = [],
@@ -46,15 +60,5 @@ function getDisplayPathImpl(file: Uri | undefined, cwd: Uri | undefined, homePat
         }
     }
 
-    if (file) {
-        const fsPath = uriPath.originalFSPath(file);
-
-        // Remove separator on the front
-        if (fsPath && fsPath.startsWith(path.sep) && isWindows) {
-            return fsPath.slice(1);
-        }
-        return fsPath || '';
-    }
-
-    return '';
+    return getFilePath(file);
 }

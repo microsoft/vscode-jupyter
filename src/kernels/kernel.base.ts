@@ -20,7 +20,7 @@ import { IApplicationShell, IWorkspaceService } from '../platform/common/applica
 import { WrappedError } from '../platform/errors/types';
 import { disposeAllDisposables } from '../platform/common/helpers';
 import { traceInfo, traceInfoIfCI, traceError, traceVerbose, traceWarning } from '../platform/logging';
-import { getDisplayPath } from '../platform/common/platform/fs-paths';
+import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
 import {
     Resource,
     IDisposableRegistry,
@@ -57,7 +57,6 @@ import { Cancellation } from '../platform/common/cancellation';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
 import { DisplayOptions } from './displayOptions';
 import { SilentExecutionErrorOptions } from './helpers';
-import { originalFSPath } from '../platform/vscode-path/resources';
 
 export abstract class BaseKernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -453,7 +452,7 @@ export abstract class BaseKernel implements IKernel {
             result.push(...changeDirScripts);
 
             // Set the ipynb file
-            const file = originalFSPath(this.resourceUri);
+            const file = getFilePath(this.resourceUri);
             if (file) {
                 result.push(`__vsc_ipynb_file__ = "${file.replace(/\\/g, '\\\\')}"`);
             }

@@ -22,6 +22,7 @@ import { LocalKernelFinder } from './raw/finder/localKernelFinder.web';
 import { NotebookProvider } from './jupyter/launcher/notebookProvider';
 import { IKernelProvider, INotebookProvider } from './types';
 import { KernelProvider } from './kernelProvider.web';
+import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKernelIdProvider';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
@@ -62,6 +63,10 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IRemoteKernelFinder>(IRemoteKernelFinder, RemoteKernelFinder);
     serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
+    serviceManager.addSingleton<PreferredRemoteKernelIdProvider>(
+        PreferredRemoteKernelIdProvider,
+        PreferredRemoteKernelIdProvider
+    );
 
     // Subdirectories
     registerWidgetTypes(serviceManager, isDevMode);

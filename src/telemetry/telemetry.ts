@@ -19,7 +19,8 @@ import { getResourceType } from '../platform/common/utils';
 import { populateTelemetryWithErrorInfo } from '../platform/errors';
 import { setSharedProperty, IEventNamePropertyMapping, sendTelemetryEvent, waitBeforeSending } from '.';
 import { IServiceContainer } from '../platform/ioc/types';
-import { getComparisonKey, originalFSPath } from '../platform/vscode-path/resources';
+import { getComparisonKey } from '../platform/vscode-path/resources';
+import { getFilePath } from '../platform/common/platform/fs-paths';
 
 /**
  * This information is sent with each telemetry event.
@@ -238,7 +239,7 @@ export function trackKernelResourceInformation(resource: Resource, information: 
             );
             currentData.pythonEnvironmentType = interpreter.envType;
             currentData.pythonEnvironmentPath = getTelemetrySafeHashedString(
-                originalFSPath(getNormalizedInterpreterPath(interpreter.uri))
+                getFilePath(getNormalizedInterpreterPath(interpreter.uri))
             );
             pythonEnvironmentsByHash.set(currentData.pythonEnvironmentPath, interpreter);
             if (interpreter.version) {

@@ -28,6 +28,7 @@ import { getInterpreterId } from '../platform/pythonEnvironments/info/interprete
 import { noop } from '../platform/common/utils/misc';
 import { sleep } from '../platform/common/utils/async';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
+import { getFilePath } from '../platform/common/platform/fs-paths';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ensure(target: any, key: string) {
@@ -134,14 +135,14 @@ export class LanguageServer implements Disposable {
                           () => languageClient,
                           () => noop, // Don't trace output. Slows things down too much
                           NOTEBOOK_SELECTOR,
-                          interpreter.uri.fsPath || interpreter.uri.path,
+                          getFilePath(interpreter.uri),
                           (uri) => shouldAllowIntellisense(uri, interpreterId, interpreter.uri),
                           getNotebookHeader
                       )
                     : createPylanceMiddleware(
                           () => languageClient,
                           NOTEBOOK_SELECTOR,
-                          interpreter.uri.fsPath || interpreter.uri.path,
+                          getFilePath(interpreter.uri),
                           (uri) => shouldAllowIntellisense(uri, interpreterId, interpreter.uri),
                           getNotebookHeader
                       );
@@ -227,8 +228,9 @@ export class LanguageServer implements Disposable {
         if (python) {
             const runJediPath = path.join(python.extensionPath, 'pythonFiles', 'run-jedi-language-server.py');
             if (await fs.pathExists(runJediPath)) {
+                const interpreterPath = getFilePath(interpreter.uri);
                 const serverOptions: ServerOptions = {
-                    command: interpreter.uri.fsPath || 'python',
+                    command: interpreterPath.length > 0 ? interpreterPath : 'python',
                     args: [runJediPath]
                 };
                 return serverOptions;

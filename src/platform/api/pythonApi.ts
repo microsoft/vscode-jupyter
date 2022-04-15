@@ -6,7 +6,6 @@
 // Licensed under the MIT License.
 
 import { Disposable, EventEmitter, Event, Uri, workspace } from 'vscode';
-import { originalFSPath } from '../vscode-path/resources';
 import { fsPathToUri } from '../vscode-path/utils';
 import { PythonEnvironment } from './extension';
 import {
@@ -26,7 +25,7 @@ import { isCI, PythonExtension, Telemetry } from '../common/constants';
 import { IExtensions, IDisposableRegistry, Resource } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import { traceDecoratorVerbose, traceError, traceInfo, traceVerbose } from '../logging';
-import { getDisplayPath } from '../common/platform/fs-paths';
+import { getDisplayPath, getFilePath } from '../common/platform/fs-paths';
 import { IInterpreterSelector, IInterpreterQuickPickItem } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { areInterpreterPathsSame } from '../pythonEnvironments/info/interpreter';
@@ -51,8 +50,8 @@ export function serializePythonEnvironment(
     if (jupyterVersion) {
         return {
             ...jupyterVersion,
-            path: originalFSPath(jupyterVersion.uri),
-            envPath: jupyterVersion.envPath ? originalFSPath(jupyterVersion.envPath) : undefined
+            path: getFilePath(jupyterVersion.uri),
+            envPath: jupyterVersion.envPath ? getFilePath(jupyterVersion.envPath) : undefined
         };
     }
 }
@@ -346,7 +345,7 @@ export class InterpreterService implements IInterpreterService {
         try {
             return await this.apiProvider
                 .getApi()
-                .then((api) => api.getInterpreterDetails(originalFSPath(pythonPath), resource))
+                .then((api) => api.getInterpreterDetails(getFilePath(pythonPath), resource))
                 .then(deserializePythonEnvironment);
         } catch {
             // If the python extension cannot get the details here, don't fail. Just don't use them.
