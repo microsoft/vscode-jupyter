@@ -4,13 +4,13 @@ import { expect } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import * as vscode from 'vscode';
-import { PythonExtensionChecker } from '../../../platform/api/pythonApi.node';
+import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { IJupyterSettings } from '../../../platform/common/types';
 import { INotebook, KernelConnectionMetadata } from '../../../platform/../kernels/types';
-import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider.node';
-import { DisplayOptions } from '../../../kernels/displayOptions.node';
+import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
+import { DisplayOptions } from '../../../kernels/displayOptions';
 import { IJupyterNotebookProvider } from '../../../kernels/jupyter/types';
 import { IRawNotebookProvider } from '../../../kernels/raw/types';
 

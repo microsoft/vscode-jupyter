@@ -21,11 +21,11 @@ interface IVariableExplorerCellFormatterProps {
 
 // Our formatter for cells in the variable explorer. Allow for different styles per column type
 export class VariableExplorerCellFormatter extends React.Component<IVariableExplorerCellFormatterProps> {
-    public shouldComponentUpdate(nextProps: IVariableExplorerCellFormatterProps) {
+    public override shouldComponentUpdate(nextProps: IVariableExplorerCellFormatterProps) {
         return nextProps.value !== this.props.value;
     }
 
-    public render() {
+    public override render() {
         const className = `react-grid-variable-explorer-cell-${this.props.cellStyle.toString()}`;
         if (this.props.value !== null && this.props.value !== undefined) {
             return (

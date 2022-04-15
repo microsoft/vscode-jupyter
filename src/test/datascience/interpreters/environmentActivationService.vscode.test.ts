@@ -10,7 +10,7 @@ import { traceInfo } from '../../../platform/logging';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { initialize } from '../../initialize.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import {
     EnvironmentActivationService,
     EnvironmentVariablesCacheInformation

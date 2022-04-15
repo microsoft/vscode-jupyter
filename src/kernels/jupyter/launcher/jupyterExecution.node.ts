@@ -5,14 +5,14 @@ import * as path from '../../../platform/vscode-path/path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
 import { IWorkspaceService } from '../../../platform/common/application/types';
-import { Cancellation } from '../../../platform/common/cancellation.node';
+import { Cancellation } from '../../../platform/common/cancellation';
 import { WrappedError } from '../../../platform/errors/types';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposableRegistry, IConfigurationService, Resource } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError.node';
 import { JupyterWaitForIdleError } from '../../../platform/errors/jupyterWaitForIdleError.node';
-import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, captureTelemetry } from '../../../telemetry';
@@ -208,7 +208,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             // Expand the working directory. Create a dummy launching file in the root path (so we expand correctly)
             const workingDirectory = expandWorkingDir(
                 options.workingDir,
-                this.workspace.rootPath ? path.join(this.workspace.rootPath, `${uuid()}.txt`) : undefined,
+                this.workspace.rootFolder ? path.join(this.workspace.rootFolder.fsPath, `${uuid()}.txt`) : undefined,
                 this.workspace
             );
 

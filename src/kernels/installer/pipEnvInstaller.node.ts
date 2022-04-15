@@ -6,12 +6,13 @@ import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnviron
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { InterpreterUri } from '../../platform/common/types';
 import { isResource } from '../../platform/common/utils/misc';
-import { IInterpreterService } from '../../platform/interpreter/contracts.node';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { ExecutionInstallArgs, ModuleInstaller } from './moduleInstaller.node';
 import { ModuleInstallerType, ModuleInstallFlags } from './types';
 import { isPipenvEnvironmentRelatedToFolder } from './pipenv.node';
-import { getInterpreterWorkspaceFolder } from '../../platform/../kernels/helpers.node';
+import { getInterpreterWorkspaceFolder } from '../helpers';
 import { IServiceContainer } from '../../platform/ioc/types';
+import { getFilePath } from '../../platform/common/platform/fs-paths';
 
 export const pipenvName = 'pipenv';
 
@@ -66,10 +67,11 @@ export class PipEnvInstaller extends ModuleInstaller {
             flags & ModuleInstallFlags.updateDependencies ||
             flags & ModuleInstallFlags.upgrade;
         const args = [update ? 'update' : 'install', moduleName, '--dev'];
+        const workspaceFolder = getInterpreterWorkspaceFolder(interpreter, this.workspaceService);
         return {
             args,
             exe: pipenvName,
-            cwd: getInterpreterWorkspaceFolder(interpreter, this.workspaceService)
+            cwd: workspaceFolder ? getFilePath(workspaceFolder) : undefined
         };
     }
 }

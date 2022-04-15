@@ -9,7 +9,7 @@ import { ConfigurationTarget } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { IAsyncDisposableRegistry, IConfigurationService } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { IMultiStepInputFactory, IMultiStepInput } from '../../../platform/common/utils/multiStepInput.node';
+import { IMultiStepInputFactory, IMultiStepInput } from '../../../platform/common/utils/multiStepInput';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { IJupyterPasswordConnect, IJupyterPasswordConnectInfo } from '../types';

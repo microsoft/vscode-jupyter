@@ -4,8 +4,9 @@
 'use strict';
 
 import { Event, Uri } from 'vscode';
-import { IDisposable } from '../../platform/common/types';
+import { IDisposable, IHttpClient } from '../../platform/common/types';
 import { IPyWidgetMessages } from '../../platform/messageTypes';
+import { IKernel } from '../types';
 
 export interface IPyWidgetMessage {
     message: IPyWidgetMessages;
@@ -50,6 +51,18 @@ export interface IWidgetScriptSourceProvider extends IDisposable {
     getWidgetScriptSource(moduleName: string, moduleVersion: string): Promise<Readonly<WidgetScriptSource>>;
 }
 
+export const IWidgetScriptSourceProviderFactory = Symbol('IWidgetScriptSourceProviderFactory');
+
+export interface IWidgetScriptSourceProviderFactory {
+    getProviders(
+        kernel: IKernel,
+        uriConverter: ILocalResourceUriConverter,
+        httpClient: IHttpClient
+    ): IWidgetScriptSourceProvider[];
+}
+
+export const ILocalResourceUriConverter = Symbol('ILocalResourceUriConverter');
+
 /**
  * Given a local resource this will convert the Uri into a form such that it can be used in a WebView.
  */
@@ -70,4 +83,13 @@ export interface ILocalResourceUriConverter {
      * ```
      */
     asWebviewUri(localResource: Uri): Promise<Uri>;
+    /**
+     * The converter will post an event when it needs to convert the webview URI
+     */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    requestUri: Event<Uri>;
+    /**
+     * This is the response to the requestUri event
+     */
+    resolveUri(request: Uri, result: Uri): void;
 }

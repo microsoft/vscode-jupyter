@@ -38,8 +38,8 @@ import { PYTHON_LANGUAGE, Settings } from '../../../platform/common/constants';
 import { RemoteKernelSpecConnectionMetadata } from '../../../platform/../kernels/types';
 import { JupyterServer } from '../jupyterServer.node';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants.node';
-import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector.node';
-import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider.node';
+import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
+import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider';
 import { INotebookControllerManager } from '../../../notebooks/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */

@@ -5,18 +5,18 @@
 import { inject, injectable } from 'inversify';
 import { NotebookEditor, TextEditor } from 'vscode';
 import { IKernel, IKernelProvider } from '../../kernels/types';
-import { getNotebookMetadata, isJupyterNotebook, isPythonNotebook } from '../../notebooks/helpers.node';
+import { getNotebookMetadata, isJupyterNotebook, isPythonNotebook } from '../../notebooks/helpers';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { EditorContexts, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { ContextKey } from '../../platform/common/contextKey.node';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { isNotebookCell, noop } from '../../platform/common/utils/misc';
-import { getActiveInteractiveWindow } from '../helpers.node';
+import { getActiveInteractiveWindow } from '../helpers';
 import { InteractiveWindowView, JupyterNotebookView } from '../../notebooks/constants';
 import { INotebookControllerManager } from '../../notebooks/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../types';
-import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector.node';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 
 @injectable()
 export class ActiveEditorContextService implements IExtensionSingleActivationService, IDisposable {

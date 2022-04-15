@@ -6,7 +6,7 @@ import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { DataScience } from '../platform/common/utils/localize';
 import { IStatusProvider } from '../platform/progress/types';
-import { getDisplayNameOrNameOfKernelConnection } from './helpers.node';
+import { getDisplayNameOrNameOfKernelConnection } from './helpers';
 import { IKernel, IKernelProvider } from './types';
 
 /**

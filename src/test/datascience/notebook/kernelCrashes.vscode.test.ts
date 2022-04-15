@@ -36,10 +36,10 @@ import * as dedent from 'dedent';
 import { IKernelProvider } from '../../../platform/../kernels/types';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { sleep } from '../../core';
-import { getDisplayNameOrNameOfKernelConnection } from '../../../platform/../kernels/helpers.node';
+import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
 import { Uri, window, workspace } from 'vscode';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
-import { translateCellErrorOutput } from '../../../notebooks/helpers.node';
+import { translateCellErrorOutput } from '../../../notebooks/helpers';
 import { INotebookEditorProvider } from '../../../notebooks/types';
 
 const codeToKillKernel = dedent`

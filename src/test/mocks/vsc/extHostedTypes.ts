@@ -485,7 +485,7 @@ export namespace vscMockExtHostedTypes {
             return this._anchor === this._end;
         }
 
-        toJSON() {
+        override toJSON() {
             return {
                 start: this.start,
                 end: this.end,

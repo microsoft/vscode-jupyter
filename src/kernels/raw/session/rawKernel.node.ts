@@ -8,7 +8,7 @@ import * as uuid from 'uuid/v4';
 import { traceError, traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
-import { getNameOfKernelConnection } from '../../../kernels/helpers.node';
+import { getNameOfKernelConnection } from '../../../kernels/helpers';
 import { IWebSocketLike } from '../../common/kernelSocketWrapper.node';
 import { IKernelProcess } from '../types';
 import { RawSocket } from './rawSocket.node';

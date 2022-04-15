@@ -9,7 +9,7 @@ import * as sinon from 'sinon';
 import { languages, Uri } from 'vscode';
 import { traceInfo } from '../../../../platform/logging';
 import { IDisposable } from '../../../../platform/common/types';
-import { IInterpreterService } from '../../../../platform/interpreter/contracts.node';
+import { IInterpreterService } from '../../../../platform/interpreter/contracts';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../../constants.node';
 import { initialize, IS_CI_SERVER } from '../../../initialize.node';

@@ -6,7 +6,7 @@ import { ExportFormat } from './types';
 
 @injectable()
 export class ExportToHTML extends ExportBase {
-    public async export(
+    public override async export(
         source: Uri,
         target: Uri,
         interpreter: PythonEnvironment,

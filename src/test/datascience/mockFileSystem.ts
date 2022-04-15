@@ -112,17 +112,17 @@ export class MockFileSystem extends FileSystem {
         super();
         this.vscfs = new FakeVSCodeFileSystemAPI();
     }
-    public async readLocalFile(filePath: string): Promise<string> {
+    public override async readLocalFile(filePath: string): Promise<string> {
         const contents = this.contentOverloads.get(this.getFileKey(filePath));
         if (contents) {
             return contents;
         }
         return super.readLocalFile(filePath);
     }
-    public async writeLocalFile(filePath: string, contents: string): Promise<void> {
+    public override async writeLocalFile(filePath: string, contents: string): Promise<void> {
         this.contentOverloads.set(this.getFileKey(filePath), contents);
     }
-    public async readFile(filePath: Uri): Promise<string> {
+    public override async readFile(filePath: Uri): Promise<string> {
         const contents = this.contentOverloads.get(this.getFileKey(filePath.fsPath));
         if (contents) {
             return contents;
@@ -135,7 +135,7 @@ export class MockFileSystem extends FileSystem {
     private getFileKey(filePath: string): string {
         return filePath.toLowerCase();
     }
-    public async localFileExists(filePath: string) {
+    public override async localFileExists(filePath: string) {
         const exists = this.contentOverloads.has(this.getFileKey(filePath));
         if (exists) {
             return exists;

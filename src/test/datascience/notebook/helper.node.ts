@@ -48,12 +48,12 @@ import { JupyterServer } from '../jupyterServer.node';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebuggingManager, IKernelDebugAdapter } from '../../../platform/debugger/types';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { LastSavedNotebookCellLanguage } from '../../../intellisense/cellLanguageService.node';
-import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeNotebookController.node';
-import { chainWithPendingUpdates } from '../../../notebooks/execution/notebookUpdater.node';
-import { NotebookCellStateTracker, hasErrorOutput, getTextOutputValue } from '../../../notebooks/helpers.node';
+import { LastSavedNotebookCellLanguage } from '../../../intellisense/cellLanguageService';
+import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeNotebookController';
+import { chainWithPendingUpdates } from '../../../notebooks/execution/notebookUpdater';
+import { NotebookCellStateTracker, hasErrorOutput, getTextOutputValue } from '../../../notebooks/helpers';
 import { INotebookControllerManager, CellOutputMimeTypes, INotebookEditorProvider } from '../../../notebooks/types';
-import { InteractiveControllerIdSuffix } from '../../../notebooks/controllers/notebookControllerManager.node';
+import { InteractiveControllerIdSuffix } from '../../../notebooks/controllers/notebookControllerManager';
 import { IVSCodeNotebookController } from '../../../notebooks/controllers/types';
 
 // Running in Conda environments, things can be a little slower.

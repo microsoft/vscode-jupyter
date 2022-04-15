@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import type { IExtensionApi } from '../platform/api';
 import { disposeAllDisposables } from '../platform/common/helpers';
 import type { IDisposable } from '../platform/common/types';
-import { clearPendingChainedUpdatesForTests } from '../notebooks/execution/notebookUpdater.node';
+import { clearPendingChainedUpdatesForTests } from '../notebooks/execution/notebookUpdater';
 import { clearPendingTimers, IExtensionTestApi, PYTHON_PATH, setPythonPathInWorkspaceRoot } from './common.node';
 import { IS_SMOKE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from './constants.node';
 import { sleep } from './core';

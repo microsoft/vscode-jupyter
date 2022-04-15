@@ -12,7 +12,7 @@ import {
     connectionFilePlaceholder,
     findIndexOfConnectionFile,
     isPythonKernelConnection
-} from '../../../kernels/helpers.node';
+} from '../../../kernels/helpers';
 import {
     IJupyterKernelSpec,
     LocalKernelSpecConnectionMetadata,
@@ -21,7 +21,7 @@ import {
 import { IKernelConnection, IKernelProcess } from '../types';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation.node';
+import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import {
     getTelemetrySafeErrorMessageFromPythonTraceback,
     getErrorMessageFromPythonTraceback

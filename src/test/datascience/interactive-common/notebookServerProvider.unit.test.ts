@@ -7,12 +7,12 @@ import * as typemoq from 'typemoq';
 import { CancellationTokenSource, Disposable, EventEmitter, Uri } from 'vscode';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../../platform/common/types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { NotebookServerProvider } from '../../../kernels/jupyter/launcher/notebookServerProvider.node';
-import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage.node';
-import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector.node';
-import { DisplayOptions } from '../../../kernels/displayOptions.node';
+import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
+import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
+import { DisplayOptions } from '../../../kernels/displayOptions';
 import { IJupyterExecution, INotebookServer } from '../../../kernels/jupyter/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */

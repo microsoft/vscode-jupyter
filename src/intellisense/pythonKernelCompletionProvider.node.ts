@@ -15,7 +15,7 @@ import {
 } from 'vscode';
 import * as lsp from 'vscode-languageclient';
 import { IVSCodeNotebook } from '../platform/common/application/types';
-import { createPromiseFromCancellation } from '../platform/common/cancellation.node';
+import { createPromiseFromCancellation } from '../platform/common/cancellation';
 import { traceError, traceInfoIfCI, traceVerbose } from '../platform/logging';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IConfigurationService, IDisposableRegistry } from '../platform/common/types';
@@ -23,7 +23,7 @@ import { waitForPromise } from '../platform/common/utils/async';
 import { isNotebookCell } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { IJupyterSession, IKernelProvider } from '../kernels/types';
-import { findAssociatedNotebookDocument, getAssociatedJupyterNotebook } from '../notebooks/helpers.node';
+import { findAssociatedNotebookDocument, getAssociatedJupyterNotebook } from '../notebooks/helpers';
 import { INotebookLanguageClientProvider } from '../notebooks/types';
 import { mapJupyterKind } from './conversion.node';
 import { IInteractiveWindowProvider } from '../interactive-window/types';

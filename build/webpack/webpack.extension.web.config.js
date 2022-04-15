@@ -33,23 +33,6 @@ const config = {
     module: {
         rules: [
             {
-                // JupyterServices imports node-fetch.
-                test: /@jupyterlab[\\\/]services[\\\/].*js$/,
-                use: [
-                    {
-                        loader: path.join(__dirname, 'loaders', 'fixNodeFetch.js')
-                    }
-                ]
-            },
-            {
-                test: /\.ts$/,
-                use: [
-                    {
-                        loader: path.join(__dirname, 'loaders', 'externalizeDependencies.js')
-                    }
-                ]
-            },
-            {
                 test: /\.ts$/,
                 exclude: /node_modules/,
                 use: [
@@ -134,6 +117,14 @@ const config = {
         path: path.resolve(constants.ExtensionRootDir, 'out'),
         libraryTarget: 'commonjs2',
         devtoolModuleFilenameTemplate: '../[resource-path]'
+    },
+    watchOptions: {
+        aggregateTimeout: 200,
+        poll: 1000,
+        ignored: /node_modules/
+    },
+    stats: {
+        builtAt: true
     }
 };
 // tslint:disable-next-line:no-default-export

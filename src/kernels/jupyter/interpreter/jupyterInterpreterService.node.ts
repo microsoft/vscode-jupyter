@@ -6,10 +6,10 @@
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import { createPromiseFromCancellation } from '../../../platform/common/cancellation.node';
+import { createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import '../../../platform/common/extensions';
 import { noop } from '../../../platform/common/utils/misc';
-import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';

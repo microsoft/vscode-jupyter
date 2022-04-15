@@ -15,7 +15,7 @@ import {
     IMultiStepInput,
     InputStep,
     IQuickPickParameters
-} from '../../../platform/common/utils/multiStepInput.node';
+} from '../../../platform/common/utils/multiStepInput';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 

@@ -22,7 +22,7 @@ export function expandWorkingDir(
     if (workingDir) {
         const variables = new SystemVariables(
             launchingFile ? Uri.file(launchingFile) : undefined,
-            workspace.rootPath,
+            workspace.rootFolder,
             workspace
         );
         return variables.resolve(workingDir);
@@ -101,5 +101,5 @@ export async function computeWorkingDirectory(resource: Resource, workspace: IWo
     }
 
     // Otherwise a file without an extension or directory doesn't exist. Just use the workspace root
-    return workspace.getWorkspaceFolder(resource)?.uri.fsPath || workspace.rootPath || process.cwd();
+    return workspace.getWorkspaceFolder(resource)?.uri.fsPath || workspace.rootFolder?.fsPath || process.cwd();
 }

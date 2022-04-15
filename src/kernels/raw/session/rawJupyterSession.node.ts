@@ -5,7 +5,7 @@ import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import type { Slot } from '@lumino/signaling';
 import { CancellationError, CancellationTokenSource } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation.node';
+import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
 import { traceInfo, traceError, traceVerbose, traceWarning } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
@@ -13,16 +13,16 @@ import { IDisplayOptions, IDisposable, Resource } from '../../../platform/common
 import { TimedOutError, createDeferred, sleep } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
-import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../../telemetry/telemetry.node';
+import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../../telemetry/telemetry';
 import { sendTelemetryEvent, captureTelemetry } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
-import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers.node';
+import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
 import { ISessionWithSocket, KernelConnectionMetadata } from '../../../kernels/types';
 import { BaseJupyterSession } from '../../common/baseJupyterSession.node';
 import { IKernelLauncher, IKernelProcess } from '../types';
 import { RawSession } from './rawSession.node';
-import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter.node';
-import { DisplayOptions } from '../../displayOptions.node';
+import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
+import { DisplayOptions } from '../../displayOptions';
 
 /*
 RawJupyterSession is the implementation of IJupyterSession that instead of
@@ -40,7 +40,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         }
         return false;
     }
-    public get status(): KernelMessage.Status {
+    public override get status(): KernelMessage.Status {
         if (this.terminatingStatus && super.status !== 'dead') {
             return this.terminatingStatus;
         }
@@ -144,7 +144,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         this.connected = true;
     }
 
-    protected shutdownSession(
+    protected override shutdownSession(
         session: RawSession | undefined,
         statusHandler: Slot<ISessionWithSocket, KernelMessage.Status> | undefined,
         isRequestToShutdownRestartSession: boolean | undefined
@@ -166,7 +166,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         });
     }
 
-    protected setSession(session: RawSession | undefined) {
+    protected override setSession(session: RawSession | undefined) {
         super.setSession(session);
         if (!session) {
             return;

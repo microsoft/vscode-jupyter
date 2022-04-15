@@ -23,8 +23,8 @@ import { SessionDisposedError } from '../../platform/errors/sessionDisposedError
 import { suppressShutdownErrors } from '../raw/session/rawKernel.node';
 import { IJupyterSession, ISessionWithSocket, KernelConnectionMetadata, KernelSocketInformation } from '../types';
 import { ChainingExecuteRequester } from './chainingExecuteRequester.node';
-import { getResourceType } from '../../platform/common/utils.node';
-import { KernelProgressReporter } from '../../platform/progress/kernelProgressReporter.node';
+import { getResourceType } from '../../platform/common/utils';
+import { KernelProgressReporter } from '../../platform/progress/kernelProgressReporter';
 
 /**
  * Exception raised when starting a Jupyter Session fails.

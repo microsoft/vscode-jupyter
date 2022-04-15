@@ -19,7 +19,7 @@ class CellFormatter extends React.Component<ICellFormatterProps> {
         super(props);
     }
 
-    public render() {
+    public override render() {
         // Render based on type
         if (this.props.value !== undefined && this.props.columnDef && this.props.columnDef.hasOwnProperty('type')) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any

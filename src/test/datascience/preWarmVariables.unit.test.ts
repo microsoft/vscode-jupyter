@@ -6,7 +6,7 @@
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
-import { PythonExtensionChecker } from '../../platform/api/pythonApi.node';
+import { PythonExtensionChecker } from '../../platform/api/pythonApi';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../platform/api/types';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { CondaService } from '../../platform/common/process/condaService.node';

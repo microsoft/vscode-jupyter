@@ -18,11 +18,7 @@ interface IToolbarProps {
 }
 
 export class Toolbar extends React.Component<IToolbarProps> {
-    constructor(props: IToolbarProps) {
-        super(props);
-    }
-
-    public render() {
+    public override render() {
         return (
             <div id="plot-toolbar-panel">
                 <ImageButton

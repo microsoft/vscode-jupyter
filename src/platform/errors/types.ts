@@ -12,7 +12,7 @@ export abstract class BaseError extends Error {
 }
 
 export abstract class BaseKernelError extends BaseError {
-    public stdErr?: string;
+    public override stdErr?: string;
     constructor(
         category: ErrorCategory,
         message: string,

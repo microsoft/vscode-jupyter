@@ -31,7 +31,7 @@ export class SvgViewer extends React.Component<ISvgViewerProps, ISvgViewerState>
         this.state = { value: props.defaultValue ? props.defaultValue : ({} as Value), tool: props.tool };
     }
 
-    public componentDidUpdate(prevProps: ISvgViewerProps) {
+    public override componentDidUpdate(prevProps: ISvgViewerProps) {
         // May need to update state if props changed
         if (prevProps.defaultValue !== this.props.defaultValue || this.props.id !== prevProps.id) {
             this.setState({
@@ -56,7 +56,7 @@ export class SvgViewer extends React.Component<ISvgViewerProps, ISvgViewerState>
         }
     }
 
-    public render() {
+    public override render() {
         const plotBackground = this.props.themeMatplotlibPlots
             ? 'var(--override-widget-background, var(--vscode-notifications-background))'
             : 'white';

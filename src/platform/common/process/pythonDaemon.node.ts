@@ -80,7 +80,7 @@ export class PythonDaemonExecutionService extends BasePythonDaemon implements IP
             return this.pythonExecutionService.isModuleInstalled(moduleName);
         }
     }
-    public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
+    public override execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
         if (this.isAlive && this.canExecFileUsingDaemon(args, options)) {
             try {
                 return this.execAsObservable({ fileName: args[0] }, args.slice(1), options);
@@ -96,7 +96,7 @@ export class PythonDaemonExecutionService extends BasePythonDaemon implements IP
             return this.pythonExecutionService.execObservable(args, options);
         }
     }
-    public execModuleObservable(
+    public override execModuleObservable(
         moduleName: string,
         args: string[],
         options: SpawnOptions

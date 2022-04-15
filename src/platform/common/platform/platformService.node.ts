@@ -5,6 +5,7 @@
 import { injectable } from 'inversify';
 import * as os from 'os';
 import { coerce, SemVer } from 'semver';
+import { Uri } from 'vscode';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName, PlatformErrors } from '../../../telemetry/constants';
 import { getOSType, OSType } from '../utils/platform';
@@ -14,6 +15,10 @@ import { IPlatformService } from './types';
 
 @injectable()
 export class PlatformService implements IPlatformService {
+    private readonly _homeDir = Uri.file(os.homedir());
+    public get homeDir() {
+        return this._homeDir;
+    }
     public readonly osType: OSType = getOSType();
     public version?: SemVer;
     constructor() {

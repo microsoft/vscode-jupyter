@@ -12,7 +12,7 @@ import type {
 import * as path from '../../../platform/vscode-path/path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
-import { Cancellation } from '../../../platform/common/cancellation.node';
+import { Cancellation } from '../../../platform/common/cancellation';
 import { BaseError } from '../../../platform/errors/types';
 import { traceVerbose, traceError, traceInfo } from '../../../platform/logging';
 import { Resource, IOutputChannel, IDisplayOptions } from '../../../platform/common/types';
@@ -23,38 +23,18 @@ import { SessionDisposedError } from '../../../platform/errors/sessionDisposedEr
 import { captureTelemetry } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { BaseJupyterSession, JupyterSessionStartError } from '../../common/baseJupyterSession.node';
-import { getNameOfKernelConnection } from '../../helpers.node';
+import { getNameOfKernelConnection, jvscIdentifier } from '../../helpers';
 import { KernelConnectionMetadata, isLocalConnection, IJupyterConnection, ISessionWithSocket } from '../../types';
 import { JupyterKernelService } from '../jupyterKernelService.node';
 import { JupyterWebSockets } from './jupyterWebSocket.node';
-import { DisplayOptions } from '../../displayOptions.node';
+import { DisplayOptions } from '../../displayOptions';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { noop } from '../../../platform/common/utils/misc';
 
-const jvscIdentifier = '-jvsc-';
 function getRemoteIPynbSuffix(): string {
     return `${jvscIdentifier}${uuid()}`;
 }
 
-/**
- * When creating remote sessions, we generate bogus names for the notebook.
- * These names are prefixed with the same local file name, and a random suffix.
- * However the random part does contain an identifier, and we can stip this off
- * to get the original local ipynb file name.
- */
-export function removeNotebookSuffixAddedByExtension(notebookPath: string) {
-    if (notebookPath.includes(jvscIdentifier)) {
-        const guidRegEx = /[a-f0-9]$/;
-        if (
-            notebookPath
-                .substring(notebookPath.lastIndexOf(jvscIdentifier) + jvscIdentifier.length)
-                .search(guidRegEx) !== -1
-        ) {
-            return `${notebookPath.substring(0, notebookPath.lastIndexOf(jvscIdentifier))}.ipynb`;
-        }
-    }
-    return notebookPath;
-}
 // function is
 export class JupyterSession extends BaseJupyterSession {
     constructor(
@@ -67,7 +47,7 @@ export class JupyterSession extends BaseJupyterSession {
         private readonly outputChannel: IOutputChannel,
         private readonly restartSessionCreated: (id: Kernel.IKernelConnection) => void,
         restartSessionUsed: (id: Kernel.IKernelConnection) => void,
-        readonly workingDirectory: string,
+        override readonly workingDirectory: string,
         private readonly idleTimeout: number,
         private readonly kernelService: JupyterKernelService,
         interruptTimeout: number,
@@ -89,7 +69,7 @@ export class JupyterSession extends BaseJupyterSession {
         return this.waitForIdleOnSession(this.session, timeout);
     }
 
-    public get kernel(): Kernel.IKernelConnection | undefined {
+    public override get kernel(): Kernel.IKernelConnection | undefined {
         return this.session?.kernel || undefined;
     }
 

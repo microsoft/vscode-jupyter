@@ -29,7 +29,7 @@ import {
 } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { isUri, noop } from '../../platform/common/utils/misc';
-import { IInterpreterService } from '../../platform/interpreter/contracts.node';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ExportCommands } from './exportCommands.node';

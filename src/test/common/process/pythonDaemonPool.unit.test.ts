@@ -29,7 +29,7 @@ use(chaiPromised);
 suite('Daemon - Python Daemon Pool', () => {
     class DaemonPool extends PythonDaemonExecutionServicePool {
         // eslint-disable-next-line
-        public createConnection(proc: ChildProcess) {
+        public override createConnection(proc: ChildProcess) {
             return super.createConnection(proc);
         }
     }

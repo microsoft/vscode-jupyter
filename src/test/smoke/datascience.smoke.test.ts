@@ -11,7 +11,7 @@ import * as path from '../../platform/vscode-path/path';
 import * as vscode from 'vscode';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { traceInfo } from '../../platform/logging';
-import { IInterpreterService } from '../../platform/interpreter/contracts.node';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { IExtensionTestApi, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants.node';
 import { sleep } from '../core';

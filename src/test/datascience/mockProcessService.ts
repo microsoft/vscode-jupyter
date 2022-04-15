@@ -3,7 +3,7 @@
 'use strict';
 import { Observable } from 'rxjs/Observable';
 
-import { Cancellation, CancellationError } from '../../platform/common/cancellation.node';
+import { Cancellation, CancellationError } from '../../platform/common/cancellation';
 import {
     ExecutionResult,
     IProcessService,

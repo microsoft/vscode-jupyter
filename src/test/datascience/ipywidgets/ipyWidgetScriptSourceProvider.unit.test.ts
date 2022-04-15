@@ -15,12 +15,16 @@ import { IPythonExecutionFactory } from '../../../platform/common/process/types.
 import { IConfigurationService, IJupyterSettings } from '../../../platform/common/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { IKernel, RemoteKernelSpecConnectionMetadata } from '../../../platform/../kernels/types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { CDNWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider.node';
-import { IPyWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/ipyWidgetScriptSourceProvider.node';
+import { IPyWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/ipyWidgetScriptSourceProvider';
 import { LocalWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/localWidgetScriptSourceProvider.node';
-import { RemoteWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/remoteWidgetScriptSourceProvider.node';
-import { ILocalResourceUriConverter } from '../../../kernels/ipywidgets-message-coordination/types';
+import { RemoteWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/remoteWidgetScriptSourceProvider';
+import {
+    ILocalResourceUriConverter,
+    IWidgetScriptSourceProviderFactory
+} from '../../../kernels/ipywidgets-message-coordination/types';
+import { ScriptSourceProviderFactory } from '../../../kernels/ipywidgets-message-coordination/scriptSourceProviderFactory.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 
@@ -31,6 +35,7 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
     let settings: IJupyterSettings;
     let appShell: IApplicationShell;
     let workspaceService: IWorkspaceService;
+    let scriptSourceFactory: IWidgetScriptSourceProviderFactory;
     let onDidChangeWorkspaceSettings: EventEmitter<ConfigurationChangeEvent>;
     let userSelectedOkOrDoNotShowAgainInPrompt: PersistentState<boolean>;
     setup(() => {
@@ -54,17 +59,22 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
         when(configService.getSettings(anything())).thenReturn(settings as any);
         when(userSelectedOkOrDoNotShowAgainInPrompt.value).thenReturn(false);
         when(userSelectedOkOrDoNotShowAgainInPrompt.updateValue(anything())).thenResolve();
+        scriptSourceFactory = new ScriptSourceProviderFactory(
+            instance(configService),
+            instance(fs),
+            instance(interpreterService),
+            instance(factory)
+        );
+
         scriptSourceProvider = new IPyWidgetScriptSourceProvider(
             instance(kernel),
             instance(resourceConverter),
-            instance(fs),
-            instance(interpreterService),
             instance(appShell),
             instance(configService),
             instance(workspaceService),
             instance(stateFactory),
             instance(httpClient),
-            instance(factory)
+            scriptSourceFactory
         );
     });
     teardown(() => sinon.restore());

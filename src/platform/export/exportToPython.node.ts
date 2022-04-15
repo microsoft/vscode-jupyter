@@ -5,7 +5,7 @@ import { ExportBase } from './exportBase.node';
 
 @injectable()
 export class ExportToPython extends ExportBase {
-    public async export(
+    public override async export(
         source: Uri,
         target: Uri,
         interpreter: PythonEnvironment,

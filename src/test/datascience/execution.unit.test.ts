@@ -34,11 +34,11 @@ import {
 import { IAsyncDisposableRegistry, IConfigurationService, IOutputChannel } from '../../platform/common/types';
 import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
-import { IInterpreterService } from '../../platform/interpreter/contracts.node';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { ServiceContainer } from '../../platform/ioc/container';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/interpreter.node';
-import { getKernelId } from '../../kernels/helpers.node';
+import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/interpreter';
+import { getKernelId } from '../../kernels/helpers';
 import { Product } from '../../kernels/installer/types';
 import { JupyterInterpreterDependencyService } from '../../kernels/jupyter/interpreter/jupyterInterpreterDependencyService.node';
 import { JupyterInterpreterOldCacheStateStore } from '../../kernels/jupyter/interpreter/jupyterInterpreterOldCacheStateStore.node';
@@ -55,7 +55,7 @@ import { noop } from '../core';
 import { MockOutputChannel } from '../mockClasses';
 import { MockJupyterServer } from './mockJupyterServer';
 import { MockJupyterSettings } from './mockJupyterSettings';
-import { DisplayOptions } from '../../kernels/displayOptions.node';
+import { DisplayOptions } from '../../kernels/displayOptions';
 import { INotebookServer } from '../../kernels/jupyter/types';
 import { IJupyterSubCommandExecutionService } from '../../kernels/jupyter/types.node';
 import { SystemVariables } from '../../platform/common/variables/systemVariables.node';
@@ -159,10 +159,10 @@ suite('Jupyter Execution', async () => {
             super();
             this.func = func;
         }
-        public match(value: Object): boolean {
+        public override match(value: Object): boolean {
             return this.func(value);
         }
-        public toString(): string {
+        public override toString(): string {
             return 'FunctionMatcher';
         }
     }

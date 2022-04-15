@@ -6,7 +6,12 @@ import { inject, injectable, named } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken, Memento, Uri } from 'vscode';
-import { createInterpreterKernelSpec, getKernelId, getKernelRegistrationInfo } from '../../../kernels/helpers.node';
+import {
+    createInterpreterKernelSpec,
+    getKernelId,
+    getKernelRegistrationInfo,
+    isDefaultKernelSpec
+} from '../../../kernels/helpers';
 import {
     IJupyterKernelSpec,
     LocalKernelSpecConnectionMetadata,
@@ -22,39 +27,14 @@ import { traceInfoIfCI, traceVerbose, traceError } from '../../../platform/loggi
 import { getDisplayPath, getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IMemento, GLOBAL_MEMENTO, Resource } from '../../../platform/common/types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
-import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter.node';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 import { captureTelemetry } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { fsPathToUri } from '../../../platform/vscode-path/utils';
 import { ResourceSet } from '../../../platform/vscode-path/map';
 
-export const isDefaultPythonKernelSpecName = /^python\d*.?\d*$/;
-
-export function isDefaultKernelSpec(kernelspec: IJupyterKernelSpec) {
-    // // When we create kernlespecs, we change the name to include a unique id.
-    // // We need to look at the name of the original kernelspec that was created on disc.
-    // // E.g. assume we're loading a kernlespec for a default Python kernel, the name would be `python3`
-    // // However we give this a completely different name, and at that point its not possible to determine
-    // // whether this is a default kernel or not.
-    // // Hence determine the original name baesed on the original kernelspec file.
-    const originalSpecFile = kernelspec.metadata?.vscode?.originalSpecFile || kernelspec.metadata?.originalSpecFile;
-    const name = originalSpecFile ? path.basename(path.dirname(originalSpecFile)) : kernelspec.name || '';
-    const displayName = kernelspec.metadata?.vscode?.originalDisplayName || kernelspec.display_name || '';
-
-    // If the user creates a kernelspec with a name `python4` or changes the display
-    // name of kernel `python3` to `Hello World`, then we'd still treat them as default kernelspecs,
-    // The expectation is for users to use unique names & display names for their kernelspecs.
-    if (
-        name.toLowerCase().match(isDefaultPythonKernelSpecName) ||
-        displayName.toLowerCase() === 'python 3 (ipykernel)' ||
-        displayName.toLowerCase() === 'python 3'
-    ) {
-        return true;
-    }
-    return false;
-}
 /**
  * Returns all Python kernels and any related kernels registered in the python environment.
  * If Python extension is not installed, this will return all Python kernels registered globally.
@@ -83,7 +63,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         const workspaceFolderId =
             this.workspaceService.getWorkspaceFolderIdentifier(
                 resource,
-                resource?.fsPath || this.workspaceService.rootPath
+                resource?.fsPath || this.workspaceService.rootFolder?.fsPath
             ) || 'root';
         return this.listKernelsWithCache(
             workspaceFolderId,

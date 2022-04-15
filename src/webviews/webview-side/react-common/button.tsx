@@ -13,11 +13,7 @@ interface IButtonProps {
 }
 
 export class Button extends React.Component<IButtonProps> {
-    constructor(props: IButtonProps) {
-        super(props);
-    }
-
-    public render() {
+    public override render() {
         const innerFilter = this.props.disabled ? 'button-inner-disabled-filter' : '';
         const ariaDisabled = this.props.disabled ? 'true' : 'false';
 

@@ -16,11 +16,7 @@ interface IImageButtonProps {
 }
 
 export class ImageButton extends React.Component<IImageButtonProps> {
-    constructor(props: IImageButtonProps) {
-        super(props);
-    }
-
-    public render() {
+    public override render() {
         const classNames = `image-button image-button-${this.props.baseTheme} ${this.props.hidden ? 'hide' : ''} ${
             this.props.className ? this.props.className : ''
         }`;

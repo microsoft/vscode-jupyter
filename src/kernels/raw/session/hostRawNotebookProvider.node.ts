@@ -19,17 +19,17 @@ import {
 } from '../../../platform/common/types';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { trackKernelResourceInformation } from '../../../telemetry/telemetry.node';
+import { trackKernelResourceInformation } from '../../../telemetry/telemetry';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
-import { isPythonKernelConnection } from '../../helpers.node';
+import { isPythonKernelConnection } from '../../helpers';
 import { computeWorkingDirectory } from '../../jupyter/jupyterUtils.node';
 import { JupyterNotebook } from '../../jupyter/launcher/jupyterNotebook.node';
 import { ConnectNotebookProviderOptions, INotebook, IRawConnection, KernelConnectionMetadata } from '../../types';
 import { IKernelLauncher, IRawNotebookProvider, IRawNotebookSupportedService } from '../types';
 import { RawJupyterSession } from './rawJupyterSession.node';
 import { noop } from '../../../platform/common/utils/misc';
-import { Cancellation } from '../../../platform/common/cancellation.node';
+import { Cancellation } from '../../../platform/common/cancellation';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 /* eslint-disable @typescript-eslint/no-explicit-any */

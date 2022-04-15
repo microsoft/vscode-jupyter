@@ -12,13 +12,13 @@ import { DataScience } from '../../platform/common/utils/localize';
 import { Identifiers, Telemetry } from '../../webviews/webview-side/common/constants';
 import { JupyterDebuggerNotInstalledError } from '../../platform/errors/jupyterDebuggerNotInstalledError.node';
 import { JupyterDebuggerRemoteNotSupportedError } from '../../platform/errors/jupyterDebuggerRemoteNotSupportedError.node';
-import { executeSilently } from '../helpers.node';
-import { getPlainTextOrStreamOutput } from '../kernel.node';
+import { getPlainTextOrStreamOutput } from '../kernel.base';
 import { IKernel, isLocalConnection } from '../types';
 import { IInteractiveWindowDebugger } from '../../interactive-window/types';
 import { ICellHashListener, IFileHashes } from '../../interactive-window/editor-integration/types';
 import { IJupyterDebugService, ISourceMapRequest } from './types';
-import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector.node';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
+import { executeSilently } from '../helpers';
 
 @injectable()
 export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, ICellHashListener {

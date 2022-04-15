@@ -19,7 +19,7 @@ import {
     IConfigurationService
 } from '../../../../platform/common/types';
 import { testOnlyMethod } from '../../../../platform/common/utils/decorators';
-import { IInterpreterService } from '../../../../platform/interpreter/contracts.node';
+import { IInterpreterService } from '../../../../platform/interpreter/contracts';
 import { IServiceContainer } from '../../../../platform/ioc/types';
 import { IJupyterExecution, INotebookServerOptions, INotebookServer } from '../../types';
 
@@ -49,7 +49,7 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
     public clearCache() {
         this.serverCache.clearCache();
     }
-    public async dispose(): Promise<void> {
+    public override async dispose(): Promise<void> {
         traceInfo(`Disposing HostJupyterExecution ${this._id}`);
         if (!this._disposed) {
             this._disposed = true;
@@ -74,7 +74,7 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
         }
     }
 
-    public async connectToNotebookServer(
+    public override async connectToNotebookServer(
         options: INotebookServerOptions,
         cancelToken: CancellationToken
     ): Promise<INotebookServer | undefined> {
@@ -82,7 +82,7 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
             return this.serverCache.getOrCreate(this.hostConnectToNotebookServer.bind(this), options, cancelToken);
         }
     }
-    public async getServer(options: INotebookServerOptions): Promise<INotebookServer | undefined> {
+    public override async getServer(options: INotebookServerOptions): Promise<INotebookServer | undefined> {
         if (!this._disposed) {
             // See if we have this server or not.
             return this.serverCache.get(options);

@@ -19,13 +19,13 @@ export class SystemVariables extends AbstractSystemVariables {
 
     constructor(
         file: Uri | undefined,
-        rootFolder: string | undefined,
+        rootFolder: Uri | undefined,
         workspace?: IWorkspaceService,
         documentManager?: IDocumentManager
     ) {
         super();
         const workspaceFolder = workspace && file ? workspace.getWorkspaceFolder(file) : undefined;
-        this._workspaceFolder = workspaceFolder ? workspaceFolder.uri.fsPath : rootFolder || __dirname;
+        this._workspaceFolder = workspaceFolder ? workspaceFolder.uri.fsPath : rootFolder?.fsPath || __dirname;
         this._workspaceFolderName = path.basename(this._workspaceFolder);
         this._filePath = file ? file.fsPath : undefined;
         if (documentManager && documentManager.activeTextEditor) {

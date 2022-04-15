@@ -65,7 +65,7 @@ export function KernelSocketWrapper<T extends ClassType<IWebSocketLike>>(SuperCl
             super.send(data, a2);
         }
 
-        public send(data: any, a2: any): void {
+        public override send(data: any, a2: any): void {
             if (this.sendHooks) {
                 // Stick the send hooks into the send chain. We use chain
                 // to ensure that:
@@ -80,7 +80,7 @@ export function KernelSocketWrapper<T extends ClassType<IWebSocketLike>>(SuperCl
             }
         }
 
-        public emit(event: string | symbol, ...args: any[]): boolean {
+        public override emit(event: string | symbol, ...args: any[]): boolean {
             if (event === 'message' && this.receiveHooks.length) {
                 // Stick the receive hooks into the message chain. We use chain
                 // to ensure that:

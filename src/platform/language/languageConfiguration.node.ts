@@ -3,7 +3,7 @@
 'use strict';
 
 import { IndentAction, LanguageConfiguration } from 'vscode';
-import { verboseRegExp } from '../common/utils/regexp.node';
+import { verboseRegExp } from '../common/utils/regexp';
 
 /* eslint-disable no-multi-str */
 

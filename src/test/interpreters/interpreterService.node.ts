@@ -7,7 +7,7 @@ import { Event, EventEmitter, Uri } from 'vscode';
 import { getInterpreterInfo } from './index.node';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { Resource } from '../../platform/common/types';
-import { IInterpreterService } from '../../platform/interpreter/contracts.node';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { fsPathToUri } from '../../platform/vscode-path/utils';
 import { ResourceSet } from '../../platform/vscode-path/map';

@@ -15,11 +15,7 @@ interface ISvgListProps {
 }
 
 export class SvgList extends React.Component<ISvgListProps> {
-    constructor(props: ISvgListProps) {
-        super(props);
-    }
-
-    public render() {
+    public override render() {
         return (
             <div className="svg-list-container">
                 <div className="svg-list">{this.renderImages()}</div>

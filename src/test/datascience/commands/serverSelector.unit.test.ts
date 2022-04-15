@@ -5,7 +5,7 @@ import { Uri } from 'vscode';
 import { CommandManager } from '../../../platform/common/application/commandManager';
 import { ICommandManager } from '../../../platform/common/application/types';
 import { JupyterServerSelectorCommand } from '../../../platform/commands/serverSelector.node';
-import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector.node';
+import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { Commands } from '../../../platform/common/constants';
 import { INotebookControllerManager } from '../../../notebooks/types';
 

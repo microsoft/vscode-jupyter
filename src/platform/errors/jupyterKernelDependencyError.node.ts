@@ -4,7 +4,7 @@
 'use strict';
 
 import { DataScience } from '../common/utils/localize';
-import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers.node';
+import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { KernelConnectionMetadata, KernelInterpreterDependencyResponse } from '../../kernels/types';
 import { BaseKernelError } from './types';
 

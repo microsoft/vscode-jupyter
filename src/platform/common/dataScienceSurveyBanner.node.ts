@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { NotebookCellExecutionState, NotebookCellExecutionStateChangeEvent, UIKind } from 'vscode';
-import { isJupyterNotebook } from '../../notebooks/helpers.node';
+import { isJupyterNotebook } from '../../notebooks/helpers';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from './application/types';
 import './extensions';

@@ -669,7 +669,7 @@ export interface IWorkspaceService {
      *
      * @readonly
      */
-    readonly rootPath: string | undefined;
+    readonly rootFolder: Uri | undefined;
 
     /**
      * List of workspace folders or `undefined` when no folder is open.
@@ -1249,7 +1249,7 @@ export interface IVSCodeNotebook {
     showNotebookDocument(document: NotebookDocument, options?: NotebookDocumentShowOptions): Thenable<NotebookEditor>;
 }
 
-export const IEncryptedStorage = Symbol('IAuthenticationService');
+export const IEncryptedStorage = Symbol('IEncryptedStorage');
 export interface IEncryptedStorage {
     store(service: string, key: string, value: string | undefined): Promise<void>;
     retrieve(service: string, key: string): Promise<string | undefined>;

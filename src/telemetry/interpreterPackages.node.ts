@@ -7,10 +7,11 @@ import { IPythonExecutionFactory } from '../platform/common/process/types.node';
 import { IDisposableRegistry, InterpreterUri } from '../platform/common/types';
 import { createDeferred, Deferred } from '../platform/common/utils/async';
 import { isResource, noop } from '../platform/common/utils/misc';
-import { IInterpreterService } from '../platform/interpreter/contracts.node';
+import { IInterpreterService } from '../platform/interpreter/contracts';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { getComparisonKey } from '../platform/vscode-path/resources';
 import { getTelemetrySafeHashedString, getTelemetrySafeVersion } from './helpers';
+import { IInterpreterPackages } from './types';
 
 const interestedPackages = new Set(
     [
@@ -32,11 +33,11 @@ const interestedPackages = new Set(
 
 const notInstalled = 'NOT INSTALLED';
 @injectable()
-export class InterpreterPackages {
-    private static interpreterInformation = new Map<string, Deferred<Map<string, string>>>();
-    private static pendingInterpreterInformation = new Map<string, Promise<void>>();
+export class InterpreterPackages implements IInterpreterPackages {
+    private interpreterInformation = new Map<string, Deferred<Map<string, string>>>();
+    private pendingInterpreterInformation = new Map<string, Promise<void>>();
     private pendingInterpreterBeforeActivation = new Set<InterpreterUri>();
-    private static instance?: InterpreterPackages;
+    private static _instance: InterpreterPackages | undefined;
     constructor(
         @inject(IPythonExtensionChecker) private readonly pythonExtensionChecker: IPythonExtensionChecker,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
@@ -44,31 +45,28 @@ export class InterpreterPackages {
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {
-        InterpreterPackages.instance = this;
+        InterpreterPackages._instance = this;
         this.apiProvider.onDidActivatePythonExtension(
             () => this.pendingInterpreterBeforeActivation.forEach((item) => this.trackPackages(item)),
             this,
             this.disposables
         );
     }
-    public static getPackageVersions(interpreter: PythonEnvironment): Promise<Map<string, string>> {
+    public static get instance() {
+        return InterpreterPackages._instance;
+    }
+    public getPackageVersions(interpreter: PythonEnvironment): Promise<Map<string, string>> {
         const key = getComparisonKey(interpreter.uri);
-        let deferred = InterpreterPackages.interpreterInformation.get(key);
+        let deferred = this.interpreterInformation.get(key);
         if (!deferred) {
             deferred = createDeferred<Map<string, string>>();
-            InterpreterPackages.interpreterInformation.set(key, deferred);
-
-            if (InterpreterPackages.instance) {
-                InterpreterPackages.instance.trackInterpreterPackages(interpreter).catch(noop);
-            }
+            this.interpreterInformation.set(key, deferred);
+            this.trackInterpreterPackages(interpreter).catch(noop);
         }
         return deferred.promise;
     }
-    public static async getPackageVersion(
-        interpreter: PythonEnvironment,
-        packageName: string
-    ): Promise<string | undefined> {
-        const packages = await InterpreterPackages.getPackageVersions(interpreter);
+    public async getPackageVersion(interpreter: PythonEnvironment, packageName: string): Promise<string | undefined> {
+        const packages = await this.getPackageVersions(interpreter);
         const telemetrySafeString = getTelemetrySafeHashedString(packageName.toLocaleLowerCase());
         if (!packages.has(telemetrySafeString)) {
             return;
@@ -102,7 +100,7 @@ export class InterpreterPackages {
     }
     private async trackInterpreterPackages(interpreter: PythonEnvironment, ignoreCache?: boolean) {
         const key = getComparisonKey(interpreter.uri);
-        if (InterpreterPackages.pendingInterpreterInformation.has(key) && !ignoreCache) {
+        if (this.pendingInterpreterInformation.has(key) && !ignoreCache) {
             return;
         }
 
@@ -111,14 +109,14 @@ export class InterpreterPackages {
             // If this promise was resolved, then remove it from the pending list.
             // But cache for at least 5m (this is used only to diagnose failures in kernels).
             const timer = setTimeout(() => {
-                if (InterpreterPackages.pendingInterpreterInformation.get(key) === promise) {
-                    InterpreterPackages.pendingInterpreterInformation.delete(key);
+                if (this.pendingInterpreterInformation.get(key) === promise) {
+                    this.pendingInterpreterInformation.delete(key);
                 }
             }, 300_000);
             const disposable = { dispose: () => clearTimeout(timer) };
             this.disposables.push(disposable);
         });
-        InterpreterPackages.pendingInterpreterInformation.set(key, promise);
+        this.pendingInterpreterInformation.set(key, promise);
     }
     private async getPackageInformation(interpreter: PythonEnvironment) {
         const service = await this.executionFactory.createActivatedEnvironment({
@@ -150,10 +148,10 @@ export class InterpreterPackages {
                 packageAndVersions.set(getTelemetrySafeHashedString(packageName), version || '');
             });
         const key = getComparisonKey(interpreter.uri);
-        let deferred = InterpreterPackages.interpreterInformation.get(key);
+        let deferred = this.interpreterInformation.get(key);
         if (!deferred) {
             deferred = createDeferred<Map<string, string>>();
-            InterpreterPackages.interpreterInformation.set(key, deferred);
+            this.interpreterInformation.set(key, deferred);
         }
         deferred.resolve(packageAndVersions);
     }

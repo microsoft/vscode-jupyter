@@ -7,7 +7,7 @@ import { ChildProcess } from 'child_process';
 import { Subscription } from 'rxjs';
 import { CancellationError, CancellationToken, Disposable, Event, EventEmitter } from 'vscode';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
-import { Cancellation } from '../../../platform/common/cancellation.node';
+import { Cancellation } from '../../../platform/common/cancellation';
 import { traceInfo, traceError, traceWarning } from '../../../platform/logging';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { ObservableExecutionResult, Output } from '../../../platform/common/process/types.node';

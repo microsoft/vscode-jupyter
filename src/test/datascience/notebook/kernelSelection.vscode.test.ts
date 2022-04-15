@@ -12,11 +12,11 @@ import { BufferDecoder } from '../../../platform/common/process/decoder.node';
 import { ProcessService } from '../../../platform/common/process/proc.node';
 import { IDisposable } from '../../../platform/common/types';
 import { IKernelProvider } from '../../../platform/../kernels/types';
-import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import {
     getInterpreterHash,
     getNormalizedInterpreterPath
-} from '../../../platform/pythonEnvironments/info/interpreter.node';
+} from '../../../platform/pythonEnvironments/info/interpreter';
 import { createEventHandler, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import { closeActiveWindows, initialize, IS_CI_SERVER } from '../../initialize.node';
@@ -35,7 +35,7 @@ import {
     waitForTextOutput,
     defaultNotebookTestTimeout
 } from './helper.node';
-import { getTextOutputValue } from '../../../notebooks/helpers.node';
+import { getTextOutputValue } from '../../../notebooks/helpers';
 import { getOSType, OSType } from '../../../platform/common/utils/platform';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */

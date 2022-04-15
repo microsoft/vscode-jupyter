@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { ICommandManager } from '../../platform/common/application/types';
 import { IDisposable } from '../../platform/common/types';
 import { NotebookDocument, Uri } from 'vscode';
-import { JupyterServerSelector } from '../../kernels/jupyter/serverSelector.node';
+import { JupyterServerSelector } from '../../kernels/jupyter/serverSelector';
 import { Commands } from '../common/constants';
 import { traceInfo } from '../logging';
 import { INotebookControllerManager } from '../../notebooks/types';

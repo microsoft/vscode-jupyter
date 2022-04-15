@@ -105,7 +105,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    protected onMessage(message: string, payload: any) {
+    protected override onMessage(message: string, payload: any) {
         switch (message) {
             case InteractiveWindowMessages.GetVariablesRequest:
                 this.handleMessage(message, payload, this.requestVariables);

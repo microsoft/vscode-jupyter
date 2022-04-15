@@ -8,7 +8,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationToken, CancellationTokenSource, Progress as VSCProgress } from 'vscode';
 import { ApplicationShell } from '../../../platform/common/application/applicationShell';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { getUserMessageForAction } from '../../../platform/progress/messages.node';
+import { getUserMessageForAction } from '../../../platform/progress/messages';
 import { ProgressReporter } from '../../../platform/progress/progressReporter.node';
 import { ReportableAction } from '../../../platform/progress/types';
 import { noop, sleep } from '../../core';

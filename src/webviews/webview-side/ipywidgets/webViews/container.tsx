@@ -52,10 +52,10 @@ export class WidgetManagerComponent extends React.Component<Props> {
             }
         });
     }
-    public render() {
+    public override render() {
         return null;
     }
-    public componentWillUnmount() {
+    public override componentWillUnmount() {
         this.widgetManager.dispose();
     }
     private createLoadSuccessAction(

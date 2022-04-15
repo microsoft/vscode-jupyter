@@ -21,7 +21,7 @@ import { IPlatformService } from '../common/platform/types';
 import { IFileSystem } from '../common/platform/types.node';
 import { IDataScienceCommandListener, IDisposableRegistry, IExtensionContext } from '../common/types';
 import { GitHubIssue } from '../common/utils/localize';
-import { IInterpreterService } from '../interpreter/contracts.node';
+import { IInterpreterService } from '../interpreter/contracts';
 import { getUserHomeDir } from '../common/utils/platform.node';
 
 @injectable()

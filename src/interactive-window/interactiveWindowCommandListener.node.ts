@@ -30,15 +30,15 @@ import * as localize from '../platform/common/utils/localize';
 import { captureTelemetry } from '../telemetry';
 import { CommandSource } from '../platform/testing/common/constants';
 import { JupyterInstallError } from '../platform/errors/jupyterInstallError';
-import { getActiveInteractiveWindow } from './helpers.node';
+import { getActiveInteractiveWindow } from './helpers';
 import { INotebookControllerManager, INotebookEditorProvider } from '../notebooks/types';
 import { KernelConnectionMetadata } from '../kernels/types';
-import { chainWithPendingUpdates } from '../notebooks/execution/notebookUpdater.node';
+import { chainWithPendingUpdates } from '../notebooks/execution/notebookUpdater';
 import { INotebookExporter, IJupyterExecution } from '../kernels/jupyter/types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { IFileConverter, IExportDialog, ExportFormat } from '../platform/export/types';
 import { IStatusProvider } from '../platform/progress/types';
-import { generateCellsFromDocument } from './editor-integration/cellFactory.node';
+import { generateCellsFromDocument } from './editor-integration/cellFactory';
 import { IInteractiveWindowProvider } from './types';
 import { JupyterNotebookView } from '../notebooks/constants';
 

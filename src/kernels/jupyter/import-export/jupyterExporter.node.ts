@@ -7,15 +7,15 @@ import * as os from 'os';
 import * as path from '../../../platform/vscode-path/path';
 
 import { Uri } from 'vscode';
-import { createCodeCell } from '../../../interactive-window/editor-integration/cellFactory.node';
-import { CellMatcher } from '../../../interactive-window/editor-integration/cellMatcher.node';
+import { createCodeCell } from '../../../interactive-window/editor-integration/cellFactory';
+import { CellMatcher } from '../../../interactive-window/editor-integration/cellMatcher';
 import { INotebookEditorProvider } from '../../../notebooks/types';
 import { IWorkspaceService, IApplicationShell } from '../../../platform/common/application/types';
 import { traceError } from '../../../platform/logging';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { ICell, IConfigurationService } from '../../../platform/common/types';
-import { pruneCell } from '../../../platform/common/utils.node';
+import { pruneCell } from '../../../platform/common/utils';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IDataScienceErrorHandler } from '../../../platform/errors/types';
 import { concatMultilineString } from '../../../webviews/webview-side/common';

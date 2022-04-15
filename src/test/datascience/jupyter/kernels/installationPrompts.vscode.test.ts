@@ -24,12 +24,9 @@ import {
 import { createDeferred, sleep } from '../../../../platform/common/utils/async';
 import { Common, DataScience } from '../../../../platform/common/utils/localize';
 import { InteractiveWindowProvider } from '../../../../interactive-window/interactiveWindowProvider.node';
-import { hasErrorOutput, translateCellErrorOutput } from '../../../../notebooks/helpers.node';
-import { IInterpreterService } from '../../../../platform/interpreter/contracts.node';
-import {
-    areInterpreterPathsSame,
-    getInterpreterHash
-} from '../../../../platform/pythonEnvironments/info/interpreter.node';
+import { hasErrorOutput, translateCellErrorOutput } from '../../../../notebooks/helpers';
+import { IInterpreterService } from '../../../../platform/interpreter/contracts';
+import { areInterpreterPathsSame, getInterpreterHash } from '../../../../platform/pythonEnvironments/info/interpreter';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../../common.node';
 import {
     EXTENSION_ROOT_DIR_FOR_TESTS,
@@ -41,8 +38,8 @@ import { openNotebook, submitFromPythonFile, submitFromPythonFileUsingCodeWatche
 import { JupyterNotebookView } from '../../../../notebooks/constants';
 import { INotebookControllerManager } from '../../../../notebooks/types';
 import { BaseKernelError, WrappedError } from '../../../../platform/errors/types';
-import { clearInstalledIntoInterpreterMemento } from '../../../../kernels/installer/productInstaller.node';
-import { ProductNames } from '../../../../kernels/installer/productNames.node';
+import { clearInstalledIntoInterpreterMemento } from '../../../../kernels/installer/productInstaller';
+import { ProductNames } from '../../../../kernels/installer/productNames';
 import { Product, IInstaller, InstallerResponse } from '../../../../kernels/installer/types';
 import {
     createTemporaryNotebook,
@@ -61,7 +58,7 @@ import {
     WindowPromptStubButtonClickOptions,
     waitForTextOutput
 } from '../../notebook/helper.node';
-import * as kernelSelector from '../../../../notebooks/controllers/kernelSelector.node';
+import * as kernelSelector from '../../../../notebooks/controllers/kernelSelector';
 import { noop } from '../../../core';
 import { IInteractiveWindowProvider } from '../../../../interactive-window/types';
 import { Commands } from '../../../../platform/common/constants';

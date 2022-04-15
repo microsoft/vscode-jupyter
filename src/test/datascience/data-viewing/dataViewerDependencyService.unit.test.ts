@@ -12,7 +12,7 @@ import { IApplicationShell } from '../../../platform/common/application/types';
 import { PythonExecutionFactory } from '../../../platform/common/process/pythonExecutionFactory.node';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/common/process/types.node';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
-import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { ProductInstaller } from '../../../kernels/installer/productInstaller.node';
 import { IInstaller, Product } from '../../../kernels/installer/types';

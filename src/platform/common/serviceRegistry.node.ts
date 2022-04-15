@@ -8,14 +8,14 @@ import { ImportTracker } from '../../telemetry/importTracker.node';
 import { IImportTracker } from '../../telemetry/types';
 import { ActiveResourceService } from './application/activeResource.node';
 import { ApplicationEnvironment } from './application/applicationEnvironment.node';
-import { ClipboardService } from './application/clipboard.node';
+import { ClipboardService } from './application/clipboard';
 import { ReloadVSCodeCommandHandler } from './application/commands/reloadCommand.node';
 import { DebugService } from './application/debugService.node';
-import { DocumentManager } from './application/documentManager.node';
-import { EncryptedStorage } from './application/encryptedStorage.node';
+import { DocumentManager } from './application/documentManager';
+import { EncryptedStorage } from './application/encryptedStorage';
 import { Extensions } from './application/extensions.node';
 import { LanguageService } from './application/languageService.node';
-import { VSCodeNotebook } from './application/notebook.node';
+import { VSCodeNotebook } from './application/notebook';
 import {
     IActiveResourceService,
     IApplicationEnvironment,
@@ -26,8 +26,8 @@ import {
     ILanguageService,
     IVSCodeNotebook
 } from './application/types';
-import { AsyncDisposableRegistry } from './asyncDisposableRegistry.node';
-import { CryptoUtils } from './crypto.node';
+import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
+import { CryptoUtils } from './crypto';
 import { ExperimentService } from './experiments/service';
 import { FeatureDeprecationManager } from './featureDeprecationManager';
 import { BrowserService } from './net/browser';
@@ -46,9 +46,9 @@ import {
     IPersistentStateFactory,
     IsWindows
 } from './types';
-import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput.node';
+import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
 import { PortAttributesProviders } from './net/portAttributeProvider.node';
-import { LanguageInitializer } from '../../telemetry/languageInitializer.node';
+import { LanguageInitializer } from '../../telemetry/languageInitializer';
 import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.node';
 import { registerTypes as processRegisterTypes } from './process/serviceRegistry.node';
 import { registerTypes as variableRegisterTypes } from './variables/serviceRegistry.node';

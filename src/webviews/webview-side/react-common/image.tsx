@@ -213,11 +213,7 @@ interface IImageProps {
 }
 
 export class Image extends React.Component<IImageProps> {
-    constructor(props: IImageProps) {
-        super(props);
-    }
-
-    public render() {
+    public override render() {
         if (this.props.codicon) {
             const pre = 'codicon codicon-';
             const styles: React.CSSProperties = {
@@ -238,7 +234,7 @@ interface ICodiconProps {
 }
 
 export class Codicon extends React.Component<ICodiconProps> {
-    public render() {
+    public override() {
         const pre = 'codicon codicon-';
         const styles: React.CSSProperties = {
             color: 'var(--vscode-editor-foreground)'

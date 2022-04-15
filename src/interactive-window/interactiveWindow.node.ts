@@ -35,42 +35,30 @@ import { noop } from '../platform/common/utils/misc';
 import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../kernels/types';
 import { INotebookControllerManager } from '../notebooks/types';
 import { generateMarkdownFromCodeLines, parseForComments } from '../webviews/webview-side/common';
-import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../telemetry/telemetry.node';
+import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../telemetry/telemetry';
 import { chainable } from '../platform/common/utils/decorators';
 import { InteractiveCellResultError } from '../platform/errors/interactiveCellResultError.node';
 import { DataScience } from '../platform/common/utils/localize';
 import { createDeferred, Deferred } from '../platform/common/utils/async';
-import { connectToKernel } from '../kernels/helpers.node';
 import { IServiceContainer } from '../platform/ioc/types';
 import { SysInfoReason } from '../platform/messageTypes';
-import { chainWithPendingUpdates } from '../notebooks/execution/notebookUpdater.node';
-import { updateNotebookMetadata } from '../notebooks/helpers.node';
+import { chainWithPendingUpdates } from '../notebooks/execution/notebookUpdater';
+import { updateNotebookMetadata } from '../notebooks/helpers';
 import { CellExecutionCreator } from '../notebooks/execution/cellExecutionCreator';
 import { createOutputWithErrorMessageForDisplay } from '../platform/errors/errorUtils';
 import { INotebookExporter } from '../kernels/jupyter/types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { IExportDialog, ExportFormat } from '../platform/export/types';
-import { generateCellsFromNotebookDocument } from './editor-integration/cellFactory.node';
-import { CellMatcher } from './editor-integration/cellMatcher.node';
+import { generateCellsFromNotebookDocument } from './editor-integration/cellFactory';
+import { CellMatcher } from './editor-integration/cellMatcher';
 import { IInteractiveWindowLoadable, IInteractiveWindowDebugger } from './types';
-import { generateInteractiveCode } from './helpers.node';
+import { generateInteractiveCode } from './helpers';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
-import { DisplayOptions } from '../kernels/displayOptions.node';
+import { DisplayOptions } from '../kernels/displayOptions';
+import { getInteractiveCellMetadata, InteractiveCellMetadata } from './helpers';
+import { KernelConnector } from '../kernels/kernelConnector';
+import { getFilePath } from '../platform/common/platform/fs-paths';
 
-export type InteractiveCellMetadata = {
-    interactiveWindowCellMarker: string;
-    interactive: {
-        uristring: string;
-        line: number;
-        originalSource: string;
-    };
-    id: string;
-};
-export function getInteractiveCellMetadata(cell: NotebookCell): InteractiveCellMetadata | undefined {
-    if (cell.metadata.interactive !== undefined) {
-        return cell.metadata as InteractiveCellMetadata;
-    }
-}
 export class InteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
@@ -186,7 +174,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             };
             // When connecting, we need to update the sys info message
             this.updateSysInfoMessage(this.getSysInfoMessage(metadata, SysInfoReason.Start), false, sysInfoCell);
-            const kernel = await connectToKernel(
+            const kernel = await KernelConnector.connectToKernel(
                 controller,
                 metadata,
                 this.serviceContainer,
@@ -444,7 +432,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
     public async debugCode(code: string, fileUri: Uri, line: number): Promise<boolean> {
         let saved = true;
-        const file = fileUri.fsPath;
+        const file = getFilePath(fileUri);
         // Make sure the file is saved before debugging
         const doc = this.documentManager.textDocuments.find((d) => this.fs.areLocalPathsSame(d.fileName, file));
         if (doc && doc.isUntitled) {
@@ -620,7 +608,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
 
         // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
-        await this.setFileInKernel(fileUri.fsPath, kernel!);
+        await this.setFileInKernel(getFilePath(fileUri), kernel!);
         traceInfoIfCI('file in kernel set for IW');
     }
 
@@ -695,9 +683,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         if (this.owner) {
             return this.owner;
         }
-        const root = this.workspaceService.rootPath;
+        const root = this.workspaceService.rootFolder;
         if (root) {
-            return Uri.file(root);
+            return root;
         }
         return undefined;
     }
@@ -812,7 +800,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             // Bring up the export file dialog box
             const uri = await this.exportDialog.showDialog(ExportFormat.ipynb, this.owningResource);
             if (uri) {
-                await this.jupyterExporter.exportToFile(cells, uri.fsPath);
+                await this.jupyterExporter.exportToFile(cells, getFilePath(uri));
             }
         }
     }

@@ -22,6 +22,7 @@ export interface IPlatformService {
     readonly isLinux: boolean;
     readonly is64bit: boolean;
     getVersion(): Promise<SemVer>;
+    readonly homeDir: vscode.Uri | undefined;
 }
 
 //===========================

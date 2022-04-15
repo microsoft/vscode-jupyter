@@ -22,7 +22,7 @@ import { ITestVariableViewProvider } from './variableViewTestInterfaces';
 import { ITestWebviewHost } from '../testInterfaces';
 import { traceInfo } from '../../../platform/logging';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { IInterpreterService } from '../../../platform/interpreter/contracts.node';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { Commands } from '../../../platform/common/constants';
 import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataViewer.node';
 import { IVariableViewProvider } from '../../../webviews/extension-side/variablesView/types';

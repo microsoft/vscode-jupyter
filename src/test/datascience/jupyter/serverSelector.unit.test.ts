@@ -7,22 +7,22 @@ import * as sinon from 'sinon';
 import * as os from 'os';
 import { QuickPickItem } from 'vscode';
 import { ApplicationShell } from '../../../platform/common/application/applicationShell';
-import { ClipboardService } from '../../../platform/common/application/clipboard.node';
+import { ClipboardService } from '../../../platform/common/application/clipboard';
 import { IClipboard } from '../../../platform/common/application/types';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { IJupyterSettings } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { MultiStepInput, MultiStepInputFactory } from '../../../platform/common/utils/multiStepInput.node';
+import { MultiStepInput, MultiStepInputFactory } from '../../../platform/common/utils/multiStepInput';
 import { MockInputBox } from '../mockInputBox';
 import { MockQuickPick } from '../mockQuickPick';
 import { MockMemento } from '../../mocks/mementos';
 import { WorkspaceService } from '../../../platform/common/application/workspace';
-import { CryptoUtils } from '../../../platform/common/crypto.node';
+import { CryptoUtils } from '../../../platform/common/crypto';
 import { ApplicationEnvironment } from '../../../platform/common/application/applicationEnvironment.node';
 import { MockEncryptedStorage } from '../mockEncryptedStorage';
-import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage.node';
-import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector.node';
-import { JupyterUriProviderRegistration } from '../../../kernels/jupyter/jupyterUriProviderRegistration.node';
+import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
+import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
+import { JupyterUriProviderRegistration } from '../../../kernels/jupyter/jupyterUriProviderRegistration';
 import { Settings } from '../../../platform/common/constants';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */

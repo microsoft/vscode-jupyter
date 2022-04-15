@@ -4,7 +4,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Memento } from 'vscode';
-import { getKernelId } from '../../../kernels/helpers.node';
+import { getKernelId } from '../../../kernels/helpers';
 import {
     IJupyterKernelSpec,
     LocalKernelSpecConnectionMetadata,

@@ -26,7 +26,7 @@ import {
     IJupyterInterpreterDependencyManager,
     JupyterInterpreterDependencyResponse
 } from '../../kernels/jupyter/types';
-import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers.node';
+import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { getOSType, OSType } from '../../platform/common/utils/platform';
 
 suite('DataScience Error Handler Unit Tests', () => {

@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { createPromiseFromCancellation, Cancellation } from '../../../platform/common/cancellation.node';
+import { createPromiseFromCancellation, Cancellation } from '../../../platform/common/cancellation';
 import { traceError } from '../../../platform/logging';
 import { DataScience, Common } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
@@ -14,7 +14,7 @@ import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvi
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry, JupyterCommands } from '../../../webviews/webview-side/common/constants';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
-import { ProductNames } from '../../installer/productNames.node';
+import { ProductNames } from '../../installer/productNames';
 import { Product, IInstaller, InstallerResponse } from '../../installer/types';
 import { HelpLinks } from '../../../platform/common/constants';
 import { reportAction } from '../../../platform/progress/decorator.node';

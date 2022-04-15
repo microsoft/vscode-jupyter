@@ -6,13 +6,13 @@ import { CancellationToken, NotebookDocument } from 'vscode';
 import { traceError } from '../../platform/logging';
 import { IFileSystem } from '../../platform/common/platform/types.node';
 import { DataScience } from '../../platform/common/utils/localize';
-import { stripAnsi } from '../../platform/common/utils/regexp.node';
+import { stripAnsi } from '../../platform/common/utils/regexp';
 import { JupyterDataRateLimitError } from '../../platform/errors/jupyterDataRateLimitError.node';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
-import { executeSilently } from '../helpers.node';
+import { executeSilently } from '../helpers';
 import { IKernel } from '../types';
 import { IKernelVariableRequester, IJupyterVariable } from './types';
-import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector.node';
+import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 import { DataFrameLoading, GetVariableInfo } from '../../platform/common/constants.node';
 
 type DataFrameSplitFormat = {

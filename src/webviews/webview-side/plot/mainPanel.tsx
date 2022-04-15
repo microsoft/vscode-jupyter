@@ -75,7 +75,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         };
     }
 
-    public componentWillMount() {
+    public override componentWillMount() {
         // Add ourselves as a handler for the post office
         this.postOffice.addHandler(this);
 
@@ -86,14 +86,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         window.addEventListener('keydown', this.onKeyDown);
     }
 
-    public componentWillUnmount() {
+    public override componentWillUnmount() {
         this.postOffice.removeHandler(this);
         this.postOffice.dispose();
         // Stop listening to key events
         window.removeEventListener('keydown', this.onKeyDown);
     }
 
-    public render = () => {
+    public override render = () => {
         if (this.state.settings) {
             const baseTheme = this.computeBaseTheme();
             return (

@@ -16,13 +16,13 @@ import { OSType } from '../utils/platform';
 import { EnvironmentVariables, IEnvironmentVariablesProvider } from '../variables/types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter.node';
+import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
 import { IPythonApiProvider } from '../../api/types';
 import { StopWatch } from '../utils/stopWatch';
 import { Memento } from 'vscode';
 import { getDisplayPath } from '../platform/fs-paths';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
-import { IInterpreterService } from '../../interpreter/contracts.node';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { CurrentProcess } from './currentProcess.node';
 import { getTelemetrySafeHashedString } from '../../../telemetry/helpers';
 import { CondaService } from './condaService.node';
@@ -32,7 +32,7 @@ import { ProcessService } from './proc.node';
 import { BufferDecoder } from './decoder.node';
 import { testOnlyMethod } from '../utils/decorators';
 import { DataScience } from '../utils/localize';
-import { KernelProgressReporter } from '../../progress/kernelProgressReporter.node';
+import { KernelProgressReporter } from '../../progress/kernelProgressReporter';
 import { Telemetry } from '../constants';
 import { IFileSystem } from '../platform/types.node';
 import {
@@ -45,7 +45,7 @@ import {
     traceWarning
 } from '../../logging';
 import { TraceOptions } from '../../logging/types';
-import { serializePythonEnvironment } from '../../api/pythonApi.node';
+import { serializePythonEnvironment } from '../../api/pythonApi';
 
 const ENVIRONMENT_PREFIX = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const ENVIRONMENT_TIMEOUT = 30000;

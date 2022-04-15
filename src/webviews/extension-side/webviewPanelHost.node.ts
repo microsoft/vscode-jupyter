@@ -31,11 +31,11 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
     private messageListener: IWebviewPanelMessageListener;
 
     constructor(
-        protected configService: IConfigurationService,
+        protected override configService: IConfigurationService,
         private provider: IWebviewPanelProvider,
         cssGenerator: ICodeCssGenerator,
-        protected themeFinder: IThemeFinder,
-        protected workspaceService: IWorkspaceService,
+        protected override themeFinder: IThemeFinder,
+        protected override workspaceService: IWorkspaceService,
         messageListenerCtor: (
             callback: (message: string, payload: {}) => void,
             viewChanged: (panel: IWebviewPanel) => void,
@@ -71,7 +71,7 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         }
     }
 
-    public dispose() {
+    public override dispose() {
         if (!this.isDisposed) {
             if (this.webPanel) {
                 this.webPanel.close();

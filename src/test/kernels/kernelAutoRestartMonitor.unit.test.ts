@@ -4,7 +4,7 @@
 import type { KernelMessage } from '@jupyterlab/services';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter, Uri } from 'vscode';
-import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers.node';
+import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { KernelAutoRestartMonitor } from '../../kernels/kernelAutoRestartMonitor.node';
 import { IJupyterSession, IKernel, IKernelProvider, KernelConnectionMetadata } from '../../kernels/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { DataScience } from '../common/utils/localize';
-import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers.node';
+import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { KernelConnectionMetadata } from '../../kernels/types';
 import { BaseKernelError } from './types';
 

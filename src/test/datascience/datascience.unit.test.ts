@@ -7,7 +7,7 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CommandManager } from '../../platform/common/application/commandManager';
-import { DocumentManager } from '../../platform/common/application/documentManager.node';
+import { DocumentManager } from '../../platform/common/application/documentManager';
 import { IDocumentManager, IWorkspaceService } from '../../platform/common/application/types';
 import { WorkspaceService } from '../../platform/common/application/workspace';
 import { JupyterSettings } from '../../platform/common/configSettings';
@@ -20,7 +20,7 @@ import { DataScienceCodeLensProvider } from '../../interactive-window/editor-int
 import { RawNotebookSupportedService } from '../../kernels/raw/session/rawNotebookSupportedService.node';
 import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
 import { IRawNotebookSupportedService } from '../../kernels/raw/types';
-import { pruneCell } from '../../platform/common/utils.node';
+import { pruneCell } from '../../platform/common/utils';
 
 /* eslint-disable  */
 suite('DataScience Tests', () => {
