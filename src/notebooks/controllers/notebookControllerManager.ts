@@ -267,7 +267,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             this.registerNoPythonControllers();
         }
 
-        // Update total number of connection & the like for existing controllers.
+        // Update total number of connection & the like for existing remote controllers.
         nonCachedConnections.forEach((connection) => {
             const controller = this.registeredControllers.get(connection.id);
             if (controller && connection.kind === 'connectToLiveRemoteKernel') {

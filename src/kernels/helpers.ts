@@ -29,7 +29,7 @@ import { getNormalizedInterpreterPath, getInterpreterHash } from '../platform/py
 import { getTelemetrySafeVersion } from '../telemetry/helpers';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { fsPathToUri } from '../platform/vscode-path/utils';
-import { deserializePythonEnvironment } from '../platform/api/pythonApi';
+import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
 import { JupyterKernelSpec } from './jupyter/jupyterKernelSpec';
 import { IConfigurationService, Resource } from '../platform/common/types';
 import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKernelIdProvider';
@@ -485,6 +485,11 @@ export function compareKernels(
         if (a === activeInterpreterConnection) {
             return 1;
         } else if (b === activeInterpreterConnection) {
+            return -1;
+            // Interpreter should trump kernelspec
+        } else if (a.kind === 'startUsingPythonInterpreter' && b.kind !== 'startUsingPythonInterpreter') {
+            return 1;
+        } else if (a.kind !== 'startUsingPythonInterpreter' && b.kind === 'startUsingPythonInterpreter') {
             return -1;
         }
     }
@@ -1477,4 +1482,25 @@ function handleExecuteSilentErrors(
                 });
             }
         });
+}
+
+export function serializeKernelConnection(kernelConnection: KernelConnectionMetadata) {
+    if (kernelConnection.interpreter) {
+        return {
+            ...kernelConnection,
+            interpreter: serializePythonEnvironment(kernelConnection.interpreter)!
+        };
+    }
+    return kernelConnection;
+}
+
+export function deserializeKernelConnection(kernelConnection: any): KernelConnectionMetadata {
+    if (kernelConnection.interpreter) {
+        return {
+            ...kernelConnection,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            interpreter: deserializePythonEnvironment(kernelConnection.interpreter as any)!
+        };
+    }
+    return kernelConnection;
 }

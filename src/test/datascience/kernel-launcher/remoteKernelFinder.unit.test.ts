@@ -16,7 +16,8 @@ import {
     IJupyterConnection,
     IJupyterKernelSpec,
     IKernelFinder,
-    LiveRemoteKernelConnectionMetadata
+    LiveRemoteKernelConnectionMetadata,
+    RemoteKernelSpecConnectionMetadata
 } from '../../../kernels/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { JupyterSessionManager } from '../../../kernels/jupyter/session/jupyterSessionManager.node';
@@ -30,6 +31,10 @@ import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProv
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { LocalKernelFinder } from '../../../kernels/raw/finder/localKernelFinder.node';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
+import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
+import { RemoteKernelSpecsCacheKey } from '../../../kernels/kernelFinder.base';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];
@@ -37,6 +42,8 @@ suite(`Remote Kernel Finder`, () => {
     let remoteKernelFinder: IRemoteKernelFinder;
     let localKernelFinder: ILocalKernelFinder;
     let kernelFinder: IKernelFinder;
+    let fs: IFileSystem;
+    let memento: MockMemento;
     let jupyterSessionManager: IJupyterSessionManager;
     const dummyEvent = new EventEmitter<number>();
     let interpreterService: IInterpreterService;
@@ -119,7 +126,7 @@ suite(`Remote Kernel Finder`, () => {
         when(jupyterSessionManagerFactory.onRestartSessionUsed).thenReturn(sessionUsedEvent.event);
         interpreterService = mock<IInterpreterService>();
         localKernelFinder = mock(LocalKernelFinder);
-        when(localKernelFinder.listKernels(anything(), anything(), anything())).thenResolve([]);
+        when(localKernelFinder.listKernels(anything(), anything())).thenResolve([]);
 
         remoteKernelFinder = new RemoteKernelFinder(
             disposables,
@@ -135,7 +142,12 @@ suite(`Remote Kernel Finder`, () => {
         when(configService.getSettings(anything())).thenReturn(dsSettings as any);
         const notebookProvider = mock(NotebookProvider);
         when(notebookProvider.connect(anything())).thenResolve(connInfo);
-
+        fs = mock(FileSystem);
+        when(fs.deleteLocalFile(anything())).thenResolve();
+        when(fs.localFileExists(anything())).thenResolve(true);
+        const serverUriStorage = mock(JupyterServerUriStorage);
+        when(serverUriStorage.getUri()).thenResolve(connInfo.baseUrl);
+        memento = new MockMemento();
         kernelFinder = new KernelFinder(
             instance(localKernelFinder),
             remoteKernelFinder,
@@ -143,7 +155,10 @@ suite(`Remote Kernel Finder`, () => {
             instance(interpreterService),
             preferredRemoteKernelIdProvider,
             instance(notebookProvider),
-            instance(configService)
+            instance(configService),
+            memento,
+            instance(fs),
+            instance(serverUriStorage)
         );
     });
     teardown(() => {
@@ -268,5 +283,27 @@ suite(`Remote Kernel Finder`, () => {
             python3Kernels[1].name,
             'Wrong live kernel returned'
         );
+    });
+    test('Invalid kernels not returned', async () => {
+        const validKernel: RemoteKernelSpecConnectionMetadata = {
+            kernelSpec: python3spec,
+            baseUrl: connInfo.baseUrl,
+            kind: 'startUsingRemoteKernelSpec',
+            id: '2'
+        };
+        const invalidKernel: RemoteKernelSpecConnectionMetadata = {
+            kernelSpec: python3spec,
+            baseUrl: 'dude',
+            kind: 'startUsingRemoteKernelSpec',
+            id: '3'
+        };
+        await memento.update(RemoteKernelSpecsCacheKey, [validKernel, invalidKernel]);
+        const uri = Uri.file('/usr/foobar/foo.ipynb');
+        await preferredRemoteKernelIdProvider.storePreferredRemoteKernelId(uri, '2');
+
+        const kernels = await kernelFinder.listKernels(uri, undefined, 'useCache');
+        assert.ok(kernels, 'Kernels not found for uri');
+        assert.equal(kernels.length, 1, `Too many cached kernels`);
+        assert.deepStrictEqual(kernels[0], validKernel, 'Wrong kernel returned from cache');
     });
 });

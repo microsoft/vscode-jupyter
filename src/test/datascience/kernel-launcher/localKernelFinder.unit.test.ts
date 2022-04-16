@@ -52,6 +52,7 @@ import { ConfigurationService } from '../../../platform/common/configuration/ser
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider';
 import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
 import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder.node';
+import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -92,7 +93,7 @@ import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder.
             getOSTypeStub.returns(isWindows ? platform.OSType.Windows : platform.OSType.Linux);
             interpreterService = mock(InterpreterService);
             remoteKernelFinder = mock(RemoteKernelFinder);
-            when(remoteKernelFinder.listKernels(anything(), anything(), anything(), anything())).thenResolve([]);
+            when(remoteKernelFinder.listKernels(anything(), anything(), anything())).thenResolve([]);
             // Ensure the active Interpreter is in the list of interpreters.
             if (activeInterpreter) {
                 testData.interpreters = testData.interpreters || [];
@@ -215,9 +216,7 @@ import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder.
                     instance(extensionChecker),
                     nonPythonKernelSpecFinder,
                     instance(memento)
-                ),
-                instance(memento),
-                instance(fs)
+                )
             );
 
             const configService = mock(ConfigurationService);
@@ -227,6 +226,7 @@ import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder.
             when(configService.getSettings(anything())).thenReturn(dsSettings as any);
             const preferredRemote = mock(PreferredRemoteKernelIdProvider);
             const notebookProvider = mock(NotebookProvider);
+            const serverUriStorage = mock(JupyterServerUriStorage);
             kernelFinder = new KernelFinder(
                 localKernelFinder,
                 instance(remoteKernelFinder),
@@ -234,7 +234,10 @@ import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder.
                 instance(interpreterService),
                 instance(preferredRemote),
                 instance(notebookProvider),
-                instance(configService)
+                instance(configService),
+                instance(memento),
+                instance(fs),
+                instance(serverUriStorage)
             );
         }
         teardown(() => {

@@ -48,8 +48,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
     public async listKernels(
         _resource: Resource,
         connInfo: INotebookProviderConnection | undefined,
-        _cancelToken: CancellationToken,
-        _useCache?: 'useCache' | 'ignoreCache'
+        _cancelToken: CancellationToken
     ): Promise<KernelConnectionMetadata[]> {
         // Get a jupyter session manager to talk to
         let sessionManager: IJupyterSessionManager | undefined;
