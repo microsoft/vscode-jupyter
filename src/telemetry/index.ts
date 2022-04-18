@@ -155,7 +155,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     ex?: Error,
     sendOriginalEventWithErrors?: boolean
 ) {
-    if (!isTelemetrySupported() || (isTestExecution() && eventName !== Telemetry.RunTest)) {
+    if (!isTelemetrySupported() || isTestExecution()) {
         return;
     }
     // If stuff is already queued, then queue the rest.

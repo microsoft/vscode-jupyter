@@ -2299,6 +2299,7 @@
         "@vscode/test-electron": "^1.6.1",
         "@vscode/test-web": "^0.0.24",
         "acorn": "^6.4.1",
+        "applicationinsights": "^2.3.1",
         "babel-polyfill": "^6.26.0",
         "bufferutil": "^4.0.6",
         "chai": "^4.3.0",
