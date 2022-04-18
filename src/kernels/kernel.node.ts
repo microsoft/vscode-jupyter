@@ -27,7 +27,7 @@ import {
     KernelConnectionMetadata,
     NotebookCellRunState
 } from './types';
-import { KernelExecution } from '../notebooks/execution/kernelExecution.node';
+import { KernelExecution } from '../notebooks/execution/kernelExecution';
 import { traceCellMessage } from '../notebooks/helpers';
 import { AddRunCellHook } from '../platform/common/constants.node';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';

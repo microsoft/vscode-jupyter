@@ -4,8 +4,8 @@
 'use strict';
 
 import { EventEmitter, NotebookCell, NotebookCellKind, NotebookController, NotebookDocument, workspace } from 'vscode';
-import { CellExecutionFactory } from './cellExecution.node';
-import { CellExecutionQueue } from './cellExecutionQueue.node';
+import { CellExecutionFactory } from './cellExecution';
+import { CellExecutionQueue } from './cellExecutionQueue';
 import { KernelMessage } from '@jupyterlab/services';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { traceInfo, traceInfoIfCI, traceWarning } from '../../platform/logging';

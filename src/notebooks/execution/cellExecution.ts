@@ -39,7 +39,7 @@ import { Deferred, createDeferred } from '../../platform/common/utils/async';
 import * as localize from '../../platform/common/utils/localize';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { CellHashProviderFactory } from '../../interactive-window/editor-integration/cellHashProviderFactory';
-import { InteractiveWindowView } from '../../notebooks/constants';
+import { InteractiveWindowView } from '../constants';
 import {
     NotebookCellStateTracker,
     traceCellMessage,
@@ -54,7 +54,7 @@ import { swallowExceptions } from '../../platform/common/utils/decorators';
 import { noop } from '../../platform/common/utils/misc';
 import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../kernels/helpers';
 import { IJupyterSession, IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
-import { handleTensorBoardDisplayDataOutput } from './executionHelpers.node';
+import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
 import { ICellHashProvider, ICellHash } from '../../interactive-window/editor-integration/types';
 
 // Helper interface for the set_next_input execute reply payload
