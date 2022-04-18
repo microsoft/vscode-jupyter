@@ -46,7 +46,7 @@ body:
   id: logs
   attributes:
     label: Jupyter logs
-    description: Copy and paste all of the text in the Jupyter Output panel available via the ```Jupyter: Show Output``` command. This is often critical to help us understand and fix what may have gone wrong!
+    description: Copy and paste all of the text in the Jupyter Output panel available via the Jupyter: Show Output command. This is often critical to help us understand and fix what may have gone wrong!
     render: shell
 - type: markdown
   attributes:
