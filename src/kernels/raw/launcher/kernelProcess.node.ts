@@ -46,7 +46,7 @@ import {
 import { Resource, IOutputChannel, IJupyterSettings } from '../../../platform/common/types';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
+import { swallowExceptions } from '../../../platform/common/utils/misc';
 import { KernelDiedError } from '../../../platform/errors/kernelDiedError.node';
 import { KernelPortNotUsedTimeoutError } from '../../../platform/errors/kernelPortNotUsedTimeoutError.node';
 import { KernelProcessExitedError } from '../../../platform/errors/kernelProcessExitedError.node';
@@ -276,9 +276,11 @@ export class KernelProcess implements IKernelProcess {
             this._process?.kill(); // NOSONAR
             this.exitEvent.fire({});
         });
-        swallowExceptions(async () =>
-            this.connectionFile ? this.fileSystem.deleteLocalFile(this.connectionFile) : noop()
-        );
+        swallowExceptions(async () => {
+            if (this.connectionFile && (await this.fileSystem.localFileExists(this.connectionFile))) {
+                await this.fileSystem.deleteLocalFile(this.connectionFile);
+            }
+        });
     }
 
     private sendToOutput(data: string) {
@@ -344,7 +346,7 @@ export class KernelProcess implements IKernelProcess {
             await this.fileSystem.writeLocalFile(this.connectionFile, JSON.stringify(this._connection));
 
             // Replace the connection file argument with this file
-            // Remmeber, non-python kernels can have argv as `--connection-file={connection_file}`,
+            // Remember, non-python kernels can have argv as `--connection-file={connection_file}`,
             // hence we should not replace the entire entry, but just replace the text `{connection_file}`
             // See https://github.com/microsoft/vscode-jupyter/issues/7203
             if (this.launchKernelSpec.argv[indexOfConnectionFile].includes('--connection-file')) {
