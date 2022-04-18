@@ -119,7 +119,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
     });
     test('Use same kernel when re-opening notebook', async function () {
         await openNotebook(ipynbFile.fsPath);
-        await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
+        await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE, true);
         let nbEditor = vscodeNotebook.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');
         // Cell 1 = `a = "Hello World"`
@@ -149,7 +149,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         // Second cell should display the value of existing variable from previous execution.
 
         await openNotebook(ipynbFile.fsPath);
-        await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
+        await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE, true);
         nbEditor = vscodeNotebook.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');
 

@@ -318,7 +318,11 @@ async function waitForKernelToChangeImpl(
     }
 }
 
-export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, timeout = 100_000) {
+export async function waitForKernelToGetAutoSelected(
+    expectedLanguage?: string,
+    preferRemoteKernelSpec: boolean = false,
+    timeout = 100_000
+) {
     traceInfoIfCI('Wait for kernel to get auto selected');
     const { vscodeNotebook, notebookControllerManager } = await getServices();
 
@@ -365,21 +369,33 @@ export async function waitForKernelToGetAutoSelected(expectedLanguage?: string, 
     // Find one that matches the expected language or the preferred
     const expectedLower = expectedLanguage?.toLowerCase();
     const language = expectedLower || 'python';
-    const match =
-        (preferred &&
+    const preferredKind = preferRemoteKernelSpec ? 'startUsingRemoteKernelSpec' : preferred?.connection.kind;
+    let match: IVSCodeNotebookController | undefined;
+    if (preferred) {
+        if (
             preferred.connection.kind !== 'connectToLiveRemoteKernel' &&
-            (!expectedLanguage || preferred.connection.kernelSpec?.language?.toLowerCase() === expectedLower)) ||
-        preferred?.connection.kind === 'connectToLiveRemoteKernel'
-            ? preferred
-            : notebookControllers.find(
-                  (d) =>
-                      d.connection.kind != 'connectToLiveRemoteKernel' &&
-                      language === d.connection.kernelSpec?.language?.toLowerCase()
-              );
+            (!expectedLanguage || preferred.connection.kernelSpec?.language?.toLowerCase() === expectedLower) &&
+            preferredKind === preferred.connection.kind
+        ) {
+            match = preferred;
+        } else if (preferred.connection.kind === 'connectToLiveRemoteKernel') {
+            match = preferred;
+        }
+    }
+    if (!match) {
+        match = notebookControllers.find(
+            (d) =>
+                d.connection.kind != 'connectToLiveRemoteKernel' &&
+                language === d.connection.kernelSpec?.language?.toLowerCase() &&
+                (!preferRemoteKernelSpec || d.connection.kind.includes('Remote'))
+        );
+    }
 
     const criteria = { labelOrId: match!.id };
     if (!match) {
-        traceInfoIfCI(`Houston, we have a problem, no match. Expected language ${expectedLanguage}.`);
+        traceInfoIfCI(
+            `Houston, we have a problem, no match. Expected language ${expectedLanguage}. Expected kind ${preferredKind}.`
+        );
     }
     traceInfo(`Preferred kernel for selection is ${match?.id}, criteria = ${JSON.stringify(criteria)}`);
     assert.ok(match, 'No kernel to auto select');
@@ -799,7 +815,7 @@ export async function saveActiveNotebook() {
 export async function runCell(cell: NotebookCell, waitForExecutionToComplete = false) {
     const api = await initialize();
     const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-    await waitForKernelToGetAutoSelected(undefined, 60_000);
+    await waitForKernelToGetAutoSelected(undefined, false, 60_000);
     if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.document) {
         throw new Error('No notebook or document');
     }
@@ -817,7 +833,7 @@ export async function runCell(cell: NotebookCell, waitForExecutionToComplete = f
 export async function runAllCellsInActiveNotebook(waitForExecutionToComplete = false) {
     const api = await initialize();
     const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-    await waitForKernelToGetAutoSelected(undefined, 60_000);
+    await waitForKernelToGetAutoSelected(undefined, false, 60_000);
 
     if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.document) {
         throw new Error('No editor or document');
