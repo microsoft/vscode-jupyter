@@ -7,11 +7,7 @@ body:
 - type: markdown
   attributes:
     value: |
-      ## Welcome!
-- type: markdown
-  attributes:
-    value: |
-      ### Before submitting a bug, you may want to check out...
+      ## Before submitting a bug, you may want to check out...
       * Troubleshooting on [our wiki](https://github.com/microsoft/vscode-jupyter/wiki)
       * Our [Discussions Forum](https://github.com/microsoft/vscode-jupyter/discussions)
 - type: checkboxes
