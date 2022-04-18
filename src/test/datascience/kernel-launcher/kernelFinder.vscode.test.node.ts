@@ -14,17 +14,17 @@ import { initialize } from '../../initialize.node';
 import { traceInfo } from '../../../platform/logging';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
-import { ILocalKernelFinder } from '../../../kernels/raw/types';
+import { IKernelFinder, LocalKernelConnectionMetadata } from '../../../kernels/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - Kernels Finder', () => {
     let api: IExtensionTestApi;
-    let kernelFinder: ILocalKernelFinder;
+    let kernelFinder: IKernelFinder;
     let interpreterService: IInterpreterService;
     let resourceToUse: Uri;
     suiteSetup(async () => {
         api = await initialize();
-        kernelFinder = api.serviceContainer.get<ILocalKernelFinder>(ILocalKernelFinder);
+        kernelFinder = api.serviceContainer.get<IKernelFinder>(IKernelFinder);
         interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
         resourceToUse = Uri.file(path.join(workspace.workspaceFolders![0].uri.fsPath, 'test.ipynb'));
     });
@@ -113,7 +113,9 @@ suite('DataScience - Kernels Finder', () => {
             return this.skip();
         }
         const kernelSpecs = await kernelFinder.listKernels(resourceToUse);
-        const juliaKernelSpec = kernelSpecs.find((item) => item.kernelSpec?.language === 'julia');
+        const juliaKernelSpec = kernelSpecs.find(
+            (item) => item.kind !== 'connectToLiveRemoteKernel' && item?.kernelSpec?.language === 'julia'
+        ) as LocalKernelConnectionMetadata;
         assert.ok(juliaKernelSpec);
 
         const kernelSpec = await kernelFinder.findKernel(resourceToUse, {

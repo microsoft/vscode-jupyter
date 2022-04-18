@@ -17,7 +17,7 @@ import {
     Telemetry,
     VSCodeNativeTelemetry
 } from '../platform/common/constants';
-import { traceError, traceVerbose } from '../platform/logging';
+import { traceError, traceWithLevel } from '../platform/logging';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { ResourceSpecificTelemetryProperties } from './types';
 import { CheckboxState, EventName, PlatformErrors, SliceOperationSource } from './constants';
@@ -30,6 +30,7 @@ import { ExportFormat } from '../platform/export/types';
 import { InterruptResult, KernelInterpreterDependencyResponse } from '../kernels/types';
 import { populateTelemetryWithErrorInfo } from '../platform/errors';
 import { IExportedKernelService } from '../platform/api/extension';
+import { LogLevel } from '../platform/logging/types';
 
 export const waitBeforeSending = 'waitBeforeSending';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -262,8 +263,8 @@ function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E exten
 
         reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     }
-
-    traceVerbose(
+    traceWithLevel(
+        LogLevel.Trace,
         `Telemetry Event : ${eventNameSent} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
             customProperties
         )} `
@@ -1538,10 +1539,9 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.FetchControllers]: {
         /**
-         * Whether this is the first time we're loading this (same as not using caches).
-         * In the case of remotes, this is always `true` (as we don't cache anything for remote kernels).
+         * Whether this is from a cached result or not
          */
-        firstTime: boolean;
+        cached: boolean;
         /**
          * Whether we've loaded local or remote controllers.
          */

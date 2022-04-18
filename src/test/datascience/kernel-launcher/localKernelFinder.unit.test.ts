@@ -32,21 +32,33 @@ import { EventEmitter, Memento, Uri } from 'vscode';
 import { IDisposable, IExtensionContext } from '../../../platform/common/types';
 import { getInterpreterHash } from '../../../platform/pythonEnvironments/info/interpreter';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../../../platform/../kernels/types';
+import {
+    IKernelFinder,
+    KernelConnectionMetadata,
+    LocalKernelConnectionMetadata
+} from '../../../platform/../kernels/types';
 import { arePathsSame } from '../../../platform/common/platform/fileUtils.node';
 import { JupyterPaths } from '../../../kernels/raw/finder/jupyterPaths.node';
 import { LocalKernelFinder } from '../../../kernels/raw/finder/localKernelFinder.node';
 import { loadKernelSpec } from '../../../kernels/raw/finder/localKernelSpecFinderBase.node';
 import { LocalKnownPathKernelSpecFinder } from '../../../kernels/raw/finder/localKnownPathKernelSpecFinder.node';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../kernels/raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.node';
-import { ILocalKernelFinder } from '../../../kernels/raw/types';
+import { ILocalKernelFinder, IRemoteKernelFinder } from '../../../kernels/raw/types';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
+import { KernelFinder } from '../../../kernels/kernelFinder.node';
+import { ConfigurationService } from '../../../platform/common/configuration/service.node';
+import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider';
+import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
+import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder.node';
+import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
-        let kernelFinder: ILocalKernelFinder;
+        let localKernelFinder: ILocalKernelFinder;
+        let remoteKernelFinder: IRemoteKernelFinder;
+        let kernelFinder: IKernelFinder;
         let interpreterService: IInterpreterService;
         let platformService: IPlatformService;
         let fs: IFileSystem;
@@ -80,6 +92,8 @@ import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
             const getOSTypeStub = sinon.stub(platform, 'getOSType');
             getOSTypeStub.returns(isWindows ? platform.OSType.Windows : platform.OSType.Linux);
             interpreterService = mock(InterpreterService);
+            remoteKernelFinder = mock(RemoteKernelFinder);
+            when(remoteKernelFinder.listKernels(anything(), anything(), anything())).thenResolve([]);
             // Ensure the active Interpreter is in the list of interpreters.
             if (activeInterpreter) {
                 testData.interpreters = testData.interpreters || [];
@@ -192,9 +206,7 @@ import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
             when(memento.get('LOCAL_KERNEL_SPEC_CONNECTIONS_CACHE_KEY_V2', anything())).thenReturn([]);
             when(memento.get('JUPYTER_GLOBAL_KERNELSPECS_V2', anything())).thenReturn([]);
             when(memento.update('JUPYTER_GLOBAL_KERNELSPECS_V2', anything())).thenResolve();
-            kernelFinder = new LocalKernelFinder(
-                instance(interpreterService),
-                instance(extensionChecker),
+            localKernelFinder = new LocalKernelFinder(
                 nonPythonKernelSpecFinder,
                 new LocalPythonAndRelatedNonPythonKernelSpecFinder(
                     instance(interpreterService),
@@ -204,9 +216,28 @@ import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
                     instance(extensionChecker),
                     nonPythonKernelSpecFinder,
                     instance(memento)
-                ),
+                )
+            );
+
+            const configService = mock(ConfigurationService);
+            const dsSettings = {
+                jupyterServerType: 'local'
+            } as any;
+            when(configService.getSettings(anything())).thenReturn(dsSettings as any);
+            const preferredRemote = mock(PreferredRemoteKernelIdProvider);
+            const notebookProvider = mock(NotebookProvider);
+            const serverUriStorage = mock(JupyterServerUriStorage);
+            kernelFinder = new KernelFinder(
+                localKernelFinder,
+                instance(remoteKernelFinder),
+                instance(extensionChecker),
+                instance(interpreterService),
+                instance(preferredRemote),
+                instance(notebookProvider),
+                instance(configService),
                 instance(memento),
-                instance(fs)
+                instance(fs),
+                instance(serverUriStorage)
             );
         }
         teardown(() => {
@@ -565,7 +596,7 @@ import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
          * Gets the list of kernels from the kernel provider and compares them against what's expected.
          */
         async function verifyKernels(expectations: ExpectedKernels) {
-            const actualKernels = await kernelFinder.listKernels(undefined);
+            const actualKernels = await localKernelFinder.listKernels(undefined);
             const expectedKernels = await generateExpectedKernels(
                 expectations.expectedGlobalKernelSpecs || [],
                 expectations.expectedInterpreterKernelSpecFiles || [],
@@ -698,7 +729,7 @@ import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
                 ]
             };
             await initialize(testData);
-            const kernels = await kernelFinder.listKernels(undefined);
+            const kernels = await localKernelFinder.listKernels(undefined);
             verifyGlobalKernelSpec(
                 kernels.find((item) => item.kernelSpec.display_name === juliaKernelSpec.display_name),
                 juliaKernelSpec
@@ -728,7 +759,7 @@ import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
                 ]
             };
             await initialize(testData);
-            const kernels = await kernelFinder.listKernels(undefined);
+            const kernels = await localKernelFinder.listKernels(undefined);
             // console.error(kernels);
             assert.isUndefined(
                 kernels.find(
@@ -929,7 +960,7 @@ import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 
                         // Nothing should be started using the Python interpreter.
                         // Why? Because we don't have the Python extension.
-                        const actualKernels = await kernelFinder.listKernels(undefined);
+                        const actualKernels = await localKernelFinder.listKernels(undefined);
                         assert.isUndefined(
                             actualKernels.find((kernel) => kernel.kind === 'startUsingPythonInterpreter')
                         );
@@ -1107,10 +1138,10 @@ import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
                         let kernel: KernelConnectionMetadata | undefined;
 
                         // Try an empty python Notebook without any kernelspec in metadata.
-                        kernel = await kernelFinder.findKernel(nbUri, {
+                        kernel = (await kernelFinder.findKernel(nbUri, {
                             language_info: { name: PYTHON_LANGUAGE },
                             orig_nbformat: 4
-                        });
+                        })) as LocalKernelConnectionMetadata;
                         assert.equal(kernel?.kernelSpec?.language, 'python');
                         assert.strictEqual(kernel?.kind, 'startUsingPythonInterpreter');
                         assert.notStrictEqual(
@@ -1122,14 +1153,14 @@ import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
                         }
 
                         // Generic Python 3 notebooks.
-                        kernel = await kernelFinder.findKernel(nbUri, {
+                        kernel = (await kernelFinder.findKernel(nbUri, {
                             kernelspec: {
                                 display_name: 'Python 3',
                                 name: 'python3'
                             },
                             language_info: { name: PYTHON_LANGUAGE },
                             orig_nbformat: 4
-                        });
+                        })) as LocalKernelConnectionMetadata;
                         assert.equal(kernel?.kernelSpec?.language, 'python');
                         assert.strictEqual(kernel?.kind, 'startUsingPythonInterpreter');
                         assert.notStrictEqual(
@@ -1141,14 +1172,14 @@ import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
                         }
 
                         // Generic Python 3 notebooks (kernels with IpyKernel installed).
-                        kernel = await kernelFinder.findKernel(nbUri, {
+                        kernel = (await kernelFinder.findKernel(nbUri, {
                             kernelspec: {
                                 display_name: 'Python 3 (IPyKernel)',
                                 name: 'python3'
                             },
                             language_info: { name: PYTHON_LANGUAGE },
                             orig_nbformat: 4
-                        });
+                        })) as LocalKernelConnectionMetadata;
                         assert.equal(kernel?.kernelSpec?.language, 'python');
                         assert.strictEqual(kernel?.kind, 'startUsingPythonInterpreter');
                         assert.notStrictEqual(
@@ -1160,14 +1191,14 @@ import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
                         }
 
                         // Python 2
-                        kernel = await kernelFinder.findKernel(nbUri, {
+                        kernel = (await kernelFinder.findKernel(nbUri, {
                             kernelspec: {
                                 display_name: 'Python 2 on Disk',
                                 name: 'python2'
                             },
                             language_info: { name: PYTHON_LANGUAGE },
                             orig_nbformat: 4
-                        });
+                        })) as LocalKernelConnectionMetadata;
                         assert.equal(kernel?.kernelSpec?.display_name, 'Python 2 on Disk');
                         assert.equal(kernel?.kernelSpec?.language, 'python');
                         assert.strictEqual(kernel?.kind, 'startUsingLocalKernelSpec');
@@ -1336,10 +1367,10 @@ import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-                        const kernel = await kernelFinder.findKernel(Uri.file('wow.py'), {
+                        const kernel = (await kernelFinder.findKernel(Uri.file('wow.py'), {
                             language_info: { name: PYTHON_LANGUAGE },
                             orig_nbformat: 4
-                        });
+                        })) as LocalKernelConnectionMetadata;
                         assert.strictEqual(
                             kernel?.kernelSpec?.language,
                             'python',
@@ -1379,7 +1410,9 @@ import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-                        const kernel = await kernelFinder.findKernel(Uri.file('wow.py'));
+                        const kernel = (await kernelFinder.findKernel(
+                            Uri.file('wow.py')
+                        )) as LocalKernelConnectionMetadata;
                         assert.strictEqual(
                             kernel?.kernelSpec?.language,
                             'python',
@@ -1419,11 +1452,11 @@ import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
                         await initialize(testData, activePythonEnv);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
-                        const kernel = await kernelFinder.findKernel(Uri.file('wow.py'), {
+                        const kernel = (await kernelFinder.findKernel(Uri.file('wow.py'), {
                             language_info: {
                                 name: PYTHON_LANGUAGE
                             }
-                        } as any);
+                        } as any)) as LocalKernelConnectionMetadata;
                         assert.strictEqual(
                             kernel?.kernelSpec?.language,
                             'python',
