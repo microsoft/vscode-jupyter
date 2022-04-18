@@ -11,7 +11,7 @@ body:
 - type: markdown
   attributes:
     value: |
-      Before submitting a bug, you may find the help you need on [our wiki](https://github.com/microsoft/vscode-jupyter/wiki) or on our [Discussions Forum](https://github.com/microsoft/vscode-jupyter/discussions)
+      ### Before submitting a bug, you may find the help you need on [our wiki](https://github.com/microsoft/vscode-jupyter/wiki) or on our [Discussions Forum](https://github.com/microsoft/vscode-jupyter/discussions)
 - type: checkboxes
   id: feature-focus
   attributes:
