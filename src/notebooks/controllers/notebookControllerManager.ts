@@ -252,7 +252,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         const cachedConnections = await this.listKernels(cancelToken, 'useCache');
         const nonCachedConnectionsPromise = this.listKernels(cancelToken, 'ignoreCache');
 
-        // Now create or update the actual controllers from our connections. Do this first
+        // Now create or update the actual controllers from our connections. Do this for the cached connections
         // so they show up quicker.
         this.createNotebookControllers(cachedConnections);
 
