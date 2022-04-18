@@ -19,6 +19,7 @@ import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { getAssociatedNotebookDocument } from '../notebooks/controllers/kernelSelector';
 import { DisplayOptions } from './displayOptions';
 import { KernelConnector } from './kernelConnector';
+import { getDisplayPath } from '../platform/common/platform/fs-paths';
 
 @injectable()
 export class KernelCommandListener implements IDataScienceCommandListener {
