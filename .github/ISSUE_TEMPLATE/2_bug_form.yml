@@ -10,6 +10,10 @@ body:
       ## Before submitting a bug, you may want to check out...
       * Troubleshooting on [our wiki](https://github.com/microsoft/vscode-jupyter/wiki)
       * Our [Discussions Forum](https://github.com/microsoft/vscode-jupyter/discussions)
+- type: markdown
+  attributes:
+    value: |
+      ## Bug Form
 - type: checkboxes
   id: feature-focus
   attributes:
