@@ -24,6 +24,7 @@ import { CommonMessageCoordinator } from './commonMessageCoordinator';
 import { INotebookCommunication, INotebookControllerManager } from '../../notebooks/types';
 import { ConsoleForegroundColors } from '../../platform/logging/types';
 import { IVSCodeNotebookController } from '../../notebooks/controllers/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 
 class NotebookCommunication implements INotebookCommunication, IDisposable {
     private eventHandlerListening?: boolean;
@@ -92,7 +93,7 @@ class NotebookCommunication implements INotebookCommunication, IDisposable {
  * This class wires up VSC notebooks to ipywidget communications.
  */
 @injectable()
-export class NotebookIPyWidgetCoordinator {
+export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationService {
     private readonly messageCoordinators = new WeakMap<NotebookDocument, Promise<CommonMessageCoordinator>>();
     private readonly attachedEditors = new WeakMap<NotebookDocument, WeakSet<NotebookEditor>>();
     private readonly notebookDisposables = new WeakMap<NotebookDocument, Disposable[]>();
@@ -104,14 +105,16 @@ export class NotebookIPyWidgetCoordinator {
     private readonly notebookEditors = new WeakMap<NotebookDocument, NotebookEditor[]>();
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
+        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) private readonly asyncDisposableRegistry: IAsyncDisposableRegistry,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(INotebookControllerManager) private readonly controllerManager: INotebookControllerManager
     ) {
-        notebook.onDidChangeVisibleNotebookEditors(this.onDidChangeVisibleNotebookEditors, this, disposableRegistry);
-        notebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this, disposableRegistry);
-        controllerManager.onNotebookControllerSelected(this.onDidSelectController, this, disposableRegistry);
+    }
+    public activate(): void {
+        this.notebook.onDidChangeVisibleNotebookEditors(this.onDidChangeVisibleNotebookEditors, this, this.disposableRegistry);
+        this.notebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this, this.disposableRegistry);
+        this.controllerManager.onNotebookControllerSelected(this.onDidSelectController, this, this.disposableRegistry);
     }
     public onDidSelectController(e: { notebook: NotebookDocument; controller: IVSCodeNotebookController }) {
         // Dispost previous message coordinators.
