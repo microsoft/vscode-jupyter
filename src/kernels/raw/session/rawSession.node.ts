@@ -136,7 +136,7 @@ export class RawSession implements ISessionWithSocket {
     public async waitForReady(): Promise<void> {
         traceVerbose(`Waiting for Raw session to be ready, currently ${this.connectionStatus}`);
         // When our kernel connects and gets a status message it triggers the ready promise
-        const deferred = createDeferred<string>();
+        const deferred = createDeferred<'connected'>();
         const handler = (_session: RawSession, status: Kernel.ConnectionStatus) => {
             if (status == 'connected') {
                 traceVerbose('Raw session connected');
@@ -156,7 +156,7 @@ export class RawSession implements ISessionWithSocket {
         this.connectionStatusChanged.disconnect(handler);
         traceVerbose(`Waited for Raw session to be ready & got ${result}`);
 
-        if (result.toString() !== 'connected') {
+        if (result !== 'connected') {
             throw new KernelConnectionTimeoutError(this.kernelConnectionMetadata);
         }
     }

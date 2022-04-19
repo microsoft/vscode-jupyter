@@ -1047,6 +1047,21 @@ export interface IEventNamePropertyMapping {
          */
         language: string;
     };
+    [Telemetry.KernelSpecLanguage]: {
+        /**
+         * Language of the kernelSpec.
+         */
+        language: string;
+        /**
+         * Whether this is a local or remote kernel.
+         */
+        kind: 'local' | 'remote';
+        /**
+         * Whether shell is used to start the kernel. E.g. `"/bin/sh"` is used in the argv of the kernelSpec.
+         * OCaml is one such kernel.
+         */
+        usesShell?: boolean;
+    };
     /**
      * Telemetry event sent to indicate 'jupyter kernelspec' is not possible.
      *

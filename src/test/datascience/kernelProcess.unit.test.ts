@@ -218,6 +218,7 @@ suite('kernel Process', () => {
             dispose: instance(tempFileDisposable).dispose,
             filePath: tempFile
         });
+        when(fs.localFileExists(expectedConnectionFile)).thenResolve(true);
 
         await kernelProcess.launch('', 0, token.token);
 
@@ -253,6 +254,7 @@ suite('kernel Process', () => {
             dispose: instance(tempFileDisposable).dispose,
             filePath: tempFile
         });
+        when(fs.localFileExists(tempFile)).thenResolve(true);
 
         await kernelProcess.launch('', 0, token.token);
 
@@ -284,6 +286,7 @@ suite('kernel Process', () => {
             dispose: noop,
             filePath: tempFile
         });
+        when(fs.localFileExists(expectedConnectionFile)).thenResolve(true);
         when(jupyterPaths.getRuntimeDir()).thenResolve(jupyterRuntimeDir);
         when(pythonExecFactory.createDaemon(anything())).thenResolve(instance(pythonProcess));
         when(connectionMetadata.kind).thenReturn('startUsingPythonInterpreter');
@@ -331,6 +334,7 @@ suite('kernel Process', () => {
             dispose: noop,
             filePath: tempFile
         });
+        when(fs.localFileExists(tempFile)).thenResolve(true);
         when(jupyterPaths.getRuntimeDir()).thenResolve();
         when(pythonExecFactory.createDaemon(anything())).thenResolve(instance(pythonProcess));
         when(connectionMetadata.kind).thenReturn('startUsingPythonInterpreter');

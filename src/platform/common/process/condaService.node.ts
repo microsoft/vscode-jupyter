@@ -171,7 +171,7 @@ export class CondaService {
             : await this.fs.getFileHash(this._file.fsPath);
         await this.globalState.update(CACHEKEY_FOR_CONDA_INFO, {
             version: this._version.raw,
-            file: this._file,
+            file: this._file.fsPath,
             fileHash
         });
     }
@@ -181,20 +181,20 @@ export class CondaService {
      * Even if not, we'll update this with the latest information.
      */
     private async getCachedInformation(): Promise<{ version: SemVer; file: Uri } | undefined> {
-        const cachedInfo = this.globalState.get<{ version: string; file: Uri; fileHash: string } | undefined>(
+        const cachedInfo = this.globalState.get<{ version: string; file: string; fileHash: string } | undefined>(
             CACHEKEY_FOR_CONDA_INFO,
             undefined
         );
         if (!cachedInfo) {
             return;
         }
-        const fileHash = cachedInfo.file.fsPath.toLowerCase().endsWith('conda')
+        const fileHash = cachedInfo.file.toLowerCase().endsWith('conda')
             ? ''
-            : await this.fs.getFileHash(cachedInfo.file.fsPath);
+            : await this.fs.getFileHash(cachedInfo.file);
         if (cachedInfo.fileHash === fileHash) {
             return {
                 version: new SemVer(cachedInfo.version),
-                file: cachedInfo.file
+                file: Uri.file(cachedInfo.file)
             };
         }
     }

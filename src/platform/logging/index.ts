@@ -49,25 +49,25 @@ export function traceLog(message: string, ...args: Arguments): void {
 }
 
 export function traceError(message: string, ...args: Arguments): void {
-    if (globalLoggingLevel >= LogLevel.Error) {
+    if (globalLoggingLevel <= LogLevel.Error) {
         loggers.forEach((l) => l.traceError(message, ...args));
     }
 }
 
 export function traceWarning(message: string, ...args: Arguments): void {
-    if (globalLoggingLevel >= LogLevel.Warn) {
+    if (globalLoggingLevel <= LogLevel.Warn) {
         loggers.forEach((l) => l.traceWarn(message, ...args));
     }
 }
 
 export function traceInfo(message: string, ...args: Arguments): void {
-    if (globalLoggingLevel >= LogLevel.Info) {
+    if (globalLoggingLevel <= LogLevel.Info) {
         loggers.forEach((l) => l.traceInfo(message, ...args));
     }
 }
 
 export function traceVerbose(message: string, ...args: Arguments): void {
-    if (globalLoggingLevel <= LogLevel.Debug) {
+    if (globalLoggingLevel <= LogLevel.Trace) {
         loggers.forEach((l) => l.traceVerbose(message, ...args));
     }
 }

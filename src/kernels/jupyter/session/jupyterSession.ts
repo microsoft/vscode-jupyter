@@ -211,7 +211,9 @@ export class JupyterSession extends BaseJupyterSession {
                 );
             } catch (ex) {
                 // If we failed to create the kernel, we need to clean up the file.
-                backingFile?.dispose().catch(noop);
+                if (this.connInfo && backingFile) {
+                    this.contentsManager.delete(backingFile.path).ignoreErrors();
+                }
                 throw ex;
             }
         }
@@ -224,7 +226,7 @@ export class JupyterSession extends BaseJupyterSession {
 
         // Create our session options using this temporary notebook and our connection info
         const sessionOptions: Session.ISessionOptions = {
-            path: backingFile?.filePath || `${uuid()}.ipynb`, // Name has to be unique
+            path: backingFile?.path || `${uuid()}.ipynb`, // Name has to be unique
             kernel: {
                 name: kernelName
             },
@@ -271,7 +273,9 @@ export class JupyterSession extends BaseJupyterSession {
                     })
                     .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
                     .finally(() => {
-                        backingFile?.dispose().catch(noop);
+                        if (this.connInfo && backingFile) {
+                            this.contentsManager.delete(backingFile.path).ignoreErrors();
+                        }
                     }),
             options.token
         );
