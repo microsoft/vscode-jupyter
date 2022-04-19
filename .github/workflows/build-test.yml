@@ -353,6 +353,7 @@ jobs:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest]
+        version: ['stable', 'prerelease']
         # More details on includes/excludes can be found here https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#example-including-additional-values-into-combinations
         # Basically with exclude, you can exclude any of the combinations from the result matrix.
         # & with include, you can include additional items to the result matrix.
@@ -495,6 +496,14 @@ jobs:
       - run: python -m pip install wheel
         shell: bash
         if: matrix.python != 'conda' && matrix.python != 'noPython'
+
+      # Install the pre-release versions of the packages
+      - name: Install Pre-Release Python Libs
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.version == 'prerelease'
+        run: |
+          python --version
+          python -c "import sys;print(sys.executable)"
+          python -m pip install jupyter notebook ipykernel ipython nbconvert nbformat --pre
 
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
