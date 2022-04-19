@@ -35,7 +35,6 @@ import { JupyterSession } from './jupyterSession.node';
 import { createJupyterWebSocket } from './jupyterWebSocket.node';
 import { sleep } from '../../../platform/common/utils/async';
 import { IJupyterSessionManager, IJupyterPasswordConnect, IJupyterKernel } from '../types';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
 
 // Key for our insecure connection global state
 const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnections';
@@ -69,8 +68,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         private configService: IConfigurationService,
         private readonly appShell: IApplicationShell,
         private readonly stateFactory: IPersistentStateFactory,
-        private readonly kernelService: JupyterKernelService,
-        private readonly fs: IFileSystem
+        private readonly kernelService: JupyterKernelService
     ) {
         this.userAllowsInsecureConnections = this.stateFactory.createGlobalPersistentState<boolean>(
             GlobalStateUserAllowsInsecureConnections,
@@ -195,8 +193,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             workingDirectory,
             this.configService.getSettings(resource).jupyterLaunchTimeout,
             this.kernelService,
-            this.configService.getSettings(resource).jupyterInterruptTimeout,
-            this.fs
+            this.configService.getSettings(resource).jupyterInterruptTimeout
         );
         try {
             await session.connect({ token: cancelToken, ui });
