@@ -88,6 +88,7 @@ import { ConsoleLogger } from './platform/logging/consoleLogger';
 import { FileLogger } from './platform/logging/fileLogger.node';
 import { createWriteStream } from 'fs-extra';
 import { initializeGlobals as initializeTelemetryGlobals } from './telemetry/telemetry';
+import { Experiments } from './platform/common/experiments/groups';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -319,7 +320,6 @@ async function activateLegacy(
     registerNotebookTypes(serviceManager);
     registerInteractiveTypes(serviceManager);
     registerWebviewTypes(serviceManager, isDevMode);
-    registerIntellisenseTypes(serviceManager, isDevMode);
 
     // We need to setup this property before any telemetry is sent
     const fs = serviceManager.get<IFileSystemNode>(IFileSystemNode);
@@ -334,6 +334,9 @@ async function activateLegacy(
 
     const applicationEnv = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment);
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
+
+    const pylanceLspNotebooksExperiment = await experimentService.inExperiment(Experiments.PylanceLspNotebooks);
+    registerIntellisenseTypes(serviceManager, isDevMode, pylanceLspNotebooksExperiment);
 
     // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.
     // `IConfigurationService` may depend any of the registered types, so doing it after all registrations are finished.
