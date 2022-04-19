@@ -30,6 +30,7 @@ import { noop } from '../../../../platform/common/utils/misc';
 import { Cancellation } from '../../../../platform/common/cancellation';
 import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
 import { INotebookServer, IJupyterSessionManagerFactory } from '../../types';
+import { Uri } from 'vscode';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 @injectable()
@@ -93,7 +94,7 @@ export class HostJupyterServer implements INotebookServer {
             const session = await sessionManager.startNew(
                 resource,
                 kernelConnection,
-                workingDirectory,
+                Uri.file(workingDirectory),
                 ui,
                 cancelToken
             );

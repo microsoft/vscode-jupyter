@@ -1,10 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { Agent as HttpsAgent } from 'https';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, optional } from 'inversify';
 import * as nodeFetch from 'node-fetch';
-import { URLSearchParams } from 'url';
 import { ConfigurationTarget } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { IAsyncDisposableRegistry, IConfigurationService } from '../../../platform/common/types';
@@ -12,7 +10,7 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { IMultiStepInputFactory, IMultiStepInput } from '../../../platform/common/utils/multiStepInput';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
-import { IJupyterPasswordConnect, IJupyterPasswordConnectInfo } from '../types';
+import { IJupyterPasswordConnect, IJupyterPasswordConnectInfo, IJupyterRequestAgentCreator } from '../types';
 
 @injectable()
 export class JupyterPasswordConnect implements IJupyterPasswordConnect {
@@ -24,7 +22,10 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
         @inject(IAsyncDisposableRegistry) private readonly asyncDisposableRegistry: IAsyncDisposableRegistry,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService
+        @inject(IConfigurationService) private readonly configService: IConfigurationService,
+        @inject(IJupyterRequestAgentCreator)
+        @optional()
+        private readonly agentCreator: IJupyterRequestAgentCreator | undefined
     ) {}
 
     @captureTelemetry(Telemetry.GetPasswordAttempt)
@@ -266,8 +267,8 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         allowUnauthorized: boolean,
         options: nodeFetch.RequestInit
     ): nodeFetch.RequestInit {
-        if (url.startsWith('https') && allowUnauthorized) {
-            const requestAgent = new HttpsAgent({ rejectUnauthorized: false });
+        if (url.startsWith('https') && allowUnauthorized && this.agentCreator) {
+            const requestAgent = this.agentCreator.createHttpRequestAgent();
             return { ...options, agent: requestAgent };
         }
 

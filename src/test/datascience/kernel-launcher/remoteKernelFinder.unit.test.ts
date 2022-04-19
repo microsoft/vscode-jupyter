@@ -57,7 +57,7 @@ suite(`Remote Kernel Finder`, () => {
         disconnected: dummyEvent.event,
         token: '',
         hostName: 'foobar',
-        rootDirectory: '.',
+        rootDirectory: Uri.file('.'),
         dispose: noop
     };
     const defaultPython3Name = 'python3';

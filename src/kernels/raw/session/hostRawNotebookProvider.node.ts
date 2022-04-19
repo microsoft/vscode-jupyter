@@ -115,7 +115,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
                 this.kernelLauncher,
                 resource,
                 noop,
-                workingDirectory,
+                vscode.Uri.file(workingDirectory),
                 interruptTimeout,
                 kernelConnection,
                 launchTimeout

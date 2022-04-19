@@ -39,6 +39,7 @@ import {
 } from '../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { serializePythonEnvironment } from '../../platform/api/pythonApi';
+import { IJupyterKernelService } from './types';
 
 /**
  * Responsible for registering and updating kernels
@@ -47,7 +48,7 @@ import { serializePythonEnvironment } from '../../platform/api/pythonApi';
  * @class JupyterKernelService
  */
 @injectable()
-export class JupyterKernelService {
+export class JupyterKernelService implements IJupyterKernelService {
     constructor(
         @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService,
         @inject(IFileSystem) private readonly fs: IFileSystem,

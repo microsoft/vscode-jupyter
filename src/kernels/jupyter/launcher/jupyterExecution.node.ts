@@ -3,7 +3,7 @@
 'use strict';
 import * as path from '../../../platform/vscode-path/path';
 import * as uuid from 'uuid/v4';
-import { CancellationToken } from 'vscode';
+import { CancellationToken, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { WrappedError } from '../../../platform/errors/types';
@@ -216,7 +216,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 options.resource,
                 useDefaultConfig,
                 this.configuration.getSettings(undefined).jupyterCommandLineArguments,
-                workingDirectory,
+                Uri.file(workingDirectory),
                 cancelToken
             );
             if (connection) {
@@ -243,7 +243,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         resource: Resource,
         useDefaultConfig: boolean,
         customCommandLine: string[],
-        workingDirectory: string,
+        workingDirectory: Uri,
         cancelToken: CancellationToken
     ): Promise<IJupyterConnection> {
         return this.notebookStarter.start(resource, useDefaultConfig, customCommandLine, workingDirectory, cancelToken);

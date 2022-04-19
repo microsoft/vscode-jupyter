@@ -13,7 +13,7 @@ import { ConfigurationService } from '../../platform/common/configuration/servic
 import { MultiStepInputFactory } from '../../platform/common/utils/multiStepInput';
 import { MockInputBox } from './mockInputBox';
 import { MockQuickPick } from './mockQuickPick';
-import { JupyterPasswordConnect } from '../../kernels/jupyter/launcher/jupyterPasswordConnect.node';
+import { JupyterPasswordConnect } from '../../kernels/jupyter/launcher/jupyterPasswordConnect';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, ,  */
 suite('JupyterPasswordConnect', () => {
@@ -36,7 +36,8 @@ suite('JupyterPasswordConnect', () => {
             instance(appShell),
             multiStepFactory,
             instance(mockDisposableRegistry),
-            instance(configService)
+            instance(configService),
+            undefined
         );
     });
 

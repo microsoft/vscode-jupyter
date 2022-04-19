@@ -80,7 +80,7 @@ export function createRemoteConnectionInfo(
             return { dispose: noop };
         },
         dispose: noop,
-        rootDirectory: '',
+        rootDirectory: Uri.file(''),
         getAuthHeader: serverUri ? () => getJupyterServerUri(uri)?.authorizationHeader : undefined,
         url: uri
     };

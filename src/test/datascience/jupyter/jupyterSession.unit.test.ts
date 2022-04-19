@@ -34,6 +34,7 @@ import { JupyterKernelService } from '../../../kernels/jupyter/jupyterKernelServ
 import { JupyterSession } from '../../../kernels/jupyter/session/jupyterSession';
 import { DisplayOptions } from '../../../kernels/displayOptions';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { BackingFileCreator } from '../../../kernels/jupyter/session/backingFileCreator.node';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - JupyterSession', () => {
@@ -115,7 +116,7 @@ suite('DataScience - JupyterSession', () => {
         when(session.kernel).thenReturn(instance(kernel));
         when(session.isDisposed).thenReturn(false);
         when(kernel.status).thenReturn('idle');
-        when(connection.rootDirectory).thenReturn('');
+        when(connection.rootDirectory).thenReturn(Uri.file(''));
         when(connection.localLaunch).thenReturn(false);
         const channel = new MockOutputChannel('JUPYTER');
         const kernelService = mock(JupyterKernelService);
@@ -129,6 +130,7 @@ suite('DataScience - JupyterSession', () => {
         when(sessionManager.connectTo(anything())).thenReturn(newActiveRemoteKernel.model as any);
         const fs = mock<IFileSystem>();
         const tmpFile = path.join('tmp', 'tempfile.json');
+        const backingFileCreator = new BackingFileCreator(instance(fs));
         when(fs.createTemporaryLocalFile(anything())).thenResolve({ dispose: noop, filePath: tmpFile });
         when(fs.deleteLocalFile(anything())).thenResolve();
         when(fs.ensureLocalDir(anything())).thenResolve();
@@ -146,11 +148,11 @@ suite('DataScience - JupyterSession', () => {
             () => {
                 restartSessionUsedEvent.resolve();
             },
-            '',
+            Uri.file(''),
             1,
             instance(kernelService),
             1,
-            instance(fs)
+            backingFileCreator
         );
     }
     setup(() => createJupyterSession());
