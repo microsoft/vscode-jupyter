@@ -19,7 +19,6 @@ import { getNameOfKernelConnection } from '../../helpers';
 import { KernelConnectionMetadata, isLocalConnection, IJupyterConnection, ISessionWithSocket } from '../../types';
 import { JupyterWebSockets } from './jupyterWebSocket';
 import { DisplayOptions } from '../../displayOptions';
-import { noop } from '../../../platform/common/utils/misc';
 import { IJupyterBackingFileCreator, IJupyterKernelService } from '../types';
 import { Uri } from 'vscode';
 
@@ -212,7 +211,7 @@ export class JupyterSession extends BaseJupyterSession {
             } catch (ex) {
                 // If we failed to create the kernel, we need to clean up the file.
                 if (this.connInfo && backingFile) {
-                    this.contentsManager.delete(backingFile.path).ignoreErrors();
+                    this.contentsManager.delete(backingFile.filePath).ignoreErrors();
                 }
                 throw ex;
             }
@@ -226,7 +225,7 @@ export class JupyterSession extends BaseJupyterSession {
 
         // Create our session options using this temporary notebook and our connection info
         const sessionOptions: Session.ISessionOptions = {
-            path: backingFile?.path || `${uuid()}.ipynb`, // Name has to be unique
+            path: backingFile?.filePath || `${uuid()}.ipynb`, // Name has to be unique
             kernel: {
                 name: kernelName
             },
@@ -274,7 +273,7 @@ export class JupyterSession extends BaseJupyterSession {
                     .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
                     .finally(() => {
                         if (this.connInfo && backingFile) {
-                            this.contentsManager.delete(backingFile.path).ignoreErrors();
+                            this.contentsManager.delete(backingFile.filePath).ignoreErrors();
                         }
                     }),
             options.token

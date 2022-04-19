@@ -130,7 +130,7 @@ suite('DataScience - JupyterSession', () => {
         when(sessionManager.connectTo(anything())).thenReturn(newActiveRemoteKernel.model as any);
         const fs = mock<IFileSystem>();
         const tmpFile = path.join('tmp', 'tempfile.json');
-        const backingFileCreator = new BackingFileCreator(instance(fs));
+        const backingFileCreator = new BackingFileCreator();
         when(fs.createTemporaryLocalFile(anything())).thenResolve({ dispose: noop, filePath: tmpFile });
         when(fs.deleteLocalFile(anything())).thenResolve();
         when(fs.ensureLocalDir(anything())).thenResolve();
