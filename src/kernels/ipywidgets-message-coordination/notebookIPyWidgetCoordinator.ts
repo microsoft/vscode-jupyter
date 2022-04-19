@@ -67,7 +67,7 @@ class NotebookCommunication implements INotebookCommunication, IDisposable {
     }
     public get onDidReceiveMessage() {
         this.eventHandlerListening = true;
-        // Immeidately after the event handler is added, send the pending messages.
+        // Immediately after the event handler is added, send the pending messages.
         setTimeout(() => this.sendPendingMessages(), 0);
         return this._onDidReceiveMessage.event;
     }
@@ -109,15 +109,18 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         @inject(IAsyncDisposableRegistry) private readonly asyncDisposableRegistry: IAsyncDisposableRegistry,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(INotebookControllerManager) private readonly controllerManager: INotebookControllerManager
-    ) {
-    }
+    ) {}
     public activate(): void {
-        this.notebook.onDidChangeVisibleNotebookEditors(this.onDidChangeVisibleNotebookEditors, this, this.disposableRegistry);
+        this.notebook.onDidChangeVisibleNotebookEditors(
+            this.onDidChangeVisibleNotebookEditors,
+            this,
+            this.disposableRegistry
+        );
         this.notebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this, this.disposableRegistry);
         this.controllerManager.onNotebookControllerSelected(this.onDidSelectController, this, this.disposableRegistry);
     }
     public onDidSelectController(e: { notebook: NotebookDocument; controller: IVSCodeNotebookController }) {
-        // Dispost previous message coordinators.
+        // Dispose previous message coordinators.
         traceVerbose(`Setting setActiveController for ${getDisplayPath(e.notebook.uri)}`);
         const previousCoordinators = this.messageCoordinators.get(e.notebook);
         if (previousCoordinators) {
@@ -163,7 +166,7 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         }
         traceVerbose(`Intiailize notebook communications for editor ${getDisplayPath(editor.document.uri)}`);
         const comms = new NotebookCommunication(editor, controller);
-        this.addNotebookDiposables(notebook, [comms]);
+        this.addNotebookDisposables(notebook, [comms]);
         this.notebookCommunications.set(editor, comms);
         const { token } = new CancellationTokenSource();
         this.resolveKernel(notebook, comms, token).catch(noop);
@@ -186,7 +189,7 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         }
         return Cancellation.race(() => promise!.then(this.attachCoordinator.bind(this, document, webview)), token);
     }
-    private addNotebookDiposables(notebook: NotebookDocument, disposables: IDisposable[]) {
+    private addNotebookDisposables(notebook: NotebookDocument, disposables: IDisposable[]) {
         const currentDisposables: IDisposable[] = this.notebookDisposables.get(notebook) || [];
         currentDisposables.push(...disposables);
         this.notebookDisposables.set(notebook, currentDisposables);
@@ -262,7 +265,7 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
             webview
                 .postMessage({ type: IPyWidgetMessages.IPyWidgets_IsReadyRequest, payload: undefined })
                 .then(noop, noop);
-            this.addNotebookDiposables(document, disposables);
+            this.addNotebookDisposables(document, disposables);
         }
         return promise.promise;
     }
