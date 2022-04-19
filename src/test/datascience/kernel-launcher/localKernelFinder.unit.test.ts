@@ -1130,6 +1130,11 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
                                 {
                                     interpreter: python2Global
                                 }
+                                // },
+                                // {
+                                // interpreter: python38VenvEnv,
+                                // kernelSpecs: [fullyQualifiedPythonKernelSpec]
+                                // }
                             ]
                         };
                         await initialize(testData, activePythonEnv);
@@ -1329,6 +1334,18 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
                             orig_nbformat: 4
                         });
                         await verifyKernel(kernel, { expectedInterpreter: condaEnv1 });
+
+                        // Match based on custom kernelspec name
+                        kernel = (await kernelFinder.findKernel(nbUri, {
+                            kernelspec: {
+                                display_name: 'Junk Display Name',
+                                name: python2spec.name
+                            },
+                            language_info: { name: PYTHON_LANGUAGE },
+                            orig_nbformat: 4
+                        })) as LocalKernelConnectionMetadata;
+                        assert.equal(kernel?.kind, 'startUsingLocalKernelSpec');
+                        assert.equal(kernel?.kernelSpec.name, 'python2Custom');
 
                         // Unknown kernel language
                         kernel = await kernelFinder.findKernel(nbUri, {

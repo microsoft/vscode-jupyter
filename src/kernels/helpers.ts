@@ -294,10 +294,10 @@ export function compareKernels(
         b.kernelSpec.metadata?.vscode?.originalDisplayName || b.kernelSpec?.display_name || '';
     const kernelSpecNameOfA = originalSpecFileA
         ? path.basename(path.dirname(originalSpecFileA))
-        : a.kernelSpec?.display_name || '';
+        : a.kernelSpec?.name || '';
     const kernelSpecNameOfB = originalSpecFileB
         ? path.basename(path.dirname(originalSpecFileB))
-        : b.kernelSpec?.display_name || '';
+        : b.kernelSpec?.name || '';
 
     // Special simple comparison algorithm for Non-Python notebooks.
     if (possibleNbMetadataLanguage && possibleNbMetadataLanguage !== PYTHON_LANGUAGE) {
