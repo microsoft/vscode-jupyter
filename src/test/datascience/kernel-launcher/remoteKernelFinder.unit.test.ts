@@ -20,9 +20,9 @@ import {
     RemoteKernelSpecConnectionMetadata
 } from '../../../kernels/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { JupyterSessionManager } from '../../../kernels/jupyter/session/jupyterSessionManager.node';
-import { JupyterSessionManagerFactory } from '../../../kernels/jupyter/session/jupyterSessionManagerFactory.node';
-import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder.node';
+import { JupyterSessionManager } from '../../../kernels/jupyter/session/jupyterSessionManager';
+import { JupyterSessionManagerFactory } from '../../../kernels/jupyter/session/jupyterSessionManagerFactory';
+import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../../../kernels/raw/types';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider';
 import { IJupyterKernel, IJupyterSessionManager } from '../../../kernels/jupyter/types';

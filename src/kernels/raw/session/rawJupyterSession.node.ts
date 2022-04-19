@@ -18,7 +18,7 @@ import { sendTelemetryEvent, captureTelemetry } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
 import { ISessionWithSocket, KernelConnectionMetadata } from '../../../kernels/types';
-import { BaseJupyterSession } from '../../common/baseJupyterSession.node';
+import { BaseJupyterSession } from '../../common/baseJupyterSession';
 import { IKernelLauncher, IKernelProcess } from '../types';
 import { RawSession } from './rawSession.node';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';

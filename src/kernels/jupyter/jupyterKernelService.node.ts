@@ -27,7 +27,7 @@ import { IEnvironmentActivationService } from '../../platform/interpreter/activa
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
-import { JupyterKernelDependencyError } from '../../platform/errors/jupyterKernelDependencyError.node';
+import { JupyterKernelDependencyError } from '../../platform/errors/jupyterKernelDependencyError';
 import { getKernelRegistrationInfo, cleanEnvironment } from '../helpers';
 import { JupyterPaths } from '../raw/finder/jupyterPaths.node';
 import {

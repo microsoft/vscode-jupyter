@@ -26,7 +26,7 @@ import { isUri } from '../../platform/common/utils/misc';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../platform/terminals/types';
-import { InteractiveCellResultError } from '../../platform/errors/interactiveCellResultError.node';
+import { InteractiveCellResultError } from '../../platform/errors/interactiveCellResultError';
 import { Telemetry, Commands, Identifiers } from '../../platform/common/constants';
 import { IDataScienceErrorHandler } from '../../platform/errors/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../types';

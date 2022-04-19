@@ -11,9 +11,8 @@ import type {
     SessionManager
 } from '@jupyterlab/services';
 import { JSONObject } from '@lumino/coreutils';
-import { Agent as HttpsAgent } from 'https';
 import * as nodeFetch from 'node-fetch';
-import { CancellationToken, EventEmitter } from 'vscode';
+import { CancellationToken, EventEmitter, Uri } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { traceInfo, traceError } from '../../../platform/logging';
 import {
@@ -25,17 +24,22 @@ import {
     IDisplayOptions
 } from '../../../platform/common/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
-import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError.node';
+import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
 import { createInterpreterKernelSpec } from '../../helpers';
 import { IJupyterConnection, IJupyterKernelSpec, KernelConnectionMetadata } from '../../types';
-import { JupyterKernelService } from '../jupyterKernelService.node';
 import { JupyterKernelSpec } from '../jupyterKernelSpec';
-import { createAuthorizingRequest } from './jupyterRequest.node';
-import { JupyterSession } from './jupyterSession.node';
-import { createJupyterWebSocket } from './jupyterWebSocket.node';
+import { createAuthorizingRequest } from './jupyterRequest';
+import { JupyterSession } from './jupyterSession';
+import { createJupyterWebSocket } from './jupyterWebSocket';
 import { sleep } from '../../../platform/common/utils/async';
-import { IJupyterSessionManager, IJupyterPasswordConnect, IJupyterKernel } from '../types';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import {
+    IJupyterSessionManager,
+    IJupyterPasswordConnect,
+    IJupyterKernel,
+    IJupyterKernelService,
+    IJupyterBackingFileCreator,
+    IJupyterRequestAgentCreator
+} from '../types';
 
 // Key for our insecure connection global state
 const GlobalStateUserAllowsInsecureConnections = 'DataScienceAllowInsecureConnections';
@@ -69,8 +73,9 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         private configService: IConfigurationService,
         private readonly appShell: IApplicationShell,
         private readonly stateFactory: IPersistentStateFactory,
-        private readonly kernelService: JupyterKernelService,
-        private readonly fs: IFileSystem
+        private readonly kernelService: IJupyterKernelService | undefined,
+        private readonly backingFileCreator: IJupyterBackingFileCreator,
+        private readonly requestAgentCreator: IJupyterRequestAgentCreator | undefined
     ) {
         this.userAllowsInsecureConnections = this.stateFactory.createGlobalPersistentState<boolean>(
             GlobalStateUserAllowsInsecureConnections,
@@ -168,7 +173,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     public async startNew(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
-        workingDirectory: string,
+        workingDirectory: Uri,
         ui: IDisplayOptions,
         cancelToken: CancellationToken
     ): Promise<JupyterSession> {
@@ -196,7 +201,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             this.configService.getSettings(resource).jupyterLaunchTimeout,
             this.kernelService,
             this.configService.getSettings(resource).jupyterInterruptTimeout,
-            this.fs
+            this.backingFileCreator
         );
         try {
             await session.connect({ token: cancelToken, ui });
@@ -308,8 +313,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         const allowUnauthorized = this.configService.getSettings(undefined).allowUnauthorizedRemoteConnection;
         // If this is an https connection and we want to allow unauthorized connections set that option on our agent
         // we don't need to save the agent as the previous behaviour is just to create a temporary default agent when not specified
-        if (connInfo.baseUrl.startsWith('https') && allowUnauthorized) {
-            const requestAgent = new HttpsAgent({ rejectUnauthorized: false });
+        if (connInfo.baseUrl.startsWith('https') && allowUnauthorized && this.requestAgentCreator) {
+            const requestAgent = this.requestAgentCreator.createHttpRequestAgent();
             requestInit = { ...requestInit, agent: requestAgent };
         }
 

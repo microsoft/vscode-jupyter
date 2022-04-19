@@ -4,7 +4,7 @@
 import * as WebSocketWS from 'ws';
 import { traceError } from '../../../platform/logging';
 import { noop } from '../../../platform/common/utils/misc';
-import { KernelSocketWrapper } from '../../common/kernelSocketWrapper.node';
+import { KernelSocketWrapper } from '../../common/kernelSocketWrapper';
 import { IKernelSocket } from '../../types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */

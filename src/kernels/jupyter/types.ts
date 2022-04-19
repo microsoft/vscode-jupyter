@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import type * as nbformat from '@jupyterlab/nbformat';
-import type { Kernel, Session } from '@jupyterlab/services';
+import type { Kernel, Session, ContentsManager } from '@jupyterlab/services';
 import { Event } from 'vscode';
 import { SemVer } from 'semver';
 import { Uri, QuickPickItem } from 'vscode';
@@ -111,7 +111,7 @@ export interface IJupyterSessionManager extends IAsyncDisposable {
     startNew(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
-        workingDirectory: string,
+        workingDirectory: Uri,
         ui: IDisplayOptions,
         cancelToken: CancellationToken
     ): Promise<IJupyterSession>;
@@ -219,4 +219,31 @@ export interface IJupyterServerUriStorage {
     clearUriList(): Promise<void>;
     getUri(): Promise<string>;
     setUri(uri: string): Promise<void>;
+}
+
+export const IJupyterBackingFileCreator = Symbol('IJupyterBackingFileCreator');
+export interface IJupyterBackingFileCreator {
+    createBackingFile(
+        resource: Resource,
+        workingDirectory: Uri,
+        kernel: KernelConnectionMetadata,
+        connInfo: IJupyterConnection,
+        contentsManager: ContentsManager
+    ): Promise<{ dispose: () => Promise<unknown>; filePath: string } | undefined>;
+}
+
+export const IJupyterKernelService = Symbol('IJupyterKernelService');
+export interface IJupyterKernelService {
+    ensureKernelIsUsable(
+        resource: Resource,
+        kernel: KernelConnectionMetadata,
+        ui: IDisplayOptions,
+        cancelToken: CancellationToken
+    ): Promise<void>;
+}
+
+export const IJupyterRequestAgentCreator = Symbol('IJupyterRequestAgentCreator');
+export interface IJupyterRequestAgentCreator {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    createHttpRequestAgent(): any;
 }

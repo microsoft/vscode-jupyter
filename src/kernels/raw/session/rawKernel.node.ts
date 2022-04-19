@@ -9,34 +9,11 @@ import { traceError, traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
 import { getNameOfKernelConnection } from '../../../kernels/helpers';
-import { IWebSocketLike } from '../../common/kernelSocketWrapper.node';
+import { IWebSocketLike } from '../../common/kernelSocketWrapper';
 import { IKernelProcess } from '../types';
 import { RawSocket } from './rawSocket.node';
 import { IKernelSocket } from '../../types';
-import { isTestExecution } from '../../../platform/common/constants.node';
-
-export function suppressShutdownErrors(realKernel: any) {
-    // When running under a test, mark all futures as done so we
-    // don't hit this problem:
-    // https://github.com/jupyterlab/jupyterlab/issues/4252
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    if (isTestExecution()) {
-        const defaultKernel = realKernel as any; // NOSONAR
-        if (defaultKernel && defaultKernel._futures) {
-            const futures = defaultKernel._futures as Map<any, any>; // NOSONAR
-            if (futures) {
-                futures.forEach((f) => {
-                    if (f._status !== undefined) {
-                        f._status |= 4;
-                    }
-                });
-            }
-        }
-        if (defaultKernel && defaultKernel._reconnectLimit) {
-            defaultKernel._reconnectLimit = 0;
-        }
-    }
-}
+import { suppressShutdownErrors } from '../../common/baseJupyterSession';
 
 /*
 RawKernel class represents the mapping from the JupyterLab services IKernel interface

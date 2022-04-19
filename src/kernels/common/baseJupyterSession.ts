@@ -6,7 +6,7 @@ import type { JSONObject } from '@lumino/coreutils';
 import type { Slot } from '@lumino/signaling';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
-import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
+import { CancellationTokenSource, Event, EventEmitter, Uri } from 'vscode';
 import { WrappedError } from '../../platform/errors/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceInfo, traceVerbose, traceError, traceWarning, traceInfoIfCI } from '../../platform/logging';
@@ -16,15 +16,39 @@ import * as localize from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
-import { JupyterInvalidKernelError } from '../../platform/errors/jupyterInvalidKernelError.node';
-import { JupyterWaitForIdleError } from '../../platform/errors/jupyterWaitForIdleError.node';
-import { KernelInterruptTimeoutError } from '../../platform/errors/kernelInterruptTimeoutError.node';
-import { SessionDisposedError } from '../../platform/errors/sessionDisposedError.node';
-import { suppressShutdownErrors } from '../raw/session/rawKernel.node';
+import { JupyterInvalidKernelError } from '../../platform/errors/jupyterInvalidKernelError';
+import { JupyterWaitForIdleError } from '../../platform/errors/jupyterWaitForIdleError';
+import { KernelInterruptTimeoutError } from '../../platform/errors/kernelInterruptTimeoutError';
+import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
 import { IJupyterSession, ISessionWithSocket, KernelConnectionMetadata, KernelSocketInformation } from '../types';
-import { ChainingExecuteRequester } from './chainingExecuteRequester.node';
+import { ChainingExecuteRequester } from './chainingExecuteRequester';
 import { getResourceType } from '../../platform/common/utils';
 import { KernelProgressReporter } from '../../platform/progress/kernelProgressReporter';
+import { isTestExecution } from '../../platform/common/constants';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function suppressShutdownErrors(realKernel: any) {
+    // When running under a test, mark all futures as done so we
+    // don't hit this problem:
+    // https://github.com/jupyterlab/jupyterlab/issues/4252
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    if (isTestExecution()) {
+        const defaultKernel = realKernel as any; // NOSONAR
+        if (defaultKernel && defaultKernel._futures) {
+            const futures = defaultKernel._futures as Map<any, any>; // NOSONAR
+            if (futures) {
+                futures.forEach((f) => {
+                    if (f._status !== undefined) {
+                        f._status |= 4;
+                    }
+                });
+            }
+        }
+        if (defaultKernel && defaultKernel._reconnectLimit) {
+            defaultKernel._reconnectLimit = 0;
+        }
+    }
+}
 
 /**
  * Exception raised when starting a Jupyter Session fails.
@@ -95,7 +119,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         protected resource: Resource,
         protected readonly kernelConnectionMetadata: KernelConnectionMetadata,
         private restartSessionUsed: (id: Kernel.IKernelConnection) => void,
-        public workingDirectory: string,
+        public workingDirectory: Uri,
         private readonly interruptTimeout: number
     ) {
         this.statusHandler = this.onStatusChanged.bind(this);

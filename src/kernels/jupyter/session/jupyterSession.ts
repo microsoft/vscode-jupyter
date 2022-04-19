@@ -1,15 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type {
-    Contents,
-    ContentsManager,
-    Kernel,
-    KernelSpecManager,
-    Session,
-    SessionManager
-} from '@jupyterlab/services';
-import * as path from '../../../platform/vscode-path/path';
+import type { ContentsManager, Kernel, KernelSpecManager, Session, SessionManager } from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { Cancellation } from '../../../platform/common/cancellation';
@@ -18,22 +10,18 @@ import { traceVerbose, traceError, traceInfo } from '../../../platform/logging';
 import { Resource, IOutputChannel, IDisplayOptions } from '../../../platform/common/types';
 import { waitForCondition } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { JupyterInvalidKernelError } from '../../../platform/errors/jupyterInvalidKernelError.node';
-import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError.node';
+import { JupyterInvalidKernelError } from '../../../platform/errors/jupyterInvalidKernelError';
+import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
 import { captureTelemetry } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
-import { BaseJupyterSession, JupyterSessionStartError } from '../../common/baseJupyterSession.node';
-import { getNameOfKernelConnection, jvscIdentifier } from '../../helpers';
+import { BaseJupyterSession, JupyterSessionStartError } from '../../common/baseJupyterSession';
+import { getNameOfKernelConnection } from '../../helpers';
 import { KernelConnectionMetadata, isLocalConnection, IJupyterConnection, ISessionWithSocket } from '../../types';
-import { JupyterKernelService } from '../jupyterKernelService.node';
-import { JupyterWebSockets } from './jupyterWebSocket.node';
+import { JupyterWebSockets } from './jupyterWebSocket';
 import { DisplayOptions } from '../../displayOptions';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { noop } from '../../../platform/common/utils/misc';
-
-function getRemoteIPynbSuffix(): string {
-    return `${jvscIdentifier}${uuid()}`;
-}
+import { IJupyterBackingFileCreator, IJupyterKernelService } from '../types';
+import { Uri } from 'vscode';
 
 // function is
 export class JupyterSession extends BaseJupyterSession {
@@ -47,11 +35,11 @@ export class JupyterSession extends BaseJupyterSession {
         private readonly outputChannel: IOutputChannel,
         private readonly restartSessionCreated: (id: Kernel.IKernelConnection) => void,
         restartSessionUsed: (id: Kernel.IKernelConnection) => void,
-        override readonly workingDirectory: string,
+        override readonly workingDirectory: Uri,
         private readonly idleTimeout: number,
-        private readonly kernelService: JupyterKernelService,
+        private readonly kernelService: IJupyterKernelService | undefined,
         interruptTimeout: number,
-        private readonly fs: IFileSystem
+        private readonly backingFileCreator: IJupyterBackingFileCreator
     ) {
         super(
             connInfo.localLaunch ? 'localJupyter' : 'remoteJupyter',
@@ -194,85 +182,25 @@ export class JupyterSession extends BaseJupyterSession {
         }
     }
 
-    private async createBackingFile(): Promise<{ dispose: () => Promise<unknown>; filePath: string } | undefined> {
-        if (this.connInfo.localLaunch) {
-            const tempFile = await this.fs.createTemporaryLocalFile('.ipynb');
-            const tempDirectory = path.join(
-                path.dirname(tempFile.filePath),
-                path.basename(tempFile.filePath, '.ipynb')
-            );
-            await tempFile.dispose();
-            // This way we ensure all checkpoints are in a unique directory and will not conflict.
-            await this.fs.ensureLocalDir(tempDirectory);
-
-            const newName = this.resource
-                ? `${path.basename(this.resource.fsPath, '.ipynb')}.ipynb`
-                : `${DataScience.defaultNotebookName()}-${uuid()}.ipynb`;
-
-            const filePath = path.join(tempDirectory, newName);
-            return {
-                filePath,
-                dispose: () => this.fs.deleteLocalFile(filePath)
-            };
-        }
-        let backingFile: Contents.IModel | undefined = undefined;
-
-        // First make sure the notebook is in the right relative path (jupyter expects a relative path with unix delimiters)
-        const relativeDirectory = path.relative(this.connInfo.rootDirectory, this.workingDirectory).replace(/\\/g, '/');
-
-        // However jupyter does not support relative paths outside of the original root.
-        const backingFileOptions: Contents.ICreateOptions =
-            isLocalConnection(this.kernelConnectionMetadata) && !relativeDirectory.startsWith('..')
-                ? { type: 'notebook', path: relativeDirectory }
-                : { type: 'notebook' };
-
-        // Generate a more descriptive name
-        const newName = this.resource
-            ? `${path.basename(this.resource.fsPath, '.ipynb')}${getRemoteIPynbSuffix()}.ipynb`
-            : `${DataScience.defaultNotebookName()}-${uuid()}.ipynb`;
-
-        try {
-            // Create a temporary notebook for this session. Each needs a unique name (otherwise we get the same session every time)
-            backingFile = await this.contentsManager.newUntitled(backingFileOptions);
-            const backingFileDir = path.dirname(backingFile.path);
-            backingFile = await this.contentsManager.rename(
-                backingFile.path,
-                backingFileDir.length && backingFileDir !== '.' ? `${backingFileDir}/${newName}` : newName // Note, the docs say the path uses UNIX delimiters.
-            );
-        } catch (exc) {
-            // If it failed for local, try without a relative directory
-            if (isLocalConnection(this.kernelConnectionMetadata)) {
-                try {
-                    backingFile = await this.contentsManager.newUntitled({ type: 'notebook' });
-                    const backingFileDir = path.dirname(backingFile.path);
-                    backingFile = await this.contentsManager.rename(
-                        backingFile.path,
-                        backingFileDir.length && backingFileDir !== '.' ? `${backingFileDir}/${newName}` : newName // Note, the docs say the path uses UNIX delimiters.
-                    );
-                } catch (e) {}
-            } else {
-                traceError(`Backing file not supported: ${exc}`);
-            }
-        }
-
-        if (backingFile) {
-            const filePath = backingFile.path;
-            return {
-                filePath,
-                dispose: () => this.contentsManager.delete(filePath)
-            };
-        }
-    }
-
     private async createSession(options: {
         token: CancellationToken;
         ui: IDisplayOptions;
     }): Promise<ISessionWithSocket> {
         // Create our backing file for the notebook
-        const backingFile = await this.createBackingFile();
+        const backingFile = await this.backingFileCreator.createBackingFile(
+            this.resource,
+            this.workingDirectory,
+            this.kernelConnectionMetadata,
+            this.connInfo,
+            this.contentsManager
+        );
 
         // Make sure the kernel has ipykernel installed if on a local machine.
-        if (this.kernelConnectionMetadata?.interpreter && isLocalConnection(this.kernelConnectionMetadata)) {
+        if (
+            this.kernelConnectionMetadata?.interpreter &&
+            isLocalConnection(this.kernelConnectionMetadata) &&
+            this.kernelService
+        ) {
             // Make sure the kernel actually exists and is up to date.
             try {
                 await this.kernelService.ensureKernelIsUsable(

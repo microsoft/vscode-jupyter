@@ -5,7 +5,7 @@ import '../../../platform/common/extensions';
 
 import { ChildProcess } from 'child_process';
 import { Subscription } from 'rxjs';
-import { CancellationError, CancellationToken, Disposable, Event, EventEmitter } from 'vscode';
+import { CancellationError, CancellationToken, Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { traceInfo, traceError, traceWarning } from '../../../platform/logging';
@@ -34,8 +34,8 @@ export class JupyterConnectionWaiter implements IDisposable {
 
     constructor(
         private readonly launchResult: ObservableExecutionResult<string>,
-        private readonly notebookDir: string,
-        private readonly rootDir: string,
+        private readonly notebookDir: Uri,
+        private readonly rootDir: Uri,
         private readonly getServerInfo: (cancelToken?: CancellationToken) => Promise<JupyterServerInfo[] | undefined>,
         serviceContainer: IServiceContainer,
         private cancelToken?: CancellationToken
@@ -110,7 +110,7 @@ export class JupyterConnectionWaiter implements IDisposable {
     private getJupyterURL(serverInfos: JupyterServerInfo[] | undefined, data: any) {
         if (serverInfos && serverInfos.length > 0 && !this.startPromise.completed) {
             const matchInfo = serverInfos.find((info) =>
-                this.fs.areLocalPathsSame(this.notebookDir, info.notebook_dir)
+                this.fs.areLocalPathsSame(this.notebookDir.fsPath, info.notebook_dir)
             );
             if (matchInfo) {
                 const url = matchInfo.url;
@@ -220,7 +220,7 @@ class JupyterConnection implements IJupyterConnection {
         public readonly baseUrl: string,
         public readonly token: string,
         public readonly hostName: string,
-        public readonly rootDirectory: string,
+        public readonly rootDirectory: Uri,
         private readonly disposable: Disposable,
         childProc: ChildProcess | undefined
     ) {

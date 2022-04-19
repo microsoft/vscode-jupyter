@@ -45,6 +45,11 @@ const config = {
                 ]
             },
             {
+                test: /vscode_datascience_helpers.*\.py/,
+                exclude: /node_modules/,
+                type: 'asset/source'
+            },
+            {
                 enforce: 'post',
                 test: /unicode-properties[\/\\]index.js$/,
                 use: [

@@ -19,12 +19,12 @@ import {
 import { Deferred, createDeferred, sleep } from '../../../../platform/common/utils/async';
 import { DataScience } from '../../../../platform/common/utils/localize';
 import { StopWatch } from '../../../../platform/common/utils/stopWatch';
-import { SessionDisposedError } from '../../../../platform/errors/sessionDisposedError.node';
+import { SessionDisposedError } from '../../../../platform/errors/sessionDisposedError';
 import { sendKernelTelemetryEvent } from '../../../../telemetry/telemetry';
 import { Telemetry } from '../../../../webviews/webview-side/common/constants';
 import { KernelConnectionMetadata, isLocalConnection, IJupyterConnection, INotebook } from '../../../types';
 import { computeWorkingDirectory } from '../../jupyterUtils.node';
-import { JupyterSessionManager } from '../../session/jupyterSessionManager.node';
+import { JupyterSessionManager } from '../../session/jupyterSessionManager';
 import { JupyterNotebook } from '../jupyterNotebook.node';
 import { noop } from '../../../../platform/common/utils/misc';
 import { Cancellation } from '../../../../platform/common/cancellation';

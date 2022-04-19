@@ -9,7 +9,7 @@ import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import * as path from '../../../platform/vscode-path/path';
 import * as uuid from 'uuid/v4';
-import { CancellationError, CancellationToken, Disposable } from 'vscode';
+import { CancellationError, CancellationToken, Disposable, Uri } from 'vscode';
 import { IDisposable } from '@fluentui/react';
 import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
@@ -71,7 +71,7 @@ export class NotebookStarter implements Disposable {
         resource: Resource,
         useDefaultConfig: boolean,
         customCommandLine: string[],
-        workingDirectory: string,
+        workingDirectory: Uri,
         cancelToken: CancellationToken
     ): Promise<IJupyterConnection> {
         traceInfo('Starting Notebook');
@@ -89,7 +89,7 @@ export class NotebookStarter implements Disposable {
                 useDefaultConfig,
                 customCommandLine,
                 tempDirPromise,
-                workingDirectory
+                workingDirectory.fsPath
             );
 
             // Make sure we haven't canceled already.
@@ -128,7 +128,7 @@ export class NotebookStarter implements Disposable {
             traceInfo('Waiting for Jupyter Notebook');
             starter = new JupyterConnectionWaiter(
                 launchResult,
-                tempDir.path,
+                Uri.file(tempDir.path),
                 workingDirectory,
                 this.jupyterInterpreterService.getRunningJupyterServers.bind(this.jupyterInterpreterService),
                 this.serviceContainer,

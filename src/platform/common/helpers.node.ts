@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { ModuleNotInstalledError } from '../../platform/errors/moduleNotInstalledError.node';
+import { ModuleNotInstalledError } from '../errors/moduleNotInstalledError';
 
 export function isNotInstalledError(error: Error): boolean {
     const isError = typeof error === 'object' && error !== null;

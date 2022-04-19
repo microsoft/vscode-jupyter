@@ -3,7 +3,7 @@
 'use strict';
 import type { JSONObject } from '@lumino/coreutils';
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
-import { DelayedFutureExecute } from './delayedFutureExecute.node';
+import { DelayedFutureExecute } from './delayedFutureExecute';
 
 // Class that makes sure when doing a requestExecute on an IKernelConnection, that only one request happens
 // at a time.

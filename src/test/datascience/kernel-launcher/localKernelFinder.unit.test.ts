@@ -51,7 +51,7 @@ import { KernelFinder } from '../../../kernels/kernelFinder.node';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider';
 import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
-import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder.node';
+import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 
 [false, true].forEach((isWindows) => {

@@ -20,8 +20,8 @@ import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jup
 import { DataScienceErrorHandler } from '../../platform/errors/errorHandler.node';
 import { JupyterConnectError } from '../../platform/errors/jupyterConnectError';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
-import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError.node';
-import { KernelDiedError } from '../../platform/errors/kernelDiedError.node';
+import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
+import { KernelDiedError } from '../../platform/errors/kernelDiedError';
 import {
     IJupyterInterpreterDependencyManager,
     JupyterInterpreterDependencyResponse

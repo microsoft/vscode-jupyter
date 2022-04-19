@@ -31,7 +31,7 @@ import {
 } from '../../../platform/../kernels/types';
 import { MockOutputChannel } from '../../mockClasses';
 import { JupyterKernelService } from '../../../kernels/jupyter/jupyterKernelService.node';
-import { JupyterSession } from '../../../kernels/jupyter/session/jupyterSession.node';
+import { JupyterSession } from '../../../kernels/jupyter/session/jupyterSession';
 import { DisplayOptions } from '../../../kernels/displayOptions';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 

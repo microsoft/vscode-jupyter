@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable, named, optional } from 'inversify';
 import type { Kernel } from '@jupyterlab/services';
 import { EventEmitter } from 'vscode';
-import { JupyterSessionManager } from './jupyterSessionManager.node';
+import { JupyterSessionManager } from './jupyterSessionManager';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import {
     IConfigurationService,
@@ -13,10 +13,15 @@ import {
     IDisposableRegistry
 } from '../../../platform/common/types';
 import { JUPYTER_OUTPUT_CHANNEL } from '../../../webviews/webview-side/common/constants';
-import { JupyterKernelService } from '../jupyterKernelService.node';
 import { IJupyterConnection } from '../../types';
-import { IJupyterSessionManagerFactory, IJupyterPasswordConnect, IJupyterSessionManager } from '../types';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import {
+    IJupyterSessionManagerFactory,
+    IJupyterPasswordConnect,
+    IJupyterSessionManager,
+    IJupyterBackingFileCreator,
+    IJupyterKernelService,
+    IJupyterRequestAgentCreator
+} from '../types';
 
 @injectable()
 export class JupyterSessionManagerFactory implements IJupyterSessionManagerFactory {
@@ -29,8 +34,11 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
-        @inject(JupyterKernelService) private readonly kernelService: JupyterKernelService,
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @inject(IJupyterKernelService) @optional() private readonly kernelService: IJupyterKernelService | undefined,
+        @inject(IJupyterBackingFileCreator) private readonly backingFileCreator: IJupyterBackingFileCreator,
+        @inject(IJupyterRequestAgentCreator)
+        @optional()
+        private readonly requestAgentCreator: IJupyterRequestAgentCreator | undefined
     ) {}
 
     /**
@@ -48,7 +56,8 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
             this.appShell,
             this.stateFactory,
             this.kernelService,
-            this.fs
+            this.backingFileCreator,
+            this.requestAgentCreator
         );
         await result.initialize(connInfo);
         this.disposableRegistry.push(

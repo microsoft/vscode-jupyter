@@ -7,15 +7,15 @@ import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
 import { Observable } from 'rxjs/Observable';
 import { noop } from '../../platform/common/utils/misc';
-import { JupyterInvalidKernelError } from '../../platform/errors/jupyterInvalidKernelError.node';
-import { JupyterWaitForIdleError } from '../../platform/errors/jupyterWaitForIdleError.node';
+import { JupyterInvalidKernelError } from '../../platform/errors/jupyterInvalidKernelError';
+import { JupyterWaitForIdleError } from '../../platform/errors/jupyterWaitForIdleError';
 import { IJupyterSession, KernelConnectionMetadata, KernelSocketInformation } from '../../platform/../kernels/types';
 import { sleep } from '../core';
 import { MockJupyterRequest } from './mockJupyterRequest';
 import { Resource } from '../../platform/common/types';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { concatMultilineString } from '../../webviews/webview-side/common';
-import { KernelInterruptTimeoutError } from '../../platform/errors/kernelInterruptTimeoutError.node';
+import { KernelInterruptTimeoutError } from '../../platform/errors/kernelInterruptTimeoutError';
 
 const LineFeedRegEx = /(\r\n|\n)/g;
 
