@@ -8,7 +8,7 @@ const format = require('format-util') as typeof import('format-util');
 
 function formatMessage(level: string | undefined, message: string, ...data: Arguments): string {
     return level
-        ? `[${level.toUpperCase()} ${getTimeForLogging()}]: ${format(message, ...data)}`
+        ? `${level} ${getTimeForLogging()}: ${format(message, ...data)}`
         : format(message, ...data);
 }
 

@@ -49,5 +49,5 @@ export function returnValueToLogString(returnValue: unknown): string {
 }
 export function getTimeForLogging(): string {
     const date = new Date();
-    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}.${date.getMilliseconds()}`;
+    return `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}.${date.getMilliseconds()}`;
 }
