@@ -28,7 +28,6 @@ import { KernelConnectionMetadata, isLocalConnection, IJupyterConnection, ISessi
 import { JupyterKernelService } from '../jupyterKernelService.node';
 import { JupyterWebSockets } from './jupyterWebSocket.node';
 import { DisplayOptions } from '../../displayOptions';
-import { noop } from '../../../platform/common/utils/misc';
 
 function getRemoteIPynbSuffix(): string {
     return `${jvscIdentifier}${uuid()}`;
