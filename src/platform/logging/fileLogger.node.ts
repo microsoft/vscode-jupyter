@@ -8,9 +8,7 @@ import { Arguments, ILogger } from './types';
 import { getTimeForLogging } from './util';
 
 function formatMessage(level?: string, ...data: Arguments): string {
-    return level
-        ? `${level} ${getTimeForLogging()}: ${util.format(...data)}\r\n`
-        : `${util.format(...data)}\r\n`;
+    return level ? `${level} ${getTimeForLogging()}: ${util.format(...data)}\r\n` : `${util.format(...data)}\r\n`;
 }
 
 export class FileLogger implements ILogger, Disposable {

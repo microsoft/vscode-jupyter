@@ -239,9 +239,9 @@ export abstract class BaseKernel implements IKernel {
         try {
             // No need to block kernel startup on UI updates.
             traceInfo(
-                `Starting Notebook in kernel.ts id = ${this.kernelConnectionMetadata.id} for ${getDisplayPath(
-                    this.id
-                )} (disableUI=${this.startupUI.disableUI})`
+                `Starting Notebook id = ${this.kernelConnectionMetadata.id} for ${getDisplayPath(this.id)} (disableUI=${
+                    this.startupUI.disableUI
+                })`
             );
             this.createProgressIndicator(disposables);
             this.isKernelDead = false;
