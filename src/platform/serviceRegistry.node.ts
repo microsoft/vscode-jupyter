@@ -48,7 +48,7 @@ import { IFileConverter, INbConvertExport, ExportFormat, IExport, IExportDialog 
 import { GitHubIssueCommandListener } from './logging/gitHubIssueCommandListener.node';
 import { KernelProgressReporter } from './progress/kernelProgressReporter';
 import { ProgressReporter } from './progress/progressReporter.node';
-import { StatusProvider } from './progress/statusProvider.node';
+import { StatusProvider } from './progress/statusProvider';
 import { IStatusProvider } from './progress/types';
 import { ApplicationShell } from './common/application/applicationShell';
 import { CommandManager } from './common/application/commandManager';
