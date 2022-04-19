@@ -24,6 +24,7 @@ import { CommonMessageCoordinator } from './commonMessageCoordinator';
 import { INotebookCommunication, INotebookControllerManager } from '../../notebooks/types';
 import { ConsoleForegroundColors } from '../../platform/logging/types';
 import { IVSCodeNotebookController } from '../../notebooks/controllers/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 
 class NotebookCommunication implements INotebookCommunication, IDisposable {
     private eventHandlerListening?: boolean;
@@ -66,7 +67,7 @@ class NotebookCommunication implements INotebookCommunication, IDisposable {
     }
     public get onDidReceiveMessage() {
         this.eventHandlerListening = true;
-        // Immeidately after the event handler is added, send the pending messages.
+        // Immediately after the event handler is added, send the pending messages.
         setTimeout(() => this.sendPendingMessages(), 0);
         return this._onDidReceiveMessage.event;
     }
@@ -92,7 +93,7 @@ class NotebookCommunication implements INotebookCommunication, IDisposable {
  * This class wires up VSC notebooks to ipywidget communications.
  */
 @injectable()
-export class NotebookIPyWidgetCoordinator {
+export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationService {
     private readonly messageCoordinators = new WeakMap<NotebookDocument, Promise<CommonMessageCoordinator>>();
     private readonly attachedEditors = new WeakMap<NotebookDocument, WeakSet<NotebookEditor>>();
     private readonly notebookDisposables = new WeakMap<NotebookDocument, Disposable[]>();
@@ -104,17 +105,22 @@ export class NotebookIPyWidgetCoordinator {
     private readonly notebookEditors = new WeakMap<NotebookDocument, NotebookEditor[]>();
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
+        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) private readonly asyncDisposableRegistry: IAsyncDisposableRegistry,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(INotebookControllerManager) private readonly controllerManager: INotebookControllerManager
-    ) {
-        notebook.onDidChangeVisibleNotebookEditors(this.onDidChangeVisibleNotebookEditors, this, disposableRegistry);
-        notebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this, disposableRegistry);
-        controllerManager.onNotebookControllerSelected(this.onDidSelectController, this, disposableRegistry);
+    ) {}
+    public activate(): void {
+        this.notebook.onDidChangeVisibleNotebookEditors(
+            this.onDidChangeVisibleNotebookEditors,
+            this,
+            this.disposableRegistry
+        );
+        this.notebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this, this.disposableRegistry);
+        this.controllerManager.onNotebookControllerSelected(this.onDidSelectController, this, this.disposableRegistry);
     }
     public onDidSelectController(e: { notebook: NotebookDocument; controller: IVSCodeNotebookController }) {
-        // Dispost previous message coordinators.
+        // Dispose previous message coordinators.
         traceVerbose(`Setting setActiveController for ${getDisplayPath(e.notebook.uri)}`);
         const previousCoordinators = this.messageCoordinators.get(e.notebook);
         if (previousCoordinators) {
@@ -160,7 +166,7 @@ export class NotebookIPyWidgetCoordinator {
         }
         traceVerbose(`Intiailize notebook communications for editor ${getDisplayPath(editor.document.uri)}`);
         const comms = new NotebookCommunication(editor, controller);
-        this.addNotebookDiposables(notebook, [comms]);
+        this.addNotebookDisposables(notebook, [comms]);
         this.notebookCommunications.set(editor, comms);
         const { token } = new CancellationTokenSource();
         this.resolveKernel(notebook, comms, token).catch(noop);
@@ -183,7 +189,7 @@ export class NotebookIPyWidgetCoordinator {
         }
         return Cancellation.race(() => promise!.then(this.attachCoordinator.bind(this, document, webview)), token);
     }
-    private addNotebookDiposables(notebook: NotebookDocument, disposables: IDisposable[]) {
+    private addNotebookDisposables(notebook: NotebookDocument, disposables: IDisposable[]) {
         const currentDisposables: IDisposable[] = this.notebookDisposables.get(notebook) || [];
         currentDisposables.push(...disposables);
         this.notebookDisposables.set(notebook, currentDisposables);
@@ -259,7 +265,7 @@ export class NotebookIPyWidgetCoordinator {
             webview
                 .postMessage({ type: IPyWidgetMessages.IPyWidgets_IsReadyRequest, payload: undefined })
                 .then(noop, noop);
-            this.addNotebookDiposables(document, disposables);
+            this.addNotebookDisposables(document, disposables);
         }
         return promise.promise;
     }
