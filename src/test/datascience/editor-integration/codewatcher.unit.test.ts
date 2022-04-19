@@ -27,9 +27,9 @@ import {
 } from '../../../platform/common/application/types';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IConfigurationService } from '../../../platform/common/types';
-import { CodeLensFactory } from '../../../interactive-window/editor-integration/codeLensFactory.node';
-import { DataScienceCodeLensProvider } from '../../../interactive-window/editor-integration/codelensprovider.node';
-import { CodeWatcher } from '../../../interactive-window/editor-integration/codewatcher.node';
+import { CodeLensFactory } from '../../../interactive-window/editor-integration/codeLensFactory';
+import { DataScienceCodeLensProvider } from '../../../interactive-window/editor-integration/codelensprovider';
+import { CodeWatcher } from '../../../interactive-window/editor-integration/codewatcher';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { ICodeExecutionHelper } from '../../../platform/terminals/types';
 import { MockDocumentManager } from '../mockDocumentManager';
@@ -86,7 +86,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
     let debugService: TypeMoq.IMock<IDebugService>;
     let debugLocationTracker: TypeMoq.IMock<IDebugLocationTracker>;
     const contexts: Map<string, boolean> = new Map<string, boolean>();
-    const jupyterSettings = new MockJupyterSettings(undefined, SystemVariables, 'node');
+    let jupyterSettings: MockJupyterSettings;
     const disposables: Disposable[] = [];
 
     setup(() => {
@@ -101,8 +101,10 @@ suite('DataScience Code Watcher Unit Tests', () => {
         helper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         debugService = TypeMoq.Mock.ofType<IDebugService>();
+        const workspace = mock<IWorkspaceService>();
 
         // Setup default settings
+        jupyterSettings = new MockJupyterSettings(undefined, SystemVariables, 'node', instance(workspace));
         jupyterSettings.assign({
             allowImportFromNotebook: true,
             jupyterLaunchTimeout: 20000,
@@ -143,7 +145,6 @@ suite('DataScience Code Watcher Unit Tests', () => {
         // Setup config service
         configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => jupyterSettings);
 
-        const workspace = mock<IWorkspaceService>();
         when(workspace.isTrusted).thenReturn(true);
         const trustedEvent = new EventEmitter<void>();
         when(workspace.onDidGrantWorkspaceTrust).thenReturn(trustedEvent.event);
@@ -172,7 +173,6 @@ suite('DataScience Code Watcher Unit Tests', () => {
                 () =>
                     new CodeWatcher(
                         interactiveWindowProvider.object,
-                        fileSystem.object,
                         configService.object,
                         documentManager.object,
                         helper.object,
@@ -203,7 +203,6 @@ suite('DataScience Code Watcher Unit Tests', () => {
 
         codeWatcher = new CodeWatcher(
             interactiveWindowProvider.object,
-            fileSystem.object,
             configService.object,
             documentManager.object,
             helper.object,
@@ -1073,7 +1072,6 @@ testing1
             commandManager.object,
             disposables,
             debugService.object,
-            fileSystem.object,
             instance(workspace)
         );
 

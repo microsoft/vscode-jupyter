@@ -14,7 +14,7 @@ import { calculateWorkingDirectory } from '../platform/common/utils.node';
 import { CodeSnippets } from '../webviews/webview-side/common/constants';
 import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
 import { isLocalHostConnection, isPythonKernelConnection } from './helpers';
-import { expandWorkingDir } from './jupyter/jupyterUtils.node';
+import { expandWorkingDir } from './jupyter/jupyterUtils';
 import { INotebookProvider, isLocalConnection, KernelConnectionMetadata } from './types';
 import { AddRunCellHook } from '../platform/common/constants.node';
 import { IStatusProvider } from '../platform/progress/types';
@@ -92,7 +92,12 @@ export class Kernel extends BaseKernel {
                 return this.getChangeDirectoryCode(suggestedDir);
             } else if (launchingFile && (await this.fs.localFileExists(launchingFile.fsPath))) {
                 // Combine the working directory with this file if possible.
-                suggestedDir = expandWorkingDir(suggestedDir, launchingFile.fsPath, this.workspaceService);
+                suggestedDir = expandWorkingDir(
+                    suggestedDir,
+                    launchingFile,
+                    this.workspaceService,
+                    this.configService.getSettings(launchingFile)
+                );
                 if (suggestedDir && (await this.fs.localDirectoryExists(suggestedDir))) {
                     traceInfo('UpdateWorkingDirectoryAndPath in Kernel');
                     return this.getChangeDirectoryCode(suggestedDir);

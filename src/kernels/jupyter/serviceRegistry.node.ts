@@ -4,6 +4,9 @@ import { IExtensionSingleActivationService } from '../../platform/activation/typ
 import { IServiceManager } from '../../platform/ioc/types';
 import { IRemoteKernelFinder } from '../raw/types';
 import { INotebookProvider } from '../types';
+import { JupyterCommandLineSelectorCommand } from './commands/commandLineSelector';
+import { CommandRegistry } from './commands/commandRegistry';
+import { JupyterServerSelectorCommand } from './commands/serverSelector';
 import { JupyterExporter } from './import-export/jupyterExporter.node';
 import { JupyterImporter } from './import-export/jupyterImporter.node';
 import { JupyterCommandFactory } from './interpreter/jupyterCommand.node';
@@ -22,13 +25,13 @@ import { NbConvertInterpreterDependencyChecker } from './interpreter/nbconvertIn
 import { CellOutputMimeTypeTracker } from './jupyterCellOutputMimeTypeTracker.node';
 import { JupyterKernelService } from './jupyterKernelService.node';
 import { JupyterUriProviderRegistration } from './jupyterUriProviderRegistration';
-import { JupyterCommandLineSelector } from './launcher/commandLineSelector.node';
-import { JupyterNotebookProvider } from './launcher/jupyterNotebookProvider.node';
+import { JupyterCommandLineSelector } from './launcher/commandLineSelector';
+import { JupyterNotebookProvider } from './launcher/jupyterNotebookProvider';
 import { JupyterPasswordConnect } from './launcher/jupyterPasswordConnect';
-import { HostJupyterExecution } from './launcher/liveshare/hostJupyterExecution.node';
-import { HostJupyterServer } from './launcher/liveshare/hostJupyterServer.node';
+import { HostJupyterExecution } from './launcher/liveshare/hostJupyterExecution';
+import { HostJupyterServer } from './launcher/liveshare/hostJupyterServer';
 import { NotebookProvider } from './launcher/notebookProvider';
-import { NotebookServerProvider } from './launcher/notebookServerProvider.node';
+import { NotebookServerProvider } from './launcher/notebookServerProvider';
 import { NotebookStarter } from './launcher/notebookStarter.node';
 import { ServerPreload } from './launcher/serverPreload.node';
 import { JupyterServerUriStorage } from './launcher/serverUriStorage';
@@ -51,7 +54,8 @@ import {
     IJupyterUriProviderRegistration,
     IJupyterServerUriStorage,
     IJupyterBackingFileCreator,
-    IJupyterKernelService
+    IJupyterKernelService,
+    INotebookStarter
 } from './types';
 import { IJupyterCommandFactory, IJupyterSubCommandExecutionService } from './types.node';
 
@@ -119,8 +123,17 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         JupyterUriProviderRegistration
     );
     serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
-    serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);
+    serviceManager.addSingleton<INotebookStarter>(INotebookStarter, NotebookStarter);
     serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
     serviceManager.addSingleton<IJupyterBackingFileCreator>(IJupyterBackingFileCreator, BackingFileCreator);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, CommandRegistry);
+    serviceManager.addSingleton<JupyterCommandLineSelectorCommand>(
+        JupyterCommandLineSelectorCommand,
+        JupyterCommandLineSelectorCommand
+    );
+    serviceManager.addSingleton<JupyterServerSelectorCommand>(
+        JupyterServerSelectorCommand,
+        JupyterServerSelectorCommand
+    );
 }

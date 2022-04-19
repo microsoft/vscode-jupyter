@@ -15,6 +15,7 @@ import { IDisposable } from '../platform/common/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants.node';
 import { noop } from './core';
 import { isCI } from '../platform/common/constants';
+import { IWorkspaceService } from '../platform/common/application/types';
 
 const StreamZip = require('node-stream-zip');
 
@@ -82,11 +83,16 @@ function getWorkspaceRoot() {
     return workspaceFolder ? workspaceFolder.uri : vscode.workspace.workspaceFolders[0].uri;
 }
 
-export async function getExtensionSettings(resource: Uri | undefined) {
+export async function getExtensionSettings(resource: Uri | undefined, workspaceService: IWorkspaceService) {
     const pythonSettings =
         require('../platform/common/configSettings') as typeof import('../platform/common/configSettings');
     const systemVariables = await import('../platform/common/variables/systemVariables.node');
-    return pythonSettings.JupyterSettings.getInstance(resource, systemVariables.SystemVariables, 'node');
+    return pythonSettings.JupyterSettings.getInstance(
+        resource,
+        systemVariables.SystemVariables,
+        'node',
+        workspaceService
+    );
 }
 export function retryAsync(this: any, wrapped: Function, retryCount: number = 2) {
     return async (...args: any[]) => {

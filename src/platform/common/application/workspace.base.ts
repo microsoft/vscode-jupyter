@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { injectable } from 'inversify';
 import * as path from '../../vscode-path/path';
 import {
     CancellationToken,
@@ -19,8 +18,7 @@ import { Resource } from '../types';
 import { getOSType, OSType } from '../utils/platform';
 import { IWorkspaceService } from './types';
 
-@injectable()
-export class WorkspaceService implements IWorkspaceService {
+export abstract class BaseWorkspaceService implements IWorkspaceService {
     public get onDidChangeConfiguration(): Event<ConfigurationChangeEvent> {
         return workspace.onDidChangeConfiguration;
     }
@@ -94,4 +92,6 @@ export class WorkspaceService implements IWorkspaceService {
               )
             : defaultValue;
     }
+
+    public abstract computeWorkingDirectory(resource: Resource): Promise<string>;
 }

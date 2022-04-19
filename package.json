@@ -576,7 +576,7 @@
                 "command": "jupyter.selectjupyteruri",
                 "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
                 "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+                "enablement": "isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.selectNativeJupyterUriFromToolBar",
@@ -780,7 +780,6 @@
             {
                 "command": "jupyter.clearSavedJupyterUris",
                 "title": "%jupyter.command.jupyter.clearSavedJupyterUris.title%",
-                "enablement": "!jupyter.webExtension",
                 "category": "Jupyter"
             },
             {

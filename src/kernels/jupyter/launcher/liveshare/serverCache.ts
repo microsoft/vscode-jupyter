@@ -6,10 +6,8 @@ import '../../../../platform/common/extensions';
 import { CancellationToken } from 'vscode';
 import { IWorkspaceService } from '../../../../platform/common/application/types';
 import { traceInfo, traceError } from '../../../../platform/logging';
-import { IFileSystem } from '../../../../platform/common/platform/types.node';
-import { IAsyncDisposable, IConfigurationService } from '../../../../platform/common/types';
+import { IAsyncDisposable } from '../../../../platform/common/types';
 import { testOnlyMethod } from '../../../../platform/common/utils/decorators';
-import { calculateWorkingDirectory } from '../../../../platform/common/utils.node';
 import { sleep } from '../../../../platform/common/utils/async';
 import { INotebookServerOptions, INotebookServer } from '../../types';
 
@@ -23,11 +21,7 @@ export class ServerCache implements IAsyncDisposable {
     private cache: Map<string, IServerData> = new Map<string, IServerData>();
     private disposed = false;
 
-    constructor(
-        private configService: IConfigurationService,
-        private workspace: IWorkspaceService,
-        private fs: IFileSystem
-    ) {}
+    constructor(private workspace: IWorkspaceService) {}
     @testOnlyMethod()
     public clearCache() {
         this.cache.clear();
@@ -126,7 +120,7 @@ export class ServerCache implements IAsyncDisposable {
             workingDir:
                 options && options.workingDir
                     ? options.workingDir
-                    : await calculateWorkingDirectory(this.configService, this.workspace, this.fs, options.resource),
+                    : await this.workspace.computeWorkingDirectory(options.resource),
             ui: options.ui,
             localJupyter: options.localJupyter
         };

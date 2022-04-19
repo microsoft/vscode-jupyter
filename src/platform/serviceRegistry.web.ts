@@ -11,7 +11,6 @@ import {
     IApplicationShell,
     IApplicationEnvironment
 } from './common/application/types';
-import { WorkspaceService } from './common/application/workspace';
 import { ConfigurationService } from './common/configuration/service.web';
 import { registerTypes as registerApiTypes } from './api/serviceRegistry.web';
 import { registerTypes as registerCommonTypes } from './common/serviceRegistry.web';
@@ -21,6 +20,7 @@ import { IConfigurationService, IExtensionContext } from './common/types';
 import { IServiceManager } from './ioc/types';
 import { StatusProvider } from './progress/statusProvider';
 import { IStatusProvider } from './progress/types';
+import { WorkspaceService } from './common/application/workspace.web';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);

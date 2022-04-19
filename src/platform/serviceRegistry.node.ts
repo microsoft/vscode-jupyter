@@ -3,7 +3,6 @@
 'use strict';
 
 import { IServiceManager } from '../platform/ioc/types';
-import { CommandRegistry } from './commands/commandRegistry.node';
 import { registerTypes as registerApiTypes } from './api/serviceRegistry.node';
 import { registerTypes as registerCommonTypes } from './common/serviceRegistry.node';
 import { registerTypes as registerTerminalTypes } from './terminals/serviceRegistry.node';
@@ -16,7 +15,11 @@ import { CodeCssGenerator } from '../webviews/extension-side/codeCssGenerator.no
 import { DataViewer } from '../webviews/extension-side/dataviewer/dataViewer.node';
 import { DataViewerDependencyService } from '../webviews/extension-side/dataviewer/dataViewerDependencyService.node';
 import { DataViewerFactory } from '../webviews/extension-side/dataviewer/dataViewerFactory.node';
-import { IDataViewer, IDataViewerFactory } from '../webviews/extension-side/dataviewer/types';
+import {
+    IDataViewer,
+    IDataViewerDependencyService,
+    IDataViewerFactory
+} from '../webviews/extension-side/dataviewer/types';
 import { PlotViewer } from '../webviews/extension-side/plotting/plotViewer.node';
 import { PlotViewerProvider } from '../webviews/extension-side/plotting/plotViewerProvider.node';
 import { IPlotViewer, IPlotViewerProvider } from '../webviews/extension-side/plotting/types';
@@ -53,10 +56,10 @@ import { IStatusProvider } from './progress/types';
 import { ApplicationShell } from './common/application/applicationShell';
 import { CommandManager } from './common/application/commandManager';
 import { ICommandManager, IWorkspaceService, IApplicationShell } from './common/application/types';
-import { WorkspaceService } from './common/application/workspace';
 import { ConfigurationService } from './common/configuration/service.node';
 import { IFileSystem } from './common/platform/types.node';
 import { FileSystem } from './common/platform/fileSystem.node';
+import { WorkspaceService } from './common/application/workspace.node';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
@@ -64,7 +67,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
     serviceManager.addSingleton<IApplicationShell>(IApplicationShell, ApplicationShell);
     serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
-    serviceManager.addSingleton<CommandRegistry>(CommandRegistry, CommandRegistry);
 
     registerActivationTypes(serviceManager);
     registerApiTypes(serviceManager);
@@ -77,7 +79,10 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
     serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
-    serviceManager.addSingleton<DataViewerDependencyService>(DataViewerDependencyService, DataViewerDependencyService);
+    serviceManager.addSingleton<IDataViewerDependencyService>(
+        IDataViewerDependencyService,
+        DataViewerDependencyService
+    );
     serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, GitHubIssueCommandListener);

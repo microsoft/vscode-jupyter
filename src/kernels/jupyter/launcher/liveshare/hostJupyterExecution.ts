@@ -6,13 +6,11 @@ import '../../../../platform/common/extensions';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
 
-import { JupyterExecutionBase } from '../jupyterExecution.node';
-import { NotebookStarter } from '../notebookStarter.node';
-import { ServerCache } from './serverCache.node';
-import { inject, injectable } from 'inversify';
+import { JupyterExecutionBase } from '../jupyterExecution';
+import { ServerCache } from './serverCache';
+import { inject, injectable, optional } from 'inversify';
 import { IWorkspaceService } from '../../../../platform/common/application/types';
 import { traceInfo } from '../../../../platform/logging';
-import { IFileSystem } from '../../../../platform/common/platform/types.node';
 import {
     IDisposableRegistry,
     IAsyncDisposableRegistry,
@@ -21,7 +19,7 @@ import {
 import { testOnlyMethod } from '../../../../platform/common/utils/decorators';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts';
 import { IServiceContainer } from '../../../../platform/ioc/types';
-import { IJupyterExecution, INotebookServerOptions, INotebookServer } from '../../types';
+import { IJupyterExecution, INotebookServerOptions, INotebookServer, INotebookStarter } from '../../types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -34,14 +32,13 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
         @inject(IInterpreterService) interpreterService: IInterpreterService,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
-        @inject(IFileSystem) fs: IFileSystem,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IConfigurationService) configService: IConfigurationService,
-        @inject(NotebookStarter) notebookStarter: NotebookStarter,
+        @inject(INotebookStarter) @optional() notebookStarter: INotebookStarter | undefined,
         @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
         super(interpreterService, disposableRegistry, workspace, configService, notebookStarter, serviceContainer);
-        this.serverCache = new ServerCache(configService, workspace, fs);
+        this.serverCache = new ServerCache(workspace);
         asyncRegistry.push(this);
     }
 

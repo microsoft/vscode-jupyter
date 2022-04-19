@@ -23,9 +23,8 @@ import { SessionDisposedError } from '../../../../platform/errors/sessionDispose
 import { sendKernelTelemetryEvent } from '../../../../telemetry/telemetry';
 import { Telemetry } from '../../../../webviews/webview-side/common/constants';
 import { KernelConnectionMetadata, isLocalConnection, IJupyterConnection, INotebook } from '../../../types';
-import { computeWorkingDirectory } from '../../jupyterUtils.node';
 import { JupyterSessionManager } from '../../session/jupyterSessionManager';
-import { JupyterNotebook } from '../jupyterNotebook.node';
+import { JupyterNotebook } from '../jupyterNotebook';
 import { noop } from '../../../../platform/common/utils/misc';
 import { Cancellation } from '../../../../platform/common/cancellation';
 import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
@@ -87,7 +86,7 @@ export class HostJupyterServer implements INotebookServer {
             this.throwIfDisposedOrCancelled(cancelToken);
             // Figure out the working directory we need for our new notebook. This is only necessary for local.
             const workingDirectory = isLocalConnection(kernelConnection)
-                ? await computeWorkingDirectory(resource, this.workspaceService)
+                ? await this.workspaceService.computeWorkingDirectory(resource)
                 : '';
             this.throwIfDisposedOrCancelled(cancelToken);
             // Start a session (or use the existing one if allowed)

@@ -9,7 +9,7 @@ import { getNotebookMetadata, isJupyterNotebook, isPythonNotebook } from '../../
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { EditorContexts, PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { ContextKey } from '../../platform/common/contextKey.node';
+import { ContextKey } from '../../platform/common/contextKey';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { isNotebookCell, noop } from '../../platform/common/utils/misc';
 import { getActiveInteractiveWindow } from '../helpers';

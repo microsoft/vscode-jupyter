@@ -5,8 +5,6 @@ import * as vscode from 'vscode';
 import { Identifiers } from '../webviews/webview-side/common/constants';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
-import { JupyterCommandLineSelectorCommand } from '../platform/commands/commandLineSelector.node';
-import { JupyterServerSelectorCommand } from '../platform/commands/serverSelector.node';
 import { IApplicationEnvironment } from '../platform/common/application/types';
 import { JVSC_EXTENSION_ID } from '../platform/common/constants';
 import { IConfigurationService, IDataScienceCommandListener } from '../platform/common/types';
@@ -126,14 +124,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         IKernelVariableRequester,
         PythonVariablesRequester,
         Identifiers.PYTHON_VARIABLES_REQUESTER
-    );
-    serviceManager.addSingleton<JupyterCommandLineSelectorCommand>(
-        JupyterCommandLineSelectorCommand,
-        JupyterCommandLineSelectorCommand
-    );
-    serviceManager.addSingleton<JupyterServerSelectorCommand>(
-        JupyterServerSelectorCommand,
-        JupyterServerSelectorCommand
     );
     serviceManager.addSingleton<IKernelDependencyService>(IKernelDependencyService, KernelDependencyService);
     serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);

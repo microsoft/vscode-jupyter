@@ -16,7 +16,7 @@ import { MultiStepInput, MultiStepInputFactory } from '../../../platform/common/
 import { MockInputBox } from '../mockInputBox';
 import { MockQuickPick } from '../mockQuickPick';
 import { MockMemento } from '../../mocks/mementos';
-import { WorkspaceService } from '../../../platform/common/application/workspace';
+import { WorkspaceService } from '../../../platform/common/application/workspace.node';
 import { CryptoUtils } from '../../../platform/common/crypto';
 import { ApplicationEnvironment } from '../../../platform/common/application/applicationEnvironment.node';
 import { MockEncryptedStorage } from '../mockEncryptedStorage';

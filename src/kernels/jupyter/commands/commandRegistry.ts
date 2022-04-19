@@ -4,14 +4,14 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { IWorkspaceService } from '../../platform/common/application/types';
-
-import { IDisposable } from '../../platform/common/types';
-import { JupyterCommandLineSelectorCommand } from './commandLineSelector.node';
-import { JupyterServerSelectorCommand } from './serverSelector.node';
+import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { IWorkspaceService } from '../../../platform/common/application/types';
+import { IDisposable } from '../../../platform/common/types';
+import { JupyterCommandLineSelectorCommand } from './commandLineSelector';
+import { JupyterServerSelectorCommand } from './serverSelector';
 
 @injectable()
-export class CommandRegistry implements IDisposable {
+export class CommandRegistry implements IExtensionSingleActivationService {
     private readonly disposables: IDisposable[] = [];
     constructor(
         @inject(JupyterServerSelectorCommand) private readonly serverSelectedCommand: JupyterServerSelectorCommand,
@@ -21,7 +21,7 @@ export class CommandRegistry implements IDisposable {
     ) {
         this.disposables.push(this.serverSelectedCommand);
     }
-    public register() {
+    public async activate() {
         this.registerCommandsIfTrusted();
     }
     public dispose() {

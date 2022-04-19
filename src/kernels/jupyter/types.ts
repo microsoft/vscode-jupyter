@@ -7,7 +7,7 @@ import { Event } from 'vscode';
 import { SemVer } from 'semver';
 import { Uri, QuickPickItem } from 'vscode';
 import { CancellationToken, Disposable } from 'vscode-jsonrpc';
-import { IAsyncDisposable, ICell, IDisplayOptions, Resource } from '../../platform/common/types';
+import { IAsyncDisposable, ICell, IDisplayOptions, IDisposable, Resource } from '../../platform/common/types';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import {
@@ -246,4 +246,15 @@ export const IJupyterRequestAgentCreator = Symbol('IJupyterRequestAgentCreator')
 export interface IJupyterRequestAgentCreator {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     createHttpRequestAgent(): any;
+}
+
+export const INotebookStarter = Symbol('INotebookStarter');
+export interface INotebookStarter extends IDisposable {
+    start(
+        resource: Resource,
+        useDefaultConfig: boolean,
+        customCommandLine: string[],
+        workingDirectory: Uri,
+        cancelToken: CancellationToken
+    ): Promise<IJupyterConnection>;
 }

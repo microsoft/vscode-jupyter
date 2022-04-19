@@ -21,14 +21,14 @@ import { INotebookControllerManager } from '../../notebooks/types';
 import { Commands, Telemetry } from '../../platform/common/constants';
 import { FileConverter } from '../../platform/export/fileConverter.node';
 import { IFileConverter, ExportFormat } from '../../platform/export/types';
-import { IInteractiveWindowProvider } from '../types';
+import { IExportCommands, IInteractiveWindowProvider } from '../types';
 
 interface IExportQuickPickItem extends QuickPickItem {
     handler(): void;
 }
 
 @injectable()
-export class ExportCommands implements IDisposable {
+export class ExportCommands implements IExportCommands, IDisposable {
     private readonly disposables: IDisposable[] = [];
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,

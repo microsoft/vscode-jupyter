@@ -92,6 +92,7 @@ export type ErrorCategory =
     | 'kernelspecnotfound' // Left for historical purposes, not used anymore.
     | 'unsupportedKernelSpec' // Left for historical purposes, not used anymore.
     | 'sessionDisposed'
+    | 'nodeonly'
     | 'unknown';
 
 // If there are errors, then the are added to the telementry properties.

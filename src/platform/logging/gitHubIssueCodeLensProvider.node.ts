@@ -4,7 +4,7 @@ import { IExtensionSingleActivationService } from '../activation/types';
 import { Commands, GITHUB_ISSUE_MARKDOWN_FILE } from '../common/constants';
 import { IExtensionContext } from '../common/types';
 import { GitHubIssue } from '../common/utils/localize';
-import { generateCommand } from '../../interactive-window/editor-integration/codeLensFactory.node';
+import { generateCommand } from '../../interactive-window/editor-integration/codeLensFactory';
 
 @injectable()
 export class GitHubIssueCodeLensProvider implements IExtensionSingleActivationService {

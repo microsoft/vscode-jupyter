@@ -8,8 +8,8 @@ import { CodeLens, ConfigurationTarget, env, Range, Uri, commands } from 'vscode
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IShowDataViewerFromVariablePanel } from '../../platform/messageTypes';
 import { IKernelProvider } from '../../kernels/types';
-import { convertDebugProtocolVariableToIJupyterVariable } from '../../kernels/variables/debuggerVariables.node';
-import { DataViewerChecker } from '../../webviews/extension-side/dataviewer/dataViewerChecker.node';
+import { convertDebugProtocolVariableToIJupyterVariable } from '../../kernels/variables/helpers';
+import { DataViewerChecker } from '../../webviews/extension-side/dataviewer/dataViewerChecker';
 import { ICommandNameArgumentTypeMapping } from '../../platform/common/application/commands';
 import {
     IApplicationShell,
@@ -19,7 +19,6 @@ import {
     IWorkspaceService
 } from '../../platform/common/application/types';
 import { traceError } from '../../platform/logging';
-import { IFileSystem } from '../../platform/common/platform/types.node';
 
 import {
     IConfigurationService,
@@ -32,18 +31,18 @@ import { isUri, noop } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { ExportCommands } from './exportCommands.node';
 import { JUPYTER_OUTPUT_CHANNEL, Identifiers, Commands, Telemetry } from '../../platform/common/constants';
-import { DataViewerDependencyService } from '../../webviews/extension-side/dataviewer/dataViewerDependencyService.node';
 import {
+    IDataViewerDependencyService,
     IDataViewerFactory,
     IJupyterVariableDataProviderFactory
 } from '../../webviews/extension-side/dataviewer/types';
-import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IJupyterVariables } from '../../kernels/variables/types';
 import { IDataScienceErrorHandler } from '../../platform/errors/types';
 import { IDataScienceCodeLensProvider, ICodeWatcher } from '../editor-integration/types';
-import { IInteractiveWindowProvider } from '../types';
+import { IExportCommands, IInteractiveWindowProvider } from '../types';
+import * as urlPath from '../../platform/vscode-path/resources';
+import { getFilePath } from '../../platform/common/platform/fs-paths';
 
 @injectable()
 export class CommandRegistry implements IDisposable {
@@ -60,17 +59,17 @@ export class CommandRegistry implements IDisposable {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel,
-        @inject(ExportCommands) private readonly exportCommand: ExportCommands,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IExportCommands) @optional() private readonly exportCommand: IExportCommands | undefined,
         @inject(IJupyterVariableDataProviderFactory)
         private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
         @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IJupyterVariables) @named(Identifiers.DEBUGGER_VARIABLES) private variableProvider: IJupyterVariables,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
-        @inject(DataViewerDependencyService) private readonly dataViewerDependencyService: DataViewerDependencyService,
+        @inject(IDataViewerDependencyService)
+        @optional()
+        private readonly dataViewerDependencyService: IDataViewerDependencyService | undefined,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
     ) {
@@ -105,7 +104,6 @@ export class CommandRegistry implements IDisposable {
             Commands.EnableLoadingWidgetsFrom3rdPartySource,
             this.enableLoadingWidgetScriptsFromThirdParty
         );
-        this.registerCommand(Commands.ClearSavedJupyterUris, this.clearJupyterUris);
         if (this.commandListeners) {
             this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
                 listener.register(this.commandManager);
@@ -119,7 +117,7 @@ export class CommandRegistry implements IDisposable {
         if (!this.workspace.isTrusted) {
             return;
         }
-        this.exportCommand.register();
+        this.exportCommand?.register();
         this.registerCommand(Commands.RunAllCells, this.runAllCells);
         this.registerCommand(Commands.RunCell, this.runCell);
         this.registerCommand(Commands.RunCurrentCell, this.runCurrentCell);
@@ -156,13 +154,11 @@ export class CommandRegistry implements IDisposable {
 
     private getCodeWatcher(file: Uri | undefined): ICodeWatcher | undefined {
         if (file) {
-            const possibleDocuments = this.documentManager.textDocuments.filter((d) =>
-                this.fs.arePathsSame(d.uri, file)
-            );
+            const possibleDocuments = this.documentManager.textDocuments.filter((d) => urlPath.isEqual(d.uri, file));
             if (possibleDocuments && possibleDocuments.length === 1) {
                 return this.dataScienceCodeLensProvider.getCodeWatcher(possibleDocuments[0]);
             } else if (possibleDocuments && possibleDocuments.length > 1) {
-                throw new Error(DataScience.documentMismatch().format(file.fsPath));
+                throw new Error(DataScience.documentMismatch().format(getFilePath(file)));
             }
         }
 
@@ -199,10 +195,6 @@ export class CommandRegistry implements IDisposable {
                     .then(noop, noop);
             })
             .catch(noop);
-    }
-
-    private async clearJupyterUris(): Promise<void> {
-        return this.serverUriStorage.clearUriList();
     }
 
     private async runAllCells(file: Uri | undefined): Promise<void> {
@@ -542,7 +534,7 @@ export class CommandRegistry implements IDisposable {
         if (this.debugService.activeDebugSession) {
             try {
                 // First find out the current python environment that we are working with
-                if (this.debugService.activeDebugSession.configuration.python) {
+                if (this.debugService.activeDebugSession.configuration.python && this.dataViewerDependencyService) {
                     const pythonEnv = await this.interpreterService.getInterpreterDetails(
                         this.debugService.activeDebugSession.configuration.python
                     );

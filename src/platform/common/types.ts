@@ -10,8 +10,10 @@ import { PythonEnvironment } from '../pythonEnvironments/info';
 import { CommandsWithoutArgs } from './application/commands';
 import { ICommandManager } from './application/types';
 import { Experiments } from './experiments/groups';
+import { ISystemVariables } from './variables/types';
 export const IsCodeSpace = Symbol('IsCodeSpace');
 export const IsDevMode = Symbol('IsDevMode');
+export const IsWebExtension = Symbol('IsWebExtension');
 export const IsPreRelease = Symbol('IsPreRelease');
 export const IOutputChannel = Symbol('IOutputChannel');
 export interface IOutputChannel extends OutputChannel {}
@@ -122,6 +124,7 @@ export interface IVariableTooltipFields {
 
 export interface IWatchableJupyterSettings extends IJupyterSettings {
     readonly onDidChange: Event<void>;
+    createSystemVariables(resource: Resource): ISystemVariables;
 }
 
 export type LoggingLevelSettingType = 'off' | 'error' | 'warn' | 'info' | 'debug' | 'verbose';

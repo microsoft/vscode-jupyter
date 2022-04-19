@@ -30,8 +30,7 @@ export class NotebookProvider implements INotebookProvider {
         @optional()
         private readonly rawNotebookProvider: IRawNotebookProvider | undefined,
         @inject(IJupyterNotebookProvider)
-        @optional()
-        private readonly jupyterNotebookProvider: IJupyterNotebookProvider | undefined,
+        private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}

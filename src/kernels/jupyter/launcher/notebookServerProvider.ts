@@ -3,12 +3,11 @@
 
 'use strict';
 
-import { IDisposable } from '@fluentui/react';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, optional } from 'inversify';
 import { CancellationError, CancellationToken } from 'vscode';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceInfo } from '../../../platform/logging';
-import { IConfigurationService, IDisposableRegistry, Resource } from '../../../platform/common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../../platform/common/types';
 import { testOnlyMethod } from '../../../platform/common/utils/decorators';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
@@ -25,6 +24,8 @@ import {
     IJupyterServerUriStorage,
     INotebookServerOptions
 } from '../types';
+import { NotSupportedInWebError } from '../../../platform/errors/notSupportedInWebError';
+import { getFilePath } from '../../../platform/common/platform/fs-paths';
 
 @injectable()
 export class NotebookServerProvider implements IJupyterServerProvider {
@@ -35,7 +36,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
     private ui = new DisplayOptions(true);
     constructor(
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
-        @inject(IJupyterExecution) private readonly jupyterExecution: IJupyterExecution,
+        @inject(IJupyterExecution) @optional() private readonly jupyterExecution: IJupyterExecution | undefined,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(JupyterServerSelector) private serverSelector: JupyterServerSelector,
@@ -59,7 +60,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         const serverOptions = await this.getNotebookServerOptions(options.resource, options.localJupyter === true);
 
         // If we are just fetching or only want to create for local, see if exists
-        if (options.localJupyter && !serverOptions.uri) {
+        if (options.localJupyter && !serverOptions.uri && this.jupyterExecution) {
             const server = await this.jupyterExecution.getServer(serverOptions);
             // Possible it wasn't created, hence create it.
             if (server) {
@@ -102,6 +103,9 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         token: CancellationToken | undefined,
         forLocal: boolean
     ): Promise<INotebookServer | undefined> {
+        if (!this.jupyterExecution) {
+            throw new NotSupportedInWebError();
+        }
         const serverOptions = await this.getNotebookServerOptions(resource, forLocal);
         traceInfo(`Checking for server existence.`);
 
@@ -119,7 +123,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
                 return;
             }
             // Status depends upon if we're about to connect to existing server or not.
-            progressReporter = (await this.jupyterExecution.getServer(serverOptions))
+            progressReporter = (await this.jupyterExecution!.getServer(serverOptions))
                 ? KernelProgressReporter.createProgressReporter(resource, DataScience.connectingToJupyter())
                 : KernelProgressReporter.createProgressReporter(resource, DataScience.startingJupyter());
             disposables.push(progressReporter);
@@ -164,7 +168,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
 
     private async checkUsable(options: INotebookServerOptions): Promise<boolean> {
         try {
-            if (options && !options.uri) {
+            if (options && !options.uri && this.jupyterExecution) {
                 const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
                 return usableInterpreter ? true : false;
             } else {
@@ -176,13 +180,15 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             if (activeInterpreter) {
                 const displayName = activeInterpreter.displayName
                     ? activeInterpreter.displayName
-                    : activeInterpreter.uri.fsPath;
+                    : getFilePath(activeInterpreter.uri);
                 throw new Error(
                     DataScience.jupyterNotSupportedBecauseOfEnvironment().format(displayName, e.toString())
                 );
             } else {
                 throw new JupyterInstallError(
-                    DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError())
+                    DataScience.jupyterNotSupported().format(
+                        this.jupyterExecution ? await this.jupyterExecution.getNotebookError() : 'Error'
+                    )
                 );
             }
         }

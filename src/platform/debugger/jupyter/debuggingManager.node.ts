@@ -22,7 +22,7 @@ import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { IConfigurationService, IDisposable } from '../../common/types';
 import { KernelDebugAdapter } from './kernelDebugAdapter.node';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { ContextKey } from '../../common/contextKey.node';
+import { ContextKey } from '../../common/contextKey';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
 import { traceError, traceInfo, traceInfoIfCI } from '../../logging';
 import { DataScience } from '../../common/utils/localize';

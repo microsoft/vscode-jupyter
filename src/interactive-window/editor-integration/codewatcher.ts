@@ -18,8 +18,6 @@ import {
 } from 'vscode';
 
 import { IDocumentManager } from '../../platform/common/application/types';
-import { IFileSystem } from '../../platform/common/platform/types.node';
-
 import { ICellRange, IConfigurationService, IDisposable, Resource } from '../../platform/common/types';
 import { chainable } from '../../platform/common/utils/decorators';
 import { isUri } from '../../platform/common/utils/misc';
@@ -34,6 +32,7 @@ import { CellMatcher } from './cellMatcher';
 import { ICodeWatcher, ICodeLensFactory } from './types';
 import { traceDecoratorVerbose } from '../../platform/logging';
 import { TraceOptions } from '../../platform/logging/types';
+import * as urlPath from '../../platform/vscode-path/resources';
 
 function getIndex(index: number, length: number): number {
     // return index within the length range with negative indexing
@@ -67,7 +66,6 @@ export class CodeWatcher implements ICodeWatcher {
 
     constructor(
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
-        @inject(IFileSystem) private fs: IFileSystem,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(ICodeExecutionHelper) private executionHelper: ICodeExecutionHelper,
@@ -249,7 +247,7 @@ export class CodeWatcher implements ICodeWatcher {
 
     @captureTelemetry(Telemetry.RunSelectionOrLine)
     public async runSelectionOrLine(activeEditor: TextEditor | undefined, text?: string | Uri) {
-        if (this.document && activeEditor && this.fs.arePathsSame(activeEditor.document.uri, this.document.uri)) {
+        if (this.document && activeEditor && urlPath.isEqual(activeEditor.document.uri, this.document.uri)) {
             const iw = await this.getActiveInteractiveWindow();
             let codeToExecute: string | undefined;
             if (text === undefined || isUri(text)) {
@@ -968,7 +966,7 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     private onDocumentClosed(doc: TextDocument): void {
-        if (this.document && this.fs.arePathsSame(doc.uri, this.document.uri)) {
+        if (this.document && urlPath.isEqual(doc.uri, this.document.uri)) {
             this.codeLensUpdatedEvent.dispose();
             this.closeDocumentDisposable?.dispose(); // NOSONAR
             this.updateRequiredDisposable?.dispose(); // NOSONAR

@@ -9,7 +9,6 @@ import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { Cancellation } from '../../platform/common/cancellation';
 import { Identifiers, PYTHON, Telemetry } from '../../platform/common/constants';
 import { traceError } from '../../platform/logging';
-import { IFileSystem } from '../../platform/common/platform/types.node';
 import { IDisposableRegistry } from '../../platform/common/types';
 
 import { sleep } from '../../platform/common/utils/async';
@@ -20,6 +19,8 @@ import { InteractiveWindowView } from '../../notebooks/constants';
 import { IJupyterVariables } from '../../kernels/variables/types';
 import { IInteractiveWindowProvider } from '../types';
 import { getInteractiveCellMetadata } from '../helpers';
+import * as urlPath from '../../platform/vscode-path/resources';
+
 @injectable()
 export class HoverProvider implements IExtensionSyncActivationService, vscode.HoverProvider {
     private runFiles = new Set<string>();
@@ -29,7 +30,6 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
     constructor(
         @inject(IJupyterVariables) @named(Identifiers.KERNEL_VARIABLES) private variableProvider: IJupyterVariables,
         @inject(IInteractiveWindowProvider) private interactiveProvider: IInteractiveWindowProvider,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
@@ -127,7 +127,7 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
     private getMatchingKernels(document: vscode.TextDocument): IKernel[] {
         // First see if we have an interactive window who's owner is this document
         let notebookUris = this.interactiveProvider.windows
-            .filter((w) => w.owner && this.fs.arePathsSame(w.owner, document.uri))
+            .filter((w) => w.owner && urlPath.isEqual(w.owner, document.uri))
             .map((w) => w.notebookUri?.toString());
         if (!Array.isArray(notebookUris) || notebookUris.length == 0) {
             return [];

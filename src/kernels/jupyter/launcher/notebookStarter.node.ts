@@ -9,13 +9,12 @@ import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import * as path from '../../../platform/vscode-path/path';
 import * as uuid from 'uuid/v4';
-import { CancellationError, CancellationToken, Disposable, Uri } from 'vscode';
-import { IDisposable } from '@fluentui/react';
+import { CancellationError, CancellationToken, Uri } from 'vscode';
 import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceInfo, traceError } from '../../../platform/logging';
 import { TemporaryDirectory } from '../../../platform/common/platform/types';
-import { IOutputChannel, Resource } from '../../../platform/common/types';
+import { IDisposable, IOutputChannel, Resource } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { JupyterConnectError } from '../../../platform/errors/jupyterConnectError';
@@ -30,6 +29,7 @@ import { ReportableAction } from '../../../platform/progress/types';
 import { IJupyterConnection } from '../../types';
 import { IJupyterSubCommandExecutionService } from '../types.node';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { INotebookStarter } from '../types';
 
 /**
  * Responsible for starting a notebook.
@@ -40,7 +40,7 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
  * @implements {Disposable}
  */
 @injectable()
-export class NotebookStarter implements Disposable {
+export class NotebookStarter implements INotebookStarter {
     private readonly disposables: IDisposable[] = [];
     private static _usedPorts = new Set<number>();
     public static get usedPorts() {

@@ -72,3 +72,8 @@ export interface IInteractiveWindow extends IInteractiveBase {
 export interface IInteractiveWindowLoadable extends IInteractiveWindow {
     changeMode(newMode: InteractiveWindowMode): void;
 }
+
+export const IExportCommands = Symbol('IExportCommands');
+export interface IExportCommands {
+    register(): void;
+}

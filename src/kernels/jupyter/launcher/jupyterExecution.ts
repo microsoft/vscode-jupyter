@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import * as path from '../../../platform/vscode-path/path';
+import * as urlPath from '../../../platform/vscode-path/resources';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../platform/common/application/types';
@@ -17,9 +17,7 @@ import { IServiceContainer } from '../../../platform/ioc/types';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, captureTelemetry } from '../../../telemetry';
 import { Telemetry, Identifiers } from '../../../webviews/webview-side/common/constants';
-import { expandWorkingDir, createRemoteConnectionInfo } from '../jupyterUtils.node';
-
-import { NotebookStarter } from './notebookStarter.node';
+import { expandWorkingDir, createRemoteConnectionInfo } from '../jupyterUtils';
 import { IJupyterConnection } from '../../types';
 import {
     IJupyterExecution,
@@ -27,7 +25,8 @@ import {
     IJupyterServerUri,
     INotebookServerOptions,
     INotebookServer,
-    JupyterServerUriHandle
+    JupyterServerUriHandle,
+    INotebookStarter
 } from '../types';
 import { IJupyterSubCommandExecutionService } from '../types.node';
 
@@ -45,7 +44,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         private readonly disposableRegistry: IDisposableRegistry,
         private readonly workspace: IWorkspaceService,
         private readonly configuration: IConfigurationService,
-        private readonly notebookStarter: NotebookStarter,
+        private readonly notebookStarter: INotebookStarter | undefined,
         private readonly serviceContainer: IServiceContainer
     ) {
         this.jupyterInterpreterService = serviceContainer.get<IJupyterSubCommandExecutionService>(
@@ -204,12 +203,14 @@ export class JupyterExecutionBase implements IJupyterExecution {
             // If that works, then attempt to start the server
             traceInfo(`Launching server`);
             const useDefaultConfig = !options || options.skipUsingDefaultConfig ? false : true;
+            const settings = this.configuration.getSettings(options.resource);
 
             // Expand the working directory. Create a dummy launching file in the root path (so we expand correctly)
             const workingDirectory = expandWorkingDir(
                 options.workingDir,
-                this.workspace.rootFolder ? path.join(this.workspace.rootFolder.fsPath, `${uuid()}.txt`) : undefined,
-                this.workspace
+                this.workspace.rootFolder ? urlPath.joinPath(this.workspace.rootFolder, `${uuid()}.txt`) : undefined,
+                this.workspace,
+                settings
             );
 
             const connection = await this.startNotebookServer(
@@ -245,8 +246,14 @@ export class JupyterExecutionBase implements IJupyterExecution {
         customCommandLine: string[],
         workingDirectory: Uri,
         cancelToken: CancellationToken
-    ): Promise<IJupyterConnection> {
-        return this.notebookStarter.start(resource, useDefaultConfig, customCommandLine, workingDirectory, cancelToken);
+    ): Promise<IJupyterConnection | undefined> {
+        return this.notebookStarter?.start(
+            resource,
+            useDefaultConfig,
+            customCommandLine,
+            workingDirectory,
+            cancelToken
+        );
     }
     private onSettingsChanged() {
         // Clear our usableJupyterInterpreter so that we recompute our values

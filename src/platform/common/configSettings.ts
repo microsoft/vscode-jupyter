@@ -12,7 +12,6 @@ import {
 import './extensions';
 import { LogLevel } from '../logging/types';
 import { IWorkspaceService } from './application/types';
-import { WorkspaceService } from './application/workspace';
 import { isTestExecution } from './constants';
 import {
     IExperiments,
@@ -26,7 +25,7 @@ import {
     WidgetCDNs
 } from './types';
 import { debounceSync } from './utils/decorators';
-import { ISystemVariablesConstructor } from './variables/types';
+import { ISystemVariables, ISystemVariablesConstructor } from './variables/types';
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 
@@ -110,19 +109,17 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     private _changeEmitter = new EventEmitter<void>();
     private _workspaceRoot: Resource;
     private _disposables: Disposable[] = [];
-    private readonly _workspace: IWorkspaceService;
 
     constructor(
         workspaceFolder: Resource,
         private _systemVariablesCtor: ISystemVariablesConstructor, // Note: All properties not set with '_' are destroyed on update.
         private _type: 'node' | 'web',
-        workspace?: IWorkspaceService
+        private readonly _workspace: IWorkspaceService
     ) {
-        this._workspace = workspace || new WorkspaceService();
         this._workspaceRoot = workspaceFolder;
         this.initialize();
         // Disable auto start in untrusted workspaces.
-        if (workspace && workspace.isTrusted === false) {
+        if (_workspace && _workspace.isTrusted === false) {
             this.disableJupyterAutoStart = true;
         }
     }
@@ -131,9 +128,8 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         resource: Uri | undefined,
         systemVariablesCtor: ISystemVariablesConstructor,
         type: 'node' | 'web',
-        workspace?: IWorkspaceService
+        workspace: IWorkspaceService
     ): JupyterSettings {
-        workspace = workspace || new WorkspaceService();
         const workspaceFolderUri = JupyterSettings.getSettingsUriAndTarget(resource, workspace).uri;
         const workspaceFolderKey = workspaceFolderUri ? workspaceFolderUri.path : '';
 
@@ -153,9 +149,8 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     // eslint-disable-next-line @typescript-eslint/member-delimiter-style
     public static getSettingsUriAndTarget(
         resource: Uri | undefined,
-        workspace?: IWorkspaceService
+        workspace: IWorkspaceService
     ): { uri: Uri | undefined; target: ConfigurationTarget } {
-        workspace = workspace || new WorkspaceService();
         const workspaceFolder = resource ? workspace.getWorkspaceFolder(resource) : undefined;
         let workspaceFolderUri: Uri | undefined = workspaceFolder ? workspaceFolder.uri : undefined;
 
@@ -182,6 +177,10 @@ export class JupyterSettings implements IWatchableJupyterSettings {
         this._disposables = [];
     }
 
+    public createSystemVariables(resource: Resource): ISystemVariables {
+        return new this._systemVariablesCtor(resource, this._workspaceRoot, this._workspace);
+    }
+
     public toJSON() {
         // Override this so settings can be turned into JSON without a circular problem
 
@@ -194,8 +193,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     }
     // eslint-disable-next-line complexity,
     protected update(jupyterConfig: WorkspaceConfiguration, pythonConfig: WorkspaceConfiguration | undefined) {
-        const workspaceRoot = this._workspaceRoot?.path;
-        const systemVariables = new this._systemVariablesCtor(undefined, workspaceRoot, this._workspace);
+        const systemVariables = this.createSystemVariables(undefined);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const loggingSettings = systemVariables.resolveAny(jupyterConfig.get<any>('logging'))!;

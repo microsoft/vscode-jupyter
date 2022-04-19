@@ -10,7 +10,7 @@ import * as protocol from 'vscode-languageserver-protocol';
 import { IExtensionSingleActivationService } from '../platform/activation/types';
 import { ICommandManager, IApplicationShell } from '../platform/common/application/types';
 import { PYTHON_LANGUAGE, NOTEBOOK_SELECTOR } from '../platform/common/constants';
-import { ContextKey } from '../platform/common/contextKey.node';
+import { ContextKey } from '../platform/common/contextKey';
 import { traceInfo } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types.node';
 import { IDisposableRegistry, IConfigurationService } from '../platform/common/types';

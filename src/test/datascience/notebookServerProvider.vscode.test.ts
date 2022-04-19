@@ -16,8 +16,8 @@ import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IConfigurationService } from '../../platform/common/types';
 import { JupyterSettings } from '../../platform/common/configSettings';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { HostJupyterExecution } from '../../kernels/jupyter/launcher/liveshare/hostJupyterExecution.node';
-import { NotebookServerProvider } from '../../kernels/jupyter/launcher/notebookServerProvider.node';
+import { HostJupyterExecution } from '../../kernels/jupyter/launcher/liveshare/hostJupyterExecution';
+import { NotebookServerProvider } from '../../kernels/jupyter/launcher/notebookServerProvider';
 import { IJupyterExecution, IJupyterServerProvider } from '../../kernels/jupyter/types';
 import { DisplayOptions } from '../../kernels/displayOptions';
 

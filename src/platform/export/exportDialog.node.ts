@@ -1,7 +1,6 @@
 import { inject, injectable } from 'inversify';
 import * as path from '../../platform/vscode-path/path';
 import { SaveDialogOptions, Uri } from 'vscode';
-import { computeWorkingDirectory } from '../../kernels/jupyter/jupyterUtils.node';
 import { IApplicationShell, IWorkspaceService } from '../common/application/types';
 import * as localize from '../common/utils/localize';
 import { ExportFormat, IExportDialog } from './types';
@@ -74,7 +73,7 @@ export class ExportDialog implements IExportDialog {
             source.scheme === 'vscode-interactive'
         ) {
             // Just combine the working directory with the file
-            return Uri.file(path.join(await computeWorkingDirectory(source, this.workspaceService), targetFileName));
+            return Uri.file(path.join(await this.workspaceService.computeWorkingDirectory(source), targetFileName));
         }
 
         // Otherwise split off the end of the path and combine it with the target file name

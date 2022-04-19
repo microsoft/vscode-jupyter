@@ -10,9 +10,8 @@ import {
     IDocumentManager,
     IWorkspaceService
 } from '../../platform/common/application/types';
-import { ContextKey } from '../../platform/common/contextKey.node';
+import { ContextKey } from '../../platform/common/contextKey';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import { IFileSystem } from '../../platform/common/platform/types.node';
 
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
@@ -29,6 +28,7 @@ import {
 } from '../../platform/common/constants';
 import { IDebugLocationTracker } from '../../platform/debugger/types';
 import { IDataScienceCodeLensProvider, ICodeWatcher } from './types';
+import * as urlPath from '../../platform/vscode-path/resources';
 
 @injectable()
 export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider, IDisposable {
@@ -44,7 +44,6 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IDebugService) private debugService: IDebugService,
-        @inject(IFileSystem) private fs: IFileSystem,
         @inject(IWorkspaceService) workspace: IWorkspaceService
     ) {
         disposableRegistry.push(this);
@@ -133,7 +132,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
             const debugLocation = this.debugLocationTracker.getLocation(this.debugService.activeDebugSession);
 
             // Debug locations only work on local paths, so check against fsPath here.
-            if (debugLocation && this.fs.areLocalPathsSame(debugLocation.fileName, document.uri.fsPath)) {
+            if (debugLocation && urlPath.isEqual(vscode.Uri.file(debugLocation.fileName), document.uri, true)) {
                 // We are in the given debug file, so only return the code lens that contains the given line
                 const activeLenses = lenses.filter((lens) => {
                     // -1 for difference between file system one based and debugger zero based

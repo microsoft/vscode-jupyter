@@ -14,7 +14,7 @@ import * as uuid from 'uuid/v4';
 import { CancellationTokenSource, ConfigurationChangeEvent, Disposable, EventEmitter, Uri } from 'vscode';
 import { ApplicationShell } from '../../platform/common/application/applicationShell';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
-import { WorkspaceService } from '../../platform/common/application/workspace';
+import { WorkspaceService } from '../../platform/common/application/workspace.node';
 import { ConfigurationService } from '../../platform/common/configuration/service.node';
 import { PersistentState, PersistentStateFactory } from '../../platform/common/persistentState';
 import { FileSystem } from '../../platform/common/platform/fileSystem.node';
@@ -44,7 +44,7 @@ import { JupyterInterpreterDependencyService } from '../../kernels/jupyter/inter
 import { JupyterInterpreterOldCacheStateStore } from '../../kernels/jupyter/interpreter/jupyterInterpreterOldCacheStateStore.node';
 import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
 import { JupyterInterpreterSubCommandExecutionService } from '../../kernels/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService.node';
-import { HostJupyterExecution } from '../../kernels/jupyter/launcher/liveshare/hostJupyterExecution.node';
+import { HostJupyterExecution } from '../../kernels/jupyter/launcher/liveshare/hostJupyterExecution';
 import { NotebookStarter } from '../../kernels/jupyter/launcher/notebookStarter.node';
 import { JupyterPaths } from '../../kernels/raw/finder/jupyterPaths.node';
 import { LocalKernelFinder } from '../../kernels/raw/finder/localKernelFinder.node';
@@ -96,7 +96,7 @@ suite('Jupyter Execution', async () => {
     const disposableRegistry = new DisposableRegistry();
     const dummyEvent = new EventEmitter<void>();
     const configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
-    const pythonSettings = new MockJupyterSettings(undefined, SystemVariables, 'node');
+    const pythonSettings = new MockJupyterSettings(undefined, SystemVariables, 'node', instance(workspaceService));
     const jupyterOnPath = getOSType() === OSType.Windows ? '/foo/bar/jupyter.exe' : '/foo/bar/jupyter';
     let ipykernelInstallCount = 0;
     let notebookStarter: NotebookStarter;
@@ -1000,7 +1000,6 @@ suite('Jupyter Execution', async () => {
                 instance(interpreterService),
                 disposableRegistry as unknown as any[],
                 disposableRegistry,
-                instance(fileSystem),
                 instance(workspaceService),
                 instance(configService),
                 notebookStarter,

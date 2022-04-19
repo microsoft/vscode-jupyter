@@ -18,6 +18,7 @@ import { RegExpValues } from '../../../webviews/webview-side/common/constants';
 import { JupyterConnectError } from '../../../platform/errors/jupyterConnectError';
 import { IJupyterConnection } from '../../types';
 import { JupyterServerInfo } from '../types';
+import { getJupyterConnectionDisplayName } from './helpers';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any
 const namedRegexp = require('named-js-regexp');
@@ -247,9 +248,4 @@ class JupyterConnection implements IJupyterConnection {
             this.disposable.dispose();
         }
     }
-}
-
-export function getJupyterConnectionDisplayName(token: string, baseUrl: string): string {
-    const tokenString = token.length > 0 ? `?token=${token}` : '';
-    return `${baseUrl}${tokenString}`;
 }
