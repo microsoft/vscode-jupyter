@@ -2,7 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import { AppenderData, ITelemetryAppender } from './baseTelemetryReporter';
+import { AppenderData, ITelemetryAppender } from './baseCiTelemetryReporter';
 
 export interface BaseTelemetryClient {
     logEvent(eventName: string, data?: AppenderData): void;
@@ -10,7 +10,7 @@ export interface BaseTelemetryClient {
     flush(): void | Promise<void>;
 }
 
-export class BaseTelemetryAppender implements ITelemetryAppender {
+export class TelemetryAppender implements ITelemetryAppender {
     private _telemetryClient: BaseTelemetryClient | undefined;
     private _clientInitialization: Promise<void> | undefined;
 
@@ -36,8 +36,7 @@ export class BaseTelemetryAppender implements ITelemetryAppender {
     logEvent(eventName: string, data?: AppenderData): void {
         if (this._telemetryClient) {
             this._telemetryClient.logEvent(eventName, data);
-        }
-        else{
+        } else {
             this._eventQueue.push({ eventName, data });
         }
     }
@@ -50,8 +49,7 @@ export class BaseTelemetryAppender implements ITelemetryAppender {
     logException(exception: Error, data?: AppenderData): void {
         if (this._telemetryClient) {
             this._telemetryClient.logException(exception, data);
-        }
-        else{
+        } else {
             this._exceptionQueue.push({ exception, data });
         }
     }
