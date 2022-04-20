@@ -53,11 +53,11 @@ suite('Telemetry', () => {
         }
     }
 
-    setup(() => {
+    setup(async () => {
         workspaceService = mock(WorkspaceService);
         setTestExecution(false);
         setUnitTestExecution(false);
-        clearTelemetryReporter();
+        await clearTelemetryReporter();
         Reporter.clear();
     });
     teardown(() => {

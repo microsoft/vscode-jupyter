@@ -89,7 +89,7 @@ export function _resetSharedProperties(): void {
 
 let telemetryReporter: TelemetryReporter | undefined;
 function getTelemetryReporter() {
-    if (!isTestExecution() && telemetryReporter) {
+    if (telemetryReporter) {
         return telemetryReporter;
     }
     const extensionId = JVSC_EXTENSION_ID;
@@ -103,7 +103,8 @@ function getTelemetryReporter() {
     return (telemetryReporter = new reporter(extensionId, extensionVersion, AppinsightsKey, true));
 }
 
-export function clearTelemetryReporter() {
+export async function clearTelemetryReporter () {
+    await telemetryReporter?.dispose();
     telemetryReporter = undefined;
 }
 

@@ -43,8 +43,8 @@ suite('Interactive Shift Enter Banner', () => {
         }
     }
 
-    setup(() => {
-        clearTelemetryReporter();
+    setup(async () => {
+        await clearTelemetryReporter();
         setUnitTestExecution(false);
         setTestExecution(false);
         appShell = typemoq.Mock.ofType<IApplicationShell>();
@@ -53,14 +53,14 @@ suite('Interactive Shift Enter Banner', () => {
         rewiremock('@vscode/extension-telemetry').with({ default: Reporter });
     });
 
-    teardown(() => {
+    teardown(async () => {
         setUnitTestExecution(oldValueOfVSC_JUPYTER_UNIT_TEST);
         setTestExecution(oldValueOfVSC_JUPYTER_CI_TEST);
         Reporter.properties = [];
         Reporter.eventNames = [];
         Reporter.measures = [];
         rewiremock.disable();
-        clearTelemetryReporter();
+        await clearTelemetryReporter();
     });
 
     test('Shift Enter Banner with Jupyter available', async () => {
