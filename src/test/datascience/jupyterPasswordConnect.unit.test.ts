@@ -15,12 +15,14 @@ import { MockInputBox } from './mockInputBox';
 import { MockQuickPick } from './mockQuickPick';
 import { JupyterPasswordConnect } from '../../kernels/jupyter/launcher/jupyterPasswordConnect';
 import { JupyterRequestCreator } from '../../kernels/jupyter/session/jupyterRequestCreator.node';
+import { IJupyterRequestCreator } from '../../kernels/jupyter/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, ,  */
 suite('JupyterPasswordConnect', () => {
     let jupyterPasswordConnect: JupyterPasswordConnect;
     let appShell: ApplicationShell;
     let configService: ConfigurationService;
+    let requestCreator: IJupyterRequestCreator;
 
     const xsrfValue: string = '12341234';
     const sessionName: string = 'sessionName';
@@ -32,7 +34,7 @@ suite('JupyterPasswordConnect', () => {
         const multiStepFactory = new MultiStepInputFactory(instance(appShell));
         const mockDisposableRegistry = mock(AsyncDisposableRegistry);
         configService = mock(ConfigurationService);
-        const requestCreator = new JupyterRequestCreator();
+        requestCreator = mock(JupyterRequestCreator);
 
         jupyterPasswordConnect = new JupyterPasswordConnect(
             instance(appShell),
@@ -40,7 +42,7 @@ suite('JupyterPasswordConnect', () => {
             instance(mockDisposableRegistry),
             instance(configService),
             undefined,
-            requestCreator
+            instance(requestCreator)
         );
     });
 
@@ -145,6 +147,7 @@ suite('JupyterPasswordConnect', () => {
                 )
             )
             .returns(() => Promise.resolve(mockSessionResponse.object));
+        when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo('http://TESTNAME:8888/');
         assert(result, 'Failed to get password');
@@ -193,6 +196,7 @@ suite('JupyterPasswordConnect', () => {
                 )
             )
             .returns(() => Promise.resolve(mockSessionResponse.object));
+        when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo('https://TESTNAME:8888/');
         assert(result, 'Failed to get password');
@@ -211,6 +215,7 @@ suite('JupyterPasswordConnect', () => {
 
     test('getPasswordConnectionInfo failure', async () => {
         const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(false, false);
+        when(requestCreator.getFetchMethod()).thenReturn(fetchMock.object as any);
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo('http://TESTNAME:8888/');
         assert(!result);
@@ -282,7 +287,8 @@ suite('JupyterPasswordConnect', () => {
         };
     }
     test('getPasswordConnectionInfo jupyter hub', async () => {
-        createJupyterHubSetup();
+        const fetch = createJupyterHubSetup();
+        when(requestCreator.getFetchMethod()).thenReturn(fetch as any);
 
         const result = await jupyterPasswordConnect.getPasswordConnectionInfo('http://TESTNAME:8888/');
         assert.ok(result, 'No hub connection info');

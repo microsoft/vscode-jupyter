@@ -2133,7 +2133,7 @@
         "download-api": "vscode-dts dev",
         "postdownload-api": "vscode-dts main",
         "generateTelemetry": "gulp generateTelemetryMd",
-        "open-in-browser": "vscode-test-web --extensionDevelopmentPath=. .",
+        "open-in-browser": "vscode-test-web --extensionDevelopmentPath=. ./src/test/datascience",
         "testWebExtension": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. --extensionTestsPath=out/web/test/suite/index.web.bundle.js"
     },
     "dependencies": {

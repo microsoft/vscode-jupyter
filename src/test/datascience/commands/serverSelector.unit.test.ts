@@ -34,7 +34,7 @@ suite('DataScience - Server Selector Command', () => {
     test('Register Command', () => {
         serverSelectorCommand.register();
 
-        verify(commandManager.registerCommand(Commands.SelectJupyterURI, anything(), instance(serverSelector))).once();
+        verify(commandManager.registerCommand(Commands.SelectJupyterURI, anything(), serverSelectorCommand)).once();
     });
 
     test('Command Handler should invoke ServerSelector', () => {
