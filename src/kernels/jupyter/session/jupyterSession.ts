@@ -17,9 +17,8 @@ import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { BaseJupyterSession, JupyterSessionStartError } from '../../common/baseJupyterSession';
 import { getNameOfKernelConnection } from '../../helpers';
 import { KernelConnectionMetadata, isLocalConnection, IJupyterConnection, ISessionWithSocket } from '../../types';
-import { JupyterWebSockets } from './jupyterWebSocket';
 import { DisplayOptions } from '../../displayOptions';
-import { IJupyterBackingFileCreator, IJupyterKernelService } from '../types';
+import { IJupyterBackingFileCreator, IJupyterKernelService, IJupyterRequestCreator } from '../types';
 import { Uri } from 'vscode';
 
 // function is
@@ -38,7 +37,8 @@ export class JupyterSession extends BaseJupyterSession {
         private readonly idleTimeout: number,
         private readonly kernelService: IJupyterKernelService | undefined,
         interruptTimeout: number,
-        private readonly backingFileCreator: IJupyterBackingFileCreator
+        private readonly backingFileCreator: IJupyterBackingFileCreator,
+        private readonly requestCreator: IJupyterRequestCreator
     ) {
         super(
             connInfo.localLaunch ? 'localJupyter' : 'remoteJupyter',
@@ -95,7 +95,7 @@ export class JupyterSession extends BaseJupyterSession {
                 }) as ISessionWithSocket;
                 newSession.kernelConnectionMetadata = this.kernelConnectionMetadata;
                 newSession.kernelSocketInformation = {
-                    socket: JupyterWebSockets.get(this.kernelConnectionMetadata.id),
+                    socket: this.requestCreator.getWebsocket(this.kernelConnectionMetadata.id),
                     options: {
                         clientId: '',
                         id: this.kernelConnectionMetadata.id,
@@ -233,6 +233,8 @@ export class JupyterSession extends BaseJupyterSession {
             type: 'notebook'
         };
 
+        const requestCreator = this.requestCreator;
+
         return Cancellation.race(
             () =>
                 this.sessionManager!.startNew(sessionOptions, {
@@ -254,7 +256,7 @@ export class JupyterSession extends BaseJupyterSession {
                                 get socket() {
                                     // When we restart kernels, a new websocket is created and we need to get the new one.
                                     // & the id in the dictionary is the kernel.id.
-                                    return JupyterWebSockets.get(session.kernel!.id);
+                                    return requestCreator.getWebsocket(session.kernel!.id);
                                 },
                                 options: {
                                     clientId: session.kernel.clientId,

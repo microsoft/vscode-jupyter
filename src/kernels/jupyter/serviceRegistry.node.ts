@@ -38,6 +38,7 @@ import { JupyterServerUriStorage } from './launcher/serverUriStorage';
 import { RemoteKernelFinder } from './remoteKernelFinder';
 import { JupyterServerSelector } from './serverSelector';
 import { BackingFileCreator } from './session/backingFileCreator.node';
+import { JupyterRequestCreator } from './session/jupyterRequestCreator.node';
 import { JupyterSessionManagerFactory } from './session/jupyterSessionManagerFactory';
 import {
     INotebookExporter,
@@ -55,7 +56,8 @@ import {
     IJupyterServerUriStorage,
     IJupyterBackingFileCreator,
     IJupyterKernelService,
-    INotebookStarter
+    INotebookStarter,
+    IJupyterRequestCreator
 } from './types';
 import { IJupyterCommandFactory, IJupyterSubCommandExecutionService } from './types.node';
 
@@ -136,4 +138,5 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         JupyterServerSelectorCommand,
         JupyterServerSelectorCommand
     );
+    serviceManager.addSingleton<IJupyterRequestCreator>(IJupyterRequestCreator, JupyterRequestCreator);
 }

@@ -20,6 +20,7 @@ import { JupyterServerUriStorage } from './launcher/serverUriStorage';
 import { RemoteKernelFinder } from './remoteKernelFinder';
 import { JupyterServerSelector } from './serverSelector';
 import { BackingFileCreator } from './session/backingFileCreator.web';
+import { JupyterRequestCreator } from './session/jupyterRequestCreator.web';
 import { JupyterSessionManagerFactory } from './session/jupyterSessionManagerFactory';
 import {
     IJupyterPasswordConnect,
@@ -31,7 +32,8 @@ import {
     IJupyterNotebookProvider,
     IJupyterServerProvider,
     IJupyterExecution,
-    INotebookServer
+    INotebookServer,
+    IJupyterRequestCreator
 } from './types';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
@@ -64,4 +66,5 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         JupyterServerSelectorCommand
     );
     serviceManager.addSingleton<IJupyterServerProvider>(IJupyterServerProvider, NotebookServerProvider);
+    serviceManager.addSingleton<IJupyterRequestCreator>(IJupyterRequestCreator, JupyterRequestCreator);
 }

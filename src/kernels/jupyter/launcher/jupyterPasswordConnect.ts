@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable, optional } from 'inversify';
-import * as nodeFetch from 'node-fetch';
 import { ConfigurationTarget } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { IAsyncDisposableRegistry, IConfigurationService } from '../../../platform/common/types';
@@ -10,14 +9,16 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { IMultiStepInputFactory, IMultiStepInput } from '../../../platform/common/utils/multiStepInput';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
-import { IJupyterPasswordConnect, IJupyterPasswordConnectInfo, IJupyterRequestAgentCreator } from '../types';
+import {
+    IJupyterPasswordConnect,
+    IJupyterPasswordConnectInfo,
+    IJupyterRequestAgentCreator,
+    IJupyterRequestCreator
+} from '../types';
 
 @injectable()
 export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     private savedConnectInfo = new Map<string, Promise<IJupyterPasswordConnectInfo | undefined>>();
-    private fetchFunction: (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => Promise<nodeFetch.Response> =
-        nodeFetch.default;
-
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
@@ -25,21 +26,14 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IJupyterRequestAgentCreator)
         @optional()
-        private readonly agentCreator: IJupyterRequestAgentCreator | undefined
+        private readonly agentCreator: IJupyterRequestAgentCreator | undefined,
+        @inject(IJupyterRequestCreator) private readonly requestCreator: IJupyterRequestCreator
     ) {}
 
     @captureTelemetry(Telemetry.GetPasswordAttempt)
-    public getPasswordConnectionInfo(
-        url: string,
-        fetchFunction?: (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => Promise<nodeFetch.Response>
-    ): Promise<IJupyterPasswordConnectInfo | undefined> {
+    public getPasswordConnectionInfo(url: string): Promise<IJupyterPasswordConnectInfo | undefined> {
         if (!url || url.length < 1) {
             return Promise.resolve(undefined);
-        }
-
-        // Update our fetch function if necessary
-        if (fetchFunction) {
-            this.fetchFunction = fetchFunction;
         }
 
         // Add on a trailing slash to our URL if it's not there already
@@ -262,14 +256,11 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     }
 
     // For HTTPS connections respect our allowUnauthorized setting by adding in an agent to enable that on the request
-    private addAllowUnauthorized(
-        url: string,
-        allowUnauthorized: boolean,
-        options: nodeFetch.RequestInit
-    ): nodeFetch.RequestInit {
+    private addAllowUnauthorized(url: string, allowUnauthorized: boolean, options: RequestInit): RequestInit {
         if (url.startsWith('https') && allowUnauthorized && this.agentCreator) {
             const requestAgent = this.agentCreator.createHttpRequestAgent();
-            return { ...options, agent: requestAgent };
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return { ...options, agent: requestAgent } as any;
         }
 
         return options;
@@ -366,12 +357,12 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         return response.status !== 200;
     }
 
-    private async makeRequest(url: string, options: nodeFetch.RequestInit): Promise<nodeFetch.Response> {
+    private async makeRequest(url: string, options: RequestInit): Promise<Response> {
         const allowUnauthorized = this.configService.getSettings(undefined).allowUnauthorizedRemoteConnection;
 
         // Try once and see if it fails with unauthorized.
         try {
-            return await this.fetchFunction(
+            return await this.requestCreator.getFetchMethod()(
                 url,
                 this.addAllowUnauthorized(url, allowUnauthorized ? true : false, options)
             );
@@ -393,7 +384,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
                         undefined,
                         ConfigurationTarget.Workspace
                     );
-                    return this.fetchFunction(url, this.addAllowUnauthorized(url, true, options));
+                    return this.requestCreator.getFetchMethod()(url, this.addAllowUnauthorized(url, true, options));
                 } else if (value === closeOption) {
                     sendTelemetryEvent(Telemetry.SelfCertsMessageClose);
                 }
@@ -463,13 +454,16 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         return { sessionCookieName, sessionCookieValue };
     }
 
-    private getCookies(response: nodeFetch.Response): Map<string, string> {
+    private getCookies(response: Response): Map<string, string> {
         const cookieList: Map<string, string> = new Map<string, string>();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const raw = (response.headers as any).raw ? (response.headers as any).raw() : response.headers;
 
-        const cookies = response.headers.raw()['set-cookie'];
+        const cookies = raw['set-cookie'];
 
         if (cookies) {
-            cookies.forEach((value) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            cookies.forEach((value: any) => {
                 const cookieKey = value.substring(0, value.indexOf('='));
                 const cookieVal = value.substring(value.indexOf('=') + 1);
                 cookieList.set(cookieKey, cookieVal);

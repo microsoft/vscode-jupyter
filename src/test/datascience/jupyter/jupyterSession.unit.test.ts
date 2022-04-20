@@ -35,6 +35,7 @@ import { DisplayOptions } from '../../../kernels/displayOptions';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { BackingFileCreator } from '../../../kernels/jupyter/session/backingFileCreator.node';
 import * as path from '../../../platform/vscode-path/path';
+import { JupyterRequestCreator } from '../../../kernels/jupyter/session/jupyterRequestCreator.node';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - JupyterSession', () => {
@@ -131,6 +132,7 @@ suite('DataScience - JupyterSession', () => {
         const fs = mock<IFileSystem>();
         const tmpFile = path.join('tmp', 'tempfile.json');
         const backingFileCreator = new BackingFileCreator();
+        const requestCreator = new JupyterRequestCreator();
         when(fs.createTemporaryLocalFile(anything())).thenResolve({ dispose: noop, filePath: tmpFile });
         when(fs.deleteLocalFile(anything())).thenResolve();
         when(fs.ensureLocalDir(anything())).thenResolve();
@@ -152,7 +154,8 @@ suite('DataScience - JupyterSession', () => {
             1,
             instance(kernelService),
             1,
-            backingFileCreator
+            backingFileCreator,
+            requestCreator
         );
     }
     setup(() => createJupyterSession());

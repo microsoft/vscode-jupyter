@@ -20,7 +20,8 @@ import {
     IJupyterSessionManager,
     IJupyterBackingFileCreator,
     IJupyterKernelService,
-    IJupyterRequestAgentCreator
+    IJupyterRequestAgentCreator,
+    IJupyterRequestCreator
 } from '../types';
 
 @injectable()
@@ -38,7 +39,8 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
         @inject(IJupyterBackingFileCreator) private readonly backingFileCreator: IJupyterBackingFileCreator,
         @inject(IJupyterRequestAgentCreator)
         @optional()
-        private readonly requestAgentCreator: IJupyterRequestAgentCreator | undefined
+        private readonly requestAgentCreator: IJupyterRequestAgentCreator | undefined,
+        @inject(IJupyterRequestCreator) private readonly requestCreator: IJupyterRequestCreator
     ) {}
 
     /**
@@ -57,7 +59,8 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
             this.stateFactory,
             this.kernelService,
             this.backingFileCreator,
-            this.requestAgentCreator
+            this.requestAgentCreator,
+            this.requestCreator
         );
         await result.initialize(connInfo);
         this.disposableRegistry.push(

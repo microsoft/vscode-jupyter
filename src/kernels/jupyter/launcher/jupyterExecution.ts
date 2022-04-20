@@ -13,7 +13,6 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
 import { JupyterWaitForIdleError } from '../../../platform/errors/jupyterWaitForIdleError';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { IServiceContainer } from '../../../platform/ioc/types';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, captureTelemetry } from '../../../telemetry';
 import { Telemetry, Identifiers } from '../../../webviews/webview-side/common/constants';
@@ -29,14 +28,13 @@ import {
     INotebookStarter
 } from '../types';
 import { IJupyterSubCommandExecutionService } from '../types.node';
+import { IServiceContainer } from '../../../platform/ioc/types';
 
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
 
 export class JupyterExecutionBase implements IJupyterExecution {
     private usablePythonInterpreter: PythonEnvironment | undefined;
     private disposed: boolean = false;
-    private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService;
-    private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration;
     private uriToJupyterServerUri = new Map<string, IJupyterServerUri>();
     private pendingTimeouts: (NodeJS.Timeout | number)[] = [];
     constructor(
@@ -45,14 +43,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
         private readonly workspace: IWorkspaceService,
         private readonly configuration: IConfigurationService,
         private readonly notebookStarter: INotebookStarter | undefined,
+        private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService | undefined,
+        private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration,
         private readonly serviceContainer: IServiceContainer
     ) {
-        this.jupyterInterpreterService = serviceContainer.get<IJupyterSubCommandExecutionService>(
-            IJupyterSubCommandExecutionService
-        );
-        this.jupyterPickerRegistration = serviceContainer.get<IJupyterUriProviderRegistration>(
-            IJupyterUriProviderRegistration
-        );
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
         this.disposableRegistry.push(this);
 
@@ -78,23 +72,25 @@ export class JupyterExecutionBase implements IJupyterExecution {
     }
 
     public async refreshCommands(): Promise<void> {
-        await this.jupyterInterpreterService.refreshCommands();
+        await this.jupyterInterpreterService?.refreshCommands();
     }
 
-    public isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean> {
+    public async isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean> {
         // See if we can find the command notebook
-        return this.jupyterInterpreterService.isNotebookSupported(cancelToken);
+        return this.jupyterInterpreterService ? this.jupyterInterpreterService.isNotebookSupported(cancelToken) : false;
     }
 
     public async getNotebookError(): Promise<string> {
-        return this.jupyterInterpreterService.getReasonForJupyterNotebookNotBeingSupported();
+        return this.jupyterInterpreterService
+            ? this.jupyterInterpreterService.getReasonForJupyterNotebookNotBeingSupported()
+            : DataScience.webNotSupported();
     }
 
     public async getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined> {
         // Only try to compute this once.
-        if (!this.usablePythonInterpreter && !this.disposed) {
+        if (!this.usablePythonInterpreter && !this.disposed && this.jupyterInterpreterService) {
             this.usablePythonInterpreter = await Cancellation.race(
-                () => this.jupyterInterpreterService.getSelectedInterpreter(cancelToken),
+                () => this.jupyterInterpreterService!.getSelectedInterpreter(cancelToken),
                 cancelToken
             );
         }

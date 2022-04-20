@@ -19,7 +19,14 @@ import {
 import { testOnlyMethod } from '../../../../platform/common/utils/decorators';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts';
 import { IServiceContainer } from '../../../../platform/ioc/types';
-import { IJupyterExecution, INotebookServerOptions, INotebookServer, INotebookStarter } from '../../types';
+import {
+    IJupyterExecution,
+    INotebookServerOptions,
+    INotebookServer,
+    INotebookStarter,
+    IJupyterUriProviderRegistration
+} from '../../types';
+import { IJupyterSubCommandExecutionService } from '../../types.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -35,9 +42,22 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(INotebookStarter) @optional() notebookStarter: INotebookStarter | undefined,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
+        @inject(IJupyterSubCommandExecutionService)
+        @optional()
+        jupyterInterpreterService: IJupyterSubCommandExecutionService | undefined,
+        @inject(IJupyterUriProviderRegistration) jupyterPickerRegistration: IJupyterUriProviderRegistration
     ) {
-        super(interpreterService, disposableRegistry, workspace, configService, notebookStarter, serviceContainer);
+        super(
+            interpreterService,
+            disposableRegistry,
+            workspace,
+            configService,
+            notebookStarter,
+            jupyterInterpreterService,
+            jupyterPickerRegistration,
+            serviceContainer
+        );
         this.serverCache = new ServerCache(workspace);
         asyncRegistry.push(this);
     }

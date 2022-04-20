@@ -6,10 +6,10 @@ import { IKernelSocket } from '../types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type IWebSocketLike = {
-    onopen: (event: { target: any }) => void;
-    onerror: (event: { error: any; message: string; type: string; target: any }) => void;
-    onclose: (event: { wasClean: boolean; code: number; reason: string; target: any }) => void;
-    onmessage: (event: { data: WebSocketWS.Data; type: string; target: any }) => void;
+    onopen: ((this: any, event: any) => void) | null;
+    onerror: ((this: any, event: any) => void) | null;
+    onclose: ((this: any, event: any) => void) | null;
+    onmessage: ((this: any, event: any) => void) | null;
     emit(event: string | symbol, ...args: any[]): boolean;
     send(data: any, a2: any): void;
     close(): void;

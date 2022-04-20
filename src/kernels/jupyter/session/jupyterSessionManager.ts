@@ -11,7 +11,6 @@ import type {
     SessionManager
 } from '@jupyterlab/services';
 import { JSONObject } from '@lumino/coreutils';
-import * as nodeFetch from 'node-fetch';
 import { CancellationToken, EventEmitter, Uri } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { traceInfo, traceError } from '../../../platform/logging';
@@ -28,9 +27,7 @@ import { SessionDisposedError } from '../../../platform/errors/sessionDisposedEr
 import { createInterpreterKernelSpec } from '../../helpers';
 import { IJupyterConnection, IJupyterKernelSpec, KernelConnectionMetadata } from '../../types';
 import { JupyterKernelSpec } from '../jupyterKernelSpec';
-import { createAuthorizingRequest } from './jupyterRequest';
 import { JupyterSession } from './jupyterSession';
-import { createJupyterWebSocket } from './jupyterWebSocket';
 import { sleep } from '../../../platform/common/utils/async';
 import {
     IJupyterSessionManager,
@@ -38,7 +35,8 @@ import {
     IJupyterKernel,
     IJupyterKernelService,
     IJupyterBackingFileCreator,
-    IJupyterRequestAgentCreator
+    IJupyterRequestAgentCreator,
+    IJupyterRequestCreator
 } from '../types';
 
 // Key for our insecure connection global state
@@ -75,7 +73,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         private readonly stateFactory: IPersistentStateFactory,
         private readonly kernelService: IJupyterKernelService | undefined,
         private readonly backingFileCreator: IJupyterBackingFileCreator,
-        private readonly requestAgentCreator: IJupyterRequestAgentCreator | undefined
+        private readonly requestAgentCreator: IJupyterRequestAgentCreator | undefined,
+        private readonly requestCreator: IJupyterRequestCreator
     ) {
         this.userAllowsInsecureConnections = this.stateFactory.createGlobalPersistentState<boolean>(
             GlobalStateUserAllowsInsecureConnections,
@@ -201,7 +200,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             this.configService.getSettings(resource).jupyterLaunchTimeout,
             this.kernelService,
             this.configService.getSettings(resource).jupyterInterruptTimeout,
-            this.backingFileCreator
+            this.backingFileCreator,
+            this.requestCreator
         );
         try {
             await session.connect({ token: cancelToken, ui });
@@ -272,14 +272,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let requestInit: any = { cache: 'no-store', credentials: 'same-origin' };
         let cookieString;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let requestCtor: any = nodeFetch.Request;
-
-        // If authorization header is provided, then we need to prevent jupyterlab services from
-        // writing the authorization header.
-        if (connInfo.getAuthHeader) {
-            requestCtor = createAuthorizingRequest(connInfo.getAuthHeader);
-        }
 
         // If no token is specified prompt for a password
         if ((connInfo.token === '' || connInfo.token === 'null') && !connInfo.getAuthHeader) {
@@ -324,20 +316,15 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         serverSettings = {
             ...serverSettings,
             init: requestInit,
-            WebSocket: createJupyterWebSocket(
+            WebSocket: this.requestCreator.getWebsocketCtor(
                 cookieString,
                 allowUnauthorized,
                 connInfo.getAuthHeader
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ) as any,
-            // Redefine fetch to our node-modules so it picks up the correct version.
-            // Typecasting as any works fine as long as all 3 of these are the same version
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            fetch: nodeFetch.default as any,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            Request: requestCtor,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            Headers: nodeFetch.Headers as any
+            fetch: this.requestCreator.getFetchMethod(),
+            Request: this.requestCreator.getRequestCtor(connInfo.getAuthHeader),
+            Headers: this.requestCreator.getHeadersCtor()
         };
 
         traceInfo(`Creating server with settings : ${JSON.stringify(serverSettings)}`);

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
@@ -18,8 +19,10 @@ import {
     NotebookCreationOptions,
     IJupyterSession,
     IJupyterKernelSpec,
-    GetServerOptions
+    GetServerOptions,
+    IKernelSocket
 } from '../types';
+import { ClassType } from '../../platform/ioc/types';
 
 export type JupyterServerInfo = {
     base_url: string;
@@ -246,6 +249,21 @@ export const IJupyterRequestAgentCreator = Symbol('IJupyterRequestAgentCreator')
 export interface IJupyterRequestAgentCreator {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     createHttpRequestAgent(): any;
+}
+
+export const IJupyterRequestCreator = Symbol('IJupyterRequestCreator');
+export interface IJupyterRequestCreator {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    getRequestCtor(getAuthHeader?: () => any): ClassType<Request>;
+    getFetchMethod(): (input: RequestInfo, init?: RequestInit) => Promise<Response>;
+    getHeadersCtor(): ClassType<Headers>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    getWebsocketCtor(
+        cookieString?: string,
+        allowUnauthorized?: boolean,
+        getAuthHeaders?: () => any
+    ): ClassType<WebSocket>;
+    getWebsocket(id: string): IKernelSocket | undefined;
 }
 
 export const INotebookStarter = Symbol('INotebookStarter');

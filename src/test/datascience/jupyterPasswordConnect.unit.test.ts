@@ -14,6 +14,7 @@ import { MultiStepInputFactory } from '../../platform/common/utils/multiStepInpu
 import { MockInputBox } from './mockInputBox';
 import { MockQuickPick } from './mockQuickPick';
 import { JupyterPasswordConnect } from '../../kernels/jupyter/launcher/jupyterPasswordConnect';
+import { JupyterRequestCreator } from '../../kernels/jupyter/session/jupyterRequestCreator.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, ,  */
 suite('JupyterPasswordConnect', () => {
@@ -31,13 +32,15 @@ suite('JupyterPasswordConnect', () => {
         const multiStepFactory = new MultiStepInputFactory(instance(appShell));
         const mockDisposableRegistry = mock(AsyncDisposableRegistry);
         configService = mock(ConfigurationService);
+        const requestCreator = new JupyterRequestCreator();
 
         jupyterPasswordConnect = new JupyterPasswordConnect(
             instance(appShell),
             multiStepFactory,
             instance(mockDisposableRegistry),
             instance(configService),
-            undefined
+            undefined,
+            requestCreator
         );
     });
 
@@ -143,10 +146,7 @@ suite('JupyterPasswordConnect', () => {
             )
             .returns(() => Promise.resolve(mockSessionResponse.object));
 
-        const result = await jupyterPasswordConnect.getPasswordConnectionInfo(
-            'http://TESTNAME:8888/',
-            fetchMock.object
-        );
+        const result = await jupyterPasswordConnect.getPasswordConnectionInfo('http://TESTNAME:8888/');
         assert(result, 'Failed to get password');
         if (result) {
             // eslint-disable-next-line
@@ -194,10 +194,7 @@ suite('JupyterPasswordConnect', () => {
             )
             .returns(() => Promise.resolve(mockSessionResponse.object));
 
-        const result = await jupyterPasswordConnect.getPasswordConnectionInfo(
-            'https://TESTNAME:8888/',
-            fetchMock.object
-        );
+        const result = await jupyterPasswordConnect.getPasswordConnectionInfo('https://TESTNAME:8888/');
         assert(result, 'Failed to get password');
         if (result) {
             // eslint-disable-next-line
@@ -215,10 +212,7 @@ suite('JupyterPasswordConnect', () => {
     test('getPasswordConnectionInfo failure', async () => {
         const { fetchMock, mockXsrfHeaders, mockXsrfResponse } = createMockSetup(false, false);
 
-        const result = await jupyterPasswordConnect.getPasswordConnectionInfo(
-            'http://TESTNAME:8888/',
-            fetchMock.object
-        );
+        const result = await jupyterPasswordConnect.getPasswordConnectionInfo('http://TESTNAME:8888/');
         assert(!result);
 
         // Verfiy calls
@@ -288,9 +282,9 @@ suite('JupyterPasswordConnect', () => {
         };
     }
     test('getPasswordConnectionInfo jupyter hub', async () => {
-        const fetchMock = createJupyterHubSetup();
+        createJupyterHubSetup();
 
-        const result = await jupyterPasswordConnect.getPasswordConnectionInfo('http://TESTNAME:8888/', fetchMock);
+        const result = await jupyterPasswordConnect.getPasswordConnectionInfo('http://TESTNAME:8888/');
         assert.ok(result, 'No hub connection info');
         assert.equal(result?.remappedBaseUrl, 'http://testname:8888/user/test', 'Url not remapped');
         assert.equal(result?.remappedToken, 'foobar', 'Token should be returned in URL');
