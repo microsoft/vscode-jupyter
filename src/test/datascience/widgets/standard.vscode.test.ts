@@ -43,6 +43,9 @@ suite.only('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
     const templateIPySheetNbPath = path.join(notebookPath, 'ipySheet_widgets.ipynb');
     const templateIPySheetSearchNbPath = path.join(notebookPath, 'ipySheet_widgets_search.ipynb');
     const templateIPySheetSliderNbPath = path.join(notebookPath, 'ipySheet_widgets_slider.ipynb');
+    const templateIPyVolumeNbPath = path.join(notebookPath, 'ipyvolume_widgets.ipynb');
+    const templatePy3js1NbPath = path.join(notebookPath, 'pythreejs_widgets.ipynb');
+    const templatePy3js2NbPath = path.join(notebookPath, 'pythreejs_widgets2.ipynb');
 
     this.timeout(120_000);
     suiteSetup(async function () {
@@ -230,34 +233,27 @@ suite.only('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await comms.setValue(cell4, '.widget-text input', '5255');
         await assertOutputContainsHtml(comms, cell7, ['>5255<', '>5378.0']);
     });
-    // test('IPySheet Widget', async () => {
-    //     const comms = await initializeNotebook({ templateFile: templateIPySheetNbPath });
-    //     // Confirm we have execution order and output.
-    //     const [, cell1, , cell3, , cell5, cell6, cell7, cell9, cell10, , cell12, cell13] =
-    //         vscodeNotebook.activeNotebookEditor!.document.getCells();
-    //     await Promise.all([
-    //         executeCellAndDontWaitForOutput(cell1, comms),
-    //         executeCellAndWaitForOutput(cell3, comms),
-    //         executeCellAndWaitForOutput(cell5, comms),
-    //         executeCellAndWaitForOutput(cell6, comms),
-    //         executeCellAndWaitForOutput(cell7, comms),
-    //         executeCellAndWaitForOutput(cell9, comms),
-    //         executeCellAndWaitForOutput(cell10, comms),
-    //         executeCellAndWaitForOutput(cell12, comms),
-    //         executeCellAndWaitForOutput(cell13, comms)
-    //     ]);
+    test('Render ipyvolume (slider, color picker, figure)', async function () {
+        const comms = await initializeNotebook({ templateFile: templateIPyVolumeNbPath });
+        const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(1);
 
-    //     await waitForCondition(
-    //         async () => {
-    //             const innerHTML = await comms.queryHtml(cell1, '.widget-text');
-    //             assert.include(innerHTML, 'Enter your name:');
-    //             assert.include(innerHTML, '<input type="text');
-    //             return true;
-    //         },
-    //         WidgetRenderingTimeoutForTests,
-    //         'Textbox not rendered'
-    //     );
-    // });
+        await executeCellAndWaitForOutput(cell, comms);
+        await assertOutputContainsHtml(comms, cell, ['<input type="color"', '>Slider1<', '>Slider2<', '<canvas']);
+    });
+    test('Render pythreejs', async function () {
+        const comms = await initializeNotebook({ templateFile: templatePy3js1NbPath });
+        const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(1);
+
+        await executeCellAndWaitForOutput(cell, comms);
+        await assertOutputContainsHtml(comms, cell, ['<canvas']);
+    });
+    test('Render pythreejs (2)', async function () {
+        const comms = await initializeNotebook({ templateFile: templatePy3js2NbPath });
+        const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(1);
+
+        await executeCellAndWaitForOutput(cell, comms);
+        await assertOutputContainsHtml(comms, cell, ['<canvas']);
+    });
     test.skip('Widget renders after executing a notebook which was saved after previous execution', async () => {
         // https://github.com/microsoft/vscode-jupyter/issues/8748
         let comms = await initializeNotebook({ templateFile: templateNbPath });
