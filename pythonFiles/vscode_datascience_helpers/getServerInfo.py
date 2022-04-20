@@ -3,17 +3,20 @@
 import builtins
 
 try:
-    from notebook.notebookapp import list_running_servers
     import json
-
-    server_list = list_running_servers()
+    try:
+        from notebook.notebookapp import list_running_servers
+        server_list = list_running_servers()
+    except:
+        from jupyter_server import serverapp
+        server_list = serverapp.list_running_servers()
 
     server_info_list = []
 
     for si in server_list:
         server_info_object = {}
         server_info_object["base_url"] = si["base_url"]
-        server_info_object["notebook_dir"] = si["notebook_dir"]
+        server_info_object["notebook_dir"] = si.get("notebook_dir", si.get('root_dir', ''))
         server_info_object["hostname"] = si["hostname"]
         server_info_object["password"] = si["password"]
         server_info_object["pid"] = si["pid"]

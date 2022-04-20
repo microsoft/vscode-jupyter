@@ -353,7 +353,10 @@ jobs:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest]
-        version: ['stable', 'prerelease']
+        # Whether we're using stable (<empty>) or pre-release versions of Python packages.
+        # When installing pre-release versions, we're only focused on jupyter & related packages.
+        # Not pre-release versions of pandas, numpy or other such packages that are not core to Jupyter.
+        packageVersion: ['']
         # More details on includes/excludes can be found here https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#example-including-additional-values-into-combinations
         # Basically with exclude, you can exclude any of the combinations from the result matrix.
         # & with include, you can include additional items to the result matrix.
@@ -365,10 +368,20 @@ jobs:
           - jupyter: raw
             python: noPython
             os: ubuntu-latest
-          - os: windows-latest
+          - jupyter: raw
             python: nonConda
             pythonVersion: '3.10'
-            jupyter: raw
+            os: windows-latest
+          - jupyter: local
+            python: nonConda
+            pythonVersion: '3.9'
+            os: ubuntu-latest
+            packageVersion: 'prerelease'
+          - jupyter: raw
+            python: nonConda
+            pythonVersion: '3.9'
+            os: ubuntu-latest
+            packageVersion: 'prerelease'
         exclude:
           - python: conda # Conda does't seem to support 3.10 yet.
             pythonVersion: '3.10'
@@ -499,7 +512,7 @@ jobs:
 
       # Install the pre-release versions of the packages
       - name: Install Pre-Release Python Libs
-        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.version == 'prerelease'
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.packageVersion == 'prerelease'
         run: |
           python --version
           python -c "import sys;print(sys.executable)"
