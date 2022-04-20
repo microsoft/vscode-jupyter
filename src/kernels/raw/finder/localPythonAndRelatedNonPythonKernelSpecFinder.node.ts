@@ -76,11 +76,13 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         resource: Resource,
         cancelToken?: CancellationToken
     ): Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
-        const activeInterpreterPromise = this.interpreterService.getActiveInterpreter(resource);
+        const activeInterpreterPromise = this.extensionChecker.isPythonExtensionInstalled
+            ? this.interpreterService.getActiveInterpreter(resource)
+            : undefined;
         const interpreters = this.extensionChecker.isPythonExtensionInstalled
             ? await this.interpreterService.getInterpreters(resource)
             : [];
-        const activeInterpreter = await activeInterpreterPromise;
+        const activeInterpreter = activeInterpreterPromise ? await activeInterpreterPromise : undefined;
         if (activeInterpreter) {
             interpreters.push(activeInterpreter);
         }
