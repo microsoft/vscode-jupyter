@@ -18,7 +18,8 @@ import {
     NotebookCreationOptions,
     IJupyterSession,
     IJupyterKernelSpec,
-    GetServerOptions
+    GetServerOptions,
+    KernelActionSource
 } from '../types';
 
 export type JupyterServerInfo = {
@@ -46,7 +47,8 @@ export interface INotebookServer extends IAsyncDisposable {
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         cancelToken: CancellationToken,
-        ui: IDisplayOptions
+        ui: IDisplayOptions,
+        creator: KernelActionSource
     ): Promise<INotebook>;
     connect(connection: IJupyterConnection, cancelToken: CancellationToken): Promise<void>;
     getConnectionInfo(): IJupyterConnection | undefined;
@@ -113,7 +115,8 @@ export interface IJupyterSessionManager extends IAsyncDisposable {
         kernelConnection: KernelConnectionMetadata,
         workingDirectory: string,
         ui: IDisplayOptions,
-        cancelToken: CancellationToken
+        cancelToken: CancellationToken,
+        actionSource: KernelActionSource
     ): Promise<IJupyterSession>;
     getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
     getRunningKernels(): Promise<IJupyterKernel[]>;

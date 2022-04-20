@@ -24,7 +24,13 @@ import { captureTelemetry } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { BaseJupyterSession, JupyterSessionStartError } from '../../common/baseJupyterSession.node';
 import { getNameOfKernelConnection, jvscIdentifier } from '../../helpers';
-import { KernelConnectionMetadata, isLocalConnection, IJupyterConnection, ISessionWithSocket } from '../../types';
+import {
+    KernelConnectionMetadata,
+    isLocalConnection,
+    IJupyterConnection,
+    ISessionWithSocket,
+    KernelActionSource
+} from '../../types';
 import { JupyterKernelService } from '../jupyterKernelService.node';
 import { JupyterWebSockets } from './jupyterWebSocket.node';
 import { DisplayOptions } from '../../displayOptions';
@@ -48,7 +54,8 @@ export class JupyterSession extends BaseJupyterSession {
         override readonly workingDirectory: string,
         private readonly idleTimeout: number,
         private readonly kernelService: JupyterKernelService,
-        interruptTimeout: number
+        interruptTimeout: number,
+        private readonly sessionCreator: KernelActionSource
     ) {
         super(
             connInfo.localLaunch ? 'localJupyter' : 'remoteJupyter',
@@ -252,7 +259,8 @@ export class JupyterSession extends BaseJupyterSession {
                     this.resource,
                     this.kernelConnectionMetadata,
                     options.ui,
-                    options.token
+                    options.token,
+                    this.sessionCreator === '3rdPartyExtension'
                 );
             } catch (ex) {
                 // If we failed to create the kernel, we need to clean up the file.

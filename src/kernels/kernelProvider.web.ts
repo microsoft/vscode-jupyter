@@ -48,7 +48,8 @@ export class KernelProvider extends BaseKernelProvider {
             options.controller,
             this.configService,
             this.cellHashProviderFactory,
-            this.workspaceService
+            this.workspaceService,
+            options.creator
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);

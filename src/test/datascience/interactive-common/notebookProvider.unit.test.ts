@@ -70,7 +70,8 @@ suite('DataScience - NotebookProvider', () => {
             resource: Uri('C:\\\\foo.py'),
             kernelConnection: instance(mock<KernelConnectionMetadata>()),
             ui: new DisplayOptions(false),
-            token: cancelToken.token
+            token: cancelToken.token,
+            creator: 'jupyterExtension'
         });
         expect(notebook).to.not.equal(undefined, 'Provider should return a notebook');
     });
@@ -86,7 +87,8 @@ suite('DataScience - NotebookProvider', () => {
             resource: Uri('C:\\\\foo.py'),
             kernelConnection: instance(mock<KernelConnectionMetadata>()),
             ui: new DisplayOptions(false),
-            token: cancelToken.token
+            token: cancelToken.token,
+            creator: 'jupyterExtension'
         });
         expect(notebook).to.not.equal(undefined, 'Server should return a notebook');
 
@@ -94,7 +96,8 @@ suite('DataScience - NotebookProvider', () => {
             resource: Uri('C:\\\\foo.py'),
             kernelConnection: instance(mock<KernelConnectionMetadata>()),
             ui: new DisplayOptions(false),
-            token: cancelToken.token
+            token: cancelToken.token,
+            creator: 'jupyterExtension'
         });
         expect(notebook2).to.equal(notebook);
     });

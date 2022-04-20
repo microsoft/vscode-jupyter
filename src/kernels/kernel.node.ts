@@ -24,6 +24,7 @@ import {
     INotebookProvider,
     InterruptResult,
     isLocalConnection,
+    KernelActionSource,
     KernelConnectionMetadata,
     NotebookCellRunState
 } from './types';
@@ -56,7 +57,8 @@ export class Kernel extends BaseKernel {
         cellHashProviderFactory: CellHashProviderFactory,
         workspaceService: IWorkspaceService,
         private readonly pythonExecutionFactory: IPythonExecutionFactory,
-        private readonly statusProvider: IStatusProvider
+        private readonly statusProvider: IStatusProvider,
+        creator: KernelActionSource
     ) {
         super(
             id,
@@ -69,7 +71,8 @@ export class Kernel extends BaseKernel {
             controller,
             configService,
             workspaceService,
-            cellHashProviderFactory
+            cellHashProviderFactory,
+            creator
         );
         this.kernelExecution = new KernelExecution(
             this,
