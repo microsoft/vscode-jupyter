@@ -9,6 +9,7 @@ import { traceError } from '../../../platform/logging';
 import { noop } from '../../../platform/common/utils/misc';
 import { KernelSocketWrapper } from '../../common/kernelSocketWrapper';
 import { IKernelSocket } from '../../types';
+import { injectable } from 'inversify';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const JupyterWebSockets = new Map<string, WebSocketWS & IKernelSocket>(); // NOSONAR
@@ -16,6 +17,7 @@ const JupyterWebSockets = new Map<string, WebSocketWS & IKernelSocket>(); // NOS
 // Function for creating node Request object that prevents jupyterlab services from writing its own
 // authorization header.
 /* eslint-disable @typescript-eslint/no-explicit-any */
+@injectable()
 export class JupyterRequestCreator implements IJupyterRequestCreator {
     public getRequestCtor(getAuthHeader?: () => any) {
         class AuthorizingRequest extends nodeFetch.Request {

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { injectable } from 'inversify';
 import { noop } from '../../../platform/common/utils/misc';
 import { ClassType } from '../../../platform/ioc/types';
 import { traceError } from '../../../platform/logging';
@@ -29,6 +30,7 @@ class EmittingWebSocket extends WebSocket {
 // Function for creating node Request object that prevents jupyterlab services from writing its own
 // authorization header.
 /* eslint-disable @typescript-eslint/no-explicit-any */
+@injectable()
 export class JupyterRequestCreator implements IJupyterRequestCreator {
     public getRequestCtor(getAuthHeader?: () => any) {
         class AuthorizingRequest extends Request {

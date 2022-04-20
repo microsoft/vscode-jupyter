@@ -20,6 +20,7 @@ import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { IRemoteKernelFinder } from '../raw/types';
 import { IJupyterSessionManagerFactory, IJupyterSessionManager } from './types';
 import { sendKernelSpecTelemetry } from '../raw/finder/helper';
+import { traceError } from '../../platform/logging';
 
 // This class searches for a kernel that matches the given kernel name.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -113,6 +114,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                 const filtered = mappedLive.filter((k) => !this.kernelIdsToHide.has(k.kernelModel.id || ''));
                 const items = [...filtered, ...mappedSpecs];
                 return items;
+            } catch (ex) {
+                traceError(`Error fetching remote kernels:`, ex);
             } finally {
                 if (sessionManager) {
                     await sessionManager.dispose();
