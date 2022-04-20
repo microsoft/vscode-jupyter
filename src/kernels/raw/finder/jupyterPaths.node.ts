@@ -103,8 +103,8 @@ export class JupyterPaths {
                 runtimeDir = uriPath.joinPath(userHomeDir, macJupyterRuntimePath);
             } else {
                 runtimeDir = process.env['$XDG_RUNTIME_DIR']
-                    ? fsPathToUri(path.join(process.env['$XDG_RUNTIME_DIR'], 'jupyter'))
-                    : uriPath.joinPath(userHomeDir, '.local', 'share', 'jupyter');
+                    ? fsPathToUri(path.join(process.env['$XDG_RUNTIME_DIR'], 'jupyter', 'runtime'))
+                    : uriPath.joinPath(userHomeDir, '.local', 'share', 'jupyter', 'runtime');
             }
         }
         if (!runtimeDir) {
