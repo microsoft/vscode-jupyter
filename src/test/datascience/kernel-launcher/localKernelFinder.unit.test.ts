@@ -55,7 +55,7 @@ import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder.
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 
 [false, true].forEach((isWindows) => {
-    suite.only(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
+    suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
         let localKernelFinder: ILocalKernelFinder;
         let remoteKernelFinder: IRemoteKernelFinder;
         let kernelFinder: IKernelFinder;
