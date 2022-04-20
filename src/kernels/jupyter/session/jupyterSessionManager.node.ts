@@ -169,7 +169,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         workingDirectory: string,
         ui: IDisplayOptions,
         cancelToken: CancellationToken,
-        actionSource: KernelActionSource
+        creator: KernelActionSource
     ): Promise<JupyterSession> {
         if (
             !this.connInfo ||
@@ -195,7 +195,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             this.configService.getSettings(resource).jupyterLaunchTimeout,
             this.kernelService,
             this.configService.getSettings(resource).jupyterInterruptTimeout,
-            actionSource
+            creator
         );
         try {
             await session.connect({ token: cancelToken, ui });

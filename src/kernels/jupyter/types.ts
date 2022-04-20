@@ -116,7 +116,7 @@ export interface IJupyterSessionManager extends IAsyncDisposable {
         workingDirectory: string,
         ui: IDisplayOptions,
         cancelToken: CancellationToken,
-        actionSource: KernelActionSource
+        creator: KernelActionSource
     ): Promise<IJupyterSession>;
     getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
     getRunningKernels(): Promise<IJupyterKernel[]>;
