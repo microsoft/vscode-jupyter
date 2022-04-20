@@ -244,7 +244,8 @@ export interface IJupyterKernelService {
         resource: Resource,
         kernel: KernelConnectionMetadata,
         ui: IDisplayOptions,
-        cancelToken: CancellationToken
+        cancelToken: CancellationToken,
+        cannotChangeKernels?: boolean
     ): Promise<void>;
 }
 

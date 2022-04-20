@@ -151,7 +151,7 @@ export abstract class BaseKernel implements IKernel {
         outputTracker: CellOutputDisplayIdTracker,
         readonly cellHashProviderFactory: CellHashProviderFactory,
         private readonly statusProvider: IStatusProvider,
-        private readonly creator: KernelActionSource
+        public readonly creator: KernelActionSource
     ) {
         this.kernelExecution = new KernelExecution(
             this,
