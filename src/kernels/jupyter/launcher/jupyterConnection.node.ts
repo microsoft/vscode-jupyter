@@ -149,9 +149,11 @@ export class JupyterConnectionWaiter implements IDisposable {
                 return;
             }
 
+            // For more recent versions of Jupyter the web pages are served from `/tree` and the api is at the root.
+            const pathName = url.pathname.endsWith('/tree') ? url.pathname.replace('/tree', '') : url.pathname;
             // Here we parsed the URL correctly
             this.resolveStartPromise(
-                `${url.protocol}//${url.host}${url.pathname}`,
+                `${url.protocol}//${url.host}${pathName}`,
                 `${url.searchParams.get('token')}`,
                 url.hostname
             );
