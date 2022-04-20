@@ -86,7 +86,11 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
             globalKernelSpecs?: KernelSpec.ISpecModel[];
         };
 
-        async function initialize(testData: TestData, activeInterpreter?: PythonEnvironment) {
+        async function initialize(
+            testData: TestData,
+            activeInterpreter?: PythonEnvironment,
+            doNotAddActiveInterpreterIntoListOfInterpreters?: boolean
+        ) {
             const getRealPathStub = sinon.stub(fsExtra, 'realpath');
             getRealPathStub.returnsArg(0);
             const getOSTypeStub = sinon.stub(platform, 'getOSType');
@@ -97,7 +101,9 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
             // Ensure the active Interpreter is in the list of interpreters.
             if (activeInterpreter) {
                 testData.interpreters = testData.interpreters || [];
-                testData.interpreters.push(activeInterpreter);
+                if (!doNotAddActiveInterpreterIntoListOfInterpreters) {
+                    // testData.interpreters.push(activeInterpreter);
+                }
             }
             const distinctInterpreters = new Set<PythonEnvironment>();
             (testData.interpreters || []).forEach((item) =>
@@ -760,7 +766,6 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
             };
             await initialize(testData);
             const kernels = await localKernelFinder.listKernels(undefined);
-            // console.error(kernels);
             assert.isUndefined(
                 kernels.find(
                     (item) =>
@@ -1083,7 +1088,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 
                         await verifyKernels(expectedKernels);
                     });
-                    test('Can match based on notebook metadata', async () => {
+                    async function testMatchingNotebookMetadata(activeInterpreterIsInListOfInterpreters = true) {
                         const testData: TestData = {
                             globalKernelSpecs: [juliaKernelSpec, rKernelSpec, rV1KernelSpec, python2spec],
                             interpreters: [
@@ -1129,15 +1134,24 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
                                 },
                                 {
                                     interpreter: python2Global
+                                },
+                                {
+                                    interpreter: python38VenvEnv,
+                                    kernelSpecs: [fullyQualifiedPythonKernelSpec]
                                 }
-                                // },
-                                // {
-                                // interpreter: python38VenvEnv,
-                                // kernelSpecs: [fullyQualifiedPythonKernelSpec]
-                                // }
                             ]
                         };
-                        await initialize(testData, activePythonEnv);
+                        if (!activeInterpreterIsInListOfInterpreters && activePythonEnv && testData.interpreters) {
+                            // We need to test a scenario where active interpreter is not in the list of all interpreters.
+                            // Hence remove that.
+                            testData.interpreters = testData.interpreters.filter((item) => {
+                                if ('interpreter' in item) {
+                                    return item.interpreter !== activePythonEnv;
+                                }
+                                return item !== activePythonEnv;
+                            });
+                        }
+                        await initialize(testData, activePythonEnv, !activeInterpreterIsInListOfInterpreters);
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
                         const nbUri = Uri.file('test.ipynb');
                         let kernel: KernelConnectionMetadata | undefined;
@@ -1154,6 +1168,44 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
                             'registeredByNewVersionOfExtForCustomKernelSpec'
                         );
                         if (activePythonEnv) {
+                            await verifyKernel(kernel, { expectedInterpreter: activePythonEnv });
+                        }
+
+                        // Generic Python notebooks (without display name).
+                        kernel = (await kernelFinder.findKernel(nbUri, {
+                            kernelspec: {
+                                display_name: '',
+                                name: 'python'
+                            },
+                            language_info: { name: PYTHON_LANGUAGE },
+                            orig_nbformat: 4
+                        })) as LocalKernelConnectionMetadata;
+                        assert.equal(kernel?.kernelSpec?.language, 'python');
+                        assert.strictEqual(kernel?.kind, 'startUsingPythonInterpreter');
+                        assert.notStrictEqual(
+                            getKernelRegistrationInfo(kernel!.kernelSpec),
+                            'registeredByNewVersionOfExtForCustomKernelSpec'
+                        );
+                        if (activePythonEnv && activePythonEnv.version?.major && activePythonEnv.version?.major >= 3) {
+                            await verifyKernel(kernel, { expectedInterpreter: activePythonEnv });
+                        }
+
+                        // Generic Python notebooks.
+                        kernel = (await kernelFinder.findKernel(nbUri, {
+                            kernelspec: {
+                                display_name: 'Python',
+                                name: 'python'
+                            },
+                            language_info: { name: PYTHON_LANGUAGE },
+                            orig_nbformat: 4
+                        })) as LocalKernelConnectionMetadata;
+                        assert.equal(kernel?.kernelSpec?.language, 'python');
+                        assert.strictEqual(kernel?.kind, 'startUsingPythonInterpreter');
+                        assert.notStrictEqual(
+                            getKernelRegistrationInfo(kernel!.kernelSpec),
+                            'registeredByNewVersionOfExtForCustomKernelSpec'
+                        );
+                        if (activePythonEnv && activePythonEnv.version?.major && activePythonEnv.version?.major >= 3) {
                             await verifyKernel(kernel, { expectedInterpreter: activePythonEnv });
                         }
 
@@ -1353,7 +1405,10 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
                             orig_nbformat: 4
                         });
                         assert.isUndefined(kernel, 'Should not return a kernel');
-                    });
+                    }
+                    test('Can match based on notebook metadata', async () => testMatchingNotebookMetadata(true));
+                    test('Can match based on notebook metadata, even when active interpreter is not in list of all interpreter', async () =>
+                        testMatchingNotebookMetadata(false));
                     test('Return active interpreter for interactive window', async function () {
                         if (!activePythonEnv) {
                             return this.skip();

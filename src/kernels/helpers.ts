@@ -165,8 +165,22 @@ export function findPreferredKernel(
         }
     }
 
-    const preferredInterpreterKernelSpec =
+    let preferredInterpreterKernelSpec =
         preferredInterpreter && findKernelSpecMatchingInterpreter(preferredInterpreter, kernels);
+    if (preferredInterpreter && !preferredInterpreterKernelSpec) {
+        const spec = createInterpreterKernelSpec(preferredInterpreter);
+        preferredInterpreterKernelSpec = <PythonKernelConnectionMetadata>{
+            kind: 'startUsingPythonInterpreter',
+            kernelSpec: spec,
+            interpreter: preferredInterpreter,
+            id: getKernelId(spec, preferredInterpreter)
+        };
+        // Active interpreter isn't in the list of kernels,
+        // Either because we're using a cached list or Python API isn't returning active interpreter
+        // along with list of all interpreters.
+        kernels.push(preferredInterpreterKernelSpec);
+    }
+
     traceInfoIfCI(`preferredInterpreterKernelSpecIndex = ${preferredInterpreterKernelSpec?.id}`);
 
     if (!notebookMetadata || !notebookMetadata?.kernelspec) {
@@ -230,7 +244,7 @@ export function findPreferredKernel(
         // Remember, all we're doing is sorting the list, just because its sorted in order of preference doesn't mean we have a match.
         preferredKernel = undefined;
     } else {
-        traceInfoIfCI(`Preferred kernel is ${JSON.stringify(kernels[0])}`);
+        traceInfoIfCI(`Preferred kernel is ${JSON.stringify(preferredKernel)}`);
     }
     return preferredKernel;
 }
