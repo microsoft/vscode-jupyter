@@ -62,7 +62,7 @@ suite('Interactive window', async function () {
         sinon.restore();
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
-
+    
     test('Execute cell from Python file', async () => {
         const source = 'print(42)';
         const { activeInteractiveWindow } = await submitFromPythonFile(interactiveWindowProvider, source, disposables);
