@@ -21,6 +21,7 @@ import { IRemoteKernelFinder } from '../raw/types';
 import { IJupyterSessionManagerFactory, IJupyterSessionManager } from './types';
 import { sendKernelSpecTelemetry } from '../raw/finder/helper';
 import { traceError } from '../../platform/logging';
+import { IPythonExtensionChecker } from '../../platform/api/types';
 
 // This class searches for a kernel that matches the given kernel name.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -34,7 +35,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
     constructor(
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
-        @inject(IInterpreterService) private interpreterService: IInterpreterService
+        @inject(IInterpreterService) private interpreterService: IInterpreterService,
+        @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker
     ) {
         disposableRegistry.push(
             this.jupyterSessionManagerFactory.onRestartSessionCreated(this.addKernelToIgnoreList.bind(this))
@@ -142,7 +144,10 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
 
     private async getInterpreter(spec: IJupyterKernelSpec, baseUrl: string) {
         const parsed = new URL(baseUrl);
-        if (parsed.hostname.toLocaleLowerCase() === 'localhost' || parsed.hostname === '127.0.0.1') {
+        if (
+            (parsed.hostname.toLocaleLowerCase() === 'localhost' || parsed.hostname === '127.0.0.1') &&
+            this.extensionChecker.isPythonExtensionInstalled
+        ) {
             // Interpreter is possible. Same machine as VS code
             return this.interpreterService.getInterpreterDetails(Uri.file(spec.argv[0]));
         }

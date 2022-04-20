@@ -127,14 +127,16 @@ suite(`Remote Kernel Finder`, () => {
         interpreterService = mock<IInterpreterService>();
         localKernelFinder = mock(LocalKernelFinder);
         when(localKernelFinder.listKernels(anything(), anything())).thenResolve([]);
+        const extensionChecker = mock(PythonExtensionChecker);
+        when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
         remoteKernelFinder = new RemoteKernelFinder(
             disposables,
             instance(jupyterSessionManagerFactory),
-            instance(interpreterService)
+            instance(interpreterService),
+            instance(extensionChecker)
         );
 
-        const extensionChecker = mock(PythonExtensionChecker);
         const configService = mock(ConfigurationService);
         const dsSettings = {
             jupyterServerType: 'remote'
