@@ -4,7 +4,7 @@
 import { IJupyterRequestCreator } from '../types';
 import * as nodeFetch from 'node-fetch';
 import { ClassType } from '../../../platform/ioc/types';
-import * as WebSocketWS from 'ws';
+import * as WebSocketIsomorphic from 'isomorphic-ws';
 import { traceError } from '../../../platform/logging';
 import { noop } from '../../../platform/common/utils/misc';
 import { KernelSocketWrapper } from '../../common/kernelSocketWrapper';
@@ -12,7 +12,7 @@ import { IKernelSocket } from '../../types';
 import { injectable } from 'inversify';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const JupyterWebSockets = new Map<string, WebSocketWS & IKernelSocket>(); // NOSONAR
+const JupyterWebSockets = new Map<string, WebSocketIsomorphic & IKernelSocket>(); // NOSONAR
 
 // Function for creating node Request object that prevents jupyterlab services from writing its own
 // authorization header.
@@ -49,12 +49,12 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
         allowUnauthorized?: boolean,
         getAuthHeaders?: () => any
     ): ClassType<WebSocket> {
-        class JupyterWebSocket extends KernelSocketWrapper(WebSocketWS) {
+        class JupyterWebSocket extends KernelSocketWrapper(WebSocketIsomorphic) {
             private kernelId: string | undefined;
             private timer: NodeJS.Timeout | number;
 
             constructor(url: string, protocols?: string | string[] | undefined) {
-                let co: WebSocketWS.ClientOptions = {};
+                let co: WebSocketIsomorphic.ClientOptions = {};
                 let co_headers: { [key: string]: string } | undefined;
 
                 if (allowUnauthorized) {
@@ -113,5 +113,9 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
 
     public getHeadersCtor(): ClassType<Headers> {
         return nodeFetch.Headers as any;
+    }
+
+    public getRequestInit(): RequestInit {
+        return { cache: 'no-store', credentials: 'same-origin' };
     }
 }

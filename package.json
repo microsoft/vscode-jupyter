@@ -2170,6 +2170,7 @@
         "image-size": "^1.0.0",
         "inversify": "^5.0.1",
         "is-online": "^9.0.0",
+        "isomorphic-ws": "^4.0.1",
         "jquery": "^3.6.0",
         "jsonc-parser": "^2.0.3",
         "lodash": "^4.17.21",

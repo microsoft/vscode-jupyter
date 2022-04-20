@@ -264,6 +264,7 @@ export interface IJupyterRequestCreator {
         getAuthHeaders?: () => any
     ): ClassType<WebSocket>;
     getWebsocket(id: string): IKernelSocket | undefined;
+    getRequestInit(): RequestInit;
 }
 
 export const INotebookStarter = Symbol('INotebookStarter');

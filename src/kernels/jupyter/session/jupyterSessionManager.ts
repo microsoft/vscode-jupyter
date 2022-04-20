@@ -270,7 +270,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
 
         // Agent is allowed to be set on this object, but ts doesn't like it on RequestInit, so any
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let requestInit: any = { cache: 'no-store', credentials: 'same-origin' };
+        let requestInit: any = this.requestCreator.getRequestInit();
         let cookieString;
 
         // If no token is specified prompt for a password

@@ -2,30 +2,14 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
-import { noop } from '../../../platform/common/utils/misc';
+import * as WebSocketIsomorphic from 'isomorphic-ws';
 import { ClassType } from '../../../platform/ioc/types';
 import { traceError } from '../../../platform/logging';
 import { KernelSocketWrapper } from '../../common/kernelSocketWrapper';
 import { IKernelSocket } from '../../types';
 import { IJupyterRequestCreator } from '../types';
 
-const JupyterWebSockets = new Map<string, WebSocket & IKernelSocket>(); // NOSONAR
-
-class EmittingWebSocket extends WebSocket {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    public emit(event: string | symbol, ...args: any[]) {
-        switch (event) {
-            case 'open':
-                return this.onopen ? this.onopen(new Event(event)) : noop();
-            case 'close':
-                return this.onclose ? this.onclose(new CloseEvent(event)) : noop();
-            case 'message':
-                return this.onmessage ? this.onmessage(new MessageEvent(event, { data: args })) : noop();
-            case 'error':
-                return this.onerror ? this.onerror(new ErrorEvent(event)) : noop();
-        }
-    }
-}
+const JupyterWebSockets = new Map<string, WebSocketIsomorphic & IKernelSocket>(); // NOSONAR
 
 // Function for creating node Request object that prevents jupyterlab services from writing its own
 // authorization header.
@@ -58,7 +42,7 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
     }
 
     public getWebsocketCtor(cookieString?: string, allowUnauthorized?: boolean, getAuthHeaders?: () => any) {
-        class JupyterWebSocket extends KernelSocketWrapper(EmittingWebSocket) {
+        class JupyterWebSocket extends KernelSocketWrapper(WebSocketIsomorphic) {
             private kernelId: string | undefined;
             private timer: NodeJS.Timeout | number;
 
@@ -112,10 +96,6 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
                 // Ping the websocket connection every 30 seconds to make sure it stays alive
                 timer = this.timer = setInterval(() => this.ping(), 30_000);
             }
-
-            private ping() {
-                this.send('ping');
-            }
         }
         return JupyterWebSocket as any;
     }
@@ -130,5 +110,9 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
 
     public getHeadersCtor(): ClassType<Headers> {
         return Headers;
+    }
+
+    public getRequestInit(): RequestInit {
+        return { cache: 'no-store' };
     }
 }
