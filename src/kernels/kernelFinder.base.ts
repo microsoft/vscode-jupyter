@@ -5,7 +5,7 @@ import { CancellationToken, Memento } from 'vscode';
 import { isPythonNotebook } from '../notebooks/helpers';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { createPromiseFromCancellation } from '../platform/common/cancellation';
-import { PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
+import { PYTHON_LANGUAGE, Settings, Telemetry } from '../platform/common/constants';
 import { IConfigurationService, Resource } from '../platform/common/types';
 import { getResourceType } from '../platform/common/utils';
 import { noop } from '../platform/common/utils/misc';
@@ -25,6 +25,7 @@ import {
     deserializeKernelConnection,
     serializeKernelConnection
 } from './helpers';
+import { IJupyterServerUriStorage } from './jupyter/types';
 import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKernelIdProvider';
 import { ILocalKernelFinder, IRemoteKernelFinder } from './raw/types';
 import { IKernelFinder, INotebookProvider, INotebookProviderConnection, KernelConnectionMetadata } from './types';
@@ -46,7 +47,8 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         private readonly notebookProvider: INotebookProvider,
         private readonly localKernelFinder: ILocalKernelFinder | undefined,
         private readonly remoteKernelFinder: IRemoteKernelFinder | undefined,
-        private readonly globalState: Memento
+        private readonly globalState: Memento,
+        protected readonly serverUriStorage: IJupyterServerUriStorage
     ) {}
 
     // Finding a kernel is the same no matter what the source
@@ -128,19 +130,22 @@ export abstract class BaseKernelFinder implements IKernelFinder {
     ): Promise<KernelConnectionMetadata[]> {
         this.startTimeForFetching = this.startTimeForFetching ?? new StopWatch();
 
-        try {
-            // Get both local and remote kernels.
-            const [localKernels, remoteKernels] = await Promise.all([
-                this.listLocalKernels(resource, cancelToken, useCache),
-                this.listRemoteKernels(resource, cancelToken, useCache)
-            ]);
+        // Get both local and remote kernels.
+        const [localKernels, remoteKernels] = await Promise.all([
+            this.listLocalKernels(resource, cancelToken, useCache).catch((ex) => {
+                traceError('Failed to get local kernels', ex);
+                return [];
+            }),
+            this.listRemoteKernels(resource, cancelToken, useCache).catch((ex) => {
+                traceError('Failed to get remote kernels', ex);
+                // When remote kernels fail, turn off remote
+                void this.serverUriStorage.setUri(Settings.JupyterServerLocalLaunch);
+                return [];
+            })
+        ]);
 
-            // Combine the results from local and remote
-            return [...localKernels, ...remoteKernels];
-        } catch (ex) {
-            traceError('Failed to get kernel connections', ex);
-            return [] as KernelConnectionMetadata[];
-        }
+        // Combine the results from local and remote
+        return [...localKernels, ...remoteKernels];
     }
 
     // Validating if a kernel is still allowed or not (from the cache). Non cached are always assumed to be valid

@@ -2078,7 +2078,6 @@
     "enabledApiProposals": [
         "notebookControllerKind",
         "notebookDebugOptions",
-        "notebookDocumentEvents",
         "notebookDeprecated",
         "notebookEditor",
         "notebookEditorDecorationType",
