@@ -42,7 +42,7 @@ suite.only('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
     const templateSliderNbPath = path.join(notebookPath, 'slider_widgets.ipynb');
     const templateIPySheetNbPath = path.join(notebookPath, 'ipySheet_widgets.ipynb');
     const templateIPySheetSearchNbPath = path.join(notebookPath, 'ipySheet_widgets_search.ipynb');
-    // const templateIPySheetSliderNbPath = path.join(notebookPath, 'ipySheet_widgets_slider.ipynb');
+    const templateIPySheetSliderNbPath = path.join(notebookPath, 'ipySheet_widgets_slider.ipynb');
 
     this.timeout(120_000);
     suiteSetup(async function () {
@@ -200,31 +200,35 @@ suite.only('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
     });
     test('Render IPySheets & search', async () => {
         const comms = await initializeNotebook({ templateFile: templateIPySheetSearchNbPath });
-        // const [, cell1, , cell3, , cell5, cell6, cell7, , cell9, cell10, , cell12, cell13] =
-        const [, cell1, , cell3, , cell5, cell6, cell7, , cell9, cell10, , cell12, cell13] =
-            vscodeNotebook.activeNotebookEditor!.document.getCells();
+        const [, cell1, , cell3, cell4, cell5] = vscodeNotebook.activeNotebookEditor!.document.getCells();
 
         await executeCellAndDontWaitForOutput(cell1);
-        await executeCellAndWaitForOutput(cell3, comms);
-        await executeCellAndDontWaitForOutput(cell5);
-        await executeCellAndWaitForOutput(cell6, comms);
-        await executeCellAndWaitForOutput(cell7, comms);
-        await executeCellAndDontWaitForOutput(cell9);
-        await executeCellAndWaitForOutput(cell10, comms);
-        await executeCellAndWaitForOutput(cell12, comms);
-        await executeCellAndWaitForOutput(cell13, comms);
-        await assertOutputContainsHtml(comms, cell3, ['Hello', 'World', '42.000']);
-        await assertOutputContainsHtml(comms, cell6, ['Search:', '<input type="text']);
-        await assertOutputContainsHtml(comms, cell7, ['test:', 'train', 'foo']);
-        await assertOutputContainsHtml(comms, cell10, ['Continuous Slider']);
-        await assertOutputContainsHtml(comms, cell12, ['Continuous Text']);
+        await executeCellAndDontWaitForOutput(cell3);
+        await executeCellAndWaitForOutput(cell4, comms);
+        await executeCellAndWaitForOutput(cell5, comms);
+        await assertOutputContainsHtml(comms, cell4, ['title="Search:"', '<input type="text']);
+        await assertOutputContainsHtml(comms, cell5, ['>train<', '>foo<']);
 
         // Update the textbox widget.
-        await comms.setValue(cell12, '.widget-text input', '60');
-        await assertOutputContainsHtml(comms, cell12, ['765']);
-        await assertOutputContainsHtml(comms, cell10, ['765']);
+        await comms.setValue(cell4, '.widget-text input', 'train');
+        await assertOutputContainsHtml(comms, cell5, ['class="htSearchResult">train<']);
+    });
+    test('Render IPySheets & slider', async () => {
+        const comms = await initializeNotebook({ templateFile: templateIPySheetSliderNbPath });
+        const [, cell1, , cell3, cell4, , cell6, cell7] = vscodeNotebook.activeNotebookEditor!.document.getCells();
 
-        await assertOutputContainsHtml(comms, cell13, ['50.0', '815.0']);
+        await executeCellAndDontWaitForOutput(cell1);
+        await executeCellAndDontWaitForOutput(cell3);
+        await executeCellAndWaitForOutput(cell4, comms);
+        await executeCellAndWaitForOutput(cell6, comms);
+        await executeCellAndWaitForOutput(cell7, comms);
+        await assertOutputContainsHtml(comms, cell4, ['Continuous Slider', '<input type="text']);
+        await assertOutputContainsHtml(comms, cell6, ['Continuous Text', '<input type="number']);
+        await assertOutputContainsHtml(comms, cell7, ['Continuous Slider', '>0<', '>123.00']);
+
+        // Update the textbox widget (for slider).
+        await comms.setValue(cell4, '.widget-text input', '5255');
+        await assertOutputContainsHtml(comms, cell7, ['>5255<', '>5378.0']);
     });
     // test('IPySheet Widget', async () => {
     //     const comms = await initializeNotebook({ templateFile: templateIPySheetNbPath });

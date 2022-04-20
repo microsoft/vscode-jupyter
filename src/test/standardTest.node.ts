@@ -100,7 +100,7 @@ async function createSettings(): Promise<string> {
         // Disable the restart ask so that restart just happens
         'jupyter.askForKernelRestart': false,
         // To get widgets working.
-        "jupyter.widgetScriptSources": ["jsdelivr.com", "unpkg.com"]
+        'jupyter.widgetScriptSources': ['jsdelivr.com', 'unpkg.com']
     };
 
     if (IS_REMOTE_NATIVE_TEST()) {
