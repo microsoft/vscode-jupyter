@@ -130,7 +130,9 @@ export class ScriptManager extends EventEmitter {
                         moduleVersion,
                         new Error(`Timeout getting source for ${moduleName}:${moduleVersion}`),
                         true
-                    ).ignoreErrors();
+                    ).catch(() => {
+                        // Do nothing with errors
+                    });
                     request.deferred.resolve();
                     this.timedoutWaitingForWidgetsToGetLoaded = true;
                 }
@@ -199,6 +201,7 @@ export class ScriptManager extends EventEmitter {
         // Now resolve promises (anything that was waiting for modules to get registered can carry on).
         sources.forEach((source) => {
             this.registeredWidgetSources.set(source.moduleName, source);
+            this.widgetsRegisteredInRequireJs.add(source.moduleName);
             // We have fetched the script sources for all of these modules.
             // In some cases we might not have the source, meaning we don't have it or couldn't find it.
             let request = this.widgetSourceRequests.get(source.moduleName);
