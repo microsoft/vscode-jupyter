@@ -151,7 +151,6 @@ async function setPythonPathInWorkspace(
         console.log(`Updating Interpreter path to ${pythonPath} in workspace`);
         await settings.update('pythonPath', pythonPath, config).then(noop, noop);
         await settings.update('defaultInterpreterPath', pythonPath, config).then(noop, noop);
-        await settings.update('defaultInterpreterPath', pythonPath, config).then(noop, noop);
         if (config === vscode.ConfigurationTarget.Global) {
             await settings.update('defaultInterpreterPath', pythonPath, config).then(noop, noop);
         }

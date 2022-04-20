@@ -7,7 +7,12 @@ import { Uri, workspace } from 'vscode';
 import { IApplicationShell, IWorkspaceService, IVSCodeNotebook } from '../platform/common/application/types';
 import { IFileSystem } from '../platform/common/platform/types.node';
 import { IPythonExecutionFactory } from '../platform/common/process/types.node';
-import { IAsyncDisposableRegistry, IDisposableRegistry, IConfigurationService } from '../platform/common/types';
+import {
+    IAsyncDisposableRegistry,
+    IDisposableRegistry,
+    IConfigurationService,
+    IExtensionContext
+} from '../platform/common/types';
 import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../notebooks/constants';
 import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
@@ -30,7 +35,8 @@ export class KernelProvider extends BaseKernelProvider {
         @inject(CellHashProviderFactory) private cellHashProviderFactory: CellHashProviderFactory,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
-        @inject(IStatusProvider) private readonly statusProvider: IStatusProvider
+        @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
+        @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {
         super(asyncDisposables, disposables, notebook);
     }
@@ -63,7 +69,8 @@ export class KernelProvider extends BaseKernelProvider {
             this.workspaceService,
             this.pythonExecutionFactory,
             this.statusProvider,
-            options.creator
+            options.creator,
+            this.context
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);

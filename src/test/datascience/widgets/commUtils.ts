@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { NotebookEditor, NotebookRendererMessaging, notebooks } from 'vscode';
+import { NotebookCell, NotebookEditor, NotebookRendererMessaging, notebooks } from 'vscode';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
@@ -41,13 +41,13 @@ export class Utils {
     public dispose() {
         disposeAllDisposables(this.disposables);
     }
-    public async queryHtml(outputId: string, selector?: string) {
+    public async queryHtml(cell: NotebookCell, selector?: string) {
         // Verify the slider widget is created.
         const request = {
             requestId: Date.now().toString(),
-            id: outputId,
+            cellIndex: cell.index,
             command: 'queryInnerHTML',
-            selector
+            selector: selector
         };
         const editor = await this.editorPromise;
         traceInfo(`Sending message to Widget renderer ${JSON.stringify(request)}`);
@@ -60,17 +60,17 @@ export class Utils {
                     if (message.error) {
                         return reject(message.error);
                     }
-                    resolve(message.innerHTML);
+                    resolve(message.innerHTML || '');
                 }
             });
             this.disposables.push(disposable);
         });
     }
-    public async click(selector: string, outputId: string) {
+    public async click(cell: NotebookCell, selector: string) {
         // Verify the slider widget is created.
         const request = {
             requestId: Date.now().toString(),
-            id: outputId,
+            cellIndex: cell.index,
             command: 'clickElement',
             selector
         };
@@ -91,11 +91,11 @@ export class Utils {
             this.disposables.push(disposable);
         });
     }
-    public async setValue(selector: string, outputId: string, value: string) {
+    public async setValue(cell: NotebookCell, selector: string, value: string) {
         // Verify the slider widget is created.
         const request = {
             requestId: Date.now().toString(),
-            id: outputId,
+            cellIndex: cell.index,
             command: 'setElementValue',
             selector,
             value

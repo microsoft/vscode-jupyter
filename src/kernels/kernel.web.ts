@@ -4,7 +4,7 @@
 'use strict';
 import { NotebookController, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../platform/common/application/types';
-import { Resource, IDisposableRegistry, IConfigurationService } from '../platform/common/types';
+import { Resource, IDisposableRegistry, IConfigurationService, IExtensionContext } from '../platform/common/types';
 import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory';
 import { INotebookProvider, KernelActionSource, KernelConnectionMetadata } from './types';
 import { BaseKernel } from './kernel.base';
@@ -34,7 +34,8 @@ export class Kernel extends BaseKernel {
         cellHashProviderFactory: CellHashProviderFactory,
         workspaceService: IWorkspaceService,
         statusProvider: IStatusProvider,
-        creator: KernelActionSource
+        creator: KernelActionSource,
+        context: IExtensionContext
     ) {
         super(
             id,
@@ -51,7 +52,8 @@ export class Kernel extends BaseKernel {
             outputTracker,
             cellHashProviderFactory,
             statusProvider,
-            creator
+            creator,
+            context
         );
     }
 

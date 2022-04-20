@@ -26,7 +26,8 @@ import {
     IDisposableRegistry,
     IConfigurationService,
     IDisposable,
-    IDisplayOptions
+    IDisplayOptions,
+    IExtensionContext
 } from '../platform/common/types';
 import { Deferred, sleep } from '../platform/common/utils/async';
 import { DataScience } from '../platform/common/utils/localize';
@@ -151,7 +152,8 @@ export abstract class BaseKernel implements IKernel {
         outputTracker: CellOutputDisplayIdTracker,
         readonly cellHashProviderFactory: CellHashProviderFactory,
         private readonly statusProvider: IStatusProvider,
-        public readonly creator: KernelActionSource
+        public readonly creator: KernelActionSource,
+        context: IExtensionContext
     ) {
         this.kernelExecution = new KernelExecution(
             this,
@@ -161,7 +163,8 @@ export abstract class BaseKernel implements IKernel {
             disposables,
             controller,
             outputTracker,
-            cellHashProviderFactory
+            cellHashProviderFactory,
+            context
         );
         this.kernelExecution.onPreExecute((c) => this._onPreExecute.fire(c), this, disposables);
     }

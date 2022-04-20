@@ -5,7 +5,7 @@
 import { inject, injectable } from 'inversify';
 import { Uri, workspace } from 'vscode';
 import { IApplicationShell, IWorkspaceService, IVSCodeNotebook } from '../platform/common/application/types';
-import { IAsyncDisposableRegistry, IDisposableRegistry, IConfigurationService } from '../platform/common/types';
+import { IAsyncDisposableRegistry, IDisposableRegistry, IConfigurationService, IExtensionContext } from '../platform/common/types';
 import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../notebooks/constants';
 import { Kernel } from './kernel.web';
@@ -26,7 +26,8 @@ export class KernelProvider extends BaseKernelProvider {
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(CellHashProviderFactory) private cellHashProviderFactory: CellHashProviderFactory,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
-        @inject(IStatusProvider) private readonly statusProvider: IStatusProvider
+        @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
+        @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {
         super(asyncDisposables, disposables, notebook);
     }
@@ -57,7 +58,8 @@ export class KernelProvider extends BaseKernelProvider {
             this.cellHashProviderFactory,
             this.workspaceService,
             this.statusProvider,
-            options.creator
+            options.creator,
+            this.context
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);
