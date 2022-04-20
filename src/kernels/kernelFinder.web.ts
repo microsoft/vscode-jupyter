@@ -21,7 +21,7 @@ export class KernelFinder extends BaseKernelFinder {
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalState: Memento,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
+        @inject(IJupyterServerUriStorage) serverUriStorage: IJupyterServerUriStorage
     ) {
         super(
             extensionChecker,
@@ -31,7 +31,8 @@ export class KernelFinder extends BaseKernelFinder {
             notebookProvider,
             undefined, // Local not supported in web
             remoteKernelFinder,
-            globalState
+            globalState,
+            serverUriStorage
         );
     }
     protected async isValidCachedKernel(kernel: KernelConnectionMetadata): Promise<boolean> {

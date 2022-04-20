@@ -155,7 +155,8 @@ suite('DataScience - JupyterSession', () => {
             instance(kernelService),
             1,
             backingFileCreator,
-            requestCreator
+            requestCreator,
+            'jupyterExtension'
         );
     }
     setup(() => createJupyterSession());

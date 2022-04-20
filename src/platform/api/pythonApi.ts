@@ -5,7 +5,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable, EventEmitter, Event, Uri, workspace } from 'vscode';
+import { Disposable, EventEmitter, Event, Uri, workspace, ExtensionMode } from 'vscode';
 import { fsPathToUri } from '../vscode-path/utils';
 import { PythonEnvironment } from './extension';
 import {
@@ -22,7 +22,7 @@ import { noop } from 'rxjs';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { IWorkspaceService, IApplicationShell, ICommandManager } from '../common/application/types';
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
-import { IExtensions, IDisposableRegistry, Resource } from '../common/types';
+import { IExtensions, IDisposableRegistry, Resource, IExtensionContext } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import { traceDecoratorVerbose, traceError, traceInfo, traceVerbose } from '../logging';
 import { getDisplayPath, getFilePath } from '../common/platform/fs-paths';
@@ -249,7 +249,8 @@ export class InterpreterService implements IInterpreterService {
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IWorkspaceService) private workspace: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {
         if (this.extensionChecker.isPythonExtensionInstalled) {
             if (!this.extensionChecker.isPythonExtensionActive) {
@@ -323,7 +324,7 @@ export class InterpreterService implements IInterpreterService {
                         this.workspaceCachedActiveInterpreter.delete(workspaceId);
                     }
                 });
-                if (isCI) {
+                if (isCI || [ExtensionMode.Development, ExtensionMode.Test].includes(this.context.extensionMode)) {
                     promise
                         .then((item) =>
                             traceInfo(
@@ -356,10 +357,11 @@ export class InterpreterService implements IInterpreterService {
     private onDidChangeWorkspaceFolders() {
         this.interpreterListCachePromise = undefined;
     }
-    private async getInterpretersImpl(_resource?: Uri): Promise<PythonEnvironment[]> {
+    private async getInterpretersImpl(resource?: Uri): Promise<PythonEnvironment[]> {
         // Python uses the resource to look up the workspace folder. For Jupyter
         // we want all interpreters regardless of workspace folder so call this multiple times
         const folders = this.workspace.workspaceFolders;
+        const activeInterpreterPromise = this.getActiveInterpreter(resource);
         const all = folders
             ? await Promise.all(
                   [...folders, undefined].map((f) =>
@@ -367,13 +369,18 @@ export class InterpreterService implements IInterpreterService {
                   )
               )
             : await Promise.all([await this.apiProvider.getApi().then((api) => api.getInterpreters(undefined))]);
-
+        const activeInterpreter = await activeInterpreterPromise;
         // Remove dupes
         const result: PythonEnvironment[] = [];
-        all.flat().forEach((p) => {
-            const translated = deserializePythonEnvironment(p);
-            if (translated && !result.find((r) => areInterpreterPathsSame(r.uri, translated.uri))) {
-                result.push(translated);
+        const allInterpreters = [...all.flat()]
+            .map(deserializePythonEnvironment)
+            .filter((item) => !!item) as PythonEnvironment[];
+        if (activeInterpreter) {
+            allInterpreters.push(activeInterpreter);
+        }
+        allInterpreters.forEach((interpreter) => {
+            if (interpreter && !result.find((r) => areInterpreterPathsSame(r.uri, interpreter.uri))) {
+                result.push(interpreter);
             }
         });
         return result;

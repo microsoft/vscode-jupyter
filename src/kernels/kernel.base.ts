@@ -51,6 +51,7 @@ import {
     INotebookProviderConnection,
     InterruptResult,
     isLocalConnection,
+    KernelActionSource,
     KernelConnectionMetadata,
     KernelSocketInformation,
     NotebookCellRunState
@@ -149,7 +150,8 @@ export abstract class BaseKernel implements IKernel {
         protected readonly workspaceService: IWorkspaceService,
         outputTracker: CellOutputDisplayIdTracker,
         readonly cellHashProviderFactory: CellHashProviderFactory,
-        private readonly statusProvider: IStatusProvider
+        private readonly statusProvider: IStatusProvider,
+        private readonly creator: KernelActionSource
     ) {
         this.kernelExecution = new KernelExecution(
             this,
@@ -393,7 +395,8 @@ export abstract class BaseKernel implements IKernel {
                 resource: this.resourceUri,
                 ui: this.startupUI,
                 kernelConnection: this.kernelConnectionMetadata,
-                token: this.startCancellation.token
+                token: this.startCancellation.token,
+                creator: this.creator
             });
             Cancellation.throwIfCanceled(this.startCancellation.token);
             if (!notebook) {

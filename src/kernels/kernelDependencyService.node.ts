@@ -59,7 +59,8 @@ export class KernelDependencyService implements IKernelDependencyService {
         kernelConnection: KernelConnectionMetadata,
         ui: IDisplayOptions,
         @ignoreLogging() token: CancellationToken,
-        ignoreCache?: boolean
+        ignoreCache?: boolean,
+        cannotChangeKernels?: boolean
     ): Promise<KernelInterpreterDependencyResponse> {
         traceInfo(
             `installMissingDependencies ${
@@ -98,7 +99,14 @@ export class KernelDependencyService implements IKernelDependencyService {
             promise = KernelProgressReporter.wrapAndReportProgress(
                 resource,
                 DataScience.installingMissingDependencies(),
-                () => this.runInstaller(resource, kernelConnection.interpreter!, ui, cancelTokenSource)
+                () =>
+                    this.runInstaller(
+                        resource,
+                        kernelConnection.interpreter!,
+                        ui,
+                        cancelTokenSource,
+                        cannotChangeKernels
+                    )
             );
             promise
                 .finally(() => {
@@ -177,7 +185,8 @@ export class KernelDependencyService implements IKernelDependencyService {
         resource: Resource,
         interpreter: PythonEnvironment,
         ui: IDisplayOptions,
-        cancelTokenSource: CancellationTokenSource
+        cancelTokenSource: CancellationTokenSource,
+        cannotChangeKernels?: boolean
     ): Promise<KernelInterpreterDependencyResponse> {
         traceInfoIfCI(
             `Run Installer for ${getDisplayPath(resource)} ui.disableUI=${
@@ -223,7 +232,11 @@ export class KernelDependencyService implements IKernelDependencyService {
         const selectKernel = DataScience.selectKernel();
         // Due to a bug in our code, if we don't have a resource, don't display the option to change kernels.
         // https://github.com/microsoft/vscode-jupyter/issues/6135
-        const options = resource ? [Common.install(), selectKernel] : [Common.install()];
+        const options = resource
+            ? cannotChangeKernels
+                ? [Common.install()]
+                : [Common.install(), selectKernel]
+            : [Common.install()];
         try {
             if (!this.isCodeSpace) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {

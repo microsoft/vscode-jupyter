@@ -6,7 +6,7 @@ import { NotebookController, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../platform/common/application/types';
 import { Resource, IDisposableRegistry, IConfigurationService } from '../platform/common/types';
 import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory';
-import { INotebookProvider, KernelConnectionMetadata } from './types';
+import { INotebookProvider, KernelActionSource, KernelConnectionMetadata } from './types';
 import { BaseKernel } from './kernel.base';
 import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
 import { IStatusProvider } from '../platform/progress/types';
@@ -33,7 +33,8 @@ export class Kernel extends BaseKernel {
         outputTracker: CellOutputDisplayIdTracker,
         cellHashProviderFactory: CellHashProviderFactory,
         workspaceService: IWorkspaceService,
-        statusProvider: IStatusProvider
+        statusProvider: IStatusProvider,
+        creator: KernelActionSource
     ) {
         super(
             id,
@@ -49,7 +50,8 @@ export class Kernel extends BaseKernel {
             workspaceService,
             outputTracker,
             cellHashProviderFactory,
-            statusProvider
+            statusProvider,
+            creator
         );
     }
 

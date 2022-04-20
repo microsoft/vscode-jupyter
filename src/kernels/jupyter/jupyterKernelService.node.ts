@@ -67,7 +67,8 @@ export class JupyterKernelService implements IJupyterKernelService {
         resource: Resource,
         @logValue<KernelConnectionMetadata>('id') kernel: KernelConnectionMetadata,
         @logValue<IDisplayOptions>('disableUI') ui: IDisplayOptions,
-        @ignoreLogging() cancelToken: CancellationToken
+        @ignoreLogging() cancelToken: CancellationToken,
+        cannotChangeKernels?: boolean
     ): Promise<void> {
         traceVerbose('Check if a kernel is usable');
         // If we have an interpreter, make sure it has the correct dependencies installed
@@ -81,7 +82,8 @@ export class JupyterKernelService implements IJupyterKernelService {
                 kernel,
                 ui,
                 cancelToken,
-                true
+                true,
+                cannotChangeKernels
             );
             switch (result) {
                 case KernelInterpreterDependencyResponse.cancel:

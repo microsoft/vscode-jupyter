@@ -16,7 +16,13 @@ import { captureTelemetry } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { BaseJupyterSession, JupyterSessionStartError } from '../../common/baseJupyterSession';
 import { getNameOfKernelConnection } from '../../helpers';
-import { KernelConnectionMetadata, isLocalConnection, IJupyterConnection, ISessionWithSocket } from '../../types';
+import {
+    KernelConnectionMetadata,
+    isLocalConnection,
+    IJupyterConnection,
+    ISessionWithSocket,
+    KernelActionSource
+} from '../../types';
 import { DisplayOptions } from '../../displayOptions';
 import { IJupyterBackingFileCreator, IJupyterKernelService, IJupyterRequestCreator } from '../types';
 import { Uri } from 'vscode';
@@ -38,7 +44,8 @@ export class JupyterSession extends BaseJupyterSession {
         private readonly kernelService: IJupyterKernelService | undefined,
         interruptTimeout: number,
         private readonly backingFileCreator: IJupyterBackingFileCreator,
-        private readonly requestCreator: IJupyterRequestCreator
+        private readonly requestCreator: IJupyterRequestCreator,
+        private readonly sessionCreator: KernelActionSource
     ) {
         super(
             connInfo.localLaunch ? 'localJupyter' : 'remoteJupyter',
@@ -206,7 +213,8 @@ export class JupyterSession extends BaseJupyterSession {
                     this.resource,
                     this.kernelConnectionMetadata,
                     options.ui,
-                    options.token
+                    options.token,
+                    this.sessionCreator === '3rdPartyExtension'
                 );
             } catch (ex) {
                 // If we failed to create the kernel, we need to clean up the file.

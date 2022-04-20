@@ -1,7 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { KernelConnectionMetadata, KernelInterpreterDependencyResponse } from '../../kernels/types';
+import {
+    KernelAction,
+    KernelActionSource,
+    KernelConnectionMetadata,
+    KernelInterpreterDependencyResponse
+} from '../../kernels/types';
 import { Resource } from '../common/types';
 
 export abstract class BaseError extends Error {
@@ -137,16 +142,14 @@ export interface IDataScienceErrorHandler {
      */
     handleKernelError(
         err: Error,
-        errorContext: 'start' | 'restart' | 'interrupt' | 'execution',
+        errorContext: KernelAction,
         kernelConnection: KernelConnectionMetadata,
-        resource: Resource
+        resource: Resource,
+        actionSource: KernelActionSource
     ): Promise<KernelInterpreterDependencyResponse>;
     /**
      * The value of `errorContext` is used to determine the context of the error message, whether it applies to starting or interrupting kernels or the like.
      * Thus based on the context the error message would be different.
      */
-    getErrorMessageForDisplayInCell(
-        err: Error,
-        errorContext: 'start' | 'restart' | 'interrupt' | 'execution'
-    ): Promise<string>;
+    getErrorMessageForDisplayInCell(err: Error, errorContext: KernelAction): Promise<string>;
 }

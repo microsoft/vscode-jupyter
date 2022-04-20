@@ -55,7 +55,7 @@ export class IPyWidgetScriptSource {
         uriConverter.requestUri(
             (e) =>
                 this.postEmitter.fire({
-                    message: InteractiveWindowMessages.ConvertUriForUseInWebViewResponse,
+                    message: InteractiveWindowMessages.ConvertUriForUseInWebViewRequest,
                     payload: e
                 }),
             undefined,

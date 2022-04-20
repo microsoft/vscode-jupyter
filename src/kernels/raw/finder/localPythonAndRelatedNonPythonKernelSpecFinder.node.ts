@@ -76,10 +76,16 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         resource: Resource,
         cancelToken?: CancellationToken
     ): Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
+        const activeInterpreterPromise = this.extensionChecker.isPythonExtensionInstalled
+            ? this.interpreterService.getActiveInterpreter(resource)
+            : undefined;
         const interpreters = this.extensionChecker.isPythonExtensionInstalled
             ? await this.interpreterService.getInterpreters(resource)
             : [];
-
+        const activeInterpreter = activeInterpreterPromise ? await activeInterpreterPromise : undefined;
+        if (activeInterpreter) {
+            interpreters.push(activeInterpreter);
+        }
         // If we don't have Python extension installed or don't discover any Python interpreters
         // then list all of the global python kernel specs.
         if (interpreters.length === 0 || !this.extensionChecker.isPythonExtensionInstalled) {

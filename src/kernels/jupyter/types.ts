@@ -20,7 +20,8 @@ import {
     IJupyterSession,
     IJupyterKernelSpec,
     GetServerOptions,
-    IKernelSocket
+    IKernelSocket,
+    KernelActionSource
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
 
@@ -49,7 +50,8 @@ export interface INotebookServer extends IAsyncDisposable {
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         cancelToken: CancellationToken,
-        ui: IDisplayOptions
+        ui: IDisplayOptions,
+        creator: KernelActionSource
     ): Promise<INotebook>;
     connect(connection: IJupyterConnection, cancelToken: CancellationToken): Promise<void>;
     getConnectionInfo(): IJupyterConnection | undefined;
@@ -116,7 +118,8 @@ export interface IJupyterSessionManager extends IAsyncDisposable {
         kernelConnection: KernelConnectionMetadata,
         workingDirectory: Uri,
         ui: IDisplayOptions,
-        cancelToken: CancellationToken
+        cancelToken: CancellationToken,
+        creator: KernelActionSource
     ): Promise<IJupyterSession>;
     getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
     getRunningKernels(): Promise<IJupyterKernel[]>;

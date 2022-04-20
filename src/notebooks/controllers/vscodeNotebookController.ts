@@ -495,8 +495,7 @@ export class VSCodeNotebookController implements Disposable {
             this.controller,
             this.kernelConnection,
             this.serviceContainer,
-            doc.uri,
-            doc,
+            { resource: doc.uri, notebook: doc },
             options,
             this.disposables
         );
@@ -629,7 +628,8 @@ export class VSCodeNotebookController implements Disposable {
         const newKernel = this.kernelProvider.getOrCreate(document.uri, {
             metadata: selectedKernelConnectionMetadata,
             controller: this.controller,
-            resourceUri: document.uri // In the case of interactive window, we cannot pass the Uri of notebook, it must be the Py file or undefined.
+            resourceUri: document.uri, // In the case of interactive window, we cannot pass the Uri of notebook, it must be the Py file or undefined.
+            creator: 'jupyterExtension'
         });
         traceVerbose(`KernelProvider switched kernel to id = ${newKernel.kernelConnectionMetadata.id}`);
 

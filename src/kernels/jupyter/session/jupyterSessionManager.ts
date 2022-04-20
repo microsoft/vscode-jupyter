@@ -25,7 +25,7 @@ import {
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
 import { createInterpreterKernelSpec } from '../../helpers';
-import { IJupyterConnection, IJupyterKernelSpec, KernelConnectionMetadata } from '../../types';
+import { IJupyterConnection, IJupyterKernelSpec, KernelActionSource, KernelConnectionMetadata } from '../../types';
 import { JupyterKernelSpec } from '../jupyterKernelSpec';
 import { JupyterSession } from './jupyterSession';
 import { sleep } from '../../../platform/common/utils/async';
@@ -174,7 +174,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         kernelConnection: KernelConnectionMetadata,
         workingDirectory: Uri,
         ui: IDisplayOptions,
-        cancelToken: CancellationToken
+        cancelToken: CancellationToken,
+        creator: KernelActionSource
     ): Promise<JupyterSession> {
         if (
             !this.connInfo ||
@@ -201,7 +202,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             this.kernelService,
             this.configService.getSettings(resource).jupyterInterruptTimeout,
             this.backingFileCreator,
-            this.requestCreator
+            this.requestCreator,
+            creator
         );
         try {
             await session.connect({ token: cancelToken, ui });
