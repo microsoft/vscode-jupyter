@@ -434,7 +434,8 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             kernel = this.kernelProvider.getOrCreate(doc.uri, {
                 metadata: controller.connection,
                 controller: controller?.controller,
-                resourceUri: doc.uri
+                resourceUri: doc.uri,
+                creator: 'jupyterExtension'
             });
         }
         if (kernel && kernel.status === 'unknown') {
@@ -455,7 +456,8 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 kernel = this.kernelProvider.getOrCreate(doc.uri, {
                     metadata: controller.connection,
                     controller: controller?.controller,
-                    resourceUri: doc.uri
+                    resourceUri: doc.uri,
+                    creator: 'jupyterExtension'
                 });
             }
 

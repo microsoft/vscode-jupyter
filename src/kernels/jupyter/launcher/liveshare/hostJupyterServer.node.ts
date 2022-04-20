@@ -22,7 +22,13 @@ import { StopWatch } from '../../../../platform/common/utils/stopWatch';
 import { SessionDisposedError } from '../../../../platform/errors/sessionDisposedError.node';
 import { sendKernelTelemetryEvent } from '../../../../telemetry/telemetry';
 import { Telemetry } from '../../../../webviews/webview-side/common/constants';
-import { KernelConnectionMetadata, isLocalConnection, IJupyterConnection, INotebook } from '../../../types';
+import {
+    KernelConnectionMetadata,
+    isLocalConnection,
+    IJupyterConnection,
+    INotebook,
+    KernelActionSource
+} from '../../../types';
 import { computeWorkingDirectory } from '../../jupyterUtils.node';
 import { JupyterSessionManager } from '../../session/jupyterSessionManager.node';
 import { JupyterNotebook } from '../jupyterNotebook.node';
@@ -74,7 +80,8 @@ export class HostJupyterServer implements INotebookServer {
         sessionManager: JupyterSessionManager,
         kernelConnection: KernelConnectionMetadata,
         cancelToken: CancellationToken,
-        ui: IDisplayOptions
+        ui: IDisplayOptions,
+        actionSource: KernelActionSource
     ): Promise<INotebook> {
         this.throwIfDisposedOrCancelled(cancelToken);
         // Compute launch information from the resource and the notebook metadata
@@ -95,7 +102,8 @@ export class HostJupyterServer implements INotebookServer {
                 kernelConnection,
                 workingDirectory,
                 ui,
-                cancelToken
+                cancelToken,
+                actionSource
             );
             this.throwIfDisposedOrCancelled(cancelToken);
             traceInfo(`Started session for kernel ${kernelConnection.id}`);
@@ -162,7 +170,8 @@ export class HostJupyterServer implements INotebookServer {
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
         cancelToken: CancellationToken,
-        ui: IDisplayOptions
+        ui: IDisplayOptions,
+        creator: KernelActionSource
     ): Promise<INotebook> {
         this.throwIfDisposedOrCancelled(cancelToken);
         traceInfoIfCI(
@@ -181,7 +190,8 @@ export class HostJupyterServer implements INotebookServer {
                 this.sessionManager,
                 kernelConnection,
                 cancelToken,
-                ui
+                ui,
+                creator
             );
             this.throwIfDisposedOrCancelled(cancelToken);
             const baseUrl = this.connection?.baseUrl || '';

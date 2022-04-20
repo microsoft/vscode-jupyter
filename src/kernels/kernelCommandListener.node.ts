@@ -167,9 +167,9 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                     controller.controller,
                     controller.connection,
                     currentContext,
+                    kernel.creator,
                     this.serviceContainer,
-                    kernel.resourceUri,
-                    notebook,
+                    { resource: kernel.resourceUri, notebook },
                     new DisplayOptions(false),
                     this.disposableRegistry
                 );

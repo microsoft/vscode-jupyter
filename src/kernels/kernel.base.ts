@@ -49,6 +49,7 @@ import {
     INotebookProvider,
     INotebookProviderConnection,
     isLocalConnection,
+    KernelActionSource,
     KernelConnectionMetadata,
     KernelSocketInformation,
     NotebookCellRunState
@@ -138,7 +139,8 @@ export abstract class BaseKernel implements IKernel {
         public readonly controller: NotebookController,
         protected readonly configService: IConfigurationService,
         protected readonly workspaceService: IWorkspaceService,
-        readonly cellHashProviderFactory: CellHashProviderFactory
+        readonly cellHashProviderFactory: CellHashProviderFactory,
+        public readonly creator: KernelActionSource
     ) {}
     private perceivedJupyterStartupTelemetryCaptured?: boolean;
 
@@ -250,7 +252,8 @@ export abstract class BaseKernel implements IKernel {
                 resource: this.resourceUri,
                 ui: this.startupUI,
                 kernelConnection: this.kernelConnectionMetadata,
-                token: this.startCancellation.token
+                token: this.startCancellation.token,
+                creator: this.creator
             });
             Cancellation.throwIfCanceled(this.startCancellation.token);
             if (!notebook) {

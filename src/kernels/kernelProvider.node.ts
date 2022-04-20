@@ -62,7 +62,8 @@ export class KernelProvider extends BaseKernelProvider {
             this.cellHashProviderFactory,
             this.workspaceService,
             this.pythonExecutionFactory,
-            this.statusProvider
+            this.statusProvider,
+            options.creator
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);
