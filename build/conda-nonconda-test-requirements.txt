@@ -13,3 +13,5 @@ bqplot
 K3D
 ipyleaflet
 jinja2==3.0.3 # https://github.com/microsoft/vscode-jupyter/issues/9468#issuecomment-1078468039
+matplotlib
+ipympl
