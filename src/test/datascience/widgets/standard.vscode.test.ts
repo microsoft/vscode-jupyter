@@ -190,7 +190,7 @@ suite.only('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await assertOutputContainsHtml(comms, cell1, ['Button clicked']);
         await assertOutputContainsHtml(comms, cell2, ['Button clicked']);
     });
-    test.only('Render IPySheets', async () => {
+    test('Render IPySheets', async () => {
         const comms = await initializeNotebook({ templateFile: templateIPySheetNbPath });
         const [, cell1, , cell3] = vscodeNotebook.activeNotebookEditor!.document.getCells();
 
