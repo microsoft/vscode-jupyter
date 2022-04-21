@@ -221,7 +221,7 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await executeCellAndWaitForOutput(cell4, comms);
         await executeCellAndWaitForOutput(cell6, comms);
         await executeCellAndWaitForOutput(cell7, comms);
-        await assertOutputContainsHtml(cell4, comms, ['Continuous Slider', '<input type="text']);
+        await assertOutputContainsHtml(cell4, comms, ['Continuous Slider']);
         await assertOutputContainsHtml(cell6, comms, ['Continuous Text', '<input type="number']);
         await assertOutputContainsHtml(cell7, comms, ['Continuous Slider', '>0<', '>123.00']);
 
@@ -255,8 +255,8 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(1);
 
         await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(cell, comms, ['>m<', '>b<', '<img src="data:image/png;base64,']);
-        await assertOutputContainsHtml(cell, comms, ['<img src="data:image/png;base64,'], '.jp-OutputArea-output');
+        await assertOutputContainsHtml(cell, comms, ['>m<', '>b<', '<img src="data:image']);
+        await assertOutputContainsHtml(cell, comms, ['<img src="data:image'], '.jp-OutputArea-output');
     });
     test('Render matplotlib, non-interactive inline', async function () {
         const comms = await initializeNotebook({ templateFile: 'matplotlib_widgets.ipynb' });
@@ -274,7 +274,7 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await assertOutputContainsHtml(cell, comms, ['<canvas'], '.jupyter-matplotlib-canvas-div');
     });
     test('Render matplotlib, widget in multiple cells', async function () {
-        const comms = await initializeNotebook({ templateFile: 'matplotlib_multiple_cells_widgets.ipynb' });
+        const comms = await initializeNotebook({ templateFile: 'matplotlib_multple_cells_widgets.ipynb' });
         const [, cell1, cell2, cell3, cell4] = vscodeNotebook.activeNotebookEditor!.document.getCells();
 
         await executeCellAndDontWaitForOutput(cell1);
