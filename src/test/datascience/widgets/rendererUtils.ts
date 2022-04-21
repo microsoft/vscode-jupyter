@@ -137,7 +137,6 @@ function setElementValueHandler({
     }
 }
 
-console.error('Loaded Kernel Test Utils');
 function convertVSCodeOutputToExecuteResultOrDisplayData(
     outputItem: OutputItem
 ): nbformat.IExecuteResult | nbformat.IDisplayData {

@@ -102,8 +102,8 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell)]);
     }
     async function assertOutputContainsHtml(
-        comms: Utils,
         cell: NotebookCell,
+        comms: Utils,
         htmlFragmentsToLookFor: string[],
         selector?: string
     ) {
@@ -128,13 +128,13 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         const comms = await initializeNotebook({ templateFile: 'slider_widgets.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(comms, cell, ['6519'], '.widget-readout');
+        await assertOutputContainsHtml(cell, comms, ['6519'], '.widget-readout');
     });
     test('Textbox Widget', async () => {
         const comms = await initializeNotebook({ templateFile: 'standard_widgets.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(1)!;
         await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(comms, cell, ['<input type="text', 'Enter your name:'], '.widget-text');
+        await assertOutputContainsHtml(cell, comms, ['<input type="text', 'Enter your name:'], '.widget-text');
     });
     test('Linking Widgets slider to textbox widget', async function () {
         const comms = await initializeNotebook({ templateFile: 'slider_widgets.ipynb' });
@@ -142,20 +142,20 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await executeCellAndDontWaitForOutput(cell1);
         await executeCellAndWaitForOutput(cell2, comms);
         await executeCellAndWaitForOutput(cell3, comms);
-        await assertOutputContainsHtml(comms, cell2, ['0'], '.widget-readout');
-        await assertOutputContainsHtml(comms, cell3, ['<input type="number']);
+        await assertOutputContainsHtml(cell2, comms, ['0'], '.widget-readout');
+        await assertOutputContainsHtml(cell3, comms, ['<input type="number']);
 
         // Update the textbox widget.
         await comms.setValue(cell3, '.widget-text input', '60');
 
         // Verify the slider has changed.
-        await assertOutputContainsHtml(comms, cell2, ['60'], '.widget-readout');
+        await assertOutputContainsHtml(cell2, comms, ['60'], '.widget-readout');
     });
     test('Checkbox Widget', async () => {
         const comms = await initializeNotebook({ templateFile: 'standard_widgets.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(2)!;
         await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(comms, cell, ['Check me', '<input type="checkbox'], '.widget-checkbox');
+        await assertOutputContainsHtml(cell, comms, ['Check me', '<input type="checkbox'], '.widget-checkbox');
     });
     test('Button Widget (click button)', async () => {
         const comms = await initializeNotebook({ templateFile: 'button_widgets.ipynb' });
@@ -164,14 +164,14 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await executeCellAndWaitForOutput(cell0, comms);
         await executeCellAndWaitForOutput(cell1, comms);
         await executeCellAndWaitForOutput(cell2, comms);
-        await assertOutputContainsHtml(comms, cell0, ['Click Me!', '<button']);
-        await assertOutputContainsHtml(comms, cell1, ['Click Me!', '<button']);
+        await assertOutputContainsHtml(cell0, comms, ['Click Me!', '<button']);
+        await assertOutputContainsHtml(cell1, comms, ['Click Me!', '<button']);
 
         // Click the button and verify we have output in other cells
         await click(comms, cell0, 'button');
-        await assertOutputContainsHtml(comms, cell0, ['Button clicked']);
-        await assertOutputContainsHtml(comms, cell1, ['Button clicked']);
-        await assertOutputContainsHtml(comms, cell2, ['Button clicked']);
+        await assertOutputContainsHtml(cell0, comms, ['Button clicked']);
+        await assertOutputContainsHtml(cell1, comms, ['Button clicked']);
+        await assertOutputContainsHtml(cell2, comms, ['Button clicked']);
     });
     test('Button Widget (click button in output of another cell)', async () => {
         const comms = await initializeNotebook({ templateFile: 'button_widgets.ipynb' });
@@ -180,14 +180,14 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await executeCellAndWaitForOutput(cell0, comms);
         await executeCellAndWaitForOutput(cell1, comms);
         await executeCellAndWaitForOutput(cell2, comms);
-        await assertOutputContainsHtml(comms, cell0, ['Click Me!', '<button']);
-        await assertOutputContainsHtml(comms, cell1, ['Click Me!', '<button']);
+        await assertOutputContainsHtml(cell0, comms, ['Click Me!', '<button']);
+        await assertOutputContainsHtml(cell1, comms, ['Click Me!', '<button']);
 
         // Click the button and verify we have output in other cells
         await click(comms, cell1, 'button');
-        await assertOutputContainsHtml(comms, cell0, ['Button clicked']);
-        await assertOutputContainsHtml(comms, cell1, ['Button clicked']);
-        await assertOutputContainsHtml(comms, cell2, ['Button clicked']);
+        await assertOutputContainsHtml(cell0, comms, ['Button clicked']);
+        await assertOutputContainsHtml(cell1, comms, ['Button clicked']);
+        await assertOutputContainsHtml(cell2, comms, ['Button clicked']);
     });
     test('Render IPySheets', async () => {
         const comms = await initializeNotebook({ templateFile: 'ipySheet_widgets.ipynb' });
@@ -195,7 +195,7 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
 
         await executeCellAndDontWaitForOutput(cell1);
         await executeCellAndWaitForOutput(cell3, comms);
-        await assertOutputContainsHtml(comms, cell3, ['Hello', 'World', '42.000']);
+        await assertOutputContainsHtml(cell3, comms, ['Hello', 'World', '42.000']);
     });
     test('Render IPySheets & search', async () => {
         const comms = await initializeNotebook({ templateFile: 'ipySheet_widgets_search.ipynb' });
@@ -205,12 +205,12 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await executeCellAndDontWaitForOutput(cell3);
         await executeCellAndWaitForOutput(cell4, comms);
         await executeCellAndWaitForOutput(cell5, comms);
-        await assertOutputContainsHtml(comms, cell4, ['title="Search:"', '<input type="text']);
-        await assertOutputContainsHtml(comms, cell5, ['>train<', '>foo<']);
+        await assertOutputContainsHtml(cell4, comms, ['title="Search:"', '<input type="text']);
+        await assertOutputContainsHtml(cell5, comms, ['>train<', '>foo<']);
 
         // Update the textbox widget.
         await comms.setValue(cell4, '.widget-text input', 'train');
-        await assertOutputContainsHtml(comms, cell5, ['class="htSearchResult">train<']);
+        await assertOutputContainsHtml(cell5, comms, ['class="htSearchResult">train<']);
     });
     test('Render IPySheets & slider', async () => {
         const comms = await initializeNotebook({ templateFile: 'ipySheet_widgets_slider.ipynb' });
@@ -221,57 +221,57 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await executeCellAndWaitForOutput(cell4, comms);
         await executeCellAndWaitForOutput(cell6, comms);
         await executeCellAndWaitForOutput(cell7, comms);
-        await assertOutputContainsHtml(comms, cell4, ['Continuous Slider', '<input type="text']);
-        await assertOutputContainsHtml(comms, cell6, ['Continuous Text', '<input type="number']);
-        await assertOutputContainsHtml(comms, cell7, ['Continuous Slider', '>0<', '>123.00']);
+        await assertOutputContainsHtml(cell4, comms, ['Continuous Slider', '<input type="text']);
+        await assertOutputContainsHtml(cell6, comms, ['Continuous Text', '<input type="number']);
+        await assertOutputContainsHtml(cell7, comms, ['Continuous Slider', '>0<', '>123.00']);
 
         // Update the textbox widget (for slider).
         await comms.setValue(cell4, '.widget-text input', '5255');
-        await assertOutputContainsHtml(comms, cell7, ['>5255<', '>5378.0']);
+        await assertOutputContainsHtml(cell7, comms, ['>5255<', '>5378.0']);
     });
     test('Render ipyvolume (slider, color picker, figure)', async function () {
         const comms = await initializeNotebook({ templateFile: 'ipyvolume_widgets.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(1);
 
         await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(comms, cell, ['<input type="color"', '>Slider1<', '>Slider2<', '<canvas']);
+        await assertOutputContainsHtml(cell, comms, ['<input type="color"', '>Slider1<', '>Slider2<', '<canvas']);
     });
     test('Render pythreejs', async function () {
         const comms = await initializeNotebook({ templateFile: 'pythreejs_widgets.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(1);
 
         await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(comms, cell, ['<canvas']);
+        await assertOutputContainsHtml(cell, comms, ['<canvas']);
     });
     test('Render pythreejs, 2', async function () {
         const comms = await initializeNotebook({ templateFile: 'pythreejs_widgets2.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(1);
 
         await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(comms, cell, ['<canvas']);
+        await assertOutputContainsHtml(cell, comms, ['<canvas']);
     });
     test('Render matplotlib, interactive inline', async function () {
         const comms = await initializeNotebook({ templateFile: 'matplotlib_widgets.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(1);
 
         await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(comms, cell, ['>m<', '>b<', '<img src="data:image/png;base64,']);
-        await assertOutputContainsHtml(comms, cell, ['<img src="data:image/png;base64,'], '.jp-OutputArea-output');
+        await assertOutputContainsHtml(cell, comms, ['>m<', '>b<', '<img src="data:image/png;base64,']);
+        await assertOutputContainsHtml(cell, comms, ['<img src="data:image/png;base64,'], '.jp-OutputArea-output');
     });
     test('Render matplotlib, non-interactive inline', async function () {
         const comms = await initializeNotebook({ templateFile: 'matplotlib_widgets.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(2);
 
         await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(comms, cell, ['<img src="blob:vscode']);
+        await assertOutputContainsHtml(cell, comms, ['<img src="blob:vscode']);
     });
     test('Render matplotlib, widget', async function () {
         const comms = await initializeNotebook({ templateFile: 'matplotlib_widgets.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(3);
 
         await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(comms, cell, ['>Figure 1<', '<canvas', 'Download plot']);
-        await assertOutputContainsHtml(comms, cell, ['<canvas'], '.jupyter-matplotlib-canvas-div');
+        await assertOutputContainsHtml(cell, comms, ['>Figure 1<', '<canvas', 'Download plot']);
+        await assertOutputContainsHtml(cell, comms, ['<canvas'], '.jupyter-matplotlib-canvas-div');
     });
     test('Render matplotlib, widget in multiple cells', async function () {
         const comms = await initializeNotebook({ templateFile: 'matplotlib_multiple_cells_widgets.ipynb' });
@@ -281,17 +281,17 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await executeCellAndDontWaitForOutput(cell2);
         await executeCellAndWaitForOutput(cell3, comms);
         await executeCellAndWaitForOutput(cell4, comms);
-        await assertOutputContainsHtml(comms, cell3, ['>Figure 1<', '<canvas', 'Download plot']);
-        await assertOutputContainsHtml(comms, cell3, ['<canvas'], '.jupyter-matplotlib-canvas-div');
-        await assertOutputContainsHtml(comms, cell4, ['>Figure 2<', '<canvas', 'Download plot']);
-        await assertOutputContainsHtml(comms, cell4, ['<canvas'], '.jupyter-matplotlib-canvas-div');
+        await assertOutputContainsHtml(cell3, comms, ['>Figure 1<', '<canvas', 'Download plot']);
+        await assertOutputContainsHtml(cell3, comms, ['<canvas'], '.jupyter-matplotlib-canvas-div');
+        await assertOutputContainsHtml(cell4, comms, ['>Figure 2<', '<canvas', 'Download plot']);
+        await assertOutputContainsHtml(cell4, comms, ['<canvas'], '.jupyter-matplotlib-canvas-div');
     });
     test.skip('Widget renders after executing a notebook which was saved after previous execution', async () => {
         // https://github.com/microsoft/vscode-jupyter/issues/8748
         let comms = await initializeNotebook({ templateFile: 'standard_widgets.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(comms, cell, ['66'], '.widget-readout');
+        await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
 
         // Restart the kernel.
         const uri = vscodeNotebook.activeNotebookEditor!.document.uri;
@@ -305,19 +305,19 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         assert.isOk(cell.outputs.length, 'No outputs in the cell after saving nb');
 
         await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(comms, cell, ['66'], '.widget-readout');
+        await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
     });
     test.skip('Widget renders after restarting kernel', async () => {
         const comms = await initializeNotebook({ templateFile: 'standard_widgets.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(comms, cell, ['66'], '.widget-readout');
+        await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
 
         // Restart the kernel.
         const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document.uri)!;
         await kernel.restart();
         await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(comms, cell, ['66'], '.widget-readout');
+        await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
 
         // Clear all cells and restart and test again.
         await kernel.restart();
@@ -325,20 +325,20 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await waitForCondition(async () => cell.outputs.length === 0, 5_000, 'Cell did not get cleared');
 
         await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(comms, cell, ['66'], '.widget-readout');
+        await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
     });
     test.skip('Widget renders after interrupting kernel', async () => {
         // https://github.com/microsoft/vscode-jupyter/issues/8749
         const comms = await initializeNotebook({ templateFile: 'standard_widgets.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(comms, cell, ['66'], '.widget-readout');
+        await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
 
         // Restart the kernel.
         const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document.uri)!;
         await kernel.interrupt();
         await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(comms, cell, ['66'], '.widget-readout');
+        await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
 
         // Clear all cells and restart and test again.
         await kernel.interrupt();
@@ -346,6 +346,6 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await waitForCondition(async () => cell.outputs.length === 0, 5_000, 'Cell did not get cleared');
 
         await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(comms, cell, ['66'], '.widget-readout');
+        await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
     });
 });
