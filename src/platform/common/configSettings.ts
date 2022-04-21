@@ -95,6 +95,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public showVariableViewWhenDebugging: boolean = true;
     public newCellOnRunLast: boolean = true;
     public pylanceHandlesNotebooks: boolean = false;
+    public pylanceLspNotebooksEnabled: boolean = false;
     public pythonCompletionTriggerCharacters: string = '';
     public logKernelOutputSeparately: boolean = false;
     public poetryPath: string = '';

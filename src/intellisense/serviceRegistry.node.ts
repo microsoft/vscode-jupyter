@@ -3,10 +3,12 @@
 'use strict';
 
 import { inject } from 'inversify';
-import { CancellationToken, ConfigurationParams, ConfigurationRequest, DidChangeConfigurationSignature, Disposable, HandlerResult, Middleware, RequestHandler, ResponseError, WorkspaceMiddleware, _WindowMiddleware } from 'vscode-languageclient';
+import { CancellationToken, ConfigurationParams, ConfigurationRequest, Disposable, Middleware, ResponseError, _WindowMiddleware } from 'vscode-languageclient';
 import { INotebookLanguageClientProvider } from '../notebooks/types';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
 import { IPythonApiProvider } from '../platform/api/types';
+import { getFilePath } from '../platform/common/platform/fs-paths';
+import { IConfigurationService } from '../platform/common/types';
 import { isThenable } from '../platform/common/utils/async';
 import { IServiceManager } from '../platform/ioc/types';
 import { NotebookCellLanguageService } from './cellLanguageService';
@@ -15,7 +17,7 @@ import { EmptyNotebookCellLanguageService } from './emptyNotebookCellLanguageSer
 import { PythonKernelCompletionProvider } from './pythonKernelCompletionProvider';
 import { PythonKernelCompletionProviderRegistration } from './pythonKernelCompletionProviderRegistration';
 
-export async function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean, _pylanceLspNotebooksExperiment: boolean) {
+export async function registerTypes(serviceManager: IServiceManager, configService: IConfigurationService, _isDevMode: boolean) {
     serviceManager.addSingleton<PythonKernelCompletionProvider>(
         PythonKernelCompletionProvider,
         PythonKernelCompletionProvider
@@ -35,7 +37,7 @@ export async function registerTypes(serviceManager: IServiceManager, _isDevMode:
         EmptyNotebookCellLanguageService
     );
 
-    if (!_pylanceLspNotebooksExperiment) {
+    if (!configService.getSettings().pylanceLspNotebooksEnabled) {
         serviceManager.addSingleton<INotebookLanguageClientProvider>(INotebookLanguageClientProvider, IntellisenseProvider);
     }
     else
@@ -71,12 +73,13 @@ export class PythonPathMiddleware implements Middleware, Disposable {
             // How to get NotebookDocument object?
             // Do we need to deal with controllers?
             // Can the python path change? Need to implement this? -- didChangeConfiguration?: (sections: string[] | undefined, next: DidChangeConfigurationSignature) => void;
-            const interpreter = controller?.connection.interpreter || (await this.interpreterService.getActiveInterpreter(n.uri) // <-- n is NotebookDocument
-            getFilePath(interpreter.uri),
+            // const interpreter = controller?.connection.interpreter || (await this.interpreterService.getActiveInterpreter(n.uri)); // <-- n is NotebookDocument
+            // const pythonPath = getFilePath(interpreter.uri);
+            const pythonPath = "";
 
             for (const [i, item] of params.items.entries()) {
                 if (item.section === 'python') {
-                    (settings[i] as any).pythonPath = this.pythonPath;
+                    (settings[i] as any).pythonPath = pythonPath;
                 }
             }
 

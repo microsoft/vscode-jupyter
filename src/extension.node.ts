@@ -335,8 +335,7 @@ async function activateLegacy(
     const applicationEnv = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment);
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
 
-    const pylanceLspNotebooksExperiment = await experimentService.inExperiment(Experiments.PylanceLspNotebooks);
-    registerIntellisenseTypes(serviceManager, isDevMode, pylanceLspNotebooksExperiment);
+    registerIntellisenseTypes(serviceManager, configuration, isDevMode);
 
     // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.
     // `IConfigurationService` may depend any of the registered types, so doing it after all registrations are finished.

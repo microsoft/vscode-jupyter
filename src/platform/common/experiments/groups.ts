@@ -3,6 +3,5 @@
 
 export enum Experiments {
     // Experiment to enable tensor tooltips.
-    EnhancedTooltips = 'jupyterEnhancedTensorTooltips',
-    PylanceLspNotebooks = 'pylanceLspNotebooksEnabled'
+    EnhancedTooltips = 'jupyterEnhancedTensorTooltips'
 }
