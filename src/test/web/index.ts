@@ -35,7 +35,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
 
             // bundles all files in the current directory matching `*.web.test`
             const importAll = (r: __WebpackModuleApi.RequireContext) => r.keys().forEach(r);
-            importAll(require.context('..', true, /(\.common\.test$)|(\.web\.test$)/));
+            importAll(require.context('..', true, /\.web\.test$/));
 
             try {
                 // Run the mocha test

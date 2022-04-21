@@ -10,7 +10,7 @@ import { traceInfo } from '../../../platform/logging';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
 import { openNotebook } from '../helpers';
 import { closeNotebooksAndCleanUpAfterTests } from './helper.node';
-import { window } from 'vscode';
+import { Uri, window } from 'vscode';
 import { initialize } from '../../initialize.node';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { cellOutputToVSCCellOutput } from '../../../notebooks/helpers';
@@ -38,7 +38,7 @@ suite('DataScience - VSCode Notebook - (Validate Output order)', function () {
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests());
     test('Verify order of outputs in existing ipynb file', async () => {
-        await openNotebook(templateIPynb);
+        await openNotebook(Uri.file(templateIPynb));
         const cells = window.activeNotebookEditor?.document?.getCells()!;
 
         const expectedOutputItemMimeTypes = [

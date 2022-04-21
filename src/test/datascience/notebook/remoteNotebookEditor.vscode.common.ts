@@ -6,7 +6,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { commands, Memento, Uri } from 'vscode';
+import { commands, Memento, NotebookDocument, Uri } from 'vscode';
 import { IEncryptedStorage, IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo, traceInfoIfCI } from '../../../platform/logging';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
@@ -14,7 +14,6 @@ import { IExtensionTestApi, waitForCondition } from '../../common';
 import { closeActiveWindows, initialize } from '../../initialize';
 import {
     runAllCellsInActiveNotebook,
-    startJupyterServer,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected,
     saveActiveNotebook,
@@ -29,16 +28,17 @@ import {
 } from './helper';
 import { openNotebook } from '../helpers';
 import { PYTHON_LANGUAGE, Settings } from '../../../platform/common/constants';
-import { RemoteKernelSpecConnectionMetadata } from '../../../platform/../kernels/types';
-import { JupyterServer } from '../jupyterServer.node';
 import { IS_REMOTE_NATIVE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider';
 import { INotebookControllerManager } from '../../../notebooks/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function () {
-    this.timeout(120_000);
+export function sharedRemoteNotebookEditorTests(
+    suite: Mocha.Suite,
+    startJupyterServer: (notebook?: NotebookDocument) => Promise<void>
+) {
+    suite.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
@@ -77,7 +77,25 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
             await startJupyterServer();
         }
         // Don't use same file for this test (files get modified in tests and we might save stuff)
-        ipynbFile = await createTemporaryNotebook([], disposables);
+        ipynbFile = await createTemporaryNotebook(
+            [
+                {
+                    cell_type: 'code',
+                    source: ['a = "Hello World"\n'],
+                    outputs: [],
+                    execution_count: 0,
+                    metadata: {}
+                },
+                {
+                    cell_type: 'code',
+                    source: ['print(a)\n'],
+                    outputs: [],
+                    execution_count: 0,
+                    metadata: {}
+                }
+            ],
+            disposables
+        );
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
@@ -91,7 +109,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         this.skip();
         const previousList = globalMemento.get<{}[]>(Settings.JupyterServerUriList, []);
         const encryptedStorageSpiedStore = sinon.spy(encryptedStorage, 'store');
-        await openNotebook(ipynbFile.fsPath);
+        await openNotebook(ipynbFile);
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
         await deleteAllCellsAndWait();
         await insertCodeCell('print("123412341234")', { index: 0 });
@@ -104,7 +122,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         assert.notDeepEqual(previousList, newList, 'MRU not updated');
     });
     test('Use same kernel when re-opening notebook', async function () {
-        await openNotebook(ipynbFile.fsPath);
+        await openNotebook(ipynbFile);
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE, true);
         let nbEditor = vscodeNotebook.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');
@@ -134,7 +152,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         // It should connect to the same live kernel
         // Second cell should display the value of existing variable from previous execution.
 
-        await openNotebook(ipynbFile.fsPath);
+        await openNotebook(ipynbFile);
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE, true);
         nbEditor = vscodeNotebook.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');
@@ -191,62 +209,6 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
             defaultNotebookTestTimeout,
             () =>
                 `Should not have any remote controllers, existing ${JSON.stringify(
-                    controllerManager.registeredNotebookControllers()
-                )}`
-        );
-    });
-
-    test('Old Remote kernels are removed when switching to new Remote Server', async function () {
-        await controllerManager.loadNotebookControllers();
-
-        // Opening a notebook will trigger the refresh of the kernel list.
-        let nbUri = await createTemporaryNotebook([], disposables);
-        await openNotebook(nbUri.fsPath);
-
-        const baseUrls = new Set<string>();
-        // Wait til we get new controllers with a different base url.
-        await waitForCondition(
-            async () => {
-                const controllers = controllerManager.registeredNotebookControllers();
-                const remoteKernelSpecs = controllers
-                    .filter((item) => item.connection.kind === 'startUsingRemoteKernelSpec')
-                    .map((item) => item.connection as RemoteKernelSpecConnectionMetadata);
-                remoteKernelSpecs.forEach((item) => baseUrls.add(item.baseUrl));
-                return remoteKernelSpecs.length > 0;
-            },
-            defaultNotebookTestTimeout,
-            () =>
-                `Should have at least one remote kernelspec, ${JSON.stringify(
-                    controllerManager.registeredNotebookControllers()
-                )}`
-        );
-
-        traceInfoIfCI(`Base Url is ${Array.from(baseUrls).join(', ')}`);
-
-        // Start another jupyter server with a new port.
-        const uri = await JupyterServer.instance.startSecondJupyterWithToken();
-        const uriString = decodeURIComponent(uri.toString());
-        traceInfo(`Another Jupyter started and listening at ${uriString}`);
-        await jupyterServerSelector.setJupyterURIToLocal();
-        await jupyterServerSelector.setJupyterURIToRemote(uriString);
-
-        // Opening a notebook will trigger the refresh of the kernel list.
-        nbUri = await createTemporaryNotebook([], disposables);
-        await openNotebook(nbUri.fsPath);
-        traceInfo(`Waiting for kernels to get refreshed for Jupyter Remotenp ${uriString}`);
-
-        // Wait til we get new controllers with a different base url.
-        await waitForCondition(
-            async () => {
-                const controllers = controllerManager.registeredNotebookControllers();
-                return controllers.some(
-                    (item) =>
-                        item.connection.kind === 'startUsingRemoteKernelSpec' && !baseUrls.has(item.connection.baseUrl)
-                );
-            },
-            defaultNotebookTestTimeout,
-            () =>
-                `Should have at least one remote kernelspec with different baseUrls, ${JSON.stringify(
                     controllerManager.registeredNotebookControllers()
                 )}`
         );
@@ -324,7 +286,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
     });
 
     test('Remote kernels support intellisense', async function () {
-        await openNotebook(ipynbFile.fsPath);
+        await openNotebook(ipynbFile);
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
         let nbEditor = vscodeNotebook.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');
@@ -353,7 +315,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
 
     test('Selecting URI returns preferred kernel', async function () {
         // Open the notebook but without a server started
-        const notebook = await openNotebook(ipynbFile.fsPath);
+        const notebook = await openNotebook(ipynbFile);
 
         // Start a server
         const preferred = await startJupyterServer(notebook);
@@ -371,4 +333,5 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
 
         assert.ok(preferred, `No preferred kernel set for selecting a URI`);
     });
-});
+    return disposables;
+}

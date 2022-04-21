@@ -22,6 +22,7 @@ import { initialize } from '../initialize.node';
 import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../interactive-window/types';
 import { Commands } from '../../platform/common/constants';
+import { getFilePath } from '../../platform/common/platform/fs-paths';
 
 // The default base set of data science settings to use
 export function defaultDataScienceSettings(): IJupyterSettings {
@@ -85,12 +86,11 @@ export function writeDiffSnapshot(_snapshot: any, _prefix: string) {
     // fs.writeFile(file, JSON.stringify(diff), { encoding: 'utf-8' }).ignoreErrors();
 }
 
-export async function openNotebook(ipynbFile: string) {
-    traceInfo(`Opening notebook ${ipynbFile}`);
-    const uri = vscode.Uri.file(ipynbFile);
-    const nb = await vscode.workspace.openNotebookDocument(uri);
+export async function openNotebook(ipynbFile: vscode.Uri) {
+    traceInfo(`Opening notebook ${getFilePath(ipynbFile)}`);
+    const nb = await vscode.workspace.openNotebookDocument(ipynbFile);
     await vscode.window.showNotebookDocument(nb);
-    traceInfo(`Opened notebook ${ipynbFile}`);
+    traceInfo(`Opened notebook ${getFilePath(ipynbFile)}`);
     return nb;
 }
 

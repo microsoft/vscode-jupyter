@@ -59,7 +59,7 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
     });
     suiteTeardown(closeNotebooksAndCleanUpAfterTests);
     test('Verify output & metadata when re-opening (slow)', async () => {
-        await openNotebook(testEmptyIPynb.fsPath);
+        await openNotebook(testEmptyIPynb);
 
         await insertCodeCell('print(1)', { index: 0 });
         await insertCodeCell('print(a)', { index: 1 });
@@ -113,7 +113,7 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
         await closeActiveWindows();
 
         // Reopen the notebook & validate the metadata.
-        await openNotebook(testEmptyIPynb.fsPath);
+        await openNotebook(testEmptyIPynb);
         initializeCells();
         verifyCelMetadata();
     });

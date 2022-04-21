@@ -3,6 +3,7 @@
 
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, no-invalid-this, @typescript-eslint/no-explicit-any */
 
+import type * as nbformat from '@jupyterlab/nbformat';
 import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
 import {
@@ -27,20 +28,17 @@ import {
     languages,
     Position,
     Hover,
-    Diagnostic,
-    NotebookData
+    Diagnostic
 } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook } from '../../../platform/common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceInfo, traceInfoIfCI } from '../../../platform/logging';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
-import { createDeferred } from '../../../platform/common/utils/async';
+import { createDeferred, sleep } from '../../../platform/common/utils/async';
 import { IKernelProvider } from '../../../platform/../kernels/types';
-import { sleep, waitForCondition } from '../../common.node';
 import { noop } from '../../core';
 import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
-import { JupyterServer } from '../jupyterServer.node';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebuggingManager, IKernelDebugAdapter } from '../../../platform/debugger/types';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -51,11 +49,12 @@ import { NotebookCellStateTracker, hasErrorOutput, getTextOutputValue } from '..
 import { INotebookControllerManager, CellOutputMimeTypes, INotebookEditorProvider } from '../../../notebooks/types';
 import { InteractiveControllerIdSuffix } from '../../../notebooks/controllers/notebookControllerManager';
 import { IVSCodeNotebookController } from '../../../notebooks/controllers/types';
-import { IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
+import { IS_SMOKE_TEST } from '../../constants';
 import * as urlPath from '../../../platform/vscode-path/resources';
 import * as uuid from 'uuid/v4';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
 import { IPlatformService } from '../../../platform/common/platform/types';
+import { waitForCondition } from '../../common';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -137,27 +136,34 @@ export async function deleteAllCellsAndWait() {
 }
 
 export async function createTemporaryNotebook(
-    cells: NotebookCellData[] = [],
+    cells: (nbformat.ICodeCell | nbformat.IMarkdownCell)[],
     disposables: IDisposable[],
     kernelName: string = 'Python 3'
 ): Promise<Uri> {
     const services = await getServices();
     const platformService = services.serviceContainer.get<IPlatformService>(IPlatformService);
     const uri = urlPath.joinPath(platformService.tempDir || Uri.file('./'), `${uuid()}.ipynb`);
-    const language = 'python';
-    cells = cells.length == 0 ? [new NotebookCellData(NotebookCellKind.Code, '', language)] : cells;
-    const data = new NotebookData(cells);
-    data.metadata = {
-        custom: {
-            cells: [],
-            metadata: {
-                orig_nbformat: 4
-            },
-            nbformat: 4,
-            nbformat_minor: 2,
-            kernel: {
-                display_name: kernelName
-            }
+    cells =
+        cells.length == 0
+            ? [
+                  {
+                      cell_type: 'code',
+                      outputs: [],
+                      source: ['\n'],
+                      execution_count: 0,
+                      metadata: {}
+                  }
+              ]
+            : cells;
+    const data: nbformat.INotebookContent = {
+        cells,
+        metadata: {
+            orig_nbformat: 4
+        },
+        nbformat: 4,
+        nbformat_minor: 2,
+        kernel: {
+            display_name: kernelName
         }
     };
     await workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(data)));
@@ -422,24 +428,6 @@ export async function waitForKernelToGetAutoSelected(
     return waitForKernelToChange(criteria, timeout);
 }
 
-export async function startJupyterServer(notebook?: NotebookDocument) {
-    if (IS_REMOTE_NATIVE_TEST()) {
-        const uri = await JupyterServer.instance.startJupyterWithToken();
-        const uriString = decodeURIComponent(uri.toString());
-        traceInfo(`Jupyter started and listening at ${uriString}`);
-        return commands.executeCommand('jupyter.selectjupyteruri', false, uri, notebook);
-    } else {
-        traceInfo(`Jupyter not started and set to local`); // This is the default
-    }
-}
-
-export async function stopJupyterServer() {
-    if (IS_REMOTE_NATIVE_TEST()) {
-        return;
-    }
-    await JupyterServer.instance.dispose().catch(noop);
-}
-
 let workedAroundVSCodeNotebookStartPage = false;
 /**
  * VS Code displays a start page when opening notebooks for the first time.
@@ -553,6 +541,7 @@ export async function waitForExecutionCompletedSuccessfully(
     cell: NotebookCell,
     timeout: number = defaultNotebookTestTimeout
 ) {
+    assert.ok(cell, 'No notebook cell to wait for');
     await Promise.all([
         waitForCondition(
             async () => assertHasExecutionCompletedSuccessfully(cell),

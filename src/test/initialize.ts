@@ -6,21 +6,15 @@ import { IDisposable } from '../platform/common/types';
 import { sleep } from '../platform/common/utils/async';
 import { clearPendingTimers, IExtensionTestApi } from './common';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from './constants';
-import { startJupyterServer } from './datascience/notebook/helper';
 
 export function isInsiders() {
     return vscode.env.appName.indexOf('Insider') > 0 || vscode.env.appName.indexOf('OSS') > 0;
 }
 
-let jupyterServerStarted = false;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function initialize(): Promise<IExtensionTestApi> {
     const api = await activateExtension();
-    // Ensure we start jupyter server before opening any notebooks or the like.
-    if (!jupyterServerStarted) {
-        jupyterServerStarted = true;
-        await startJupyterServer();
-    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return api as any as IExtensionTestApi;
 }

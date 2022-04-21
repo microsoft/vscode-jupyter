@@ -7,9 +7,11 @@ import * as fs from 'fs-extra';
 import * as path from '../../../platform/vscode-path/path';
 import * as tmp from 'tmp';
 import { IDisposable } from '../../../platform/common/types';
-import { swallowExceptions } from '../../../platform/common/utils/misc';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
-import { Uri } from 'vscode';
+import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
+import { commands, NotebookDocument, Uri } from 'vscode';
+import { traceInfo } from '../../../platform/logging';
+import { JupyterServer } from '../jupyterServer.node';
 export * from './helper';
 
 export async function createTemporaryFile(options: {
@@ -50,4 +52,22 @@ export async function createTemporaryNotebookFromFile(
 
     disposables.push({ dispose: () => swallowExceptions(() => fs.unlinkSync(tempFile)) });
     return Uri.file(tempFile);
+}
+
+export async function startJupyterServer(notebook?: NotebookDocument): Promise<any> {
+    if (IS_REMOTE_NATIVE_TEST()) {
+        const uri = await JupyterServer.instance.startJupyterWithToken();
+        const uriString = decodeURIComponent(uri.toString());
+        traceInfo(`Jupyter started and listening at ${uriString}`);
+        return commands.executeCommand('jupyter.selectjupyteruri', false, uri, notebook);
+    } else {
+        traceInfo(`Jupyter not started and set to local`); // This is the default
+    }
+}
+
+export async function stopJupyterServer() {
+    if (IS_REMOTE_NATIVE_TEST()) {
+        return;
+    }
+    await JupyterServer.instance.dispose().catch(noop);
 }

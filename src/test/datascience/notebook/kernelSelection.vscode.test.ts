@@ -56,7 +56,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnoreg', executable)
     );
 
-    let nbFile1: string;
+    let nbFile1: Uri;
     let api: IExtensionTestApi;
     let activeInterpreterPath: Uri;
     let venvNoKernelPythonPath: Uri;
@@ -138,13 +138,12 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         console.log(`Start test ${this.currentTest?.title}`);
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-        nbFile1 = (await createTemporaryNotebookFromFile(templateIPynbFile, disposables, venvNoKernelDisplayName))
-            .fsPath;
+        nbFile1 = await createTemporaryNotebookFromFile(templateIPynbFile, disposables, venvNoKernelDisplayName);
         // Update hash in notebook metadata.
         fs.writeFileSync(
-            nbFile1,
+            nbFile1.fsPath,
             fs
-                .readFileSync(nbFile1)
+                .readFileSync(nbFile1.fsPath)
                 .toString('utf8')
                 .replace('<hash>', getInterpreterHash({ uri: venvNoKernelPythonPath }))
         );

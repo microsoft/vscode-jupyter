@@ -22,6 +22,7 @@ let testSettings: TestSettingsType = {
 
 export const MAX_EXTENSION_ACTIVATION_TIME = 180_000;
 export const TEST_TIMEOUT = 25000;
+export const JUPYTER_SERVER_URI = 'TOBEREPLACED_WITHURI';
 export const TEST_RETRYCOUNT = 0;
 export function IS_SMOKE_TEST() {
     return testSettings.isSmokeTest;

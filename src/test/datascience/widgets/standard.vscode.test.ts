@@ -81,7 +81,7 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
             'templateFile' in options
                 ? await createTemporaryNotebookFromFile(options.templateFile, disposables)
                 : Uri.file(options.notebookFile);
-        await openNotebook(nbUri.fsPath);
+        await openNotebook(nbUri);
         await waitForKernelToGetAutoSelected();
         return initializeWidgetComms(api.serviceContainer);
     }

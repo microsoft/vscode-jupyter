@@ -69,7 +69,7 @@ import { isUri } from '../../../../platform/common/utils/misc';
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience Install IPyKernel (slow) (install)', function () {
     const disposables: IDisposable[] = [];
-    let nbFile: string;
+    let nbFile: Uri;
     const templateIPynbFile = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
         'src/test/datascience/jupyter/kernels/nbWithKernel.ipynb'
@@ -146,12 +146,12 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
 
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-        nbFile = (await createTemporaryNotebookFromFile(templateIPynbFile, disposables)).fsPath;
+        nbFile = await createTemporaryNotebookFromFile(templateIPynbFile, disposables);
         // Update hash in notebook metadata.
         fs.writeFileSync(
-            nbFile,
+            nbFile.fsPath,
             fs
-                .readFileSync(nbFile)
+                .readFileSync(nbFile.fsPath)
                 .toString('utf8')
                 .replace('<hash>', getInterpreterHash({ uri: venvPythonPath }))
         );
@@ -511,7 +511,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         // Un-install IpyKernel
         await uninstallIPyKernel(venvPythonPath.fsPath);
 
-        nbFile = (await createTemporaryNotebookFromFile(templateIPynbFile, disposables)).fsPath;
+        nbFile = await createTemporaryNotebookFromFile(templateIPynbFile, disposables);
         await openNotebookAndInstallIpyKernelWhenRunningCell(venvPythonPath);
     });
     test('Ensure ipykernel install prompt is displayed even selecting another kernel which too does not have IPyKernel installed (VSCode Notebook)', async function () {
@@ -527,7 +527,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         await uninstallIPyKernel(venvPythonPath.fsPath);
         await uninstallIPyKernel(venvNoRegPath.fsPath);
 
-        nbFile = (await createTemporaryNotebookFromFile(templateIPynbFile, disposables)).fsPath;
+        nbFile = await createTemporaryNotebookFromFile(templateIPynbFile, disposables);
         await openNotebookAndInstallIpyKernelWhenRunningCell(venvPythonPath, venvNoRegPath);
     });
     test('Ensure ipykernel install prompt is not displayed after selecting another kernel which has IPyKernel installed (VSCode Notebook)', async function () {
@@ -543,7 +543,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         await uninstallIPyKernel(venvPythonPath.fsPath);
         await installIPyKernel(venvNoRegPath.fsPath);
 
-        nbFile = (await createTemporaryNotebookFromFile(templateIPynbFile, disposables)).fsPath;
+        nbFile = await createTemporaryNotebookFromFile(templateIPynbFile, disposables);
         await openNotebookAndInstallIpyKernelWhenRunningCell(venvPythonPath, venvNoRegPath, 'DoNotInstallIPyKernel');
     });
     test('Should be prompted to re-install ipykernel when restarting a kernel from which ipykernel was uninstalled (VSCode Notebook)', async function () {
@@ -567,7 +567,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         console.log('Step3');
         const promptToInstall = await clickInstallFromIPyKernelPrompt();
         await commandManager.executeCommand(Commands.RestartKernel, {
-            notebookEditor: { notebookUri: Uri.file(nbFile) }
+            notebookEditor: { notebookUri: nbFile }
         }),
             console.log('Step4');
         await Promise.all([
@@ -603,7 +603,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
 
         await Promise.all([
             await commandManager.executeCommand(Commands.RestartKernel, {
-                notebookEditor: { notebookUri: Uri.file(nbFile) }
+                notebookEditor: { notebookUri: nbFile }
             }),
             waitForCondition(
                 async () => promptToInstall.displayed.then(() => true),
@@ -792,7 +792,11 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         let selectADifferentKernelStub: undefined | sinon.SinonStub<any[], any>;
         try {
             console.log('Stepa');
-            if (!workspace.notebookDocuments.some((item) => item.uri.fsPath.toLowerCase() === nbFile.toLowerCase())) {
+            if (
+                !workspace.notebookDocuments.some(
+                    (item) => item.uri.fsPath.toLowerCase() === nbFile.fsPath.toLowerCase()
+                )
+            ) {
                 await openNotebook(nbFile);
                 await waitForKernelToChange({ interpreterPath });
             }

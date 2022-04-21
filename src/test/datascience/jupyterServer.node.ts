@@ -4,6 +4,8 @@
 import * as getFreePort from 'get-port';
 import * as path from '../../platform/vscode-path/path';
 import * as tcpPortUsed from 'tcp-port-used';
+import * as uuid from 'uuid/v4';
+const uuidToHex = require('uuid-to-hex') as typeof import('uuid-to-hex');
 import { Uri } from 'vscode';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceError, traceInfo, traceInfoIfCI } from '../../platform/logging';
@@ -40,7 +42,7 @@ export class JupyterServer implements IAsyncDisposable {
             await tcpPortUsed.waitUntilFree(this.availableSecondPort, 200, 5_000);
         }
     }
-    public async startJupyterWithToken(token = '7d25707a86975be50ee9757c929fef9012d27cf43153d1c1'): Promise<Uri> {
+    public async startJupyterWithToken(token = this.generateToken()): Promise<Uri> {
         if (!this._jupyterServerWithToken) {
             this._jupyterServerWithToken = new Promise<Uri>(async (resolve, reject) => {
                 const port = await this.getFreePort();
@@ -61,7 +63,7 @@ export class JupyterServer implements IAsyncDisposable {
         }
         return this._jupyterServerWithToken;
     }
-    public async startSecondJupyterWithToken(token = 'fbd00a866c54f5d9f64df9ba820860de56f32379407d03e8'): Promise<Uri> {
+    public async startSecondJupyterWithToken(token = this.generateToken()): Promise<Uri> {
         if (!this._secondJupyterServerWithToken) {
             this._secondJupyterServerWithToken = new Promise<Uri>(async (resolve, reject) => {
                 const port = await this.getSecondFreePort();
@@ -81,6 +83,10 @@ export class JupyterServer implements IAsyncDisposable {
             });
         }
         return this._secondJupyterServerWithToken;
+    }
+
+    private generateToken(): string {
+        return uuidToHex(uuid());
     }
     private async getFreePort() {
         // Always use the same port (when using different ports, our code doesn't work as we need to re-load VSC).
