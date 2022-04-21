@@ -18,7 +18,7 @@ import { openNotebook } from '../helpers';
 import {
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
-    createTemporaryNotebook,
+    createTemporaryNotebookFromFile,
     defaultNotebookTestTimeout,
     prewarmNotebooks,
     runCell,
@@ -79,7 +79,7 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
     async function initializeNotebook(options: { templateFile: string } | { notebookFile: string }) {
         const nbUri =
             'templateFile' in options
-                ? Uri.file(await createTemporaryNotebook(options.templateFile, disposables))
+                ? await createTemporaryNotebookFromFile(options.templateFile, disposables)
                 : Uri.file(options.notebookFile);
         await openNotebook(nbUri.fsPath);
         await waitForKernelToGetAutoSelected();

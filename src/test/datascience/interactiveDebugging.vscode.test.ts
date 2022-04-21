@@ -41,7 +41,7 @@ suite('Interactive window debugging', async function () {
     };
 
     setup(async function () {
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
         traceInfo(`Start Test ${this.currentTest?.title}`);

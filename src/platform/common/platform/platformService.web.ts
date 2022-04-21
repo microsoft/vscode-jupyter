@@ -9,6 +9,9 @@ import { IPlatformService } from './types';
 
 @injectable()
 export class PlatformService implements IPlatformService {
+    public get tempDir() {
+        return undefined;
+    }
     public get homeDir() {
         return undefined;
     }

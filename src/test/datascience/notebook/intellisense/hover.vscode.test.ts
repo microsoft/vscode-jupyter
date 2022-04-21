@@ -30,7 +30,7 @@ suite('DataScience - VSCode Intellisense Notebook Hover', function () {
         traceInfo(`Start Suite Hover`);
         this.timeout(120_000);
         api = await initialize();
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             // https://github.com/microsoft/vscode-jupyter/issues/6331
             return this.skip();
         }

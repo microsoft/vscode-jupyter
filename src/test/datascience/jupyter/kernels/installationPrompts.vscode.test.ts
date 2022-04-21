@@ -42,7 +42,6 @@ import { clearInstalledIntoInterpreterMemento } from '../../../../kernels/instal
 import { ProductNames } from '../../../../kernels/installer/productNames';
 import { Product, IInstaller, InstallerResponse } from '../../../../kernels/installer/types';
 import {
-    createTemporaryNotebook,
     closeNotebooksAndCleanUpAfterTests,
     hijackPrompt,
     waitForKernelToGetAutoSelected,
@@ -56,7 +55,8 @@ import {
     insertCodeCell,
     WindowPromptStub,
     WindowPromptStubButtonClickOptions,
-    waitForTextOutput
+    waitForTextOutput,
+    createTemporaryNotebookFromFile
 } from '../../notebook/helper.node';
 import * as kernelSelector from '../../../../notebooks/controllers/kernelSelector';
 import { noop } from '../../../core';
@@ -104,7 +104,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
     */
     suiteSetup(async function () {
         // These are slow tests, hence lets run only on linux on CI.
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
         if (!fs.pathExistsSync(venvPythonPath.fsPath) || !fs.pathExistsSync(venvNoRegPath.fsPath)) {
@@ -146,7 +146,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
 
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-        nbFile = await createTemporaryNotebook(templateIPynbFile, disposables);
+        nbFile = (await createTemporaryNotebookFromFile(templateIPynbFile, disposables)).fsPath;
         // Update hash in notebook metadata.
         fs.writeFileSync(
             nbFile,
@@ -204,7 +204,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         venvNoRegPath.fsPath
     )}'`, async () => openNotebookAndInstallIpyKernelWhenRunningCell(venvPythonPath));
     test('Ensure ipykernel install prompt is displayed every time you try to run a cell in a Notebook', async function () {
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
 
@@ -268,7 +268,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         );
     });
     test('Ensure ipykernel install prompt is displayed every time you try to run a cell in an Interactive Window and you can switch kernels', async function () {
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
         // This is a complex test that tests the following workflow (which used to fail)
@@ -500,7 +500,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
     });
 
     test('Ensure ipykernel install prompt is displayed even after uninstalling ipykernel (VSCode Notebook)', async function () {
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
 
@@ -511,11 +511,11 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         // Un-install IpyKernel
         await uninstallIPyKernel(venvPythonPath.fsPath);
 
-        nbFile = await createTemporaryNotebook(templateIPynbFile, disposables);
+        nbFile = (await createTemporaryNotebookFromFile(templateIPynbFile, disposables)).fsPath;
         await openNotebookAndInstallIpyKernelWhenRunningCell(venvPythonPath);
     });
     test('Ensure ipykernel install prompt is displayed even selecting another kernel which too does not have IPyKernel installed (VSCode Notebook)', async function () {
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
 
@@ -527,11 +527,11 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         await uninstallIPyKernel(venvPythonPath.fsPath);
         await uninstallIPyKernel(venvNoRegPath.fsPath);
 
-        nbFile = await createTemporaryNotebook(templateIPynbFile, disposables);
+        nbFile = (await createTemporaryNotebookFromFile(templateIPynbFile, disposables)).fsPath;
         await openNotebookAndInstallIpyKernelWhenRunningCell(venvPythonPath, venvNoRegPath);
     });
     test('Ensure ipykernel install prompt is not displayed after selecting another kernel which has IPyKernel installed (VSCode Notebook)', async function () {
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
 
@@ -543,11 +543,11 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         await uninstallIPyKernel(venvPythonPath.fsPath);
         await installIPyKernel(venvNoRegPath.fsPath);
 
-        nbFile = await createTemporaryNotebook(templateIPynbFile, disposables);
+        nbFile = (await createTemporaryNotebookFromFile(templateIPynbFile, disposables)).fsPath;
         await openNotebookAndInstallIpyKernelWhenRunningCell(venvPythonPath, venvNoRegPath, 'DoNotInstallIPyKernel');
     });
     test('Should be prompted to re-install ipykernel when restarting a kernel from which ipykernel was uninstalled (VSCode Notebook)', async function () {
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
 
@@ -580,7 +580,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         ]);
     });
     test('Ensure ipykernel install prompt is displayed and we can select another kernel after uninstalling IPyKernel from a live notebook and then restarting the kernel (VSCode Notebook)', async function () {
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
         // Verify we can open a notebook, run a cell and ipykernel prompt should be displayed.
@@ -627,7 +627,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         ]);
     });
     test('Ensure ipykernel install prompt will switch', async function () {
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
         // Confirm message is displayed & then dismiss the message (so that execution stops due to missing dependency).

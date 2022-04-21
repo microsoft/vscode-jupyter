@@ -109,7 +109,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         traceInfo('Step 5');
     });
     test('Restarting kernel will cancel cell execution & we can re-run a cell', async function () {
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
         traceInfo('Step 1');
@@ -201,7 +201,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
     });
     test('Interrupt and running cells again should only run the necessary cells', async function () {
         // No need to test remote as this is a test of status (fewer slower tests is better).
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
 
@@ -325,7 +325,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         console.log('Step12');
     });
     test('Can restart a kernel after it dies', async function () {
-        if (IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST() || IS_NON_RAW_NATIVE_TEST()) {
             // The kernel will auto start if it fails when using Jupyter.
             // When using Raw we don't use jupyter.
             return this.skip();

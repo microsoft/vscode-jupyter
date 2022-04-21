@@ -27,7 +27,7 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Goto Definitio
     suiteSetup(async function () {
         traceInfo(`Start Suite Code Completion via Jupyter`);
         this.timeout(120_000);
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             // https://github.com/microsoft/vscode-jupyter/issues/6331
             return this.skip();
         }

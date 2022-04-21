@@ -70,7 +70,7 @@ export async function setAutoSaveDelayInWorkspaceRoot(delayinMS: number) {
 }
 
 function getWorkspaceRoot() {
-    if (IS_SMOKE_TEST || IS_PERF_TEST) {
+    if (IS_SMOKE_TEST() || IS_PERF_TEST()) {
         return;
     }
     const vscode = require('vscode') as typeof import('vscode');

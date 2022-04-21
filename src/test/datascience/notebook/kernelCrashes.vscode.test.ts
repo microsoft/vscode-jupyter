@@ -153,7 +153,7 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
 
     suite('Raw Kernels', () => {
         setup(function () {
-            if (IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
+            if (IS_REMOTE_NATIVE_TEST() || IS_NON_RAW_NATIVE_TEST()) {
                 return this.skip();
             }
         });

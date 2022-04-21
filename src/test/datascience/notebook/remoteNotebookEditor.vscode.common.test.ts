@@ -6,38 +6,32 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import * as path from '../../../platform/vscode-path/path';
 import { commands, Memento, Uri } from 'vscode';
 import { IEncryptedStorage, IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo, traceInfoIfCI } from '../../../platform/logging';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
 import { IExtensionTestApi, waitForCondition } from '../../common';
+import { closeActiveWindows, initialize } from '../../initialize';
 import {
-    closeActiveWindows,
-    EXTENSION_ROOT_DIR_FOR_TESTS,
-    initialize,
-    IS_REMOTE_NATIVE_TEST
-} from '../../initialize.node';
-import {
-    closeNotebooksAndCleanUpAfterTests,
     runAllCellsInActiveNotebook,
     startJupyterServer,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected,
-    createTemporaryNotebook,
     saveActiveNotebook,
     runCell,
     deleteAllCellsAndWait,
     insertCodeCell,
     waitForTextOutput,
     defaultNotebookTestTimeout,
+    closeNotebooksAndCleanUpAfterTests,
+    createTemporaryNotebook,
     createEmptyPythonNotebook
-} from './helper.node';
+} from './helper';
 import { openNotebook } from '../helpers';
 import { PYTHON_LANGUAGE, Settings } from '../../../platform/common/constants';
 import { RemoteKernelSpecConnectionMetadata } from '../../../platform/../kernels/types';
 import { JupyterServer } from '../jupyterServer.node';
-import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants.node';
+import { IS_REMOTE_NATIVE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider';
 import { INotebookControllerManager } from '../../../notebooks/types';
@@ -49,14 +43,6 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
     let remoteKernelIdProvider: PreferredRemoteKernelIdProvider;
-    const templatePythonNb = path.join(
-        EXTENSION_ROOT_DIR_FOR_TESTS,
-        'src',
-        'test',
-        'datascience',
-        'notebook',
-        'rememberRemoteKernel.ipynb'
-    );
     let ipynbFile: Uri;
     let globalMemento: Memento;
     let encryptedStorage: IEncryptedStorage;
@@ -64,7 +50,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
     let jupyterServerSelector: JupyterServerSelector;
 
     suiteSetup(async function () {
-        if (!IS_REMOTE_NATIVE_TEST) {
+        if (!IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
         this.timeout(120_000);
@@ -91,7 +77,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
             await startJupyterServer();
         }
         // Don't use same file for this test (files get modified in tests and we might save stuff)
-        ipynbFile = Uri.file(await createTemporaryNotebook(templatePythonNb, disposables));
+        ipynbFile = await createTemporaryNotebook([], disposables);
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
@@ -214,7 +200,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         await controllerManager.loadNotebookControllers();
 
         // Opening a notebook will trigger the refresh of the kernel list.
-        let nbUri = Uri.file(await createTemporaryNotebook(templatePythonNb, disposables));
+        let nbUri = await createTemporaryNotebook([], disposables);
         await openNotebook(nbUri.fsPath);
 
         const baseUrls = new Set<string>();
@@ -245,7 +231,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         await jupyterServerSelector.setJupyterURIToRemote(uriString);
 
         // Opening a notebook will trigger the refresh of the kernel list.
-        nbUri = Uri.file(await createTemporaryNotebook(templatePythonNb, disposables));
+        nbUri = await createTemporaryNotebook([], disposables);
         await openNotebook(nbUri.fsPath);
         traceInfo(`Waiting for kernels to get refreshed for Jupyter Remotenp ${uriString}`);
 

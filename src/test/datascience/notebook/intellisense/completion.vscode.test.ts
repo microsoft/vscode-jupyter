@@ -38,7 +38,7 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Code Completio
         traceInfo(`Start Suite Code Completion via Jupyter`);
         this.timeout(120_000);
         api = await initialize();
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             // https://github.com/microsoft/vscode-jupyter/issues/6331
             return this.skip();
         }

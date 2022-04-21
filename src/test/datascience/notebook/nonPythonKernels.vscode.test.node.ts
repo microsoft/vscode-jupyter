@@ -19,7 +19,6 @@ import { openNotebook } from '../helpers';
 import {
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
-    createTemporaryNotebook,
     runAllCellsInActiveNotebook,
     runCell,
     insertCodeCell,
@@ -28,7 +27,8 @@ import {
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected,
     workAroundVSCodeNotebookStartPages,
-    waitForTextOutput
+    waitForTextOutput,
+    createTemporaryNotebookFromFile
 } from './helper.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { NotebookCellLanguageService } from '../../../intellisense/cellLanguageService';
@@ -106,10 +106,10 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         await closeNotebooks();
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-        testJuliaNb = Uri.file(await createTemporaryNotebook(juliaNb, disposables));
-        testJavaNb = Uri.file(await createTemporaryNotebook(javaNb, disposables));
-        testCSharpNb = Uri.file(await createTemporaryNotebook(csharpNb, disposables));
-        testEmptyPythonNb = Uri.file(await createTemporaryNotebook(emptyPythonNb, disposables));
+        testJuliaNb = await createTemporaryNotebookFromFile(juliaNb, disposables);
+        testJavaNb = await createTemporaryNotebookFromFile(javaNb, disposables);
+        testCSharpNb = await createTemporaryNotebookFromFile(csharpNb, disposables);
+        testEmptyPythonNb = await createTemporaryNotebookFromFile(emptyPythonNb, disposables);
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async () => {

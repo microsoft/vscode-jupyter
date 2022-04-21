@@ -8,6 +8,7 @@ async function go() {
         const extensionDevelopmentPath = path.resolve(__dirname, '../');
         await test_web.runTests({
             browserType: 'chromium',
+            verbose: true,
             extensionDevelopmentPath,
             extensionTestsPath: path.join(extensionDevelopmentPath, 'out', 'extension.web.bundle')
         });

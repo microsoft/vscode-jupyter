@@ -16,7 +16,7 @@ import { openNotebook } from '../helpers';
 import {
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
-    createTemporaryNotebook,
+    createTemporaryNotebookFromFile,
     runCell,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected
@@ -57,7 +57,7 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
         sinon.restore();
         await closeNotebooks();
         // Don't use same file (due to dirty handling, we might save in dirty.)
-        testWidgetNb = Uri.file(await createTemporaryNotebook(widgetsNB, disposables));
+        testWidgetNb = await createTemporaryNotebookFromFile(widgetsNB, disposables);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Can run a widget notebook (webview-test)', async function () {

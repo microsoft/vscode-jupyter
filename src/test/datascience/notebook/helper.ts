@@ -27,7 +27,8 @@ import {
     languages,
     Position,
     Hover,
-    Diagnostic
+    Diagnostic,
+    NotebookData
 } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook } from '../../../platform/common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../platform/common/constants';
@@ -50,6 +51,11 @@ import { NotebookCellStateTracker, hasErrorOutput, getTextOutputValue } from '..
 import { INotebookControllerManager, CellOutputMimeTypes, INotebookEditorProvider } from '../../../notebooks/types';
 import { InteractiveControllerIdSuffix } from '../../../notebooks/controllers/notebookControllerManager';
 import { IVSCodeNotebookController } from '../../../notebooks/controllers/types';
+import { IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
+import * as urlPath from '../../../platform/vscode-path/resources';
+import * as uuid from 'uuid/v4';
+import { swallowExceptions } from '../../../platform/common/utils/misc';
+import { IPlatformService } from '../../../platform/common/platform/types';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -130,6 +136,60 @@ export async function deleteAllCellsAndWait() {
     );
 }
 
+export async function createTemporaryNotebook(
+    cells: NotebookCellData[] = [],
+    disposables: IDisposable[],
+    kernelName: string = 'Python 3'
+): Promise<Uri> {
+    const services = await getServices();
+    const platformService = services.serviceContainer.get<IPlatformService>(IPlatformService);
+    const uri = urlPath.joinPath(platformService.tempDir || Uri.file('./'), `${uuid()}.ipynb`);
+    const language = 'python';
+    cells = cells.length == 0 ? [new NotebookCellData(NotebookCellKind.Code, '', language)] : cells;
+    const data = new NotebookData(cells);
+    data.metadata = {
+        custom: {
+            cells: [],
+            metadata: {
+                orig_nbformat: 4
+            },
+            nbformat: 4,
+            nbformat_minor: 2,
+            kernel: {
+                display_name: kernelName
+            }
+        }
+    };
+    await workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(data)));
+
+    disposables.push({
+        dispose: () => swallowExceptions(() => workspace.fs.delete(uri))
+    });
+    return uri;
+}
+
+/**
+ * Open an existing notebook with some metadata that tells extension to use Python kernel.
+ * Else creating a blank notebook could result in selection of non-python kernel, based on other tests.
+ * We have other tests where we test non-python kernels, this could mean we might end up with non-python kernels
+ * when creating a new notebook.
+ * This function ensures we always open a notebook for testing that is guaranteed to use a Python kernel.
+ */
+export async function createEmptyPythonNotebook(disposables: IDisposable[] = []) {
+    traceInfoIfCI('Creating an empty notebook');
+    const { serviceContainer } = await getServices();
+    const editorProvider = serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
+    const vscodeNotebook = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+    // Don't use same file (due to dirty handling, we might save in dirty.)
+    // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
+    const nbFile = await createTemporaryNotebook([], disposables);
+    // Open a python notebook and use this for all tests in this test suite.
+    await editorProvider.open(nbFile);
+    assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
+    await waitForKernelToGetAutoSelected();
+    await deleteAllCellsAndWait();
+}
+
 async function shutdownAllNotebooks() {
     const api = await initialize();
     const kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider) as IKernelProvider;
@@ -146,8 +206,8 @@ export async function ensureNewNotebooksHavePythonCells() {
         await globalMemento.update(LastSavedNotebookCellLanguage, PYTHON_LANGUAGE).then(noop, noop);
     }
 }
-export async function closeNotebooksAndCleanUpAfterTestsCommon(isSmokeTest: boolean, disposables: IDisposable[] = []) {
-    if (!isSmokeTest) {
+export async function closeNotebooksAndCleanUpAfterTests(disposables: IDisposable[] = []) {
+    if (!IS_SMOKE_TEST()) {
         // When running smoke tests, we won't have access to these.
         const configSettings = await import('../../../platform/common/configSettings');
         // Dispose any cached python settings (used only in test env).
@@ -166,7 +226,7 @@ export async function closeNotebooksAndCleanUpAfterTestsCommon(isSmokeTest: bool
     sinon.restore();
 }
 
-export async function closeNotebooksCommon(disposables: IDisposable[] = []) {
+export async function closeNotebooks(disposables: IDisposable[] = []) {
     if (!isInsiders()) {
         return false;
     }
@@ -362,8 +422,8 @@ export async function waitForKernelToGetAutoSelected(
     return waitForKernelToChange(criteria, timeout);
 }
 
-export async function startJupyterServer(notebook?: NotebookDocument, isRemoteTest?: boolean) {
-    if (isRemoteTest) {
+export async function startJupyterServer(notebook?: NotebookDocument) {
+    if (IS_REMOTE_NATIVE_TEST()) {
         const uri = await JupyterServer.instance.startJupyterWithToken();
         const uriString = decodeURIComponent(uri.toString());
         traceInfo(`Jupyter started and listening at ${uriString}`);
@@ -373,8 +433,8 @@ export async function startJupyterServer(notebook?: NotebookDocument, isRemoteTe
     }
 }
 
-export async function stopJupyterServer(isRemoteTest?: boolean) {
-    if (!isRemoteTest) {
+export async function stopJupyterServer() {
+    if (IS_REMOTE_NATIVE_TEST()) {
         return;
     }
     await JupyterServer.instance.dispose().catch(noop);

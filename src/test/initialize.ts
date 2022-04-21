@@ -14,12 +14,12 @@ export function isInsiders() {
 
 let jupyterServerStarted = false;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function initialize(isRemoteTest?: boolean): Promise<IExtensionTestApi> {
+export async function initialize(): Promise<IExtensionTestApi> {
     const api = await activateExtension();
     // Ensure we start jupyter server before opening any notebooks or the like.
     if (!jupyterServerStarted) {
         jupyterServerStarted = true;
-        await startJupyterServer(undefined, isRemoteTest);
+        await startJupyterServer();
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return api as any as IExtensionTestApi;

@@ -12,7 +12,7 @@ import { ExportUtil } from '../../../platform/export/exportUtil.node';
 import { IExtensionTestApi } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
 import { closeActiveWindows, initialize } from '../../initialize.node';
-import { createTemporaryNotebook } from '../notebook/helper.node';
+import { createTemporaryNotebookFromFile } from '../notebook/helper.node';
 
 suite('DataScience - Export Util', () => {
     let api: IExtensionTestApi;
@@ -23,11 +23,9 @@ suite('DataScience - Export Util', () => {
     });
     setup(async () => {
         // Create a new file (instead of modifying existing file).
-        testPdfIpynb = Uri.file(
-            await createTemporaryNotebook(
-                path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'export', 'testPDF.ipynb'),
-                testDisposables
-            )
+        testPdfIpynb = await createTemporaryNotebookFromFile(
+            path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'export', 'testPDF.ipynb'),
+            testDisposables
         );
     });
     teardown(() => closeActiveWindows(testDisposables));

@@ -3,38 +3,10 @@
 
 import * as path from '../platform/vscode-path/path';
 import { setCI, setTestExecution, setUnitTestExecution } from '../platform/common/constants';
-import { IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER } from './ciConstants.node';
+import { setTestSettings } from './constants';
 export * from './constants';
 
 // Activating extension for Multiroot and Debugger CI tests for Windows takes just over 2 minutes sometimes, so 3 minutes seems like a safe margin
-export const MAX_EXTENSION_ACTIVATION_TIME = 180_000;
-export const TEST_TIMEOUT = 25000;
-export const TEST_RETRYCOUNT = 0;
-export const IS_SMOKE_TEST = process.env.VSC_JUPYTER_SMOKE_TEST === '1';
-export const IS_PERF_TEST = process.env.VSC_JUPYTER_PERF_TEST === '1';
-export const IS_REMOTE_NATIVE_TEST = (process.env.VSC_JUPYTER_REMOTE_NATIVE_TEST || '').toLowerCase() === 'true';
-export const IS_NON_RAW_NATIVE_TEST = (process.env.VSC_JUPYTER_NON_RAW_NATIVE_TEST || '').toLowerCase() === 'true';
-export const IS_MULTI_ROOT_TEST = isMultirootTest();
-export const IS_CONDA_TEST = (process.env.VSC_JUPYTER_CI_IS_CONDA || '').toLowerCase() === 'true';
-
-// If running on CI server, then run debugger tests ONLY if the corresponding flag is enabled.
-export const TEST_DEBUGGER = IS_CI_SERVER ? IS_CI_SERVER_TEST_DEBUGGER : true;
-
-function isMultirootTest() {
-    // No need to run smoke nor perf tests in a multi-root environment.
-    if (IS_SMOKE_TEST || IS_PERF_TEST) {
-        return false;
-    }
-    try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const vscode = require('vscode');
-        const workspace = vscode.workspace;
-        return Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 1;
-    } catch {
-        // being accessed, when VS Code hasn't been launched.
-        return false;
-    }
-}
 
 export const EXTENSION_ROOT_DIR_FOR_TESTS = path.join(__dirname, '..', '..');
 
@@ -51,3 +23,12 @@ export const IPYTHON_VERSION_CODE = 'import IPython\nprint(int(IPython.__version
 setCI(process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true');
 setTestExecution(process.env.VSC_JUPYTER_CI_TEST === '1');
 setUnitTestExecution(process.env.VSC_JUPYTER_UNIT_TEST === '1');
+setTestSettings({
+    isSmokeTest: process.env.VSC_JUPYTER_SMOKE_TEST === '1',
+    isCIServer: process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true',
+    isCIServerTestDebuggable: process.env.IS_CI_SERVER_TEST_DEBUGGER === '1',
+    isCondaTest: (process.env.VSC_JUPYTER_CI_IS_CONDA || '').toLowerCase() === 'true',
+    isNonRawNativeTest: (process.env.VSC_JUPYTER_NON_RAW_NATIVE_TEST || '').toLowerCase() === 'true',
+    isRemoteNativeTest: (process.env.VSC_JUPYTER_REMOTE_NATIVE_TEST || '').toLowerCase() === 'true',
+    isPerfTest: process.env.VSC_JUPYTER_PERF_TEST === '1'
+});
