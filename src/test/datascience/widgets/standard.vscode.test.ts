@@ -14,7 +14,7 @@ import { IDisposable } from '../../../platform/common/types';
 import { IKernelProvider } from '../../../platform/../kernels/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize.node';
-import { openNotebook } from '../helpers';
+import { openNotebook } from '../helpers.node';
 import {
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,

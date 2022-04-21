@@ -6,7 +6,7 @@ import { RemoteKernelSpecConnectionMetadata } from '../../../kernels/types';
 import { INotebookControllerManager } from '../../../notebooks/types';
 import { traceInfoIfCI, traceInfo } from '../../../platform/logging';
 import { waitForCondition } from '../../common';
-import { openNotebook } from '../helpers';
+import { openNotebook } from '../helpers.node';
 import { JupyterServer } from '../jupyterServer.node';
 import { createTemporaryNotebook, defaultNotebookTestTimeout, getServices, startJupyterServer } from './helper.node';
 import { sharedRemoteNotebookEditorTests } from './remoteNotebookEditor.vscode.common';

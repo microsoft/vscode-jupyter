@@ -20,7 +20,7 @@ import {
 import { createEventHandler, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import { closeActiveWindows, initialize, IS_CI_SERVER } from '../../initialize.node';
-import { openNotebook } from '../helpers';
+import { openNotebook } from '../helpers.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,

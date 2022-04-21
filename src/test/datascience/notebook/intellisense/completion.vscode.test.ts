@@ -13,7 +13,7 @@ import { getTextOutputValue } from '../../../../notebooks/helpers';
 import { captureScreenShot, IExtensionTestApi } from '../../../common.node';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants.node';
 import { initialize } from '../../../initialize.node';
-import { createStandaloneInteractiveWindow, insertIntoInputEditor } from '../../helpers';
+import { createStandaloneInteractiveWindow, insertIntoInputEditor } from '../../helpers.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
     runCell,

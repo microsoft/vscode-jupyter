@@ -12,7 +12,7 @@ import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { IDisposable } from '../../../platform/common/types';
 import { IExtensionTestApi } from '../../common.node';
 import { initialize } from '../../initialize.node';
-import { openNotebook } from '../helpers';
+import { openNotebook } from '../helpers.node';
 import {
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,

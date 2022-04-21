@@ -16,7 +16,7 @@ import {
     submitFromPythonFileUsingCodeWatcher,
     waitForCodeLenses,
     waitForLastCellToComplete
-} from './helpers';
+} from './helpers.node';
 import { closeNotebooksAndCleanUpAfterTests, defaultNotebookTestTimeout, getCellOutputs } from './notebook/helper.node';
 import { ITestWebviewHost } from './testInterfaces';
 import { waitForVariablesToMatch } from './variableView/variableViewHelpers';

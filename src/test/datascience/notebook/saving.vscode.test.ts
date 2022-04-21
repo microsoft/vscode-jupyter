@@ -14,7 +14,7 @@ import { IDisposable } from '../../../platform/common/types';
 import { IExtensionTestApi, waitForCondition } from '../../common.node';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import { closeActiveWindows, initialize } from '../../initialize.node';
-import { openNotebook } from '../helpers';
+import { openNotebook } from '../helpers.node';
 import {
     assertHasTextOutputInVSCode,
     assertVSCCellHasErrorOutput,

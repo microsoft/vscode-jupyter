@@ -34,7 +34,7 @@ import {
     JVSC_EXTENSION_ID_FOR_TESTS
 } from '../../../constants.node';
 import { closeActiveWindows, initialize } from '../../../initialize.node';
-import { openNotebook, submitFromPythonFile, submitFromPythonFileUsingCodeWatcher } from '../../helpers';
+import { openNotebook, submitFromPythonFile, submitFromPythonFileUsingCodeWatcher } from '../../helpers.node';
 import { JupyterNotebookView } from '../../../../notebooks/constants';
 import { INotebookControllerManager } from '../../../../notebooks/types';
 import { BaseKernelError, WrappedError } from '../../../../platform/errors/types';

@@ -21,7 +21,7 @@ import {
     submitFromPythonFileUsingCodeWatcher,
     waitForInteractiveWindow,
     waitForLastCellToComplete
-} from './helpers';
+} from './helpers.node';
 import {
     assertHasTextOutputInVSCode,
     clickOKForRestartPrompt,

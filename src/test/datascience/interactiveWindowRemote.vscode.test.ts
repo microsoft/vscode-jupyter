@@ -8,7 +8,7 @@ import { workspace, Disposable } from 'vscode';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { traceInfo } from '../../platform/logging';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize.node';
-import { submitFromPythonFile } from './helpers';
+import { submitFromPythonFile } from './helpers.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
     startJupyterServer,

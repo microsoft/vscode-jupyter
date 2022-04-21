@@ -8,7 +8,7 @@ import * as path from '../../../platform/vscode-path/path';
 import { assert } from 'chai';
 import { traceInfo } from '../../../platform/logging';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
-import { openNotebook } from '../helpers';
+import { openNotebook } from '../helpers.node';
 import { closeNotebooksAndCleanUpAfterTests } from './helper.node';
 import { Uri, window } from 'vscode';
 import { initialize } from '../../initialize.node';

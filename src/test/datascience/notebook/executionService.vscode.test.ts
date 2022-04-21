@@ -44,7 +44,7 @@ import {
     waitForCellExecutionToComplete,
     createTemporaryNotebookFromFile
 } from './helper.node';
-import { openNotebook } from '../helpers';
+import { openNotebook } from '../helpers.node';
 import { noop } from '../../../platform/common/utils/misc';
 import { getTextOutputValue, hasErrorOutput, translateCellErrorOutput } from '../../../notebooks/helpers';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
