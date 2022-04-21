@@ -2,14 +2,20 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { inject } from 'inversify';
+import { inject, injectable, named } from 'inversify';
+import { Uri } from 'vscode';
 import { CancellationToken, ConfigurationParams, ConfigurationRequest, Disposable, Middleware, ResponseError, _WindowMiddleware } from 'vscode-languageclient';
-import { INotebookLanguageClientProvider } from '../notebooks/types';
+import { IInteractiveWindowProvider } from '../interactive-window/types';
+import { findAssociatedNotebookDocument } from '../notebooks/helpers';
+import { INotebookControllerManager, INotebookLanguageClientProvider } from '../notebooks/types';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
 import { IPythonApiProvider } from '../platform/api/types';
+import { IVSCodeNotebook } from '../platform/common/application/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../platform/common/constants';
 import { getFilePath } from '../platform/common/platform/fs-paths';
-import { IConfigurationService } from '../platform/common/types';
+import { IConfigurationService, IOutputChannel } from '../platform/common/types';
 import { isThenable } from '../platform/common/utils/async';
+import { IInterpreterService } from '../platform/interpreter/contracts';
 import { IServiceManager } from '../platform/ioc/types';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { NotebookCellBangInstallDiagnosticsProvider } from './diagnosticsProvider';
@@ -37,17 +43,12 @@ export async function registerTypes(serviceManager: IServiceManager, configServi
         EmptyNotebookCellLanguageService
     );
 
-    if (!configService.getSettings().pylanceLspNotebooksEnabled) {
-        serviceManager.addSingleton<INotebookLanguageClientProvider>(INotebookLanguageClientProvider, IntellisenseProvider);
+    if (configService.getSettings().pylanceLspNotebooksEnabled) {
+        serviceManager.addSingleton<NotebookPythonPathService>(NotebookPythonPathService, NotebookPythonPathService);
     }
     else
     {
-        // QUESTIONS:]
-        // Better way to kick off async call to middleware injection API?
-        // If this is the right place to do this, better way to get experiment status?
-        // Why do we need to inject middleware rather than having Python extension create it via vscode-jupyter-lsp-middleware? Maybe that package can't calculate path on its own?
-        serviceManager.addSingleton<NotebookPythonPathService>(NotebookPythonPathService, NotebookPythonPathService);
-        await serviceManager.get<NotebookPythonPathService>(NotebookPythonPathService).initialize();
+        serviceManager.addSingleton<INotebookLanguageClientProvider>(INotebookLanguageClientProvider, IntellisenseProvider);
     }
 }
 
@@ -73,8 +74,7 @@ export class PythonPathMiddleware implements Middleware, Disposable {
             // How to get NotebookDocument object?
             // Do we need to deal with controllers?
             // Can the python path change? Need to implement this? -- didChangeConfiguration?: (sections: string[] | undefined, next: DidChangeConfigurationSignature) => void;
-            // const interpreter = controller?.connection.interpreter || (await this.interpreterService.getActiveInterpreter(n.uri)); // <-- n is NotebookDocument
-            // const pythonPath = getFilePath(interpreter.uri);
+
             const pythonPath = "";
 
             for (const [i, item] of params.items.entries()) {
@@ -88,14 +88,37 @@ export class PythonPathMiddleware implements Middleware, Disposable {
     };
 }
 
-class NotebookPythonPathService {
+@injectable()
+export class NotebookPythonPathService implements IExtensionSingleActivationService {
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
-    ) {}
+        @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
+        @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
+        @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel
+    ) {
+        this.output.appendLine(`NotebookPythonPathService: constructor`);
+    }
 
-    public async initialize() {
+    public async activate() {
+        this.output.appendLine(`NotebookPythonPathService: activate`);
         await this.apiProvider.getApi().then((api) =>
-                api.injectMiddlewareHook(new PythonPathMiddleware())
+                api.registerJupyterPythonPathFunction(this.jupyterPythonPathFunction)
             );
+    }
+
+    private async jupyterPythonPathFunction(uri: Uri): Promise<string | undefined> {
+        this.output.appendLine(`NotebookPythonPathService: jupyterPythonPathFunction: ${uri.toString()}`);
+        const notebook = findAssociatedNotebookDocument(uri, this.notebooks, this.interactiveWindowProvider);
+        const controller = notebook
+            ? this.notebookControllerManager.getSelectedNotebookController(notebook)
+            : undefined;
+
+        const interpreter = controller ? controller.connection.interpreter : await this.interpreterService.getActiveInterpreter(uri);
+        if (!interpreter){return undefined;}
+
+        const pythonPath = getFilePath(interpreter.uri);
+        return pythonPath;
     }
 }

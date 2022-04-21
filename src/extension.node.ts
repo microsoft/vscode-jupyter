@@ -88,7 +88,6 @@ import { ConsoleLogger } from './platform/logging/consoleLogger';
 import { FileLogger } from './platform/logging/fileLogger.node';
 import { createWriteStream } from 'fs-extra';
 import { initializeGlobals as initializeTelemetryGlobals } from './telemetry/telemetry';
-import { Experiments } from './platform/common/experiments/groups';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 

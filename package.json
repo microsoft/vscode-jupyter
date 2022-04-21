@@ -1982,7 +1982,7 @@
                         "experimental"
                     ]
                 },
-                "jupyter.pylanceLspNotebooksEnabled": {
+                "python.pylanceLspNotebooksEnabled": {
                     "type": "boolean",
                     "default": false,
                     "description": "Determines if pylance's experimental LSP notebooks support is used or not.",

@@ -10,7 +10,6 @@ export type ILanguageServerConnection = Pick<
     lsp.ProtocolConnection,
     'sendRequest' | 'sendNotification' | 'onProgress' | 'sendProgress' | 'onNotification' | 'onRequest'
 >;
-import { Middleware } from 'vscode-languageclient/node';
 
 export interface ILanguageServer extends Disposable {
     readonly connection: ILanguageServerConnection;
@@ -137,7 +136,7 @@ export type PythonApi = {
         interpreter?: PythonEnvironment_PythonApi
     ): Promise<string[] | undefined>;
 
-    injectMiddlewareHook(middleware: Middleware): void;
+    registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>): void;
     /**
      * This API will re-trigger environment discovery. Extensions can wait on the returned
      * promise to get the updated interpreters list. If there is a refresh already going on
