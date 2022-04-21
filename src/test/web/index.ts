@@ -1,12 +1,12 @@
 // Re-export extension entry point, so that the output from this file
 // when bundled can be used as entry point for extension as well as tests.
 // The same objects/types will be used as the module is only ever loaded once by nodejs.
-import * as extension from '../../../extension.web';
+import * as extension from '../../extension.web';
 import * as vscode from 'vscode';
-import type { IExtensionApi } from '../../../platform/api';
-import type { IExtensionContext } from '../../../platform/common/types';
-import { IExtensionTestApi } from '../../common';
-import { JVSC_EXTENSION_ID } from '../../../platform/common/constants';
+import type { IExtensionApi } from '../../platform/api';
+import type { IExtensionContext } from '../../platform/common/types';
+import { IExtensionTestApi } from '../common';
+import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
 
 let activatedResponse: undefined | IExtensionApi;
 
@@ -25,9 +25,9 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
                 reporter: undefined
             });
 
-            // bundles all files in the current directory matching `*.test`
+            // bundles all files in the current directory matching `*.web.test`
             const importAll = (r: __WebpackModuleApi.RequireContext) => r.keys().forEach(r);
-            importAll(require.context('.', true, /\.web.test$/));
+            importAll(require.context('..', true, /(\.common\.test$)|(\.web\.test$)/));
 
             try {
                 // Run the mocha test

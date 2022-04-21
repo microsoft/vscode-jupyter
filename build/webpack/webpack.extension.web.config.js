@@ -10,10 +10,10 @@ const CleanTerminalPlugin = require('clean-terminal-webpack-plugin');
 
 const prodEntry = {
     extension: './src/extension.web.ts',
-    'test/smoke.test/index': './src/test/web/smoke.test/index.ts' // source of the web extension test runner
+    'test/index': './src/test/web/index.ts' // source of the web extension test runner
 };
 const testEntry = {
-    extension: './src/test/web/smoke.test/index.ts' // source of the web extension test runner
+    extension: './src/test/web/index.ts' // source of the web extension test runner
 };
 
 // When running web tests, the entry point for the tests and extension are the same.
