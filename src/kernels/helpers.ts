@@ -232,7 +232,12 @@ export function findPreferredKernel(
     );
 
     let preferredKernel: KernelConnectionMetadata | undefined = kernels[kernels.length - 1];
-    if (
+
+    if (!notebookMetadata || (preferredKernel && !isExactMatch(preferredKernel, notebookMetadata))) {
+        // Make sure that our preferred kernel is an exact match before we suggest it
+        traceInfo(`Preferred kernel ${preferredKernel.id} rejected from suggestion as inexact match.`);
+        preferredKernel = undefined;
+    } else if (
         possibleNbMetadataLanguage &&
         possibleNbMetadataLanguage !== PYTHON_LANGUAGE &&
         !notebookMetadata?.kernelspec &&
@@ -246,7 +251,77 @@ export function findPreferredKernel(
     } else {
         traceInfoIfCI(`Preferred kernel is ${JSON.stringify(preferredKernel)}`);
     }
+
     return preferredKernel;
+}
+
+function isExactMatch(
+    kernelConnection: KernelConnectionMetadata,
+    notebookMetadata: nbformat.INotebookMetadata
+): boolean {
+    // To get an exact match, we need to have a kernelspec in the metadata
+    if (!notebookMetadata.kernelspec) {
+        return false;
+    }
+
+    // Live kernel connections are not exact matches
+    if (kernelConnection.kind === 'connectToLiveRemoteKernel') {
+        return false;
+    }
+
+    if (notebookMetadata.interpreter && interpreterMatchesThatInNotebookMetadata(kernelConnection, notebookMetadata)) {
+        // Case: Metadata has interpreter, in this case it should have an interpreter
+        // and a kernel spec that should fully match, note that in this case matching
+        // name on a default python kernel spec is ok (as the interpreter hash matches)
+        return isKernelSpecExactMatch(kernelConnection.kernelSpec, notebookMetadata.kernelspec, true);
+    } else {
+        // Case: Metadata does not have an interpreter, in this case just full match on the
+        // kernelspec, but do not accept default python name as valid for an exact match
+        return isKernelSpecExactMatch(kernelConnection.kernelSpec, notebookMetadata.kernelspec, false);
+    }
+}
+
+function isKernelSpecExactMatch(
+    kernelConnectionKernelSpec: IJupyterKernelSpec,
+    notebookMetadataKernelSpec: nbformat.IKernelspecMetadata,
+    allowPythonDefaultMatch: boolean
+): boolean {
+    // Get our correct kernelspec name and display_name from the connection
+    const connectionOriginalSpecFile =
+        kernelConnectionKernelSpec.metadata?.vscode?.originalSpecFile ||
+        kernelConnectionKernelSpec.metadata?.originalSpecFile;
+    const connectionKernelSpecName = connectionOriginalSpecFile
+        ? path.basename(path.dirname(connectionOriginalSpecFile))
+        : kernelConnectionKernelSpec?.name || '';
+    const connectionKernelSpecDisplayName =
+        kernelConnectionKernelSpec.metadata?.vscode?.originalDisplayName ||
+        kernelConnectionKernelSpec.display_name ||
+        '';
+
+    if (
+        allowPythonDefaultMatch &&
+        connectionKernelSpecName === notebookMetadataKernelSpec.name &&
+        connectionKernelSpecDisplayName === notebookMetadataKernelSpec.display_name
+    ) {
+        // If default match is ok, just check
+        return true;
+    } else if (
+        !allowPythonDefaultMatch &&
+        !isDefaultKernelSpec({
+            argv: [],
+            display_name: notebookMetadataKernelSpec.display_name,
+            name: notebookMetadataKernelSpec.name,
+            uri: Uri.file('')
+        }) &&
+        connectionKernelSpecName === notebookMetadataKernelSpec.name &&
+        connectionKernelSpecDisplayName === notebookMetadataKernelSpec.display_name
+    ) {
+        // If default match is not ok, only accept name / display name match for
+        // non-default kernel specs
+        return true;
+    }
+
+    return false;
 }
 
 export function compareKernels(
@@ -756,10 +831,10 @@ function compareAgainstInterpreterInNotebookMetadata(
         // Give preference to kernel b that starts using plain python.
         return -1;
     } else if (a.kind === 'startUsingPythonInterpreter' && a.kind !== b.kind) {
-        // Give preference to kernel a that starts using a plain Python for a custom kenrelspec.
+        // Give preference to kernel a that starts using a plain Python for a custom kernelspec.
         return 1;
     } else if (b.kind === 'startUsingPythonInterpreter' && b.kind !== a.kind) {
-        // Give preference to kernel b that starts using a plain Python for a custom kenrelspec.
+        // Give preference to kernel b that starts using a plain Python for a custom kernelspec.
         return -1;
     } else if (a.kind === 'startUsingLocalKernelSpec' && a.kind !== b.kind) {
         // Give preference to kernel a that starts using a custom kernelspec python.
