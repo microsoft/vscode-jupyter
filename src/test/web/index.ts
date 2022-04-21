@@ -6,7 +6,8 @@ import * as vscode from 'vscode';
 import type { IExtensionApi } from '../../platform/api';
 import type { IExtensionContext } from '../../platform/common/types';
 import { IExtensionTestApi } from '../common';
-import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
+import { JVSC_EXTENSION_ID, setTestExecution } from '../../platform/common/constants';
+import { setTestSettings } from '../constants';
 
 let activatedResponse: undefined | IExtensionApi;
 
@@ -23,6 +24,13 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
             mocha.setup({
                 ui: 'tdd',
                 reporter: undefined
+            });
+
+            // Can't tell if on CI or not, so assume not.
+            setTestExecution(true);
+            setTestSettings({
+                isRemoteNativeTest: true,
+                isNonRawNativeTest: true
             });
 
             // bundles all files in the current directory matching `*.web.test`
