@@ -31,7 +31,7 @@ import { initializeWidgetComms, Utils } from './commUtils';
 import { WidgetRenderingTimeoutForTests } from './constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite.only('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
+suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
@@ -82,7 +82,11 @@ suite.only('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
                 : Uri.file(options.notebookFile);
         await openNotebook(nbUri);
         await waitForKernelToGetAutoSelected();
+        // Widgets get rendered only when the output is in view. If we have a very large notebook
+        // and the output is not visible, then it will not get rendered & the tests will fail. The tests inspect the rendered HTML.
+        // Solution - maximize available real-estate by hiding the output panels & hiding the input cells.
         await commands.executeCommand('workbench.action.closePanel');
+        await commands.executeCommand('workbench.action.maximizeEditor');
         await commands.executeCommand('notebook.cell.collapseAllCellInputs');
         return initializeWidgetComms(api.serviceContainer);
     }
@@ -104,15 +108,16 @@ suite.only('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         selector?: string
     ) {
         // Verify the widget is created & rendered.
+        let html = '';
         await waitForCondition(
             async () => {
                 await comms.ready;
-                const html = await comms.queryHtml(cell, selector);
+                html = await comms.queryHtml(cell, selector);
                 htmlFragmentsToLookFor.forEach((fragment) => assert.include(html, fragment));
                 return true;
             },
-            WidgetRenderingTimeoutForTests * 10,
-            'Widget did not render'
+            WidgetRenderingTimeoutForTests,
+            () => `Widget did not render or ${htmlFragmentsToLookFor.join(', ')} not in html = ${html}`
         );
     }
     async function click(comms: Utils, cell: NotebookCell, selector: string) {

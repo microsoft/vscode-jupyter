@@ -22,7 +22,6 @@ let rendererContext: RendererContext<unknown>;
     renderOutputItem: (outputItem: OutputItem, element: HTMLElement) => {
         const outputCellIndex = getOutputCellIndex(outputItem);
         if (typeof outputCellIndex === 'number') {
-            console.error(`Rendering cell index ${outputCellIndex}`);
             outputsByCellIndex.set(outputCellIndex, element);
         }
         if (rendererContext && rendererContext.postMessage) {
