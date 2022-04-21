@@ -274,7 +274,7 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await assertOutputContainsHtml(cell, comms, ['<canvas'], '.jupyter-matplotlib-canvas-div');
     });
     test('Render matplotlib, widget in multiple cells', async function () {
-        const comms = await initializeNotebook({ templateFile: 'matplotlib_multple_cells_widgets.ipynb' });
+        const comms = await initializeNotebook({ templateFile: 'matplotlib_multiple_cells_widgets.ipynb' });
         const [, cell1, cell2, cell3, cell4] = vscodeNotebook.activeNotebookEditor!.document.getCells();
 
         await executeCellAndDontWaitForOutput(cell1);
