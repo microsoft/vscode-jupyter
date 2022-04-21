@@ -273,19 +273,24 @@ function isExactMatch(
         // Case: Metadata has interpreter, in this case it should have an interpreter
         // and a kernel spec that should fully match, note that in this case matching
         // name on a default python kernel spec is ok (as the interpreter hash matches)
-        return isKernelSpecExactMatch(kernelConnection.kernelSpec, notebookMetadata.kernelspec, true);
+        return isKernelSpecExactMatch(kernelConnection, notebookMetadata.kernelspec, true);
     } else {
         // Case: Metadata does not have an interpreter, in this case just full match on the
         // kernelspec, but do not accept default python name as valid for an exact match
-        return isKernelSpecExactMatch(kernelConnection.kernelSpec, notebookMetadata.kernelspec, false);
+        return isKernelSpecExactMatch(kernelConnection, notebookMetadata.kernelspec, false);
     }
 }
 
 function isKernelSpecExactMatch(
-    kernelConnectionKernelSpec: IJupyterKernelSpec,
+    kernelConnection: KernelConnectionMetadata,
     notebookMetadataKernelSpec: nbformat.IKernelspecMetadata,
     allowPythonDefaultMatch: boolean
 ): boolean {
+    if (kernelConnection.kind === 'connectToLiveRemoteKernel') {
+        return false;
+    }
+    const kernelConnectionKernelSpec = kernelConnection.kernelSpec;
+
     // Get our correct kernelspec name and display_name from the connection
     const connectionOriginalSpecFile =
         kernelConnectionKernelSpec.metadata?.vscode?.originalSpecFile ||
@@ -297,13 +302,15 @@ function isKernelSpecExactMatch(
         kernelConnectionKernelSpec.metadata?.vscode?.originalDisplayName ||
         kernelConnectionKernelSpec.display_name ||
         '';
+    const connectionInterpreterEnvName = kernelConnection.interpreter?.envName;
 
     if (
         allowPythonDefaultMatch &&
-        connectionKernelSpecName === notebookMetadataKernelSpec.name &&
-        connectionKernelSpecDisplayName === notebookMetadataKernelSpec.display_name
+        connectionKernelSpecDisplayName === notebookMetadataKernelSpec.display_name &&
+        (connectionKernelSpecName === notebookMetadataKernelSpec.name ||
+            connectionInterpreterEnvName === notebookMetadataKernelSpec.name)
     ) {
-        // If default match is ok, just check
+        // If default match is ok, just check name or interpreter env name
         return true;
     } else if (
         !allowPythonDefaultMatch &&
@@ -313,8 +320,9 @@ function isKernelSpecExactMatch(
             name: notebookMetadataKernelSpec.name,
             uri: Uri.file('')
         }) &&
-        connectionKernelSpecName === notebookMetadataKernelSpec.name &&
-        connectionKernelSpecDisplayName === notebookMetadataKernelSpec.display_name
+        connectionKernelSpecDisplayName === notebookMetadataKernelSpec.display_name &&
+        (connectionKernelSpecName === notebookMetadataKernelSpec.name ||
+            connectionInterpreterEnvName === notebookMetadataKernelSpec.name)
     ) {
         // If default match is not ok, only accept name / display name match for
         // non-default kernel specs
