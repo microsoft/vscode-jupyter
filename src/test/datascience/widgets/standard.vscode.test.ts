@@ -31,7 +31,7 @@ import { initializeWidgetComms, Utils } from './commUtils';
 import { WidgetRenderingTimeoutForTests } from './constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
+suite.only('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
@@ -191,43 +191,38 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
     });
     test('Render IPySheets', async () => {
         const comms = await initializeNotebook({ templateFile: 'ipySheet_widgets.ipynb' });
-        const [, cell1, , cell3] = vscodeNotebook.activeNotebookEditor!.document.getCells();
+        const [, cell1] = vscodeNotebook.activeNotebookEditor!.document.getCells();
 
-        await executeCellAndDontWaitForOutput(cell1);
-        await executeCellAndWaitForOutput(cell3, comms);
-        await assertOutputContainsHtml(cell3, comms, ['Hello', 'World', '42.000']);
+        await executeCellAndWaitForOutput(cell1, comms);
+        await assertOutputContainsHtml(cell1, comms, ['Hello', 'World', '42.000']);
     });
     test('Render IPySheets & search', async () => {
         const comms = await initializeNotebook({ templateFile: 'ipySheet_widgets_search.ipynb' });
-        const [, cell1, , cell3, cell4, cell5] = vscodeNotebook.activeNotebookEditor!.document.getCells();
+        const [, cell1, cell2] = vscodeNotebook.activeNotebookEditor!.document.getCells();
 
-        await executeCellAndDontWaitForOutput(cell1);
-        await executeCellAndDontWaitForOutput(cell3);
-        await executeCellAndWaitForOutput(cell4, comms);
-        await executeCellAndWaitForOutput(cell5, comms);
-        await assertOutputContainsHtml(cell4, comms, ['title="Search:"', '<input type="text']);
-        await assertOutputContainsHtml(cell5, comms, ['>train<', '>foo<']);
+        await executeCellAndWaitForOutput(cell1, comms);
+        await executeCellAndWaitForOutput(cell2, comms);
+        await assertOutputContainsHtml(cell1, comms, ['title="Search:"', '<input type="text']);
+        await assertOutputContainsHtml(cell2, comms, ['>train<', '>foo<']);
 
         // Update the textbox widget.
-        await comms.setValue(cell4, '.widget-text input', 'train');
-        await assertOutputContainsHtml(cell5, comms, ['class="htSearchResult">train<']);
+        await comms.setValue(cell1, '.widget-text input', 'train');
+        await assertOutputContainsHtml(cell2, comms, ['class="htSearchResult">train<']);
     });
     test('Render IPySheets & slider', async () => {
         const comms = await initializeNotebook({ templateFile: 'ipySheet_widgets_slider.ipynb' });
-        const [, cell1, , cell3, cell4, , cell6, cell7] = vscodeNotebook.activeNotebookEditor!.document.getCells();
+        const [, cell1, cell2, cell3] = vscodeNotebook.activeNotebookEditor!.document.getCells();
 
-        await executeCellAndDontWaitForOutput(cell1);
-        await executeCellAndDontWaitForOutput(cell3);
-        await executeCellAndWaitForOutput(cell4, comms);
-        await executeCellAndWaitForOutput(cell6, comms);
-        await executeCellAndWaitForOutput(cell7, comms);
-        await assertOutputContainsHtml(cell4, comms, ['Continuous Slider']);
-        await assertOutputContainsHtml(cell6, comms, ['Continuous Text', '<input type="number']);
-        await assertOutputContainsHtml(cell7, comms, ['Continuous Slider', '>0<', '>123.00']);
+        await executeCellAndWaitForOutput(cell1, comms);
+        await executeCellAndWaitForOutput(cell2, comms);
+        await executeCellAndWaitForOutput(cell3, comms);
+        await assertOutputContainsHtml(cell1, comms, ['Continuous Slider']);
+        await assertOutputContainsHtml(cell2, comms, ['Continuous Text', '<input type="number']);
+        await assertOutputContainsHtml(cell3, comms, ['Continuous Slider', '>0<', '>123.00']);
 
         // Update the textbox widget (for slider).
-        await comms.setValue(cell4, '.widget-text input', '5255');
-        await assertOutputContainsHtml(cell7, comms, ['>5255<', '>5378.0']);
+        await comms.setValue(cell2, '.widget-text input', '5255');
+        await assertOutputContainsHtml(cell3, comms, ['>5255<', '>5378.0']);
     });
     test('Render ipyvolume (slider, color picker, figure)', async function () {
         const comms = await initializeNotebook({ templateFile: 'ipyvolume_widgets.ipynb' });
@@ -251,7 +246,7 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await assertOutputContainsHtml(cell, comms, ['<canvas']);
     });
     test('Render matplotlib, interactive inline', async function () {
-        const comms = await initializeNotebook({ templateFile: 'matplotlib_widgets.ipynb' });
+        const comms = await initializeNotebook({ templateFile: 'matplotlib_widgets_interactive.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(1);
 
         await executeCellAndWaitForOutput(cell, comms);
@@ -259,14 +254,14 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await assertOutputContainsHtml(cell, comms, ['<img src="data:image'], '.jp-OutputArea-output');
     });
     test('Render matplotlib, non-interactive inline', async function () {
-        const comms = await initializeNotebook({ templateFile: 'matplotlib_widgets.ipynb' });
+        const comms = await initializeNotebook({ templateFile: 'matplotlib_widgets_inline.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(2);
 
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['<img src="blob:vscode']);
     });
     test('Render matplotlib, widget', async function () {
-        const comms = await initializeNotebook({ templateFile: 'matplotlib_widgets.ipynb' });
+        const comms = await initializeNotebook({ templateFile: 'matplotlib_widgets_widget.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(3);
 
         await executeCellAndWaitForOutput(cell, comms);
