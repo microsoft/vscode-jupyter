@@ -52,11 +52,11 @@ export abstract class BaseKernelFinder implements IKernelFinder {
     // Finding a kernel is the same no matter what the source
     @traceDecoratorVerbose('Find kernel spec', TraceOptions.BeforeCall | TraceOptions.Arguments)
     @captureTelemetry(Telemetry.KernelFinderPerf)
-    public async findKernel(
+    public async rankKernelsForResource(
         resource: Resource,
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
-    ): Promise<KernelConnectionMetadata | undefined> {
+    ): Promise<KernelConnectionMetadata[] | undefined> {
         const resourceType = getResourceType(resource);
         const telemetrySafeLanguage =
             resourceType === 'interactive'

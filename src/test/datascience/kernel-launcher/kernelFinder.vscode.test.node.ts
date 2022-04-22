@@ -14,7 +14,7 @@ import { initialize } from '../../initialize.node';
 import { traceInfo } from '../../../platform/logging';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
-import { IKernelFinder, LocalKernelConnectionMetadata } from '../../../kernels/types';
+import { IKernelFinder, KernelConnectionMetadata, LocalKernelConnectionMetadata } from '../../../kernels/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - Kernels Finder', () => {
@@ -41,7 +41,7 @@ suite('DataScience - Kernels Finder', () => {
         assert.isAtLeast(kernelSpecs.length, 1);
     });
     test('No kernel returned if no matching kernel found for language', async () => {
-        const kernelSpec = await kernelFinder.findKernel(resourceToUse, {
+        const kernelSpec = await kernelFinder.rankKernelsForResource(resourceToUse, {
             language_info: { name: 'foobar' },
             orig_nbformat: 4
         });
@@ -49,13 +49,15 @@ suite('DataScience - Kernels Finder', () => {
     });
     test('Python kernel returned if no matching kernel found', async () => {
         const interpreter = await interpreterService.getActiveInterpreter(resourceToUse);
-        const kernelSpec = await kernelFinder.findKernel(resourceToUse, {
-            kernelspec: { display_name: 'foobar', name: 'foobar' },
-            orig_nbformat: 4,
-            language_info: {
-                name: PYTHON_LANGUAGE
-            }
-        });
+        const kernelSpec = takeTopRankKernel(
+            await kernelFinder.rankKernelsForResource(resourceToUse, {
+                kernelspec: { display_name: 'foobar', name: 'foobar' },
+                orig_nbformat: 4,
+                language_info: {
+                    name: PYTHON_LANGUAGE
+                }
+            })
+        );
         if (!kernelSpec?.interpreter) {
             throw new Error('Kernelspec & interpreter info should not be empty');
         }
@@ -69,13 +71,15 @@ suite('DataScience - Kernels Finder', () => {
     });
     test('Interpreter kernel returned if kernelspec metadata not provided', async () => {
         const interpreter = await interpreterService.getActiveInterpreter(resourceToUse);
-        const kernelSpec = await kernelFinder.findKernel(resourceToUse, {
-            kernelspec: undefined,
-            orig_nbformat: 4,
-            language_info: {
-                name: PYTHON_LANGUAGE
-            }
-        });
+        const kernelSpec = takeTopRankKernel(
+            await kernelFinder.rankKernelsForResource(resourceToUse, {
+                kernelspec: undefined,
+                orig_nbformat: 4,
+                language_info: {
+                    name: PYTHON_LANGUAGE
+                }
+            })
+        );
         if (!kernelSpec?.interpreter) {
             throw new Error('Kernelspec & interpreter info should not be empty');
         }
@@ -87,10 +91,12 @@ suite('DataScience - Kernels Finder', () => {
         );
     });
     test('Can find a Python kernel based on language', async () => {
-        const kernelSpec = await kernelFinder.findKernel(resourceToUse, {
-            language_info: { name: PYTHON_LANGUAGE },
-            orig_nbformat: 4
-        });
+        const kernelSpec = takeTopRankKernel(
+            await kernelFinder.rankKernelsForResource(resourceToUse, {
+                language_info: { name: PYTHON_LANGUAGE },
+                orig_nbformat: 4
+            })
+        );
         assert.ok(kernelSpec);
         const language = getKernelConnectionLanguage(kernelSpec);
         assert.equal(language, PYTHON_LANGUAGE);
@@ -100,10 +106,12 @@ suite('DataScience - Kernels Finder', () => {
             return this.skip();
         }
 
-        const kernelSpec = await kernelFinder.findKernel(resourceToUse, {
-            language_info: { name: 'julia' },
-            orig_nbformat: 4
-        });
+        const kernelSpec = takeTopRankKernel(
+            await kernelFinder.rankKernelsForResource(resourceToUse, {
+                language_info: { name: 'julia' },
+                orig_nbformat: 4
+            })
+        );
         assert.ok(kernelSpec);
         const language = getKernelConnectionLanguage(kernelSpec);
         assert.equal(language, 'julia');
@@ -118,11 +126,21 @@ suite('DataScience - Kernels Finder', () => {
         ) as LocalKernelConnectionMetadata;
         assert.ok(juliaKernelSpec);
 
-        const kernelSpec = await kernelFinder.findKernel(resourceToUse, {
-            kernelspec: juliaKernelSpec?.kernelSpec as any,
-            orig_nbformat: 4
-        });
+        const kernelSpec = takeTopRankKernel(
+            await kernelFinder.rankKernelsForResource(resourceToUse, {
+                kernelspec: juliaKernelSpec?.kernelSpec as any,
+                orig_nbformat: 4
+            })
+        );
         assert.ok(kernelSpec);
         assert.deepEqual(kernelSpec, juliaKernelSpec);
     });
 });
+
+export function takeTopRankKernel(
+    rankedKernels: KernelConnectionMetadata[] | undefined
+): KernelConnectionMetadata | undefined {
+    if (rankedKernels && rankedKernels.length) {
+        return rankedKernels[rankedKernels.length - 1];
+    }
+}

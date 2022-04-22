@@ -453,11 +453,20 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // Don't attempt preferred kernel search for interactive window, but do make sure we
             // load all our controllers for interactive window
             if (document.notebookType === JupyterNotebookView) {
-                preferredConnection = await this.kernelFinder.findKernel(
+                // preferredConnection = await this.kernelFinder.rankKernelsForResource(
+                // document.uri,
+                // getNotebookMetadata(document),
+                // preferredSearchToken.token
+                // );
+                const rankedConnections = await this.kernelFinder.rankKernelsForResource(
                     document.uri,
                     getNotebookMetadata(document),
                     preferredSearchToken.token
                 );
+
+                if (rankedConnections && rankedConnections.length) {
+                    preferredConnection = rankedConnections[rankedConnections.length - 1];
+                }
 
                 // If we found a preferred kernel, set the association on the NotebookController
                 if (preferredSearchToken.token.isCancellationRequested && !preferredConnection) {

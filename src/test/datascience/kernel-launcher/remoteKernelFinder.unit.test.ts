@@ -35,6 +35,7 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { RemoteKernelSpecsCacheKey } from '../../../kernels/kernelFinder.base';
+import { takeTopRankKernel } from './kernelFinder.vscode.test.node';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];
@@ -239,21 +240,21 @@ suite(`Remote Kernel Finder`, () => {
         ]);
 
         // Try python
-        let kernel = await kernelFinder.findKernel(undefined, {
+        let kernel = await kernelFinder.rankKernelsForResource(undefined, {
             language_info: { name: PYTHON_LANGUAGE },
             orig_nbformat: 4
         });
         assert.ok(kernel, 'No python kernel found matching notebook metadata');
 
         // Julia
-        kernel = await kernelFinder.findKernel(undefined, {
+        kernel = await kernelFinder.rankKernelsForResource(undefined, {
             language_info: { name: 'julia' },
             orig_nbformat: 4
         });
         assert.ok(kernel, 'No julia kernel found matching notebook metadata');
 
         // Python 2
-        kernel = await kernelFinder.findKernel(undefined, {
+        kernel = await kernelFinder.rankKernelsForResource(undefined, {
             kernelspec: {
                 display_name: 'Python 2 on Disk',
                 name: 'python2'
@@ -275,7 +276,7 @@ suite(`Remote Kernel Finder`, () => {
         const uri = Uri.file('/usr/foobar/foo.ipynb');
         await preferredRemoteKernelIdProvider.storePreferredRemoteKernelId(uri, '2');
 
-        const kernel = await kernelFinder.findKernel(uri);
+        const kernel = takeTopRankKernel(await kernelFinder.rankKernelsForResource(uri));
         assert.ok(kernel, 'Kernel not found for uri');
         assert.equal(kernel?.kind, 'connectToLiveRemoteKernel', 'Live kernel not found');
         assert.equal(

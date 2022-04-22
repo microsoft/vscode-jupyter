@@ -514,11 +514,11 @@ export interface IKernelDependencyService {
 export const IKernelFinder = Symbol('IKernelFinder');
 
 export interface IKernelFinder {
-    findKernel(
+    rankKernelsForResource(
         resource: Resource,
         option?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
-    ): Promise<KernelConnectionMetadata | undefined>;
+    ): Promise<KernelConnectionMetadata[] | undefined>;
     listKernels(
         resource: Resource,
         cancelToken?: CancellationToken,
