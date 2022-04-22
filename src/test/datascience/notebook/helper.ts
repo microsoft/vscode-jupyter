@@ -138,13 +138,17 @@ export async function deleteAllCellsAndWait() {
 export async function createTemporaryNotebook(
     cells: (nbformat.ICodeCell | nbformat.IMarkdownCell)[],
     disposables: IDisposable[],
-    kernelName: string = 'Python 3'
+    kernelName: string = 'Python 3',
+    rootFolder?: Uri
 ): Promise<Uri> {
     const services = await getServices();
     const platformService = services.serviceContainer.get<IPlatformService>(IPlatformService);
     const workspaceService = services.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     const rootUrl =
-        platformService.tempDir || workspaceService.rootFolder || Uri.file('./').with({ scheme: 'vscode-test-web' });
+        rootFolder ||
+        platformService.tempDir ||
+        workspaceService.rootFolder ||
+        Uri.file('./').with({ scheme: 'vscode-test-web' });
     const uri = urlPath.joinPath(rootUrl, `${uuid()}.ipynb`);
     cells =
         cells.length == 0
@@ -184,14 +188,14 @@ export async function createTemporaryNotebook(
  * when creating a new notebook.
  * This function ensures we always open a notebook for testing that is guaranteed to use a Python kernel.
  */
-export async function createEmptyPythonNotebook(disposables: IDisposable[] = []) {
+export async function createEmptyPythonNotebook(disposables: IDisposable[] = [], rootFolder?: Uri) {
     traceInfoIfCI('Creating an empty notebook');
     const { serviceContainer } = await getServices();
     const editorProvider = serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
     const vscodeNotebook = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     // Don't use same file (due to dirty handling, we might save in dirty.)
     // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-    const nbFile = await createTemporaryNotebook([], disposables);
+    const nbFile = await createTemporaryNotebook([], disposables, 'python3', rootFolder);
     // Open a python notebook and use this for all tests in this test suite.
     await editorProvider.open(nbFile);
     assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');

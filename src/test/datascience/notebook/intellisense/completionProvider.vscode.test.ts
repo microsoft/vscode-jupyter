@@ -14,6 +14,7 @@ import {
     ConfigurationTarget,
     Position,
     TextDocument,
+    Uri,
     workspace,
     WorkspaceEdit
 } from 'vscode';
@@ -26,7 +27,7 @@ import {
 } from '../../../../intellisense/pythonKernelCompletionProvider.node';
 import { IExtensionTestApi, sleep } from '../../../common.node';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants.node';
-import { initialize } from '../../../initialize.node';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../../initialize.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
     runCell,
@@ -50,17 +51,17 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
     suiteSetup(async function () {
         traceInfo(`Start Suite Code Completion via Jupyter`);
         this.timeout(120_000);
-        api = await initialize();
-        if (IS_REMOTE_NATIVE_TEST()) {
-            // https://github.com/microsoft/vscode-jupyter/issues/6331
-            return this.skip();
-        }
         previousPythonCompletionTriggerCharactersValue = workspace
             .getConfiguration('jupyter', undefined)
             .get<string>('pythonCompletionTriggerCharacters');
         await workspace
             .getConfiguration('jupyter', undefined)
             .update('pythonCompletionTriggerCharacters', '.%"\'', ConfigurationTarget.Global);
+        api = await initialize();
+        if (IS_REMOTE_NATIVE_TEST()) {
+            // https://github.com/microsoft/vscode-jupyter/issues/6331
+            return this.skip();
+        }
         await startJupyterServer();
         await prewarmNotebooks();
         sinon.restore();
@@ -73,7 +74,7 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
         traceInfo(`Start Test ${this.currentTest?.title}`);
         sinon.restore();
         await startJupyterServer();
-        await createEmptyPythonNotebook(disposables);
+        await createEmptyPythonNotebook(disposables, Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'tmp'))); // TODO, can't do this on web tests
         setIntellisenseTimeout(30000);
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });

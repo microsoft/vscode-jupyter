@@ -235,11 +235,11 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
     }
 }
 
-function positionInsideString(word: string, position: Position) {
-    const indexDoubleQuote = word.indexOf('"');
-    const indexSingleQuote = word.indexOf("'");
-    const lastIndexDoubleQuote = word.lastIndexOf('"');
-    const lastIndexSingleQuote = word.lastIndexOf("'");
+function positionInsideString(line: string, position: Position) {
+    const indexDoubleQuote = line.indexOf('"');
+    const indexSingleQuote = line.indexOf("'");
+    const lastIndexDoubleQuote = line.lastIndexOf('"');
+    const lastIndexSingleQuote = line.lastIndexOf("'");
     const index = indexDoubleQuote >= 0 ? indexDoubleQuote : indexSingleQuote;
     const lastIndex = lastIndexDoubleQuote >= 0 ? lastIndexDoubleQuote : lastIndexSingleQuote;
     return index >= 0 && position.character > index && position.character <= lastIndex;
@@ -283,13 +283,12 @@ export function filterCompletions(
     );
     const wordRangeWithTriggerCharacter =
         wordRange && charBeforeCursorPosition ? wordRange.union(charBeforeCursorPosition) : undefined;
-    const word = wordRangeWithTriggerCharacter
-        ? cell.getText(wordRangeWithTriggerCharacter)
-        : cell.lineAt(position.line).text;
+    const line = cell.lineAt(position.line).text;
+    const word = wordRangeWithTriggerCharacter ? cell.getText(wordRangeWithTriggerCharacter) : line;
     const wordDot = word.endsWith('.') || isPreviousCharTriggerCharacter;
     const insideString =
         allowStringFilter &&
-        (triggerCharacter == "'" || triggerCharacter == '"' || positionInsideString(word, position));
+        (triggerCharacter == "'" || triggerCharacter == '"' || positionInsideString(line, position));
 
     // If inside of a string, filter out everything except file names
     if (insideString) {
