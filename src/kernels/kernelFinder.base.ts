@@ -19,7 +19,7 @@ import { getTelemetrySafeLanguage } from '../telemetry/helpers';
 import { DisplayOptions } from './displayOptions';
 import {
     getLanguageInNotebookMetadata,
-    findPreferredKernel,
+    rankKernels,
     getDisplayNameOrNameOfKernelConnection,
     isLocalLaunch,
     deserializeKernelConnection,
@@ -65,7 +65,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         try {
             // Get list of all of the specs from the cache and without the cache (note, cached items will be validated before being returned)
             const cached = await this.listKernels(resource, cancelToken, 'useCache');
-            const nonCachedPromise = this.listKernels(resource, cancelToken, 'ignoreCache');
+            // const nonCachedPromise = this.listKernels(resource, cancelToken, 'ignoreCache');
 
             const isPythonNbOrInteractiveWindow = isPythonNotebook(notebookMetadata) || resourceType === 'interactive';
             // Always include the interpreter in the search if we can
@@ -75,7 +75,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
                     : undefined;
 
             // Find the preferred kernel index from the list.
-            let preferred = findPreferredKernel(
+            let preferred = rankKernels(
                 cached,
                 resource,
                 notebookMetadata,
@@ -84,25 +84,26 @@ export abstract class BaseKernelFinder implements IKernelFinder {
             );
 
             // If still not found, try the nonCached list
-            if (!preferred) {
-                preferred = findPreferredKernel(
-                    await nonCachedPromise,
-                    resource,
-                    notebookMetadata,
-                    preferredInterpreter,
-                    this.preferredRemoteFinder
-                );
-            }
-            sendTelemetryEvent(Telemetry.PreferredKernel, undefined, {
-                result: preferred ? 'found' : 'notfound',
-                resourceType,
-                language: telemetrySafeLanguage,
-                hasActiveInterpreter: !!preferredInterpreter
-            });
-            if (preferred) {
-                traceInfo(`findKernel found ${getDisplayNameOrNameOfKernelConnection(preferred)}`);
-                return preferred;
-            }
+            // IANHU: Work do to here, maybe an exact match check?
+            // if (!preferred) {
+            // preferred = rankKernels(
+            // await nonCachedPromise,
+            // resource,
+            // notebookMetadata,
+            // preferredInterpreter,
+            // this.preferredRemoteFinder
+            // );
+            // }
+            // sendTelemetryEvent(Telemetry.PreferredKernel, undefined, {
+            // result: preferred ? 'found' : 'notfound',
+            // resourceType,
+            // language: telemetrySafeLanguage,
+            // hasActiveInterpreter: !!preferredInterpreter
+            // });
+            // if (preferred) {
+            // traceInfo(`findKernel found ${getDisplayNameOrNameOfKernelConnection(preferred)}`);
+            // return preferred;
+            // }
         } catch (ex) {
             sendTelemetryEvent(
                 Telemetry.PreferredKernel,

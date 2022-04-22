@@ -136,7 +136,7 @@ export function getInterpreterHashInMetadata(
         return (notebookMetadata as any).interpreter.hash;
     }
 }
-export function findPreferredKernel(
+export function rankKernels(
     kernels: KernelConnectionMetadata[],
     resource: Resource,
     notebookMetadata: nbformat.INotebookMetadata | undefined,
@@ -237,6 +237,8 @@ function isExactMatch(
     notebookMetadata: nbformat.INotebookMetadata
 ): boolean {
     // IANHU: Live kernel connection check here
+
+    // Language mismatch check here
 
     // To get an exact match, we need to have a kernelspec in the metadata
     if (!notebookMetadata.kernelspec) {
