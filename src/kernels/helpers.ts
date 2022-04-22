@@ -172,12 +172,39 @@ export function rankKernels(
 
     traceInfoIfCI(`preferredInterpreterKernelSpecIndex = ${preferredInterpreterKernelSpec?.id}`);
 
-    // Now perform our big comparison on the kernel list
+    // Figure out our possible language from the metadata
     notebookMetadata?.language_info?.name || (notebookMetadata?.kernelspec as undefined | IJupyterKernelSpec)?.language;
     const actualNbMetadataLanguage: string | undefined =
         notebookMetadata?.language_info?.name ||
         (notebookMetadata?.kernelspec as undefined | IJupyterKernelSpec)?.language;
     let possibleNbMetadataLanguage = actualNbMetadataLanguage;
+
+    // If the notebook has a language set, remove anything not that language we don't want to rank those items
+    kernels = kernels.filter((kernel) => {
+        if (
+            possibleNbMetadataLanguage &&
+            possibleNbMetadataLanguage !== PYTHON_LANGUAGE &&
+            !notebookMetadata?.kernelspec &&
+            kernel.kind !== 'connectToLiveRemoteKernel' &&
+            kernel.kernelSpec.language &&
+            kernel.kernelSpec.language !== possibleNbMetadataLanguage
+        ) {
+            return false;
+        }
+        // Return everything else
+        return true;
+    });
+
+    // } else if (
+    // possibleNbMetadataLanguage &&
+    // possibleNbMetadataLanguage !== PYTHON_LANGUAGE &&
+    // !notebookMetadata?.kernelspec &&
+    // preferredKernel.kind !== 'connectToLiveRemoteKernel' &&
+    // preferredKernel.kernelSpec.language &&
+    // preferredKernel.kernelSpec.language !== possibleNbMetadataLanguage
+    // ) {
+
+    // Now perform our big comparison on the kernel list
     // Interactive window always defaults to Python kernels.
     if (getResourceType(resource) === 'interactive') {
         // TODO: Based on the resource, we should be able to find the language.

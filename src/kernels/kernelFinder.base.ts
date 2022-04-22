@@ -74,14 +74,20 @@ export abstract class BaseKernelFinder implements IKernelFinder {
                     ? await this.interpreterService.getActiveInterpreter(resource)
                     : undefined;
 
-            // Find the preferred kernel index from the list.
-            let preferred = rankKernels(
+            return await rankKernels(
                 cached,
                 resource,
                 notebookMetadata,
                 preferredInterpreter,
                 this.preferredRemoteFinder
             );
+            // let preferred = rankKernels(
+            // cached,
+            // resource,
+            // notebookMetadata,
+            // preferredInterpreter,
+            // this.preferredRemoteFinder
+            // );
 
             // If still not found, try the nonCached list
             // IANHU: Work do to here, maybe an exact match check?
