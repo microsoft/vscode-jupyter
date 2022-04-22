@@ -224,34 +224,33 @@ suite.only('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await comms.setValue(cell2, '.widget-text input', '5255');
         await assertOutputContainsHtml(cell3, comms, ['>5255<', '>5378.0']);
     });
-    test('Render ipyvolume (slider, color picker, figure)', async function () {
+    test.skip('Render ipyvolume (slider, color picker, figure)', async function () {
         const comms = await initializeNotebook({ templateFile: 'ipyvolume_widgets.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(1);
 
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['<input type="color"', '>Slider1<', '>Slider2<', '<canvas']);
     });
-    test('Render pythreejs', async function () {
+    test.skip('Render pythreejs', async function () {
         const comms = await initializeNotebook({ templateFile: 'pythreejs_widgets.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(1);
 
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['<canvas']);
     });
-    test('Render pythreejs, 2', async function () {
+    test.skip('Render pythreejs, 2', async function () {
         const comms = await initializeNotebook({ templateFile: 'pythreejs_widgets2.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(1);
 
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['<canvas']);
     });
-    test('Render matplotlib, interactive inline', async function () {
+    test.skip('Render matplotlib, interactive inline', async function () {
         const comms = await initializeNotebook({ templateFile: 'matplotlib_widgets_interactive.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(1);
 
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['>m<', '>b<', '<img src="data:image']);
-        await assertOutputContainsHtml(cell, comms, ['<img src="data:image'], '.jp-OutputArea-output');
     });
     test('Render matplotlib, non-interactive inline', async function () {
         const comms = await initializeNotebook({ templateFile: 'matplotlib_widgets_inline.ipynb' });
@@ -260,13 +259,12 @@ suite.only('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['<img src="blob:vscode']);
     });
-    test('Render matplotlib, widget', async function () {
+    test.skip('Render matplotlib, widget', async function () {
         const comms = await initializeNotebook({ templateFile: 'matplotlib_widgets_widget.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(3);
 
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['>Figure 1<', '<canvas', 'Download plot']);
-        await assertOutputContainsHtml(cell, comms, ['<canvas'], '.jupyter-matplotlib-canvas-div');
     });
     test('Render matplotlib, widget in multiple cells', async function () {
         const comms = await initializeNotebook({ templateFile: 'matplotlib_multiple_cells_widgets.ipynb' });
@@ -277,9 +275,7 @@ suite.only('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await executeCellAndWaitForOutput(cell3, comms);
         await executeCellAndWaitForOutput(cell4, comms);
         await assertOutputContainsHtml(cell3, comms, ['>Figure 1<', '<canvas', 'Download plot']);
-        await assertOutputContainsHtml(cell3, comms, ['<canvas'], '.jupyter-matplotlib-canvas-div');
         await assertOutputContainsHtml(cell4, comms, ['>Figure 2<', '<canvas', 'Download plot']);
-        await assertOutputContainsHtml(cell4, comms, ['<canvas'], '.jupyter-matplotlib-canvas-div');
     });
     test.skip('Widget renders after executing a notebook which was saved after previous execution', async () => {
         // https://github.com/microsoft/vscode-jupyter/issues/8748
