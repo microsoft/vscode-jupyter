@@ -1556,7 +1556,8 @@
                         "warn",
                         "info",
                         "debug",
-                        "verbose"
+                        "verbose",
+                        "everything"
                     ],
                     "description": "The logging level the extension logs at.",
                     "scope": "machine"

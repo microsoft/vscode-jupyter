@@ -17,7 +17,7 @@ import {
     Telemetry,
     VSCodeNativeTelemetry
 } from '../platform/common/constants';
-import { traceError, traceWithLevel } from '../platform/logging';
+import { traceError, traceEverything } from '../platform/logging';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { ResourceSpecificTelemetryProperties } from './types';
 import { CheckboxState, EventName, PlatformErrors, SliceOperationSource } from './constants';
@@ -30,7 +30,6 @@ import { ExportFormat } from '../platform/export/types';
 import { InterruptResult, KernelInterpreterDependencyResponse } from '../kernels/types';
 import { populateTelemetryWithErrorInfo } from '../platform/errors';
 import { IExportedKernelService } from '../platform/api/extension';
-import { LogLevel } from '../platform/logging/types';
 
 export const waitBeforeSending = 'waitBeforeSending';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -263,8 +262,7 @@ function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E exten
 
         reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     }
-    traceWithLevel(
-        LogLevel.Trace,
+    traceEverything(
         `Telemetry Event : ${eventNameSent} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
             customProperties
         )} `

@@ -11,6 +11,7 @@ export enum LogLevel {
     Info = 20,
     Debug = 10,
     Trace = 5,
+    Everything = 1,
     Off = 100
 }
 
@@ -21,6 +22,7 @@ export interface ILogger {
     traceError(message: string, ...data: Arguments): void;
     traceWarn(message: string, ...data: Arguments): void;
     traceInfo(message: string, ...data: Arguments): void;
+    traceEverything(message: string, ...data: Arguments): void;
     traceVerbose(message: string, ...data: Arguments): void;
 }
 

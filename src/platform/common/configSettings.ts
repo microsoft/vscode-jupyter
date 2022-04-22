@@ -311,6 +311,9 @@ function convertSettingTypeToLogLevel(setting: LoggingLevelSettingType | undefin
         case 'verbose': {
             return LogLevel.Trace;
         }
+        case 'everything': {
+            return LogLevel.Everything;
+        }
         default: {
             return LogLevel.Error;
         }
