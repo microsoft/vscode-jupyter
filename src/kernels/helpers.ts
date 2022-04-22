@@ -9,7 +9,6 @@ import * as nbformat from '@jupyterlab/nbformat';
 import type { KernelSpec } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
-import * as url from 'url-parse';
 import {
     KernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
@@ -36,6 +35,7 @@ import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKer
 import { getResourceType } from '../platform/common/utils';
 import { sendTelemetryEvent } from '../telemetry';
 import { isPythonNotebook } from '../notebooks/helpers';
+const isLocalHost = require('is-localhost-ip');
 
 // https://jupyter-client.readthedocs.io/en/stable/kernels.html
 export const connectionFilePlaceholder = '{connection_file}';
@@ -1365,8 +1365,7 @@ export function isLocalHostConnection(kernelConnection: KernelConnectionMetadata
         kernelConnection.kind === 'connectToLiveRemoteKernel' ||
         kernelConnection.kind === 'startUsingRemoteKernelSpec'
     ) {
-        const parsed = new url(kernelConnection.baseUrl);
-        return parsed.hostname.toLocaleLowerCase() === 'localhost' || parsed.hostname === '127.0.0.1';
+        return isLocalHost(kernelConnection.baseUrl);
     }
     return false;
 }

@@ -3,7 +3,6 @@
 'use strict';
 
 import { Kernel } from '@jupyterlab/services';
-import * as url from 'url';
 import { injectable, inject } from 'inversify';
 import { CancellationToken, Uri } from 'vscode';
 import { getKernelId } from '../helpers';
@@ -21,6 +20,7 @@ import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { IRemoteKernelFinder } from '../raw/types';
 import { IJupyterSessionManagerFactory, IJupyterSessionManager } from './types';
 import { sendKernelSpecTelemetry } from '../raw/finder/helper';
+const isLocalHost = require('is-localhost-ip');
 
 // This class searches for a kernel that matches the given kernel name.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -139,8 +139,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
     }
 
     private async getInterpreter(spec: IJupyterKernelSpec, baseUrl: string) {
-        const parsed = new url.URL(baseUrl);
-        if (parsed.hostname.toLocaleLowerCase() === 'localhost' || parsed.hostname === '127.0.0.1') {
+        if (isLocalHost(baseUrl)) {
             // Interpreter is possible. Same machine as VS code
             return this.interpreterService.getInterpreterDetails(Uri.file(spec.argv[0]));
         }
