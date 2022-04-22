@@ -41,7 +41,7 @@ suite('DataScience - Kernels Finder', () => {
         assert.isAtLeast(kernelSpecs.length, 1);
     });
     test('No kernel returned if no matching kernel found for language', async () => {
-        const kernelSpec = await kernelFinder.rankKernelsForResource(resourceToUse, {
+        const kernelSpec = await kernelFinder.rankKernels(resourceToUse, {
             language_info: { name: 'foobar' },
             orig_nbformat: 4
         });
@@ -50,7 +50,7 @@ suite('DataScience - Kernels Finder', () => {
     test('Python kernel returned if no matching kernel found', async () => {
         const interpreter = await interpreterService.getActiveInterpreter(resourceToUse);
         const kernelSpec = takeTopRankKernel(
-            await kernelFinder.rankKernelsForResource(resourceToUse, {
+            await kernelFinder.rankKernels(resourceToUse, {
                 kernelspec: { display_name: 'foobar', name: 'foobar' },
                 orig_nbformat: 4,
                 language_info: {
@@ -72,7 +72,7 @@ suite('DataScience - Kernels Finder', () => {
     test('Interpreter kernel returned if kernelspec metadata not provided', async () => {
         const interpreter = await interpreterService.getActiveInterpreter(resourceToUse);
         const kernelSpec = takeTopRankKernel(
-            await kernelFinder.rankKernelsForResource(resourceToUse, {
+            await kernelFinder.rankKernels(resourceToUse, {
                 kernelspec: undefined,
                 orig_nbformat: 4,
                 language_info: {
@@ -92,7 +92,7 @@ suite('DataScience - Kernels Finder', () => {
     });
     test('Can find a Python kernel based on language', async () => {
         const kernelSpec = takeTopRankKernel(
-            await kernelFinder.rankKernelsForResource(resourceToUse, {
+            await kernelFinder.rankKernels(resourceToUse, {
                 language_info: { name: PYTHON_LANGUAGE },
                 orig_nbformat: 4
             })
@@ -107,7 +107,7 @@ suite('DataScience - Kernels Finder', () => {
         }
 
         const kernelSpec = takeTopRankKernel(
-            await kernelFinder.rankKernelsForResource(resourceToUse, {
+            await kernelFinder.rankKernels(resourceToUse, {
                 language_info: { name: 'julia' },
                 orig_nbformat: 4
             })
@@ -127,7 +127,7 @@ suite('DataScience - Kernels Finder', () => {
         assert.ok(juliaKernelSpec);
 
         const kernelSpec = takeTopRankKernel(
-            await kernelFinder.rankKernelsForResource(resourceToUse, {
+            await kernelFinder.rankKernels(resourceToUse, {
                 kernelspec: juliaKernelSpec?.kernelSpec as any,
                 orig_nbformat: 4
             })

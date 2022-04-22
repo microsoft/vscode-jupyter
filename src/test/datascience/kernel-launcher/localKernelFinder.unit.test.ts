@@ -1158,7 +1158,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 
                         // Try an empty python Notebook without any kernelspec in metadata.
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernelsForResource(nbUri, {
+                            await kernelFinder.rankKernels(nbUri, {
                                 language_info: { name: PYTHON_LANGUAGE },
                                 orig_nbformat: 4
                             })
@@ -1175,7 +1175,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 
                         // Generic Python notebooks (without display name).
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernelsForResource(nbUri, {
+                            await kernelFinder.rankKernels(nbUri, {
                                 kernelspec: {
                                     display_name: '',
                                     name: 'python'
@@ -1196,7 +1196,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 
                         // Generic Python notebooks.
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernelsForResource(nbUri, {
+                            await kernelFinder.rankKernels(nbUri, {
                                 kernelspec: {
                                     display_name: 'Python',
                                     name: 'python'
@@ -1217,7 +1217,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 
                         // Generic Python 3 notebooks.
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernelsForResource(nbUri, {
+                            await kernelFinder.rankKernels(nbUri, {
                                 kernelspec: {
                                     display_name: 'Python 3',
                                     name: 'python3'
@@ -1238,7 +1238,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 
                         // Generic Python 3 notebooks (kernels with IpyKernel installed).
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernelsForResource(nbUri, {
+                            await kernelFinder.rankKernels(nbUri, {
                                 kernelspec: {
                                     display_name: 'Python 3 (IPyKernel)',
                                     name: 'python3'
@@ -1259,7 +1259,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 
                         // Python 2
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernelsForResource(nbUri, {
+                            await kernelFinder.rankKernels(nbUri, {
                                 kernelspec: {
                                     display_name: 'Python 2 on Disk',
                                     name: 'python2'
@@ -1282,7 +1282,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 
                         // Julia based on language
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernelsForResource(nbUri, {
+                            await kernelFinder.rankKernels(nbUri, {
                                 language_info: { name: 'julia' },
                                 orig_nbformat: 4
                             })
@@ -1291,7 +1291,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 
                         // Julia based on kernelspec name & display name (without any language information)
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernelsForResource(nbUri, {
+                            await kernelFinder.rankKernels(nbUri, {
                                 kernelspec: {
                                     display_name: juliaKernelSpec.display_name,
                                     name: juliaKernelSpec.name
@@ -1303,7 +1303,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 
                         // R (match a specific R kernel based on the display name & name)
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernelsForResource(nbUri, {
+                            await kernelFinder.rankKernels(nbUri, {
                                 kernelspec: {
                                     display_name: rV1KernelSpec.display_name,
                                     name: rV1KernelSpec.name
@@ -1316,7 +1316,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 
                         // R (match a specific R kernel based on the name)
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernelsForResource(nbUri, {
+                            await kernelFinder.rankKernels(nbUri, {
                                 kernelspec: {
                                     display_name: '',
                                     name: rV1KernelSpec.name
@@ -1329,7 +1329,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 
                         // R (match a specific R kernel based on the display_name)
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernelsForResource(nbUri, {
+                            await kernelFinder.rankKernels(nbUri, {
                                 kernelspec: {
                                     display_name: rV1KernelSpec.display_name,
                                     name: ''
@@ -1342,7 +1342,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 
                         // Python 2 based on name
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernelsForResource(nbUri, {
+                            await kernelFinder.rankKernels(nbUri, {
                                 kernelspec: {
                                     display_name: 'Some unknown name for Python 2',
                                     name: 'python2'
@@ -1355,7 +1355,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 
                         // Python 2 based on display name
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernelsForResource(nbUri, {
+                            await kernelFinder.rankKernels(nbUri, {
                                 kernelspec: {
                                     display_name: python2Global.displayName || '',
                                     name: 'python2'
@@ -1368,7 +1368,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 
                         // Match conda environment based on env display name of conda env.
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernelsForResource(nbUri, {
+                            await kernelFinder.rankKernels(nbUri, {
                                 kernelspec: {
                                     display_name: '',
                                     name: condaEnv1.envName || ''
@@ -1381,7 +1381,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 
                         // Match conda environment based on env display name of conda env.
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernelsForResource(nbUri, {
+                            await kernelFinder.rankKernels(nbUri, {
                                 kernelspec: {
                                     display_name: condaEnv1.displayName || '',
                                     name: condaEnv1.envName || ''
@@ -1394,7 +1394,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 
                         // Match conda environment based on env name of conda env (even if name doesn't match).
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernelsForResource(nbUri, {
+                            await kernelFinder.rankKernels(nbUri, {
                                 kernelspec: {
                                     display_name: condaEnv1.displayName || '',
                                     name: 'someUnknownNameThatWillNeverMatch'
@@ -1407,7 +1407,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 
                         // Match based on interpreter hash even if name and display name do not match.
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernelsForResource(nbUri, {
+                            await kernelFinder.rankKernels(nbUri, {
                                 kernelspec: {
                                     display_name: 'Will never match',
                                     name: 'someUnknownNameThatWillNeverMatch'
@@ -1423,7 +1423,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 
                         // Match based on custom kernelspec name
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernelsForResource(nbUri, {
+                            await kernelFinder.rankKernels(nbUri, {
                                 kernelspec: {
                                     display_name: 'Junk Display Name',
                                     name: python2spec.name
@@ -1437,7 +1437,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 
                         // Unknown kernel language
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernelsForResource(nbUri, {
+                            await kernelFinder.rankKernels(nbUri, {
                                 language_info: { name: 'someunknownlanguage' },
                                 orig_nbformat: 4
                             })
@@ -1478,7 +1478,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
                         const kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernelsForResource(Uri.file('wow.py'), {
+                            await kernelFinder.rankKernels(Uri.file('wow.py'), {
                                 language_info: { name: PYTHON_LANGUAGE },
                                 orig_nbformat: 4
                             })
@@ -1523,7 +1523,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
                         const kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernelsForResource(Uri.file('wow.py'))
+                            await kernelFinder.rankKernels(Uri.file('wow.py'))
                         ) as LocalKernelConnectionMetadata;
                         assert.strictEqual(
                             kernel?.kernelSpec?.language,
@@ -1565,7 +1565,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
                         const kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernelsForResource(Uri.file('wow.py'), {
+                            await kernelFinder.rankKernels(Uri.file('wow.py'), {
                                 language_info: {
                                     name: PYTHON_LANGUAGE
                                 }

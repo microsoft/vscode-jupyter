@@ -240,21 +240,21 @@ suite(`Remote Kernel Finder`, () => {
         ]);
 
         // Try python
-        let kernel = await kernelFinder.rankKernelsForResource(undefined, {
+        let kernel = await kernelFinder.rankKernels(undefined, {
             language_info: { name: PYTHON_LANGUAGE },
             orig_nbformat: 4
         });
         assert.ok(kernel, 'No python kernel found matching notebook metadata');
 
         // Julia
-        kernel = await kernelFinder.rankKernelsForResource(undefined, {
+        kernel = await kernelFinder.rankKernels(undefined, {
             language_info: { name: 'julia' },
             orig_nbformat: 4
         });
         assert.ok(kernel, 'No julia kernel found matching notebook metadata');
 
         // Python 2
-        kernel = await kernelFinder.rankKernelsForResource(undefined, {
+        kernel = await kernelFinder.rankKernels(undefined, {
             kernelspec: {
                 display_name: 'Python 2 on Disk',
                 name: 'python2'
@@ -276,7 +276,7 @@ suite(`Remote Kernel Finder`, () => {
         const uri = Uri.file('/usr/foobar/foo.ipynb');
         await preferredRemoteKernelIdProvider.storePreferredRemoteKernelId(uri, '2');
 
-        const kernel = takeTopRankKernel(await kernelFinder.rankKernelsForResource(uri));
+        const kernel = takeTopRankKernel(await kernelFinder.rankKernels(uri));
         assert.ok(kernel, 'Kernel not found for uri');
         assert.equal(kernel?.kind, 'connectToLiveRemoteKernel', 'Live kernel not found');
         assert.equal(

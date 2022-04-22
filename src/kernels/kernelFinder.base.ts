@@ -19,7 +19,7 @@ import { getTelemetrySafeLanguage } from '../telemetry/helpers';
 import { DisplayOptions } from './displayOptions';
 import {
     getLanguageInNotebookMetadata,
-    rankKernels,
+    rankKernelsImpl,
     getDisplayNameOrNameOfKernelConnection,
     isLocalLaunch,
     deserializeKernelConnection,
@@ -51,18 +51,14 @@ export abstract class BaseKernelFinder implements IKernelFinder {
     ) {}
 
     // Finding a kernel is the same no matter what the source
-    @traceDecoratorVerbose('Find kernel spec', TraceOptions.BeforeCall | TraceOptions.Arguments)
-    @captureTelemetry(Telemetry.KernelFinderPerf)
-    public async rankKernelsForResource(
+    @traceDecoratorVerbose('Rank Kernels', TraceOptions.BeforeCall | TraceOptions.Arguments)
+    @captureTelemetry(Telemetry.RankKernelsPerf)
+    public async rankKernels(
         resource: Resource,
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<KernelConnectionMetadata[] | undefined> {
         const resourceType = getResourceType(resource);
-        const telemetrySafeLanguage =
-            resourceType === 'interactive'
-                ? PYTHON_LANGUAGE
-                : getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata) || '');
         try {
             // Get list of all of the specs from the cache and without the cache (note, cached items will be validated before being returned)
             const cached = await this.listKernels(resource, cancelToken, 'useCache');
@@ -80,7 +76,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
                 this.preferredRemoteFinder &&
                 this.preferredRemoteFinder.getPreferredRemoteKernelId(resource);
 
-            let rankedKernels = rankKernels(
+            let rankedKernels = rankKernelsImpl(
                 cached,
                 resource,
                 notebookMetadata,
@@ -90,16 +86,16 @@ export abstract class BaseKernelFinder implements IKernelFinder {
 
             if (
                 rankedKernels &&
-                rankKernels.length &&
+                rankedKernels.length &&
                 isExactMatchImpl(rankedKernels[rankedKernels.length - 1], notebookMetadata, preferredRemoteKernelId)
             ) {
                 // If we found a good exact match in here, then just return our results, no need to check non-cached
-                traceInfo('RankKernelsForResource found a good match in cached results');
+                traceInfo('Found a good kernel connection in cached results');
                 return rankedKernels;
             }
 
             // Didn't find a good exact match in the first batch. So return the nonCached list
-            rankedKernels = rankKernels(
+            rankedKernels = rankKernelsImpl(
                 await nonCachedPromise,
                 resource,
                 notebookMetadata,
@@ -109,20 +105,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
 
             return rankedKernels;
         } catch (ex) {
-            // IANHU send this telemetry here?
-            sendTelemetryEvent(
-                Telemetry.PreferredKernel,
-                undefined,
-                {
-                    result: 'failed',
-                    resourceType,
-                    language: telemetrySafeLanguage
-                },
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                ex as any,
-                true
-            );
-            traceError(`findKernel crashed`, ex);
+            traceError(`RankKernels crashed`, ex);
             return undefined;
         }
     }

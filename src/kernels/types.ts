@@ -514,7 +514,7 @@ export interface IKernelDependencyService {
 export const IKernelFinder = Symbol('IKernelFinder');
 
 export interface IKernelFinder {
-    rankKernelsForResource(
+    rankKernels(
         resource: Resource,
         option?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken

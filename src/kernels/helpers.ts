@@ -136,7 +136,7 @@ export function getInterpreterHashInMetadata(
         return (notebookMetadata as any).interpreter.hash;
     }
 }
-export function rankKernels(
+export function rankKernelsImpl(
     kernels: KernelConnectionMetadata[],
     resource: Resource,
     notebookMetadata: nbformat.INotebookMetadata | undefined,
@@ -179,7 +179,7 @@ export function rankKernels(
         (notebookMetadata?.kernelspec as undefined | IJupyterKernelSpec)?.language;
     let possibleNbMetadataLanguage = actualNbMetadataLanguage;
 
-    // If the notebook has a language set, remove anything not that language we don't want to rank those items
+    // If the notebook has a language set, remove anything not that language as we don't want to rank those items
     kernels = kernels.filter((kernel) => {
         if (
             possibleNbMetadataLanguage &&
@@ -242,11 +242,6 @@ export function isExactMatchImpl(
 
     // To get an exact match, we need to have a kernelspec in the metadata
     if (!notebookMetadata || !notebookMetadata.kernelspec) {
-        return false;
-    }
-
-    // Live kernel connections are not exact matches (aside from the initial ID match)
-    if (kernelConnection.kind === 'connectToLiveRemoteKernel') {
         return false;
     }
 

@@ -458,7 +458,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // load all our controllers for interactive window
             const notebookMetadata = getNotebookMetadata(document);
             if (document.notebookType === JupyterNotebookView) {
-                const rankedConnections = await this.kernelFinder.rankKernelsForResource(
+                const rankedConnections = await this.kernelFinder.rankKernels(
                     document.uri,
                     getNotebookMetadata(document),
                     preferredSearchToken.token
@@ -472,18 +472,22 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         preferredConnection = potentialMatch;
                     }
 
-                    // const resourceType = getResourceType(document.uri);
-                    // const telemetrySafeLanguage =
-                    // resourceType === 'interactive'
-                    // ? PYTHON_LANGUAGE
-                    // : getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata) || '');
+                    const resourceType = getResourceType(document.uri);
+                    const telemetrySafeLanguage =
+                        resourceType === 'interactive'
+                            ? PYTHON_LANGUAGE
+                            : getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata) || '');
 
-                    // sendTelemetryEvent(Telemetry.PreferredKernel, undefined, {
-                    // result: preferredConnection ? 'found' : 'notfound',
-                    // resourceType,
-                    // language: telemetrySafeLanguage,
-                    // hasActiveInterpreter: !!preferredInterpreter
-                    // });
+                    const preferredInterpreter =
+                        isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
+                            ? await this.interpreters.getActiveInterpreter(document.uri)
+                            : undefined;
+                    sendTelemetryEvent(Telemetry.PreferredKernel, undefined, {
+                        result: preferredConnection ? 'found' : 'notfound',
+                        resourceType,
+                        language: telemetrySafeLanguage,
+                        hasActiveInterpreter: !!preferredInterpreter
+                    });
                 }
 
                 // If we found a preferred kernel, set the association on the NotebookController

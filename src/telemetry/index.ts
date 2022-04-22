@@ -1103,7 +1103,7 @@ export interface IEventNamePropertyMapping {
     /**
      * Total time taken to find a kernel on disc or on a remote machine.
      */
-    [Telemetry.KernelFinderPerf]: never | undefined;
+    [Telemetry.RankKernelsPerf]: never | undefined;
     /**
      * Total time taken to list kernels for VS Code.
      */
