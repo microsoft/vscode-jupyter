@@ -5,7 +5,7 @@ import { disposeAllDisposables } from '../platform/common/helpers';
 import { IDisposable } from '../platform/common/types';
 import { sleep } from '../platform/common/utils/async';
 import { clearPendingTimers, IExtensionTestApi } from './common';
-import { JVSC_EXTENSION_ID_FOR_TESTS } from './constants';
+import { IS_SMOKE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from './constants';
 
 export function isInsiders() {
     return vscode.env.appName.indexOf('Insider') > 0 || vscode.env.appName.indexOf('OSS') > 0;
@@ -28,7 +28,9 @@ export async function activateExtension() {
 }
 
 export async function closeActiveWindows(disposables: IDisposable[] = []): Promise<void> {
-    clearPendingChainedUpdatesForTests();
+    if (!IS_SMOKE_TEST()) {
+        clearPendingChainedUpdatesForTests();
+    }
     clearPendingTimers();
     disposeAllDisposables(disposables);
     await closeWindowsAndNotebooks();
