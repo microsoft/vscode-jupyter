@@ -137,7 +137,7 @@ suite('DataScience - Kernels Finder', () => {
     });
 });
 
-export function takeTopRankKernel(
+function takeTopRankKernel(
     rankedKernels: KernelConnectionMetadata[] | undefined
 ): KernelConnectionMetadata | undefined {
     if (rankedKernels && rankedKernels.length) {

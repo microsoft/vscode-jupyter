@@ -141,7 +141,7 @@ export function rankKernels(
     resource: Resource,
     notebookMetadata: nbformat.INotebookMetadata | undefined,
     preferredInterpreter: PythonEnvironment | undefined,
-    remoteKernelPreferredProvider: PreferredRemoteKernelIdProvider | undefined
+    preferredRemoteKernelId: string | undefined
 ): KernelConnectionMetadata[] | undefined {
     traceInfo(
         `Find preferred kernel for ${getDisplayPath(resource)} with metadata ${JSON.stringify(
@@ -195,15 +195,6 @@ export function rankKernels(
         return true;
     });
 
-    // } else if (
-    // possibleNbMetadataLanguage &&
-    // possibleNbMetadataLanguage !== PYTHON_LANGUAGE &&
-    // !notebookMetadata?.kernelspec &&
-    // preferredKernel.kind !== 'connectToLiveRemoteKernel' &&
-    // preferredKernel.kernelSpec.language &&
-    // preferredKernel.kernelSpec.language !== possibleNbMetadataLanguage
-    // ) {
-
     // Now perform our big comparison on the kernel list
     // Interactive window always defaults to Python kernels.
     if (getResourceType(resource) === 'interactive') {
@@ -228,51 +219,33 @@ export function rankKernels(
             preferredInterpreterKernelSpec,
             a,
             b,
-            resource &&
-                remoteKernelPreferredProvider &&
-                remoteKernelPreferredProvider.getPreferredRemoteKernelId(resource)
+            preferredRemoteKernelId
         )
     );
 
     return kernels;
-    // let preferredKernel: KernelConnectionMetadata | undefined = kernels[kernels.length - 1];
-
-    // if (!notebookMetadata || (preferredKernel && !isExactMatch(preferredKernel, notebookMetadata))) {
-    // // Make sure that our preferred kernel is an exact match before we suggest it
-    // traceInfo(`Preferred kernel ${preferredKernel.id} rejected from suggestion as inexact match.`);
-    // preferredKernel = undefined;
-    // } else if (
-    // possibleNbMetadataLanguage &&
-    // possibleNbMetadataLanguage !== PYTHON_LANGUAGE &&
-    // !notebookMetadata?.kernelspec &&
-    // preferredKernel.kind !== 'connectToLiveRemoteKernel' &&
-    // preferredKernel.kernelSpec.language &&
-    // preferredKernel.kernelSpec.language !== possibleNbMetadataLanguage
-    // ) {
-    // // If we have a specific language & the preferred item is not of the same language then don't return anything.
-    // // Remember, all we're doing is sorting the list, just because its sorted in order of preference doesn't mean we have a match.
-    // preferredKernel = undefined;
-    // } else {
-    // traceInfoIfCI(`Preferred kernel is ${JSON.stringify(preferredKernel)}`);
-    // }
-
-    // return preferredKernel;
 }
 
-function isExactMatch(
+export function isExactMatchImpl(
     kernelConnection: KernelConnectionMetadata,
-    notebookMetadata: nbformat.INotebookMetadata
+    notebookMetadata: nbformat.INotebookMetadata | undefined,
+    preferredRemoteKernelId: string | undefined
 ): boolean {
-    // IANHU: Live kernel connection check here
-
-    // Language mismatch check here
+    // Live kernel ID match is always an exact match
+    if (
+        kernelConnection.kind === 'connectToLiveRemoteKernel' &&
+        preferredRemoteKernelId &&
+        kernelConnection.kernelModel.id === preferredRemoteKernelId
+    ) {
+        return true;
+    }
 
     // To get an exact match, we need to have a kernelspec in the metadata
-    if (!notebookMetadata.kernelspec) {
+    if (!notebookMetadata || !notebookMetadata.kernelspec) {
         return false;
     }
 
-    // Live kernel connections are not exact matches
+    // Live kernel connections are not exact matches (aside from the initial ID match)
     if (kernelConnection.kind === 'connectToLiveRemoteKernel') {
         return false;
     }

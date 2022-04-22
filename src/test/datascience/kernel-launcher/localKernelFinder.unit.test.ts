@@ -53,7 +53,6 @@ import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/pre
 import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
 import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder.node';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
-import { takeTopRankKernel } from './kernelFinder.vscode.test.node';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -1586,3 +1585,11 @@ import { takeTopRankKernel } from './kernelFinder.vscode.test.node';
         });
     });
 });
+
+export function takeTopRankKernel(
+    rankedKernels: KernelConnectionMetadata[] | undefined
+): KernelConnectionMetadata | undefined {
+    if (rankedKernels && rankedKernels.length) {
+        return rankedKernels[rankedKernels.length - 1];
+    }
+}

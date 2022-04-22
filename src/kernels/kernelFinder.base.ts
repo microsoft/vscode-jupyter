@@ -23,7 +23,8 @@ import {
     getDisplayNameOrNameOfKernelConnection,
     isLocalLaunch,
     deserializeKernelConnection,
-    serializeKernelConnection
+    serializeKernelConnection,
+    isExactMatchImpl
 } from './helpers';
 import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKernelIdProvider';
 import { ILocalKernelFinder, IRemoteKernelFinder } from './raw/types';
@@ -65,7 +66,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         try {
             // Get list of all of the specs from the cache and without the cache (note, cached items will be validated before being returned)
             const cached = await this.listKernels(resource, cancelToken, 'useCache');
-            // const nonCachedPromise = this.listKernels(resource, cancelToken, 'ignoreCache');
+            const nonCachedPromise = this.listKernels(resource, cancelToken, 'ignoreCache');
 
             const isPythonNbOrInteractiveWindow = isPythonNotebook(notebookMetadata) || resourceType === 'interactive';
             // Always include the interpreter in the search if we can
@@ -74,43 +75,41 @@ export abstract class BaseKernelFinder implements IKernelFinder {
                     ? await this.interpreterService.getActiveInterpreter(resource)
                     : undefined;
 
-            return await rankKernels(
+            const preferredRemoteKernelId =
+                resource &&
+                this.preferredRemoteFinder &&
+                this.preferredRemoteFinder.getPreferredRemoteKernelId(resource);
+
+            let rankedKernels = rankKernels(
                 cached,
                 resource,
                 notebookMetadata,
                 preferredInterpreter,
-                this.preferredRemoteFinder
+                preferredRemoteKernelId
             );
-            // let preferred = rankKernels(
-            // cached,
-            // resource,
-            // notebookMetadata,
-            // preferredInterpreter,
-            // this.preferredRemoteFinder
-            // );
 
-            // If still not found, try the nonCached list
-            // IANHU: Work do to here, maybe an exact match check?
-            // if (!preferred) {
-            // preferred = rankKernels(
-            // await nonCachedPromise,
-            // resource,
-            // notebookMetadata,
-            // preferredInterpreter,
-            // this.preferredRemoteFinder
-            // );
-            // }
-            // sendTelemetryEvent(Telemetry.PreferredKernel, undefined, {
-            // result: preferred ? 'found' : 'notfound',
-            // resourceType,
-            // language: telemetrySafeLanguage,
-            // hasActiveInterpreter: !!preferredInterpreter
-            // });
-            // if (preferred) {
-            // traceInfo(`findKernel found ${getDisplayNameOrNameOfKernelConnection(preferred)}`);
-            // return preferred;
-            // }
+            if (
+                rankedKernels &&
+                rankKernels.length &&
+                isExactMatchImpl(rankedKernels[rankedKernels.length - 1], notebookMetadata, preferredRemoteKernelId)
+            ) {
+                // If we found a good exact match in here, then just return our results, no need to check non-cached
+                traceInfo('RankKernelsForResource found a good match in cached results');
+                return rankedKernels;
+            }
+
+            // Didn't find a good exact match in the first batch. So return the nonCached list
+            rankedKernels = rankKernels(
+                await nonCachedPromise,
+                resource,
+                notebookMetadata,
+                preferredInterpreter,
+                preferredRemoteKernelId
+            );
+
+            return rankedKernels;
         } catch (ex) {
+            // IANHU send this telemetry here?
             sendTelemetryEvent(
                 Telemetry.PreferredKernel,
                 undefined,
@@ -148,6 +147,17 @@ export abstract class BaseKernelFinder implements IKernelFinder {
             traceError('Failed to get kernel connections', ex);
             return [] as KernelConnectionMetadata[];
         }
+    }
+
+    public isExactMatch(
+        resource: Resource,
+        kernelConnection: KernelConnectionMetadata,
+        notebookMetadata: nbformat.INotebookMetadata | undefined
+    ): boolean {
+        const preferredRemoteKernelId =
+            resource && this.preferredRemoteFinder && this.preferredRemoteFinder.getPreferredRemoteKernelId(resource);
+
+        return isExactMatchImpl(kernelConnection, notebookMetadata, preferredRemoteKernelId);
     }
 
     // Validating if a kernel is still allowed or not (from the cache). Non cached are always assumed to be valid

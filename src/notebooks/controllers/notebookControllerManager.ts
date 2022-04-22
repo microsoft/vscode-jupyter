@@ -61,9 +61,13 @@ import {
     createInterpreterKernelSpec,
     getDisplayNameOrNameOfKernelConnection,
     getKernelId,
+    getLanguageInNotebookMetadata,
+    isExactMatchImpl,
     isLocalLaunch,
     isPythonKernelConnection
 } from '../../kernels/helpers';
+import { getResourceType } from '../../platform/common/utils';
+import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -452,12 +456,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             let preferredConnection: KernelConnectionMetadata | undefined;
             // Don't attempt preferred kernel search for interactive window, but do make sure we
             // load all our controllers for interactive window
+            const notebookMetadata = getNotebookMetadata(document);
             if (document.notebookType === JupyterNotebookView) {
-                // preferredConnection = await this.kernelFinder.rankKernelsForResource(
-                // document.uri,
-                // getNotebookMetadata(document),
-                // preferredSearchToken.token
-                // );
                 const rankedConnections = await this.kernelFinder.rankKernelsForResource(
                     document.uri,
                     getNotebookMetadata(document),
@@ -465,7 +465,25 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 );
 
                 if (rankedConnections && rankedConnections.length) {
-                    preferredConnection = rankedConnections[rankedConnections.length - 1];
+                    const potentialMatch = rankedConnections[rankedConnections.length - 1];
+
+                    // Only assign if we are an exact match
+                    if (this.kernelFinder.isExactMatch(document.uri, potentialMatch, notebookMetadata)) {
+                        preferredConnection = potentialMatch;
+                    }
+
+                    // const resourceType = getResourceType(document.uri);
+                    // const telemetrySafeLanguage =
+                    // resourceType === 'interactive'
+                    // ? PYTHON_LANGUAGE
+                    // : getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata) || '');
+
+                    // sendTelemetryEvent(Telemetry.PreferredKernel, undefined, {
+                    // result: preferredConnection ? 'found' : 'notfound',
+                    // resourceType,
+                    // language: telemetrySafeLanguage,
+                    // hasActiveInterpreter: !!preferredInterpreter
+                    // });
                 }
 
                 // If we found a preferred kernel, set the association on the NotebookController

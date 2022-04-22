@@ -35,7 +35,7 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { RemoteKernelSpecsCacheKey } from '../../../kernels/kernelFinder.base';
-import { takeTopRankKernel } from './kernelFinder.vscode.test.node';
+import { takeTopRankKernel } from './localKernelFinder.unit.test';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];

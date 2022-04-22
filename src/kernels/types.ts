@@ -524,4 +524,10 @@ export interface IKernelFinder {
         cancelToken?: CancellationToken,
         useCache?: 'useCache' | 'ignoreCache'
     ): Promise<KernelConnectionMetadata[]>;
+    // For the given kernel connection, return true if it's an exact match for the notebookMetadata
+    isExactMatch(
+        resource: Resource,
+        kernelConnection: KernelConnectionMetadata,
+        notebookMetadata: nbformat.INotebookMetadata | undefined
+    ): boolean;
 }
