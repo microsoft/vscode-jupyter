@@ -45,11 +45,10 @@ export async function registerTypes(serviceManager: IServiceManager, configServi
 
     if (configService.getSettings().pylanceLspNotebooksEnabled) {
         serviceManager.addSingleton<NotebookPythonPathService>(NotebookPythonPathService, NotebookPythonPathService);
+        serviceManager.addBinding(NotebookPythonPathService, IExtensionSingleActivationService);
     }
-    else
-    {
-        serviceManager.addSingleton<INotebookLanguageClientProvider>(INotebookLanguageClientProvider, IntellisenseProvider);
-    }
+
+    serviceManager.addSingleton<INotebookLanguageClientProvider>(INotebookLanguageClientProvider, IntellisenseProvider);
 }
 
 export class PythonPathMiddleware implements Middleware, Disposable {
