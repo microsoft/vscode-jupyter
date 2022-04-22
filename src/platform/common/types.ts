@@ -124,7 +124,7 @@ export interface IWatchableJupyterSettings extends IJupyterSettings {
     readonly onDidChange: Event<void>;
 }
 
-export type LoggingLevelSettingType = 'off' | 'error' | 'warn' | 'info' | 'debug' | 'verbose';
+export type LoggingLevelSettingType = 'off' | 'error' | 'warn' | 'info' | 'debug' | 'verbose' | 'everything';
 
 export interface ILoggingSettings {
     readonly level: LoggingLevelSettingType | 'off';
