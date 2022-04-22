@@ -139,7 +139,8 @@ export async function createTemporaryNotebook(
     cells: (nbformat.ICodeCell | nbformat.IMarkdownCell)[],
     disposables: IDisposable[],
     kernelName: string = 'Python 3',
-    rootFolder?: Uri
+    rootFolder?: Uri,
+    prefix?: string
 ): Promise<Uri> {
     const services = await getServices();
     const platformService = services.serviceContainer.get<IPlatformService>(IPlatformService);
@@ -149,7 +150,7 @@ export async function createTemporaryNotebook(
         platformService.tempDir ||
         workspaceService.rootFolder ||
         Uri.file('./').with({ scheme: 'vscode-test-web' });
-    const uri = urlPath.joinPath(rootUrl, `${uuid()}.ipynb`);
+    const uri = urlPath.joinPath(rootUrl, `${prefix || ''}${uuid()}.ipynb`);
     cells =
         cells.length == 0
             ? [
@@ -195,7 +196,7 @@ export async function createEmptyPythonNotebook(disposables: IDisposable[] = [],
     const vscodeNotebook = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     // Don't use same file (due to dirty handling, we might save in dirty.)
     // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-    const nbFile = await createTemporaryNotebook([], disposables, 'python3', rootFolder);
+    const nbFile = await createTemporaryNotebook([], disposables, 'Python 3', rootFolder, 'emptyPython');
     // Open a python notebook and use this for all tests in this test suite.
     await editorProvider.open(nbFile);
     assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');

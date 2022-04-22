@@ -295,6 +295,8 @@ export function filterCompletions(
         result = result.filter((r) => r.itemText.includes('.') || r.itemText.endsWith('/'));
     }
 
+    traceInfoIfCI(`Jupyter completions filtering applied: ${insideString} on ${line}`);
+
     // Update magics to have a much lower sort order than other strings.
     // Also change things that start with our current word to eliminate the
     // extra long label.
