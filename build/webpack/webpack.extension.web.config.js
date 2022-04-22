@@ -89,6 +89,10 @@ const config = {
     },
     externals: ['vscode', 'commonjs', 'electron'], // Don't bundle these
     plugins: [
+        // Work around for Buffer is undefined:
+        new webpack.ProvidePlugin({
+            Buffer: ['buffer', 'Buffer']
+        }),
         new webpack.ProvidePlugin({
             process: 'process/browser' // provide a shim for the global `process` variable
         }),
@@ -114,7 +118,8 @@ const config = {
             // Webpack 5 no longer polyfills Node.js core modules automatically.
             // see https://webpack.js.org/configuration/resolve/#resolvefallback
             // for the list of Node.js core module polyfills.
-            assert: require.resolve('assert')
+            assert: require.resolve('assert'),
+            buffer: require.resolve('buffer')
         }
     },
     output: {

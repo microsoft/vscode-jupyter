@@ -30,7 +30,7 @@ import {
     Hover,
     Diagnostic
 } from 'vscode';
-import { IApplicationShell, IVSCodeNotebook } from '../../../platform/common/application/types';
+import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../platform/common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceInfo, traceInfoIfCI } from '../../../platform/logging';
@@ -142,7 +142,10 @@ export async function createTemporaryNotebook(
 ): Promise<Uri> {
     const services = await getServices();
     const platformService = services.serviceContainer.get<IPlatformService>(IPlatformService);
-    const uri = urlPath.joinPath(platformService.tempDir || Uri.file('./'), `${uuid()}.ipynb`);
+    const workspaceService = services.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+    const rootUrl =
+        platformService.tempDir || workspaceService.rootFolder || Uri.file('./').with({ scheme: 'vscode-test-web' });
+    const uri = urlPath.joinPath(rootUrl, `${uuid()}.ipynb`);
     cells =
         cells.length == 0
             ? [

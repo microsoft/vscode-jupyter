@@ -6,7 +6,7 @@ import * as vscode from 'vscode';
 import type { IExtensionApi } from '../../platform/api';
 import type { IExtensionContext } from '../../platform/common/types';
 import { IExtensionTestApi } from '../common';
-import { JVSC_EXTENSION_ID, setTestExecution } from '../../platform/common/constants';
+import { JVSC_EXTENSION_ID, setCI, setTestExecution } from '../../platform/common/constants';
 import { setTestSettings } from '../constants';
 
 let activatedResponse: undefined | IExtensionApi;
@@ -27,6 +27,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
             });
 
             // Can't tell if on CI or not, so assume not.
+            setCI(true);
             setTestExecution(true);
             setTestSettings({
                 isRemoteNativeTest: true,
@@ -69,4 +70,5 @@ export async function run(): Promise<void> {
     // Run the tests from within the context of the extension bundle.
     // We achieve this by getting the extension to run the tests (then its guaranteed to use the same context as the extension).
     await vscode.commands.executeCommand('jupyter.web.runTests');
+    console.log('Finished executing tests.');
 }
