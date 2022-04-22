@@ -23,6 +23,7 @@ export interface IPlatformService {
     readonly is64bit: boolean;
     getVersion(): Promise<SemVer>;
     readonly homeDir: vscode.Uri | undefined;
+    readonly tempDir: vscode.Uri | undefined;
 }
 
 //===========================

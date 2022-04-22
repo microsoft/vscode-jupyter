@@ -5,7 +5,6 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert, expect } from 'chai';
-import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import { NotebookCell, Uri } from 'vscode';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
@@ -14,8 +13,8 @@ import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { IExtensionTestApi, waitForCondition } from '../../common.node';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants.node';
-import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize.node';
-import { openNotebook } from '../helpers';
+import { closeActiveWindows, initialize } from '../../initialize.node';
+import { openNotebook } from '../helpers.node';
 import {
     assertHasTextOutputInVSCode,
     assertVSCCellHasErrorOutput,
@@ -37,18 +36,10 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
-    const templateIPynbEmpty = path.join(
-        EXTENSION_ROOT_DIR_FOR_TESTS,
-        'src',
-        'test',
-        'datascience',
-        'notebook',
-        'empty.ipynb'
-    );
     let testEmptyIPynb: Uri;
     suiteSetup(async function () {
         api = await initialize();
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
@@ -58,7 +49,7 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
         sinon.restore();
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-        testEmptyIPynb = Uri.file(await createTemporaryNotebook(templateIPynbEmpty, disposables));
+        testEmptyIPynb = await createTemporaryNotebook([], disposables);
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
@@ -68,7 +59,7 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
     });
     suiteTeardown(closeNotebooksAndCleanUpAfterTests);
     test('Verify output & metadata when re-opening (slow)', async () => {
-        await openNotebook(testEmptyIPynb.fsPath);
+        await openNotebook(testEmptyIPynb);
 
         await insertCodeCell('print(1)', { index: 0 });
         await insertCodeCell('print(a)', { index: 1 });
@@ -122,7 +113,7 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
         await closeActiveWindows();
 
         // Reopen the notebook & validate the metadata.
-        await openNotebook(testEmptyIPynb.fsPath);
+        await openNotebook(testEmptyIPynb);
         initializeCells();
         verifyCelMetadata();
     });

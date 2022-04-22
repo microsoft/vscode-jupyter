@@ -4,7 +4,7 @@
 import { SemVer } from 'semver';
 
 import { ErrorUtils } from '../../platform/errors/errorUtils';
-import { ModuleNotInstalledError } from '../../platform/errors/moduleNotInstalledError.node';
+import { ModuleNotInstalledError } from '../../platform/errors/moduleNotInstalledError';
 import { BufferDecoder } from '../../platform/common/process/decoder.node';
 import { ProcessService } from '../../platform/common/process/proc.node';
 import {

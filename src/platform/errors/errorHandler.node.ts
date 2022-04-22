@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
 import { JupyterInstallError } from './jupyterInstallError';
-import { JupyterSelfCertsError } from './jupyterSelfCertsError.node';
+import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import {
     CancellationError,
     CancellationError as VscCancellationError,
@@ -10,10 +10,10 @@ import {
     ConfigurationTarget,
     workspace
 } from 'vscode';
-import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError.node';
-import { KernelDiedError } from './kernelDiedError.node';
-import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError.node';
-import { KernelProcessExitedError } from './kernelProcessExitedError.node';
+import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError';
+import { KernelDiedError } from './kernelDiedError';
+import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError';
+import { KernelProcessExitedError } from './kernelProcessExitedError';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
 import { traceError, traceWarning } from '../logging';
 import { IBrowserService, IConfigurationService, Resource } from '../../platform/common/types';
@@ -33,7 +33,7 @@ import {
 } from '../../kernels/types';
 import { analyzeKernelErrors, KernelFailureReason, getErrorMessageFromPythonTraceback } from './errorUtils';
 import { JupyterConnectError } from './jupyterConnectError';
-import { JupyterKernelDependencyError } from './jupyterKernelDependencyError.node';
+import { JupyterKernelDependencyError } from './jupyterKernelDependencyError';
 import { WrappedError, BaseKernelError, WrappedKernelError, BaseError, IDataScienceErrorHandler } from './types';
 import { noop } from '../common/utils/misc';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';

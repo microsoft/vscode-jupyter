@@ -14,7 +14,7 @@ import * as uuid from 'uuid/v4';
 import { CancellationTokenSource, ConfigurationChangeEvent, Disposable, EventEmitter, Uri } from 'vscode';
 import { ApplicationShell } from '../../platform/common/application/applicationShell';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
-import { WorkspaceService } from '../../platform/common/application/workspace';
+import { WorkspaceService } from '../../platform/common/application/workspace.node';
 import { ConfigurationService } from '../../platform/common/configuration/service.node';
 import { PersistentState, PersistentStateFactory } from '../../platform/common/persistentState';
 import { FileSystem } from '../../platform/common/platform/fileSystem.node';
@@ -44,7 +44,7 @@ import { JupyterInterpreterDependencyService } from '../../kernels/jupyter/inter
 import { JupyterInterpreterOldCacheStateStore } from '../../kernels/jupyter/interpreter/jupyterInterpreterOldCacheStateStore.node';
 import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
 import { JupyterInterpreterSubCommandExecutionService } from '../../kernels/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService.node';
-import { HostJupyterExecution } from '../../kernels/jupyter/launcher/liveshare/hostJupyterExecution.node';
+import { HostJupyterExecution } from '../../kernels/jupyter/launcher/liveshare/hostJupyterExecution';
 import { NotebookStarter } from '../../kernels/jupyter/launcher/notebookStarter.node';
 import { JupyterPaths } from '../../kernels/raw/finder/jupyterPaths.node';
 import { LocalKernelFinder } from '../../kernels/raw/finder/localKernelFinder.node';
@@ -60,6 +60,7 @@ import { INotebookServer } from '../../kernels/jupyter/types';
 import { IJupyterSubCommandExecutionService } from '../../kernels/jupyter/types.node';
 import { SystemVariables } from '../../platform/common/variables/systemVariables.node';
 import { getOSType, OSType } from '../../platform/common/utils/platform';
+import { JupyterUriProviderRegistration } from '../../kernels/jupyter/jupyterUriProviderRegistration';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 class DisposableRegistry implements IAsyncDisposableRegistry {
@@ -96,7 +97,7 @@ suite('Jupyter Execution', async () => {
     const disposableRegistry = new DisposableRegistry();
     const dummyEvent = new EventEmitter<void>();
     const configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
-    const pythonSettings = new MockJupyterSettings(undefined, SystemVariables, 'node');
+    const pythonSettings = new MockJupyterSettings(undefined, SystemVariables, 'node', instance(workspaceService));
     const jupyterOnPath = getOSType() === OSType.Windows ? '/foo/bar/jupyter.exe' : '/foo/bar/jupyter';
     let ipykernelInstallCount = 0;
     let notebookStarter: NotebookStarter;
@@ -994,17 +995,19 @@ suite('Jupyter Execution', async () => {
         when(kernelFinder.listKernels(anything(), anything())).thenResolve([kernelMetadata]);
         when(serviceContainer.get<NotebookStarter>(NotebookStarter)).thenReturn(notebookStarter);
         when(serviceContainer.get<ILocalKernelFinder>(ILocalKernelFinder)).thenReturn(instance(kernelFinder));
+        const provider = mock(JupyterUriProviderRegistration);
         return {
             executionService: activeService.object,
             jupyterExecution: new HostJupyterExecution(
                 instance(interpreterService),
                 disposableRegistry as unknown as any[],
                 disposableRegistry,
-                instance(fileSystem),
                 instance(workspaceService),
                 instance(configService),
                 notebookStarter,
-                instance(serviceContainer)
+                instance(serviceContainer),
+                jupyterCmdExecutionService,
+                instance(provider)
             )
         };
     }

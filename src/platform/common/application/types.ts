@@ -823,6 +823,12 @@ export interface IWorkspaceService {
      * Event that fires when the current workspace has been trusted.
      */
     readonly onDidGrantWorkspaceTrust: Event<void>;
+
+    /**
+     * Computes where the working directory of a file is
+     * @param resource
+     */
+    computeWorkingDirectory(resource: Resource): Promise<string>;
 }
 
 export const ITerminalManager = Symbol('ITerminalManager');

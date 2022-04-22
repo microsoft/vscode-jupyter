@@ -1,13 +1,14 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
 import type * as nbformat from '@jupyterlab/nbformat';
-import type { Kernel, Session } from '@jupyterlab/services';
+import type { Kernel, Session, ContentsManager } from '@jupyterlab/services';
 import { Event } from 'vscode';
 import { SemVer } from 'semver';
 import { Uri, QuickPickItem } from 'vscode';
 import { CancellationToken, Disposable } from 'vscode-jsonrpc';
-import { IAsyncDisposable, ICell, IDisplayOptions, Resource } from '../../platform/common/types';
+import { IAsyncDisposable, ICell, IDisplayOptions, IDisposable, Resource } from '../../platform/common/types';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import {
@@ -19,8 +20,10 @@ import {
     IJupyterSession,
     IJupyterKernelSpec,
     GetServerOptions,
+    IKernelSocket,
     KernelActionSource
 } from '../types';
+import { ClassType } from '../../platform/ioc/types';
 
 export type JupyterServerInfo = {
     base_url: string;
@@ -113,7 +116,7 @@ export interface IJupyterSessionManager extends IAsyncDisposable {
     startNew(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
-        workingDirectory: string,
+        workingDirectory: Uri,
         ui: IDisplayOptions,
         cancelToken: CancellationToken,
         creator: KernelActionSource
@@ -222,4 +225,59 @@ export interface IJupyterServerUriStorage {
     clearUriList(): Promise<void>;
     getUri(): Promise<string>;
     setUri(uri: string): Promise<void>;
+}
+
+export const IJupyterBackingFileCreator = Symbol('IJupyterBackingFileCreator');
+export interface IJupyterBackingFileCreator {
+    createBackingFile(
+        resource: Resource,
+        workingDirectory: Uri,
+        kernel: KernelConnectionMetadata,
+        connInfo: IJupyterConnection,
+        contentsManager: ContentsManager
+    ): Promise<{ dispose: () => Promise<unknown>; filePath: string } | undefined>;
+}
+
+export const IJupyterKernelService = Symbol('IJupyterKernelService');
+export interface IJupyterKernelService {
+    ensureKernelIsUsable(
+        resource: Resource,
+        kernel: KernelConnectionMetadata,
+        ui: IDisplayOptions,
+        cancelToken: CancellationToken,
+        cannotChangeKernels?: boolean
+    ): Promise<void>;
+}
+
+export const IJupyterRequestAgentCreator = Symbol('IJupyterRequestAgentCreator');
+export interface IJupyterRequestAgentCreator {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    createHttpRequestAgent(): any;
+}
+
+export const IJupyterRequestCreator = Symbol('IJupyterRequestCreator');
+export interface IJupyterRequestCreator {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    getRequestCtor(getAuthHeader?: () => any): ClassType<Request>;
+    getFetchMethod(): (input: RequestInfo, init?: RequestInit) => Promise<Response>;
+    getHeadersCtor(): ClassType<Headers>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    getWebsocketCtor(
+        cookieString?: string,
+        allowUnauthorized?: boolean,
+        getAuthHeaders?: () => any
+    ): ClassType<WebSocket>;
+    getWebsocket(id: string): IKernelSocket | undefined;
+    getRequestInit(): RequestInit;
+}
+
+export const INotebookStarter = Symbol('INotebookStarter');
+export interface INotebookStarter extends IDisposable {
+    start(
+        resource: Resource,
+        useDefaultConfig: boolean,
+        customCommandLine: string[],
+        workingDirectory: Uri,
+        cancelToken: CancellationToken
+    ): Promise<IJupyterConnection>;
 }

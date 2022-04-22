@@ -19,6 +19,7 @@ import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../webview-side/common/constants';
+import { IDataViewerDependencyService } from './types';
 
 const minimumSupportedPandaVersion = '0.20.0';
 
@@ -30,7 +31,7 @@ function isVersionOfPandasSupported(version: SemVer) {
  * Responsible for managing dependencies of a Data Viewer.
  */
 @injectable()
-export class DataViewerDependencyService {
+export class DataViewerDependencyService implements IDataViewerDependencyService {
     constructor(
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IInstaller) private readonly installer: IInstaller,

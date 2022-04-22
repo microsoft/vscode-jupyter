@@ -14,11 +14,10 @@ import {
 import { IExtensionTestApi, openFile, sleep } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
 import { initialize } from '../../initialize.node';
-import { HoverProvider } from '../../../interactive-window/editor-integration/hoverProvider.node';
+import { HoverProvider } from '../../../interactive-window/editor-integration/hoverProvider';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IKernelProvider } from '../../../platform/../kernels/types';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IInteractiveWindowProvider } from '../../../interactive-window/types';
 import { IJupyterVariables } from '../../../kernels/variables/types';
 import { Identifiers } from '../../../platform/common/constants';
@@ -75,7 +74,6 @@ suite('Hover provider', async () => {
         const hoverProvider = new HoverProvider(
             api.serviceContainer.get<IJupyterVariables>(IJupyterVariables, Identifiers.KERNEL_VARIABLES),
             api.serviceContainer.get<IInteractiveWindowProvider>(IInteractiveWindowProvider),
-            api.serviceContainer.get<IFileSystem>(IFileSystem),
             api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook),
             disposables,
             api.serviceContainer.get<IKernelProvider>(IKernelProvider)

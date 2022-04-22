@@ -9,7 +9,7 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import * as tasClient from 'vscode-tas-client';
 import { ApplicationEnvironment } from '../../../platform/common/application/applicationEnvironment.node';
 import { Channel, IApplicationEnvironment, IWorkspaceService } from '../../../platform/common/application/types';
-import { WorkspaceService } from '../../../platform/common/application/workspace';
+import { WorkspaceService } from '../../../platform/common/application/workspace.node';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { ExperimentService } from '../../../platform/common/experiments/service';
 import { IConfigurationService } from '../../../platform/common/types';

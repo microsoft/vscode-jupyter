@@ -5,7 +5,7 @@ import * as events from 'events';
 import { Subject } from 'rxjs/Subject';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { CancellationToken } from 'vscode';
+import { CancellationToken, Uri } from 'vscode';
 import { JupyterSettings } from '../../../platform/common/configSettings';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
@@ -31,7 +31,7 @@ suite('DataScience - JupyterConnection', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dsSettings: IJupyterSettings = { jupyterLaunchTimeout: 10_000 } as any;
     const childProc = new events.EventEmitter();
-    const notebookDir = 'someDir';
+    const notebookDir = Uri.file('someDir');
     const dummyServerInfos: JupyterServerInfo[] = [
         {
             base_url: '1',
@@ -47,7 +47,7 @@ suite('DataScience - JupyterConnection', () => {
         {
             base_url: '2',
             hostname: '22',
-            notebook_dir: notebookDir,
+            notebook_dir: notebookDir.fsPath,
             password: false,
             pid: 13,
             port: 4444,
@@ -93,7 +93,7 @@ suite('DataScience - JupyterConnection', () => {
         return new JupyterConnectionWaiter(
             launchResult,
             notebookDir,
-            EXTENSION_ROOT_DIR,
+            Uri.file(EXTENSION_ROOT_DIR),
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             getServerInfoStub as any,
             instance(serviceContainer),

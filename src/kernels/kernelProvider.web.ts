@@ -11,6 +11,8 @@ import { InteractiveWindowView } from '../notebooks/constants';
 import { Kernel } from './kernel.web';
 import { IKernel, INotebookProvider, KernelOptions } from './types';
 import { BaseKernelProvider } from './kernelProvider.base';
+import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
+import { IStatusProvider } from '../platform/progress/types';
 
 @injectable()
 export class KernelProvider extends BaseKernelProvider {
@@ -20,9 +22,11 @@ export class KernelProvider extends BaseKernelProvider {
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(CellOutputDisplayIdTracker) private readonly outputTracker: CellOutputDisplayIdTracker,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(CellHashProviderFactory) private cellHashProviderFactory: CellHashProviderFactory,
-        @inject(IVSCodeNotebook) notebook: IVSCodeNotebook
+        @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
+        @inject(IStatusProvider) private readonly statusProvider: IStatusProvider
     ) {
         super(asyncDisposables, disposables, notebook);
     }
@@ -37,6 +41,7 @@ export class KernelProvider extends BaseKernelProvider {
 
         const resourceUri = notebook?.notebookType === InteractiveWindowView ? options.resourceUri : uri;
         const waitForIdleTimeout = this.configService.getSettings(resourceUri).jupyterLaunchTimeout;
+        const interruptTimeout = this.configService.getSettings(resourceUri).jupyterInterruptTimeout;
         const kernel = new Kernel(
             uri,
             resourceUri,
@@ -44,11 +49,14 @@ export class KernelProvider extends BaseKernelProvider {
             this.notebookProvider,
             this.disposables,
             waitForIdleTimeout,
+            interruptTimeout,
             this.appShell,
             options.controller,
             this.configService,
+            this.outputTracker,
             this.cellHashProviderFactory,
             this.workspaceService,
+            this.statusProvider,
             options.creator
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);

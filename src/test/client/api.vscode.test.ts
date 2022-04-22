@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { assert } from 'chai';
-import * as path from '../../platform/vscode-path/path';
 import { traceInfo } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import {
@@ -19,8 +18,8 @@ import { initialize } from '../initialize.node';
 import * as sinon from 'sinon';
 import { captureScreenShot, createEventHandler, IExtensionTestApi } from '../common.node';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../constants.node';
-import { Uri, workspace } from 'vscode';
+import { IS_REMOTE_NATIVE_TEST } from '../constants.node';
+import { workspace } from 'vscode';
 
 // eslint-disable-next-line
 suite('3rd Party Kernel Service API', function () {
@@ -114,21 +113,17 @@ suite('3rd Party Kernel Service API', function () {
         const onDidChangeKernels = createEventHandler(kernelService!, 'onDidChangeKernels');
 
         const kernelSpecs = await kernelService!.getKernelSpecifications();
-        const pythonKernel = IS_REMOTE_NATIVE_TEST
+        const pythonKernel = IS_REMOTE_NATIVE_TEST()
             ? kernelSpecs.find(
                   (item) => item.kind === 'startUsingRemoteKernelSpec' && item.kernelSpec.language === 'python'
               )
             : kernelSpecs.find((item) => item.kind === 'startUsingPythonInterpreter');
         assert.isOk(pythonKernel, 'Python Kernel Spec not found');
 
-        const templatePythonNbFile = path.join(
-            EXTENSION_ROOT_DIR_FOR_TESTS,
-            'src/test/datascience/notebook/emptyPython.ipynb'
-        );
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-        const nbFile = await createTemporaryNotebook(templatePythonNbFile, disposables);
-        const nb = await workspace.openNotebookDocument(Uri.file(nbFile));
+        const nbFile = await createTemporaryNotebook([], disposables);
+        const nb = await workspace.openNotebookDocument(nbFile);
         const kernelInfo = await kernelService?.startKernel(pythonKernel!, nb.uri!);
 
         assert.isOk(kernelInfo!.connection, 'Kernel Connection is undefined');

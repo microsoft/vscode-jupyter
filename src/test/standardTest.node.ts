@@ -101,7 +101,7 @@ async function createSettings(): Promise<string> {
         'jupyter.askForKernelRestart': false
     };
 
-    if (IS_REMOTE_NATIVE_TEST) {
+    if (IS_REMOTE_NATIVE_TEST()) {
         // Make this a remote instance.
         defaultSettings['jupyter.jupyterServerType'] = 'remote';
     }

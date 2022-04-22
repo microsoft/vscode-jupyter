@@ -15,6 +15,8 @@ import { IDisposable } from '../platform/common/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants.node';
 import { noop } from './core';
 import { isCI } from '../platform/common/constants';
+import { IWorkspaceService } from '../platform/common/application/types';
+import { waitForCondition } from './common';
 
 const StreamZip = require('node-stream-zip');
 
@@ -68,7 +70,7 @@ export async function setAutoSaveDelayInWorkspaceRoot(delayinMS: number) {
 }
 
 function getWorkspaceRoot() {
-    if (IS_SMOKE_TEST || IS_PERF_TEST) {
+    if (IS_SMOKE_TEST() || IS_PERF_TEST()) {
         return;
     }
     const vscode = require('vscode') as typeof import('vscode');
@@ -82,11 +84,16 @@ function getWorkspaceRoot() {
     return workspaceFolder ? workspaceFolder.uri : vscode.workspace.workspaceFolders[0].uri;
 }
 
-export async function getExtensionSettings(resource: Uri | undefined) {
+export async function getExtensionSettings(resource: Uri | undefined, workspaceService: IWorkspaceService) {
     const pythonSettings =
         require('../platform/common/configSettings') as typeof import('../platform/common/configSettings');
     const systemVariables = await import('../platform/common/variables/systemVariables.node');
-    return pythonSettings.JupyterSettings.getInstance(resource, systemVariables.SystemVariables, 'node');
+    return pythonSettings.JupyterSettings.getInstance(
+        resource,
+        systemVariables.SystemVariables,
+        'node',
+        workspaceService
+    );
 }
 export function retryAsync(this: any, wrapped: Function, retryCount: number = 2) {
     return async (...args: any[]) => {
@@ -286,75 +293,6 @@ export async function unzip(zipFile: string, targetFolder: string): Promise<void
                 zip.close();
             });
         });
-    });
-}
-
-const pendingTimers: any[] = [];
-export function clearPendingTimers() {
-    while (pendingTimers.length) {
-        const timer = pendingTimers.shift();
-        try {
-            clearTimeout(timer);
-        } catch {
-            // Noop.
-        }
-        try {
-            clearInterval(timer);
-        } catch {
-            // Noop.
-        }
-    }
-}
-/**
- * Wait for a condition to be fulfilled within a timeout.
- *
- * @export
- * @param {() => Promise<boolean>} condition
- * @param {number} timeoutMs
- * @param {string} errorMessage
- * @returns {Promise<void>}
- */
-export async function waitForCondition(
-    condition: () => Promise<boolean> | boolean,
-    timeoutMs: number,
-    errorMessage: string | (() => string),
-    intervalTimeoutMs: number = 10,
-    throwOnError: boolean = false
-): Promise<void> {
-    return new Promise<void>(async (resolve, reject) => {
-        const timeout = setTimeout(() => {
-            clearTimeout(timeout);
-            // eslint-disable-next-line @typescript-eslint/no-use-before-define
-            clearTimeout(timer);
-            errorMessage = typeof errorMessage === 'string' ? errorMessage : errorMessage();
-            console.log(`Test failing --- ${errorMessage}`);
-            reject(new Error(errorMessage));
-        }, timeoutMs);
-        let timer: NodeJS.Timer;
-        const timerFunc = async () => {
-            let success = false;
-            try {
-                const promise = condition();
-                success = typeof promise === 'boolean' ? promise : await promise;
-            } catch (exc) {
-                if (throwOnError) {
-                    reject(exc);
-                }
-            }
-            if (!success) {
-                // Start up a timer again, but don't do it until after
-                // the condition is false.
-                timer = setTimeout(timerFunc, intervalTimeoutMs);
-            } else {
-                clearTimeout(timer);
-                clearTimeout(timeout);
-                resolve();
-            }
-        };
-        timer = setTimeout(timerFunc, intervalTimeoutMs);
-
-        pendingTimers.push(timer);
-        pendingTimers.push(timeout);
     });
 }
 

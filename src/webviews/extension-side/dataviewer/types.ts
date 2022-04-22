@@ -7,6 +7,7 @@ import { IKernel } from '../../../kernels/types';
 import { IJupyterVariable } from '../../../kernels/variables/types';
 import { IDisposable } from '../../../platform/common/types';
 import { SharedMessages } from '../../../platform/messageTypes';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { SliceOperationSource } from '../../../telemetry/constants';
 
 export const CellFetchAllLimit = 100000;
@@ -125,4 +126,9 @@ export interface IJupyterVariableDataProvider extends IDataViewerDataProvider {
 export const IJupyterVariableDataProviderFactory = Symbol('IJupyterVariableDataProviderFactory');
 export interface IJupyterVariableDataProviderFactory {
     create(variable: IJupyterVariable, kernel?: IKernel): Promise<IJupyterVariableDataProvider>;
+}
+
+export const IDataViewerDependencyService = Symbol('IDataViewerDependencyService');
+export interface IDataViewerDependencyService {
+    checkAndInstallMissingDependencies(interpreter: PythonEnvironment): Promise<void>;
 }

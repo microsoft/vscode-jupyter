@@ -8,7 +8,7 @@ import * as WebSocketWS from 'ws';
 import type { Dealer, Subscriber } from 'zeromq';
 import { traceError } from '../../../platform/logging';
 import { noop } from '../../../platform/common/utils/misc';
-import { IWebSocketLike } from '../../common/kernelSocketWrapper.node';
+import { IWebSocketLike } from '../../common/kernelSocketWrapper';
 import { IKernelSocket } from '../../types';
 import { IKernelConnection } from '../types';
 import type { Channel } from '@jupyterlab/services/lib/kernel/messages';

@@ -42,7 +42,7 @@ suite('DataScience - Kernel Launcher', () => {
     const disposables: IDisposable[] = [];
     suiteSetup(async function () {
         // These are slow tests, hence lets run only on linux on CI.
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
         const api = await initialize();

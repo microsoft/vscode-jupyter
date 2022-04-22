@@ -10,10 +10,10 @@ const CleanTerminalPlugin = require('clean-terminal-webpack-plugin');
 
 const prodEntry = {
     extension: './src/extension.web.ts',
-    'test/smoke.test/index': './src/test/web/smoke.test/index.ts' // source of the web extension test runner
+    'test/index': './src/test/web/index.ts' // source of the web extension test runner
 };
 const testEntry = {
-    extension: './src/test/web/smoke.test/index.ts' // source of the web extension test runner
+    extension: './src/test/web/index.ts' // source of the web extension test runner
 };
 
 // When running web tests, the entry point for the tests and extension are the same.
@@ -43,6 +43,11 @@ const config = {
                         }
                     }
                 ]
+            },
+            {
+                test: /vscode_datascience_helpers.*\.py/,
+                exclude: /node_modules/,
+                type: 'asset/source'
             },
             {
                 enforce: 'post',
@@ -84,6 +89,10 @@ const config = {
     },
     externals: ['vscode', 'commonjs', 'electron'], // Don't bundle these
     plugins: [
+        // Work around for Buffer is undefined:
+        new webpack.ProvidePlugin({
+            Buffer: ['buffer', 'Buffer']
+        }),
         new webpack.ProvidePlugin({
             process: 'process/browser' // provide a shim for the global `process` variable
         }),
@@ -109,7 +118,8 @@ const config = {
             // Webpack 5 no longer polyfills Node.js core modules automatically.
             // see https://webpack.js.org/configuration/resolve/#resolvefallback
             // for the list of Node.js core module polyfills.
-            assert: require.resolve('assert')
+            assert: require.resolve('assert'),
+            buffer: require.resolve('buffer')
         }
     },
     output: {

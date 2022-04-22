@@ -23,13 +23,13 @@ import {
     ICommandManager,
     IDocumentManager
 } from '../../../platform/common/application/types';
-import { ContextKey } from '../../../platform/common/contextKey.node';
+import { ContextKey } from '../../../platform/common/contextKey';
 import { traceError } from '../../../platform/logging';
 import { Resource, IConfigurationService, IDisposableRegistry, IDisposable } from '../../../platform/common/types';
 import * as localize from '../../../platform/common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { Telemetry } from '../../webview-side/common/constants';
-import { DataViewerChecker } from '../dataviewer/dataViewerChecker.node';
+import { DataViewerChecker } from '../dataviewer/dataViewerChecker';
 import { IJupyterVariableDataProviderFactory, IDataViewerFactory, IDataViewer } from '../dataviewer/types';
 import { ICodeCssGenerator, IThemeFinder } from '../types';
 import { WebviewViewHost } from '../webviewViewHost.node';

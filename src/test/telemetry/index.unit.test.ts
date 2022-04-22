@@ -10,7 +10,7 @@ import * as TypeMoq from 'typemoq';
 import { instance, mock, verify, when } from 'ts-mockito';
 import { WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../platform/common/application/types';
-import { WorkspaceService } from '../../platform/common/application/workspace';
+import { WorkspaceService } from '../../platform/common/application/workspace.node';
 import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
 import {
     _resetSharedProperties,

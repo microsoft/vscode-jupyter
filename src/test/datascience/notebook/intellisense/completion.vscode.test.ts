@@ -13,7 +13,7 @@ import { getTextOutputValue } from '../../../../notebooks/helpers';
 import { captureScreenShot, IExtensionTestApi } from '../../../common.node';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants.node';
 import { initialize } from '../../../initialize.node';
-import { createStandaloneInteractiveWindow, insertIntoInputEditor } from '../../helpers';
+import { createStandaloneInteractiveWindow, insertIntoInputEditor } from '../../helpers.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
     runCell,
@@ -38,7 +38,7 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Code Completio
         traceInfo(`Start Suite Code Completion via Jupyter`);
         this.timeout(120_000);
         api = await initialize();
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             // https://github.com/microsoft/vscode-jupyter/issues/6331
             return this.skip();
         }

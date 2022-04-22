@@ -16,8 +16,8 @@ import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IConfigurationService } from '../../platform/common/types';
 import { JupyterSettings } from '../../platform/common/configSettings';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { HostJupyterExecution } from '../../kernels/jupyter/launcher/liveshare/hostJupyterExecution.node';
-import { NotebookServerProvider } from '../../kernels/jupyter/launcher/notebookServerProvider.node';
+import { HostJupyterExecution } from '../../kernels/jupyter/launcher/liveshare/hostJupyterExecution';
+import { NotebookServerProvider } from '../../kernels/jupyter/launcher/notebookServerProvider';
 import { IJupyterExecution, IJupyterServerProvider } from '../../kernels/jupyter/types';
 import { DisplayOptions } from '../../kernels/displayOptions';
 
@@ -29,7 +29,7 @@ suite('Jupyter CLI Tests', async () => {
     let activeInterpreter: PythonEnvironment;
     let serviceContainer: IServiceContainer;
     setup(async function () {
-        if (!IS_NON_RAW_NATIVE_TEST) {
+        if (!IS_NON_RAW_NATIVE_TEST()) {
             return this.skip();
         }
         traceInfo(`Start Test ${this.currentTest?.title}`);
@@ -49,7 +49,7 @@ suite('Jupyter CLI Tests', async () => {
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
-        if (!IS_NON_RAW_NATIVE_TEST) {
+        if (!IS_NON_RAW_NATIVE_TEST()) {
             return this.skip();
         }
         settings.dispose();

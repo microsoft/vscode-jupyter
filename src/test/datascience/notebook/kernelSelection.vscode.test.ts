@@ -20,11 +20,10 @@ import {
 import { createEventHandler, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import { closeActiveWindows, initialize, IS_CI_SERVER } from '../../initialize.node';
-import { openNotebook } from '../helpers';
+import { openNotebook } from '../helpers.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
-    createTemporaryNotebook,
     runAllCellsInActiveNotebook,
     insertCodeCell,
     startJupyterServer,
@@ -33,7 +32,8 @@ import {
     waitForKernelToGetAutoSelected,
     waitForOutputs,
     waitForTextOutput,
-    defaultNotebookTestTimeout
+    defaultNotebookTestTimeout,
+    createTemporaryNotebookFromFile
 } from './helper.node';
 import { getTextOutputValue } from '../../../notebooks/helpers';
 import { getOSType, OSType } from '../../../platform/common/utils/platform';
@@ -56,7 +56,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnoreg', executable)
     );
 
-    let nbFile1: string;
+    let nbFile1: Uri;
     let api: IExtensionTestApi;
     let activeInterpreterPath: Uri;
     let venvNoKernelPythonPath: Uri;
@@ -138,12 +138,12 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         console.log(`Start test ${this.currentTest?.title}`);
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-        nbFile1 = await createTemporaryNotebook(templateIPynbFile, disposables, venvNoKernelDisplayName);
+        nbFile1 = await createTemporaryNotebookFromFile(templateIPynbFile, disposables, venvNoKernelDisplayName);
         // Update hash in notebook metadata.
         fs.writeFileSync(
-            nbFile1,
+            nbFile1.fsPath,
             fs
-                .readFileSync(nbFile1)
+                .readFileSync(nbFile1.fsPath)
                 .toString('utf8')
                 .replace('<hash>', getInterpreterHash({ uri: venvNoKernelPythonPath }))
         );
@@ -158,7 +158,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
     });
 
     test('Ensure we select active interpreter as kernel (when Raw Kernels)', async function () {
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
         await createEmptyPythonNotebook(disposables);
@@ -194,7 +194,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         );
     });
     test('Ensure kernel is auto selected and interpreter is as expected', async function () {
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
         await openNotebook(nbFile1);
@@ -210,7 +210,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         ]);
     });
     test('Ensure we select a Python kernel for a nb with python language information', async function () {
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
         await createEmptyPythonNotebook(disposables);
@@ -231,7 +231,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await waitForTextOutput(cell2, 'Hello World', 0, false);
     });
     test('User kernelspec in notebook metadata', async function () {
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
         await openNotebook(nbFile1);
@@ -258,7 +258,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await waitForTextOutput(cell, venvKernelSearchString, 0, false);
     });
     test('Switch kernel to an interpreter that is registered as a kernel', async function () {
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
         await createEmptyPythonNotebook(disposables);
@@ -309,7 +309,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         );
     });
     test('Switch kernel to an interpreter that is not registered as a kernel', async function () {
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
         await createEmptyPythonNotebook(disposables);

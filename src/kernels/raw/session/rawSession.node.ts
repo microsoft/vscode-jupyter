@@ -9,7 +9,7 @@ import { traceVerbose, traceInfoIfCI, traceError } from '../../../platform/loggi
 import { IDisposable, Resource } from '../../../platform/common/types';
 import { createDeferred, sleep } from '../../../platform/common/utils/async';
 import { noop } from '../../../platform/common/utils/misc';
-import { KernelConnectionTimeoutError } from '../../../platform/errors/kernelConnectionTimeoutError.node';
+import { KernelConnectionTimeoutError } from '../../../platform/errors/kernelConnectionTimeoutError';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { ISessionWithSocket, KernelConnectionMetadata, KernelSocketInformation } from '../../types';

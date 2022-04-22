@@ -37,7 +37,7 @@ import { INotebookControllerManager } from '../notebooks/types';
 import { generateMarkdownFromCodeLines, parseForComments } from '../webviews/webview-side/common';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../telemetry/telemetry';
 import { chainable } from '../platform/common/utils/decorators';
-import { InteractiveCellResultError } from '../platform/errors/interactiveCellResultError.node';
+import { InteractiveCellResultError } from '../platform/errors/interactiveCellResultError';
 import { DataScience } from '../platform/common/utils/localize';
 import { createDeferred, Deferred } from '../platform/common/utils/async';
 import { IServiceContainer } from '../platform/ioc/types';

@@ -235,11 +235,11 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
     }
 }
 
-function positionInsideString(word: string, position: Position) {
-    const indexDoubleQuote = word.indexOf('"');
-    const indexSingleQuote = word.indexOf("'");
-    const lastIndexDoubleQuote = word.lastIndexOf('"');
-    const lastIndexSingleQuote = word.lastIndexOf("'");
+function positionInsideString(line: string, position: Position) {
+    const indexDoubleQuote = line.indexOf('"');
+    const indexSingleQuote = line.indexOf("'");
+    const lastIndexDoubleQuote = line.lastIndexOf('"');
+    const lastIndexSingleQuote = line.lastIndexOf("'");
     const index = indexDoubleQuote >= 0 ? indexDoubleQuote : indexSingleQuote;
     const lastIndex = lastIndexDoubleQuote >= 0 ? lastIndexDoubleQuote : lastIndexSingleQuote;
     return index >= 0 && position.character > index && position.character <= lastIndex;
@@ -283,18 +283,19 @@ export function filterCompletions(
     );
     const wordRangeWithTriggerCharacter =
         wordRange && charBeforeCursorPosition ? wordRange.union(charBeforeCursorPosition) : undefined;
-    const word = wordRangeWithTriggerCharacter
-        ? cell.getText(wordRangeWithTriggerCharacter)
-        : cell.lineAt(position.line).text;
+    const line = cell.lineAt(position.line).text;
+    const word = wordRangeWithTriggerCharacter ? cell.getText(wordRangeWithTriggerCharacter) : line;
     const wordDot = word.endsWith('.') || isPreviousCharTriggerCharacter;
     const insideString =
         allowStringFilter &&
-        (triggerCharacter == "'" || triggerCharacter == '"' || positionInsideString(word, position));
+        (triggerCharacter == "'" || triggerCharacter == '"' || positionInsideString(line, position));
 
     // If inside of a string, filter out everything except file names
     if (insideString) {
         result = result.filter((r) => r.itemText.includes('.') || r.itemText.endsWith('/'));
     }
+
+    traceInfoIfCI(`Jupyter completions filtering applied: ${insideString} on ${line}`);
 
     // Update magics to have a much lower sort order than other strings.
     // Also change things that start with our current word to eliminate the
@@ -391,13 +392,13 @@ export function filterCompletions(
         result = result.filter((r) => !set.has(r.itemText));
     }
 
-    traceVerbose(
+    traceInfoIfCI(
         `Jupyter completions for ${word} at pos ${position.line}:${
             position.character
         } with trigger: ${triggerCharacter}\n   ${completions.map((r) => r.label).join(',')}`
     );
 
-    traceVerbose(
+    traceInfoIfCI(
         `Jupyter results for ${word} at pos ${position.line}:${
             position.character
         } with trigger: ${triggerCharacter}\n   ${result.map((r) => r.label).join(',')}`

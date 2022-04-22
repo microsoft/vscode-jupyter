@@ -8,7 +8,7 @@ import * as path from '../../../platform/vscode-path/path';
 import { EventEmitter, Memento, ViewColumn } from 'vscode';
 
 import { sendTelemetryEvent } from '../../../telemetry';
-import { JupyterDataRateLimitError } from '../../../platform/errors/jupyterDataRateLimitError.node';
+import { JupyterDataRateLimitError } from '../../../platform/errors/jupyterDataRateLimitError';
 import { DataViewerMessageListener } from './dataViewerMessageListener.node';
 import {
     DataViewerMessages,

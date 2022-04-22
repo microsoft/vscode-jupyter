@@ -1134,6 +1134,10 @@ export namespace DataScience {
         'DataScience.kernelConsoleOutputChannel',
         `{0} Kernel Console Output`
     );
+    export const webNotSupported = localize(
+        'DataScience.webNotSupported',
+        `Operation not supported in web version of Jupyter extension.`
+    );
 }
 
 export namespace Installer {

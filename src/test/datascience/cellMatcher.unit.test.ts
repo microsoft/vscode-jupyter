@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 import { CellMatcher } from '../../interactive-window/editor-integration/cellMatcher';
 import { IJupyterSettings } from '../../platform/common/types';
-import { defaultDataScienceSettings } from './helpers';
+import { defaultDataScienceSettings } from './helpers.node';
 
 suite('DataScience CellMatcher', () => {
     const settings: IJupyterSettings = defaultDataScienceSettings();

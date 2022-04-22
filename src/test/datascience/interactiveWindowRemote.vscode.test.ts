@@ -8,7 +8,7 @@ import { workspace, Disposable } from 'vscode';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { traceInfo } from '../../platform/logging';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize.node';
-import { submitFromPythonFile } from './helpers';
+import { submitFromPythonFile } from './helpers.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
     startJupyterServer,
@@ -20,7 +20,7 @@ suite('Interactive window (remote)', async () => {
     let interactiveWindowProvider: IInteractiveWindowProvider;
     let disposables: Disposable[] = [];
     setup(async function () {
-        if (!IS_REMOTE_NATIVE_TEST) {
+        if (!IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
         traceInfo(`Start Test ${this.currentTest?.title}`);

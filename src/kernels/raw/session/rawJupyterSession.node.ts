@@ -3,7 +3,7 @@
 'use strict';
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import type { Slot } from '@lumino/signaling';
-import { CancellationError, CancellationTokenSource } from 'vscode';
+import { CancellationError, CancellationTokenSource, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
@@ -18,7 +18,7 @@ import { sendTelemetryEvent, captureTelemetry } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
 import { ISessionWithSocket, KernelConnectionMetadata } from '../../../kernels/types';
-import { BaseJupyterSession } from '../../common/baseJupyterSession.node';
+import { BaseJupyterSession } from '../../common/baseJupyterSession';
 import { IKernelLauncher, IKernelProcess } from '../types';
 import { RawSession } from './rawSession.node';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
@@ -53,7 +53,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         private readonly kernelLauncher: IKernelLauncher,
         resource: Resource,
         restartSessionUsed: (id: Kernel.IKernelConnection) => void,
-        workingDirectory: string,
+        workingDirectory: Uri,
         interruptTimeout: number,
         kernelConnection: KernelConnectionMetadata,
         private readonly launchTimeout: number
@@ -258,7 +258,7 @@ export class RawJupyterSession extends BaseJupyterSession {
                     this.kernelConnectionMetadata as any,
                     this.launchTimeout,
                     this.resource,
-                    this.workingDirectory,
+                    this.workingDirectory.fsPath,
                     options.token
                 )
         );

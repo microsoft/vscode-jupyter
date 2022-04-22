@@ -30,8 +30,12 @@ import {
 } from '../../../platform/../kernels/types';
 import { MockOutputChannel } from '../../mockClasses';
 import { JupyterKernelService } from '../../../kernels/jupyter/jupyterKernelService.node';
-import { JupyterSession } from '../../../kernels/jupyter/session/jupyterSession.node';
+import { JupyterSession } from '../../../kernels/jupyter/session/jupyterSession';
 import { DisplayOptions } from '../../../kernels/displayOptions';
+import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { BackingFileCreator } from '../../../kernels/jupyter/session/backingFileCreator.node';
+import * as path from '../../../platform/vscode-path/path';
+import { JupyterRequestCreator } from '../../../kernels/jupyter/session/jupyterRequestCreator.node';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - JupyterSession', () => {
@@ -113,7 +117,8 @@ suite('DataScience - JupyterSession', () => {
         when(session.kernel).thenReturn(instance(kernel));
         when(session.isDisposed).thenReturn(false);
         when(kernel.status).thenReturn('idle');
-        when(connection.rootDirectory).thenReturn('');
+        when(connection.rootDirectory).thenReturn(Uri.file(''));
+        when(connection.localLaunch).thenReturn(false);
         const channel = new MockOutputChannel('JUPYTER');
         const kernelService = mock(JupyterKernelService);
         when(kernelService.ensureKernelIsUsable(anything(), anything(), anything(), anything())).thenResolve();
@@ -124,7 +129,13 @@ suite('DataScience - JupyterSession', () => {
         specManager = mock(KernelSpecManager);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(sessionManager.connectTo(anything())).thenReturn(newActiveRemoteKernel.model as any);
-
+        const fs = mock<IFileSystem>();
+        const tmpFile = path.join('tmp', 'tempfile.json');
+        const backingFileCreator = new BackingFileCreator();
+        const requestCreator = new JupyterRequestCreator();
+        when(fs.createTemporaryLocalFile(anything())).thenResolve({ dispose: noop, filePath: tmpFile });
+        when(fs.deleteLocalFile(anything())).thenResolve();
+        when(fs.ensureLocalDir(anything())).thenResolve();
         jupyterSession = new JupyterSession(
             resource,
             instance(connection),
@@ -139,10 +150,12 @@ suite('DataScience - JupyterSession', () => {
             () => {
                 restartSessionUsedEvent.resolve();
             },
-            '',
+            Uri.file(''),
             1,
             instance(kernelService),
             1,
+            backingFileCreator,
+            requestCreator,
             'jupyterExtension'
         );
     }

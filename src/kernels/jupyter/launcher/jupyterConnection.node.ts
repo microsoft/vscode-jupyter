@@ -5,7 +5,7 @@ import '../../../platform/common/extensions';
 
 import { ChildProcess } from 'child_process';
 import { Subscription } from 'rxjs';
-import { CancellationError, CancellationToken, Disposable, Event, EventEmitter } from 'vscode';
+import { CancellationError, CancellationToken, Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { traceInfo, traceError, traceWarning } from '../../../platform/logging';
@@ -18,6 +18,7 @@ import { RegExpValues } from '../../../webviews/webview-side/common/constants';
 import { JupyterConnectError } from '../../../platform/errors/jupyterConnectError';
 import { IJupyterConnection } from '../../types';
 import { JupyterServerInfo } from '../types';
+import { getJupyterConnectionDisplayName } from './helpers';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any
 const namedRegexp = require('named-js-regexp');
@@ -34,8 +35,8 @@ export class JupyterConnectionWaiter implements IDisposable {
 
     constructor(
         private readonly launchResult: ObservableExecutionResult<string>,
-        private readonly notebookDir: string,
-        private readonly rootDir: string,
+        private readonly notebookDir: Uri,
+        private readonly rootDir: Uri,
         private readonly getServerInfo: (cancelToken?: CancellationToken) => Promise<JupyterServerInfo[] | undefined>,
         serviceContainer: IServiceContainer,
         private cancelToken?: CancellationToken
@@ -110,7 +111,7 @@ export class JupyterConnectionWaiter implements IDisposable {
     private getJupyterURL(serverInfos: JupyterServerInfo[] | undefined, data: any) {
         if (serverInfos && serverInfos.length > 0 && !this.startPromise.completed) {
             const matchInfo = serverInfos.find((info) =>
-                this.fs.areLocalPathsSame(this.notebookDir, info.notebook_dir)
+                this.fs.areLocalPathsSame(this.notebookDir.fsPath, info.notebook_dir)
             );
             if (matchInfo) {
                 const url = matchInfo.url;
@@ -222,7 +223,7 @@ class JupyterConnection implements IJupyterConnection {
         public readonly baseUrl: string,
         public readonly token: string,
         public readonly hostName: string,
-        public readonly rootDirectory: string,
+        public readonly rootDirectory: Uri,
         private readonly disposable: Disposable,
         childProc: ChildProcess | undefined
     ) {
@@ -249,9 +250,4 @@ class JupyterConnection implements IJupyterConnection {
             this.disposable.dispose();
         }
     }
-}
-
-export function getJupyterConnectionDisplayName(token: string, baseUrl: string): string {
-    const tokenString = token.length > 0 ? `?token=${token}` : '';
-    return `${baseUrl}${tokenString}`;
 }

@@ -6,14 +6,13 @@ import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from './application/types';
 import { PYTHON_FILE, PYTHON_LANGUAGE, PYTHON_UNTITLED } from './constants';
-import { ContextKey } from './contextKey.node';
+import { ContextKey } from './contextKey';
 import './extensions';
 import { IConfigurationService, IDisposable, IDisposableRegistry, IExtensionContext } from './types';
 import { debounceAsync, swallowExceptions } from './utils/decorators';
 import { noop } from './utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
-import { CommandRegistry } from '../../interactive-window/commands/commandRegistry.node';
-import { CommandRegistry as PlatformCommandRegistry } from '../commands/commandRegistry.node';
+import { CommandRegistry } from '../../interactive-window/commands/commandRegistry';
 import { EditorContexts, Telemetry } from './constants';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
@@ -34,11 +33,9 @@ export class GlobalActivation implements IExtensionSingleActivationService {
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(CommandRegistry) private commandRegistry: CommandRegistry,
-        @inject(PlatformCommandRegistry) private platformCommandRegistry: PlatformCommandRegistry,
         @inject(IRawNotebookSupportedService) private rawSupported: IRawNotebookSupportedService
     ) {
         this.disposableRegistry.push(this.commandRegistry);
-        this.disposableRegistry.push(this.platformCommandRegistry);
     }
 
     public get activationStartTime(): number {
@@ -47,7 +44,6 @@ export class GlobalActivation implements IExtensionSingleActivationService {
 
     public async activate(): Promise<void> {
         this.commandRegistry.register();
-        this.platformCommandRegistry.register();
 
         this.extensionContext.subscriptions.push(
             vscode.languages.registerCodeLensProvider([PYTHON_FILE, PYTHON_UNTITLED], this.dataScienceCodeLensProvider)

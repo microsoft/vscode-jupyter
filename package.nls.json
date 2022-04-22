@@ -574,5 +574,6 @@
     "Installer.searchForHelp": "Search for help",
     "Installer.couldNotInstallLibrary": "Could not install {0}. If pip is not available, please use the package manager of your choice to manually install this library into your Python environment.",
     "Installer.dataScienceInstallPrompt": "Data Science library {0} is not installed. Install?",
-    "Products.installingModule": "Installing {0}"
+    "Products.installingModule": "Installing {0}",
+    "DataScience.webNotSupported": "Operation not supported in web version of Jupyter extension."
 }

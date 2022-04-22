@@ -7,7 +7,7 @@ import { traceError } from '../../platform/logging';
 import { IFileSystem } from '../../platform/common/platform/types.node';
 import { DataScience } from '../../platform/common/utils/localize';
 import { stripAnsi } from '../../platform/common/utils/regexp';
-import { JupyterDataRateLimitError } from '../../platform/errors/jupyterDataRateLimitError.node';
+import { JupyterDataRateLimitError } from '../../platform/errors/jupyterDataRateLimitError';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { executeSilently } from '../helpers';
 import { IKernel } from '../types';

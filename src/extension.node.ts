@@ -57,6 +57,7 @@ import {
     IsCodeSpace,
     IsDevMode,
     IsPreRelease,
+    IsWebExtension,
     WORKSPACE_MEMENTO
 } from './platform/common/types';
 import { createDeferred } from './platform/common/utils/async';
@@ -288,6 +289,7 @@ async function activateLegacy(
         (context.extensionMode === ExtensionMode.Development ||
             workspace.getConfiguration('jupyter').get<boolean>('development', false));
     serviceManager.addSingletonInstance<boolean>(IsDevMode, isDevMode);
+    serviceManager.addSingletonInstance<boolean>(IsWebExtension, false);
     const isPreReleasePromise = fsExtra
         .readFile(path.join(context.extensionPath, 'package.json'), { encoding: 'utf-8' })
         .then((contents) => {

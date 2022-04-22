@@ -35,7 +35,7 @@ suite('DataScience - Kernel Process', () => {
     let token: CancellationTokenSource;
     suiteSetup(async function () {
         // These are slow tests, hence lets run only on linux on CI.
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
         rewiremock.disable();

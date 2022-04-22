@@ -3,7 +3,7 @@
 
 import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { ErrorUtils } from '../../errors/errorUtils';
-import { ModuleNotInstalledError } from '../../../platform/errors/moduleNotInstalledError.node';
+import { ModuleNotInstalledError } from '../../errors/moduleNotInstalledError';
 import * as internalPython from './internal/python.node';
 import { ExecutionResult, IProcessService, ObservableExecutionResult, SpawnOptions } from './types.node';
 

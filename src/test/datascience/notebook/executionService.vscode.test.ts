@@ -27,7 +27,6 @@ import {
     waitForKernelToGetAutoSelected,
     prewarmNotebooks,
     hijackPrompt,
-    createTemporaryNotebook,
     closeNotebooks,
     waitForExecutionInProgress,
     waitForQueuedForExecution,
@@ -42,9 +41,10 @@ import {
     waitForCellExecutionState,
     getCellOutputs,
     waitForCellHavingOutput,
-    waitForCellExecutionToComplete
+    waitForCellExecutionToComplete,
+    createTemporaryNotebookFromFile
 } from './helper.node';
-import { openNotebook } from '../helpers';
+import { openNotebook } from '../helpers.node';
 import { noop } from '../../../platform/common/utils/misc';
 import { getTextOutputValue, hasErrorOutput, translateCellErrorOutput } from '../../../notebooks/helpers';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
@@ -168,7 +168,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await Promise.all([runCell(cell), waitForTextOutput(cell, '\tho\n\tho\n\tho\n', 0, true)]);
     });
     test('Verify loading of env variables form .env file', async function () {
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
         const cell = await insertCodeCell(
@@ -199,8 +199,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     });
     test('Clear output in empty cells', async function () {
         await closeNotebooks();
-        const nbUri = Uri.file(await createTemporaryNotebook(templateNbPath, disposables));
-        await openNotebook(nbUri.fsPath);
+        const nbUri = await createTemporaryNotebookFromFile(templateNbPath, disposables);
+        await openNotebook(nbUri);
         await waitForKernelToGetAutoSelected();
 
         // Confirm we have execution order and output.
@@ -377,7 +377,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await waitForExecutionCompletedSuccessfully(cell);
     });
     test('Shell commands should give preference to executables in Python Environment', async function () {
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
         await insertCodeCell('import sys', { index: 0 });
@@ -405,7 +405,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         );
     });
     test('!python should point to the Environment', async function () {
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
         await insertCodeCell(getOSType() === OSType.Windows ? '!where python' : '!which python', { index: 0 });
@@ -1204,7 +1204,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Insert the necessary amount of cells
         for (let index = startIndex; index < endIndex; index++) {
             // Once this file is deleted the cell will run to completion.
-            const tmpFile = await createTemporaryNotebook(templateNbPath, disposables);
+            const tmpFile = (await createTemporaryNotebookFromFile(templateNbPath, disposables)).fsPath;
             let cell: NotebookCell;
             if (!options?.addMarkdownCells || Math.floor(Math.random() * 2) === 0) {
                 cell = await insertCodeCell(
