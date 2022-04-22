@@ -117,14 +117,13 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
 
         await runCell(cell);
 
+        const namesCsvPath = path.join(__dirname, 'names.csv').replace(/\\/g, '/').replace('out', 'src');
+
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell);
-        await insertCodeCell(
-            `import pandas as pd\ndf = pd.read_csv("../src/test/datascience/notebook/intellisense/names.csv")\n`,
-            {
-                index: 1
-            }
-        );
+        await insertCodeCell(`import pandas as pd\ndf = pd.read_csv("${namesCsvPath}")\n`, {
+            index: 1
+        });
         const cell2 = vscodeNotebook.activeNotebookEditor?.document.cellAt(1)!;
 
         await runCell(cell2);

@@ -29,7 +29,7 @@ suite('Jupyter CLI Tests', async () => {
     let activeInterpreter: PythonEnvironment;
     let serviceContainer: IServiceContainer;
     setup(async function () {
-        if (!IS_NON_RAW_NATIVE_TEST) {
+        if (!IS_NON_RAW_NATIVE_TEST()) {
             return this.skip();
         }
         traceInfo(`Start Test ${this.currentTest?.title}`);
@@ -49,7 +49,7 @@ suite('Jupyter CLI Tests', async () => {
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
-        if (!IS_NON_RAW_NATIVE_TEST) {
+        if (!IS_NON_RAW_NATIVE_TEST()) {
             return this.skip();
         }
         settings.dispose();

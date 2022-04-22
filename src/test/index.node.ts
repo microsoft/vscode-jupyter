@@ -61,7 +61,7 @@ process.on('unhandledRejection', (ex: any, _a) => {
  */
 function configure(): SetupOptions {
     process.env.VSC_JUPYTER_CI_TEST = '1';
-    process.env.IS_MULTI_ROOT_TEST = IS_MULTI_ROOT_TEST.toString();
+    process.env.IS_MULTI_ROOT_TEST = IS_MULTI_ROOT_TEST().toString();
 
     // Check for a grep setting. Might be running a subset of the tests
     const defaultGrep = process.env.VSC_JUPYTER_CI_TEST_GREP;
@@ -150,7 +150,7 @@ export async function run(): Promise<void> {
 
     // nteract/transforms-full expects to run in the browser so we have to fake
     // parts of the browser here.
-    if (!IS_SMOKE_TEST) {
+    if (!IS_SMOKE_TEST()) {
         const reactHelpers = require('./datascience/reactHelpers') as typeof import('./datascience/reactHelpers');
         reactHelpers.setUpDomEnvironment();
     }

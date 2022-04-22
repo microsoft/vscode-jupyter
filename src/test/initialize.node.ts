@@ -43,7 +43,7 @@ export async function initialize(): Promise<IExtensionTestApi> {
 export async function initializeTest(): Promise<any> {
     await initializePython();
     await closeActiveWindows();
-    if (!IS_SMOKE_TEST) {
+    if (!IS_SMOKE_TEST()) {
         // When running smoke tests, we won't have access to these.
         const configSettings = await import('../platform/common/configSettings');
         // Dispose any cached python settings (used only in test env).

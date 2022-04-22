@@ -40,6 +40,7 @@ import { JupyterServerSelector } from './serverSelector';
 import { BackingFileCreator } from './session/backingFileCreator.node';
 import { JupyterRequestCreator } from './session/jupyterRequestCreator.node';
 import { JupyterSessionManagerFactory } from './session/jupyterSessionManagerFactory';
+import { RequestAgentCreator } from './session/requestAgentCreator.node';
 import {
     INotebookExporter,
     INotebookImporter,
@@ -57,7 +58,8 @@ import {
     IJupyterBackingFileCreator,
     IJupyterKernelService,
     INotebookStarter,
-    IJupyterRequestCreator
+    IJupyterRequestCreator,
+    IJupyterRequestAgentCreator
 } from './types';
 import { IJupyterCommandFactory, IJupyterSubCommandExecutionService } from './types.node';
 
@@ -139,4 +141,5 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         JupyterServerSelectorCommand
     );
     serviceManager.addSingleton<IJupyterRequestCreator>(IJupyterRequestCreator, JupyterRequestCreator);
+    serviceManager.addSingleton<IJupyterRequestAgentCreator>(IJupyterRequestAgentCreator, RequestAgentCreator);
 }

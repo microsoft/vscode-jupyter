@@ -21,7 +21,7 @@ const timeoutForCellToRun = 3 * 60 * 1_000;
 suite('Smoke Tests', () => {
     let api: IExtensionTestApi;
     suiteSetup(async function () {
-        if (!IS_SMOKE_TEST) {
+        if (!IS_SMOKE_TEST()) {
             return this.skip();
         }
         api = await initialize();

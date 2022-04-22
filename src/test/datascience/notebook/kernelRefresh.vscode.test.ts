@@ -34,7 +34,7 @@ suite('DataScience - VSCode Notebook - (Conda Env Detection) (slow)', function (
     let controllerManager: INotebookControllerManager;
     this.timeout(120_000);
     suiteSetup(async function () {
-        if (!IS_CONDA_TEST) {
+        if (!IS_CONDA_TEST()) {
             return this.skip();
         }
         traceInfo('Suite Setup VS Code Notebook - Execution');

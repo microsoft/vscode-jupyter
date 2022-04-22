@@ -3,10 +3,15 @@
 'use strict';
 import '../../../platform/common/extensions';
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable, named, optional } from 'inversify';
 
-import { DataViewerDependencyService } from './dataViewerDependencyService.node';
-import { ColumnType, IDataFrameInfo, IJupyterVariableDataProvider, IRowsResponse } from './types';
+import {
+    ColumnType,
+    IDataFrameInfo,
+    IDataViewerDependencyService,
+    IJupyterVariableDataProvider,
+    IRowsResponse
+} from './types';
 import { IKernel } from '../../../kernels/types';
 import { IJupyterVariable, IJupyterVariables } from '../../../kernels/variables/types';
 import { traceError } from '../../../platform/logging';
@@ -20,7 +25,9 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
 
     constructor(
         @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) private variableManager: IJupyterVariables,
-        @inject(DataViewerDependencyService) private dependencyService: DataViewerDependencyService
+        @inject(IDataViewerDependencyService)
+        @optional()
+        private dependencyService: IDataViewerDependencyService | undefined
     ) {}
 
     public get kernel(): IKernel | undefined {
@@ -153,7 +160,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
         // Postpone pre-req and variable initialization until data is requested.
         if (!this.initialized && this.variable) {
             this.initialized = true;
-            if (this._kernel?.kernelConnectionMetadata.interpreter) {
+            if (this._kernel?.kernelConnectionMetadata.interpreter && this.dependencyService) {
                 await this.dependencyService.checkAndInstallMissingDependencies(
                     this._kernel?.kernelConnectionMetadata.interpreter
                 );

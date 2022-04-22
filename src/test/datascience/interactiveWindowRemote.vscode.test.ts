@@ -20,7 +20,7 @@ suite('Interactive window (remote)', async () => {
     let interactiveWindowProvider: IInteractiveWindowProvider;
     let disposables: Disposable[] = [];
     setup(async function () {
-        if (!IS_REMOTE_NATIVE_TEST) {
+        if (!IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
         traceInfo(`Start Test ${this.currentTest?.title}`);
