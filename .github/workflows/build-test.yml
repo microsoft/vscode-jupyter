@@ -635,7 +635,7 @@ jobs:
         if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && !matrix.web
 
       - name: Build web bundle for testing
-        run: npm run compile-test-web
+        run: npm run compile-web-test
         if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.web
 
       - name: Run Native Notebook with VSCode & Jupyter (web)
