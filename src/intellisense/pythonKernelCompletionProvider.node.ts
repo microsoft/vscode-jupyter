@@ -390,13 +390,13 @@ export function filterCompletions(
         result = result.filter((r) => !set.has(r.itemText));
     }
 
-    traceVerbose(
+    traceInfoIfCI(
         `Jupyter completions for ${word} at pos ${position.line}:${
             position.character
         } with trigger: ${triggerCharacter}\n   ${completions.map((r) => r.label).join(',')}`
     );
 
-    traceVerbose(
+    traceInfoIfCI(
         `Jupyter results for ${word} at pos ${position.line}:${
             position.character
         } with trigger: ${triggerCharacter}\n   ${result.map((r) => r.label).join(',')}`

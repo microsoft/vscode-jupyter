@@ -48,15 +48,12 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
     let completionProvider: PythonKernelCompletionProvider;
     this.timeout(120_000);
     let previousPythonCompletionTriggerCharactersValue: string | undefined;
-    let logLevel: string | undefined;
     suiteSetup(async function () {
         traceInfo(`Start Suite Code Completion via Jupyter`);
         this.timeout(120_000);
         const jupyterConfig = workspace.getConfiguration('jupyter', undefined);
         previousPythonCompletionTriggerCharactersValue = jupyterConfig.get<string>('pythonCompletionTriggerCharacters');
-        logLevel = jupyterConfig.get<string>('logging.level');
         await jupyterConfig.update('pythonCompletionTriggerCharacters', '.%"\'', ConfigurationTarget.Global);
-        await jupyterConfig.update('logging.level', 'verbose', ConfigurationTarget.Global);
         api = await initialize();
         if (IS_REMOTE_NATIVE_TEST()) {
             // https://github.com/microsoft/vscode-jupyter/issues/6331
@@ -93,10 +90,6 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
                 previousPythonCompletionTriggerCharactersValue,
                 ConfigurationTarget.Global
             );
-        await workspace
-            .getConfiguration('jupyter', undefined)
-            .update('logging.level', logLevel, ConfigurationTarget.Global);
-
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
     /**
