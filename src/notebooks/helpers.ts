@@ -585,7 +585,10 @@ function convertOutputMimeToJupyterOutput(mime: string, value: Uint8Array) {
                     })
                 );
             }
-        } else if (mime.toLowerCase() === 'application/vnd.holoviews_load.v0+json') {
+        } else if (
+            mime.toLowerCase().startsWith('application/vnd.holoviews_load.v') &&
+            mime.toLowerCase().endsWith('+json')
+        ) {
             const stringValue = textDecoder.decode(value);
             try {
                 // Holoviews mimetype isn't a json.
