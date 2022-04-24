@@ -35,6 +35,7 @@ import { disposeAllDisposables } from '../../../platform/common/helpers';
 import {
     IKernelFinder,
     KernelConnectionMetadata,
+    LiveRemoteKernelConnectionMetadata,
     LocalKernelConnectionMetadata
 } from '../../../platform/../kernels/types';
 import { arePathsSame } from '../../../platform/common/platform/fileUtils.node';
@@ -67,6 +68,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
         let globalSpecPath: Uri | undefined;
         let tempDirForKernelSpecs: Uri;
         let jupyterPaths: JupyterPaths;
+        let preferredRemote: PreferredRemoteKernelIdProvider;
         type TestData = {
             interpreters?: (
                 | PythonEnvironment
@@ -230,7 +232,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
                 jupyterServerType: 'local'
             } as any;
             when(configService.getSettings(anything())).thenReturn(dsSettings as any);
-            const preferredRemote = mock(PreferredRemoteKernelIdProvider);
+            preferredRemote = mock(PreferredRemoteKernelIdProvider);
             const notebookProvider = mock(NotebookProvider);
             const serverUriStorage = mock(JupyterServerUriStorage);
             kernelFinder = new KernelFinder(
@@ -1582,6 +1584,174 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
                     });
                 }
             );
+        });
+
+        test('isExactMatch LiveID match is an exact match', async () => {
+            const testData: TestData = {};
+            await initialize(testData);
+            const nbUri = Uri.file('test.ipynb');
+            const activeID = 'activeid';
+
+            // Live kernel spec
+            const liveSpec: LiveRemoteKernelConnectionMetadata = {
+                kernelModel: { id: activeID } as any,
+                kind: 'connectToLiveRemoteKernel',
+                baseUrl: '',
+                id: activeID
+            };
+
+            // Set up the preferred remote id
+            when(preferredRemote.getPreferredRemoteKernelId(anything())).thenReturn(activeID);
+
+            const isExactMatch = kernelFinder.isExactMatch(nbUri, liveSpec, {
+                language_info: { name: PYTHON_LANGUAGE },
+                orig_nbformat: 4
+            });
+            assert.isTrue(isExactMatch);
+        });
+        test('isExactMatch kernelspec needed for exact match', async () => {
+            const testData: TestData = {};
+            await initialize(testData);
+            const nbUri = Uri.file('test.ipynb');
+
+            const isExactMatch = kernelFinder.isExactMatch(
+                nbUri,
+                { kind: 'startUsingLocalKernelSpec', id: 'hi', kernelSpec: {} as any },
+                {
+                    language_info: { name: PYTHON_LANGUAGE },
+                    orig_nbformat: 4
+                }
+            );
+            assert.isFalse(isExactMatch);
+        });
+        test('isExactMatch interpreter hash matches default name matches', async () => {
+            const testData: TestData = {};
+            await initialize(testData);
+            const nbUri = Uri.file('test.ipynb');
+
+            const isExactMatch = kernelFinder.isExactMatch(
+                nbUri,
+                {
+                    kind: 'startUsingLocalKernelSpec',
+                    id: '',
+                    kernelSpec: {
+                        argv: [],
+                        display_name: 'display_namea',
+                        name: 'python3', // default name here
+                        uri: Uri.file('path')
+                    },
+                    interpreter: { uri: Uri.file('a') } as any
+                },
+                {
+                    language_info: { name: PYTHON_LANGUAGE },
+                    orig_nbformat: 4,
+                    interpreter: { hash: '6a50dc8584134c7de537c0052ff6d236bf874355e050c90523e0c5ff2a543a28' },
+                    kernelspec: { name: 'python3', display_name: 'display_namea' }
+                }
+            );
+            assert.isTrue(isExactMatch);
+        });
+        test('isExactMatch interpreter hash matches non-default name matches', async () => {
+            const testData: TestData = {};
+            await initialize(testData);
+            const nbUri = Uri.file('test.ipynb');
+
+            const isExactMatch = kernelFinder.isExactMatch(
+                nbUri,
+                {
+                    kind: 'startUsingLocalKernelSpec',
+                    id: '',
+                    kernelSpec: {
+                        argv: [],
+                        display_name: 'display_namea',
+                        name: 'namea', // Non default name
+                        uri: Uri.file('path')
+                    },
+                    interpreter: { uri: Uri.file('a') } as any
+                },
+                {
+                    language_info: { name: PYTHON_LANGUAGE },
+                    orig_nbformat: 4,
+                    interpreter: { hash: '6a50dc8584134c7de537c0052ff6d236bf874355e050c90523e0c5ff2a543a28' },
+                    kernelspec: { name: 'namea', display_name: 'display_namea' }
+                }
+            );
+            assert.isTrue(isExactMatch);
+        });
+        test('isExactMatch non-default name matches w/o interpreter', async () => {
+            const testData: TestData = {};
+            await initialize(testData);
+            const nbUri = Uri.file('test.ipynb');
+
+            const isExactMatch = kernelFinder.isExactMatch(
+                nbUri,
+                {
+                    kind: 'startUsingLocalKernelSpec',
+                    id: '',
+                    kernelSpec: {
+                        argv: [],
+                        display_name: 'display_namea',
+                        name: 'namea',
+                        uri: Uri.file('path')
+                    }
+                },
+                {
+                    language_info: { name: PYTHON_LANGUAGE },
+                    orig_nbformat: 4,
+                    kernelspec: { name: 'namea', display_name: 'display_namea' }
+                }
+            );
+            assert.isTrue(isExactMatch);
+        });
+        test('isExactMatch default name does not match w/o interpreter', async () => {
+            const testData: TestData = {};
+            await initialize(testData);
+            const nbUri = Uri.file('test.ipynb');
+
+            const isExactMatch = kernelFinder.isExactMatch(
+                nbUri,
+                {
+                    kind: 'startUsingLocalKernelSpec',
+                    id: '',
+                    kernelSpec: {
+                        argv: [],
+                        display_name: 'display_namea',
+                        name: 'python3', // default name here
+                        uri: Uri.file('path')
+                    }
+                },
+                {
+                    language_info: { name: PYTHON_LANGUAGE },
+                    orig_nbformat: 4,
+                    kernelspec: { name: 'python3', display_name: 'display_namea' }
+                }
+            );
+            assert.isFalse(isExactMatch);
+        });
+        test('isExactMatch fails match on display_name w/o interpreter', async () => {
+            const testData: TestData = {};
+            await initialize(testData);
+            const nbUri = Uri.file('test.ipynb');
+
+            const isExactMatch = kernelFinder.isExactMatch(
+                nbUri,
+                {
+                    kind: 'startUsingLocalKernelSpec',
+                    id: '',
+                    kernelSpec: {
+                        argv: [],
+                        display_name: 'display_nameJUNK', // JUNK here
+                        name: 'namea',
+                        uri: Uri.file('path')
+                    }
+                },
+                {
+                    language_info: { name: PYTHON_LANGUAGE },
+                    orig_nbformat: 4,
+                    kernelspec: { name: 'namea', display_name: 'display_namea' }
+                }
+            );
+            assert.isFalse(isExactMatch);
         });
     });
 });
