@@ -478,6 +478,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                             ? PYTHON_LANGUAGE
                             : getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata) || '');
 
+                    const isPythonNbOrInteractiveWindow =
+                        isPythonNotebook(notebookMetadata) || resourceType === 'interactive';
                     const preferredInterpreter =
                         isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
                             ? await this.interpreters.getActiveInterpreter(document.uri)
