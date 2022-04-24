@@ -56,13 +56,13 @@ export abstract class BaseKernelFinder implements IKernelFinder {
     public async rankKernels(
         resource: Resource,
         notebookMetadata?: nbformat.INotebookMetadata,
-        cancelToken?: CancellationToken
+        cancelToken?: CancellationToken,
+        useCache?: 'useCache' | 'ignoreCache'
     ): Promise<KernelConnectionMetadata[] | undefined> {
         const resourceType = getResourceType(resource);
         try {
             // Get list of all of the specs from the cache and without the cache (note, cached items will be validated before being returned)
-            const cached = await this.listKernels(resource, cancelToken, 'useCache');
-            const nonCachedPromise = this.listKernels(resource, cancelToken, 'ignoreCache');
+            const cached = await this.listKernels(resource, cancelToken, useCache);
 
             const isPythonNbOrInteractiveWindow = isPythonNotebook(notebookMetadata) || resourceType === 'interactive';
             // Always include the interpreter in the search if we can
@@ -84,24 +84,24 @@ export abstract class BaseKernelFinder implements IKernelFinder {
                 preferredRemoteKernelId
             );
 
-            if (
-                rankedKernels &&
-                rankedKernels.length &&
-                isExactMatchImpl(rankedKernels[rankedKernels.length - 1], notebookMetadata, preferredRemoteKernelId)
-            ) {
-                // If we found a good exact match in here, then just return our results, no need to check non-cached
-                traceInfo('Found a good kernel connection in cached results');
-                return rankedKernels;
-            }
+            // if (
+            // rankedKernels &&
+            // rankedKernels.length &&
+            // isExactMatchImpl(rankedKernels[rankedKernels.length - 1], notebookMetadata, preferredRemoteKernelId)
+            // ) {
+            // // If we found a good exact match in here, then just return our results, no need to check non-cached
+            // traceInfo('Found a good kernel connection in cached results');
+            // return rankedKernels;
+            // }
 
-            // Didn't find a good exact match in the first batch. So return the nonCached list
-            rankedKernels = rankKernelsImpl(
-                await nonCachedPromise,
-                resource,
-                notebookMetadata,
-                preferredInterpreter,
-                preferredRemoteKernelId
-            );
+            // // Didn't find a good exact match in the first batch. So return the nonCached list
+            // rankedKernels = rankKernelsImpl(
+            // await nonCachedPromise,
+            // resource,
+            // notebookMetadata,
+            // preferredInterpreter,
+            // preferredRemoteKernelId
+            // );
 
             return rankedKernels;
         } catch (ex) {

@@ -517,7 +517,8 @@ export interface IKernelFinder {
     rankKernels(
         resource: Resource,
         option?: nbformat.INotebookMetadata,
-        cancelToken?: CancellationToken
+        cancelToken?: CancellationToken,
+        useCache?: 'useCache' | 'ignoreCache'
     ): Promise<KernelConnectionMetadata[] | undefined>;
     listKernels(
         resource: Resource,

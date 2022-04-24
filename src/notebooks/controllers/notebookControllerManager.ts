@@ -68,6 +68,8 @@ import {
 } from '../../kernels/helpers';
 import { getResourceType } from '../../platform/common/utils';
 import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
+import { INotebookMetadata } from '@jupyterlab/nbformat';
+import { Kernel } from '@jupyterlab/services';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -458,39 +460,24 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // load all our controllers for interactive window
             const notebookMetadata = getNotebookMetadata(document);
             if (document.notebookType === JupyterNotebookView) {
-                const rankedConnections = await this.kernelFinder.rankKernels(
-                    document.uri,
-                    getNotebookMetadata(document),
-                    preferredSearchToken.token
-                );
+                let rankedConnections: KernelConnectionMetadata[] | undefined;
+                ({ rankedConnections, preferredConnection } = await this.findPreferredKernelExactMatch(
+                    document,
+                    preferredSearchToken.token,
+                    'useCache'
+                ));
 
-                if (rankedConnections && rankedConnections.length) {
-                    const potentialMatch = rankedConnections[rankedConnections.length - 1];
-
-                    // Only assign if we are an exact match
-                    if (this.kernelFinder.isExactMatch(document.uri, potentialMatch, notebookMetadata)) {
-                        preferredConnection = potentialMatch;
-                    }
-
-                    const resourceType = getResourceType(document.uri);
-                    const telemetrySafeLanguage =
-                        resourceType === 'interactive'
-                            ? PYTHON_LANGUAGE
-                            : getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata) || '');
-
-                    const isPythonNbOrInteractiveWindow =
-                        isPythonNotebook(notebookMetadata) || resourceType === 'interactive';
-                    const preferredInterpreter =
-                        isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
-                            ? await this.interpreters.getActiveInterpreter(document.uri)
-                            : undefined;
-                    sendTelemetryEvent(Telemetry.PreferredKernel, undefined, {
-                        result: preferredConnection ? 'found' : 'notfound',
-                        resourceType,
-                        language: telemetrySafeLanguage,
-                        hasActiveInterpreter: !!preferredInterpreter
-                    });
+                // If we didn't find an exact match in the cache, try ignoring the cache
+                if (!preferredConnection) {
+                    ({ rankedConnections, preferredConnection } = await this.findPreferredKernelExactMatch(
+                        document,
+                        preferredSearchToken.token,
+                        'ignoreCache'
+                    ));
                 }
+
+                // Send telemetry on loooking for preferred don't await for sending it
+                this.sendPreferredKernelTelemetry(document.uri, notebookMetadata, preferredConnection).ignoreErrors();
 
                 // If we found a preferred kernel, set the association on the NotebookController
                 if (preferredSearchToken.token.isCancellationRequested && !preferredConnection) {
@@ -567,6 +554,59 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         } finally {
             disposable.dispose();
         }
+    }
+
+    // Use our kernel finder to rank our kernels, and see if we have an exact match
+    private async findPreferredKernelExactMatch(
+        document: NotebookDocument,
+        cancelToken: CancellationToken,
+        useCache: 'useCache' | 'ignoreCache' | undefined
+    ): Promise<{
+        rankedConnections: KernelConnectionMetadata[] | undefined;
+        preferredConnection: KernelConnectionMetadata | undefined;
+    }> {
+        const notebookMetadata = getNotebookMetadata(document);
+        let preferredConnection: KernelConnectionMetadata | undefined;
+        const rankedConnections = await this.kernelFinder.rankKernels(
+            document.uri,
+            getNotebookMetadata(document),
+            cancelToken,
+            useCache
+        );
+
+        if (rankedConnections && rankedConnections.length) {
+            const potentialMatch = rankedConnections[rankedConnections.length - 1];
+            // Only assign if we are an exact match
+            if (this.kernelFinder.isExactMatch(document.uri, potentialMatch, notebookMetadata)) {
+                preferredConnection = potentialMatch;
+            }
+        }
+
+        return { rankedConnections, preferredConnection };
+    }
+    private async sendPreferredKernelTelemetry(
+        resource: Resource,
+        notebookMetadata?: INotebookMetadata,
+        preferredConnection?: KernelConnectionMetadata
+    ) {
+        // Send telemetry on searching for a preferred connection
+        const resourceType = getResourceType(resource);
+        const telemetrySafeLanguage =
+            resourceType === 'interactive'
+                ? PYTHON_LANGUAGE
+                : getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata) || '');
+
+        const isPythonNbOrInteractiveWindow = isPythonNotebook(notebookMetadata) || resourceType === 'interactive';
+        const preferredInterpreter =
+            isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
+                ? await this.interpreters.getActiveInterpreter(resource)
+                : undefined;
+        sendTelemetryEvent(Telemetry.PreferredKernel, undefined, {
+            result: preferredConnection ? 'found' : 'notfound',
+            resourceType,
+            language: telemetrySafeLanguage,
+            hasActiveInterpreter: !!preferredInterpreter
+        });
     }
     private onDidChangeKernelFilter() {
         // Filter the connections.
