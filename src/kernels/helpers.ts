@@ -32,7 +32,6 @@ import { fsPathToUri } from '../platform/vscode-path/utils';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
 import { JupyterKernelSpec } from './jupyter/jupyterKernelSpec';
 import { IConfigurationService, Resource } from '../platform/common/types';
-import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKernelIdProvider';
 import { getResourceType } from '../platform/common/utils';
 import { sendTelemetryEvent } from '../telemetry';
 import { isPythonNotebook } from '../notebooks/helpers';

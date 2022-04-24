@@ -62,14 +62,12 @@ import {
     getDisplayNameOrNameOfKernelConnection,
     getKernelId,
     getLanguageInNotebookMetadata,
-    isExactMatchImpl,
     isLocalLaunch,
     isPythonKernelConnection
 } from '../../kernels/helpers';
 import { getResourceType } from '../../platform/common/utils';
 import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
 import { INotebookMetadata } from '@jupyterlab/nbformat';
-import { Kernel } from '@jupyterlab/services';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -460,8 +458,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // load all our controllers for interactive window
             const notebookMetadata = getNotebookMetadata(document);
             if (document.notebookType === JupyterNotebookView) {
-                let rankedConnections: KernelConnectionMetadata[] | undefined;
-                ({ rankedConnections, preferredConnection } = await this.findPreferredKernelExactMatch(
+                ({ preferredConnection } = await this.findPreferredKernelExactMatch(
                     document,
                     preferredSearchToken.token,
                     'useCache'
@@ -469,7 +466,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
                 // If we didn't find an exact match in the cache, try ignoring the cache
                 if (!preferredConnection) {
-                    ({ rankedConnections, preferredConnection } = await this.findPreferredKernelExactMatch(
+                    ({ preferredConnection } = await this.findPreferredKernelExactMatch(
                         document,
                         preferredSearchToken.token,
                         'ignoreCache'

@@ -5,22 +5,19 @@ import { CancellationToken, Memento } from 'vscode';
 import { isPythonNotebook } from '../notebooks/helpers';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { createPromiseFromCancellation } from '../platform/common/cancellation';
-import { PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
+import { Telemetry } from '../platform/common/constants';
 import { IConfigurationService, Resource } from '../platform/common/types';
 import { getResourceType } from '../platform/common/utils';
 import { noop } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { isArray } from '../platform/common/utils/sysTypes';
 import { IInterpreterService } from '../platform/interpreter/contracts';
-import { traceInfo, traceError, traceDecoratorVerbose } from '../platform/logging';
+import { traceError, traceDecoratorVerbose } from '../platform/logging';
 import { TraceOptions } from '../platform/logging/types';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
-import { getTelemetrySafeLanguage } from '../telemetry/helpers';
 import { DisplayOptions } from './displayOptions';
 import {
-    getLanguageInNotebookMetadata,
     rankKernelsImpl,
-    getDisplayNameOrNameOfKernelConnection,
     isLocalLaunch,
     deserializeKernelConnection,
     serializeKernelConnection,
