@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
 import { JupyterInstallError } from './jupyterInstallError';
-import { JupyterSelfCertsError } from './jupyterSelfCertsError.node';
+import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import {
     CancellationError,
     CancellationError as VscCancellationError,
@@ -10,10 +10,10 @@ import {
     ConfigurationTarget,
     workspace
 } from 'vscode';
-import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError.node';
-import { KernelDiedError } from './kernelDiedError.node';
-import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError.node';
-import { KernelProcessExitedError } from './kernelProcessExitedError.node';
+import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError';
+import { KernelDiedError } from './kernelDiedError';
+import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError';
+import { KernelProcessExitedError } from './kernelProcessExitedError';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
 import { traceError, traceWarning } from '../logging';
 import { IBrowserService, IConfigurationService, Resource } from '../../platform/common/types';
@@ -26,12 +26,14 @@ import { ProductNames } from '../../kernels/installer/productNames';
 import { Product } from '../../kernels/installer/types';
 import {
     IKernelDependencyService,
+    KernelAction,
+    KernelActionSource,
     KernelConnectionMetadata,
     KernelInterpreterDependencyResponse
 } from '../../kernels/types';
 import { analyzeKernelErrors, KernelFailureReason, getErrorMessageFromPythonTraceback } from './errorUtils';
 import { JupyterConnectError } from './jupyterConnectError';
-import { JupyterKernelDependencyError } from './jupyterKernelDependencyError.node';
+import { JupyterKernelDependencyError } from './jupyterKernelDependencyError';
 import { WrappedError, BaseKernelError, WrappedKernelError, BaseError, IDataScienceErrorHandler } from './types';
 import { noop } from '../common/utils/misc';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
@@ -99,10 +101,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             this.applicationShell.showErrorMessage(message).then(noop, noop);
         }
     }
-    public async getErrorMessageForDisplayInCell(
-        error: Error,
-        errorContext: 'start' | 'restart' | 'interrupt' | 'execution'
-    ) {
+    public async getErrorMessageForDisplayInCell(error: Error, errorContext: KernelAction) {
         error = WrappedError.unwrap(error);
         traceError(`Error in execution (get message for cell)`, error);
         if (error instanceof KernelDeadError) {
@@ -153,9 +152,10 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
     }
     public async handleKernelError(
         err: Error,
-        errorContext: 'start' | 'restart' | 'interrupt' | 'execution',
+        errorContext: KernelAction,
         kernelConnection: KernelConnectionMetadata,
-        resource: Resource
+        resource: Resource,
+        actionSource: KernelActionSource
     ): Promise<KernelInterpreterDependencyResponse> {
         traceWarning(`Kernel Error, context = ${errorContext}`, err);
         err = WrappedError.unwrap(err);
@@ -209,12 +209,14 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         ) {
             const tokenSource = new CancellationTokenSource();
             try {
+                const cannotChangeKernel = actionSource === '3rdPartyExtension';
                 return this.kernelDependency.installMissingDependencies(
                     resource,
                     kernelConnection,
                     new DisplayOptions(false),
                     tokenSource.token,
-                    true
+                    true,
+                    cannotChangeKernel
                 );
             } finally {
                 tokenSource.dispose();
@@ -259,7 +261,7 @@ const errorPrefixes = {
  * all they contain is some cryptic or stdout or tracebacks.
  * For such messages, provide more context on what went wrong.
  */
-function getUserFriendlyErrorMessage(error: Error, errorContext?: 'start' | 'restart' | 'interrupt' | 'execution') {
+function getUserFriendlyErrorMessage(error: Error, errorContext?: KernelAction) {
     error = WrappedError.unwrap(error);
     const errorPrefix = errorContext ? errorPrefixes[errorContext] : '';
     if (error instanceof BaseError) {

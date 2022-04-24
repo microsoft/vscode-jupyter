@@ -15,11 +15,10 @@ import { IDisposable } from '../../../platform/common/types';
 import { IExtensionTestApi, waitForCondition } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST, IS_NON_RAW_NATIVE_TEST } from '../../constants.node';
 import { initialize } from '../../initialize.node';
-import { openNotebook } from '../helpers';
+import { openNotebook } from '../helpers.node';
 import {
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
-    createTemporaryNotebook,
     runAllCellsInActiveNotebook,
     runCell,
     insertCodeCell,
@@ -28,7 +27,8 @@ import {
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected,
     workAroundVSCodeNotebookStartPages,
-    waitForTextOutput
+    waitForTextOutput,
+    createTemporaryNotebookFromFile
 } from './helper.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { NotebookCellLanguageService } from '../../../intellisense/cellLanguageService';
@@ -83,7 +83,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
     suiteSetup(async function () {
         api = await initialize();
         verifyPromptWasNotDisplayed();
-        if (!process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST || IS_REMOTE_NATIVE_TEST || IS_NON_RAW_NATIVE_TEST) {
+        if (!process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST || IS_REMOTE_NATIVE_TEST() || IS_NON_RAW_NATIVE_TEST()) {
             return this.skip();
         }
         sinon.restore();
@@ -106,10 +106,10 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         await closeNotebooks();
         // Don't use same file (due to dirty handling, we might save in dirty.)
         // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
-        testJuliaNb = Uri.file(await createTemporaryNotebook(juliaNb, disposables));
-        testJavaNb = Uri.file(await createTemporaryNotebook(javaNb, disposables));
-        testCSharpNb = Uri.file(await createTemporaryNotebook(csharpNb, disposables));
-        testEmptyPythonNb = Uri.file(await createTemporaryNotebook(emptyPythonNb, disposables));
+        testJuliaNb = await createTemporaryNotebookFromFile(juliaNb, disposables);
+        testJavaNb = await createTemporaryNotebookFromFile(javaNb, disposables);
+        testCSharpNb = await createTemporaryNotebookFromFile(csharpNb, disposables);
+        testEmptyPythonNb = await createTemporaryNotebookFromFile(emptyPythonNb, disposables);
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async () => {
@@ -120,11 +120,11 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         if (!testJavaKernels) {
             return this.skip();
         }
-        await openNotebook(testJavaNb.fsPath);
+        await openNotebook(testJavaNb);
         await waitForKernelToGetAutoSelected('java');
     });
     test('Automatically pick julia kernel when opening a Julia Notebook', async () => {
-        await openNotebook(testJuliaNb.fsPath);
+        await openNotebook(testJuliaNb);
         await waitForKernelToGetAutoSelected('julia');
     });
     test('Automatically pick csharp kernel when opening a csharp notebook', async function () {
@@ -136,12 +136,12 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         if (!pythonChecker.isPythonExtensionInstalled) {
             return this.skip();
         }
-        await openNotebook(testCSharpNb.fsPath);
+        await openNotebook(testCSharpNb);
         await waitForKernelToGetAutoSelected('c#');
     });
     test('New notebook will have a Julia cell if last notebook was a julia nb', async function () {
         return this.skip();
-        await openNotebook(testJuliaNb.fsPath);
+        await openNotebook(testJuliaNb);
         await waitForKernelToGetAutoSelected();
         await insertMarkdownCell('# Hello');
         await saveActiveNotebook();
@@ -176,13 +176,13 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         const pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
         if (pythonChecker.isPythonExtensionInstalled) {
             // Now open an existing python notebook & confirm kernel is set to Python.
-            await openNotebook(testEmptyPythonNb.fsPath);
+            await openNotebook(testEmptyPythonNb);
             await waitForKernelToGetAutoSelected('python');
         }
     });
     test('Can run a Julia notebook', async function () {
         this.timeout(60_000); // Can be slow to start Julia kernel on CI.
-        await openNotebook(testJuliaNb.fsPath);
+        await openNotebook(testJuliaNb);
         await insertCodeCell('123456', { language: 'julia', index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         // Wait till execution count changes and status is success.
@@ -200,7 +200,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
             return this.skip();
         }
         this.timeout(30_000); // Can be slow to start csharp kernel on CI.
-        await openNotebook(testCSharpNb.fsPath);
+        await openNotebook(testCSharpNb);
         await waitForKernelToGetAutoSelected('c#');
         await runAllCellsInActiveNotebook();
 

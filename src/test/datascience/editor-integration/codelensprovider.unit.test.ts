@@ -14,7 +14,7 @@ import {
 } from '../../../platform/common/application/types';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../../platform/common/types';
-import { DataScienceCodeLensProvider } from '../../../interactive-window/editor-integration/codelensprovider.node';
+import { DataScienceCodeLensProvider } from '../../../interactive-window/editor-integration/codelensprovider';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { ICodeWatcher, IDataScienceCodeLensProvider } from '../../../interactive-window/editor-integration/types';
 import { IDebugLocationTracker } from '../../../platform/debugger/types';
@@ -67,7 +67,6 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             commandManager.object,
             disposables,
             debugService.object,
-            fileSystem.object,
             instance(workspace)
         );
     });

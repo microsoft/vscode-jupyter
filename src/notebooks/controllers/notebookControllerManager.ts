@@ -29,7 +29,8 @@ import {
     IConfigurationService,
     IExtensionContext,
     IBrowserService,
-    Resource
+    Resource,
+    IsWebExtension
 } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
@@ -136,7 +137,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(KernelFilterService) private readonly kernelFilter: KernelFilterService,
         @inject(IBrowserService) private readonly browser: IBrowserService,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
+        @inject(IsWebExtension) private readonly isWeb: boolean
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -264,11 +266,14 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         const nonCachedConnections = await nonCachedConnectionsPromise;
         this.createNotebookControllers(nonCachedConnections);
 
-        // If there aren't any Python kernels, then add a placeholder for `Python` which will prompt users to install python
-        if ([...this.registeredControllers.values()].some((item) => isPythonKernelConnection(item.connection))) {
-            this.removeNoPythonControllers();
-        } else {
-            this.registerNoPythonControllers();
+        // If there aren't any Python kernels, then add a placeholder for `Python` which will prompt users to install python (only do this in the node version so
+        // we don't end up with a kernel that asks to install python)
+        if (!this.isWeb) {
+            if ([...this.registeredControllers.values()].some((item) => isPythonKernelConnection(item.connection))) {
+                this.removeNoPythonControllers();
+            } else {
+                this.registerNoPythonControllers();
+            }
         }
 
         // Update total number of connection & the like for existing remote controllers.

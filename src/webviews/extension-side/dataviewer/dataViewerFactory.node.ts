@@ -9,7 +9,7 @@ import { captureTelemetry } from '../../../telemetry';
 import { IDataViewer, IDataViewerDataProvider, IDataViewerFactory } from './types';
 import { debounce } from 'lodash';
 import { ICommandManager } from '../../../platform/common/application/types';
-import { ContextKey } from '../../../platform/common/contextKey.node';
+import { ContextKey } from '../../../platform/common/contextKey';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from '../../../platform/common/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { EditorContexts, Commands, Telemetry } from '../../webview-side/common/constants';

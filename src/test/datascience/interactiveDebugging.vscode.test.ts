@@ -16,7 +16,7 @@ import {
     submitFromPythonFileUsingCodeWatcher,
     waitForCodeLenses,
     waitForLastCellToComplete
-} from './helpers';
+} from './helpers.node';
 import { closeNotebooksAndCleanUpAfterTests, defaultNotebookTestTimeout, getCellOutputs } from './notebook/helper.node';
 import { ITestWebviewHost } from './testInterfaces';
 import { waitForVariablesToMatch } from './variableView/variableViewHelpers';
@@ -41,7 +41,7 @@ suite('Interactive window debugging', async function () {
     };
 
     setup(async function () {
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
         traceInfo(`Start Test ${this.currentTest?.title}`);

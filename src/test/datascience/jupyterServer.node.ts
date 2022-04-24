@@ -1,21 +1,74 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable local-rules/node-imports */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as getFreePort from 'get-port';
-import * as path from '../../platform/vscode-path/path';
-import * as tcpPortUsed from 'tcp-port-used';
-import { Uri } from 'vscode';
-import { disposeAllDisposables } from '../../platform/common/helpers';
-import { traceError, traceInfo, traceInfoIfCI } from '../../platform/logging';
-import { IPythonExecutionFactory } from '../../platform/common/process/types.node';
-import { IAsyncDisposable, IDisposable, IDisposableRegistry } from '../../platform/common/types';
-import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { PYTHON_PATH, sleep } from '../common.node';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
-import { initialize } from '../initialize.node';
-const testFolder = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience');
+/** DO NOT USE VSCODE in this file. It's loaded outside of an extension */
 
-export class JupyterServer implements IAsyncDisposable {
+import * as getFreePort from 'get-port';
+import * as tcpPortUsed from 'tcp-port-used';
+import * as uuid from 'uuid/v4';
+import * as path from 'path';
+import * as fs from 'fs-extra';
+import * as child_process from 'child_process';
+const uuidToHex = require('uuid-to-hex') as typeof import('uuid-to-hex');
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
+import { disposeAllDisposables } from '../../platform/common/helpers';
+import { Observable } from 'rxjs-compat/Observable';
+const testFolder = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience');
+const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
+
+import * as iconv from 'iconv-lite';
+import { sleep } from '../core';
+
+function getPythonPath(): string {
+    if (process.env.CI_PYTHON_PATH && fs.existsSync(process.env.CI_PYTHON_PATH)) {
+        return process.env.CI_PYTHON_PATH;
+    }
+    // eslint-disable-next-line
+    // TODO: Change this to python3.
+    // See https://github.com/microsoft/vscode-python/issues/10910.
+    return 'python';
+}
+
+class BufferDecoder {
+    public decode(buffers: Buffer[], encoding: string = 'utf-8'): string {
+        encoding = iconv.encodingExists(encoding) ? encoding : 'utf-8';
+        return iconv.decode(Buffer.concat(buffers), encoding);
+    }
+}
+
+// This class is used by web and node tests. The web tests need to start a server outside of VS code (because they can't start python)
+// so this class can't use anything that requires VS code types
+//
+// However this code is being launched by node, so it can use node types.
+interface IDisposable {
+    dispose(): void;
+}
+
+type Output<T extends string | Buffer> = {
+    source: 'stdout' | 'stderr';
+    out: T;
+};
+
+type ObservableExecutionResult<T extends string | Buffer> = {
+    proc: child_process.ChildProcess | undefined;
+    out: Observable<Output<T>>;
+    dispose(): void;
+};
+
+// Tracing can't be used either
+function traceInfo(message: string) {
+    console.log(message);
+}
+
+function traceInfoIfCI(message: string) {
+    if (isCI) {
+        traceInfo(message);
+    }
+}
+
+export class JupyterServer {
     public static get instance(): JupyterServer {
         if (!JupyterServer._instance) {
             JupyterServer._instance = new JupyterServer();
@@ -24,13 +77,15 @@ export class JupyterServer implements IAsyncDisposable {
     }
     private static _instance: JupyterServer;
     private _disposables: IDisposable[] = [];
-    private _jupyterServerWithToken?: Promise<Uri>;
-    private _secondJupyterServerWithToken?: Promise<Uri>;
+    private _jupyterServerWithToken?: Promise<string>;
+    private _secondJupyterServerWithToken?: Promise<string>;
     private availablePort?: number;
     private availableSecondPort?: number;
+    private decoder = new BufferDecoder();
     public async dispose() {
         this._jupyterServerWithToken = undefined;
         this._secondJupyterServerWithToken = undefined;
+        console.log(`Disposing jupyter server instance`);
         disposeAllDisposables(this._disposables);
         traceInfo('Shutting Jupyter server used for remote tests');
         if (this.availablePort) {
@@ -40,9 +95,9 @@ export class JupyterServer implements IAsyncDisposable {
             await tcpPortUsed.waitUntilFree(this.availableSecondPort, 200, 5_000);
         }
     }
-    public async startJupyterWithToken(token = '7d25707a86975be50ee9757c929fef9012d27cf43153d1c1'): Promise<Uri> {
+    public async startJupyterWithToken(token = this.generateToken()): Promise<string> {
         if (!this._jupyterServerWithToken) {
-            this._jupyterServerWithToken = new Promise<Uri>(async (resolve, reject) => {
+            this._jupyterServerWithToken = new Promise<string>(async (resolve, reject) => {
                 const port = await this.getFreePort();
                 // Possible previous instance of jupyter has not completely shutdown.
                 // Wait for it to shutdown fully so that we can re-use the same port.
@@ -53,7 +108,7 @@ export class JupyterServer implements IAsyncDisposable {
                         token
                     });
                     await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
-                    resolve(Uri.parse(`http://localhost:${port}/?token=${token}`));
+                    resolve(`http://localhost:${port}/?token=${token}`);
                 } catch (ex) {
                     reject(ex);
                 }
@@ -61,9 +116,9 @@ export class JupyterServer implements IAsyncDisposable {
         }
         return this._jupyterServerWithToken;
     }
-    public async startSecondJupyterWithToken(token = 'fbd00a866c54f5d9f64df9ba820860de56f32379407d03e8'): Promise<Uri> {
+    public async startSecondJupyterWithToken(token = this.generateToken()): Promise<string> {
         if (!this._secondJupyterServerWithToken) {
-            this._secondJupyterServerWithToken = new Promise<Uri>(async (resolve, reject) => {
+            this._secondJupyterServerWithToken = new Promise<string>(async (resolve, reject) => {
                 const port = await this.getSecondFreePort();
                 // Possible previous instance of jupyter has not completely shutdown.
                 // Wait for it to shutdown fully so that we can re-use the same port.
@@ -74,13 +129,17 @@ export class JupyterServer implements IAsyncDisposable {
                         token
                     });
                     await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
-                    resolve(Uri.parse(`http://localhost:${port}/?token=${token}`));
+                    resolve(`http://localhost:${port}/?token=${token}`);
                 } catch (ex) {
                     reject(ex);
                 }
             });
         }
         return this._secondJupyterServerWithToken;
+    }
+
+    private generateToken(): string {
+        return uuidToHex(uuid());
     }
     private async getFreePort() {
         // Always use the same port (when using different ports, our code doesn't work as we need to re-load VSC).
@@ -102,19 +161,17 @@ export class JupyterServer implements IAsyncDisposable {
     private startJupyterServer({ token, port }: { token: string; port: number }): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
             try {
-                const api = await initialize();
-                const pythonExecFactory = api.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-                const pythonExecutionService = await pythonExecFactory.create({
-                    interpreter: { uri: Uri.file(PYTHON_PATH) } as PythonEnvironment
-                });
-                const notebookArgs = [
+                const args = [
+                    '-m',
+                    'jupyter',
                     'notebook',
                     '--no-browser',
                     `--NotebookApp.port=${port}`,
-                    `--NotebookApp.token=${token}`
+                    `--NotebookApp.token=${token}`,
+                    `--NotebookApp.allow_origin=*`
                 ];
-                traceInfoIfCI(`Starting Jupyter on CI with args ${notebookArgs.join(' ')}`);
-                const result = pythonExecutionService.execModuleObservable('jupyter', notebookArgs, {
+                traceInfoIfCI(`Starting Jupyter on CI with args ${args.join(' ')}`);
+                const result = this.execObservable(getPythonPath(), args, {
                     cwd: testFolder
                 });
                 if (!result.proc) {
@@ -131,14 +188,12 @@ export class JupyterServer implements IAsyncDisposable {
                             return;
                         }
                         try {
-                            result.proc?.kill();
+                            JupyterServer.kill(result.proc.pid);
                         } catch {
                             //
                         }
                     }
                 };
-                api.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(procDisposable);
-
                 const subscription = result.out.subscribe((output) => {
                     traceInfo(`Test Remote Jupyter Server Output: ${output.out}`);
                     if (output.out.indexOf('Use Control-C to stop this server and shut down all kernels')) {
@@ -148,9 +203,83 @@ export class JupyterServer implements IAsyncDisposable {
                 this._disposables.push(procDisposable);
                 this._disposables.push({ dispose: () => subscription.unsubscribe() });
             } catch (ex) {
-                traceError('Starting remote jupyter server failed', ex);
+                traceInfo(`Starting remote jupyter server failed ${ex}`);
                 reject(ex);
             }
         });
+    }
+
+    public execObservable(
+        file: string,
+        args: string[],
+        options: child_process.SpawnOptions = {}
+    ): ObservableExecutionResult<string> {
+        const encoding = 'utf8';
+        const proc = child_process.spawn(file, args, options);
+        let procExited = false;
+        traceInfoIfCI(`Exec observable ${file}, ${args.join(' ')}`);
+        const disposable: IDisposable = {
+            // eslint-disable-next-line
+            dispose: function () {
+                if (proc && !proc.killed && !procExited) {
+                    JupyterServer.kill(proc.pid);
+                }
+                if (proc) {
+                    proc.unref();
+                }
+            }
+        };
+
+        const output = new Observable<Output<string>>((subscriber) => {
+            const disposables: IDisposable[] = [];
+
+            const on = (ee: NodeJS.EventEmitter, name: string, fn: Function) => {
+                ee.on(name, fn as any);
+                disposables.push({ dispose: () => ee.removeListener(name, fn as any) as any });
+            };
+
+            const sendOutput = (source: 'stdout' | 'stderr', data: Buffer) => {
+                const out = this.decoder.decode([data], encoding);
+                subscriber.next({ source, out: out });
+            };
+
+            on(proc.stdout!, 'data', (data: Buffer) => sendOutput('stdout', data));
+            on(proc.stderr!, 'data', (data: Buffer) => sendOutput('stderr', data));
+
+            proc.once('close', () => {
+                procExited = true;
+                subscriber.complete();
+                disposables.forEach((d) => d.dispose());
+            });
+            proc.once('exit', () => {
+                procExited = true;
+                subscriber.complete();
+                disposables.forEach((d) => d.dispose());
+            });
+            proc.once('error', (ex) => {
+                procExited = true;
+                subscriber.error(ex);
+                disposables.forEach((d) => d.dispose());
+            });
+        });
+
+        return {
+            proc,
+            out: output,
+            dispose: disposable.dispose
+        };
+    }
+
+    public static kill(pid: number): void {
+        try {
+            if (process.platform === 'win32') {
+                // Windows doesn't support SIGTERM, so execute taskkill to kill the process
+                child_process.execSync(`taskkill /pid ${pid} /T /F`);
+            } else {
+                process.kill(pid);
+            }
+        } catch {
+            // Ignore.
+        }
     }
 }

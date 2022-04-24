@@ -21,7 +21,7 @@ import {
     submitFromPythonFileUsingCodeWatcher,
     waitForInteractiveWindow,
     waitForLastCellToComplete
-} from './helpers';
+} from './helpers.node';
 import {
     assertHasTextOutputInVSCode,
     clickOKForRestartPrompt,
@@ -44,7 +44,7 @@ suite('Interactive window', async function () {
     let interactiveWindowProvider: InteractiveWindowProvider;
 
     setup(async function () {
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
         traceInfo(`Start Test ${this.currentTest?.title}`);

@@ -43,7 +43,7 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
     let pythonApiProvider: IPythonApiProvider;
     this.timeout(120_000);
     suiteSetup(async function () {
-        if (!IS_CONDA_TEST || IS_REMOTE_NATIVE_TEST) {
+        if (!IS_CONDA_TEST() || IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
         traceInfo('Suite Setup');

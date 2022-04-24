@@ -7,7 +7,7 @@ import { assert } from 'chai';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { ApplicationShell } from '../../../../platform/common/application/applicationShell';
 import { IApplicationShell, IWorkspaceService } from '../../../../platform/common/application/types';
-import { WorkspaceService } from '../../../../platform/common/application/workspace';
+import { WorkspaceService } from '../../../../platform/common/application/workspace.node';
 import { IInterpreterSelector } from '../../../../platform/interpreter/configuration/types';
 import { JupyterInterpreterSelector } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterSelector.node';
 import { JupyterInterpreterStateStore } from '../../../../kernels/jupyter/interpreter/jupyterInterpreterStateStore.node';

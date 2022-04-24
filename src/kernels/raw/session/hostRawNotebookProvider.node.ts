@@ -23,8 +23,7 @@ import { trackKernelResourceInformation } from '../../../telemetry/telemetry';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { isPythonKernelConnection } from '../../helpers';
-import { computeWorkingDirectory } from '../../jupyter/jupyterUtils.node';
-import { JupyterNotebook } from '../../jupyter/launcher/jupyterNotebook.node';
+import { JupyterNotebook } from '../../jupyter/launcher/jupyterNotebook';
 import { ConnectNotebookProviderOptions, INotebook, IRawConnection, KernelConnectionMetadata } from '../../types';
 import { IKernelLauncher, IRawNotebookProvider, IRawNotebookSupportedService } from '../types';
 import { RawJupyterSession } from './rawJupyterSession.node';
@@ -107,7 +106,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
                 }
             }
             traceInfo(`Computing working directory ${getDisplayPath(resource)}`);
-            const workingDirectory = await computeWorkingDirectory(resource, this.workspaceService);
+            const workingDirectory = await this.workspaceService.computeWorkingDirectory(resource);
             Cancellation.throwIfCanceled(cancelToken);
             const launchTimeout = this.configService.getSettings(resource).jupyterLaunchTimeout;
             const interruptTimeout = this.configService.getSettings(resource).jupyterInterruptTimeout;
@@ -115,7 +114,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
                 this.kernelLauncher,
                 resource,
                 noop,
-                workingDirectory,
+                vscode.Uri.file(workingDirectory),
                 interruptTimeout,
                 kernelConnection,
                 launchTimeout

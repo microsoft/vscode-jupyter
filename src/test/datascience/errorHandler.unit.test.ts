@@ -20,8 +20,8 @@ import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jup
 import { DataScienceErrorHandler } from '../../platform/errors/errorHandler.node';
 import { JupyterConnectError } from '../../platform/errors/jupyterConnectError';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
-import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError.node';
-import { KernelDiedError } from '../../platform/errors/kernelDiedError.node';
+import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
+import { KernelDiedError } from '../../platform/errors/kernelDiedError';
 import {
     IJupyterInterpreterDependencyManager,
     JupyterInterpreterDependencyResponse
@@ -227,7 +227,8 @@ suite('DataScience Error Handler Unit Tests', () => {
                 ),
                 'start',
                 kernelConnection,
-                undefined
+                undefined,
+                'jupyterExtension'
             );
 
             const expectedMessage = DataScience.failedToStartKernelDueToImportFailureFromFile().format(
@@ -255,7 +256,8 @@ suite('DataScience Error Handler Unit Tests', () => {
                 ),
                 'start',
                 kernelConnection,
-                undefined
+                undefined,
+                'jupyterExtension'
             );
 
             const expectedMessage = DataScience.fileSeemsToBeInterferingWithKernelStartup().format(
@@ -277,7 +279,8 @@ suite('DataScience Error Handler Unit Tests', () => {
                 ),
                 'start',
                 kernelConnection,
-                undefined
+                undefined,
+                'jupyterExtension'
             );
 
             const expectedMessage = DataScience.failedToStartKernelDueToImportFailureFromFile().format(
@@ -309,7 +312,8 @@ suite('DataScience Error Handler Unit Tests', () => {
                 ),
                 'start',
                 kernelConnection,
-                undefined
+                undefined,
+                'jupyterExtension'
             );
 
             const expectedMessage = DataScience.fileSeemsToBeInterferingWithKernelStartup().format(
@@ -334,7 +338,8 @@ ImportError: No module named 'win32api'
                 ),
                 'start',
                 kernelConnection,
-                undefined
+                undefined,
+                'jupyterExtension'
             );
 
             const expectedMessage = DataScience.failedToStartKernelDueToWin32APIFailure();
@@ -355,7 +360,8 @@ ImportError: No module named 'xyz'
                 ),
                 'start',
                 kernelConnection,
-                undefined
+                undefined,
+                'jupyterExtension'
             );
 
             const expectedMessage = DataScience.failedToStartKernelDueToImportFailure().format('xyz');
@@ -372,7 +378,8 @@ ImportError: No module named 'xyz'
                 ),
                 'start',
                 kernelConnection,
-                undefined
+                undefined,
+                'jupyterExtension'
             );
 
             const expectedMessage = DataScience.failedToStartKernelDueToPyZmqFailure();
@@ -384,7 +391,8 @@ ImportError: No module named 'xyz'
                 new KernelDiedError('Hello', `ImportError: DLL load failed`, undefined, kernelConnection),
                 'start',
                 kernelConnection,
-                undefined
+                undefined,
+                'jupyterExtension'
             );
 
             const expectedMessage = DataScience.failedToStartKernelDueToUnknowDllLoadFailure();
@@ -396,7 +404,8 @@ ImportError: No module named 'xyz'
                 new KernelDiedError('Hello', `import XYZ\nImportError: DLL load failed`, undefined, kernelConnection),
                 'start',
                 kernelConnection,
-                undefined
+                undefined,
+                'jupyterExtension'
             );
 
             const expectedMessage = DataScience.failedToStartKernelDueToDllLoadFailure().format('XYZ');
@@ -411,7 +420,8 @@ ImportError: No module named 'xyz'
                 new JupyterConnectError(stdError, `xyz`),
                 'start',
                 kernelConnection,
-                undefined
+                undefined,
+                'jupyterExtension'
             );
 
             verifyErrorMessage(expectedMessage, expectedLink);
@@ -478,7 +488,8 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 new JupyterInstallError('foo'),
                 'start',
                 kernelConnection,
-                undefined
+                undefined,
+                'jupyterExtension'
             );
             verify(dependencyManager.installMissingDependencies(anything())).once();
         });
@@ -490,7 +501,8 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 new JupyterInstallError('foo'),
                 'start',
                 kernelConnection,
-                undefined
+                undefined,
+                'jupyterExtension'
             );
             verify(dependencyManager.installMissingDependencies(anything())).once();
             assert.strictEqual(result, KernelInterpreterDependencyResponse.ok);
@@ -503,7 +515,8 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 new JupyterInstallError('foo'),
                 'start',
                 kernelConnection,
-                undefined
+                undefined,
+                'jupyterExtension'
             );
             verify(dependencyManager.installMissingDependencies(anything())).once();
             assert.strictEqual(result, KernelInterpreterDependencyResponse.cancel);

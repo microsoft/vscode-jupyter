@@ -139,6 +139,10 @@ export interface IKernel extends IAsyncDisposable {
     readonly onPreExecute: Event<NotebookCell>;
     readonly status: KernelMessage.Status;
     /**
+     * Who created this kernel, 3rd party extension or our (jupyter) extension.
+     */
+    readonly creator: KernelActionSource;
+    /**
      * Cells that are still being executed (or pending).
      */
     readonly pendingCells: readonly NotebookCell[];
@@ -190,6 +194,10 @@ export type KernelOptions = {
      * In the case of Notebooks, just pass the uri of the notebook.
      */
     resourceUri: Resource;
+    /**
+     * What is initiating this kernel action, is it Jupyter or a 3rd party extension.
+     */
+    creator: KernelActionSource;
 };
 export const IKernelProvider = Symbol('IKernelProvider');
 export interface IKernelProvider extends IAsyncDisposable {
@@ -225,7 +233,7 @@ export interface IJupyterConnection extends Disposable {
     readonly baseUrl: string;
     readonly token: string;
     readonly hostName: string;
-    readonly rootDirectory: string; // Directory where the notebook server was started.
+    readonly rootDirectory: Uri; // Directory where the notebook server was started.
     readonly url?: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getAuthHeader?(): any; // Snould be a json object
@@ -396,6 +404,7 @@ export type NotebookCreationOptions = {
     ui: IDisplayOptions;
     kernelConnection: KernelConnectionMetadata;
     token: CancellationToken;
+    creator: KernelActionSource;
 };
 
 export const INotebookProvider = Symbol('INotebookProvider');
@@ -499,7 +508,8 @@ export interface IKernelDependencyService {
         kernelConnection: KernelConnectionMetadata,
         ui: IDisplayOptions,
         token: CancellationToken,
-        ignoreCache?: boolean
+        ignoreCache?: boolean,
+        cannotChangeKernels?: boolean
     ): Promise<KernelInterpreterDependencyResponse>;
     /**
      * @param {boolean} [ignoreCache] We cache the results of this call so we don't have to do it again (users rarely uninstall ipykernel).
@@ -532,3 +542,7 @@ export interface IKernelFinder {
         notebookMetadata: nbformat.INotebookMetadata | undefined
     ): boolean;
 }
+
+export type KernelAction = 'start' | 'interrupt' | 'restart' | 'execution';
+
+export type KernelActionSource = 'jupyterExtension' | '3rdPartyExtension';

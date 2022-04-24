@@ -9,14 +9,13 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CommandManager } from '../../platform/common/application/commandManager';
 import { DocumentManager } from '../../platform/common/application/documentManager';
 import { IDocumentManager, IWorkspaceService } from '../../platform/common/application/types';
-import { WorkspaceService } from '../../platform/common/application/workspace';
+import { WorkspaceService } from '../../platform/common/application/workspace.node';
 import { JupyterSettings } from '../../platform/common/configSettings';
 import { ConfigurationService } from '../../platform/common/configuration/service.node';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../platform/common/types';
-import { CommandRegistry } from '../../interactive-window/commands/commandRegistry.node';
-import { CommandRegistry as PlatformCommandRegistry } from '../../platform/commands/commandRegistry.node';
+import { CommandRegistry } from '../../interactive-window/commands/commandRegistry';
 import { GlobalActivation } from '../../platform/common/globalActivation.node';
-import { DataScienceCodeLensProvider } from '../../interactive-window/editor-integration/codelensprovider.node';
+import { DataScienceCodeLensProvider } from '../../interactive-window/editor-integration/codelensprovider';
 import { RawNotebookSupportedService } from '../../kernels/raw/session/rawNotebookSupportedService.node';
 import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
 import { IRawNotebookSupportedService } from '../../kernels/raw/types';
@@ -31,7 +30,6 @@ suite('DataScience Tests', () => {
     let docManager: IDocumentManager;
     let workspaceService: IWorkspaceService;
     let cmdRegistry: CommandRegistry;
-    let platformCmdRegistry: PlatformCommandRegistry;
     let settings: IWatchableJupyterSettings;
     let onDidChangeSettings: sinon.SinonStub;
     let onDidChangeActiveTextEditor: sinon.SinonStub;
@@ -42,7 +40,6 @@ suite('DataScience Tests', () => {
         configService = mock(ConfigurationService);
         workspaceService = mock(WorkspaceService);
         cmdRegistry = mock(CommandRegistry);
-        platformCmdRegistry = mock(PlatformCommandRegistry);
         docManager = mock(DocumentManager);
         settings = mock(JupyterSettings);
         rawNotebookSupported = mock(RawNotebookSupportedService);
@@ -58,7 +55,6 @@ suite('DataScience Tests', () => {
             instance(docManager),
             instance(workspaceService),
             instance(cmdRegistry),
-            instance(platformCmdRegistry),
             instance(rawNotebookSupported)
         );
 

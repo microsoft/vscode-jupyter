@@ -41,7 +41,7 @@ suite('DataScience - VariableView', function () {
         api = await initialize();
 
         // Don't run if we can't use the native notebook interface
-        if (IS_REMOTE_NATIVE_TEST) {
+        if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
 

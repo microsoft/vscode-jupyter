@@ -11,7 +11,7 @@ import * as sinon from 'sinon';
 import { anything, instance, mock, when, verify } from 'ts-mockito';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { WorkspaceService } from '../../../platform/common/application/workspace';
+import { WorkspaceService } from '../../../platform/common/application/workspace.node';
 import { EnvironmentVariablesProvider } from '../../../platform/common/variables/environmentVariablesProvider.node';
 import { InterpreterService } from '../../../platform/api/pythonApi';
 import {
@@ -51,7 +51,7 @@ import { KernelFinder } from '../../../kernels/kernelFinder.node';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider';
 import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
-import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder.node';
+import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 
 [false, true].forEach((isWindows) => {

@@ -16,8 +16,12 @@ import { IPlatformService } from './types';
 @injectable()
 export class PlatformService implements IPlatformService {
     private readonly _homeDir = Uri.file(os.homedir());
+    private readonly _tempDir = Uri.file(os.tmpdir());
     public get homeDir() {
         return this._homeDir;
+    }
+    public get tempDir() {
+        return this._tempDir;
     }
     public readonly osType: OSType = getOSType();
     public version?: SemVer;

@@ -32,12 +32,12 @@ import * as uuid from 'uuid/v4';
 
 import { IConfigurationService, InteractiveWindowMode, Resource } from '../platform/common/types';
 import { noop } from '../platform/common/utils/misc';
-import { IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../kernels/types';
+import { IKernel, KernelAction, KernelConnectionMetadata, NotebookCellRunState } from '../kernels/types';
 import { INotebookControllerManager } from '../notebooks/types';
 import { generateMarkdownFromCodeLines, parseForComments } from '../webviews/webview-side/common';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../telemetry/telemetry';
 import { chainable } from '../platform/common/utils/decorators';
-import { InteractiveCellResultError } from '../platform/errors/interactiveCellResultError.node';
+import { InteractiveCellResultError } from '../platform/errors/interactiveCellResultError';
 import { DataScience } from '../platform/common/utils/localize';
 import { createDeferred, Deferred } from '../platform/common/utils/async';
 import { IServiceContainer } from '../platform/ioc/types';
@@ -162,7 +162,10 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             // Try creating a kernel
             initializeInteractiveOrNotebookTelemetryBasedOnUserAction(this.owner, metadata);
 
-            const onStartKernel = (_: unknown, k: IKernel) => {
+            const onStartKernel = (action: KernelAction, k: IKernel) => {
+                if (action !== 'start' && action !== 'restart') {
+                    return;
+                }
                 // Id may be different if the user switched controllers
                 this.currentKernelInfo.controller = k.controller;
                 this.currentKernelInfo.metadata = k.kernelConnectionMetadata;
@@ -178,10 +181,10 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 controller,
                 metadata,
                 this.serviceContainer,
-                this.owner,
-                this.notebookDocument,
+                { resource: this.owner, notebook: this.notebookDocument },
                 new DisplayOptions(false),
                 this.internalDisposables,
+                'jupyterExtension',
                 onStartKernel
             );
             this.currentKernelInfo.controller = kernel.controller;

@@ -6,7 +6,7 @@ import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { ConfigurationChangeEvent, ConfigurationTarget, EventEmitter } from 'vscode';
 import { ApplicationShell } from '../../../platform/common/application/applicationShell';
 import { IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
-import { WorkspaceService } from '../../../platform/common/application/workspace';
+import { WorkspaceService } from '../../../platform/common/application/workspace.node';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { HttpClient } from '../../../platform/common/net/httpClient.node';
 import { PersistentState, PersistentStateFactory } from '../../../platform/common/persistentState';

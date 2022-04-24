@@ -14,11 +14,11 @@ import { IDisposable } from '../../../platform/common/types';
 import { IKernelProvider } from '../../../platform/../kernels/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize.node';
-import { openNotebook } from '../helpers';
+import { openNotebook } from '../helpers.node';
 import {
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
-    createTemporaryNotebook,
+    createTemporaryNotebookFromFile,
     defaultNotebookTestTimeout,
     prewarmNotebooks,
     runCell,
@@ -79,9 +79,9 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
     async function initializeNotebook(options: { templateFile: string } | { notebookFile: string }) {
         const nbUri =
             'templateFile' in options
-                ? Uri.file(await createTemporaryNotebook(options.templateFile, disposables))
+                ? await createTemporaryNotebookFromFile(options.templateFile, disposables)
                 : Uri.file(options.notebookFile);
-        await openNotebook(nbUri.fsPath);
+        await openNotebook(nbUri);
         await waitForKernelToGetAutoSelected();
         return initializeWidgetComms(api.serviceContainer);
     }

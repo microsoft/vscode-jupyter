@@ -24,7 +24,7 @@ export class KernelFinder extends BaseKernelFinder {
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalState: Memento,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
+        @inject(IJupyterServerUriStorage) serverUriStorage: IJupyterServerUriStorage
     ) {
         super(
             extensionChecker,
@@ -34,7 +34,8 @@ export class KernelFinder extends BaseKernelFinder {
             notebookProvider,
             localKernelFinder,
             remoteKernelFinder,
-            globalState
+            globalState,
+            serverUriStorage
         );
     }
 

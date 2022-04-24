@@ -54,6 +54,7 @@ import {
     IOutputChannel,
     IsCodeSpace,
     IsDevMode,
+    IsWebExtension,
     WORKSPACE_MEMENTO
 } from './platform/common/types';
 import { createDeferred } from './platform/common/utils/async';
@@ -265,7 +266,9 @@ async function activateLegacy(
     const isDevMode =
         context.extensionMode === ExtensionMode.Development ||
         workspace.getConfiguration('jupyter').get<boolean>('development', false);
+
     serviceManager.addSingletonInstance<boolean>(IsDevMode, isDevMode);
+    serviceManager.addSingletonInstance<boolean>(IsWebExtension, true);
     if (isDevMode) {
         void commands.executeCommand('setContext', 'jupyter.development', true);
     }

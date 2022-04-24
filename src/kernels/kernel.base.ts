@@ -36,7 +36,8 @@ import { CellHashProviderFactory } from '../interactive-window/editor-integratio
 import { JupyterConnectError } from '../platform/errors/jupyterConnectError';
 import {
     sendKernelTelemetryEvent,
-    initializeInteractiveOrNotebookTelemetryBasedOnUserAction
+    initializeInteractiveOrNotebookTelemetryBasedOnUserAction,
+    trackKernelResourceInformation
 } from '../telemetry/telemetry';
 import { sendTelemetryEvent } from '../telemetry';
 import { concatMultilineString } from '../webviews/webview-side/common';
@@ -48,7 +49,9 @@ import {
     INotebook,
     INotebookProvider,
     INotebookProviderConnection,
+    InterruptResult,
     isLocalConnection,
+    KernelActionSource,
     KernelConnectionMetadata,
     KernelSocketInformation,
     NotebookCellRunState
@@ -57,6 +60,10 @@ import { Cancellation } from '../platform/common/cancellation';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
 import { DisplayOptions } from './displayOptions';
 import { SilentExecutionErrorOptions } from './helpers';
+import { traceCellMessage } from '../notebooks/helpers';
+import { KernelExecution } from '../notebooks/execution/kernelExecution';
+import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
+import { IStatusProvider } from '../platform/progress/types';
 
 export abstract class BaseKernel implements IKernel {
     get connection(): INotebookProviderConnection | undefined {
@@ -111,7 +118,6 @@ export abstract class BaseKernel implements IKernel {
     public get session(): IJupyterSession | undefined {
         return this.notebook?.session;
     }
-    public abstract get pendingCells(): readonly NotebookCell[];
     protected _disposed?: boolean;
     protected _disposing?: boolean;
     protected _ignoreNotebookDisposedErrors?: boolean;
@@ -127,6 +133,9 @@ export abstract class BaseKernel implements IKernel {
     protected restarting?: Deferred<void>;
     protected startCancellation = new CancellationTokenSource();
     private startupUI = new DisplayOptions(true);
+    private readonly kernelExecution: KernelExecution;
+    private disposingPromise?: Promise<void>;
+
     constructor(
         public readonly id: Uri,
         public readonly resourceUri: Resource,
@@ -134,12 +143,28 @@ export abstract class BaseKernel implements IKernel {
         private readonly notebookProvider: INotebookProvider,
         private readonly disposables: IDisposableRegistry,
         private readonly launchTimeout: number,
+        interruptTimeout: number,
         protected readonly appShell: IApplicationShell,
         public readonly controller: NotebookController,
         protected readonly configService: IConfigurationService,
         protected readonly workspaceService: IWorkspaceService,
-        readonly cellHashProviderFactory: CellHashProviderFactory
-    ) {}
+        outputTracker: CellOutputDisplayIdTracker,
+        readonly cellHashProviderFactory: CellHashProviderFactory,
+        private readonly statusProvider: IStatusProvider,
+        public readonly creator: KernelActionSource
+    ) {
+        this.kernelExecution = new KernelExecution(
+            this,
+            appShell,
+            kernelConnectionMetadata,
+            interruptTimeout,
+            disposables,
+            controller,
+            outputTracker,
+            cellHashProviderFactory
+        );
+        this.kernelExecution.onPreExecute((c) => this._onPreExecute.fire(c), this, disposables);
+    }
     private perceivedJupyterStartupTelemetryCaptured?: boolean;
 
     public addEventHook(hook: (event: 'willRestart' | 'willInterrupt') => Promise<void>): void {
@@ -150,7 +175,6 @@ export abstract class BaseKernel implements IKernel {
         this.eventHooks = this.eventHooks.filter((h) => h !== hook);
     }
 
-    public abstract executeCell(cell: NotebookCell): Promise<NotebookCellRunState>;
     public async executeHidden(code: string): Promise<nbformat.IOutput[]> {
         const stopWatch = new StopWatch();
         const sessionPromise = this.startNotebook().then((nb) => nb.session);
@@ -161,9 +185,130 @@ export abstract class BaseKernel implements IKernel {
     public async start(options?: IDisplayOptions): Promise<void> {
         await this.startNotebook(options);
     }
-    public abstract interrupt(): Promise<void>;
-    public abstract dispose(): Promise<void>;
-    public abstract restart(): Promise<void>;
+    public get pendingCells(): readonly NotebookCell[] {
+        return this.kernelExecution.queue;
+    }
+    public async executeCell(cell: NotebookCell): Promise<NotebookCellRunState> {
+        traceCellMessage(cell, `kernel.executeCell, ${getDisplayPath(cell.notebook.uri)}`);
+        sendKernelTelemetryEvent(this.resourceUri, Telemetry.ExecuteCell);
+        const stopWatch = new StopWatch();
+        const sessionPromise = this.startNotebook().then((nb) => nb.session);
+        const promise = this.kernelExecution.executeCell(sessionPromise, cell);
+        this.trackNotebookCellPerceivedColdTime(stopWatch, sessionPromise, promise).catch(noop);
+        void promise.then((state) => traceInfo(`Cell ${cell.index} executed with state ${state}`));
+        return promise;
+    }
+    public async interrupt(): Promise<void> {
+        await Promise.all(this.eventHooks.map((h) => h('willInterrupt')));
+        trackKernelResourceInformation(this.resourceUri, { interruptKernel: true });
+        if (this.restarting) {
+            traceInfo(`Interrupt requested & currently restarting ${getDisplayPath(this.resourceUri || this.id)}`);
+            await this.restarting.promise;
+        }
+        traceInfo(`Interrupt requested ${getDisplayPath(this.resourceUri || this.id)}`);
+        this.startCancellation.cancel();
+        const interruptResultPromise = this.kernelExecution.interrupt(
+            this._notebookPromise?.then((item) => item.session)
+        );
+
+        const status = this.statusProvider.set(DataScience.interruptKernelStatus());
+        let result: InterruptResult | undefined;
+        try {
+            traceInfo(`Interrupt requested & sent for ${getDisplayPath(this.id)} in notebookEditor.`);
+            result = await interruptResultPromise;
+            if (result === InterruptResult.TimedOut) {
+                const message = DataScience.restartKernelAfterInterruptMessage();
+                const yes = DataScience.restartKernelMessageYes();
+                const no = DataScience.restartKernelMessageNo();
+                const v = await this.appShell.showInformationMessage(message, { modal: true }, yes, no);
+                if (v === yes) {
+                    await this.restart();
+                }
+            }
+        } finally {
+            status.dispose();
+        }
+    }
+    public async dispose(): Promise<void> {
+        traceInfoIfCI(`Dispose Kernel ${getDisplayPath(this.id)}`);
+        this._disposing = true;
+        if (this.disposingPromise) {
+            return this.disposingPromise;
+        }
+        this._ignoreNotebookDisposedErrors = true;
+        this.startCancellation.cancel();
+        const disposeImpl = async () => {
+            traceInfo(`Dispose kernel ${(this.resourceUri || this.id).toString()}`);
+            this.restarting = undefined;
+            const promises: Promise<void>[] = [];
+            promises.push(this.kernelExecution.cancel());
+            this.notebook = this.notebook
+                ? this.notebook
+                : this._notebookPromise
+                ? await this._notebookPromise
+                : undefined;
+            this._notebookPromise = undefined;
+            if (this.notebook) {
+                promises.push(this.notebook.session.dispose().catch(noop));
+                this.notebook = undefined;
+            }
+            this._disposed = true;
+            this._onDisposed.fire();
+            this._onStatusChanged.fire('dead');
+            this.kernelExecution.dispose();
+            await Promise.all(promises);
+        };
+        this.disposingPromise = disposeImpl();
+        await this.disposingPromise;
+    }
+    public async restart(): Promise<void> {
+        if (this.restarting) {
+            return this.restarting.promise;
+        }
+        await Promise.all(this.eventHooks.map((h) => h('willRestart')));
+        traceInfo(`Restart requested ${this.id}`);
+        this.startCancellation.cancel();
+        // Set our status
+        const status = this.statusProvider.set(DataScience.restartingKernelStatus().format(''));
+        const progress = KernelProgressReporter.createProgressReporter(
+            this.resourceUri,
+            DataScience.restartingKernelStatus().format(
+                `: ${getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)}`
+            )
+        );
+
+        const stopWatch = new StopWatch();
+        try {
+            // If the notebook died, then start a new notebook.
+            await (this._notebookPromise
+                ? this.kernelExecution.restart(this._notebookPromise?.then((item) => item.session))
+                : this.start(new DisplayOptions(false)));
+            sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime);
+        } catch (ex) {
+            traceError(`Restart failed ${getDisplayPath(this.id)}`, ex);
+            this._ignoreNotebookDisposedErrors = true;
+            // If restart fails, kill the associated notebook.
+            const notebook = this.notebook;
+            this.notebook = undefined;
+            this._notebookPromise = undefined;
+            this.restarting = undefined;
+            // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
+            // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
+            sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime, undefined, ex);
+            await notebook?.session.dispose().catch(noop);
+            this._ignoreNotebookDisposedErrors = false;
+            throw ex;
+        } finally {
+            status.dispose();
+            progress.dispose();
+        }
+
+        // Interactive window needs a restart sys info
+        await this.initializeAfterStart(this.notebook);
+
+        // Indicate a restart occurred if it succeeds
+        this._onRestarted.fire();
+    }
     protected async trackNotebookCellPerceivedColdTime(
         stopWatch: StopWatch,
         started: Promise<unknown>,
@@ -250,7 +395,8 @@ export abstract class BaseKernel implements IKernel {
                 resource: this.resourceUri,
                 ui: this.startupUI,
                 kernelConnection: this.kernelConnectionMetadata,
-                token: this.startCancellation.token
+                token: this.startCancellation.token,
+                creator: this.creator
             });
             Cancellation.throwIfCanceled(this.startCancellation.token);
             if (!notebook) {

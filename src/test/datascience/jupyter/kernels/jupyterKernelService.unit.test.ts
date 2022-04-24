@@ -402,6 +402,7 @@ suite('DataScience - JupyterKernelService', () => {
                 anything(),
                 anything(),
                 anything(),
+                anything(),
                 anything()
             )
         ).times(kernels.filter((k) => k.interpreter).length);

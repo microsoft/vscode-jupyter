@@ -54,7 +54,7 @@ export async function run(): Promise<void> {
 
     // nteract/transforms-full expects to run in the browser so we have to fake
     // parts of the browser here.
-    if (!IS_SMOKE_TEST) {
+    if (!IS_SMOKE_TEST()) {
         const reactHelpers = require('./datascience/reactHelpers') as typeof import('./datascience/reactHelpers');
         reactHelpers.setUpDomEnvironment();
     }

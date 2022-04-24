@@ -353,6 +353,10 @@ jobs:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest]
+        # Whether we're using stable (<empty>) or pre-release versions of Python packages.
+        # When installing pre-release versions, we're only focused on jupyter & related packages.
+        # Not pre-release versions of pandas, numpy or other such packages that are not core to Jupyter.
+        packageVersion: ['']
         # More details on includes/excludes can be found here https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#example-including-additional-values-into-combinations
         # Basically with exclude, you can exclude any of the combinations from the result matrix.
         # & with include, you can include additional items to the result matrix.
@@ -361,13 +365,29 @@ jobs:
             python: nonConda
             pythonVersion: '3.9'
             os: ubuntu-latest
+            web: false
+          - jupyter: remote
+            python: nonConda
+            pythonVersion: '3.9'
+            os: ubuntu-latest
+            web: true
           - jupyter: raw
             python: noPython
             os: ubuntu-latest
-          - os: windows-latest
+          - jupyter: raw
             python: nonConda
             pythonVersion: '3.10'
-            jupyter: raw
+            os: windows-latest
+          - jupyter: local
+            python: nonConda
+            pythonVersion: '3.9'
+            os: ubuntu-latest
+            packageVersion: 'prerelease'
+          - jupyter: raw
+            python: nonConda
+            pythonVersion: '3.9'
+            os: ubuntu-latest
+            packageVersion: 'prerelease'
         exclude:
           - python: conda # Conda does't seem to support 3.10 yet.
             pythonVersion: '3.10'
@@ -496,6 +516,14 @@ jobs:
         shell: bash
         if: matrix.python != 'conda' && matrix.python != 'noPython'
 
+      # Install the pre-release versions of the packages
+      - name: Install Pre-Release Python Libs
+        if: matrix.python != 'conda' && matrix.python != 'noPython' && matrix.packageVersion == 'prerelease'
+        run: |
+          python --version
+          python -c "import sys;print(sys.executable)"
+          python -m pip install jupyter notebook ipykernel ipython nbconvert nbformat --pre
+
       # debugpy is not shipped, only installed for local tests.
       # In production, we get debugpy from python extension.
       - name: Install Python Libs
@@ -604,7 +632,27 @@ jobs:
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
         id: test_notebook_vscode_ubuntu
-        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest'
+        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && !matrix.web
+
+      - name: Build web bundle for testing
+        run: npm run compile-web-test
+        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.web
+
+      - name: Run Native Notebook with VSCode & Jupyter (web)
+        uses: GabrielBB/xvfb-action@v1.4
+        with:
+          run: npm run testWebExtension
+        env:
+          VSC_JUPYTER_FORCE_LOGGING: 1
+          VSC_PYTHON_FORCE_LOGGING: 1
+          VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST: 1
+          VSC_JUPYTER_REMOTE_NATIVE_TEST: ${{ matrix.jupyter == 'remote' }}
+          VSC_JUPYTER_NON_RAW_NATIVE_TEST: ${{ matrix.jupyter == 'local' }}
+          VSC_JUPYTER_CI_RUN_JAVA_NB_TEST: ${{ matrix.python == 'conda' }}
+          VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
+          VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
+        id: test_notebook_vscode_web
+        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.web
 
       - name: Run Native Notebook with VSCode & Jupyter (windows)
         run: |
@@ -621,7 +669,7 @@ jobs:
           VSC_PYTHON_LOG_FILE: ${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/python.log
           TEST_FILES_SUFFIX: '+(interrupt|execut)*.vscode.test*'
         id: test_notebook_vscode_windows
-        if: matrix.python != 'noPython' && matrix.os == 'windows-latest'
+        if: matrix.python != 'noPython' && matrix.os == 'windows-latest' && !matrix.web
 
       - name: Publish Notebook Test Report
         uses: scacap/action-surefire-report@v1
@@ -766,13 +814,6 @@ jobs:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: .nyc_output
           retention-days: 1
-
-      - name: Build web parts
-        run: npm run compile-web-test
-        if: always()
-
-      - name: Run web smoke test
-        run: npm run testSmokeWeb
 
   coverage:
     name: Coverage reports upload

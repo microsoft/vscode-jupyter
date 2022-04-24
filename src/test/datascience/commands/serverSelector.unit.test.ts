@@ -4,10 +4,11 @@ import { anything, capture, instance, mock, verify } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { CommandManager } from '../../../platform/common/application/commandManager';
 import { ICommandManager } from '../../../platform/common/application/types';
-import { JupyterServerSelectorCommand } from '../../../platform/commands/serverSelector.node';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { Commands } from '../../../platform/common/constants';
 import { INotebookControllerManager } from '../../../notebooks/types';
+import { JupyterServerSelectorCommand } from '../../../kernels/jupyter/commands/serverSelector';
+import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 
 /* eslint-disable  */
 suite('DataScience - Server Selector Command', () => {
@@ -20,10 +21,12 @@ suite('DataScience - Server Selector Command', () => {
         commandManager = mock(CommandManager);
         serverSelector = mock(JupyterServerSelector);
         controllerManager = mock(controllerManager);
+        const uriStorage = mock(JupyterServerUriStorage);
 
         serverSelectorCommand = new JupyterServerSelectorCommand(
             instance(commandManager),
             instance(serverSelector),
+            instance(uriStorage),
             instance(controllerManager)
         );
     });
@@ -31,7 +34,7 @@ suite('DataScience - Server Selector Command', () => {
     test('Register Command', () => {
         serverSelectorCommand.register();
 
-        verify(commandManager.registerCommand(Commands.SelectJupyterURI, anything(), instance(serverSelector))).once();
+        verify(commandManager.registerCommand(Commands.SelectJupyterURI, anything(), serverSelectorCommand)).once();
     });
 
     test('Command Handler should invoke ServerSelector', () => {

@@ -52,7 +52,10 @@ class PythonDaemon(BasePythonDaemon):
                 return self._execute_and_capture_output(lambda: self._convert(args))
             if args[0] == "notebook" and args[1] == "--version":
                 try:
-                    from notebook import notebookapp as app
+                    try:
+                        from notebook import notebookapp as app
+                    except:
+                        from notebook import app as app
 
                     return {"stdout": ".".join(list(str(v) for v in app.version_info))}
                     """ We specifically don't want to bubble up an error from --version so pass exception here """
@@ -151,7 +154,10 @@ class PythonDaemon(BasePythonDaemon):
             raise
 
     def _start_notebook(self, args, cwd, env):
-        from notebook import notebookapp as app
+        try:
+            from notebook import notebookapp as app
+        except:
+            from notebook import app as app
 
         # Args must not have ['notebook'] in the begining. Drop the `notebook` subcommand when using `jupyter`
         args = args[1:] if args[0] == "notebook" else args

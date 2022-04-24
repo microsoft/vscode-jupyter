@@ -27,7 +27,7 @@ import { IEnvironmentActivationService } from '../../platform/interpreter/activa
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
-import { JupyterKernelDependencyError } from '../../platform/errors/jupyterKernelDependencyError.node';
+import { JupyterKernelDependencyError } from '../../platform/errors/jupyterKernelDependencyError';
 import { getKernelRegistrationInfo, cleanEnvironment } from '../helpers';
 import { JupyterPaths } from '../raw/finder/jupyterPaths.node';
 import {
@@ -39,6 +39,7 @@ import {
 } from '../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { serializePythonEnvironment } from '../../platform/api/pythonApi';
+import { IJupyterKernelService } from './types';
 
 /**
  * Responsible for registering and updating kernels
@@ -47,7 +48,7 @@ import { serializePythonEnvironment } from '../../platform/api/pythonApi';
  * @class JupyterKernelService
  */
 @injectable()
-export class JupyterKernelService {
+export class JupyterKernelService implements IJupyterKernelService {
     constructor(
         @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
@@ -66,7 +67,8 @@ export class JupyterKernelService {
         resource: Resource,
         @logValue<KernelConnectionMetadata>('id') kernel: KernelConnectionMetadata,
         @logValue<IDisplayOptions>('disableUI') ui: IDisplayOptions,
-        @ignoreLogging() cancelToken: CancellationToken
+        @ignoreLogging() cancelToken: CancellationToken,
+        cannotChangeKernels?: boolean
     ): Promise<void> {
         traceVerbose('Check if a kernel is usable');
         // If we have an interpreter, make sure it has the correct dependencies installed
@@ -80,7 +82,8 @@ export class JupyterKernelService {
                 kernel,
                 ui,
                 cancelToken,
-                true
+                true,
+                cannotChangeKernels
             );
             switch (result) {
                 case KernelInterpreterDependencyResponse.cancel:

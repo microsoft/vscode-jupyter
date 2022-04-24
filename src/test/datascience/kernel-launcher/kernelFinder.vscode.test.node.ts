@@ -131,9 +131,9 @@ suite('DataScience - Kernels Finder', () => {
                 kernelspec: juliaKernelSpec?.kernelSpec as any,
                 orig_nbformat: 4
             })
-        );
-        assert.ok(kernelSpec);
-        assert.deepEqual(kernelSpec, juliaKernelSpec);
+        ) as LocalKernelConnectionMetadata;
+        assert.ok(kernelSpec.kernelSpec);
+        assert.deepEqual(kernelSpec.kernelSpec.name, juliaKernelSpec.kernelSpec.name);
     });
 });
 

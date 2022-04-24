@@ -20,9 +20,9 @@ import {
     RemoteKernelSpecConnectionMetadata
 } from '../../../kernels/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { JupyterSessionManager } from '../../../kernels/jupyter/session/jupyterSessionManager.node';
-import { JupyterSessionManagerFactory } from '../../../kernels/jupyter/session/jupyterSessionManagerFactory.node';
-import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder.node';
+import { JupyterSessionManager } from '../../../kernels/jupyter/session/jupyterSessionManager';
+import { JupyterSessionManagerFactory } from '../../../kernels/jupyter/session/jupyterSessionManagerFactory';
+import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../../../kernels/raw/types';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider';
 import { IJupyterKernel, IJupyterSessionManager } from '../../../kernels/jupyter/types';
@@ -58,7 +58,7 @@ suite(`Remote Kernel Finder`, () => {
         disconnected: dummyEvent.event,
         token: '',
         hostName: 'foobar',
-        rootDirectory: '.',
+        rootDirectory: Uri.file('.'),
         dispose: noop
     };
     const defaultPython3Name = 'python3';
@@ -128,14 +128,16 @@ suite(`Remote Kernel Finder`, () => {
         interpreterService = mock<IInterpreterService>();
         localKernelFinder = mock(LocalKernelFinder);
         when(localKernelFinder.listKernels(anything(), anything())).thenResolve([]);
+        const extensionChecker = mock(PythonExtensionChecker);
+        when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
         remoteKernelFinder = new RemoteKernelFinder(
             disposables,
             instance(jupyterSessionManagerFactory),
-            instance(interpreterService)
+            instance(interpreterService),
+            instance(extensionChecker)
         );
 
-        const extensionChecker = mock(PythonExtensionChecker);
         const configService = mock(ConfigurationService);
         const dsSettings = {
             jupyterServerType: 'remote'
