@@ -94,9 +94,23 @@ export class JupyterConnectionWaiter implements IDisposable {
         return this.startPromise.promise;
     }
 
-    private createConnection(baseUrl: string, token: string, hostName: string, processDisposable: Disposable) {
+    private createConnection(
+        url: string,
+        baseUrl: string,
+        token: string,
+        hostName: string,
+        processDisposable: Disposable
+    ) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        return new JupyterConnection(baseUrl, token, hostName, this.rootDir, processDisposable, this.launchResult.proc);
+        return new JupyterConnection(
+            url,
+            baseUrl,
+            token,
+            hostName,
+            this.rootDir,
+            processDisposable,
+            this.launchResult.proc
+        );
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -117,7 +131,7 @@ export class JupyterConnectionWaiter implements IDisposable {
                 const url = matchInfo.url;
                 const token = matchInfo.token;
                 const host = matchInfo.hostname;
-                this.resolveStartPromise(url, token, host);
+                this.resolveStartPromise(url, url, token, host);
             }
         }
         // At this point we failed to get the server info or a matching server via the python code, so fall back to
@@ -154,6 +168,7 @@ export class JupyterConnectionWaiter implements IDisposable {
             const pathName = url.pathname.endsWith('/tree') ? url.pathname.replace('/tree', '') : url.pathname;
             // Here we parsed the URL correctly
             this.resolveStartPromise(
+                uriString,
                 `${url.protocol}//${url.host}${pathName}`,
                 `${url.searchParams.get('token')}`,
                 url.hostname
@@ -184,11 +199,11 @@ export class JupyterConnectionWaiter implements IDisposable {
         }
     };
 
-    private resolveStartPromise = (baseUrl: string, token: string, hostName: string) => {
+    private resolveStartPromise(url: string, baseUrl: string, token: string, hostName: string) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         clearTimeout(this.launchTimeout as any);
         if (!this.startPromise.rejected) {
-            const connection = this.createConnection(baseUrl, token, hostName, this.launchResult);
+            const connection = this.createConnection(url, baseUrl, token, hostName, this.launchResult);
             const origDispose = connection.dispose.bind(connection);
             connection.dispose = () => {
                 // Stop listening when we disconnect
@@ -197,7 +212,7 @@ export class JupyterConnectionWaiter implements IDisposable {
             };
             this.startPromise.resolve(connection);
         }
-    };
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private rejectStartPromise = (message: string | Error) => {
@@ -220,6 +235,7 @@ class JupyterConnection implements IJupyterConnection {
     public readonly type = 'jupyter';
     private eventEmitter: EventEmitter<number> = new EventEmitter<number>();
     constructor(
+        public readonly url: string,
         public readonly baseUrl: string,
         public readonly token: string,
         public readonly hostName: string,

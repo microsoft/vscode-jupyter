@@ -42,6 +42,7 @@ export type LiveRemoteKernelConnectionMetadata = Readonly<{
     interpreter?: PythonEnvironment;
     baseUrl: string;
     kind: 'connectToLiveRemoteKernel';
+    serverHash: string;
     id: string;
 }>;
 /**
@@ -72,6 +73,7 @@ export type RemoteKernelSpecConnectionMetadata = Readonly<{
     kernelSpec: IJupyterKernelSpec;
     kind: 'startUsingRemoteKernelSpec';
     baseUrl: string;
+    serverHash: string;
     id: string;
 }>;
 /**
@@ -234,7 +236,7 @@ export interface IJupyterConnection extends Disposable {
     readonly token: string;
     readonly hostName: string;
     readonly rootDirectory: Uri; // Directory where the notebook server was started.
-    readonly url?: string;
+    readonly url: string;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getAuthHeader?(): any; // Snould be a json object
 }
