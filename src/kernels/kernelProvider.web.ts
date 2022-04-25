@@ -5,7 +5,12 @@
 import { inject, injectable } from 'inversify';
 import { Uri, workspace } from 'vscode';
 import { IApplicationShell, IWorkspaceService, IVSCodeNotebook } from '../platform/common/application/types';
-import { IAsyncDisposableRegistry, IDisposableRegistry, IConfigurationService, IExtensionContext } from '../platform/common/types';
+import {
+    IAsyncDisposableRegistry,
+    IDisposableRegistry,
+    IConfigurationService,
+    IExtensionContext
+} from '../platform/common/types';
 import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../notebooks/constants';
 import { Kernel } from './kernel.web';
