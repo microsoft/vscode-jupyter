@@ -53,8 +53,12 @@ export interface INotebookServer extends IAsyncDisposable {
         ui: IDisplayOptions,
         creator: KernelActionSource
     ): Promise<INotebook>;
-    connect(connection: IJupyterConnection, cancelToken: CancellationToken): Promise<void>;
-    getConnectionInfo(): IJupyterConnection;
+    readonly connection: IJupyterConnection;
+}
+
+export const INotebookServerFactory = Symbol('INotebookServerFactory');
+export interface INotebookServerFactory {
+    createNotebookServer(connection: IJupyterConnection): Promise<INotebookServer>;
 }
 
 // Provides notebooks that talk to jupyter servers

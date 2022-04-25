@@ -30,7 +30,7 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
             token: options.token,
             localJupyter: options.kind === 'localJupyter'
         });
-        const connection = await server.getConnectionInfo();
+        const connection = await server.connection;
         if (options.kind === 'remoteJupyter') {
             // Log this remote URI into our MRU list
             void this.serverStorage.addToUriList(
