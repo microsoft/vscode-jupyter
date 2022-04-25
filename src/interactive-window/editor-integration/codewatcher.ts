@@ -252,7 +252,7 @@ export class CodeWatcher implements ICodeWatcher {
             let codeToExecute: string | undefined;
             if (text === undefined || isUri(text)) {
                 // Get just the text of the selection or the current line if none
-                codeToExecute = await this.executionHelper.getSelectedTextToExecute(activeEditor);
+                codeToExecute = this.executionHelper.getSelectedTextToExecute(activeEditor);
             } else {
                 codeToExecute = text;
             }

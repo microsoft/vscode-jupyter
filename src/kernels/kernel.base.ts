@@ -399,11 +399,6 @@ export abstract class BaseKernel implements IKernel {
                 creator: this.creator
             });
             Cancellation.throwIfCanceled(this.startCancellation.token);
-            if (!notebook) {
-                // This is an unlikely case.
-                // getOrCreateNotebook would return undefined only if getOnly = true (an issue with typings).
-                throw new Error('Kernel has not been started');
-            }
             await this.initializeAfterStart(notebook);
 
             sendKernelTelemetryEvent(

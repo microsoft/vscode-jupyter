@@ -18,14 +18,14 @@ import {
 } from '../../../../platform/common/types';
 import { testOnlyMethod } from '../../../../platform/common/utils/decorators';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts';
-import { IServiceContainer } from '../../../../platform/ioc/types';
 import {
     IJupyterExecution,
     INotebookServerOptions,
     INotebookServer,
     INotebookStarter,
     IJupyterUriProviderRegistration,
-    IJupyterSessionManagerFactory
+    IJupyterSessionManagerFactory,
+    INotebookServerFactory
 } from '../../types';
 import { IJupyterSubCommandExecutionService } from '../../types.node';
 
@@ -43,12 +43,12 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(INotebookStarter) @optional() notebookStarter: INotebookStarter | undefined,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IJupyterSubCommandExecutionService)
         @optional()
         jupyterInterpreterService: IJupyterSubCommandExecutionService | undefined,
         @inject(IJupyterUriProviderRegistration) jupyterPickerRegistration: IJupyterUriProviderRegistration,
-        @inject(IJupyterSessionManagerFactory) sessionManagerFactory: IJupyterSessionManagerFactory
+        @inject(IJupyterSessionManagerFactory) sessionManagerFactory: IJupyterSessionManagerFactory,
+        @inject(INotebookServerFactory) notebookServerFactory: INotebookServerFactory
     ) {
         super(
             interpreterService,
@@ -59,7 +59,7 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
             jupyterInterpreterService,
             jupyterPickerRegistration,
             sessionManagerFactory,
-            serviceContainer
+            notebookServerFactory
         );
         this.serverCache = new ServerCache(workspace);
         asyncRegistry.push(this);
@@ -88,19 +88,21 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
     public async hostConnectToNotebookServer(
         options: INotebookServerOptions,
         cancelToken: CancellationToken
-    ): Promise<INotebookServer | undefined> {
+    ): Promise<INotebookServer> {
         if (!this._disposed) {
             return super.connectToNotebookServer(await this.serverCache.generateDefaultOptions(options), cancelToken);
         }
+        throw new Error('Notebook server is disposed');
     }
 
     public override async connectToNotebookServer(
         options: INotebookServerOptions,
         cancelToken: CancellationToken
-    ): Promise<INotebookServer | undefined> {
+    ): Promise<INotebookServer> {
         if (!this._disposed) {
             return this.serverCache.getOrCreate(this.hostConnectToNotebookServer.bind(this), options, cancelToken);
         }
+        throw new Error('Notebook server is disposed');
     }
     public override async getServer(options: INotebookServerOptions): Promise<INotebookServer | undefined> {
         if (!this._disposed) {

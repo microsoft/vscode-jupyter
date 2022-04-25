@@ -13,7 +13,7 @@ import { JupyterCommandLineSelector } from './launcher/commandLineSelector';
 import { JupyterNotebookProvider } from './launcher/jupyterNotebookProvider';
 import { JupyterPasswordConnect } from './launcher/jupyterPasswordConnect';
 import { HostJupyterExecution } from './launcher/liveshare/hostJupyterExecution';
-import { HostJupyterServer } from './launcher/liveshare/hostJupyterServer';
+import { HostJupyterServerFactory } from './launcher/liveshare/hostJupyterServerFactory';
 import { NotebookProvider } from './launcher/notebookProvider';
 import { NotebookServerProvider } from './launcher/notebookServerProvider';
 import { JupyterServerUriStorage } from './launcher/serverUriStorage';
@@ -32,15 +32,15 @@ import {
     IJupyterNotebookProvider,
     IJupyterServerProvider,
     IJupyterExecution,
-    INotebookServer,
-    IJupyterRequestCreator
+    IJupyterRequestCreator,
+    INotebookServerFactory
 } from './types';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
     serviceManager.addSingleton<IRemoteKernelFinder>(IRemoteKernelFinder, RemoteKernelFinder);
     serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, HostJupyterExecution);
-    serviceManager.add<INotebookServer>(INotebookServer, HostJupyterServer);
+    serviceManager.add<INotebookServerFactory>(INotebookServerFactory, HostJupyterServerFactory);
     serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);
     serviceManager.addSingleton<IJupyterSessionManagerFactory>(
         IJupyterSessionManagerFactory,

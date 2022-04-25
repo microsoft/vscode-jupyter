@@ -29,7 +29,7 @@ import { JupyterCommandLineSelector } from './launcher/commandLineSelector';
 import { JupyterNotebookProvider } from './launcher/jupyterNotebookProvider';
 import { JupyterPasswordConnect } from './launcher/jupyterPasswordConnect';
 import { HostJupyterExecution } from './launcher/liveshare/hostJupyterExecution';
-import { HostJupyterServer } from './launcher/liveshare/hostJupyterServer';
+import { HostJupyterServerFactory } from './launcher/liveshare/hostJupyterServerFactory';
 import { NotebookProvider } from './launcher/notebookProvider';
 import { NotebookServerProvider } from './launcher/notebookServerProvider';
 import { NotebookStarter } from './launcher/notebookStarter.node';
@@ -44,7 +44,6 @@ import { RequestAgentCreator } from './session/requestAgentCreator.node';
 import {
     INotebookExporter,
     INotebookImporter,
-    INotebookServer,
     IJupyterNotebookProvider,
     IJupyterExecution,
     IJupyterPasswordConnect,
@@ -59,7 +58,8 @@ import {
     IJupyterKernelService,
     INotebookStarter,
     IJupyterRequestCreator,
-    IJupyterRequestAgentCreator
+    IJupyterRequestAgentCreator,
+    INotebookServerFactory
 } from './types';
 import { IJupyterCommandFactory, IJupyterSubCommandExecutionService } from './types.node';
 
@@ -67,7 +67,7 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
     serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
     serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
-    serviceManager.add<INotebookServer>(INotebookServer, HostJupyterServer);
+    serviceManager.add<INotebookServerFactory>(INotebookServerFactory, HostJupyterServerFactory);
     serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
     serviceManager.addSingleton<IRemoteKernelFinder>(IRemoteKernelFinder, RemoteKernelFinder);
     serviceManager.addSingleton<IExtensionSingleActivationService>(

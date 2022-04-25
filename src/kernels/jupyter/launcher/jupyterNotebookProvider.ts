@@ -23,15 +23,15 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
         @inject(IJupyterServerUriStorage) private readonly serverStorage: IJupyterServerUriStorage
     ) {}
 
-    public async connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection | undefined> {
+    public async connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection> {
         const server = await this.serverProvider.getOrCreateServer({
             ui: options.ui,
             resource: options.resource,
             token: options.token,
             localJupyter: options.kind === 'localJupyter'
         });
-        const connection = await server?.getConnectionInfo();
-        if (connection && options.kind === 'remoteJupyter') {
+        const connection = await server.connection;
+        if (options.kind === 'remoteJupyter') {
             // Log this remote URI into our MRU list
             void this.serverStorage.addToUriList(
                 connection.url || connection.displayName,

@@ -36,7 +36,7 @@ export class NotebookProvider implements INotebookProvider {
     ) {}
 
     // Attempt to connect to our server provider, and if we do, return the connection info
-    public async connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection | undefined> {
+    public async connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection> {
         const settings = this.configService.getSettings(undefined);
         const serverType: string | undefined = settings.jupyterServerType;
         if (!options.ui.disableUI) {
@@ -55,13 +55,14 @@ export class NotebookProvider implements INotebookProvider {
             this.extensionChecker.isPythonExtensionInstalled ||
             serverType === Settings.JupyterServerRemoteLaunch
         ) {
-            return this.jupyterNotebookProvider?.connect(options).finally(() => handler.dispose());
+            return this.jupyterNotebookProvider.connect(options).finally(() => handler.dispose());
         } else {
             handler.dispose();
             await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
+            throw new Error('Python extension is not installed');
         }
     }
-    public async createNotebook(options: NotebookCreationOptions): Promise<INotebook | undefined> {
+    public async createNotebook(options: NotebookCreationOptions): Promise<INotebook> {
         const isLocal = isLocalConnection(options.kernelConnection);
         const rawLocalKernel = this.rawNotebookProvider?.isSupported && isLocal;
 
@@ -69,27 +70,23 @@ export class NotebookProvider implements INotebookProvider {
         // but jupyterNotebookProvider.createNotebook can be undefined if the server is not available
         // so check for our connection here first
         if (!rawLocalKernel) {
-            if (
-                !(await this.jupyterNotebookProvider?.connect({
-                    resource: options.resource,
-                    token: options.token,
-                    ui: options.ui,
-                    kind: isLocal ? 'localJupyter' : 'remoteJupyter'
-                }))
-            ) {
-                return undefined;
-            }
+            await this.jupyterNotebookProvider.connect({
+                resource: options.resource,
+                token: options.token,
+                ui: options.ui,
+                kind: isLocal ? 'localJupyter' : 'remoteJupyter'
+            });
         }
         Cancellation.throwIfCanceled(options.token);
         trackKernelResourceInformation(options.resource, { kernelConnection: options.kernelConnection });
         const promise = rawLocalKernel
-            ? this.rawNotebookProvider?.createNotebook(
+            ? this.rawNotebookProvider!.createNotebook(
                   options.resource,
                   options.kernelConnection,
                   options.ui,
                   options.token
               )
-            : this.jupyterNotebookProvider?.createNotebook(options);
+            : this.jupyterNotebookProvider.createNotebook(options);
 
         sendKernelTelemetryWhenDone(
             options.resource,

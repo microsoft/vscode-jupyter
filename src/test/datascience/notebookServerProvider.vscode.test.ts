@@ -77,8 +77,7 @@ suite('Jupyter CLI Tests', async () => {
             throw new Error('No server');
         }
         disposables.push(server);
-        const connection = await server.getConnectionInfo();
-        assert.include(connection!.baseUrl, availablePort.toString(), 'Server started with right port');
+        assert.include(server.connection.baseUrl, availablePort.toString(), 'Server started with right port');
 
         // Verify we have jupyter running on this port.
         const pythonService = await pythonExecFactory.create({ interpreter: activeInterpreter });
