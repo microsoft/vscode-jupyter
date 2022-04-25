@@ -936,7 +936,7 @@ function compareAgainstKernelDisplayNameInNotebookMetadata(
  * Given an interpreter, find the kernel connection that matches this interpreter.
  * & is used to start a kernel using the provided interpreter.
  */
-function findKernelSpecMatchingInterpreter(
+export function findKernelSpecMatchingInterpreter(
     interpreter: PythonEnvironment | undefined,
     kernels: KernelConnectionMetadata[]
 ) {

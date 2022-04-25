@@ -60,6 +60,7 @@ import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IVSCodeNotebookController } from './types';
 import {
     createInterpreterKernelSpec,
+    findKernelSpecMatchingInterpreter,
     getDisplayNameOrNameOfKernelConnection,
     getKernelId,
     getLanguageInNotebookMetadata,
@@ -463,10 +464,19 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // load all our controllers for interactive window
             const notebookMetadata = getNotebookMetadata(document);
             if (document.notebookType === JupyterNotebookView) {
+                const resourceType = getResourceType(document.uri);
+                const isPythonNbOrInteractiveWindow =
+                    isPythonNotebook(notebookMetadata) || resourceType === 'interactive';
+                const preferredInterpreter =
+                    isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
+                        ? await this.interpreters.getActiveInterpreter(document.uri)
+                        : undefined;
+
                 ({ preferredConnection } = await this.findPreferredKernelExactMatch(
                     document,
                     preferredSearchToken.token,
-                    'useCache'
+                    'useCache',
+                    preferredInterpreter
                 ));
 
                 // If we didn't find an exact match in the cache, try ignoring the cache
@@ -563,7 +573,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private async findPreferredKernelExactMatch(
         document: NotebookDocument,
         cancelToken: CancellationToken,
-        useCache: 'useCache' | 'ignoreCache' | undefined
+        useCache: 'useCache' | 'ignoreCache' | undefined,
+        preferredInterpreter: PythonEnvironment | undefined
     ): Promise<{
         rankedConnections: KernelConnectionMetadata[] | undefined;
         preferredConnection: KernelConnectionMetadata | undefined;
@@ -579,9 +590,16 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         if (rankedConnections && rankedConnections.length) {
             const potentialMatch = rankedConnections[rankedConnections.length - 1];
+
+            // Is the top ranked connection the preferred interpreter?
+            const topMatchIsPreferredInterpreter = findKernelSpecMatchingInterpreter(preferredInterpreter, [
+                potentialMatch
+            ]);
+
             // Only assign if we are an exact match or if this is the only connection found
             if (
                 rankedConnections.length === 1 ||
+                topMatchIsPreferredInterpreter ||
                 this.kernelFinder.isExactMatch(document.uri, potentialMatch, notebookMetadata)
             ) {
                 preferredConnection = potentialMatch;
@@ -602,11 +620,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 ? PYTHON_LANGUAGE
                 : getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata) || '');
 
-        const isPythonNbOrInteractiveWindow = isPythonNotebook(notebookMetadata) || resourceType === 'interactive';
-        const preferredInterpreter =
-            isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
-                ? await this.interpreters.getActiveInterpreter(resource)
-                : undefined;
         sendTelemetryEvent(Telemetry.PreferredKernel, undefined, {
             result: preferredConnection ? 'found' : 'notfound',
             resourceType,
