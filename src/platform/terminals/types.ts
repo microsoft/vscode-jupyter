@@ -17,5 +17,5 @@ export interface ICodeExecutionHelper {
     normalizeLines(code: string): Promise<string>;
     getFileToExecute(): Promise<Uri | undefined>;
     saveFileIfDirty(file: Uri): Promise<void>;
-    getSelectedTextToExecute(textEditor: TextEditor): Promise<string | undefined>;
+    getSelectedTextToExecute(textEditor: TextEditor): string | undefined;
 }
