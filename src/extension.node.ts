@@ -319,6 +319,7 @@ async function activateLegacy(
     registerNotebookTypes(serviceManager);
     registerInteractiveTypes(serviceManager);
     registerWebviewTypes(serviceManager, isDevMode);
+    registerIntellisenseTypes(serviceManager, isDevMode);
 
     // We need to setup this property before any telemetry is sent
     const fs = serviceManager.get<IFileSystemNode>(IFileSystemNode);
@@ -333,8 +334,6 @@ async function activateLegacy(
 
     const applicationEnv = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment);
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
-
-    registerIntellisenseTypes(serviceManager, configuration, isDevMode);
 
     // We should start logging using the log level as soon as possible, so set it as soon as we can access the level.
     // `IConfigurationService` may depend any of the registered types, so doing it after all registrations are finished.
