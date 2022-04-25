@@ -47,7 +47,7 @@ export class Utils {
             requestId: Date.now().toString(),
             cellIndex: cell.index,
             command: 'queryInnerHTML',
-            selector: selector
+            selector
         };
         const editor = await this.editorPromise;
         traceInfo(`Sending message to Widget renderer ${JSON.stringify(request)}`);
