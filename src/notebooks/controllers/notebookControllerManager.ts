@@ -490,7 +490,12 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 // }
 
                 // Send telemetry on loooking for preferred don't await for sending it
-                this.sendPreferredKernelTelemetry(document.uri, notebookMetadata, preferredConnection).ignoreErrors();
+                this.sendPreferredKernelTelemetry(
+                    document.uri,
+                    notebookMetadata,
+                    preferredConnection,
+                    preferredInterpreter
+                ).ignoreErrors();
 
                 // If we found a preferred kernel, set the association on the NotebookController
                 if (preferredSearchToken.token.isCancellationRequested && !preferredConnection) {
@@ -611,7 +616,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private async sendPreferredKernelTelemetry(
         resource: Resource,
         notebookMetadata?: INotebookMetadata,
-        preferredConnection?: KernelConnectionMetadata
+        preferredConnection?: KernelConnectionMetadata,
+        preferredInterpreter?: PythonEnvironment
     ) {
         // Send telemetry on searching for a preferred connection
         const resourceType = getResourceType(resource);
