@@ -43,6 +43,7 @@ import {
     IJupyterInterpreterDependencyManager,
     JupyterInterpreterDependencyResponse
 } from '../../kernels/jupyter/types';
+import { handleCertsError } from '../../kernels/jupyter/jupyterUtils';
 
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {
@@ -66,24 +67,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         if (err instanceof JupyterInstallError) {
             await this.dependencyManager.installMissingDependencies(err);
         } else if (err instanceof JupyterSelfCertsError) {
-            // On a self cert error, warn the user and ask if they want to change the setting
-            const enableOption: string = DataScience.jupyterSelfCertEnable();
-            const closeOption: string = DataScience.jupyterSelfCertClose();
-            await this.applicationShell
-                .showErrorMessage(DataScience.jupyterSelfCertFail().format(err.message), enableOption, closeOption)
-                .then((value) => {
-                    if (value === enableOption) {
-                        sendTelemetryEvent(Telemetry.SelfCertsMessageEnabled);
-                        void this.configuration.updateSetting(
-                            'allowUnauthorizedRemoteConnection',
-                            true,
-                            undefined,
-                            ConfigurationTarget.Workspace
-                        );
-                    } else if (value === closeOption) {
-                        sendTelemetryEvent(Telemetry.SelfCertsMessageClose);
-                    }
-                });
+            void handleCertsError(this.applicationShell, this.configuration, err.message);
         } else if (err instanceof VscCancellationError || err instanceof CancellationError) {
             // Don't show the message for cancellation errors
             traceWarning(`Cancelled by user`, err);

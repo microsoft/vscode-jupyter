@@ -90,6 +90,7 @@ export interface IJupyterExecution extends IAsyncDisposable {
     getServer(options: INotebookServerOptions): Promise<INotebookServer | undefined>;
     getNotebookError(): Promise<string>;
     refreshCommands(): Promise<void>;
+    validateRemoteUri(uri: string): Promise<void>;
 }
 
 export interface IJupyterPasswordConnectInfo {

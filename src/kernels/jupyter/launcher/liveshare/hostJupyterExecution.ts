@@ -24,7 +24,8 @@ import {
     INotebookServerOptions,
     INotebookServer,
     INotebookStarter,
-    IJupyterUriProviderRegistration
+    IJupyterUriProviderRegistration,
+    IJupyterSessionManagerFactory
 } from '../../types';
 import { IJupyterSubCommandExecutionService } from '../../types.node';
 
@@ -46,7 +47,8 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
         @inject(IJupyterSubCommandExecutionService)
         @optional()
         jupyterInterpreterService: IJupyterSubCommandExecutionService | undefined,
-        @inject(IJupyterUriProviderRegistration) jupyterPickerRegistration: IJupyterUriProviderRegistration
+        @inject(IJupyterUriProviderRegistration) jupyterPickerRegistration: IJupyterUriProviderRegistration,
+        @inject(IJupyterSessionManagerFactory) sessionManagerFactory: IJupyterSessionManagerFactory
     ) {
         super(
             interpreterService,
@@ -56,6 +58,7 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
             notebookStarter,
             jupyterInterpreterService,
             jupyterPickerRegistration,
+            sessionManagerFactory,
             serviceContainer
         );
         this.serverCache = new ServerCache(workspace);

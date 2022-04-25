@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { isNil } from 'lodash';
 import { EventEmitter, QuickPickItem, ThemeIcon, Uri } from 'vscode';
-import { IClipboard } from '../../platform/common/application/types';
+import { IApplicationShell, IClipboard } from '../../platform/common/application/types';
 import { Settings } from '../../platform/common/constants';
 import { traceDecoratorError, traceError } from '../../platform/logging';
 import { DataScience } from '../../platform/common/utils/localize';
@@ -23,8 +23,12 @@ import {
     IJupyterUriProvider,
     IJupyterUriProviderRegistration,
     IJupyterServerUriStorage,
-    JupyterServerUriHandle
+    JupyterServerUriHandle,
+    IJupyterExecution
 } from './types';
+import { IDataScienceErrorHandler, WrappedError } from '../../platform/errors/types';
+import { handleCertsError } from './jupyterUtils';
+import { IConfigurationService } from '../../platform/common/types';
 
 const defaultUri = 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe';
 
@@ -50,7 +54,11 @@ export class JupyterServerSelector {
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
         @inject(IJupyterUriProviderRegistration)
         private extraUriProviders: IJupyterUriProviderRegistration,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
+        @inject(IJupyterExecution) private readonly execution: IJupyterExecution,
+        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
+        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
+        @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
@@ -71,6 +79,25 @@ export class JupyterServerSelector {
     }
 
     public async setJupyterURIToRemote(userURI: string): Promise<void> {
+        // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
+        try {
+            await this.execution.validateRemoteUri(userURI);
+        } catch (err) {
+            if (err.message.indexOf('reason: self signed certificate') >= 0) {
+                sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
+                const handled = await handleCertsError(this.applicationShell, this.configService, err.message);
+                if (!handled) {
+                    return;
+                }
+            } else {
+                await this.errorHandler.handleError(
+                    WrappedError.from(DataScience.jupyterNotebookRemoteConnectFailed().format(userURI, err), err)
+                );
+                // Can't set the URI in this case.
+                return;
+            }
+        }
+
         await this.serverUriStorage.setUri(userURI);
 
         // Indicate setting a jupyter URI to a remote setting. Check if an azure remote or not

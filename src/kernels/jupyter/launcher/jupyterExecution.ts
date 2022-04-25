@@ -25,7 +25,9 @@ import {
     INotebookServerOptions,
     INotebookServer,
     JupyterServerUriHandle,
-    INotebookStarter
+    INotebookStarter,
+    IJupyterSessionManagerFactory,
+    IJupyterSessionManager
 } from '../types';
 import { IJupyterSubCommandExecutionService } from '../types.node';
 import { IServiceContainer } from '../../../platform/ioc/types';
@@ -45,6 +47,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         private readonly notebookStarter: INotebookStarter | undefined,
         private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService | undefined,
         private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration,
+        private readonly jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         private readonly serviceContainer: IServiceContainer
     ) {
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
@@ -188,6 +191,32 @@ export class JupyterExecutionBase implements IJupyterExecution {
     public getServer(_options: INotebookServerOptions): Promise<INotebookServer | undefined> {
         // This is cached at the host or guest level
         return Promise.resolve(undefined);
+    }
+
+    public async validateRemoteUri(uri: string): Promise<void> {
+        let connection: IJupyterConnection | undefined = undefined;
+        let sessionManager: IJupyterSessionManager | undefined = undefined;
+        try {
+            // Prepare our map of server URIs (needed in order to retrieve the uri during the connection)
+            await this.updateServerUri(uri);
+
+            // Create an active connection.
+            connection = await createRemoteConnectionInfo(uri, this.getServerUri.bind(this));
+
+            // Attempt to list the running kernels. It will return empty if there are none, but will
+            // throw if can't connect.
+            sessionManager = await this.jupyterSessionManagerFactory.create(connection, false);
+            await sessionManager.getRunningKernels();
+
+            // We should throw an exception if any of that fails.
+        } finally {
+            if (connection) {
+                connection.dispose();
+            }
+            if (sessionManager) {
+                void sessionManager.dispose();
+            }
+        }
     }
 
     private async startOrConnect(

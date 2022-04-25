@@ -61,6 +61,7 @@ import { IJupyterSubCommandExecutionService } from '../../kernels/jupyter/types.
 import { SystemVariables } from '../../platform/common/variables/systemVariables.node';
 import { getOSType, OSType } from '../../platform/common/utils/platform';
 import { JupyterUriProviderRegistration } from '../../kernels/jupyter/jupyterUriProviderRegistration';
+import { JupyterSessionManagerFactory } from '../../kernels/jupyter/session/jupyterSessionManagerFactory';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 class DisposableRegistry implements IAsyncDisposableRegistry {
@@ -995,6 +996,7 @@ suite('Jupyter Execution', async () => {
         when(kernelFinder.listKernels(anything(), anything())).thenResolve([kernelMetadata]);
         when(serviceContainer.get<NotebookStarter>(NotebookStarter)).thenReturn(notebookStarter);
         when(serviceContainer.get<ILocalKernelFinder>(ILocalKernelFinder)).thenReturn(instance(kernelFinder));
+        const sessionManagerFactory = mock(JupyterSessionManagerFactory);
         const provider = mock(JupyterUriProviderRegistration);
         return {
             executionService: activeService.object,
@@ -1007,7 +1009,8 @@ suite('Jupyter Execution', async () => {
                 notebookStarter,
                 instance(serviceContainer),
                 jupyterCmdExecutionService,
-                instance(provider)
+                instance(provider),
+                instance(sessionManagerFactory)
             )
         };
     }

@@ -7,6 +7,6 @@ import { IJupyterRequestAgentCreator } from '../types';
 @injectable()
 export class RequestAgentCreator implements IJupyterRequestAgentCreator {
     createHttpRequestAgent() {
-        new HttpsAgent({ rejectUnauthorized: false });
+        return new HttpsAgent({ rejectUnauthorized: false });
     }
 }

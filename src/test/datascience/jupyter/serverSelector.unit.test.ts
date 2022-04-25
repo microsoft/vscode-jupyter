@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { assert } from 'chai';
-import { anyString, anything, instance, mock, when } from 'ts-mockito';
+import { anyString, anything, instance, mock, when, verify } from 'ts-mockito';
 
 import * as sinon from 'sinon';
 import * as os from 'os';
 import { QuickPickItem } from 'vscode';
 import { ApplicationShell } from '../../../platform/common/application/applicationShell';
 import { ClipboardService } from '../../../platform/common/application/clipboard';
-import { IClipboard } from '../../../platform/common/application/types';
+import { IApplicationShell, IClipboard } from '../../../platform/common/application/types';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { IJupyterSettings } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -24,12 +24,17 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { JupyterUriProviderRegistration } from '../../../kernels/jupyter/jupyterUriProviderRegistration';
 import { Settings } from '../../../platform/common/constants';
+import { HostJupyterExecution } from '../../../kernels/jupyter/launcher/liveshare/hostJupyterExecution';
+import { DataScienceErrorHandler } from '../../../platform/errors/errorHandler.node';
+import { IJupyterExecution } from '../../../kernels/jupyter/types';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - Jupyter Server URI Selector', () => {
     let quickPick: MockQuickPick | undefined;
     let dsSettings: IJupyterSettings;
     let clipboard: IClipboard;
+    let execution: IJupyterExecution;
+    let applicationShell: IApplicationShell;
     let setting: string;
 
     function createDataScienceObject(
@@ -43,7 +48,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         } as any;
         clipboard = mock(ClipboardService);
         const configService = mock(ConfigurationService);
-        const applicationShell = mock(ApplicationShell);
+        applicationShell = mock(ApplicationShell);
         const applicationEnv = mock(ApplicationEnvironment);
         const workspaceService = mock(WorkspaceService);
         const picker = mock(JupyterUriProviderRegistration);
@@ -64,6 +69,8 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         when(workspaceService.getWorkspaceFolderIdentifier(anything())).thenReturn('1');
         when(workspaceService.hasWorkspaceFolders).thenReturn(hasFolders);
         const encryptedStorage = new MockEncryptedStorage();
+        execution = mock(HostJupyterExecution);
+        const handler = mock(DataScienceErrorHandler);
 
         const storage = new JupyterServerUriStorage(
             instance(configService),
@@ -73,7 +80,16 @@ suite('DataScience - Jupyter Server URI Selector', () => {
             instance(applicationEnv),
             new MockMemento()
         );
-        const selector = new JupyterServerSelector(instance(clipboard), multiStepFactory, instance(picker), storage);
+        const selector = new JupyterServerSelector(
+            instance(clipboard),
+            multiStepFactory,
+            instance(picker),
+            storage,
+            instance(execution),
+            instance(handler),
+            instance(applicationShell),
+            instance(configService)
+        );
         return { selector, storage };
     }
 
@@ -218,6 +234,47 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         const value = await storage.getUri();
         assert.notEqual(value, 'httx://localhost:1111', 'Already running should validate');
         assert.equal(value, 'local', 'Validation failed');
+    });
+
+    test('Server is validated', async () => {
+        const { selector, storage } = createDataScienceObject('$(server) Existing', 'https://localhost:1111', true);
+        await selector.selectJupyterURI(true);
+        const value = await storage.getUri();
+        assert.equal(value, 'https://localhost:1111', 'Validation failed');
+        verify(execution.validateRemoteUri('https://localhost:1111')).once();
+    });
+
+    test('Remote authorization is asked and works', async () => {
+        const { selector, storage } = createDataScienceObject('$(server) Existing', 'https://localhost:1111', true);
+        when(execution.validateRemoteUri(anyString())).thenReject(new Error('reason: self signed certificate'));
+        when(applicationShell.showErrorMessage(anything(), anything(), anything())).thenCall((_m, c1, _c2) => {
+            return Promise.resolve(c1);
+        });
+        await selector.selectJupyterURI(true);
+        const value = await storage.getUri();
+        assert.equal(value, 'https://localhost:1111', 'Validation failed');
+        verify(execution.validateRemoteUri('https://localhost:1111')).once();
+    });
+
+    test('Remote authorization is asked and skipped', async () => {
+        const { selector, storage } = createDataScienceObject('$(server) Existing', 'https://localhost:1111', true);
+        when(execution.validateRemoteUri(anyString())).thenReject(new Error('reason: self signed certificate'));
+        when(applicationShell.showErrorMessage(anything(), anything(), anything())).thenCall((_m, _c1, c2) => {
+            return Promise.resolve(c2);
+        });
+        await selector.selectJupyterURI(true);
+        const value = await storage.getUri();
+        assert.equal(value, 'local', 'Should not be a remote URI');
+        verify(execution.validateRemoteUri('https://localhost:1111')).once();
+    });
+
+    test('Remote authorization is asked and skipped for a different error', async () => {
+        const { selector, storage } = createDataScienceObject('$(server) Existing', 'https://localhost:1111', true);
+        when(execution.validateRemoteUri(anyString())).thenReject(new Error('different error'));
+        await selector.selectJupyterURI(true);
+        const value = await storage.getUri();
+        assert.equal(value, 'local', 'Should not be a remote URI');
+        verify(execution.validateRemoteUri('https://localhost:1111')).once();
     });
 
     suite('Default Uri when selecting remote uri', () => {

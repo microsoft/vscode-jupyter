@@ -4,14 +4,17 @@
 import '../../platform/common/extensions';
 
 import * as path from '../../platform/vscode-path/path';
-import { Uri } from 'vscode';
-import { IWorkspaceService } from '../../platform/common/application/types';
+import { ConfigurationTarget, Uri } from 'vscode';
+import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
 import { noop } from '../../platform/common/utils/misc';
 import { IJupyterConnection } from '../types';
 import { IJupyterServerUri } from './types';
 import { getJupyterConnectionDisplayName } from './launcher/helpers';
-import { IWatchableJupyterSettings, Resource } from '../../platform/common/types';
+import { IConfigurationService, IWatchableJupyterSettings, Resource } from '../../platform/common/types';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
+import { DataScience } from '../../platform/common/utils/localize';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Telemetry } from '../../platform/common/constants';
 
 export function expandWorkingDir(
     workingDir: string | undefined,
@@ -36,6 +39,29 @@ export function expandWorkingDir(
     }
 
     return process.cwd();
+}
+
+export async function handleCertsError(
+    appShell: IApplicationShell,
+    config: IConfigurationService,
+    message: string
+): Promise<boolean> {
+    // On a self cert error, warn the user and ask if they want to change the setting
+    const enableOption: string = DataScience.jupyterSelfCertEnable();
+    const closeOption: string = DataScience.jupyterSelfCertClose();
+    const value = await appShell.showErrorMessage(
+        DataScience.jupyterSelfCertFail().format(message),
+        enableOption,
+        closeOption
+    );
+    if (value === enableOption) {
+        sendTelemetryEvent(Telemetry.SelfCertsMessageEnabled);
+        void config.updateSetting('allowUnauthorizedRemoteConnection', true, undefined, ConfigurationTarget.Workspace);
+        return true;
+    } else if (value === closeOption) {
+        sendTelemetryEvent(Telemetry.SelfCertsMessageClose);
+    }
+    return false;
 }
 
 export function createRemoteConnectionInfo(
