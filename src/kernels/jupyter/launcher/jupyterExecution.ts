@@ -101,7 +101,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     public connectToNotebookServer(
         options: INotebookServerOptions,
         cancelToken: CancellationToken
-    ): Promise<INotebookServer | undefined> {
+    ): Promise<INotebookServer> {
         // Return nothing if we cancel
         // eslint-disable-next-line
         return Cancellation.race(async () => {
@@ -152,7 +152,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     } else if (connection) {
                         // If this is occurring during shutdown, don't worry about it.
                         if (this.disposed) {
-                            return undefined;
+                            throw err;
                         }
 
                         // Something else went wrong
@@ -182,6 +182,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 }
                 throw lastTryError;
             }
+            throw new Error('Max number of attempts reached');
         }, cancelToken);
     }
 

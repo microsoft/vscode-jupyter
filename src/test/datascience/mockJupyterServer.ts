@@ -25,8 +25,8 @@ export class MockJupyterServer implements INotebookServer {
     public async getNotebook(_document: NotebookDocument): Promise<INotebook | undefined> {
         return new MockJupyterNotebook(this.getConnectionInfo());
     }
-    public getConnectionInfo(): IJupyterConnection | undefined {
-        return this.connection;
+    public getConnectionInfo(): IJupyterConnection {
+        return this.connection!;
     }
     public async dispose(): Promise<void> {
         if (this.connection) {

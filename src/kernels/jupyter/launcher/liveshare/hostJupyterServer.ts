@@ -254,9 +254,9 @@ export class HostJupyterServer implements INotebookServer {
     }
 
     // Return a copy of the connection information that this server used to connect with
-    public getConnectionInfo(): IJupyterConnection | undefined {
+    public getConnectionInfo(): IJupyterConnection {
         if (!this.connection) {
-            return undefined;
+            throw new Error('Not connected');
         }
 
         // Return a copy with a no-op for dispose

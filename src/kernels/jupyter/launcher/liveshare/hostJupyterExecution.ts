@@ -85,19 +85,21 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
     public async hostConnectToNotebookServer(
         options: INotebookServerOptions,
         cancelToken: CancellationToken
-    ): Promise<INotebookServer | undefined> {
+    ): Promise<INotebookServer> {
         if (!this._disposed) {
             return super.connectToNotebookServer(await this.serverCache.generateDefaultOptions(options), cancelToken);
         }
+        throw new Error('Notebook server is disposed');
     }
 
     public override async connectToNotebookServer(
         options: INotebookServerOptions,
         cancelToken: CancellationToken
-    ): Promise<INotebookServer | undefined> {
+    ): Promise<INotebookServer> {
         if (!this._disposed) {
             return this.serverCache.getOrCreate(this.hostConnectToNotebookServer.bind(this), options, cancelToken);
         }
+        throw new Error('Notebook server is disposed');
     }
     public override async getServer(options: INotebookServerOptions): Promise<INotebookServer | undefined> {
         if (!this._disposed) {
