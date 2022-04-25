@@ -57,7 +57,6 @@ import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from
 import { IJupyterSession, IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
 import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
 import { ICellHashProvider, ICellHash } from '../../interactive-window/editor-integration/types';
-import { isCI } from '../../platform/common/constants';
 import { WIDGET_MIMETYPE } from '../../kernels/ipywidgets-message-coordination/constants';
 
 // Helper interface for the set_next_input execute reply payload
@@ -625,8 +624,7 @@ export class CellExecution implements IDisposable {
         clearState: RefBool
     ) {
         if (
-            (isCI || this.context.extensionMode === ExtensionMode.Test) &&
-            process.env.IS_WIDGET_TEST &&
+            this.context.extensionMode === ExtensionMode.Test &&
             output.data &&
             typeof output.data === 'object' &&
             WIDGET_MIMETYPE in output.data

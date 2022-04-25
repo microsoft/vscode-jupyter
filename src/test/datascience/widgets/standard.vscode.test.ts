@@ -50,8 +50,6 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
         traceInfo('Suite Setup (completed)');
-        // eslint-disable-next-line local-rules/dont-use-process
-        process.env.IS_WIDGET_TEST = 'true';
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
@@ -70,11 +68,7 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
-    suiteTeardown(() => {
-        // eslint-disable-next-line local-rules/dont-use-process
-        delete process.env.IS_WIDGET_TEST;
-        return closeNotebooksAndCleanUpAfterTests(disposables);
-    });
+    suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     async function initializeNotebook(options: { templateFile: string } | { notebookFile: string }) {
         const nbUri =
             'templateFile' in options
@@ -252,14 +246,18 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['>m<', '>b<', '<img src="data:image']);
     });
-    test.skip('Render matplotlib, non-interactive inline', async function () {
+    test('Render matplotlib, non-interactive inline', async function () {
         // Skipping this test as the renderer is not a widget renderer, its an html renderer.
         // Need to modify that code too to add the classes so we can query the html rendered.
         const comms = await initializeNotebook({ templateFile: 'matplotlib_widgets_inline.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(2);
 
         await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(cell, comms, ['<img src="blob:vscode']);
+        await waitForCondition(
+            () => cell.outputs.some((output) => output.items.some((item) => item.mime.toLowerCase().includes('image'))),
+            defaultNotebookTestTimeout,
+            'Timeout waiting for matplotlib inline image'
+        );
     });
     test.skip('Render matplotlib, widget', async function () {
         const comms = await initializeNotebook({ templateFile: 'matplotlib_widgets_widget.ipynb' });
