@@ -102,9 +102,12 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
 
     public async activate() {
         this.output.appendLine(`NotebookPythonPathService: activate`);
-        await this.apiProvider.getApi().then((api) =>
-                api.registerJupyterPythonPathFunction(this.jupyterPythonPathFunction)
-            );
+        await this.apiProvider.getApi().then((api) => {
+                // Python API may not have the register function yet.
+                if (api.registerJupyterPythonPathFunction) {
+                    api.registerJupyterPythonPathFunction(this.jupyterPythonPathFunction)
+                }
+            });
     }
 
     private async jupyterPythonPathFunction(uri: Uri): Promise<string | undefined> {
