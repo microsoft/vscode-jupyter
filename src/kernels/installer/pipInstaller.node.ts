@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { ExecutionInstallArgs, ModuleInstaller, translateProductToModule } from './moduleInstaller.node';
+import { ExecutionInstallArgs, ModuleInstaller } from './moduleInstaller.node';
 import * as path from '../../platform/vscode-path/path';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { _SCRIPTS_DIR } from '../../platform/common/process/internal/scripts/index.node';
@@ -10,6 +10,7 @@ import { IPythonExecutionFactory } from '../../platform/common/process/types.nod
 import { ModuleInstallerType, ModuleInstallFlags, Product, IInstaller } from './types';
 import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IServiceContainer } from '../../platform/ioc/types';
+import { translateProductToModule } from './utils';
 
 @injectable()
 export class PipInstaller extends ModuleInstaller {

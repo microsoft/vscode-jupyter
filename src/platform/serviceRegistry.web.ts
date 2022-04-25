@@ -21,6 +21,8 @@ import { IServiceManager } from './ioc/types';
 import { StatusProvider } from './progress/statusProvider';
 import { IStatusProvider } from './progress/types';
 import { WorkspaceService } from './common/application/workspace.web';
+import { DataScienceErrorHandler } from './errors/errorHandler';
+import { IDataScienceErrorHandler } from './errors/types';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
@@ -29,6 +31,7 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
     serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
     serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
+    serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
 
     registerCommonTypes(serviceManager);
     registerApiTypes(serviceManager);

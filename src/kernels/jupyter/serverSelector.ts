@@ -56,7 +56,8 @@ export class JupyterServerSelector {
         private extraUriProviders: IJupyterUriProviderRegistration,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IJupyterExecution) private readonly execution: IJupyterExecution,
-        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
+        @inject(IDataScienceErrorHandler)
+        private readonly errorHandler: IDataScienceErrorHandler,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}

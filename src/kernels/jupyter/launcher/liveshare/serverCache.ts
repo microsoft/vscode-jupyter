@@ -7,7 +7,6 @@ import { CancellationToken } from 'vscode';
 import { IWorkspaceService } from '../../../../platform/common/application/types';
 import { traceInfo, traceError } from '../../../../platform/logging';
 import { IAsyncDisposable } from '../../../../platform/common/types';
-import { testOnlyMethod } from '../../../../platform/common/utils/decorators';
 import { sleep } from '../../../../platform/common/utils/async';
 import { INotebookServerOptions, INotebookServer } from '../../types';
 
@@ -22,7 +21,6 @@ export class ServerCache implements IAsyncDisposable {
     private disposed = false;
 
     constructor(private workspace: IWorkspaceService) {}
-    @testOnlyMethod()
     public clearCache() {
         this.cache.clear();
     }

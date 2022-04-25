@@ -25,7 +25,7 @@ import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { JupyterUriProviderRegistration } from '../../../kernels/jupyter/jupyterUriProviderRegistration';
 import { Settings } from '../../../platform/common/constants';
 import { HostJupyterExecution } from '../../../kernels/jupyter/launcher/liveshare/hostJupyterExecution';
-import { DataScienceErrorHandler } from '../../../platform/errors/errorHandler.node';
+import { DataScienceErrorHandler } from '../../../platform/errors/errorHandler';
 import { IJupyterExecution } from '../../../kernels/jupyter/types';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
