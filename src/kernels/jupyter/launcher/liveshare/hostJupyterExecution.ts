@@ -24,7 +24,9 @@ import {
     INotebookServer,
     INotebookStarter,
     IJupyterUriProviderRegistration,
-    INotebookServerFactory
+    IJupyterSessionManagerFactory,
+    INotebookServerFactory,
+    IJupyterServerUriStorage
 } from '../../types';
 import { IJupyterSubCommandExecutionService } from '../../types.node';
 
@@ -46,7 +48,9 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
         @optional()
         jupyterInterpreterService: IJupyterSubCommandExecutionService | undefined,
         @inject(IJupyterUriProviderRegistration) jupyterPickerRegistration: IJupyterUriProviderRegistration,
-        @inject(INotebookServerFactory) notebookServerFactory: INotebookServerFactory
+        @inject(IJupyterSessionManagerFactory) sessionManagerFactory: IJupyterSessionManagerFactory,
+        @inject(INotebookServerFactory) notebookServerFactory: INotebookServerFactory,
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
     ) {
         super(
             interpreterService,
@@ -56,9 +60,17 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
             notebookStarter,
             jupyterInterpreterService,
             jupyterPickerRegistration,
+            sessionManagerFactory,
             notebookServerFactory
         );
         this.serverCache = new ServerCache(workspace);
+        this.serverUriStorage.onDidChangeUri(
+            () => {
+                this.serverCache.clearCache();
+            },
+            this,
+            disposableRegistry
+        );
         asyncRegistry.push(this);
     }
 

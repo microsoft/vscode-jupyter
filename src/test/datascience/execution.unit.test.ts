@@ -61,6 +61,8 @@ import { IJupyterSubCommandExecutionService } from '../../kernels/jupyter/types.
 import { SystemVariables } from '../../platform/common/variables/systemVariables.node';
 import { getOSType, OSType } from '../../platform/common/utils/platform';
 import { JupyterUriProviderRegistration } from '../../kernels/jupyter/jupyterUriProviderRegistration';
+import { JupyterSessionManagerFactory } from '../../kernels/jupyter/session/jupyterSessionManagerFactory';
+import { JupyterServerUriStorage } from '../../kernels/jupyter/launcher/serverUriStorage';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 class DisposableRegistry implements IAsyncDisposableRegistry {
@@ -998,8 +1000,10 @@ suite('Jupyter Execution', async () => {
         when(kernelFinder.listKernels(anything(), anything())).thenResolve([kernelMetadata]);
         when(serviceContainer.get<NotebookStarter>(NotebookStarter)).thenReturn(notebookStarter);
         when(serviceContainer.get<ILocalKernelFinder>(ILocalKernelFinder)).thenReturn(instance(kernelFinder));
+        const sessionManagerFactory = mock(JupyterSessionManagerFactory);
         const serverFactory = mock<INotebookServerFactory>();
         const provider = mock(JupyterUriProviderRegistration);
+        const serverUriStorage = mock(JupyterServerUriStorage);
         return {
             executionService: activeService.object,
             jupyterExecution: new HostJupyterExecution(
@@ -1011,7 +1015,9 @@ suite('Jupyter Execution', async () => {
                 notebookStarter,
                 jupyterCmdExecutionService,
                 instance(provider),
-                instance(serverFactory)
+                instance(sessionManagerFactory),
+                instance(serverFactory),
+                instance(serverUriStorage)
             )
         };
     }

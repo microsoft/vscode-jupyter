@@ -17,6 +17,7 @@ import { IEnvironmentActivationService } from '../../platform/interpreter/activa
 import { IServiceContainer } from '../../platform/ioc/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IModuleInstaller, ModuleInstallerType, ModuleInstallFlags, Product } from './types';
+import { translateProductToModule } from './utils';
 
 export type ExecutionInstallArgs = {
     args: string[];
@@ -183,28 +184,4 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         interpreter: PythonEnvironment,
         flags?: ModuleInstallFlags
     ): Promise<ExecutionInstallArgs>;
-}
-
-export function translateProductToModule(product: Product): string {
-    switch (product) {
-        case Product.jupyter:
-            return 'jupyter';
-        case Product.notebook:
-            return 'notebook';
-        case Product.pandas:
-            return 'pandas';
-        case Product.ipykernel:
-            return 'ipykernel';
-        case Product.nbconvert:
-            return 'nbconvert';
-        case Product.kernelspec:
-            return 'kernelspec';
-        case Product.pip:
-            return 'pip';
-        case Product.ensurepip:
-            return 'ensurepip';
-        default: {
-            throw new Error(`Product ${product} cannot be installed as a Python Module.`);
-        }
-    }
 }
