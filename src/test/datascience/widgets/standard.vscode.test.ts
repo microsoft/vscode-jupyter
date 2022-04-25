@@ -249,14 +249,15 @@ suite.only('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
     test('Render matplotlib, non-interactive inline', async function () {
         // Skipping this test as the renderer is not a widget renderer, its an html renderer.
         // Need to modify that code too to add the classes so we can query the html rendered.
-        const comms = await initializeNotebook({ templateFile: 'matplotlib_widgets_inline.ipynb' });
+        await initializeNotebook({ templateFile: 'matplotlib_widgets_inline.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(2);
 
-        await executeCellAndWaitForOutput(cell, comms);
+        const mimTypes = () => cell.outputs.map((output) => output.items.map((item) => item.mime).join(',')).join(',');
+        await executeCellAndDontWaitForOutput(cell);
         await waitForCondition(
-            () => cell.outputs.some((output) => output.items.some((item) => item.mime.toLowerCase().includes('image'))),
+            () => mimTypes().toLowerCase().includes('image/'),
             defaultNotebookTestTimeout,
-            'Timeout waiting for matplotlib inline image'
+            () => `Timeout waiting for matplotlib inline image, got ${mimTypes()}`
         );
     });
     test.skip('Render matplotlib, widget', async function () {
