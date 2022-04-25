@@ -13,7 +13,7 @@ import { INotebookServerOptions, INotebookServer } from '../../types';
 
 interface IServerData {
     options: INotebookServerOptions;
-    promise: Promise<INotebookServer | undefined>;
+    promise: Promise<INotebookServer>;
     resolved: boolean;
 }
 
@@ -28,13 +28,10 @@ export class ServerCache implements IAsyncDisposable {
     }
 
     public async getOrCreate(
-        createFunction: (
-            options: INotebookServerOptions,
-            cancelToken: CancellationToken
-        ) => Promise<INotebookServer | undefined>,
+        createFunction: (options: INotebookServerOptions, cancelToken: CancellationToken) => Promise<INotebookServer>,
         options: INotebookServerOptions,
         cancelToken: CancellationToken
-    ): Promise<INotebookServer | undefined> {
+    ): Promise<INotebookServer> {
         const fixedOptions = await this.generateDefaultOptions(options);
         const key = this.generateKey(fixedOptions);
         let data: IServerData | undefined;
@@ -53,12 +50,7 @@ export class ServerCache implements IAsyncDisposable {
         }
 
         return data.promise
-            .then((server: INotebookServer | undefined) => {
-                if (!server) {
-                    this.cache.delete(key);
-                    return undefined;
-                }
-
+            .then((server: INotebookServer) => {
                 // Change the dispose on it so we
                 // can detach from the server when it goes away.
                 const oldDispose = server.dispose.bind(server);

@@ -286,9 +286,22 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         // Look for any controllers that we have disposed (no longer found when fetching)
         const disposedControllers = Array.from(this.registeredControllers.values()).filter((controller) => {
-            return !nonCachedConnections!.some((connection) => {
+            const connectionIsNoLongerValid = !nonCachedConnections.some((connection) => {
                 return connection.id === controller.connection.id;
             });
+
+            // Never remove remote kernels that don't exist.
+            // Always leave them there for user to select, and if the connection is not available/not valid,
+            // then notify the user and remove them.
+            if (
+                connectionIsNoLongerValid &&
+                (controller.connection.kind === 'connectToLiveRemoteKernel' ||
+                    controller.connection.kind === 'startUsingRemoteKernelSpec')
+            ) {
+                controller.flagRemoteKernelAsOutdated();
+                return true;
+            }
+            return connectionIsNoLongerValid;
         });
 
         // If we have any out of date connections, dispose of them

@@ -174,7 +174,10 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         cancelToken?: CancellationToken,
         useCache: 'ignoreCache' | 'useCache' = 'ignoreCache'
     ): Promise<KernelConnectionMetadata[]> {
-        let connInfo = isLocalLaunch(this.configurationService) ? undefined : await this.getConnectionInfo(cancelToken);
+        if (isLocalLaunch(this.configurationService)) {
+            return [];
+        }
+        const connInfo = await this.getConnectionInfo(cancelToken);
 
         return this.listKernelsUsingFinder(
             () =>
@@ -248,7 +251,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         return list;
     }
 
-    private async getConnectionInfo(cancelToken?: CancellationToken): Promise<INotebookProviderConnection | undefined> {
+    private async getConnectionInfo(cancelToken?: CancellationToken): Promise<INotebookProviderConnection> {
         const ui = new DisplayOptions(false);
         return this.notebookProvider.connect({
             resource: undefined,
