@@ -8,7 +8,6 @@
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": ["--extensionDevelopmentPath=${workspaceFolder}", "--enable-proposed-api"],
-            "stopOnEntry": false,
             "smartStep": true,
             "sourceMaps": true,
             "outFiles": ["${workspaceFolder}/out/**/*", "!${workspaceFolder}/**/node_modules**/*"],
@@ -62,7 +61,6 @@
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": ["--extensionDevelopmentPath=${workspaceFolder}", "--enable-proposed-api"],
-            "stopOnEntry": false,
             "smartStep": true,
             "sourceMaps": true,
             "outFiles": ["${workspaceFolder}/out/**/*", "!${workspaceFolder}/**/node_modules**/*"],
@@ -90,7 +88,6 @@
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": ["--extensionDevelopmentPath=${workspaceFolder}", "${workspaceFolder}/data"],
-            "stopOnEntry": false,
             "smartStep": true,
             "sourceMaps": true,
             "outFiles": ["${workspaceFolder}/out/**/*", "!${workspaceFolder}/**/node_modules**/*"],
@@ -137,7 +134,6 @@
                 "VSC_JUPYTER_SMOKE_TEST": "1",
                 "VSC_JUPYTER_CI_TEST_GREP": "Smoke Test"
             },
-            "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile",
@@ -161,7 +157,6 @@
             "env": {
                 "VSC_JUPYTER_CI_TEST_GREP": "Language Server:"
             },
-            "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "preTestJediLSP",
@@ -197,7 +192,6 @@
                 "XVSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE_HTML": "1", //Enable to get full coverage repor (in coverage folder).
                 "VSC_JUPYTER_EXPOSE_SVC": "1"
             },
-            "stopOnEntry": false,
             "sourceMaps": true,
             "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile",
@@ -212,7 +206,6 @@
             "type": "node",
             "request": "launch",
             "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
-            "stopOnEntry": false,
             "sourceMaps": true,
             "args": [
                 "./out/**/*.unit.test.js",
