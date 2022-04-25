@@ -4,7 +4,7 @@
 import '../../../../platform/common/extensions';
 
 import { CancellationToken } from 'vscode-jsonrpc';
-import { injectable, inject, named } from 'inversify';
+import { inject, named } from 'inversify';
 import { IWorkspaceService } from '../../../../platform/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../../platform/common/constants';
 import { traceInfo, traceError, traceInfoIfCI } from '../../../../platform/logging';
@@ -38,7 +38,6 @@ import { INotebookServer } from '../../types';
 import { Uri } from 'vscode';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-@injectable()
 export class HostJupyterServer implements INotebookServer {
     private connectionInfoDisconnectHandler: IDisposable | undefined;
     private serverExitCode: number | undefined;
