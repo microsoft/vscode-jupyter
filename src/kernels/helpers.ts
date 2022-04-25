@@ -266,36 +266,26 @@ function isKernelSpecExactMatch(
     }
     const kernelConnectionKernelSpec = kernelConnection.kernelSpec;
 
-    // Get our correct kernelspec name and display_name from the connection
+    // Get our correct kernelspec name from the connection
     const connectionOriginalSpecFile =
         kernelConnectionKernelSpec.metadata?.vscode?.originalSpecFile ||
         kernelConnectionKernelSpec.metadata?.originalSpecFile;
     const connectionKernelSpecName = connectionOriginalSpecFile
         ? path.basename(path.dirname(connectionOriginalSpecFile))
         : kernelConnectionKernelSpec?.name || '';
-    const connectionKernelSpecDisplayName =
-        kernelConnectionKernelSpec.metadata?.vscode?.originalDisplayName ||
-        kernelConnectionKernelSpec.display_name ||
-        '';
     const connectionInterpreterEnvName = kernelConnection.interpreter?.envName;
+    const metadataNameIsDefaultName = isDefaultKernelSpec({
+        argv: [],
+        display_name: notebookMetadataKernelSpec.display_name,
+        name: notebookMetadataKernelSpec.name,
+        uri: Uri.file('')
+    });
 
-    if (
-        allowPythonDefaultMatch &&
-        connectionKernelSpecDisplayName === notebookMetadataKernelSpec.display_name &&
-        (connectionKernelSpecName === notebookMetadataKernelSpec.name ||
-            connectionInterpreterEnvName === notebookMetadataKernelSpec.name)
-    ) {
-        // If default match is ok, just check name or interpreter env name
+    if (allowPythonDefaultMatch && metadataNameIsDefaultName) {
+        // If default is allowed (due to interpreter hash match) and the metadata name is a default name then allow the match
         return true;
     } else if (
-        !allowPythonDefaultMatch &&
-        !isDefaultKernelSpec({
-            argv: [],
-            display_name: notebookMetadataKernelSpec.display_name,
-            name: notebookMetadataKernelSpec.name,
-            uri: Uri.file('')
-        }) &&
-        connectionKernelSpecDisplayName === notebookMetadataKernelSpec.display_name &&
+        !metadataNameIsDefaultName &&
         (connectionKernelSpecName === notebookMetadataKernelSpec.name ||
             connectionInterpreterEnvName === notebookMetadataKernelSpec.name)
     ) {

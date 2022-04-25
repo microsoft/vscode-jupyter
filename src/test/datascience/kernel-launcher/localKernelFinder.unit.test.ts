@@ -1728,31 +1728,6 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
             );
             assert.isFalse(isExactMatch);
         });
-        test('isExactMatch fails match on display_name w/o interpreter', async () => {
-            const testData: TestData = {};
-            await initialize(testData);
-            const nbUri = Uri.file('test.ipynb');
-
-            const isExactMatch = kernelFinder.isExactMatch(
-                nbUri,
-                {
-                    kind: 'startUsingLocalKernelSpec',
-                    id: '',
-                    kernelSpec: {
-                        argv: [],
-                        display_name: 'display_nameJUNK', // JUNK here
-                        name: 'namea',
-                        uri: Uri.file('path')
-                    }
-                },
-                {
-                    language_info: { name: PYTHON_LANGUAGE },
-                    orig_nbformat: 4,
-                    kernelspec: { name: 'namea', display_name: 'display_namea' }
-                }
-            );
-            assert.isFalse(isExactMatch);
-        });
     });
 });
 
