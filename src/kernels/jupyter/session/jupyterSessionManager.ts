@@ -329,7 +329,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             Headers: this.requestCreator.getHeadersCtor()
         };
 
-        traceInfo(`Creating server with settings : ${JSON.stringify(serverSettings)}`);
+        traceInfo(`Creating server with url : ${serverSettings.baseUrl}`);
         return this.jupyterlab.ServerConnection.makeSettings(serverSettings);
     }
 
