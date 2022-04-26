@@ -172,10 +172,9 @@ export function rankKernelsImpl(
     traceInfoIfCI(`preferredInterpreterKernelSpecIndex = ${preferredInterpreterKernelSpec?.id}`);
 
     // Figure out our possible language from the metadata
-    notebookMetadata?.language_info?.name || (notebookMetadata?.kernelspec as undefined | IJupyterKernelSpec)?.language;
     const actualNbMetadataLanguage: string | undefined =
-        notebookMetadata?.language_info?.name ||
-        (notebookMetadata?.kernelspec as undefined | IJupyterKernelSpec)?.language;
+        notebookMetadata?.language_info?.name.toLowerCase() ||
+        (notebookMetadata?.kernelspec as undefined | IJupyterKernelSpec)?.language?.toLowerCase();
     let possibleNbMetadataLanguage = actualNbMetadataLanguage;
 
     // If the notebook has a language set, remove anything not that language as we don't want to rank those items
@@ -186,7 +185,7 @@ export function rankKernelsImpl(
             !notebookMetadata?.kernelspec &&
             kernel.kind !== 'connectToLiveRemoteKernel' &&
             kernel.kernelSpec.language &&
-            kernel.kernelSpec.language !== possibleNbMetadataLanguage
+            kernel.kernelSpec.language.toLowerCase() !== possibleNbMetadataLanguage
         ) {
             return false;
         }
@@ -334,22 +333,22 @@ export function compareKernels(
         return 1;
     }
 
+    const aLang = a.kernelSpec.language?.toLowerCase();
+    const bLang = b.kernelSpec.language?.toLowerCase();
+
     if (!notebookMetadata?.kernelspec) {
         if (possibleNbMetadataLanguage) {
             if (
                 possibleNbMetadataLanguage === PYTHON_LANGUAGE &&
-                a.kernelSpec.language === b.kernelSpec.language &&
-                a.kernelSpec.language === possibleNbMetadataLanguage
+                aLang === bLang &&
+                aLang === possibleNbMetadataLanguage
             ) {
                 // Fall back to returning the active interpreter (further below).
-            } else if (
-                a.kernelSpec.language === b.kernelSpec.language &&
-                a.kernelSpec.language === possibleNbMetadataLanguage
-            ) {
+            } else if (aLang === bLang && aLang === possibleNbMetadataLanguage) {
                 return 0;
-            } else if (a.kernelSpec.language === possibleNbMetadataLanguage) {
+            } else if (aLang === possibleNbMetadataLanguage) {
                 return 1;
-            } else if (b.kernelSpec.language === possibleNbMetadataLanguage) {
+            } else if (bLang === possibleNbMetadataLanguage) {
                 return -1;
             }
         }
@@ -381,22 +380,11 @@ export function compareKernels(
     // Special simple comparison algorithm for Non-Python notebooks.
     if (possibleNbMetadataLanguage && possibleNbMetadataLanguage !== PYTHON_LANGUAGE) {
         // If this isn't a python notebook, then just look at the name & display name.
-        if (
-            a.kernelSpec.language &&
-            b.kernelSpec.language &&
-            a.kernelSpec.language !== possibleNbMetadataLanguage &&
-            b.kernelSpec.language !== possibleNbMetadataLanguage
-        ) {
+        if (aLang && bLang && aLang !== possibleNbMetadataLanguage && bLang !== possibleNbMetadataLanguage) {
             return 0;
-        } else if (
-            a.kernelSpec.language === possibleNbMetadataLanguage &&
-            b.kernelSpec.language !== possibleNbMetadataLanguage
-        ) {
+        } else if (aLang === possibleNbMetadataLanguage && bLang !== possibleNbMetadataLanguage) {
             return 1;
-        } else if (
-            a.kernelSpec.language !== possibleNbMetadataLanguage &&
-            b.kernelSpec.language === possibleNbMetadataLanguage
-        ) {
+        } else if (aLang !== possibleNbMetadataLanguage && bLang === possibleNbMetadataLanguage) {
             return -1;
         } else if (
             kernelSpecNameOfA &&
@@ -443,7 +431,7 @@ export function compareKernels(
             kernelSpecNameOfA !== kernelSpecNameOfB &&
             kernelSpecDisplayNameOfA !== kernelSpecDisplayNameOfB &&
             a.kind === 'startUsingLocalKernelSpec' &&
-            a.kernelSpec.language !== PYTHON_LANGUAGE &&
+            aLang !== PYTHON_LANGUAGE &&
             kernelSpecNameOfA === notebookMetadata.kernelspec.name &&
             kernelSpecDisplayNameOfA === notebookMetadata.kernelspec.display_name
         ) {
@@ -455,7 +443,7 @@ export function compareKernels(
             kernelSpecNameOfA !== kernelSpecNameOfB &&
             kernelSpecDisplayNameOfA !== kernelSpecDisplayNameOfB &&
             b.kind === 'startUsingLocalKernelSpec' &&
-            b.kernelSpec.language !== PYTHON_LANGUAGE &&
+            bLang !== PYTHON_LANGUAGE &&
             kernelSpecNameOfB === notebookMetadata.kernelspec.name &&
             kernelSpecDisplayNameOfB === notebookMetadata.kernelspec.display_name
         ) {
@@ -468,13 +456,13 @@ export function compareKernels(
     //
 
     // Check if one of them is non-python.
-    if (a.kernelSpec.language && b.kernelSpec.language) {
-        if (a.kernelSpec.language === b.kernelSpec.language) {
-            if (a.kernelSpec.language !== PYTHON_LANGUAGE) {
+    if (aLang && bLang) {
+        if (aLang === bLang) {
+            if (aLang !== PYTHON_LANGUAGE) {
                 return 0;
             }
         } else {
-            return a.kernelSpec.language === PYTHON_LANGUAGE ? 1 : -1;
+            return aLang === PYTHON_LANGUAGE ? 1 : -1;
         }
     }
 
