@@ -174,9 +174,11 @@ module.exports = {
         'eslint-plugin-react',
         '@typescript-eslint',
         '@typescript-eslint/tslint',
-        'eslint-plugin-local-rules'
+        'eslint-plugin-local-rules',
+        'no-only-tests'
     ],
     rules: {
+        'no-only-tests/no-only-tests': 'error',
         // Overriding ESLint rules with Typescript-specific ones
         '@typescript-eslint/ban-ts-comment': [
             'error',
