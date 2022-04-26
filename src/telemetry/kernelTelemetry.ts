@@ -18,6 +18,8 @@ export function sendKernelListTelemetry(
         kernelSpecCount: 0,
         kernelInterpreterCount: 0,
         kernelLiveCount: 0,
+        kernelLiveLocalCount: 0,
+        kernelLiveRemoteCount: 0,
         condaEnvsSharingSameInterpreter: 0
     };
     const uniqueCondaInterpreterPaths = new ResourceSet();
@@ -25,6 +27,10 @@ export function sendKernelListTelemetry(
         switch (item.kind) {
             case 'connectToLiveRemoteKernel':
                 counters.kernelLiveCount += 1;
+                counters.kernelLiveRemoteCount += 1;
+                break;
+            case 'connectToLiveLocalKernel':
+                counters.kernelLiveLocalCount += 1;
                 break;
             case 'startUsingRemoteKernelSpec':
             case 'startUsingLocalKernelSpec':

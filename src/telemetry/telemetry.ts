@@ -218,6 +218,7 @@ export function trackKernelResourceInformation(resource: Resource, information: 
                 language = kernelConnection.kernelModel.language;
                 break;
             case 'startUsingRemoteKernelSpec':
+            case 'connectToLiveLocalKernel':
             case 'startUsingLocalKernelSpec':
                 language = kernelConnection.kernelSpec.language;
                 break;

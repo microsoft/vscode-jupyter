@@ -78,20 +78,19 @@ export class CellExecutionFactory {
         private readonly kernel: IKernel,
         private readonly appShell: IApplicationShell,
         private readonly disposables: IDisposableRegistry,
-        private readonly controller: NotebookController,
         private readonly outputTracker: CellOutputDisplayIdTracker,
         private readonly cellHashProviderFactory: CellHashProviderFactory,
         private readonly context: IExtensionContext
     ) {}
 
-    public create(cell: NotebookCell, metadata: Readonly<KernelConnectionMetadata>) {
+    public create(cell: NotebookCell, metadata: Readonly<KernelConnectionMetadata>, controller: NotebookController) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         return CellExecution.fromCell(
             cell,
             this.appShell,
             metadata,
             this.disposables,
-            this.controller,
+            controller,
             this.outputTracker,
             this.cellHashProviderFactory.getOrCreate(this.kernel),
             this.context

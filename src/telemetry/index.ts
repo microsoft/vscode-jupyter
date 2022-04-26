@@ -492,6 +492,7 @@ export interface IEventNamePropertyMapping {
         kernelConnectionType:
             | 'startUsingLocalKernelSpec'
             | 'startUsingPythonInterpreter'
+            | 'connectToLiveLocalKernel'
             | 'startUsingRemoteKernelSpec';
     };
     /**
@@ -1490,6 +1491,7 @@ export interface IEventNamePropertyMapping {
             | 'startUsingDefaultKernel'
             | 'startUsingLocalKernelSpec'
             | 'startUsingRemoteKernelSpec'
+            | 'connectToLiveLocalKernel'
             | 'connectToLiveRemoteKernel';
     } & Partial<TelemetryErrorProperties>;
     /*

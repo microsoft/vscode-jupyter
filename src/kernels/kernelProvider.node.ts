@@ -20,6 +20,7 @@ import { Kernel } from './kernel.node';
 import { IKernel, INotebookProvider, KernelOptions } from './types';
 import { IStatusProvider } from '../platform/progress/types';
 import { BaseKernelProvider } from './kernelProvider.base';
+import { getDisplayPath } from '../platform/common/platform/fs-paths';
 
 @injectable()
 export class KernelProvider extends BaseKernelProvider {
@@ -42,8 +43,18 @@ export class KernelProvider extends BaseKernelProvider {
     }
 
     public getOrCreate(uri: Uri, options: KernelOptions): IKernel {
-        const existingKernelInfo = this.getInternal(uri);
         const notebook = workspace.notebookDocuments.find((nb) => nb.uri.toString() === uri.toString());
+        // If we're connecting to a live local kernel, then Uri will point to the Uri of the original kernel.
+        if (options.metadata.kind === 'connectToLiveLocalKernel') {
+            const kernelId = options.metadata.kernelId;
+            const kernel = this.kernels.find((item) => item.id.toString() === kernelId.toString());
+            if (!kernel) {
+                throw new Error(`Could not find kernel with id: ${getDisplayPath(kernelId)}`);
+            }
+            // kernel.connectedResourceUris.add(uri.toString());
+            return kernel;
+        }
+        const existingKernelInfo = this.getInternal(uri);
         if (existingKernelInfo && existingKernelInfo.options.metadata.id === options.metadata.id) {
             return existingKernelInfo.kernel;
         }
@@ -72,6 +83,7 @@ export class KernelProvider extends BaseKernelProvider {
             options.creator,
             this.context
         );
+        // kernel.connectedResourceUris.add(uri.toString());
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);
         kernel.onStarted(() => this._onDidStartKernel.fire(kernel), this, this.disposables);

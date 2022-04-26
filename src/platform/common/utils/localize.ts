@@ -1035,6 +1035,10 @@ export namespace DataScience {
         'jupyter.kernel.category.jupyterRemoteKernel',
         '(Remote) Jupyter Kernel'
     );
+    export const kernelCategoryForLocalLiveJupyterKernel = localize(
+        'jupyter.kernel.category.jupyterLocalLiveKernel',
+        '(Local Live) Jupyter Kernel'
+    );
     export const kernelCategoryForConda = localize('jupyter.kernel.category.conda', 'Conda Env');
     export const kernelCategoryForPoetry = localize('jupyter.kernel.category.poetry', 'Poetry Env');
     export const kernelCategoryForPipEnv = localize('jupyter.kernel.category.pipenv', 'Pipenv Env');

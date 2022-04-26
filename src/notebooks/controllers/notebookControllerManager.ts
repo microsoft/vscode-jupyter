@@ -11,7 +11,8 @@ import {
     ICommandManager,
     IWorkspaceService,
     IDocumentManager,
-    IApplicationShell
+    IApplicationShell,
+    IApplicationEnvironment
 } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import {
@@ -30,7 +31,8 @@ import {
     IExtensionContext,
     IBrowserService,
     Resource,
-    IsWebExtension
+    IsWebExtension,
+    IsPreRelease
 } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
@@ -48,7 +50,8 @@ import {
     IKernelProvider,
     KernelConnectionMetadata,
     PythonKernelConnectionMetadata,
-    IKernelFinder
+    IKernelFinder,
+    IKernel
 } from '../../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from '../constants';
 import { isPythonNotebook, getNotebookMetadata } from '../helpers';
@@ -61,6 +64,7 @@ import { IVSCodeNotebookController } from './types';
 import {
     createInterpreterKernelSpec,
     findKernelSpecMatchingInterpreter,
+    createLiveLocalKernelConnectionMetadata,
     getDisplayNameOrNameOfKernelConnection,
     getKernelId,
     getLanguageInNotebookMetadata,
@@ -147,7 +151,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(IBrowserService) private readonly browser: IBrowserService,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(IsWebExtension) private readonly isWeb: boolean
+        @inject(IsWebExtension) private readonly isWeb: boolean,
+        @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
+        @inject(IsPreRelease) private readonly isPreRelease: Promise<boolean>
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -181,12 +187,35 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // Make sure to reload whenever we do something that changes state
         const forceLoad = () => this.loadNotebookControllers(true);
         this.serverUriStorage.onDidChangeUri(forceLoad, this, this.disposables);
-        this.kernelProvider.onDidStartKernel(forceLoad, this, this.disposables);
-
+        this.kernelProvider.onDidStartKernel(
+            (kernel) => {
+                forceLoad().catch(noop);
+                // For jupyter notebooks we auto start kernels, in such cases
+                // don't add a controller to the list, not until the user runs a cell.
+                if (kernel.resourceUri?.toString()?.toLowerCase()?.endsWith('.ipynb')) {
+                    // Wait till user executes a cell.
+                    const disposable = kernel.onPreExecute(
+                        () => {
+                            disposable.dispose();
+                            this.addLocalLiveKernelController(kernel).catch(noop);
+                        },
+                        this,
+                        this.disposables
+                    );
+                } else {
+                    this.addLocalLiveKernelController(kernel).catch(noop);
+                }
+            },
+            this,
+            this.disposables
+        );
         // For kernel dispose we need to wait a bit, otherwise the list comes back the
         // same
         this.kernelProvider.onDidDisposeKernel(
-            () => setTimeout(forceLoad, REMOTE_KERNEL_REFRESH_INTERVAL),
+            (k) => {
+                setTimeout(forceLoad, REMOTE_KERNEL_REFRESH_INTERVAL);
+                this.removeLocalLiveKernelController(k);
+            },
             this,
             this.disposables
         );
@@ -268,6 +297,32 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         return this.controllersPromise;
     }
 
+    private async addLocalLiveKernelController(kernel: IKernel) {
+        // For now connecting to live local kernels is limited to Insiders or the pre-release channel.
+        if (this.appEnv.channel === 'insiders' || (await this.isPreRelease)) {
+            const connection = createLiveLocalKernelConnectionMetadata(kernel);
+            if (connection) {
+                this.createNotebookControllers([connection]);
+            }
+        }
+    }
+    private removeLocalLiveKernelController(kernel: IKernel) {
+        const connection = createLiveLocalKernelConnectionMetadata(kernel);
+        if (connection) {
+            Array.from(this.registeredControllers.values())
+                .filter((item) => {
+                    if (
+                        item.connection.kind === 'connectToLiveLocalKernel' &&
+                        item.connection.id === connection.id &&
+                        item.connection.kernelId === kernel.id
+                    ) {
+                        return true;
+                    }
+                    return false;
+                })
+                .forEach((item) => item.dispose());
+        }
+    }
     private async loadNotebookControllersImpl(cancelToken: CancellationToken) {
         const cachedConnections = await this.listKernels(cancelToken, 'useCache');
         const nonCachedConnectionsPromise = this.listKernels(cancelToken, 'ignoreCache');
@@ -325,11 +380,13 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         });
 
         // If we have any out of date connections, dispose of them
-        disposedControllers.forEach((controller) => {
-            this.registeredControllers.delete(controller.id);
-            traceInfoIfCI(`Disposing controller ${controller.id}`);
-            controller.dispose();
-        });
+        disposedControllers
+            .filter((controller) => controller.connection.kind !== 'connectToLiveLocalKernel')
+            .forEach((controller) => {
+                this.registeredControllers.delete(controller.id);
+                traceInfoIfCI(`Disposing controller ${controller.id}`);
+                controller.dispose();
+            });
 
         // If any of our non cached controllers were remote, indicate a remote refresh
         const liveConnections = nonCachedConnections.filter(
@@ -756,6 +813,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         if (
                             isPythonKernelConnection(kernelConnection) &&
                             (kernelConnection.kind === 'startUsingLocalKernelSpec' ||
+                                kernelConnection.kind === 'connectToLiveLocalKernel' ||
                                 kernelConnection.kind === 'startUsingPythonInterpreter')
                         ) {
                             controller.updateInterpreterDetails(kernelConnection);

@@ -16,7 +16,9 @@ import {
     LiveRemoteKernelConnectionMetadata,
     PythonKernelConnectionMetadata,
     IJupyterKernelSpec,
-    IJupyterSession
+    IJupyterSession,
+    IKernel,
+    LiveLocalKernelConnectionMetadata
 } from './types';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../platform/common/application/types';
@@ -1100,55 +1102,55 @@ export function getDisplayNameOrNameOfKernelConnection(kernelConnection: KernelC
     if (!kernelConnection) {
         return oldDisplayName;
     }
-    switch (kernelConnection.kind) {
-        case 'connectToLiveRemoteKernel': {
-            const notebookPath = removeNotebookSuffixAddedByExtension(
-                kernelConnection.kernelModel?.notebook?.path || kernelConnection.kernelModel?.model?.path || ''
-            );
-            return notebookPath ? `${oldDisplayName} (${notebookPath})` : oldDisplayName;
-        }
-        case 'startUsingRemoteKernelSpec':
-        case 'startUsingLocalKernelSpec': {
-            if (
-                kernelConnection.interpreter?.envType &&
-                kernelConnection.interpreter.envType !== EnvironmentType.Global
-            ) {
-                const envName = getPythonEnvironmentName(kernelConnection.interpreter);
-                if (kernelConnection.kernelSpec.language === PYTHON_LANGUAGE) {
-                    const pythonVersion = `Python ${
-                        getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
-                    }`.trim();
-                    return kernelConnection.interpreter.envName
-                        ? `${oldDisplayName} (${pythonVersion})`
-                        : oldDisplayName;
-                } else {
-                    // Non-Python kernelspec that launches via python interpreter
-                    return envName ? `${oldDisplayName} (${envName})` : oldDisplayName;
-                }
-            } else {
-                return oldDisplayName;
-            }
-        }
-        case 'startUsingPythonInterpreter':
-            if (
-                kernelConnection.interpreter.envType &&
-                kernelConnection.interpreter.envType !== EnvironmentType.Global
-            ) {
+    // const kind = kernelConnection.kind === 'connectToLiveLocalKernel' ? kernelConnection.kernelConnectionMetadataKind : kernelConnection.kind;
+    if (kernelConnection.kind === 'connectToLiveRemoteKernel') {
+        const notebookPath = removeNotebookSuffixAddedByExtension(
+            kernelConnection.kernelModel?.notebook?.path || kernelConnection.kernelModel?.model?.path || ''
+        );
+        return notebookPath ? `${oldDisplayName} (${notebookPath})` : oldDisplayName;
+    }
+    if (
+        kernelConnection.kind === 'startUsingRemoteKernelSpec' ||
+        kernelConnection.kind === 'startUsingLocalKernelSpec' ||
+        (kernelConnection.kind === 'connectToLiveLocalKernel' &&
+            kernelConnection.kernelConnectionMetadataKind === 'startUsingLocalKernelSpec')
+    ) {
+        if (kernelConnection.interpreter?.envType && kernelConnection.interpreter.envType !== EnvironmentType.Global) {
+            const envName = getPythonEnvironmentName(kernelConnection.interpreter);
+            if (kernelConnection.kernelSpec.language === PYTHON_LANGUAGE) {
                 const pythonVersion = `Python ${
                     getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
                 }`.trim();
-                // If user has created a custom kernelspec, then use that.
-                if (
-                    kernelConnection.kernelSpec.display_name &&
-                    getKernelRegistrationInfo(kernelConnection.kernelSpec) ===
-                        'registeredByNewVersionOfExtForCustomKernelSpec'
-                ) {
-                    return kernelConnection.kernelSpec.display_name;
-                }
-                const pythonDisplayName = pythonVersion.trim();
-                const envName = getPythonEnvironmentName(kernelConnection.interpreter);
-                return envName ? `${envName} (${pythonDisplayName})` : pythonDisplayName;
+                return kernelConnection.interpreter.envName ? `${oldDisplayName} (${pythonVersion})` : oldDisplayName;
+            } else {
+                // Non-Python kernelspec that launches via python interpreter
+                return envName ? `${oldDisplayName} (${envName})` : oldDisplayName;
             }
+        } else {
+            return oldDisplayName;
+        }
+    }
+    if (
+        kernelConnection.kind === 'startUsingPythonInterpreter' ||
+        (kernelConnection.kind === 'connectToLiveLocalKernel' &&
+            kernelConnection.kernelConnectionMetadataKind === 'startUsingPythonInterpreter')
+    ) {
+        if (kernelConnection.interpreter.envType && kernelConnection.interpreter.envType !== EnvironmentType.Global) {
+            const pythonVersion = `Python ${
+                getTelemetrySafeVersion(kernelConnection.interpreter.version?.raw || '') || ''
+            }`.trim();
+            // If user has created a custom kernelspec, then use that.
+            if (
+                kernelConnection.kernelSpec.display_name &&
+                getKernelRegistrationInfo(kernelConnection.kernelSpec) ===
+                    'registeredByNewVersionOfExtForCustomKernelSpec'
+            ) {
+                return kernelConnection.kernelSpec.display_name;
+            }
+            const pythonDisplayName = pythonVersion.trim();
+            const envName = getPythonEnvironmentName(kernelConnection.interpreter);
+            return envName ? `${envName} (${pythonDisplayName})` : pythonDisplayName;
+        }
     }
     return oldDisplayName;
 }
@@ -1573,4 +1575,30 @@ export function deserializeKernelConnection(kernelConnection: any): KernelConnec
         };
     }
     return kernelConnection;
+}
+
+export function createLiveLocalKernelConnectionMetadata(
+    kernel: IKernel
+): LiveLocalKernelConnectionMetadata | undefined {
+    if (kernel.kernelConnectionMetadata.kind === 'startUsingLocalKernelSpec') {
+        return {
+            id: `liveLocal:${kernel.kernelConnectionMetadata.id}`,
+            kernelId: kernel.id,
+            kernelSpec: kernel.kernelConnectionMetadata.kernelSpec,
+            kernelConnectionMetadataKind: kernel.kernelConnectionMetadata.kind,
+            kind: 'connectToLiveLocalKernel',
+            interpreter: kernel.kernelConnectionMetadata.interpreter,
+            kernelModel: undefined
+        };
+    } else if (kernel.kernelConnectionMetadata.kind === 'startUsingPythonInterpreter') {
+        return {
+            id: `liveLocal:${kernel.kernelConnectionMetadata.id}`,
+            kernelId: kernel.id,
+            kernelSpec: kernel.kernelConnectionMetadata.kernelSpec,
+            kernelConnectionMetadataKind: kernel.kernelConnectionMetadata.kind,
+            kind: 'connectToLiveLocalKernel',
+            interpreter: kernel.kernelConnectionMetadata.interpreter,
+            kernelModel: undefined
+        };
+    }
 }

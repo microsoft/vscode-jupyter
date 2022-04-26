@@ -6,15 +6,7 @@
 import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import type { Observable } from 'rxjs/Observable';
 import type { JSONObject } from '@lumino/coreutils';
-import type {
-    CancellationToken,
-    Disposable,
-    Event,
-    NotebookCell,
-    NotebookController,
-    QuickPickItem,
-    Uri
-} from 'vscode';
+import { CancellationToken, Disposable, Event, NotebookCell, NotebookController, QuickPickItem, Uri } from 'vscode';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { IAsyncDisposable, IDisplayOptions, Resource } from '../platform/common/types';
@@ -31,7 +23,7 @@ export enum NotebookCellRunState {
     Error = 'Error'
 }
 /**
- * Connection metadata for Live Kernels.
+ * Connection metadata for Live Remote Kernels.
  * With this we are able connect to an existing kernel (instead of starting a new session).
  */
 export type LiveRemoteKernelConnectionMetadata = Readonly<{
@@ -45,6 +37,41 @@ export type LiveRemoteKernelConnectionMetadata = Readonly<{
     serverId: string;
     id: string;
 }>;
+/**
+ * Connection metadata for Live Local Kernels.
+ * With this we are able connect to an existing kernel (instead of starting a new session).
+ */
+export type LiveLocalKernelConnectionMetadata =
+    | Readonly<{
+          kernelModel?: undefined;
+          kernelSpec: IJupyterKernelSpec;
+          /**
+           * Python interpreter will be used for intellisense & the like.
+           */
+          interpreter?: PythonEnvironment;
+          /**
+           * The Id of the Local kernel we'd like to connect to.
+           */
+          kernelId: Uri;
+          kernelConnectionMetadataKind: LocalKernelSpecConnectionMetadata['kind'];
+          kind: 'connectToLiveLocalKernel';
+          id: string;
+      }>
+    | Readonly<{
+          kernelModel?: undefined;
+          kernelSpec: IJupyterKernelSpec;
+          /**
+           * Python interpreter will be used for intellisense & the like.
+           */
+          interpreter: PythonEnvironment;
+          /**
+           * The Id of the Local kernel we'd like to connect to.
+           */
+          kernelId: Uri;
+          kernelConnectionMetadataKind: PythonKernelConnectionMetadata['kind'];
+          kind: 'connectToLiveLocalKernel';
+          id: string;
+      }>;
 /**
  * Connection metadata for Kernels started using kernelspec (JSON).
  * This could be a raw kernel (spec might have path to executable for .NET or the like).
@@ -100,6 +127,7 @@ export type KernelConnectionMetadata = RemoteKernelConnectionMetadata | LocalKer
  */
 export type LocalKernelConnectionMetadata =
     | Readonly<LocalKernelSpecConnectionMetadata>
+    | Readonly<LiveLocalKernelConnectionMetadata>
     | Readonly<PythonKernelConnectionMetadata>;
 
 /**
@@ -118,17 +146,20 @@ export function isLocalConnection(
     kernelConnection: KernelConnectionMetadata
 ): kernelConnection is LocalKernelConnectionMetadata {
     return (
-        kernelConnection.kind === 'startUsingLocalKernelSpec' || kernelConnection.kind === 'startUsingPythonInterpreter'
+        kernelConnection.kind === 'startUsingLocalKernelSpec' ||
+        kernelConnection.kind === 'connectToLiveLocalKernel' ||
+        kernelConnection.kind === 'startUsingPythonInterpreter'
     );
 }
 
 export interface IKernel extends IAsyncDisposable {
     readonly connection: INotebookProviderConnection | undefined;
+    // readonly connectedResourceUris: Set<string>;
     readonly id: Uri;
     /**;
      * In the case of Notebooks, this is the same as the Notebook Uri.
      * But in the case of Interactive Window, this is the Uri of the file (such as the Python file).
-     * However if we create an intearctive window without a file, then this is undefined.
+     * However if we create an interactive window without a file, then this is undefined.
      */
     readonly resourceUri: Resource;
     /**
@@ -182,7 +213,7 @@ export interface IKernel extends IAsyncDisposable {
     start(options?: IDisplayOptions): Promise<void>;
     interrupt(): Promise<void>;
     restart(): Promise<void>;
-    executeCell(cell: NotebookCell): Promise<NotebookCellRunState>;
+    executeCell(cell: NotebookCell, controller: NotebookController): Promise<NotebookCellRunState>;
     /**
      * Executes arbitrary code against the kernel without incrementing the execution count.
      */

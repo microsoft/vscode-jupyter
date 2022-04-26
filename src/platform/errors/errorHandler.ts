@@ -107,6 +107,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         } else if (
             (error instanceof KernelDiedError || error instanceof KernelProcessExitedError) &&
             (error.kernelConnectionMetadata.kind === 'startUsingLocalKernelSpec' ||
+                error.kernelConnectionMetadata.kind === 'connectToLiveLocalKernel' ||
                 error.kernelConnectionMetadata.kind === 'startUsingPythonInterpreter') &&
             error.kernelConnectionMetadata.interpreter &&
             this.kernelDependency &&

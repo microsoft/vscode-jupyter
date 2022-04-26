@@ -191,12 +191,12 @@ export abstract class BaseKernel implements IKernel {
     public get pendingCells(): readonly NotebookCell[] {
         return this.kernelExecution.queue;
     }
-    public async executeCell(cell: NotebookCell): Promise<NotebookCellRunState> {
+    public async executeCell(cell: NotebookCell, controller: NotebookController): Promise<NotebookCellRunState> {
         traceCellMessage(cell, `kernel.executeCell, ${getDisplayPath(cell.notebook.uri)}`);
         sendKernelTelemetryEvent(this.resourceUri, Telemetry.ExecuteCell);
         const stopWatch = new StopWatch();
         const sessionPromise = this.startNotebook().then((nb) => nb.session);
-        const promise = this.kernelExecution.executeCell(sessionPromise, cell);
+        const promise = this.kernelExecution.executeCell(sessionPromise, cell, controller);
         this.trackNotebookCellPerceivedColdTime(stopWatch, sessionPromise, promise).catch(noop);
         void promise.then((state) => traceInfo(`Cell ${cell.index} executed with state ${state}`));
         return promise;

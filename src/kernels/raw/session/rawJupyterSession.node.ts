@@ -233,6 +233,7 @@ export class RawJupyterSession extends BaseJupyterSession {
     private async startRawSession(options: { token: CancellationToken; ui: IDisplayOptions }): Promise<RawSession> {
         if (
             this.kernelConnectionMetadata.kind !== 'startUsingLocalKernelSpec' &&
+            this.kernelConnectionMetadata.kind !== 'connectToLiveLocalKernel' &&
             this.kernelConnectionMetadata.kind !== 'startUsingPythonInterpreter'
         ) {
             throw new Error(

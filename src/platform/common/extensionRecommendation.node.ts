@@ -85,6 +85,7 @@ export class ExtensionRecommendationService implements IExtensionSyncActivationS
     private onNotebookControllerSelected({ controller }: { controller: IVSCodeNotebookController }) {
         if (
             controller.connection.kind !== 'startUsingLocalKernelSpec' &&
+            controller.connection.kind !== 'connectToLiveLocalKernel' &&
             controller.connection.kind !== 'startUsingRemoteKernelSpec'
         ) {
             return;

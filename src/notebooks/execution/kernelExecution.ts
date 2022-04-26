@@ -45,7 +45,6 @@ export class KernelExecution implements IDisposable {
         readonly metadata: Readonly<KernelConnectionMetadata>,
         private readonly interruptTimeout: number,
         disposables: IDisposableRegistry,
-        controller: NotebookController,
         outputTracker: CellOutputDisplayIdTracker,
         cellHashProviderFactory: CellHashProviderFactory,
         context: IExtensionContext
@@ -54,7 +53,6 @@ export class KernelExecution implements IDisposable {
             kernel,
             appShell,
             disposables,
-            controller,
             outputTracker,
             cellHashProviderFactory,
             context
@@ -70,7 +68,8 @@ export class KernelExecution implements IDisposable {
     }
     public async executeCell(
         sessionPromise: Promise<IJupyterSession>,
-        cell: NotebookCell
+        cell: NotebookCell,
+        controller: NotebookController
     ): Promise<NotebookCellRunState> {
         traceCellMessage(cell, `KernelExecution.executeCell (1), ${getDisplayPath(cell.notebook.uri)}`);
         if (cell.kind == NotebookCellKind.Markup) {
@@ -83,7 +82,7 @@ export class KernelExecution implements IDisposable {
         }
 
         traceCellMessage(cell, `KernelExecution.executeCell (2), ${getDisplayPath(cell.notebook.uri)}`);
-        const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, sessionPromise);
+        const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, sessionPromise, controller);
         executionQueue.queueCell(cell);
         const result = await executionQueue.waitForCompletion([cell]);
         traceCellMessage(cell, `KernelExecution.executeCell completed (3), ${getDisplayPath(cell.notebook.uri)}`);
@@ -179,14 +178,23 @@ export class KernelExecution implements IDisposable {
         traceInfoIfCI(`Dispose KernelExecution`);
         this.disposables.forEach((d) => d.dispose());
     }
-    private getOrCreateCellExecutionQueue(document: NotebookDocument, sessionPromise: Promise<IJupyterSession>) {
+    private getOrCreateCellExecutionQueue(
+        document: NotebookDocument,
+        sessionPromise: Promise<IJupyterSession>,
+        controller: NotebookController
+    ) {
         const existingExecutionQueue = this.documentExecutions.get(document);
         // Re-use the existing Queue if it can be used.
         if (existingExecutionQueue && !existingExecutionQueue.isEmpty && !existingExecutionQueue.failed) {
             return existingExecutionQueue;
         }
 
-        const newCellExecutionQueue = new CellExecutionQueue(sessionPromise, this.executionFactory, this.metadata);
+        const newCellExecutionQueue = new CellExecutionQueue(
+            sessionPromise,
+            this.executionFactory,
+            this.metadata,
+            controller
+        );
         this.disposables.push(newCellExecutionQueue);
 
         // If the document is closed (user or on CI), then just stop handling the UI updates & cancel cell execution queue.
