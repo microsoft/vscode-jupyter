@@ -239,7 +239,7 @@ suite('DataScience - JupyterSession', () => {
                     kind: 'connectToLiveRemoteKernel',
                     kernelModel: {} as any,
                     baseUrl: '',
-                    serverHash: ''
+                    serverId: ''
                 });
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();
@@ -289,7 +289,7 @@ suite('DataScience - JupyterSession', () => {
                     kind: 'connectToLiveRemoteKernel',
                     kernelModel: {} as any,
                     baseUrl: '',
-                    serverHash: ''
+                    serverId: ''
                 });
                 when(session.shutdown()).thenResolve();
                 when(session.dispose()).thenReturn();

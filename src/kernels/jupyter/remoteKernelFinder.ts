@@ -80,7 +80,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                             kernelSpec: s,
                             id: getKernelId(s, undefined, connInfo.baseUrl),
                             baseUrl: connInfo.baseUrl,
-                            serverHash: computeUriHash(connInfo.url)
+                            serverId: computeUriHash(connInfo.url)
                         };
                         return kernel;
                     })
@@ -111,7 +111,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                         },
                         baseUrl: connInfo.baseUrl,
                         id: s.kernel?.id || '',
-                        serverHash: computeUriHash(connInfo.url)
+                        serverId: computeUriHash(connInfo.url)
                     };
                     return kernel;
                 });

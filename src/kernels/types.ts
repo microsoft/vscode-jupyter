@@ -42,7 +42,7 @@ export type LiveRemoteKernelConnectionMetadata = Readonly<{
     interpreter?: PythonEnvironment;
     baseUrl: string;
     kind: 'connectToLiveRemoteKernel';
-    serverHash: string;
+    serverId: string;
     id: string;
 }>;
 /**
@@ -73,7 +73,7 @@ export type RemoteKernelSpecConnectionMetadata = Readonly<{
     kernelSpec: IJupyterKernelSpec;
     kind: 'startUsingRemoteKernelSpec';
     baseUrl: string;
-    serverHash: string;
+    serverId: string;
     id: string;
 }>;
 /**

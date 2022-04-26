@@ -21,7 +21,7 @@ suite('Notebook Controller Manager', () => {
                 numberOfConnections: 1
             },
             baseUrl: '',
-            serverHash: ''
+            serverId: ''
         });
 
         assert.strictEqual(name, 'livexyz');
