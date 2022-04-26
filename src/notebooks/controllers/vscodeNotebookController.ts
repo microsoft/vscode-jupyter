@@ -161,6 +161,7 @@ export class VSCodeNotebookController implements Disposable {
             controller: VSCodeNotebookController;
         }>();
 
+        traceVerbose(`Creating notebook controller with name ${label}`);
         this.controller = this.notebookApi.createNotebookController(
             id,
             viewType,
