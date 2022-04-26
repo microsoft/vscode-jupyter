@@ -13,7 +13,7 @@ import {
     LiveRemoteKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../types';
-import { IDisposableRegistry, Resource } from '../../platform/common/types';
+import { IDisposableRegistry, IsWebExtension, Resource } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
@@ -36,7 +36,8 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
-        @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
+        @inject(IsWebExtension) private isWebExtension: boolean
     ) {
         disposableRegistry.push(
             this.jupyterSessionManagerFactory.onRestartSessionCreated(this.addKernelToIgnoreList.bind(this))
@@ -146,10 +147,15 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
         const parsed = new URL(baseUrl);
         if (
             (parsed.hostname.toLocaleLowerCase() === 'localhost' || parsed.hostname === '127.0.0.1') &&
-            this.extensionChecker.isPythonExtensionInstalled
+            this.extensionChecker.isPythonExtensionInstalled &&
+            !this.isWebExtension
         ) {
             // Interpreter is possible. Same machine as VS code
-            return this.interpreterService.getInterpreterDetails(Uri.file(spec.argv[0]));
+            try {
+                return await this.interpreterService.getInterpreterDetails(Uri.file(spec.argv[0]));
+            } catch (ex) {
+                traceError(`Failure getting interpreter details for remote kernel: `, ex);
+            }
         }
     }
 }
