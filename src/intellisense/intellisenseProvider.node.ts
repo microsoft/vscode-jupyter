@@ -134,7 +134,7 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
     }
 
     private async controllerChanged(e: { notebook: NotebookDocument; controller: IVSCodeNotebookController }) {
-        if (!(await this.notebookPythonPathService.isEnabled())) {
+        if (!this.notebookPythonPathService.isEnabled()) {
             this.output.appendLine(`IntelliSenseProvider.controllerChanged: Legacy behavior`);
             // Create the language server for this connection
             const newServer = await this.ensureLanguageServer(e.controller.connection.interpreter, e.notebook);
@@ -168,7 +168,7 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
         if (
             isJupyterNotebook(n) &&
             this.extensionChecker.isPythonExtensionInstalled &&
-            !(await this.notebookPythonPathService.isEnabled())
+            !this.notebookPythonPathService.isEnabled()
         ) {
             this.output.appendLine(`IntelliSenseProvider.openedNotebook: Legacy behavior`);
 

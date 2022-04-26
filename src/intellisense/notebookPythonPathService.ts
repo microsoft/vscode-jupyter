@@ -3,18 +3,18 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import { Uri } from 'vscode';
-import { _WindowMiddleware } from 'vscode-languageclient';
+import { extensions, Uri } from 'vscode';
 import { IInteractiveWindowProvider } from '../interactive-window/types';
 import { findAssociatedNotebookDocument } from '../notebooks/helpers';
 import { INotebookControllerManager } from '../notebooks/types';
 import { IExtensionSingleActivationService } from '../platform/activation/types';
 import { IPythonApiProvider } from '../platform/api/types';
 import { IVSCodeNotebook } from '../platform/common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../platform/common/constants';
+import { PylanceExtension, PythonExtension, STANDARD_OUTPUT_CHANNEL } from '../platform/common/constants';
 import { getFilePath } from '../platform/common/platform/fs-paths';
 import { IConfigurationService, IOutputChannel } from '../platform/common/types';
 import { IInterpreterService } from '../platform/interpreter/contracts';
+import * as semver from 'semver';
 
 @injectable()
 export class NotebookPythonPathService implements IExtensionSingleActivationService {
@@ -32,17 +32,19 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
         this.output.appendLine(`NotebookPythonPathService: constructor`);
     }
 
-    public async isEnabled() {
+    public isEnabled() {
         if (this._isEnabled === undefined) {
-           if (!this.configService.getSettings().pylanceLspNotebooksEnabled) {
-               this._isEnabled = false;
-           }
-           else {
-                this._isEnabled = await this.apiProvider.getApi().then((api) => {
-                    // Python extension may not have been updated to support the register API yet.
-                    return api.registerJupyterPythonPathFunction !== undefined;
-                });
-           }
+            const isInNotebooksExperiment = this.configService.getSettings().pylanceLspNotebooksEnabled;
+            const pythonVersion = extensions.getExtension(PythonExtension)?.packageJSON.version;
+            const pylanceVersion = extensions.getExtension(PylanceExtension)?.packageJSON.version;
+
+            this._isEnabled = isInNotebooksExperiment &&
+                              pythonVersion !== undefined &&
+                              semver.satisfies(pythonVersion, '>=2022.6.0 || 2022.5.0-dev') &&
+                              pylanceVersion !== undefined &&
+                              semver.satisfies(pylanceVersion, '>=2022.4.4-pre.1 || 9999.0.0-dev');
+
+            this.output.appendLine(`NotebookPythonPathService: isEnabled: ${this._isEnabled}`);
         }
 
         return this._isEnabled;
@@ -50,7 +52,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
 
     public async activate() {
         this.output.appendLine(`NotebookPythonPathService: activate`);
-        if (!await this.isEnabled()) {
+        if (!this.isEnabled()) {
             return;
         }
 
