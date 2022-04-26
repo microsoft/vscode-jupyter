@@ -13,7 +13,7 @@ import type {
 import { JSONObject } from '@lumino/coreutils';
 import { CancellationToken, EventEmitter, Uri } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { traceInfo, traceError } from '../../../platform/logging';
+import { traceInfo, traceError, traceVerbose } from '../../../platform/logging';
 import {
     IPersistentState,
     IConfigurationService,
@@ -56,6 +56,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     private readonly userAllowsInsecureConnections: IPersistentState<boolean>;
     private restartSessionCreatedEvent = new EventEmitter<Kernel.IKernelConnection>();
     private restartSessionUsedEvent = new EventEmitter<Kernel.IKernelConnection>();
+    private disposed?: boolean;
     private get jupyterlab(): typeof import('@jupyterlab/services') {
         if (!this._jupyterlab) {
             // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -90,15 +91,19 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         return this.restartSessionUsedEvent.event;
     }
     public async dispose() {
-        traceInfo(`Disposing session manager`);
+        if (this.disposed) {
+            return;
+        }
+        this.disposed = true;
+        traceVerbose(`Disposing session manager`);
         try {
             if (this.contentsManager) {
-                traceInfo('SessionManager - dispose contents manager');
+                traceVerbose('SessionManager - dispose contents manager');
                 this.contentsManager.dispose();
                 this.contentsManager = undefined;
             }
             if (this.sessionManager && !this.sessionManager.isDisposed) {
-                traceInfo('ShutdownSessionAndConnection - dispose session manager');
+                traceVerbose('ShutdownSessionAndConnection - dispose session manager');
                 // Make sure it finishes startup.
                 await Promise.race([sleep(10_000), this.sessionManager.ready]);
 
@@ -109,7 +114,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         } catch (e) {
             traceError(`Exception on session manager shutdown: `, e);
         } finally {
-            traceInfo('Finished disposing jupyter session manager');
+            traceVerbose('Finished disposing jupyter session manager');
         }
     }
 
