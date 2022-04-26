@@ -5,9 +5,10 @@ import { IS_CI_SERVER } from './ciConstants.node';
 import { extensions } from 'vscode';
 import { sleep } from '../platform/common/utils/async';
 
+
 let telemetryReporter: TelemetryReporter;
 
-export const rootHooks = {
+export const rootHooks : Mocha.RootHookObject = {
     beforeAll() {
         if (!IS_CI_SERVER) {
             return;
@@ -39,7 +40,7 @@ export const rootHooks = {
             );
         }
     },
-    AfterAll: async () => {
+    afterAll: async () => {
         if (!IS_CI_SERVER) {
             return;
         }
