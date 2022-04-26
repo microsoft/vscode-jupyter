@@ -396,9 +396,11 @@ export async function waitForKernelToGetAutoSelected(
         );
     } catch {
         // Do nothing for now. Just log it
-        traceInfoIfCI(`No preferred controller found during waitForKernelToGetAutoSelected`);
+        // IANHU traceInfoIfCI(`No preferred controller found during waitForKernelToGetAutoSelected`);
+        traceInfo(`No preferred controller found during waitForKernelToGetAutoSelected`);
     }
-    traceInfoIfCI(`Wait for kernel - got a preferred notebook controller: ${preferred?.id}`);
+    // IANHU traceInfoIfCI(`Wait for kernel - got a preferred notebook controller: ${preferred?.id}`);
+    traceInfo(`IANHU Wait for kernel - got a preferred notebook controller: ${preferred?.id}`);
 
     // Find one that matches the expected language or the preferred
     const expectedLower = expectedLanguage?.toLowerCase();
@@ -406,11 +408,17 @@ export async function waitForKernelToGetAutoSelected(
     const preferredKind = preferRemoteKernelSpec ? 'startUsingRemoteKernelSpec' : preferred?.connection.kind;
     let match: IVSCodeNotebookController | undefined;
     if (preferred) {
+        traceInfo(`IANHU Language: ${language}`);
+        traceInfo(`IANHU Preferred kind ${preferredKind}`);
+        if (preferred.connection.kind !== 'connectToLiveRemoteKernel') {
+            traceInfo(`IANHU Preferred lang: ${preferred.connection.kernelSpec?.language?.toLowerCase()}`);
+        }
         if (
             preferred.connection.kind !== 'connectToLiveRemoteKernel' &&
             (!expectedLanguage || preferred.connection.kernelSpec?.language?.toLowerCase() === expectedLower) &&
             preferredKind === preferred.connection.kind
         ) {
+            traceInfo(`IANHU Found match for preferred`);
             match = preferred;
         } else if (preferred.connection.kind === 'connectToLiveRemoteKernel') {
             match = preferred;
@@ -431,7 +439,7 @@ export async function waitForKernelToGetAutoSelected(
             `Houston, we have a problem, no match. Expected language ${expectedLanguage}. Expected kind ${preferredKind}.`
         );
     }
-    traceInfo(`Preferred kernel for selection is ${match?.id}, criteria = ${JSON.stringify(criteria)}`);
+    traceInfo(`IANHU Preferred kernel for selection is ${match?.id}, criteria = ${JSON.stringify(criteria)}`);
     assert.ok(match, 'No kernel to auto select');
     return waitForKernelToChange(criteria, timeout);
 }

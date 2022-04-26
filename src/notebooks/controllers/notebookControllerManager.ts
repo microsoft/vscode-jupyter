@@ -593,6 +593,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             useCache
         );
 
+        traceInfo(`IANHU RankedConnections: ${rankedConnections?.length} connections`);
+        if (rankedConnections && rankedConnections.length > 0) {
+            traceInfo(`IANHU Top RankedConnection: ${rankedConnections[rankedConnections.length - 1]}`);
+        }
+
         if (rankedConnections && rankedConnections.length) {
             const potentialMatch = rankedConnections[rankedConnections.length - 1];
 
@@ -602,13 +607,19 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             ]);
 
             // Only assign if we are an exact match or if this is the only connection found
-            if (
-                rankedConnections.length === 1 ||
-                topMatchIsPreferredInterpreter ||
-                this.kernelFinder.isExactMatch(document.uri, potentialMatch, notebookMetadata)
-            ) {
+            traceInfo(`IANHU: topMatchIsPreferredInterpreter: ${topMatchIsPreferredInterpreter}`);
+            const isMatch = this.kernelFinder.isExactMatch(document.uri, potentialMatch, notebookMetadata);
+            traceInfo(`IANHU: isMatch: ${isMatch}`);
+            if (rankedConnections.length === 1 || topMatchIsPreferredInterpreter || isMatch) {
                 preferredConnection = potentialMatch;
             }
+            // if (
+            // rankedConnections.length === 1 ||
+            // topMatchIsPreferredInterpreter ||
+            // this.kernelFinder.isExactMatch(document.uri, potentialMatch, notebookMetadata)
+            // ) {
+            // preferredConnection = potentialMatch;
+            // }
         }
 
         return { rankedConnections, preferredConnection };
