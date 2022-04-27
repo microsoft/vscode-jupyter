@@ -405,6 +405,7 @@ export async function waitForKernelToGetAutoSelected(
     }
     // IANHU traceInfoIfCI(`Wait for kernel - got a preferred notebook controller: ${preferred?.id}`);
     traceInfo(`IANHU Wait for kernel - got a preferred notebook controller: ${preferred?.id}`);
+    console.log(`IANHU Wait for kernel - got a preferred notebook controller: ${preferred?.id}`);
 
     // Find one that matches the expected language or the preferred
     const expectedLower = expectedLanguage?.toLowerCase();
@@ -413,6 +414,7 @@ export async function waitForKernelToGetAutoSelected(
     let match: IVSCodeNotebookController | undefined;
     if (preferred) {
         traceInfo(`IANHU Language: ${language}`);
+        console.log(`IANHU Language: ${language}`);
         traceInfo(`IANHU Preferred kind ${preferredKind}`);
         if (preferred.connection.kind !== 'connectToLiveRemoteKernel') {
             traceInfo(`IANHU Preferred lang: ${preferred.connection.kernelSpec?.language?.toLowerCase()}`);
@@ -429,6 +431,7 @@ export async function waitForKernelToGetAutoSelected(
         }
     }
     if (!match) {
+        console.log('IANHU no match found');
         match = notebookControllers.find(
             (d) =>
                 d.connection.kind != 'connectToLiveRemoteKernel' &&
