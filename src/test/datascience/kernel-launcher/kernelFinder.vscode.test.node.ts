@@ -40,14 +40,20 @@ suite('DataScience - Kernels Finder', () => {
         assert.isArray(kernelSpecs);
         assert.isAtLeast(kernelSpecs.length, 1);
     });
-    test('No kernel returned if no matching kernel found for language', async () => {
+    test('No kernel returned or non exact match if no matching kernel found for language', async () => {
         const kernelSpec = takeTopRankKernel(
             await kernelFinder.rankKernels(resourceToUse, {
                 language_info: { name: 'foobar' },
                 orig_nbformat: 4
             })
         );
-        assert.isUndefined(kernelSpec);
+        const isMatch =
+            kernelSpec &&
+            kernelFinder.isExactMatch(resourceToUse, kernelSpec, {
+                language_info: { name: 'foobar' },
+                orig_nbformat: 4
+            });
+        assert.isNotTrue(isMatch);
     });
     test('Python kernel returned if no matching kernel found', async () => {
         const interpreter = await interpreterService.getActiveInterpreter(resourceToUse);
