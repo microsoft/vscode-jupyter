@@ -53,14 +53,18 @@ export interface INotebookServer extends IAsyncDisposable {
         ui: IDisplayOptions,
         creator: KernelActionSource
     ): Promise<INotebook>;
-    connect(connection: IJupyterConnection, cancelToken: CancellationToken): Promise<void>;
-    getConnectionInfo(): IJupyterConnection | undefined;
+    readonly connection: IJupyterConnection;
+}
+
+export const INotebookServerFactory = Symbol('INotebookServerFactory');
+export interface INotebookServerFactory {
+    createNotebookServer(connection: IJupyterConnection): Promise<INotebookServer>;
 }
 
 // Provides notebooks that talk to jupyter servers
 export const IJupyterNotebookProvider = Symbol('IJupyterNotebookProvider');
 export interface IJupyterNotebookProvider {
-    connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection | undefined>;
+    connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection>;
     createNotebook(options: NotebookCreationOptions): Promise<INotebook>;
 }
 
@@ -82,14 +86,12 @@ export interface INotebookServerOptions {
 export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution extends IAsyncDisposable {
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
-    connectToNotebookServer(
-        options: INotebookServerOptions,
-        cancelToken?: CancellationToken
-    ): Promise<INotebookServer | undefined>;
+    connectToNotebookServer(options: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer>;
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonEnvironment | undefined>;
     getServer(options: INotebookServerOptions): Promise<INotebookServer | undefined>;
     getNotebookError(): Promise<string>;
     refreshCommands(): Promise<void>;
+    validateRemoteUri(uri: string): Promise<void>;
 }
 
 export interface IJupyterPasswordConnectInfo {
@@ -187,7 +189,7 @@ export interface IJupyterServerProvider {
     /**
      * Gets the server used for starting notebooks
      */
-    getOrCreateServer(options: GetServerOptions): Promise<INotebookServer | undefined>;
+    getOrCreateServer(options: GetServerOptions): Promise<INotebookServer>;
 }
 
 export interface IJupyterServerUri {

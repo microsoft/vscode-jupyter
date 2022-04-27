@@ -259,12 +259,14 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         const cachedConnections = await this.listKernels(cancelToken, 'useCache');
         const nonCachedConnectionsPromise = this.listKernels(cancelToken, 'ignoreCache');
 
+        traceVerbose(`Found ${cachedConnections.length} cached controllers`);
         // Now create or update the actual controllers from our connections. Do this for the cached connections
         // so they show up quicker.
         this.createNotebookControllers(cachedConnections);
 
         // Do the same thing again but with non cached
         const nonCachedConnections = await nonCachedConnectionsPromise;
+        traceVerbose(`Found ${cachedConnections.length} non-cached controllers`);
         this.createNotebookControllers(nonCachedConnections);
 
         // If there aren't any Python kernels, then add a placeholder for `Python` which will prompt users to install python (only do this in the node version so
@@ -291,9 +293,22 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
         // Look for any controllers that we have disposed (no longer found when fetching)
         const disposedControllers = Array.from(this.registeredControllers.values()).filter((controller) => {
-            return !nonCachedConnections!.some((connection) => {
+            const connectionIsNoLongerValid = !nonCachedConnections.some((connection) => {
                 return connection.id === controller.connection.id;
             });
+
+            // Never remove remote kernels that don't exist.
+            // Always leave them there for user to select, and if the connection is not available/not valid,
+            // then notify the user and remove them.
+            if (
+                connectionIsNoLongerValid &&
+                (controller.connection.kind === 'connectToLiveRemoteKernel' ||
+                    controller.connection.kind === 'startUsingRemoteKernelSpec')
+            ) {
+                controller.flagRemoteKernelAsOutdated();
+                return true;
+            }
+            return connectionIsNoLongerValid;
         });
 
         // If we have any out of date connections, dispose of them
@@ -669,6 +684,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         kernelConnections: KernelConnectionMetadata[],
         doNotHideInteractiveKernel?: boolean
     ) {
+        traceVerbose(`Creating ${kernelConnections?.length} controllers`);
         // First sort our items by label
         const connectionsWithLabel = kernelConnections.map((value) => {
             return { connection: value, label: getDisplayNameOrNameOfKernelConnection(value) };

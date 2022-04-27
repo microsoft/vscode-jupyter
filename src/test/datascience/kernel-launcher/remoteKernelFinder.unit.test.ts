@@ -135,7 +135,8 @@ suite(`Remote Kernel Finder`, () => {
             disposables,
             instance(jupyterSessionManagerFactory),
             instance(interpreterService),
-            instance(extensionChecker)
+            instance(extensionChecker),
+            false
         );
 
         const configService = mock(ConfigurationService);

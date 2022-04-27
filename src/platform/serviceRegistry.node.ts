@@ -35,7 +35,7 @@ import { IConfigurationService, IDataScienceCommandListener, IExtensionContext }
 import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFactory.node';
 import { DebuggingManager } from './debugger/jupyter/debuggingManager.node';
 import { IDebugLocationTracker, IDebuggingManager } from './debugger/types';
-import { DataScienceErrorHandler } from './errors/errorHandler.node';
+import { DataScienceErrorHandler } from './errors/errorHandler';
 import { IDataScienceErrorHandler } from './errors/types';
 import { ExportBase } from './export/exportBase.node';
 import { ExportDialog } from './export/exportDialog.node';

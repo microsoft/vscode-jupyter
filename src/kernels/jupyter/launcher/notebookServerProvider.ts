@@ -30,8 +30,8 @@ import { getFilePath } from '../../../platform/common/platform/fs-paths';
 @injectable()
 export class NotebookServerProvider implements IJupyterServerProvider {
     private serverPromise: {
-        local?: Promise<INotebookServer | undefined> | undefined;
-        remote?: Promise<INotebookServer | undefined> | undefined;
+        local?: Promise<INotebookServer>;
+        remote?: Promise<INotebookServer>;
     } = {};
     private ui = new DisplayOptions(true);
     constructor(
@@ -56,7 +56,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         this.serverPromise.local = undefined;
         this.serverPromise.remote = undefined;
     }
-    public async getOrCreateServer(options: GetServerOptions): Promise<INotebookServer | undefined> {
+    public async getOrCreateServer(options: GetServerOptions): Promise<INotebookServer> {
         const serverOptions = await this.getNotebookServerOptions(options.resource, options.localJupyter === true);
 
         // If we are just fetching or only want to create for local, see if exists
@@ -72,7 +72,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         return this.createServer(options);
     }
 
-    private async createServer(options: GetServerOptions): Promise<INotebookServer | undefined> {
+    private async createServer(options: GetServerOptions): Promise<INotebookServer> {
         // When we finally try to create a server, update our flag indicating if we're going to allow UI or not. This
         // allows the server to be attempted without a UI, but a future request can come in and use the same startup
         if (!options.ui.disableUI) {
@@ -85,7 +85,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             this.serverPromise[property] = this.startServer(options.resource, options.token, options.localJupyter);
         }
         try {
-            const value = await this.serverPromise[property];
+            const value = await this.serverPromise[property]!;
             // If we cancelled starting of the server, then don't cache the result.
             if (!value && options.token?.isCancellationRequested) {
                 delete this.serverPromise[property];
@@ -102,7 +102,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         resource: Resource,
         token: CancellationToken | undefined,
         forLocal: boolean
-    ): Promise<INotebookServer | undefined> {
+    ): Promise<INotebookServer> {
         if (!this.jupyterExecution) {
             throw new NotSupportedInWebError();
         }
@@ -153,7 +153,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             disposeAllDisposables(disposables);
             // If user cancelled, then do nothing.
             if (token?.isCancellationRequested && e instanceof CancellationError) {
-                return;
+                throw e;
             }
 
             // Also tell jupyter execution to reset its search. Otherwise we've just cached

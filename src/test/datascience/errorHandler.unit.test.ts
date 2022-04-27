@@ -17,7 +17,7 @@ import {
 } from '../../platform/../kernels/types';
 import { PythonEnvironment, EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
-import { DataScienceErrorHandler } from '../../platform/errors/errorHandler.node';
+import { DataScienceErrorHandler } from '../../platform/errors/errorHandler';
 import { JupyterConnectError } from '../../platform/errors/jupyterConnectError';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
@@ -564,12 +564,17 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 ),
                 'start'
             );
+            const command =
+                getOSType() === OSType.Windows
+                    ? `Command: '"Hello There" -m pip install ipykernel -U --force-reinstall'`
+                    : `Command: '"/Hello There" -m pip install ipykernel -U --force-reinstall'`;
+
             assert.strictEqual(
                 result,
                 [
                     "Running cells with 'Hello (Some Path)' requires ipykernel package.",
                     "Run the following command to install 'ipykernel' into the Python environment. ",
-                    `Command: '"/Hello There" -m pip install ipykernel -U --force-reinstall'`
+                    command
                 ].join('\n')
             );
         });

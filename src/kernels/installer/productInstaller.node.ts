@@ -3,7 +3,6 @@
 import { inject, injectable, named } from 'inversify';
 import * as semver from 'semver';
 import { CancellationTokenSource, Event, EventEmitter, Memento, Uri } from 'vscode';
-import { translateProductToModule } from './moduleInstaller.node';
 import { ProductNames } from './productNames';
 import {
     IInstallationChannelManager,
@@ -39,6 +38,7 @@ import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants';
 import { sleep } from '../../platform/common/utils/async';
 import { trackPackageInstalledIntoInterpreter } from './productInstaller';
 import { IInterpreterPackages } from '../../telemetry/types';
+import { translateProductToModule } from './utils';
 
 export async function isModulePresentInEnvironment(memento: Memento, product: Product, interpreter: PythonEnvironment) {
     const key = `${getInterpreterHash(interpreter)}#${ProductNames.get(product)}`;

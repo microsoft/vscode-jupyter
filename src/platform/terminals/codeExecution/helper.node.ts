@@ -97,7 +97,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
         return activeEditor.document.uri;
     }
 
-    public async getSelectedTextToExecute(textEditor: TextEditor): Promise<string | undefined> {
+    public getSelectedTextToExecute(textEditor: TextEditor): string | undefined {
         if (!textEditor) {
             return;
         }

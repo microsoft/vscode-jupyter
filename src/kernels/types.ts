@@ -412,11 +412,11 @@ export interface INotebookProvider {
     /**
      * Creates a notebook.
      */
-    createNotebook(options: NotebookCreationOptions): Promise<INotebook | undefined>;
+    createNotebook(options: NotebookCreationOptions): Promise<INotebook>;
     /**
      * Connect to a notebook provider to prepare its connection and to get connection information
      */
-    connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection | undefined>;
+    connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection>;
 }
 
 export interface IKernelSocket {

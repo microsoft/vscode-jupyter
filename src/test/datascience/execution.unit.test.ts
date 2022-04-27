@@ -49,18 +49,20 @@ import { NotebookStarter } from '../../kernels/jupyter/launcher/notebookStarter.
 import { JupyterPaths } from '../../kernels/raw/finder/jupyterPaths.node';
 import { LocalKernelFinder } from '../../kernels/raw/finder/localKernelFinder.node';
 import { ILocalKernelFinder } from '../../kernels/raw/types';
-import { IJupyterKernelSpec, LocalKernelConnectionMetadata } from '../../kernels/types';
+import { IJupyterConnection, IJupyterKernelSpec, LocalKernelConnectionMetadata } from '../../kernels/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
 import { noop } from '../core';
 import { MockOutputChannel } from '../mockClasses';
 import { MockJupyterServer } from './mockJupyterServer';
 import { MockJupyterSettings } from './mockJupyterSettings';
 import { DisplayOptions } from '../../kernels/displayOptions';
-import { INotebookServer } from '../../kernels/jupyter/types';
+import { INotebookServerFactory } from '../../kernels/jupyter/types';
 import { IJupyterSubCommandExecutionService } from '../../kernels/jupyter/types.node';
 import { SystemVariables } from '../../platform/common/variables/systemVariables.node';
 import { getOSType, OSType } from '../../platform/common/utils/platform';
 import { JupyterUriProviderRegistration } from '../../kernels/jupyter/jupyterUriProviderRegistration';
+import { JupyterSessionManagerFactory } from '../../kernels/jupyter/session/jupyterSessionManagerFactory';
+import { JupyterServerUriStorage } from '../../kernels/jupyter/launcher/serverUriStorage';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 class DisposableRegistry implements IAsyncDisposableRegistry {
@@ -897,7 +899,10 @@ suite('Jupyter Execution', async () => {
 
         // Service container also needs to generate jupyter servers. However we can't use a mock as that messes up returning
         // this object from a promise
-        when(serviceContainer.get<INotebookServer>(INotebookServer)).thenReturn(new MockJupyterServer());
+        const factory = mock<INotebookServerFactory>();
+        when(factory.createNotebookServer(anything())).thenCall(
+            (connection: IJupyterConnection) => new MockJupyterServer(connection)
+        );
 
         // We also need a file system
         const tempFile = {
@@ -995,7 +1000,10 @@ suite('Jupyter Execution', async () => {
         when(kernelFinder.listKernels(anything(), anything())).thenResolve([kernelMetadata]);
         when(serviceContainer.get<NotebookStarter>(NotebookStarter)).thenReturn(notebookStarter);
         when(serviceContainer.get<ILocalKernelFinder>(ILocalKernelFinder)).thenReturn(instance(kernelFinder));
+        const sessionManagerFactory = mock(JupyterSessionManagerFactory);
+        const serverFactory = mock<INotebookServerFactory>();
         const provider = mock(JupyterUriProviderRegistration);
+        const serverUriStorage = mock(JupyterServerUriStorage);
         return {
             executionService: activeService.object,
             jupyterExecution: new HostJupyterExecution(
@@ -1005,9 +1013,11 @@ suite('Jupyter Execution', async () => {
                 instance(workspaceService),
                 instance(configService),
                 notebookStarter,
-                instance(serviceContainer),
                 jupyterCmdExecutionService,
-                instance(provider)
+                instance(provider),
+                instance(sessionManagerFactory),
+                instance(serverFactory),
+                instance(serverUriStorage)
             )
         };
     }

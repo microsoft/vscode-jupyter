@@ -6,9 +6,10 @@ import { inject, injectable } from 'inversify';
 import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { CondaService } from '../../platform/common/process/condaService.node';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { ExecutionInstallArgs, ModuleInstaller, translateProductToModule } from './moduleInstaller.node';
+import { ExecutionInstallArgs, ModuleInstaller } from './moduleInstaller.node';
 import { ModuleInstallerType, ModuleInstallFlags, Product } from './types';
 import * as path from '../../platform/vscode-path/path';
+import { translateProductToModule } from './utils';
 
 /**
  * A Python module installer for a conda environment.

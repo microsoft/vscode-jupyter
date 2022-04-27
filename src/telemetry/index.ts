@@ -89,7 +89,7 @@ export function _resetSharedProperties(): void {
 
 let telemetryReporter: TelemetryReporter | undefined;
 function getTelemetryReporter() {
-    if (!isTestExecution() && telemetryReporter) {
+    if (telemetryReporter) {
         return telemetryReporter;
     }
     const extensionId = JVSC_EXTENSION_ID;
@@ -155,7 +155,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     ex?: Error,
     sendOriginalEventWithErrors?: boolean
 ) {
-    if (!isTelemetrySupported() || (isTestExecution() && eventName !== Telemetry.RunTest)) {
+    if (!isTelemetrySupported() || isTestExecution()) {
         return;
     }
     // If stuff is already queued, then queue the rest.

@@ -149,8 +149,14 @@ export class PythonApiProvider implements IPythonApiProvider {
         }
         this.hooksRegistered = true;
         if (!pythonExtension.isActive) {
-            await pythonExtension.activate();
-            this.didActivatePython.fire();
+            try {
+                await pythonExtension.activate();
+                this.didActivatePython.fire();
+            } catch (ex) {
+                traceError(`Failed activating the python extension: `, ex);
+                this.api.reject(ex);
+                return;
+            }
         }
         pythonExtension.exports.jupyter.registerHooks();
     }

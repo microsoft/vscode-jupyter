@@ -25,10 +25,12 @@ import {
     INotebookServerOptions,
     INotebookServer,
     JupyterServerUriHandle,
-    INotebookStarter
+    INotebookStarter,
+    IJupyterSessionManagerFactory,
+    IJupyterSessionManager,
+    INotebookServerFactory
 } from '../types';
 import { IJupyterSubCommandExecutionService } from '../types.node';
-import { IServiceContainer } from '../../../platform/ioc/types';
 
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
 
@@ -45,7 +47,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
         private readonly notebookStarter: INotebookStarter | undefined,
         private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService | undefined,
         private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration,
-        private readonly serviceContainer: IServiceContainer
+        private readonly jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
+        private readonly notebookServerFactory: INotebookServerFactory
     ) {
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
         this.disposableRegistry.push(this);
@@ -101,7 +104,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     public connectToNotebookServer(
         options: INotebookServerOptions,
         cancelToken: CancellationToken
-    ): Promise<INotebookServer | undefined> {
+    ): Promise<INotebookServer> {
         // Return nothing if we cancel
         // eslint-disable-next-line
         return Cancellation.race(async () => {
@@ -122,12 +125,11 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     if (!connection.localLaunch && LocalHosts.includes(connection.hostName.toLowerCase())) {
                         sendTelemetryEvent(Telemetry.ConnectRemoteJupyterViaLocalHost);
                     }
-                    // Create a server tha  t we will then attempt to connect to.
-                    result = this.serviceContainer.get<INotebookServer>(INotebookServer);
-
                     // eslint-disable-next-line no-constant-condition
                     traceInfo(`Connecting to process server`);
-                    await result.connect(connection, cancelToken);
+
+                    // Create a server tha  t we will then attempt to connect to.
+                    result = await this.notebookServerFactory.createNotebookServer(connection);
                     traceInfo(`Connection complete server`);
 
                     sendTelemetryEvent(
@@ -152,7 +154,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     } else if (connection) {
                         // If this is occurring during shutdown, don't worry about it.
                         if (this.disposed) {
-                            return undefined;
+                            throw err;
                         }
 
                         // Something else went wrong
@@ -182,12 +184,39 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 }
                 throw lastTryError;
             }
+            throw new Error('Max number of attempts reached');
         }, cancelToken);
     }
 
     public getServer(_options: INotebookServerOptions): Promise<INotebookServer | undefined> {
         // This is cached at the host or guest level
         return Promise.resolve(undefined);
+    }
+
+    public async validateRemoteUri(uri: string): Promise<void> {
+        let connection: IJupyterConnection | undefined = undefined;
+        let sessionManager: IJupyterSessionManager | undefined = undefined;
+        try {
+            // Prepare our map of server URIs (needed in order to retrieve the uri during the connection)
+            await this.updateServerUri(uri);
+
+            // Create an active connection.
+            connection = await createRemoteConnectionInfo(uri, this.getServerUri.bind(this));
+
+            // Attempt to list the running kernels. It will return empty if there are none, but will
+            // throw if can't connect.
+            sessionManager = await this.jupyterSessionManagerFactory.create(connection, false);
+            await sessionManager.getRunningKernels();
+
+            // We should throw an exception if any of that fails.
+        } finally {
+            if (connection) {
+                connection.dispose();
+            }
+            if (sessionManager) {
+                void sessionManager.dispose();
+            }
+        }
     }
 
     private async startOrConnect(

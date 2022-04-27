@@ -876,7 +876,7 @@ testing2`;
                     })
                 )
             )
-            .returns(() => Promise.resolve('testing2'));
+            .returns(() => 'testing2');
         helper.setup((h) => h.normalizeLines(TypeMoq.It.isAny())).returns((x: string) => Promise.resolve(x));
 
         // Set up our expected calls to add code
@@ -921,7 +921,7 @@ testing2`;
                     })
                 )
             )
-            .returns(() => Promise.resolve('testing2'));
+            .returns(() => 'testing2');
         helper.setup((h) => h.normalizeLines(TypeMoq.It.isAny())).returns((x: string) => Promise.resolve(x));
 
         // Set up our expected calls to add code
