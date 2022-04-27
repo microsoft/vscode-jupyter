@@ -203,7 +203,6 @@ export function sharedRemoteNotebookEditorTests(
 
         if (defaultPythonKernel) {
             console.log(`IANHU found default controller`);
-            console.log(`IANHU default controller ${JSON.stringify(defaultPythonKernel)}`);
         }
 
         assert.strictEqual(
