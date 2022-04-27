@@ -192,6 +192,8 @@ export function sharedRemoteNotebookEditorTests(
 
         await createEmptyPythonNotebook(disposables);
 
+        console.log(`IANHU empty notebook created`);
+
         // Find the default remote Python kernel (we know that will have ipykernel, as we've set up CI as such).
         const defaultPythonKernel = await controllerManager.getActiveInterpreterOrDefaultController(
             'jupyter-notebook',

@@ -188,9 +188,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         resource: Resource
     ): Promise<IVSCodeNotebookController | undefined> {
         if (this.isLocalLaunch) {
+            console.log(`IANHU local`);
             traceInfoIfCI('CreateActiveInterpreterController');
             return this.createActiveInterpreterController(notebookType, resource);
         } else {
+            console.log(`IANHU remote`);
             traceInfoIfCI('CreateDefaultRemoteController');
             return this.createDefaultRemoteController();
         }
@@ -374,9 +376,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
     @traceDecoratorVerbose('Get default Remote Controller')
     private async createDefaultRemoteController() {
+        console.log(`IANHU createDefaultRemoteController`);
         // Get all remote kernels
         await this.loadNotebookControllers();
         const controllers = this.registeredNotebookControllers();
+        console.log(`IANHU createDefaultRemoteController ${controllers.length}`);
         if (controllers.length === 0) {
             traceError('No remote controllers');
             return;
