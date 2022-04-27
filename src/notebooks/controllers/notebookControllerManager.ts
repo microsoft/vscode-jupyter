@@ -453,6 +453,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             return;
         }
 
+        traceInfo(`IANHU document opened nbMetadata ${JSON.stringify(getNotebookMetadata(document))}`);
+
         void this.computePreferredNotebookController(document);
         if (isPythonNotebook(getNotebookMetadata(document)) && this.extensionChecker.isPythonExtensionInstalled) {
             // If we know we're dealing with a Python notebook, load the active interpreter as a kernel asap.
@@ -486,6 +488,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
                         ? await this.interpreters.getActiveInterpreter(document.uri)
                         : undefined;
+
+                traceInfo(`IANHU nbMetadata = ${JSON.stringify(notebookMetadata)}`);
+                traceInfo(`IANHU preferredInterpreter = ${preferredInterpreter?.uri}`);
 
                 ({ preferredConnection } = await this.findPreferredKernelExactMatch(
                     document,
