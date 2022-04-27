@@ -494,6 +494,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
                 ({ preferredConnection } = await this.findPreferredKernelExactMatch(
                     document,
+                    notebookMetadata,
                     preferredSearchToken.token,
                     'useCache',
                     preferredInterpreter
@@ -597,6 +598,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     // Use our kernel finder to rank our kernels, and see if we have an exact match
     private async findPreferredKernelExactMatch(
         document: NotebookDocument,
+        notebookMetadata: INotebookMetadata | undefined,
         cancelToken: CancellationToken,
         useCache: 'useCache' | 'ignoreCache' | undefined,
         preferredInterpreter: PythonEnvironment | undefined
@@ -604,7 +606,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         rankedConnections: KernelConnectionMetadata[] | undefined;
         preferredConnection: KernelConnectionMetadata | undefined;
     }> {
-        const notebookMetadata = getNotebookMetadata(document);
         let preferredConnection: KernelConnectionMetadata | undefined;
         traceInfo(`IANHU findPre nbMetadata ${JSON.stringify(notebookMetadata)}`);
         const rankedConnections = await this.kernelFinder.rankKernels(
