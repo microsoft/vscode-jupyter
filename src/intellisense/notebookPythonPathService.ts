@@ -57,7 +57,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
         }
 
         await this.apiProvider.getApi().then((api) => {
-            api.registerJupyterPythonPathFunction(this.jupyterPythonPathFunction)
+            api.registerJupyterPythonPathFunction((uri) => this.jupyterPythonPathFunction(uri))
         });
     }
 
@@ -72,6 +72,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
         if (!interpreter){return undefined;}
 
         const pythonPath = getFilePath(interpreter.uri);
+        this.output.appendLine(`NotebookPythonPathService: returning ${pythonPath}`);
         return pythonPath;
     }
 }
