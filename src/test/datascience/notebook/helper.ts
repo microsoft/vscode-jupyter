@@ -472,11 +472,14 @@ export async function prewarmNotebooks() {
     try {
         // Ensure preferred language is always Python.
         const memento = serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
-        if (memento.get(LastSavedNotebookCellLanguage) !== PYTHON_LANGUAGE) {
+        const lastSaved = memento.get(LastSavedNotebookCellLanguage);
+        traceInfo(`IANHU lastSaved ${lastSaved}`);
+        if (lastSaved !== PYTHON_LANGUAGE) {
             await memento.update(LastSavedNotebookCellLanguage, PYTHON_LANGUAGE);
         }
         await editorProvider.createNew();
         await insertCodeCell('print("Hello World1")', { index: 0 });
+        traceInfo(`IANHU prewarmNotebooks wait for kernel selection`);
         await waitForKernelToGetAutoSelected();
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(0)!;
         traceInfoIfCI(`Running all cells in prewarm notebooks`);

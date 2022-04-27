@@ -66,6 +66,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
             const isPythonNbOrInteractiveWindow = isPythonNotebook(notebookMetadata) || resourceType === 'interactive';
 
             // IANHU logging
+            traceInfo(`IANHU nbMetadata ${JSON.stringify(notebookMetadata)}`);
             traceInfo(`IANHU isPythonNB ${isPythonNbOrInteractiveWindow}`);
             traceInfo(`IANHU isPythonInstalled ${this.extensionChecker.isPythonExtensionInstalled}`);
 
