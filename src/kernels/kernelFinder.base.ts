@@ -12,7 +12,7 @@ import { noop } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { isArray } from '../platform/common/utils/sysTypes';
 import { IInterpreterService } from '../platform/interpreter/contracts';
-import { traceError, traceDecoratorVerbose } from '../platform/logging';
+import { traceError, traceInfo, traceDecoratorVerbose } from '../platform/logging';
 import { TraceOptions } from '../platform/logging/types';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { DisplayOptions } from './displayOptions';
@@ -64,11 +64,18 @@ export abstract class BaseKernelFinder implements IKernelFinder {
             const cached = await this.listKernels(resource, cancelToken, useCache);
 
             const isPythonNbOrInteractiveWindow = isPythonNotebook(notebookMetadata) || resourceType === 'interactive';
+
+            // IANHU logging
+            traceInfo(`IANHU isPythonNB ${isPythonNbOrInteractiveWindow}`);
+            traceInfo(`IANHU isPythonInstalled ${this.extensionChecker.isPythonExtensionInstalled}`);
+
             // Always include the interpreter in the search if we can
             const preferredInterpreter =
                 isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
                     ? await this.interpreterService.getActiveInterpreter(resource)
                     : undefined;
+
+            traceInfo(`IANHU activeInterpreter ${preferredInterpreter}`);
 
             const preferredRemoteKernelId =
                 resource &&
