@@ -177,6 +177,8 @@ export function sharedRemoteNotebookEditorTests(
     });
 
     test('Can run against a remote kernelspec', async function () {
+        console.log(`IANHU starting test`);
+
         await controllerManager.loadNotebookControllers();
         const controllers = controllerManager.registeredNotebookControllers();
 
@@ -186,6 +188,8 @@ export function sharedRemoteNotebookEditorTests(
             'Should have at least one remote controller'
         );
 
+        console.log(`IANHU found remote controller`);
+
         await createEmptyPythonNotebook(disposables);
 
         // Find the default remote Python kernel (we know that will have ipykernel, as we've set up CI as such).
@@ -194,6 +198,12 @@ export function sharedRemoteNotebookEditorTests(
             undefined
         );
         assert.ok(defaultPythonKernel, 'No default remote kernel');
+
+        if (defaultPythonKernel) {
+            console.log(`IANHU found default controller`);
+            console.log(`IANHU default controller ${JSON.stringify(defaultPythonKernel)}`);
+        }
+
         assert.strictEqual(
             defaultPythonKernel?.connection.kind,
             'startUsingRemoteKernelSpec',
@@ -203,6 +213,8 @@ export function sharedRemoteNotebookEditorTests(
             id: defaultPythonKernel!.controller.id,
             extension: JVSC_EXTENSION_ID_FOR_TESTS
         });
+
+        console.log(`IANHU kernel selected`);
 
         await insertCodeCell('print("123412341234")', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
