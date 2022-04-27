@@ -3,7 +3,7 @@
 
 import { injectable, inject } from 'inversify';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
-import { KernelConnectionWrapper } from '../../kernels/kernelConnectionWrapper.node';
+import { KernelConnectionWrapper } from '../../kernels/kernelConnectionWrapper';
 import {
     IKernelProvider,
     IKernel,
