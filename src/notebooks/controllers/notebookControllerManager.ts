@@ -606,9 +606,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }> {
         const notebookMetadata = getNotebookMetadata(document);
         let preferredConnection: KernelConnectionMetadata | undefined;
+        traceInfo(`IANHU findPre nbMetadata ${JSON.stringify(notebookMetadata)}`);
         const rankedConnections = await this.kernelFinder.rankKernels(
             document.uri,
-            getNotebookMetadata(document),
+            notebookMetadata,
             cancelToken,
             useCache
         );
