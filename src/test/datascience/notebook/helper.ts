@@ -255,13 +255,14 @@ export async function waitForKernelToChange(
     criteria:
         | { labelOrId: string; isInteractiveController?: boolean }
         | { interpreterPath: Uri; isInteractiveController?: boolean },
-    timeout = defaultNotebookTestTimeout
+    timeout = defaultNotebookTestTimeout,
+    skipAutoSelection?: boolean
 ) {
     // Wait for the previous kernel change to finish.
     if (waitForKernelPendingPromise != undefined) {
         await waitForKernelPendingPromise;
     }
-    waitForKernelPendingPromise = waitForKernelToChangeImpl(criteria, timeout);
+    waitForKernelPendingPromise = waitForKernelToChangeImpl(criteria, timeout, skipAutoSelection);
     return waitForKernelPendingPromise;
 }
 
@@ -269,7 +270,8 @@ async function waitForKernelToChangeImpl(
     criteria:
         | { labelOrId: string; isInteractiveController?: boolean }
         | { interpreterPath: Uri; isInteractiveController?: boolean },
-    timeout = defaultNotebookTestTimeout
+    timeout = defaultNotebookTestTimeout,
+    skipAutoSelection?: boolean
 ) {
     const { vscodeNotebook, notebookControllerManager } = await getServices();
 
@@ -333,7 +335,7 @@ async function waitForKernelToChangeImpl(
         await waitForCondition(
             async () => {
                 // Double check not the right kernel (don't select again if already found to be correct)
-                if (!isRightKernel()) {
+                if (!isRightKernel() && !skipAutoSelection) {
                     traceInfoIfCI(`Notebook select.kernel command switching to kernel id ${id}: Try ${tryCount}`);
                     // Send a select kernel on the active notebook editor. Keep sending it if it fails.
                     await commands.executeCommand('notebook.selectKernel', { id, extension: JVSC_EXTENSION_ID });
@@ -355,7 +357,8 @@ async function waitForKernelToChangeImpl(
 export async function waitForKernelToGetAutoSelected(
     expectedLanguage?: string,
     preferRemoteKernelSpec: boolean = false,
-    timeout = 100_000
+    timeout = 100_000,
+    skipAutoSelection: boolean = false
 ) {
     traceInfoIfCI('Wait for kernel to get auto selected');
     const { vscodeNotebook, notebookControllerManager } = await getServices();
@@ -433,7 +436,7 @@ export async function waitForKernelToGetAutoSelected(
     }
     traceInfo(`Preferred kernel for selection is ${match?.id}, criteria = ${JSON.stringify(criteria)}`);
     assert.ok(match, 'No kernel to auto select');
-    return waitForKernelToChange(criteria, timeout);
+    return waitForKernelToChange(criteria, timeout, skipAutoSelection);
 }
 
 let workedAroundVSCodeNotebookStartPage = false;

@@ -38,7 +38,7 @@ export class BaseBackingFileCreator implements IJupyterBackingFileCreator {
 
         // Generate a more descriptive name
         const newName = resource
-            ? `${urlPath.basename(resource)}${getRemoteIPynbSuffix()}.ipynb`
+            ? `${urlPath.basename(resource, '.ipynb')}${getRemoteIPynbSuffix()}.ipynb`
             : `${DataScience.defaultNotebookName()}-${uuid()}.ipynb`;
 
         try {

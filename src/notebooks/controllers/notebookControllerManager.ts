@@ -312,6 +312,14 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             traceInfoIfCI(`Disposing controller ${controller.id}`);
             controller.dispose();
         });
+
+        // If any of our non cached controllers were remote, indicate a remote refresh
+        const liveConnections = nonCachedConnections.filter(
+            (n) => n.kind === 'connectToLiveRemoteKernel'
+        ) as LiveRemoteKernelConnectionMetadata[];
+        if (liveConnections.length > 0) {
+            this.remoteRefreshedEmitter.fire(liveConnections);
+        }
     }
 
     private listKernels(
