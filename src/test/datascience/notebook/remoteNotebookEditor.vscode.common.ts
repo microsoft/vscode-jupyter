@@ -150,11 +150,11 @@ export function sharedRemoteNotebookEditorTests(
         await closeActiveWindows();
 
         // Re-open and execute the second cell.
-        // It should connect to the same live kernel
+        // It should connect to the same live kernel. Don't force it to pick it.
         // Second cell should display the value of existing variable from previous execution.
 
         await openNotebook(ipynbFile);
-        await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE, true);
+        await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE, true, 100_000, true);
         nbEditor = vscodeNotebook.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');
 
