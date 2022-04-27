@@ -190,6 +190,7 @@ export async function createTemporaryNotebook(
  * This function ensures we always open a notebook for testing that is guaranteed to use a Python kernel.
  */
 export async function createEmptyPythonNotebook(disposables: IDisposable[] = [], rootFolder?: Uri) {
+    console.log(`IANHU creating empty notebook`);
     traceInfoIfCI('Creating an empty notebook');
     const { serviceContainer } = await getServices();
     const editorProvider = serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
@@ -357,6 +358,7 @@ export async function waitForKernelToGetAutoSelected(
     preferRemoteKernelSpec: boolean = false,
     timeout = 100_000
 ) {
+    console.log('IANHU wait for kernel to get auto selected');
     traceInfoIfCI('Wait for kernel to get auto selected');
     const { vscodeNotebook, notebookControllerManager } = await getServices();
 
@@ -382,6 +384,7 @@ export async function waitForKernelToGetAutoSelected(
     // We don't have one, try to find the preferred one
     let preferred: IVSCodeNotebookController | undefined;
 
+    console.log('IANHU wait for get preferredNotebookController');
     // Wait for one of them to have affinity as the preferred (this may not happen)
     try {
         await waitForCondition(
@@ -397,6 +400,7 @@ export async function waitForKernelToGetAutoSelected(
     } catch {
         // Do nothing for now. Just log it
         // IANHU traceInfoIfCI(`No preferred controller found during waitForKernelToGetAutoSelected`);
+        console.log(`IANHU No preferred controller found during waitForKernelToGetAutoSelected`);
         traceInfo(`No preferred controller found during waitForKernelToGetAutoSelected`);
     }
     // IANHU traceInfoIfCI(`Wait for kernel - got a preferred notebook controller: ${preferred?.id}`);
