@@ -200,7 +200,12 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             return this.createActiveInterpreterController(notebookType, resource);
         } else {
             traceInfoIfCI('CreateDefaultRemoteController');
-            return this.createDefaultRemoteController(notebookType);
+            const controller = await this.createDefaultRemoteController(notebookType);
+            if (controller) {
+                return controller;
+            }
+            traceVerbose('No default remote controller, hence returning the active interpreter');
+            return this.createActiveInterpreterController(notebookType, resource);
         }
     }
 
@@ -423,7 +428,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             }
         });
 
-        return defaultPython3Kernel || defaultPythonKernel || defaultPythonLanguageKernel || controllers[0];
+        return defaultPython3Kernel || defaultPythonKernel || defaultPythonLanguageKernel;
     }
     private removeNoPythonControllers() {
         this.notebookNoPythonController?.dispose();

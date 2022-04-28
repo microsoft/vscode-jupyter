@@ -23,7 +23,12 @@ import {
     NotebookController
 } from 'vscode';
 import { IPythonExtensionChecker } from '../platform/api/types';
-import { ICommandManager, IDocumentManager, IWorkspaceService } from '../platform/common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IDocumentManager,
+    IWorkspaceService
+} from '../platform/common/application/types';
 import { Commands, defaultNotebookFormat, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants';
 import '../platform/common/extensions';
 import { traceInfoIfCI } from '../platform/logging';
@@ -114,7 +119,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         private readonly errorHandler: IDataScienceErrorHandler,
         preferredController: IVSCodeNotebookController | undefined,
         public readonly notebookEditor: NotebookEditor,
-        public readonly inputUri: Uri
+        public readonly inputUri: Uri,
+        public readonly appShell: IApplicationShell
     ) {
         // Set our owner and first submitter
         if (this._owner) {
@@ -558,6 +564,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         let detachKernel = async () => noop();
         try {
             const kernel = await kernelPromise;
+            if (
+                kernel.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel' ||
+                kernel.kernelConnectionMetadata.kind === 'startUsingRemoteKernelSpec'
+            ) {
+                void this.appShell.showErrorMessage(DataScience.remoteDebuggerNotSupported());
+                isDebug = false;
+            }
             detachKernel = async () => {
                 if (isDebug) {
                     await this.interactiveWindowDebugger.detach(kernel!);
