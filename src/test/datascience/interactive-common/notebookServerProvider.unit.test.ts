@@ -51,6 +51,7 @@ suite('DataScience - NotebookServerProvider', () => {
         when(configurationService.getSettings(anything())).thenReturn(instance(pythonSettings));
         const serverStorage = mock(JupyterServerUriStorage);
         when(serverStorage.getUri()).thenResolve('local');
+        when(serverStorage.getRemoteUri()).thenResolve();
         const serverSelector = mock(JupyterServerSelector);
         const eventEmitter = new EventEmitter<void>();
         disposables.push(eventEmitter);

@@ -234,6 +234,7 @@ export interface IJupyterServerUriStorage {
     removeUri(uri: string): Promise<void>;
     clearUriList(): Promise<void>;
     getUri(): Promise<string>;
+    getRemoteUri(): Promise<string | undefined>;
     setUri(uri: string): Promise<void>;
 }
 

@@ -137,6 +137,19 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
 
         return this.currentUriPromise;
     }
+    public async getRemoteUri(): Promise<string | undefined> {
+        const uri = await this.getUri();
+        switch (uri) {
+            case Settings.JupyterServerLocalLaunch:
+                return;
+            case Settings.JupyterServerRemoteLaunch:
+                // In `getUriInternal` its not possible for us to end up with Settings.JupyterServerRemoteLaunch.
+                // If we do, then this means the uri was never saved or not in encrypted store, hence no point returning and invalid entry.
+                return;
+            default:
+                return uri;
+        }
+    }
 
     public async setUri(uri: string) {
         // Set the URI as our current state

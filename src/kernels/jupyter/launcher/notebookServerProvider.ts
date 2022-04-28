@@ -189,12 +189,12 @@ export class NotebookServerProvider implements IJupyterServerProvider {
 
     private async getNotebookServerOptions(resource: Resource, forLocal: boolean): Promise<INotebookServerOptions> {
         // Since there's one server per session, don't use a resource to figure out these settings
-        let serverURI: string | undefined = await this.serverUriStorage.getUri();
+        let serverURI: string | undefined = await this.serverUriStorage.getRemoteUri();
         const useDefaultConfig: boolean | undefined =
             this.configuration.getSettings(undefined).useDefaultConfigForJupyter;
 
         // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
-        if (forLocal || (serverURI && serverURI.toLowerCase() === Settings.JupyterServerLocalLaunch)) {
+        if (forLocal || !serverURI) {
             return {
                 resource,
                 skipUsingDefaultConfig: !useDefaultConfig,
@@ -206,7 +206,11 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         if (serverURI === Settings.JupyterServerRemoteLaunch) {
             await this.serverSelector.selectJupyterURI(true);
             // Should have been saved
-            serverURI = await this.serverUriStorage.getUri();
+            serverURI = await this.serverUriStorage.getRemoteUri();
+
+            if (!serverURI) {
+                throw new Error('Remote Jupyter Server connection not provided');
+            }
         }
 
         return {
