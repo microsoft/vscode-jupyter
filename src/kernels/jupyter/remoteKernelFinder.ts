@@ -52,14 +52,14 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
     @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'remote' })
     public async listKernels(
         _resource: Resource,
-        connInfo: INotebookProviderConnection | undefined,
+        connInfo: INotebookProviderConnection,
         _cancelToken: CancellationToken
     ): Promise<KernelConnectionMetadata[]> {
         // Get a jupyter session manager to talk to
         let sessionManager: IJupyterSessionManager | undefined;
 
         // This should only be used when doing remote.
-        if (connInfo && connInfo.type === 'jupyter') {
+        if (connInfo.type === 'jupyter') {
             try {
                 sessionManager = await this.jupyterSessionManagerFactory.create(connInfo);
 

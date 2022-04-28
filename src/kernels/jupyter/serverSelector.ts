@@ -100,6 +100,7 @@ export class JupyterServerSelector {
         }
 
         await this.serverUriStorage.setUri(userURI);
+        await this.serverUriStorage.addToUriList(userURI, Date.now(), userURI);
 
         // Indicate setting a jupyter URI to a remote setting. Check if an azure remote or not
         sendTelemetryEvent(Telemetry.SetJupyterURIToUserSpecified, undefined, {

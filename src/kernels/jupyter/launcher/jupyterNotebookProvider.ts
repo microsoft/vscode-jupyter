@@ -6,6 +6,7 @@
 import { inject, injectable } from 'inversify';
 import {
     ConnectNotebookProviderOptions,
+    GetServerOptions,
     IJupyterConnection,
     INotebook,
     isLocalConnection,
@@ -23,14 +24,9 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
     ) {}
 
     public async connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection> {
-        const server = await this.serverProvider.getOrCreateServer({
-            ui: options.ui,
-            resource: options.resource,
-            token: options.token,
-            localJupyter: options.kind === 'localJupyter'
-        });
+        const server = await this.serverProvider.getOrCreateServer(options);
         const connection = await server.connection;
-        if (options.kind === 'remoteJupyter') {
+        if (!options.localJupyter) {
             // Log this remote URI into our MRU list
             void this.serverStorage.addToUriList(
                 connection.url || connection.displayName,
@@ -42,13 +38,23 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
     }
 
     public async createNotebook(options: NotebookCreationOptions): Promise<INotebook> {
+        const kernelConnection = options.kernelConnection;
         // Make sure we have a server
-        const server = await this.serverProvider.getOrCreateServer({
-            ui: options.ui,
-            resource: options.resource,
-            token: options.token,
-            localJupyter: isLocalConnection(options.kernelConnection)
-        });
+        const serverOptions: GetServerOptions = isLocalConnection(kernelConnection)
+            ? {
+                  ui: options.ui,
+                  resource: options.resource,
+                  token: options.token,
+                  localJupyter: true
+              }
+            : {
+                  ui: options.ui,
+                  resource: options.resource,
+                  token: options.token,
+                  localJupyter: false,
+                  serverId: kernelConnection.serverId
+              };
+        const server = await this.serverProvider.getOrCreateServer(serverOptions);
         Cancellation.throwIfCanceled(options.token);
         return server.createNotebook(
             options.resource,

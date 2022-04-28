@@ -23,6 +23,7 @@ import {
     serializeKernelConnection,
     isExactMatch
 } from './helpers';
+import { computeUriHash } from './jupyter/jupyterUtils';
 import { IJupyterServerUriStorage } from './jupyter/types';
 import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKernelIdProvider';
 import { ILocalKernelFinder, IRemoteKernelFinder } from './raw/types';
@@ -155,7 +156,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         if (isLocalLaunch(this.configurationService)) {
             return [];
         }
-        const connInfo = await this.getConnectionInfo(cancelToken);
+        const connInfo = await this.getRemoteConnectionInfo(cancelToken);
 
         return this.listKernelsUsingFinder(
             () =>
@@ -229,13 +230,20 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         return list;
     }
 
-    private async getConnectionInfo(cancelToken?: CancellationToken): Promise<INotebookProviderConnection> {
+    private async getRemoteConnectionInfo(
+        cancelToken?: CancellationToken
+    ): Promise<INotebookProviderConnection | undefined> {
         const ui = new DisplayOptions(false);
+        const uri = await this.serverUriStorage.getRemoteUri();
+        if (!uri) {
+            return;
+        }
         return this.notebookProvider.connect({
             resource: undefined,
             ui,
-            kind: 'remoteJupyter',
-            token: cancelToken
+            localJupyter: false,
+            token: cancelToken,
+            serverId: computeUriHash(uri)
         });
     }
 
