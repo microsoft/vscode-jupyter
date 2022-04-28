@@ -412,15 +412,11 @@ export async function waitForKernelToGetAutoSelected(
     const preferredKind = preferRemoteKernelSpec ? 'startUsingRemoteKernelSpec' : preferred?.connection.kind;
     let match: IVSCodeNotebookController | undefined;
     if (preferred) {
-        if (preferred.connection.kind !== 'connectToLiveRemoteKernel') {
-            traceInfo(`Preferred lang: ${preferred.connection.kernelSpec?.language?.toLowerCase()}`);
-        }
         if (
             preferred.connection.kind !== 'connectToLiveRemoteKernel' &&
             (!expectedLanguage || preferred.connection.kernelSpec?.language?.toLowerCase() === expectedLower) &&
             preferredKind === preferred.connection.kind
         ) {
-            traceInfo(`Found match for preferred`);
             match = preferred;
         } else if (preferred.connection.kind === 'connectToLiveRemoteKernel') {
             match = preferred;
@@ -474,8 +470,7 @@ export async function prewarmNotebooks() {
     try {
         // Ensure preferred language is always Python.
         const memento = serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
-        const lastSaved = memento.get(LastSavedNotebookCellLanguage);
-        if (lastSaved !== PYTHON_LANGUAGE) {
+        if (memento.get(LastSavedNotebookCellLanguage) !== PYTHON_LANGUAGE) {
             await memento.update(LastSavedNotebookCellLanguage, PYTHON_LANGUAGE);
         }
         await editorProvider.createNew();
