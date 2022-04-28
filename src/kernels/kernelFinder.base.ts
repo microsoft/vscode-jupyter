@@ -12,7 +12,7 @@ import { noop } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { isArray } from '../platform/common/utils/sysTypes';
 import { IInterpreterService } from '../platform/interpreter/contracts';
-import { traceError, traceInfo, traceDecoratorVerbose } from '../platform/logging';
+import { traceError, traceDecoratorVerbose } from '../platform/logging';
 import { TraceOptions } from '../platform/logging/types';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { DisplayOptions } from './displayOptions';
