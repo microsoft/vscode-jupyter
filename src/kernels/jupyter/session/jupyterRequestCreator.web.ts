@@ -44,7 +44,7 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
     public getWebsocketCtor(cookieString?: string, allowUnauthorized?: boolean, getAuthHeaders?: () => any) {
         class JupyterWebSocket extends KernelSocketWrapper(WebSocketIsomorphic) {
             private kernelId: string | undefined;
-            private timer: NodeJS.Timeout | number;
+            //private timer: NodeJS.Timeout | number;
 
             constructor(url: string, protocols?: string | string[] | undefined) {
                 let co = {};
@@ -94,7 +94,7 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
                 }
 
                 // Ping the websocket connection every 30 seconds to make sure it stays alive
-                timer = this.timer = setInterval(() => this.ping(), 30_000);
+                //timer = this.timer = setInterval(() => this.ping(), 30_000);
             }
         }
         return JupyterWebSocket as any;
