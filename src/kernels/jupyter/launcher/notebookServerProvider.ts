@@ -60,7 +60,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         const serverOptions = await this.getNotebookServerOptions(options.resource, options.localJupyter === true);
 
         // If we are just fetching or only want to create for local, see if exists
-        if (options.localJupyter && !serverOptions.uri && this.jupyterExecution) {
+        if (options.localJupyter && this.jupyterExecution) {
             const server = await this.jupyterExecution.getServer(serverOptions);
             // Possible it wasn't created, hence create it.
             if (server) {
@@ -108,13 +108,6 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         }
         const serverOptions = await this.getNotebookServerOptions(resource, forLocal);
         traceInfo(`Checking for server existence.`);
-
-        // If the URI is 'remote' then the encrypted storage is not working. Ask user again for server URI
-        if (serverOptions.uri === Settings.JupyterServerRemoteLaunch) {
-            await this.serverSelector.selectJupyterURI(true);
-            // Should have been saved
-            serverOptions.uri = await this.serverUriStorage.getUri();
-        }
 
         const disposables: IDisposable[] = [];
         let progressReporter: IDisposable | undefined;
@@ -168,7 +161,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
 
     private async checkUsable(options: INotebookServerOptions): Promise<boolean> {
         try {
-            if (options && !options.uri && this.jupyterExecution) {
+            if (options.localJupyter && this.jupyterExecution) {
                 const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
                 return usableInterpreter ? true : false;
             } else {
@@ -202,7 +195,18 @@ export class NotebookServerProvider implements IJupyterServerProvider {
 
         // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
         if (forLocal || (serverURI && serverURI.toLowerCase() === Settings.JupyterServerLocalLaunch)) {
-            serverURI = undefined;
+            return {
+                resource,
+                skipUsingDefaultConfig: !useDefaultConfig,
+                ui: this.ui,
+                localJupyter: true
+            };
+        }
+        // If the URI is 'remote' then the encrypted storage is not working. Ask user again for server URI
+        if (serverURI === Settings.JupyterServerRemoteLaunch) {
+            await this.serverSelector.selectJupyterURI(true);
+            // Should have been saved
+            serverURI = await this.serverUriStorage.getUri();
         }
 
         return {

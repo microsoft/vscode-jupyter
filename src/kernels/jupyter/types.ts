@@ -68,20 +68,28 @@ export interface IJupyterNotebookProvider {
     createNotebook(options: NotebookCreationOptions): Promise<INotebook>;
 }
 
-export interface INotebookServerOptions {
-    /**
-     * Undefined when connecting to local Jupyter (in case Raw kernels aren't supported)
-     */
-    uri?: string;
-    resource: Resource;
-    skipUsingDefaultConfig?: boolean;
-    workingDir?: string;
-    ui: IDisplayOptions;
-    /**
-     * Whether we're only interested in local Jupyter Servers.
-     */
-    localJupyter: boolean;
-}
+export type INotebookServerOptions =
+    | {
+          resource: Resource;
+          skipUsingDefaultConfig?: boolean;
+          workingDir?: string;
+          ui: IDisplayOptions;
+          /**
+           * Whether we're only interested in local Jupyter Servers.
+           */
+          localJupyter: true;
+      }
+    | {
+          uri: string;
+          resource: Resource;
+          skipUsingDefaultConfig?: boolean;
+          workingDir?: string;
+          ui: IDisplayOptions;
+          /**
+           * Whether we're only interested in local Jupyter Servers.
+           */
+          localJupyter: false;
+      };
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution extends IAsyncDisposable {
