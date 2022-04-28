@@ -87,7 +87,7 @@ export class KernelConnector {
         switch (selection) {
             case DataScience.restartKernel(): {
                 // Set our status
-                const status = statusProvider.set(DataScience.restartingKernelStatus());
+                const status = statusProvider?.set(DataScience.restartingKernelStatus());
                 try {
                     await kernel.restart();
                     restartedKernel = true;
@@ -123,7 +123,7 @@ export class KernelConnector {
             clearInstalledIntoInterpreterMemento(memento, Product.ipykernel, metadata.interpreter.uri).ignoreErrors();
         }
 
-        const handleResult = await errorHandler.handleKernelError(
+        const handleResult = await errorHandler?.handleKernelError(
             error,
             errorContext,
             metadata,
@@ -133,7 +133,8 @@ export class KernelConnector {
 
         // Send telemetry for handling the error (if raw)
         const isLocal = isLocalConnection(metadata);
-        const rawLocalKernel = serviceContainer.get<IRawNotebookProvider>(IRawNotebookProvider).isSupported && isLocal;
+        const rawNotebookProvider = serviceContainer.get<IRawNotebookProvider>(IRawNotebookProvider);
+        const rawLocalKernel = rawNotebookProvider?.isSupported && isLocal;
         if (rawLocalKernel && errorContext === 'start') {
             sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartNoIpykernel, {
                 reason: handleResult

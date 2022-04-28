@@ -330,8 +330,7 @@
             {
                 "command": "jupyter.viewOutput",
                 "title": "%jupyter.command.jupyter.viewOutput.title%",
-                "category": "Jupyter",
-                "enablement": "!jupyter.webExtension"
+                "category": "Jupyter"
             },
             {
                 "command": "jupyter.notebookeditor.export",
