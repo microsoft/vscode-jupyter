@@ -76,6 +76,14 @@ import { INotebookMetadata } from '@jupyterlab/nbformat';
 const REMOTE_KERNEL_REFRESH_INTERVAL = 2_000;
 export const InteractiveControllerIdSuffix = ' (Interactive)';
 
+// Flag enum for the reason why a kernel was logged as an exact match
+export enum PreferredKernelExactMatchReason {
+    NoMatch = 0,
+    OnlyKernel = 1 << 0,
+    WasPreferredInterpreter = 1 << 1,
+    IsExactMatch = 1 << 2
+}
+
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
  * each of them
@@ -623,21 +631,31 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         if (rankedConnections && rankedConnections.length) {
             const potentialMatch = rankedConnections[rankedConnections.length - 1];
 
+            // Are we the only connection?
+            const onlyConnection = rankedConnections.length === 1;
+
             // Is the top ranked connection the preferred interpreter?
             const topMatchIsPreferredInterpreter = findKernelSpecMatchingInterpreter(preferredInterpreter, [
                 potentialMatch
             ]);
 
-            // Only assign if we are an exact match or if this is the only connection found
-            if (
-                rankedConnections.length === 1 ||
-                topMatchIsPreferredInterpreter ||
-                this.kernelFinder.isExactMatch(document.uri, potentialMatch, notebookMetadata)
-            ) {
+            // Are we an exact match based on metadata hash / name / ect...?
+            const isExactMatch = this.kernelFinder.isExactMatch(document.uri, potentialMatch, notebookMetadata);
+
+            // Match on our possible reasons
+            if (onlyConnection || topMatchIsPreferredInterpreter || isExactMatch) {
                 traceInfo(`Preferred kernel ${potentialMatch.id} is exact match`);
-                // IANHU telemetry here on reason why
                 preferredConnection = potentialMatch;
             }
+
+            // Send telemetry on why we matched
+            let matchReason: PreferredKernelExactMatchReason = PreferredKernelExactMatchReason.NoMatch;
+            onlyConnection && (matchReason |= PreferredKernelExactMatchReason.OnlyKernel);
+            topMatchIsPreferredInterpreter && (matchReason |= PreferredKernelExactMatchReason.WasPreferredInterpreter);
+            isExactMatch && (matchReason |= PreferredKernelExactMatchReason.IsExactMatch);
+            sendTelemetryEvent(Telemetry.PreferredKernelExactMatch, undefined, {
+                matchedReason: matchReason
+            });
         }
 
         return { rankedConnections, preferredConnection };

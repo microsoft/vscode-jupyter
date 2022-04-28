@@ -30,6 +30,7 @@ import { ExportFormat } from '../platform/export/types';
 import { InterruptResult, KernelInterpreterDependencyResponse } from '../kernels/types';
 import { populateTelemetryWithErrorInfo } from '../platform/errors';
 import { IExportedKernelService } from '../platform/api/extension';
+import { PreferredKernelExactMatchReason } from '../notebooks/controllers/notebookControllerManager';
 
 export const waitBeforeSending = 'waitBeforeSending';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -1563,5 +1564,8 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RunTest]: {
         testName: string;
         testResult: string;
+    };
+    [Telemetry.PreferredKernelExactMatch]: {
+        matchedReason: PreferredKernelExactMatchReason;
     };
 }
