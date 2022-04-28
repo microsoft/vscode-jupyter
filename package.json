@@ -787,7 +787,7 @@
                 "shortTitle": "%jupyter.command.jupyter.openVariableView.shorttitle%",
                 "icon": "$(variable-group)",
                 "category": "Jupyter",
-                "enablement": "notebookType == jupyter-notebook && isWorkspaceTrusted || notebookType == interactive && isWorkspaceTrusted"
+                "enablement": "notebookType == jupyter-notebook && isWorkspaceTrusted && !jupyter.webExtension || notebookType == interactive && isWorkspaceTrusted && !jupyter.webExtension"
             },
             {
                 "command": "jupyter.openOutlineView",

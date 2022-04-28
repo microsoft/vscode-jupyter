@@ -73,7 +73,7 @@ export class KernelConnector {
     ): Promise<boolean> {
         const appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
-        const statusProvider = serviceContainer.get<IStatusProvider>(IStatusProvider);
+        const statusProvider = serviceContainer.tryGet<IStatusProvider>(IStatusProvider);
 
         const selection = await appShell.showErrorMessage(
             DataScience.cannotRunCellKernelIsDead().format(
@@ -92,7 +92,7 @@ export class KernelConnector {
                     await kernel.restart();
                     restartedKernel = true;
                 } finally {
-                    status.dispose();
+                    status?.dispose();
                 }
                 break;
             }
@@ -114,7 +114,7 @@ export class KernelConnector {
         actionSource: KernelActionSource
     ) {
         const memento = serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
-        const errorHandler = serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
+        const errorHandler = serviceContainer.tryGet<IDataScienceErrorHandler>(IDataScienceErrorHandler);
 
         if (metadata.interpreter && errorContext === 'start') {
             // If we failed to start the kernel, then clear cache used to track
@@ -133,9 +133,9 @@ export class KernelConnector {
 
         // Send telemetry for handling the error (if raw)
         const isLocal = isLocalConnection(metadata);
-        const rawNotebookProvider = serviceContainer.get<IRawNotebookProvider>(IRawNotebookProvider);
+        const rawNotebookProvider = serviceContainer.tryGet<IRawNotebookProvider>(IRawNotebookProvider);
         const rawLocalKernel = rawNotebookProvider?.isSupported && isLocal;
-        if (rawLocalKernel && errorContext === 'start') {
+        if (rawLocalKernel && errorContext === 'start' && handleResult) {
             sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartNoIpykernel, {
                 reason: handleResult
             });

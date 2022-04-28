@@ -12,7 +12,6 @@ import { IConfigurationService, IDisposable, IDisposableRegistry, IExtensionCont
 import { debounceAsync, swallowExceptions } from './utils/decorators';
 import { noop } from './utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
-import { CommandRegistry } from '../../interactive-window/commands/commandRegistry';
 import { EditorContexts, Telemetry } from './constants';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
@@ -32,19 +31,14 @@ export class GlobalActivation implements IExtensionSingleActivationService {
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
-        @inject(CommandRegistry) private commandRegistry: CommandRegistry,
         @inject(IRawNotebookSupportedService) private rawSupported: IRawNotebookSupportedService
-    ) {
-        this.disposableRegistry.push(this.commandRegistry);
-    }
+    ) {}
 
     public get activationStartTime(): number {
         return this.startTime;
     }
 
     public async activate(): Promise<void> {
-        this.commandRegistry.register();
-
         this.extensionContext.subscriptions.push(
             vscode.languages.registerCodeLensProvider([PYTHON_FILE, PYTHON_UNTITLED], this.dataScienceCodeLensProvider)
         );
