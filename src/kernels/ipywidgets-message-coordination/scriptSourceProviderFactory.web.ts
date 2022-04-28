@@ -9,16 +9,22 @@ import { ILocalResourceUriConverter, IWidgetScriptSourceProvider, IWidgetScriptS
 
 @injectable()
 export class ScriptSourceProviderFactory implements IWidgetScriptSourceProviderFactory {
-    public getProviders(kernel: IKernel, _uriConverter: ILocalResourceUriConverter, httpClient: IHttpClient) {
+    public getProviders(
+        kernel: IKernel,
+        _uriConverter: ILocalResourceUriConverter,
+        httpClient: IHttpClient | undefined
+    ) {
         const scriptProviders: IWidgetScriptSourceProvider[] = [];
 
         // Only remote is supported at the moment
         switch (kernel.kernelConnectionMetadata.kind) {
             case 'connectToLiveRemoteKernel':
             case 'startUsingRemoteKernelSpec':
-                scriptProviders.push(
-                    new RemoteWidgetScriptSourceProvider(kernel.kernelConnectionMetadata.baseUrl, httpClient)
-                );
+                if (httpClient) {
+                    scriptProviders.push(
+                        new RemoteWidgetScriptSourceProvider(kernel.kernelConnectionMetadata.baseUrl, httpClient)
+                    );
+                }
                 break;
         }
 

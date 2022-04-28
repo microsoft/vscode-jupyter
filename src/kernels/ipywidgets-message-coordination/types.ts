@@ -57,7 +57,7 @@ export interface IWidgetScriptSourceProviderFactory {
     getProviders(
         kernel: IKernel,
         uriConverter: ILocalResourceUriConverter,
-        httpClient: IHttpClient
+        httpClient: IHttpClient | undefined
     ): IWidgetScriptSourceProvider[];
 }
 
