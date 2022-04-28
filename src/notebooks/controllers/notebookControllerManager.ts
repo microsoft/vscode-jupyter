@@ -394,7 +394,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         controllers.forEach((item) => {
             if (
                 item.connection.kind !== 'startUsingRemoteKernelSpec' ||
-                item.connection.id.includes(InteractiveControllerIdSuffix)
+                item.id.includes(InteractiveControllerIdSuffix)
             ) {
                 return;
             }
