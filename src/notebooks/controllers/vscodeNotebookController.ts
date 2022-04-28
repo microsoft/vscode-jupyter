@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { join } from '../../platform/vscode-path/path';
 import {
     CancellationError,
     CancellationError as VscCancellationError,
@@ -374,11 +373,11 @@ export class VSCodeNotebookController implements Disposable {
         );
     }
     private getRendererScripts(): NotebookRendererScript[] {
-        const scripts: string[] = [];
+        const scripts: Uri[] = [];
 
         // Put require.js first
         scripts.push(
-            join(this.context.extensionPath, 'out', 'webviews/webview-side', 'ipywidgetsKernel', 'require.js')
+            Uri.joinPath(this.context.extensionUri, 'out', 'webviews/webview-side', 'ipywidgetsKernel', 'require.js')
         );
 
         // Only used in tests & while debugging.
@@ -387,13 +386,19 @@ export class VSCodeNotebookController implements Disposable {
             this.context.extensionMode === ExtensionMode.Test
         ) {
             scripts.push(
-                join(this.context.extensionPath, 'out', 'webviews/webview-side', 'widgetTester', 'widgetTester.js')
+                Uri.joinPath(
+                    this.context.extensionUri,
+                    'out',
+                    'webviews/webview-side',
+                    'widgetTester',
+                    'widgetTester.js'
+                )
             );
 
             // In development mode, ipywidgets is not under the 'out' folder.
             scripts.push(
-                join(
-                    this.context.extensionPath,
+                Uri.joinPath(
+                    this.context.extensionUri,
                     'node_modules',
                     '@vscode',
                     'jupyter-ipywidgets',
@@ -404,8 +409,8 @@ export class VSCodeNotebookController implements Disposable {
         } else {
             // Normal package mode, ipywidgets ends up next to extension.ts
             scripts.push(
-                join(
-                    this.context.extensionPath,
+                Uri.joinPath(
+                    this.context.extensionUri,
                     'out',
                     'node_modules',
                     '@vscode',
@@ -417,18 +422,18 @@ export class VSCodeNotebookController implements Disposable {
         }
         scripts.push(
             ...[
-                join(
-                    this.context.extensionPath,
+                Uri.joinPath(
+                    this.context.extensionUri,
                     'out',
                     'webviews',
                     'webview-side',
                     'ipywidgetsKernel',
                     'ipywidgetsKernel.js'
                 ),
-                join(this.context.extensionPath, 'out', 'fontAwesome', 'fontAwesomeLoader.js')
+                Uri.joinPath(this.context.extensionUri, 'out', 'fontAwesome', 'fontAwesomeLoader.js')
             ]
         );
-        return scripts.map((uri) => new NotebookRendererScript(Uri.file(uri)));
+        return scripts.map((uri) => new NotebookRendererScript(uri));
     }
 
     private handleInterrupt(notebook: NotebookDocument) {
