@@ -194,7 +194,6 @@ export async function createEmptyPythonNotebook(
     rootFolder?: Uri,
     dontWaitForKernel?: boolean
 ) {
-    console.log(`IANHU creating empty notebook`);
     traceInfoIfCI('Creating an empty notebook');
     const { serviceContainer } = await getServices();
     const editorProvider = serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
@@ -364,7 +363,6 @@ export async function waitForKernelToGetAutoSelected(
     preferRemoteKernelSpec: boolean = false,
     timeout = 100_000
 ) {
-    console.log('IANHU wait for kernel to get auto selected');
     traceInfoIfCI('Wait for kernel to get auto selected');
     const { vscodeNotebook, notebookControllerManager } = await getServices();
 
@@ -390,7 +388,6 @@ export async function waitForKernelToGetAutoSelected(
     // We don't have one, try to find the preferred one
     let preferred: IVSCodeNotebookController | undefined;
 
-    console.log('IANHU wait for get preferredNotebookController');
     // Wait for one of them to have affinity as the preferred (this may not happen)
     try {
         await waitForCondition(
@@ -405,13 +402,9 @@ export async function waitForKernelToGetAutoSelected(
         );
     } catch {
         // Do nothing for now. Just log it
-        // IANHU traceInfoIfCI(`No preferred controller found during waitForKernelToGetAutoSelected`);
-        console.log(`IANHU No preferred controller found during waitForKernelToGetAutoSelected`);
-        traceInfo(`No preferred controller found during waitForKernelToGetAutoSelected`);
+        traceInfoIfCI(`No preferred controller found during waitForKernelToGetAutoSelected`);
     }
-    // IANHU traceInfoIfCI(`Wait for kernel - got a preferred notebook controller: ${preferred?.id}`);
-    traceInfo(`IANHU Wait for kernel - got a preferred notebook controller: ${preferred?.id}`);
-    console.log(`IANHU Wait for kernel - got a preferred notebook controller: ${preferred?.id}`);
+    traceInfoIfCI(`Wait for kernel - got a preferred notebook controller: ${preferred?.id}`);
 
     // Find one that matches the expected language or the preferred
     const expectedLower = expectedLanguage?.toLowerCase();
@@ -419,25 +412,21 @@ export async function waitForKernelToGetAutoSelected(
     const preferredKind = preferRemoteKernelSpec ? 'startUsingRemoteKernelSpec' : preferred?.connection.kind;
     let match: IVSCodeNotebookController | undefined;
     if (preferred) {
-        traceInfo(`IANHU Language: ${language}`);
-        console.log(`IANHU Language: ${language}`);
-        traceInfo(`IANHU Preferred kind ${preferredKind}`);
         if (preferred.connection.kind !== 'connectToLiveRemoteKernel') {
-            traceInfo(`IANHU Preferred lang: ${preferred.connection.kernelSpec?.language?.toLowerCase()}`);
+            traceInfo(`Preferred lang: ${preferred.connection.kernelSpec?.language?.toLowerCase()}`);
         }
         if (
             preferred.connection.kind !== 'connectToLiveRemoteKernel' &&
             (!expectedLanguage || preferred.connection.kernelSpec?.language?.toLowerCase() === expectedLower) &&
             preferredKind === preferred.connection.kind
         ) {
-            traceInfo(`IANHU Found match for preferred`);
+            traceInfo(`Found match for preferred`);
             match = preferred;
         } else if (preferred.connection.kind === 'connectToLiveRemoteKernel') {
             match = preferred;
         }
     }
     if (!match) {
-        console.log('IANHU no match found');
         match = notebookControllers.find(
             (d) =>
                 d.connection.kind != 'connectToLiveRemoteKernel' &&
@@ -452,7 +441,7 @@ export async function waitForKernelToGetAutoSelected(
             `Houston, we have a problem, no match. Expected language ${expectedLanguage}. Expected kind ${preferredKind}.`
         );
     }
-    traceInfo(`IANHU Preferred kernel for selection is ${match?.id}, criteria = ${JSON.stringify(criteria)}`);
+    traceInfo(`Preferred kernel for selection is ${match?.id}, criteria = ${JSON.stringify(criteria)}`);
     assert.ok(match, 'No kernel to auto select');
     return waitForKernelToChange(criteria, timeout);
 }
@@ -486,13 +475,11 @@ export async function prewarmNotebooks() {
         // Ensure preferred language is always Python.
         const memento = serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
         const lastSaved = memento.get(LastSavedNotebookCellLanguage);
-        traceInfo(`IANHU lastSaved ${lastSaved}`);
         if (lastSaved !== PYTHON_LANGUAGE) {
             await memento.update(LastSavedNotebookCellLanguage, PYTHON_LANGUAGE);
         }
         await editorProvider.createNew();
         await insertCodeCell('print("Hello World1")', { index: 0 });
-        traceInfo(`IANHU prewarmNotebooks wait for kernel selection`);
         await waitForKernelToGetAutoSelected();
         const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(0)!;
         traceInfoIfCI(`Running all cells in prewarm notebooks`);

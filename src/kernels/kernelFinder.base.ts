@@ -65,18 +65,11 @@ export abstract class BaseKernelFinder implements IKernelFinder {
 
             const isPythonNbOrInteractiveWindow = isPythonNotebook(notebookMetadata) || resourceType === 'interactive';
 
-            // IANHU logging
-            traceInfo(`IANHU nbMetadata ${JSON.stringify(notebookMetadata)}`);
-            traceInfo(`IANHU isPythonNB ${isPythonNbOrInteractiveWindow}`);
-            traceInfo(`IANHU isPythonInstalled ${this.extensionChecker.isPythonExtensionInstalled}`);
-
             // Always include the interpreter in the search if we can
             const preferredInterpreter =
                 isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
                     ? await this.interpreterService.getActiveInterpreter(resource)
                     : undefined;
-
-            traceInfo(`IANHU activeInterpreter ${preferredInterpreter}`);
 
             const preferredRemoteKernelId =
                 resource &&

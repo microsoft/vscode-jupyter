@@ -188,11 +188,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         resource: Resource
     ): Promise<IVSCodeNotebookController | undefined> {
         if (this.isLocalLaunch) {
-            console.log(`IANHU local`);
             traceInfoIfCI('CreateActiveInterpreterController');
             return this.createActiveInterpreterController(notebookType, resource);
         } else {
-            console.log(`IANHU remote`);
             traceInfoIfCI('CreateDefaultRemoteController');
             return this.createDefaultRemoteController(notebookType);
         }
@@ -378,11 +376,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private async createDefaultRemoteController(
         notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
     ) {
-        console.log(`IANHU createDefaultRemoteController`);
         // Get all remote kernels
         await this.loadNotebookControllers();
         const controllers = this.registeredNotebookControllers();
-        console.log(`IANHU createDefaultRemoteController ${controllers.length}`);
         if (controllers.length === 0) {
             traceError('No remote controllers');
             return;
@@ -464,8 +460,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             return;
         }
 
-        traceInfo(`IANHU document opened nbMetadata ${JSON.stringify(getNotebookMetadata(document))}`);
-
         void this.computePreferredNotebookController(document);
         if (isPythonNotebook(getNotebookMetadata(document)) && this.extensionChecker.isPythonExtensionInstalled) {
             // If we know we're dealing with a Python notebook, load the active interpreter as a kernel asap.
@@ -476,7 +470,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     public async computePreferredNotebookController(
         document: NotebookDocument
     ): Promise<IVSCodeNotebookController | undefined> {
-        console.log('IANHU compute preferred');
         traceInfoIfCI(`Clear controller mapping for ${getDisplayPath(document.uri)}`);
         const loadControllersPromise = this.loadNotebookControllers();
         // Keep track of a token per document so that we can cancel the search if the doc is closed
@@ -500,11 +493,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
                         ? await this.interpreters.getActiveInterpreter(document.uri)
                         : undefined;
-
-                traceInfo(`IANHU nbMetadata = ${JSON.stringify(notebookMetadata)}`);
-                traceInfo(`IANHU preferredInterpreter = ${preferredInterpreter?.uri}`);
-                console.log(`IANHU nbMetadata = ${JSON.stringify(notebookMetadata)}`);
-                console.log(`IANHU preferredInterpreter = ${preferredInterpreter?.uri}`);
 
                 ({ preferredConnection } = await this.findPreferredKernelExactMatch(
                     document,
@@ -632,15 +620,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             useCache
         );
 
-        traceInfo(`IANHU RankedConnections: ${rankedConnections?.length} connections`);
-        console.log(`IANHU RankedConnections: ${rankedConnections?.length} connections`);
-        if (rankedConnections && rankedConnections.length > 0) {
-            traceInfo(`IANHU Top RankedConnection: ${JSON.stringify(rankedConnections[rankedConnections.length - 1])}`);
-            console.log(
-                `IANHU Top RankedConnection: ${JSON.stringify(rankedConnections[rankedConnections.length - 1])}`
-            );
-        }
-
         if (rankedConnections && rankedConnections.length) {
             const potentialMatch = rankedConnections[rankedConnections.length - 1];
 
@@ -650,21 +629,15 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             ]);
 
             // Only assign if we are an exact match or if this is the only connection found
-            traceInfo(`IANHU: topMatchIsPreferredInterpreter: ${topMatchIsPreferredInterpreter}`);
-            console.log(`IANHU: topMatchIsPreferredInterpreter: ${topMatchIsPreferredInterpreter}`);
-            const isMatch = this.kernelFinder.isExactMatch(document.uri, potentialMatch, notebookMetadata);
-            traceInfo(`IANHU: isMatch: ${isMatch}`);
-            console.log(`IANHU: isMatch: ${isMatch}`);
-            if (rankedConnections.length === 1 || topMatchIsPreferredInterpreter || isMatch) {
+            if (
+                rankedConnections.length === 1 ||
+                topMatchIsPreferredInterpreter ||
+                this.kernelFinder.isExactMatch(document.uri, potentialMatch, notebookMetadata)
+            ) {
+                traceInfo(`Preferred kernel ${potentialMatch.id} is exact match`);
+                // IANHU telemetry here on reason why
                 preferredConnection = potentialMatch;
             }
-            // if (
-            // rankedConnections.length === 1 ||
-            // topMatchIsPreferredInterpreter ||
-            // this.kernelFinder.isExactMatch(document.uri, potentialMatch, notebookMetadata)
-            // ) {
-            // preferredConnection = potentialMatch;
-            // }
         }
 
         return { rankedConnections, preferredConnection };
