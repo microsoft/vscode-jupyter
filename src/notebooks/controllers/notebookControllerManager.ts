@@ -514,15 +514,19 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     preferredInterpreter
                 ));
 
+                // If we don't get a preferred, prep te ignore cache search to check next
+                const ignoreCacheFindPreferredPromise = this.findPreferredKernelExactMatch(
+                    document,
+                    notebookMetadata,
+                    preferredSearchToken.token,
+                    'ignoreCache',
+                    preferredInterpreter
+                );
+
                 // If we didn't find an exact match in the cache, try ignoring the cache
-                // IANHU - Slowdown? Only use cache for now
-                // if (!preferredConnection) {
-                // ({ preferredConnection } = await this.findPreferredKernelExactMatch(
-                // document,
-                // preferredSearchToken.token,
-                // 'ignoreCache'
-                // ));
-                // }
+                if (!preferredConnection) {
+                    ({ preferredConnection } = await ignoreCacheFindPreferredPromise);
+                }
 
                 // Send telemetry on loooking for preferred don't await for sending it
                 this.sendPreferredKernelTelemetry(
