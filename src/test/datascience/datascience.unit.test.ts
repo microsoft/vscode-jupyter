@@ -5,7 +5,7 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, when } from 'ts-mockito';
 import { CommandManager } from '../../platform/common/application/commandManager';
 import { DocumentManager } from '../../platform/common/application/documentManager';
 import { IDocumentManager, IWorkspaceService } from '../../platform/common/application/types';
@@ -13,7 +13,6 @@ import { WorkspaceService } from '../../platform/common/application/workspace.no
 import { JupyterSettings } from '../../platform/common/configSettings';
 import { ConfigurationService } from '../../platform/common/configuration/service.node';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../platform/common/types';
-import { CommandRegistry } from '../../interactive-window/commands/commandRegistry';
 import { GlobalActivation } from '../../platform/common/globalActivation.node';
 import { DataScienceCodeLensProvider } from '../../interactive-window/editor-integration/codelensprovider';
 import { RawNotebookSupportedService } from '../../kernels/raw/session/rawNotebookSupportedService.node';
@@ -29,7 +28,6 @@ suite('DataScience Tests', () => {
     let configService: IConfigurationService;
     let docManager: IDocumentManager;
     let workspaceService: IWorkspaceService;
-    let cmdRegistry: CommandRegistry;
     let settings: IWatchableJupyterSettings;
     let onDidChangeSettings: sinon.SinonStub;
     let onDidChangeActiveTextEditor: sinon.SinonStub;
@@ -39,7 +37,6 @@ suite('DataScience Tests', () => {
         dataScienceCodeLensProvider = mock(DataScienceCodeLensProvider);
         configService = mock(ConfigurationService);
         workspaceService = mock(WorkspaceService);
-        cmdRegistry = mock(CommandRegistry);
         docManager = mock(DocumentManager);
         settings = mock(JupyterSettings);
         rawNotebookSupported = mock(RawNotebookSupportedService);
@@ -54,7 +51,6 @@ suite('DataScience Tests', () => {
             instance(configService),
             instance(docManager),
             instance(workspaceService),
-            instance(cmdRegistry),
             instance(rawNotebookSupported)
         );
 
@@ -72,9 +68,6 @@ suite('DataScience Tests', () => {
             await dataScience.activate();
         });
 
-        test('Should register commands', async () => {
-            verify(cmdRegistry.register()).once();
-        });
         test('Should add handler for Settings Changed', async () => {
             assert.ok(onDidChangeSettings.calledOnce);
         });

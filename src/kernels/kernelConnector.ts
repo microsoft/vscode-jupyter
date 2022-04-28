@@ -73,7 +73,8 @@ export class KernelConnector {
     ): Promise<boolean> {
         const appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
-        const statusProvider = serviceContainer.get<IStatusProvider>(IStatusProvider);
+        // Status provider may not be available in web situation
+        const statusProvider = serviceContainer.tryGet<IStatusProvider>(IStatusProvider);
 
         const selection = await appShell.showErrorMessage(
             DataScience.cannotRunCellKernelIsDead().format(
@@ -87,12 +88,12 @@ export class KernelConnector {
         switch (selection) {
             case DataScience.restartKernel(): {
                 // Set our status
-                const status = statusProvider.set(DataScience.restartingKernelStatus());
+                const status = statusProvider?.set(DataScience.restartingKernelStatus());
                 try {
                     await kernel.restart();
                     restartedKernel = true;
                 } finally {
-                    status.dispose();
+                    status?.dispose();
                 }
                 break;
             }
@@ -114,6 +115,7 @@ export class KernelConnector {
         actionSource: KernelActionSource
     ) {
         const memento = serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
+        // Error handler may not be available in web situation
         const errorHandler = serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
 
         if (metadata.interpreter && errorContext === 'start') {
@@ -133,7 +135,10 @@ export class KernelConnector {
 
         // Send telemetry for handling the error (if raw)
         const isLocal = isLocalConnection(metadata);
-        const rawLocalKernel = serviceContainer.get<IRawNotebookProvider>(IRawNotebookProvider).isSupported && isLocal;
+
+        // Raw notebook provider is not available in web
+        const rawNotebookProvider = serviceContainer.tryGet<IRawNotebookProvider>(IRawNotebookProvider);
+        const rawLocalKernel = rawNotebookProvider?.isSupported && isLocal;
         if (rawLocalKernel && errorContext === 'start') {
             sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartNoIpykernel, {
                 reason: handleResult

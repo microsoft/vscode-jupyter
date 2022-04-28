@@ -24,7 +24,7 @@ export function registerTypes(serviceManager: IServiceManager) {
         IDataScienceCommandListener,
         InteractiveWindowCommandListener
     );
-    serviceManager.addSingleton<CommandRegistry>(CommandRegistry, CommandRegistry);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, CommandRegistry);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, HoverProvider);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
     serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);

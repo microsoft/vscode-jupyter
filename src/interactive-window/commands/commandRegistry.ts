@@ -24,6 +24,7 @@ import {
     IConfigurationService,
     IDataScienceCommandListener,
     IDisposable,
+    IDisposableRegistry,
     IOutputChannel
 } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
@@ -43,34 +44,43 @@ import { IDataScienceCodeLensProvider, ICodeWatcher } from '../editor-integratio
 import { IExportCommands, IInteractiveWindowProvider } from '../types';
 import * as urlPath from '../../platform/vscode-path/resources';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
+import { IExtensionSingleActivationService } from '../../platform/activation/types';
 
 @injectable()
-export class CommandRegistry implements IDisposable {
-    private readonly disposables: IDisposable[] = [];
+export class CommandRegistry implements IDisposable, IExtensionSingleActivationService {
     private dataViewerChecker: DataViewerChecker;
     constructor(
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
-        @inject(IDataScienceCodeLensProvider) private dataScienceCodeLensProvider: IDataScienceCodeLensProvider,
+        @inject(IDataScienceCodeLensProvider)
+        @optional()
+        private dataScienceCodeLensProvider: IDataScienceCodeLensProvider | undefined,
         @multiInject(IDataScienceCommandListener)
         @optional()
         private commandListeners: IDataScienceCommandListener[] | undefined,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IDebugService) private debugService: IDebugService,
+        @inject(IDebugService) @optional() private debugService: IDebugService | undefined,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel,
         @inject(IExportCommands) @optional() private readonly exportCommand: IExportCommands | undefined,
         @inject(IJupyterVariableDataProviderFactory)
-        private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory,
-        @inject(IDataViewerFactory) private readonly dataViewerFactory: IDataViewerFactory,
-        @inject(IJupyterVariables) @named(Identifiers.DEBUGGER_VARIABLES) private variableProvider: IJupyterVariables,
+        @optional()
+        private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory | undefined,
+        @inject(IDataViewerFactory) @optional() private readonly dataViewerFactory: IDataViewerFactory | undefined,
+        @inject(IJupyterVariables)
+        @optional()
+        @named(Identifiers.DEBUGGER_VARIABLES)
+        private variableProvider: IJupyterVariables | undefined,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
+        @inject(IInteractiveWindowProvider)
+        @optional()
+        private readonly interactiveWindowProvider: IInteractiveWindowProvider | undefined,
         @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
         @inject(IDataViewerDependencyService)
         @optional()
         private readonly dataViewerDependencyService: IDataViewerDependencyService | undefined,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IInterpreterService) @optional() private readonly interpreterService: IInterpreterService | undefined,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
     ) {
         this.dataViewerChecker = new DataViewerChecker(configService, appShell);
@@ -78,7 +88,7 @@ export class CommandRegistry implements IDisposable {
             this.workspace.onDidGrantWorkspaceTrust(this.registerCommandsIfTrusted, this, this.disposables);
         }
     }
-    public register() {
+    public async activate(): Promise<void> {
         this.registerCommandsIfTrusted();
         this.registerCommand(Commands.InsertCellBelowPosition, this.insertCellBelowPosition);
         this.registerCommand(Commands.InsertCellBelow, this.insertCellBelow);
@@ -153,7 +163,7 @@ export class CommandRegistry implements IDisposable {
     }
 
     private getCodeWatcher(file: Uri | undefined): ICodeWatcher | undefined {
-        if (file) {
+        if (file && this.dataScienceCodeLensProvider) {
             const possibleDocuments = this.documentManager.textDocuments.filter((d) => urlPath.isEqual(d.uri, file));
             if (possibleDocuments && possibleDocuments.length === 1) {
                 return this.dataScienceCodeLensProvider.getCodeWatcher(possibleDocuments[0]);
@@ -336,7 +346,7 @@ export class CommandRegistry implements IDisposable {
     @captureTelemetry(Telemetry.DebugStepOver)
     private async debugStepOver(): Promise<void> {
         // Make sure that we are in debug mode
-        if (this.debugService.activeDebugSession) {
+        if (this.debugService?.activeDebugSession) {
             void this.commandManager.executeCommand('workbench.action.debug.stepOver');
         }
     }
@@ -344,7 +354,7 @@ export class CommandRegistry implements IDisposable {
     @captureTelemetry(Telemetry.DebugStop)
     private async debugStop(uri: Uri): Promise<void> {
         // Make sure that we are in debug mode
-        if (this.debugService.activeDebugSession) {
+        if (this.debugService?.activeDebugSession && this.interactiveWindowProvider) {
             // Attempt to get the interactive window for this file
             const iw = this.interactiveWindowProvider.windows.find((w) => w.owner?.toString() == uri.toString());
             if (iw && iw.notebookDocument) {
@@ -362,7 +372,7 @@ export class CommandRegistry implements IDisposable {
     @captureTelemetry(Telemetry.DebugContinue)
     private async debugContinue(): Promise<void> {
         // Make sure that we are in debug mode
-        if (this.debugService.activeDebugSession) {
+        if (this.debugService?.activeDebugSession) {
             void this.commandManager.executeCommand('workbench.action.debug.continue');
         }
     }
@@ -506,7 +516,7 @@ export class CommandRegistry implements IDisposable {
     // Get our matching code watcher for the active document
     private getCurrentCodeWatcher(): ICodeWatcher | undefined {
         const activeEditor = this.documentManager.activeTextEditor;
-        if (!activeEditor || !activeEditor.document) {
+        if (!activeEditor || !activeEditor.document || !this.dataScienceCodeLensProvider) {
             return undefined;
         }
 
@@ -531,10 +541,19 @@ export class CommandRegistry implements IDisposable {
     }
     private async onVariablePanelShowDataViewerRequest(request: IShowDataViewerFromVariablePanel) {
         sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST);
-        if (this.debugService.activeDebugSession) {
+        if (
+            this.debugService?.activeDebugSession &&
+            this.variableProvider &&
+            this.jupyterVariableDataProviderFactory &&
+            this.dataViewerFactory
+        ) {
             try {
                 // First find out the current python environment that we are working with
-                if (this.debugService.activeDebugSession.configuration.python && this.dataViewerDependencyService) {
+                if (
+                    this.debugService.activeDebugSession.configuration.python &&
+                    this.dataViewerDependencyService &&
+                    this.interpreterService
+                ) {
                     const pythonEnv = await this.interpreterService.getInterpreterDetails(
                         this.debugService.activeDebugSession.configuration.python
                     );
