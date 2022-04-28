@@ -190,7 +190,8 @@ export function sharedRemoteNotebookEditorTests(
 
         console.log(`IANHU found remote controller`);
 
-        await createEmptyPythonNotebook(disposables);
+        // Don't wait for the kernel since we will select our own
+        await createEmptyPythonNotebook(disposables, undefined, true);
 
         console.log(`IANHU empty notebook created`);
 
