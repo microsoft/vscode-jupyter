@@ -44,7 +44,7 @@ export class JupyterRequestCreator implements IJupyterRequestCreator {
     public getWebsocketCtor(cookieString?: string, allowUnauthorized?: boolean, getAuthHeaders?: () => any) {
         class JupyterWebSocket extends KernelSocketWrapper(WebSocketIsomorphic) {
             private kernelId: string | undefined;
-            //private timer: NodeJS.Timeout | number;
+            private timer: NodeJS.Timeout | number = 0;
 
             constructor(url: string, protocols?: string | string[] | undefined) {
                 let co = {};
