@@ -502,6 +502,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         ? await this.interpreters.getActiveInterpreter(document.uri)
                         : undefined;
 
+                // Await looking for the preferred kernel
                 ({ preferredConnection } = await this.findPreferredKernelExactMatch(
                     document,
                     notebookMetadata,
@@ -510,7 +511,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     preferredInterpreter
                 ));
 
-                // If we don't get a preferred, prep te ignore cache search to check next
+                // Also start the search to refresh the cache, don't need to await on this
+                // unless we don't find a match. It will update the cache after running
                 const ignoreCacheFindPreferredPromise = this.findPreferredKernelExactMatch(
                     document,
                     notebookMetadata,
@@ -519,7 +521,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     preferredInterpreter
                 );
 
-                // If we didn't find an exact match in the cache, try ignoring the cache
+                // If we didn't find an exact match in the cache, try awaiting for the non-cache version
                 if (!preferredConnection) {
                     ({ preferredConnection } = await ignoreCacheFindPreferredPromise);
                 }
