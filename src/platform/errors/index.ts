@@ -22,7 +22,7 @@ export function populateTelemetryWithErrorInfo(props: Partial<TelemetryErrorProp
         props.failureSubCategory = 'errorisstring';
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const stdErr = (error as any).stdErr ? (error as any).stdErr : error.stack || '';
+    const stdErr = (error as BaseError ).stdErr ? (error as BaseError ).stdErr : error.stack || '';
     if (!stdErr) {
         return;
     }
