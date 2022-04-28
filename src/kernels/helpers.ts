@@ -32,7 +32,6 @@ import { fsPathToUri } from '../platform/vscode-path/utils';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
 import { JupyterKernelSpec } from './jupyter/jupyterKernelSpec';
 import { IConfigurationService, Resource } from '../platform/common/types';
-import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKernelIdProvider';
 import { getResourceType } from '../platform/common/utils';
 import { sendTelemetryEvent } from '../telemetry';
 import { isPythonNotebook } from '../notebooks/helpers';
@@ -136,13 +135,13 @@ export function getInterpreterHashInMetadata(
         return (notebookMetadata as any).interpreter.hash;
     }
 }
-export function findPreferredKernel(
+export function rankKernels(
     kernels: KernelConnectionMetadata[],
     resource: Resource,
     notebookMetadata: nbformat.INotebookMetadata | undefined,
     preferredInterpreter: PythonEnvironment | undefined,
-    remoteKernelPreferredProvider: PreferredRemoteKernelIdProvider | undefined
-): KernelConnectionMetadata | undefined {
+    preferredRemoteKernelId: string | undefined
+): KernelConnectionMetadata[] | undefined {
     traceInfo(
         `Find preferred kernel for ${getDisplayPath(resource)} with metadata ${JSON.stringify(
             notebookMetadata || {}
@@ -153,18 +152,7 @@ export function findPreferredKernel(
         return;
     }
 
-    // First try remote
-    if (resource && remoteKernelPreferredProvider) {
-        const preferredKernelId = remoteKernelPreferredProvider.getPreferredRemoteKernelId(resource);
-        // Find the kernel that matches
-        const kernel =
-            preferredKernelId &&
-            kernels.find((k) => k.kind === 'connectToLiveRemoteKernel' && k.kernelModel.id === preferredKernelId);
-        if (kernel) {
-            return kernel;
-        }
-    }
-
+    // First calculate what the kernel spec would be for our active interpreter
     let preferredInterpreterKernelSpec =
         preferredInterpreter && findKernelSpecMatchingInterpreter(preferredInterpreter, kernels);
     if (preferredInterpreter && !preferredInterpreterKernelSpec) {
@@ -183,28 +171,29 @@ export function findPreferredKernel(
 
     traceInfoIfCI(`preferredInterpreterKernelSpecIndex = ${preferredInterpreterKernelSpec?.id}`);
 
-    if (!notebookMetadata || !notebookMetadata?.kernelspec) {
-        // If we don't have metadata, then just return the preferred interpreter.
-        switch (getResourceType(resource)) {
-            case 'notebook':
-                if (preferredInterpreterKernelSpec && !remoteKernelPreferredProvider) {
-                    return preferredInterpreterKernelSpec;
-                }
-                break;
-            default:
-                if (preferredInterpreterKernelSpec) {
-                    return preferredInterpreterKernelSpec;
-                }
-                // Telemetry to see if this happens in the real world, this should not be possible.
-                sendTelemetryEvent(Telemetry.FailedToFindKernelSpecInterpreterForInteractive);
-        }
-    }
-
-    notebookMetadata?.language_info?.name || (notebookMetadata?.kernelspec as undefined | IJupyterKernelSpec)?.language;
+    // Figure out our possible language from the metadata
     const actualNbMetadataLanguage: string | undefined =
-        notebookMetadata?.language_info?.name ||
-        (notebookMetadata?.kernelspec as undefined | IJupyterKernelSpec)?.language;
+        notebookMetadata?.language_info?.name.toLowerCase() ||
+        (notebookMetadata?.kernelspec as undefined | IJupyterKernelSpec)?.language?.toLowerCase();
     let possibleNbMetadataLanguage = actualNbMetadataLanguage;
+
+    // If the notebook has a language set, remove anything not that language as we don't want to rank those items
+    kernels = kernels.filter((kernel) => {
+        if (
+            possibleNbMetadataLanguage &&
+            possibleNbMetadataLanguage !== PYTHON_LANGUAGE &&
+            !notebookMetadata?.kernelspec &&
+            kernel.kind !== 'connectToLiveRemoteKernel' &&
+            kernel.kernelSpec.language &&
+            kernel.kernelSpec.language.toLowerCase() !== possibleNbMetadataLanguage
+        ) {
+            return false;
+        }
+        // Return everything else
+        return true;
+    });
+
+    // Now perform our big comparison on the kernel list
     // Interactive window always defaults to Python kernels.
     if (getResourceType(resource) === 'interactive') {
         // TODO: Based on the resource, we should be able to find the language.
@@ -227,26 +216,84 @@ export function findPreferredKernel(
             notebookMetadata,
             preferredInterpreterKernelSpec,
             a,
-            b
+            b,
+            preferredRemoteKernelId
         )
     );
 
-    let preferredKernel: KernelConnectionMetadata | undefined = kernels[kernels.length - 1];
+    return kernels;
+}
+
+export function isExactMatch(
+    kernelConnection: KernelConnectionMetadata,
+    notebookMetadata: nbformat.INotebookMetadata | undefined,
+    preferredRemoteKernelId: string | undefined
+): boolean {
+    // Live kernel ID match is always an exact match
     if (
-        possibleNbMetadataLanguage &&
-        possibleNbMetadataLanguage !== PYTHON_LANGUAGE &&
-        !notebookMetadata?.kernelspec &&
-        preferredKernel.kind !== 'connectToLiveRemoteKernel' &&
-        preferredKernel.kernelSpec.language &&
-        preferredKernel.kernelSpec.language !== possibleNbMetadataLanguage
+        kernelConnection.kind === 'connectToLiveRemoteKernel' &&
+        preferredRemoteKernelId &&
+        kernelConnection.kernelModel.id === preferredRemoteKernelId
     ) {
-        // If we have a specific language & the preferred item is not of the same language then don't return anything.
-        // Remember, all we're doing is sorting the list, just because its sorted in order of preference doesn't mean we have a match.
-        preferredKernel = undefined;
-    } else {
-        traceInfoIfCI(`Preferred kernel is ${JSON.stringify(preferredKernel)}`);
+        return true;
     }
-    return preferredKernel;
+
+    // To get an exact match, we need to have a kernelspec in the metadata
+    if (!notebookMetadata || !notebookMetadata.kernelspec) {
+        return false;
+    }
+
+    if (notebookMetadata.interpreter && interpreterMatchesThatInNotebookMetadata(kernelConnection, notebookMetadata)) {
+        // Case: Metadata has interpreter, in this case it should have an interpreter
+        // and a kernel spec that should fully match, note that in this case matching
+        // name on a default python kernel spec is ok (as the interpreter hash matches)
+        return isKernelSpecExactMatch(kernelConnection, notebookMetadata.kernelspec, true);
+    } else {
+        // Case: Metadata does not have an interpreter, in this case just full match on the
+        // kernelspec, but do not accept default python name as valid for an exact match
+        return isKernelSpecExactMatch(kernelConnection, notebookMetadata.kernelspec, false);
+    }
+}
+
+function isKernelSpecExactMatch(
+    kernelConnection: KernelConnectionMetadata,
+    notebookMetadataKernelSpec: nbformat.IKernelspecMetadata,
+    allowPythonDefaultMatch: boolean
+): boolean {
+    if (kernelConnection.kind === 'connectToLiveRemoteKernel') {
+        return false;
+    }
+    const kernelConnectionKernelSpec = kernelConnection.kernelSpec;
+
+    // Get our correct kernelspec name from the connection
+    const connectionOriginalSpecFile =
+        kernelConnectionKernelSpec.metadata?.vscode?.originalSpecFile ||
+        kernelConnectionKernelSpec.metadata?.originalSpecFile;
+    const connectionKernelSpecName = connectionOriginalSpecFile
+        ? path.basename(path.dirname(connectionOriginalSpecFile))
+        : kernelConnectionKernelSpec?.name || '';
+    const connectionInterpreterEnvName = kernelConnection.interpreter?.envName;
+    const metadataNameIsDefaultName = isDefaultKernelSpec({
+        argv: [],
+        display_name: notebookMetadataKernelSpec.display_name,
+        name: notebookMetadataKernelSpec.name,
+        uri: Uri.file('')
+    });
+
+    if (allowPythonDefaultMatch && metadataNameIsDefaultName) {
+        // If default is allowed (due to interpreter hash match) and the metadata name is a default name then allow the match
+        return true;
+    } else if (
+        !metadataNameIsDefaultName &&
+        (connectionKernelSpecName === notebookMetadataKernelSpec.name ||
+            connectionInterpreterEnvName === notebookMetadataKernelSpec.name)
+    ) {
+        // If default match is not ok, only accept name / display name match for
+        // non-default kernel specs
+        return true;
+    }
+
+    return false;
 }
 
 export function compareKernels(
@@ -256,9 +303,26 @@ export function compareKernels(
     notebookMetadata: nbformat.INotebookMetadata | undefined,
     activeInterpreterConnection: KernelConnectionMetadata | undefined,
     a: KernelConnectionMetadata,
-    b: KernelConnectionMetadata
+    b: KernelConnectionMetadata,
+    preferredRemoteKernelId: string | undefined
 ) {
-    // Do not sort live kernel connections (they are at the bottom);
+    // If any ids match the perferred remote kernel id for a live connection that wins over everything
+    if (
+        a.kind === 'connectToLiveRemoteKernel' &&
+        preferredRemoteKernelId &&
+        a.kernelModel.id === preferredRemoteKernelId
+    ) {
+        // No need to deal with ties here since ID is unique for this case
+        return 1;
+    } else if (
+        b.kind === 'connectToLiveRemoteKernel' &&
+        preferredRemoteKernelId &&
+        b.kernelModel.id === preferredRemoteKernelId
+    ) {
+        return -1;
+    }
+
+    //  Do not sort other live kernel connections (they are at the bottom);
     if (a.kind === b.kind && b.kind === 'connectToLiveRemoteKernel') {
         return 0;
     }
@@ -269,22 +333,25 @@ export function compareKernels(
         return 1;
     }
 
+    // Make sure we are comparing lower case here as we have seen C# => c# mis-matches
+    const aLang = a.kernelSpec.language?.toLowerCase();
+    const bLang = b.kernelSpec.language?.toLowerCase();
+    possibleNbMetadataLanguage = possibleNbMetadataLanguage?.toLowerCase();
+    actualNbMetadataLanguage = actualNbMetadataLanguage?.toLowerCase();
+
     if (!notebookMetadata?.kernelspec) {
         if (possibleNbMetadataLanguage) {
             if (
                 possibleNbMetadataLanguage === PYTHON_LANGUAGE &&
-                a.kernelSpec.language === b.kernelSpec.language &&
-                a.kernelSpec.language === possibleNbMetadataLanguage
+                aLang === bLang &&
+                aLang === possibleNbMetadataLanguage
             ) {
                 // Fall back to returning the active interpreter (further below).
-            } else if (
-                a.kernelSpec.language === b.kernelSpec.language &&
-                a.kernelSpec.language === possibleNbMetadataLanguage
-            ) {
+            } else if (aLang === bLang && aLang === possibleNbMetadataLanguage) {
                 return 0;
-            } else if (a.kernelSpec.language === possibleNbMetadataLanguage) {
+            } else if (aLang === possibleNbMetadataLanguage) {
                 return 1;
-            } else if (b.kernelSpec.language === possibleNbMetadataLanguage) {
+            } else if (bLang === possibleNbMetadataLanguage) {
                 return -1;
             }
         }
@@ -316,22 +383,11 @@ export function compareKernels(
     // Special simple comparison algorithm for Non-Python notebooks.
     if (possibleNbMetadataLanguage && possibleNbMetadataLanguage !== PYTHON_LANGUAGE) {
         // If this isn't a python notebook, then just look at the name & display name.
-        if (
-            a.kernelSpec.language &&
-            b.kernelSpec.language &&
-            a.kernelSpec.language !== possibleNbMetadataLanguage &&
-            b.kernelSpec.language !== possibleNbMetadataLanguage
-        ) {
+        if (aLang && bLang && aLang !== possibleNbMetadataLanguage && bLang !== possibleNbMetadataLanguage) {
             return 0;
-        } else if (
-            a.kernelSpec.language === possibleNbMetadataLanguage &&
-            b.kernelSpec.language !== possibleNbMetadataLanguage
-        ) {
+        } else if (aLang === possibleNbMetadataLanguage && bLang !== possibleNbMetadataLanguage) {
             return 1;
-        } else if (
-            a.kernelSpec.language !== possibleNbMetadataLanguage &&
-            b.kernelSpec.language === possibleNbMetadataLanguage
-        ) {
+        } else if (aLang !== possibleNbMetadataLanguage && bLang === possibleNbMetadataLanguage) {
             return -1;
         } else if (
             kernelSpecNameOfA &&
@@ -378,7 +434,7 @@ export function compareKernels(
             kernelSpecNameOfA !== kernelSpecNameOfB &&
             kernelSpecDisplayNameOfA !== kernelSpecDisplayNameOfB &&
             a.kind === 'startUsingLocalKernelSpec' &&
-            a.kernelSpec.language !== PYTHON_LANGUAGE &&
+            aLang !== PYTHON_LANGUAGE &&
             kernelSpecNameOfA === notebookMetadata.kernelspec.name &&
             kernelSpecDisplayNameOfA === notebookMetadata.kernelspec.display_name
         ) {
@@ -390,7 +446,7 @@ export function compareKernels(
             kernelSpecNameOfA !== kernelSpecNameOfB &&
             kernelSpecDisplayNameOfA !== kernelSpecDisplayNameOfB &&
             b.kind === 'startUsingLocalKernelSpec' &&
-            b.kernelSpec.language !== PYTHON_LANGUAGE &&
+            bLang !== PYTHON_LANGUAGE &&
             kernelSpecNameOfB === notebookMetadata.kernelspec.name &&
             kernelSpecDisplayNameOfB === notebookMetadata.kernelspec.display_name
         ) {
@@ -403,13 +459,13 @@ export function compareKernels(
     //
 
     // Check if one of them is non-python.
-    if (a.kernelSpec.language && b.kernelSpec.language) {
-        if (a.kernelSpec.language === b.kernelSpec.language) {
-            if (a.kernelSpec.language !== PYTHON_LANGUAGE) {
+    if (aLang && bLang) {
+        if (aLang === bLang) {
+            if (aLang !== PYTHON_LANGUAGE) {
                 return 0;
             }
         } else {
-            return a.kernelSpec.language === PYTHON_LANGUAGE ? 1 : -1;
+            return aLang === PYTHON_LANGUAGE ? 1 : -1;
         }
     }
 
@@ -756,10 +812,10 @@ function compareAgainstInterpreterInNotebookMetadata(
         // Give preference to kernel b that starts using plain python.
         return -1;
     } else if (a.kind === 'startUsingPythonInterpreter' && a.kind !== b.kind) {
-        // Give preference to kernel a that starts using a plain Python for a custom kenrelspec.
+        // Give preference to kernel a that starts using a plain Python for a custom kernelspec.
         return 1;
     } else if (b.kind === 'startUsingPythonInterpreter' && b.kind !== a.kind) {
-        // Give preference to kernel b that starts using a plain Python for a custom kenrelspec.
+        // Give preference to kernel b that starts using a plain Python for a custom kernelspec.
         return -1;
     } else if (a.kind === 'startUsingLocalKernelSpec' && a.kind !== b.kind) {
         // Give preference to kernel a that starts using a custom kernelspec python.
@@ -871,7 +927,7 @@ function compareAgainstKernelDisplayNameInNotebookMetadata(
  * Given an interpreter, find the kernel connection that matches this interpreter.
  * & is used to start a kernel using the provided interpreter.
  */
-function findKernelSpecMatchingInterpreter(
+export function findKernelSpecMatchingInterpreter(
     interpreter: PythonEnvironment | undefined,
     kernels: KernelConnectionMetadata[]
 ) {

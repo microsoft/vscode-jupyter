@@ -189,7 +189,11 @@ export async function createTemporaryNotebook(
  * when creating a new notebook.
  * This function ensures we always open a notebook for testing that is guaranteed to use a Python kernel.
  */
-export async function createEmptyPythonNotebook(disposables: IDisposable[] = [], rootFolder?: Uri) {
+export async function createEmptyPythonNotebook(
+    disposables: IDisposable[] = [],
+    rootFolder?: Uri,
+    dontWaitForKernel?: boolean
+) {
     traceInfoIfCI('Creating an empty notebook');
     const { serviceContainer } = await getServices();
     const editorProvider = serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
@@ -200,7 +204,9 @@ export async function createEmptyPythonNotebook(disposables: IDisposable[] = [],
     // Open a python notebook and use this for all tests in this test suite.
     await editorProvider.open(nbFile);
     assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
-    await waitForKernelToGetAutoSelected();
+    if (!dontWaitForKernel) {
+        await waitForKernelToGetAutoSelected();
+    }
     await deleteAllCellsAndWait();
 }
 

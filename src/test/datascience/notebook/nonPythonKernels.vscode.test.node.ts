@@ -183,6 +183,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
     test('Can run a Julia notebook', async function () {
         this.timeout(60_000); // Can be slow to start Julia kernel on CI.
         await openNotebook(testJuliaNb);
+        await waitForKernelToGetAutoSelected('julia');
         await insertCodeCell('123456', { language: 'julia', index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         // Wait till execution count changes and status is success.

@@ -60,16 +60,29 @@ import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IVSCodeNotebookController } from './types';
 import {
     createInterpreterKernelSpec,
+    findKernelSpecMatchingInterpreter,
     getDisplayNameOrNameOfKernelConnection,
     getKernelId,
+    getLanguageInNotebookMetadata,
     isLocalLaunch,
     isPythonKernelConnection
 } from '../../kernels/helpers';
+import { getResourceType } from '../../platform/common/utils';
+import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
+import { INotebookMetadata } from '@jupyterlab/nbformat';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
 const REMOTE_KERNEL_REFRESH_INTERVAL = 2_000;
 export const InteractiveControllerIdSuffix = ' (Interactive)';
+
+// Flag enum for the reason why a kernel was logged as an exact match
+export enum PreferredKernelExactMatchReason {
+    NoMatch = 0,
+    OnlyKernel = 1 << 0,
+    WasPreferredInterpreter = 1 << 1,
+    IsExactMatch = 1 << 2
+}
 
 /**
  * This class tracks notebook documents that are open and the provides NotebookControllers for
@@ -187,7 +200,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             return this.createActiveInterpreterController(notebookType, resource);
         } else {
             traceInfoIfCI('CreateDefaultRemoteController');
-            return this.createDefaultRemoteController();
+            return this.createDefaultRemoteController(notebookType);
         }
     }
 
@@ -376,7 +389,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         return this.getOrCreateControllerForActiveInterpreter(activeInterpreter, notebookType);
     }
     @traceDecoratorVerbose('Get default Remote Controller')
-    private async createDefaultRemoteController() {
+    private async createDefaultRemoteController(
+        notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
+    ) {
         // Get all remote kernels
         await this.loadNotebookControllers();
         const controllers = this.registeredNotebookControllers();
@@ -391,7 +406,12 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         let defaultPythonKernel: VSCodeNotebookController | undefined;
         let defaultPythonLanguageKernel: VSCodeNotebookController | undefined;
         controllers.forEach((item) => {
-            if (item.connection.kind !== 'startUsingRemoteKernelSpec') {
+            // Sort out interactive or non-interactive controllers
+            if (
+                item.connection.kind !== 'startUsingRemoteKernelSpec' ||
+                (notebookType === 'jupyter-notebook' && item.id.includes(InteractiveControllerIdSuffix)) ||
+                (notebookType === 'interactive' && !item.id.includes(InteractiveControllerIdSuffix))
+            ) {
                 return;
             }
             if (item.connection.kernelSpec.name === 'python') {
@@ -480,12 +500,47 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             let preferredConnection: KernelConnectionMetadata | undefined;
             // Don't attempt preferred kernel search for interactive window, but do make sure we
             // load all our controllers for interactive window
+            const notebookMetadata = getNotebookMetadata(document);
             if (document.notebookType === JupyterNotebookView) {
-                preferredConnection = await this.kernelFinder.findKernel(
-                    document.uri,
-                    getNotebookMetadata(document),
-                    preferredSearchToken.token
+                const resourceType = getResourceType(document.uri);
+                const isPythonNbOrInteractiveWindow =
+                    isPythonNotebook(notebookMetadata) || resourceType === 'interactive';
+                const preferredInterpreter =
+                    isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
+                        ? await this.interpreters.getActiveInterpreter(document.uri)
+                        : undefined;
+
+                // Await looking for the preferred kernel
+                ({ preferredConnection } = await this.findPreferredKernelExactMatch(
+                    document,
+                    notebookMetadata,
+                    preferredSearchToken.token,
+                    'useCache',
+                    preferredInterpreter
+                ));
+
+                // Also start the search to refresh the cache, don't need to await on this
+                // unless we don't find a match. It will update the cache after running
+                const ignoreCacheFindPreferredPromise = this.findPreferredKernelExactMatch(
+                    document,
+                    notebookMetadata,
+                    preferredSearchToken.token,
+                    'ignoreCache',
+                    preferredInterpreter
                 );
+
+                // If we didn't find an exact match in the cache, try awaiting for the non-cache version
+                if (!preferredConnection) {
+                    ({ preferredConnection } = await ignoreCacheFindPreferredPromise);
+                }
+
+                // Send telemetry on loooking for preferred don't await for sending it
+                this.sendPreferredKernelTelemetry(
+                    document.uri,
+                    notebookMetadata,
+                    preferredConnection,
+                    preferredInterpreter
+                ).ignoreErrors();
 
                 // If we found a preferred kernel, set the association on the NotebookController
                 if (preferredSearchToken.token.isCancellationRequested && !preferredConnection) {
@@ -562,6 +617,78 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         } finally {
             disposable.dispose();
         }
+    }
+
+    // Use our kernel finder to rank our kernels, and see if we have an exact match
+    private async findPreferredKernelExactMatch(
+        document: NotebookDocument,
+        notebookMetadata: INotebookMetadata | undefined,
+        cancelToken: CancellationToken,
+        useCache: 'useCache' | 'ignoreCache' | undefined,
+        preferredInterpreter: PythonEnvironment | undefined
+    ): Promise<{
+        rankedConnections: KernelConnectionMetadata[] | undefined;
+        preferredConnection: KernelConnectionMetadata | undefined;
+    }> {
+        let preferredConnection: KernelConnectionMetadata | undefined;
+        const rankedConnections = await this.kernelFinder.rankKernels(
+            document.uri,
+            notebookMetadata,
+            cancelToken,
+            useCache
+        );
+
+        if (rankedConnections && rankedConnections.length) {
+            const potentialMatch = rankedConnections[rankedConnections.length - 1];
+
+            // Are we the only connection?
+            const onlyConnection = rankedConnections.length === 1;
+
+            // Is the top ranked connection the preferred interpreter?
+            const topMatchIsPreferredInterpreter = findKernelSpecMatchingInterpreter(preferredInterpreter, [
+                potentialMatch
+            ]);
+
+            // Are we an exact match based on metadata hash / name / ect...?
+            const isExactMatch = this.kernelFinder.isExactMatch(document.uri, potentialMatch, notebookMetadata);
+
+            // Match on our possible reasons
+            if (onlyConnection || topMatchIsPreferredInterpreter || isExactMatch) {
+                traceInfo(`Preferred kernel ${potentialMatch.id} is exact match`);
+                preferredConnection = potentialMatch;
+            }
+
+            // Send telemetry on why we matched
+            let matchReason: PreferredKernelExactMatchReason = PreferredKernelExactMatchReason.NoMatch;
+            onlyConnection && (matchReason |= PreferredKernelExactMatchReason.OnlyKernel);
+            topMatchIsPreferredInterpreter && (matchReason |= PreferredKernelExactMatchReason.WasPreferredInterpreter);
+            isExactMatch && (matchReason |= PreferredKernelExactMatchReason.IsExactMatch);
+            sendTelemetryEvent(Telemetry.PreferredKernelExactMatch, undefined, {
+                matchedReason: matchReason
+            });
+        }
+
+        return { rankedConnections, preferredConnection };
+    }
+    private async sendPreferredKernelTelemetry(
+        resource: Resource,
+        notebookMetadata?: INotebookMetadata,
+        preferredConnection?: KernelConnectionMetadata,
+        preferredInterpreter?: PythonEnvironment
+    ) {
+        // Send telemetry on searching for a preferred connection
+        const resourceType = getResourceType(resource);
+        const telemetrySafeLanguage =
+            resourceType === 'interactive'
+                ? PYTHON_LANGUAGE
+                : getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata) || '');
+
+        sendTelemetryEvent(Telemetry.PreferredKernel, undefined, {
+            result: preferredConnection ? 'found' : 'notfound',
+            resourceType,
+            language: telemetrySafeLanguage,
+            hasActiveInterpreter: !!preferredInterpreter
+        });
     }
     private onDidChangeKernelFilter() {
         // Filter the connections.

@@ -417,7 +417,7 @@ export enum Telemetry {
     KernelProviderPerf = 'DS_INTERNAL.KERNEL_PROVIDER_PERF',
     GetPreferredKernelPerf = 'DS_INTERNAL.GET_PREFERRED_KERNEL_PERF',
     PreferredKernel = 'DS_INTERNAL.PREFERRED_KERNEL',
-    KernelFinderPerf = 'DS_INTERNAL.KERNEL_FINDER_PERF',
+    RankKernelsPerf = 'DS_INTERNAL.RANK_KERNELS_PERF',
     KernelListingPerf = 'DS_INTERNAL.KERNEL_LISTING_PERF',
     InterpreterListingPerf = 'DS_INTERNAL.INTERPRETER_LISTING_PERF',
     ActiveInterpreterListingPerf = 'DS_INTERNAL.ACTIVE_INTERPRETER_LISTING_PERF',
@@ -514,7 +514,8 @@ export enum Telemetry {
     // Sent when we get a jupyter execute_request error reply when running some part of interactive window debug setup code
     InteractiveWindowDebugSetupCodeFailure = 'DATASCIENCE.INTERACTIVE_WINDOW_DEBUG_SETUP_CODE_FAILURE',
     KernelCrash = 'DATASCIENCE.KERNEL_CRASH',
-    RunTest = 'DS_INTERNAL.RUNTEST'
+    RunTest = 'DS_INTERNAL.RUNTEST',
+    PreferredKernelExactMatch = 'DS_INTERNAL.PREFERRED_KERNEL_EXACT_MATCH'
 }
 
 export enum NativeKeyboardCommandTelemetry {

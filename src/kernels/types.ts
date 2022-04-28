@@ -524,16 +524,23 @@ export interface IKernelDependencyService {
 export const IKernelFinder = Symbol('IKernelFinder');
 
 export interface IKernelFinder {
-    findKernel(
+    rankKernels(
         resource: Resource,
         option?: nbformat.INotebookMetadata,
-        cancelToken?: CancellationToken
-    ): Promise<KernelConnectionMetadata | undefined>;
+        cancelToken?: CancellationToken,
+        useCache?: 'useCache' | 'ignoreCache'
+    ): Promise<KernelConnectionMetadata[] | undefined>;
     listKernels(
         resource: Resource,
         cancelToken?: CancellationToken,
         useCache?: 'useCache' | 'ignoreCache'
     ): Promise<KernelConnectionMetadata[]>;
+    // For the given kernel connection, return true if it's an exact match for the notebookMetadata
+    isExactMatch(
+        resource: Resource,
+        kernelConnection: KernelConnectionMetadata,
+        notebookMetadata: nbformat.INotebookMetadata | undefined
+    ): boolean;
 }
 
 export type KernelAction = 'start' | 'interrupt' | 'restart' | 'execution';

@@ -5,25 +5,23 @@ import { CancellationToken, Memento } from 'vscode';
 import { isPythonNotebook } from '../notebooks/helpers';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { createPromiseFromCancellation } from '../platform/common/cancellation';
-import { PYTHON_LANGUAGE, Settings, Telemetry } from '../platform/common/constants';
+import { Settings, Telemetry } from '../platform/common/constants';
 import { IConfigurationService, Resource } from '../platform/common/types';
 import { getResourceType } from '../platform/common/utils';
 import { noop } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { isArray } from '../platform/common/utils/sysTypes';
 import { IInterpreterService } from '../platform/interpreter/contracts';
-import { traceInfo, traceError, traceDecoratorVerbose } from '../platform/logging';
+import { traceError, traceDecoratorVerbose } from '../platform/logging';
 import { TraceOptions } from '../platform/logging/types';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
-import { getTelemetrySafeLanguage } from '../telemetry/helpers';
 import { DisplayOptions } from './displayOptions';
 import {
-    getLanguageInNotebookMetadata,
-    findPreferredKernel,
-    getDisplayNameOrNameOfKernelConnection,
+    rankKernels,
     isLocalLaunch,
     deserializeKernelConnection,
-    serializeKernelConnection
+    serializeKernelConnection,
+    isExactMatch
 } from './helpers';
 import { IJupyterServerUriStorage } from './jupyter/types';
 import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKernelIdProvider';
@@ -51,74 +49,43 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         protected readonly serverUriStorage: IJupyterServerUriStorage
     ) {}
 
-    // Finding a kernel is the same no matter what the source
-    @traceDecoratorVerbose('Find kernel spec', TraceOptions.BeforeCall | TraceOptions.Arguments)
-    @captureTelemetry(Telemetry.KernelFinderPerf)
-    public async findKernel(
+    @traceDecoratorVerbose('Rank Kernels', TraceOptions.BeforeCall | TraceOptions.Arguments)
+    @captureTelemetry(Telemetry.RankKernelsPerf)
+    public async rankKernels(
         resource: Resource,
         notebookMetadata?: nbformat.INotebookMetadata,
-        cancelToken?: CancellationToken
-    ): Promise<KernelConnectionMetadata | undefined> {
+        cancelToken?: CancellationToken,
+        useCache?: 'useCache' | 'ignoreCache'
+    ): Promise<KernelConnectionMetadata[] | undefined> {
         const resourceType = getResourceType(resource);
-        const telemetrySafeLanguage =
-            resourceType === 'interactive'
-                ? PYTHON_LANGUAGE
-                : getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata) || '');
         try {
             // Get list of all of the specs from the cache and without the cache (note, cached items will be validated before being returned)
-            const cached = await this.listKernels(resource, cancelToken, 'useCache');
-            const nonCachedPromise = this.listKernels(resource, cancelToken, 'ignoreCache');
+            const kernels = await this.listKernels(resource, cancelToken, useCache);
 
             const isPythonNbOrInteractiveWindow = isPythonNotebook(notebookMetadata) || resourceType === 'interactive';
+
             // Always include the interpreter in the search if we can
             const preferredInterpreter =
                 isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
                     ? await this.interpreterService.getActiveInterpreter(resource)
                     : undefined;
 
-            // Find the preferred kernel index from the list.
-            let preferred = findPreferredKernel(
-                cached,
+            const preferredRemoteKernelId =
+                resource &&
+                this.preferredRemoteFinder &&
+                this.preferredRemoteFinder.getPreferredRemoteKernelId(resource);
+
+            let rankedKernels = rankKernels(
+                kernels,
                 resource,
                 notebookMetadata,
                 preferredInterpreter,
-                this.preferredRemoteFinder
+                preferredRemoteKernelId
             );
 
-            // If still not found, try the nonCached list
-            if (!preferred) {
-                preferred = findPreferredKernel(
-                    await nonCachedPromise,
-                    resource,
-                    notebookMetadata,
-                    preferredInterpreter,
-                    this.preferredRemoteFinder
-                );
-            }
-            sendTelemetryEvent(Telemetry.PreferredKernel, undefined, {
-                result: preferred ? 'found' : 'notfound',
-                resourceType,
-                language: telemetrySafeLanguage,
-                hasActiveInterpreter: !!preferredInterpreter
-            });
-            if (preferred) {
-                traceInfo(`findKernel found ${getDisplayNameOrNameOfKernelConnection(preferred)}`);
-                return preferred;
-            }
+            return rankedKernels;
         } catch (ex) {
-            sendTelemetryEvent(
-                Telemetry.PreferredKernel,
-                undefined,
-                {
-                    result: 'failed',
-                    resourceType,
-                    language: telemetrySafeLanguage
-                },
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                ex as any,
-                true
-            );
-            traceError(`findKernel crashed`, ex);
+            traceError(`RankKernels crashed`, ex);
             return undefined;
         }
     }
@@ -148,6 +115,17 @@ export abstract class BaseKernelFinder implements IKernelFinder {
 
         // Combine the results from local and remote
         return [...localKernels, ...remoteKernels];
+    }
+
+    public isExactMatch(
+        resource: Resource,
+        kernelConnection: KernelConnectionMetadata,
+        notebookMetadata: nbformat.INotebookMetadata | undefined
+    ): boolean {
+        const preferredRemoteKernelId =
+            resource && this.preferredRemoteFinder && this.preferredRemoteFinder.getPreferredRemoteKernelId(resource);
+
+        return isExactMatch(kernelConnection, notebookMetadata, preferredRemoteKernelId);
     }
 
     // Validating if a kernel is still allowed or not (from the cache). Non cached are always assumed to be valid

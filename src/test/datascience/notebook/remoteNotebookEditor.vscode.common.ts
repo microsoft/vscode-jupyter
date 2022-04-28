@@ -186,7 +186,8 @@ export function sharedRemoteNotebookEditorTests(
             'Should have at least one remote controller'
         );
 
-        await createEmptyPythonNotebook(disposables);
+        // Don't wait for the kernel since we will select our own
+        await createEmptyPythonNotebook(disposables, undefined, true);
 
         // Find the default remote Python kernel (we know that will have ipykernel, as we've set up CI as such).
         const defaultPythonKernel = await controllerManager.getActiveInterpreterOrDefaultController(
@@ -194,6 +195,7 @@ export function sharedRemoteNotebookEditorTests(
             undefined
         );
         assert.ok(defaultPythonKernel, 'No default remote kernel');
+
         assert.strictEqual(
             defaultPythonKernel?.connection.kind,
             'startUsingRemoteKernelSpec',
@@ -209,25 +211,5 @@ export function sharedRemoteNotebookEditorTests(
         await Promise.all([runCell(cell), waitForTextOutput(cell, '123412341234')]);
     });
 
-    test('Selecting URI returns preferred kernel', async function () {
-        // Open the notebook but without a server started
-        const notebook = await openNotebook(ipynbFile);
-
-        // Start a server
-        const preferred = await startJupyterServer(notebook);
-        await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
-        let nbEditor = vscodeNotebook.activeNotebookEditor!;
-        assert.isOk(nbEditor, 'No active notebook');
-        // Cell 1 = `a = "Hello World"`
-        // Cell 2 = `print(a)`
-        let cell2 = nbEditor.document.getCells()![1]!;
-        await Promise.all([
-            runAllCellsInActiveNotebook(),
-            waitForExecutionCompletedSuccessfully(cell2),
-            waitForTextOutput(cell2, 'Hello World', 0, false)
-        ]);
-
-        assert.ok(preferred, `No preferred kernel set for selecting a URI`);
-    });
     return disposables;
 }
