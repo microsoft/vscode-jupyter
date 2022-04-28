@@ -135,7 +135,7 @@ export function getInterpreterHashInMetadata(
         return (notebookMetadata as any).interpreter.hash;
     }
 }
-export function rankKernelsImpl(
+export function rankKernels(
     kernels: KernelConnectionMetadata[],
     resource: Resource,
     notebookMetadata: nbformat.INotebookMetadata | undefined,
@@ -224,7 +224,7 @@ export function rankKernelsImpl(
     return kernels;
 }
 
-export function isExactMatchImpl(
+export function isExactMatch(
     kernelConnection: KernelConnectionMetadata,
     notebookMetadata: nbformat.INotebookMetadata | undefined,
     preferredRemoteKernelId: string | undefined
@@ -333,8 +333,11 @@ export function compareKernels(
         return 1;
     }
 
+    // Make sure we are comparing lower case here as we have seen C# => c# mis-matches
     const aLang = a.kernelSpec.language?.toLowerCase();
     const bLang = b.kernelSpec.language?.toLowerCase();
+    possibleNbMetadataLanguage = possibleNbMetadataLanguage?.toLowerCase();
+    actualNbMetadataLanguage = actualNbMetadataLanguage?.toLowerCase();
 
     if (!notebookMetadata?.kernelspec) {
         if (possibleNbMetadataLanguage) {

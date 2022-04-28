@@ -17,11 +17,11 @@ import { TraceOptions } from '../platform/logging/types';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { DisplayOptions } from './displayOptions';
 import {
-    rankKernelsImpl,
+    rankKernels,
     isLocalLaunch,
     deserializeKernelConnection,
     serializeKernelConnection,
-    isExactMatchImpl
+    isExactMatch
 } from './helpers';
 import { IJupyterServerUriStorage } from './jupyter/types';
 import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKernelIdProvider';
@@ -49,7 +49,6 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         protected readonly serverUriStorage: IJupyterServerUriStorage
     ) {}
 
-    // Finding a kernel is the same no matter what the source
     @traceDecoratorVerbose('Rank Kernels', TraceOptions.BeforeCall | TraceOptions.Arguments)
     @captureTelemetry(Telemetry.RankKernelsPerf)
     public async rankKernels(
@@ -61,7 +60,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         const resourceType = getResourceType(resource);
         try {
             // Get list of all of the specs from the cache and without the cache (note, cached items will be validated before being returned)
-            const cached = await this.listKernels(resource, cancelToken, useCache);
+            const kernels = await this.listKernels(resource, cancelToken, useCache);
 
             const isPythonNbOrInteractiveWindow = isPythonNotebook(notebookMetadata) || resourceType === 'interactive';
 
@@ -76,8 +75,8 @@ export abstract class BaseKernelFinder implements IKernelFinder {
                 this.preferredRemoteFinder &&
                 this.preferredRemoteFinder.getPreferredRemoteKernelId(resource);
 
-            let rankedKernels = rankKernelsImpl(
-                cached,
+            let rankedKernels = rankKernels(
+                kernels,
                 resource,
                 notebookMetadata,
                 preferredInterpreter,
@@ -126,7 +125,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         const preferredRemoteKernelId =
             resource && this.preferredRemoteFinder && this.preferredRemoteFinder.getPreferredRemoteKernelId(resource);
 
-        return isExactMatchImpl(kernelConnection, notebookMetadata, preferredRemoteKernelId);
+        return isExactMatch(kernelConnection, notebookMetadata, preferredRemoteKernelId);
     }
 
     // Validating if a kernel is still allowed or not (from the cache). Non cached are always assumed to be valid
