@@ -194,7 +194,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         } else {
             console.log(`IANHU remote`);
             traceInfoIfCI('CreateDefaultRemoteController');
-            return this.createDefaultRemoteController();
+            return this.createDefaultRemoteController(notebookType);
         }
     }
 
@@ -375,7 +375,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         return this.getOrCreateControllerForActiveInterpreter(activeInterpreter, notebookType);
     }
     @traceDecoratorVerbose('Get default Remote Controller')
-    private async createDefaultRemoteController() {
+    private async createDefaultRemoteController(
+        notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
+    ) {
         console.log(`IANHU createDefaultRemoteController`);
         // Get all remote kernels
         await this.loadNotebookControllers();
@@ -392,9 +394,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         let defaultPythonKernel: VSCodeNotebookController | undefined;
         let defaultPythonLanguageKernel: VSCodeNotebookController | undefined;
         controllers.forEach((item) => {
+            // Sort out interactive or non-interactive controllers
             if (
                 item.connection.kind !== 'startUsingRemoteKernelSpec' ||
-                item.id.includes(InteractiveControllerIdSuffix)
+                (notebookType === 'jupyter-notebook' && item.id.includes(InteractiveControllerIdSuffix)) ||
+                (notebookType === 'interactive' && !item.id.includes(InteractiveControllerIdSuffix))
             ) {
                 return;
             }
