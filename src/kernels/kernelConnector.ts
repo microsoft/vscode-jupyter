@@ -116,7 +116,7 @@ export class KernelConnector {
     ) {
         const memento = serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
         // Error handler may not be available in web situation
-        const errorHandler = serviceContainer.tryGet<IDataScienceErrorHandler>(IDataScienceErrorHandler);
+        const errorHandler = serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
 
         if (metadata.interpreter && errorContext === 'start') {
             // If we failed to start the kernel, then clear cache used to track
@@ -125,7 +125,7 @@ export class KernelConnector {
             clearInstalledIntoInterpreterMemento(memento, Product.ipykernel, metadata.interpreter.uri).ignoreErrors();
         }
 
-        const handleResult = await errorHandler?.handleKernelError(
+        const handleResult = await errorHandler.handleKernelError(
             error,
             errorContext,
             metadata,
@@ -139,7 +139,7 @@ export class KernelConnector {
         // Raw notebook provider is not available in web
         const rawNotebookProvider = serviceContainer.tryGet<IRawNotebookProvider>(IRawNotebookProvider);
         const rawLocalKernel = rawNotebookProvider?.isSupported && isLocal;
-        if (rawLocalKernel && errorContext === 'start' && handleResult) {
+        if (rawLocalKernel && errorContext === 'start') {
             sendKernelTelemetryEvent(resource, Telemetry.RawKernelSessionStartNoIpykernel, {
                 reason: handleResult
             });
