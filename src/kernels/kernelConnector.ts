@@ -73,6 +73,7 @@ export class KernelConnector {
     ): Promise<boolean> {
         const appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
+        // Status provider may not be available in web situation
         const statusProvider = serviceContainer.tryGet<IStatusProvider>(IStatusProvider);
 
         const selection = await appShell.showErrorMessage(
@@ -114,6 +115,7 @@ export class KernelConnector {
         actionSource: KernelActionSource
     ) {
         const memento = serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
+        // Error handler may not be available in web situation
         const errorHandler = serviceContainer.tryGet<IDataScienceErrorHandler>(IDataScienceErrorHandler);
 
         if (metadata.interpreter && errorContext === 'start') {
@@ -133,6 +135,8 @@ export class KernelConnector {
 
         // Send telemetry for handling the error (if raw)
         const isLocal = isLocalConnection(metadata);
+
+        // Raw notebook provider is not available in web
         const rawNotebookProvider = serviceContainer.tryGet<IRawNotebookProvider>(IRawNotebookProvider);
         const rawLocalKernel = rawNotebookProvider?.isSupported && isLocal;
         if (rawLocalKernel && errorContext === 'start' && handleResult) {
