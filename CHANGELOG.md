@@ -6,14 +6,14 @@
 
 1. Ensure widgets using IPyWidgets 8.0 get rendered correctly.
    ([#8552](https://github.com/Microsoft/vscode-jupyter/issues/8552))
-1. Display a meaningful message in the cell that last ran when the kernel crashes.
+1. Display a meaningful message in the cell that last ran when the kernel crashed.
    ([#9375](https://github.com/Microsoft/vscode-jupyter/issues/9375))
 1. Add support for connecting to remote jupyter kernels from the web extension. The server needs to start with '--NotebookApp.allow*origin=\_baseurl*' in order to connect from a webpage.
    ([#9663](https://github.com/Microsoft/vscode-jupyter/issues/9663))
 
 ### Fixes
 
-1. Don't append another cell to a python file when the cell was empty
+1. Don't append another cell to a python file when the cell was empty.
    ([#9452](https://github.com/Microsoft/vscode-jupyter/issues/9452))
 1. Mark cell as not executing when dismissing the prompt to restart a dead kernel.
    ([#9538](https://github.com/Microsoft/vscode-jupyter/issues/9538))
@@ -62,7 +62,7 @@
    ([#9596](https://github.com/Microsoft/vscode-jupyter/issues/9596))
 1. Switch to using URIs wherever possible instead of strings for file paths.
    ([#9599](https://github.com/Microsoft/vscode-jupyter/issues/9599))
-1. Remove usage of textDocumentNotebook proposed API that was unnecessary
+1. Remove usage of textDocumentNotebook proposed API that was unnecessary.
    ([#9679](https://github.com/Microsoft/vscode-jupyter/issues/9679))
 1. Skip logging the entire server settings.
    ([#9791](https://github.com/Microsoft/vscode-jupyter/issues/9791))
