@@ -15,6 +15,7 @@ import { getFilePath } from '../platform/common/platform/fs-paths';
 import { IConfigurationService } from '../platform/common/types';
 import { IInterpreterService } from '../platform/interpreter/contracts';
 import * as semver from 'semver';
+import { traceInfo, traceVerbose } from '../platform/logging';
 
 /**
 * Manages use of the Python extension's registerJupyterPythonPathFunction API which
@@ -64,6 +65,10 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
                 semver.satisfies(pythonVersion, '>=2022.6.0 || 2022.5.0-dev') &&
                 pylanceVersion !== undefined &&
                 semver.satisfies(pylanceVersion, '>=2022.4.4-pre.1 || 9999.0.0-dev');
+
+            if (this._isEnabled) {
+                traceInfo('Pylance LSP Notebooks experiment is enabled.');
+            }
         }
 
         return this._isEnabled;
@@ -86,6 +91,9 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
         }
 
         const pythonPath = getFilePath(interpreter.uri);
+
+        traceVerbose(`Giving Pylance "${pythonPath}" as python path for "${uri}"`);
+
         return pythonPath;
     }
 }
