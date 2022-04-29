@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { _WindowMiddleware } from 'vscode-languageclient';
 import { INotebookLanguageClientProvider } from '../notebooks/types';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
 import { IServiceManager } from '../platform/ioc/types';
