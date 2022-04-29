@@ -1,7 +1,7 @@
 {
     "name": "jupyter",
     "displayName": "Jupyter",
-    "version": "2022.4.100",
+    "version": "2022.5.100",
     "description": "Jupyter notebook support, interactive programming and computing that supports Intellisense, debugging and more.",
     "publisher": "ms-toolsai",
     "author": {
@@ -27,7 +27,7 @@
         "theme": "light"
     },
     "engines": {
-        "vscode": "^1.67.0"
+        "vscode": "^1.67.0-insiders"
     },
     "keywords": [
         "jupyter",
