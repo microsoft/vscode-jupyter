@@ -45,7 +45,7 @@ export class IPyWidgetScriptSource {
         private readonly kernelProvider: IKernelProvider,
         disposables: IDisposableRegistry,
         private readonly configurationSettings: IConfigurationService,
-        private readonly httpClient: IHttpClient,
+        private readonly httpClient: IHttpClient | undefined,
         private readonly appShell: IApplicationShell,
         private readonly workspaceService: IWorkspaceService,
         private readonly stateFactory: IPersistentStateFactory,

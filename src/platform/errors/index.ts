@@ -6,7 +6,7 @@ import * as stackTrace from 'stack-trace';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { getErrorTags } from './errors';
 import { getLastFrameFromPythonTraceback } from './errorUtils';
-import { BaseError, getErrorCategory, TelemetryErrorProperties, WrappedError } from './types';
+import { getErrorCategory, TelemetryErrorProperties, BaseError, WrappedError } from './types';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function populateTelemetryWithErrorInfo(props: Partial<TelemetryErrorProperties>, error: Error) {
@@ -21,7 +21,8 @@ export function populateTelemetryWithErrorInfo(props: Partial<TelemetryErrorProp
         // Helps us determine that we are rejecting with errors in some places, in which case we aren't getting meaningful errors/data.
         props.failureSubCategory = 'errorisstring';
     }
-    const stdErr = (error instanceof BaseError ? error.stdErr : error.stack) || '';
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const stdErr = (error as BaseError).stdErr ? (error as BaseError).stdErr : error.stack || '';
     if (!stdErr) {
         return;
     }

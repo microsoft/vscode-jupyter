@@ -222,7 +222,7 @@ export class CommonMessageCoordinator {
                 this.serviceContainer.get<IKernelProvider>(IKernelProvider),
                 this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry),
                 this.serviceContainer.get<IConfigurationService>(IConfigurationService),
-                this.serviceContainer.get<IHttpClient>(IHttpClient),
+                this.serviceContainer.tryGet<IHttpClient>(IHttpClient),
                 this.serviceContainer.get<IApplicationShell>(IApplicationShell),
                 this.serviceContainer.get<IWorkspaceService>(IWorkspaceService),
                 this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory),
