@@ -13,7 +13,7 @@ import { NotebookPythonPathService } from './notebookPythonPathService';
 import { PythonKernelCompletionProvider } from './pythonKernelCompletionProvider';
 import { PythonKernelCompletionProviderRegistration } from './pythonKernelCompletionProviderRegistration';
 
-export async function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
+export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<PythonKernelCompletionProvider>(
         PythonKernelCompletionProvider,
         PythonKernelCompletionProvider
