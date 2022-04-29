@@ -29,12 +29,24 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
         @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}
 
+    public async activate() {
+        if (!this.isEnabled()) {
+            return;
+        }
+
+        await this.apiProvider.getApi().then((api) => {
+            api.registerJupyterPythonPathFunction((uri) => this._jupyterPythonPathFunction(uri));
+        });
+    }
+
     public isEnabled() {
         if (this._isEnabled === undefined) {
             const isInNotebooksExperiment = this.configService.getSettings().pylanceLspNotebooksEnabled;
             const pythonVersion = extensions.getExtension(PythonExtension)?.packageJSON.version;
             const pylanceVersion = extensions.getExtension(PylanceExtension)?.packageJSON.version;
 
+            // Only enable the experiment if we're in the treatment group and the installed
+            // versions of Python and Pylance support the experiment.
             this._isEnabled =
                 isInNotebooksExperiment &&
                 pythonVersion !== undefined &&
@@ -46,17 +58,8 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
         return this._isEnabled;
     }
 
-    public async activate() {
-        if (!this.isEnabled()) {
-            return;
-        }
-
-        await this.apiProvider.getApi().then((api) => {
-            api.registerJupyterPythonPathFunction((uri) => this.jupyterPythonPathFunction(uri));
-        });
-    }
-
-    private async jupyterPythonPathFunction(uri: Uri): Promise<string | undefined> {
+    // Called by Python extension when Pylance needs the python.exe path for a notebook
+    private async _jupyterPythonPathFunction(uri: Uri): Promise<string | undefined> {
         const notebook = findAssociatedNotebookDocument(uri, this.notebooks, this.interactiveWindowProvider);
         const controller = notebook
             ? this.notebookControllerManager.getSelectedNotebookController(notebook)
