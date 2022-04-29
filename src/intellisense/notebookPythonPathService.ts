@@ -35,7 +35,9 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
         }
 
         await this.apiProvider.getApi().then((api) => {
-            api.registerJupyterPythonPathFunction((uri) => this._jupyterPythonPathFunction(uri));
+            if (api.registerJupyterPythonPathFunction !== undefined) {
+                api.registerJupyterPythonPathFunction((uri) => this._jupyterPythonPathFunction(uri));
+            }
         });
     }
 
