@@ -16,6 +16,11 @@ import { IConfigurationService } from '../platform/common/types';
 import { IInterpreterService } from '../platform/interpreter/contracts';
 import * as semver from 'semver';
 
+/**
+* Manages use of the Python extension's registerJupyterPythonPathFunction API which
+* enables us to provide the python.exe path for a notebook as required for Pylance's
+* LSP-based notebooks support.
+*/
 @injectable()
 export class NotebookPythonPathService implements IExtensionSingleActivationService {
     private _isEnabled: boolean | undefined;
@@ -30,7 +35,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
     ) {}
 
     public async activate() {
-        if (!this.isEnabled()) {
+        if (!this.isPylanceUsingLspNotebooks()) {
             return;
         }
 
@@ -41,7 +46,11 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
         });
     }
 
-    public isEnabled() {
+    /**
+    * Returns a boolean indicating whether Pylance's LSP notebooks experiment is enabled.
+    * When this is True, the Python extension starts Pylance for notebooks instead of us.
+    */
+    public isPylanceUsingLspNotebooks() {
         if (this._isEnabled === undefined) {
             const isInNotebooksExperiment = this.configService.getSettings().pylanceLspNotebooksEnabled;
             const pythonVersion = extensions.getExtension(PythonExtension)?.packageJSON.version;
@@ -60,7 +69,9 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
         return this._isEnabled;
     }
 
-    // Called by Python extension when Pylance needs the python.exe path for a notebook
+    /**
+    * Called by the Python extension when Pylance needs the python.exe path for a notebook.
+    */
     private async _jupyterPythonPathFunction(uri: Uri): Promise<string | undefined> {
         const notebook = findAssociatedNotebookDocument(uri, this.notebooks, this.interactiveWindowProvider);
         const controller = notebook
