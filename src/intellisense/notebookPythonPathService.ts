@@ -27,8 +27,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
         @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
-    ) {
-    }
+    ) {}
 
     public isEnabled() {
         if (this._isEnabled === undefined) {
@@ -36,11 +35,12 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
             const pythonVersion = extensions.getExtension(PythonExtension)?.packageJSON.version;
             const pylanceVersion = extensions.getExtension(PylanceExtension)?.packageJSON.version;
 
-            this._isEnabled = isInNotebooksExperiment &&
-                              pythonVersion !== undefined &&
-                              semver.satisfies(pythonVersion, '>=2022.6.0 || 2022.5.0-dev') &&
-                              pylanceVersion !== undefined &&
-                              semver.satisfies(pylanceVersion, '>=2022.4.4-pre.1 || 9999.0.0-dev');
+            this._isEnabled =
+                isInNotebooksExperiment &&
+                pythonVersion !== undefined &&
+                semver.satisfies(pythonVersion, '>=2022.6.0 || 2022.5.0-dev') &&
+                pylanceVersion !== undefined &&
+                semver.satisfies(pylanceVersion, '>=2022.4.4-pre.1 || 9999.0.0-dev');
         }
 
         return this._isEnabled;
@@ -52,7 +52,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
         }
 
         await this.apiProvider.getApi().then((api) => {
-            api.registerJupyterPythonPathFunction((uri) => this.jupyterPythonPathFunction(uri))
+            api.registerJupyterPythonPathFunction((uri) => this.jupyterPythonPathFunction(uri));
         });
     }
 
@@ -61,9 +61,13 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
         const controller = notebook
             ? this.notebookControllerManager.getSelectedNotebookController(notebook)
             : undefined;
+        const interpreter = controller
+            ? controller.connection.interpreter
+            : await this.interpreterService.getActiveInterpreter(uri);
 
-        const interpreter = controller ? controller.connection.interpreter : await this.interpreterService.getActiveInterpreter(uri);
-        if (!interpreter){return undefined;}
+        if (!interpreter) {
+            return undefined;
+        }
 
         const pythonPath = getFilePath(interpreter.uri);
         return pythonPath;
