@@ -75,24 +75,29 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
     }
 
     /**
-     * Called by the Python extension when Pylance needs the python.exe path for a notebook.
+     * Called by the Python extension to give Jupyter a chance to override the python.exe
+     * path used by Pylance. Return undefined to allow Python to determine the path.
      */
     private async _jupyterPythonPathFunction(uri: Uri): Promise<string | undefined> {
         const notebook = findAssociatedNotebookDocument(uri, this.notebooks, this.interactiveWindowProvider);
-        const controller = notebook
-            ? this.notebookControllerManager.getSelectedNotebookController(notebook)
-            : undefined;
+        if (!notebook) {
+            traceVerbose(`_jupyterPythonPathFunction: "${uri}" is not a notebook`);
+            return undefined;
+        }
+
+        const controller = this.notebookControllerManager.getSelectedNotebookController(notebook);
         const interpreter = controller
             ? controller.connection.interpreter
             : await this.interpreterService.getActiveInterpreter(uri);
 
         if (!interpreter) {
+            traceVerbose(`_jupyterPythonPathFunction: Couldn't find interpreter for "${uri}"`);
             return undefined;
         }
 
         const pythonPath = getFilePath(interpreter.uri);
 
-        traceVerbose(`Giving Pylance "${pythonPath}" as python path for "${uri}"`);
+        traceVerbose(`_jupyterPythonPathFunction: Giving Pylance "${pythonPath}" as python path for "${uri}"`);
 
         return pythonPath;
     }
