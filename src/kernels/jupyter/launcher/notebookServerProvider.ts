@@ -186,7 +186,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
 
     private async getNotebookServerOptions(options: GetServerOptions): Promise<INotebookServerOptions> {
         const useDefaultConfig: boolean | undefined =
-            this.   configuration.getSettings(undefined).useDefaultConfigForJupyter;
+            this.configuration.getSettings(undefined).useDefaultConfigForJupyter;
         if (options.localJupyter) {
             return {
                 resource: options.resource,
