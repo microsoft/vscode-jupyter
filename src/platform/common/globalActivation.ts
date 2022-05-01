@@ -27,7 +27,9 @@ export class GlobalActivation implements IExtensionSingleActivationService {
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IExtensionContext) private extensionContext: IExtensionContext,
-        @inject(IDataScienceCodeLensProvider) private dataScienceCodeLensProvider: IDataScienceCodeLensProvider,
+        @inject(IDataScienceCodeLensProvider)
+        @optional()
+        private dataScienceCodeLensProvider: IDataScienceCodeLensProvider | undefined,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
@@ -39,9 +41,14 @@ export class GlobalActivation implements IExtensionSingleActivationService {
     }
 
     public async activate(): Promise<void> {
-        this.extensionContext.subscriptions.push(
-            vscode.languages.registerCodeLensProvider([PYTHON_FILE, PYTHON_UNTITLED], this.dataScienceCodeLensProvider)
-        );
+        if (this.dataScienceCodeLensProvider) {
+            this.extensionContext.subscriptions.push(
+                vscode.languages.registerCodeLensProvider(
+                    [PYTHON_FILE, PYTHON_UNTITLED],
+                    this.dataScienceCodeLensProvider
+                )
+            );
+        }
 
         // Set our initial settings and sign up for changes
         this.onSettingsChanged();
