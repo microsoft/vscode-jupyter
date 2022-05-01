@@ -13,7 +13,12 @@ import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { IKernelProvider } from '../../../platform/../kernels/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
-import { closeActiveWindows, EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize.node';
+import {
+    closeActiveWindows,
+    EXTENSION_ROOT_DIR_FOR_TESTS,
+    initialize,
+    IS_REMOTE_NATIVE_TEST
+} from '../../initialize.node';
 import { openNotebook } from '../helpers.node';
 import {
     closeNotebooks,
@@ -40,6 +45,9 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
 
     this.timeout(120_000);
     suiteSetup(async function () {
+        if (IS_REMOTE_NATIVE_TEST()) {
+            return this.skip();
+        }
         traceInfo('Suite Setup VS Code Notebook - Execution');
         this.timeout(120_000);
         api = await initialize();
