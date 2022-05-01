@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import '../../platform/common/extensions';
-
+import * as hashjs from 'hash.js';
 import * as path from '../../platform/vscode-path/path';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
@@ -106,4 +106,8 @@ export function createRemoteConnectionInfo(
         getAuthHeader: serverUri ? () => getJupyterServerUri(uri)?.authorizationHeader : undefined,
         url: uri
     };
+}
+
+export function computeUriHash(uri: string) {
+    return hashjs.sha256().update(uri).digest('hex');
 }
