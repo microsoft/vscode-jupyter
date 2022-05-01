@@ -30,9 +30,10 @@ import { KernelConnector } from '../../kernels/kernelConnector';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import { IServiceContainer } from '../ioc/types';
 import { JupyterNotebookView } from '../../notebooks/constants';
+import { IExportedKernelServiceFactory } from './types';
 
 @injectable()
-export class JupyterKernelServiceFactory {
+export class JupyterKernelServiceFactory implements IExportedKernelServiceFactory {
     private readonly chainedApiAccess = new PromiseChain();
     private readonly extensionApi = new Map<string, IExportedKernelService>();
     constructor(
