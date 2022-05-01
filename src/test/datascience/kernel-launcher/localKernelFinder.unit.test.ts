@@ -1597,7 +1597,8 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
                 kernelModel: { id: activeID } as any,
                 kind: 'connectToLiveRemoteKernel',
                 baseUrl: '',
-                id: activeID
+                id: activeID,
+                serverId: ''
             };
 
             // Set up the preferred remote id
