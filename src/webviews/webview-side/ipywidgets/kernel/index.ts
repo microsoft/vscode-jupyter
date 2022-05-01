@@ -116,7 +116,14 @@ export function disposeOutput(outputId?: string) {
 }
 function renderIPyWidget(
     outputId: string,
-    model: nbformat.IMimeBundle & { model_id: string; version_major: number },
+    model: nbformat.IMimeBundle & {
+        model_id: string;
+        version_major: number;
+        /**
+         * This property is only used & added in tests.
+         */
+        _vsc_test_cellIndex?: number;
+    },
     container: HTMLElement,
     logger: (message: string) => void
 ) {
@@ -125,6 +132,9 @@ function renderIPyWidget(
     }
     const output = document.createElement('div');
     output.className = 'cell-output cell-output';
+    if (typeof model._vsc_test_cellIndex === 'number') {
+        container.className += ` vsc-test-cell-index-${model._vsc_test_cellIndex}`;
+    }
     const ele = document.createElement('div');
     ele.className = 'cell-output-ipywidget-background';
     container.appendChild(ele);

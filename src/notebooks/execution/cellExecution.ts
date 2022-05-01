@@ -22,7 +22,8 @@ import {
     NotebookCellExecutionState,
     CancellationTokenSource,
     Event,
-    EventEmitter
+    EventEmitter,
+    ExtensionMode
 } from 'vscode';
 
 import { Kernel } from '@jupyterlab/services';
@@ -34,7 +35,7 @@ import { BaseError } from '../../platform/errors/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceError, traceInfoIfCI, traceWarning } from '../../platform/logging';
 import { RefBool } from '../../platform/common/refBool.node';
-import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
+import { IDisposable, IDisposableRegistry, IExtensionContext } from '../../platform/common/types';
 import { Deferred, createDeferred } from '../../platform/common/utils/async';
 import * as localize from '../../platform/common/utils/localize';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
@@ -56,6 +57,7 @@ import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from
 import { IJupyterSession, IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
 import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
 import { ICellHashProvider, ICellHash } from '../../interactive-window/editor-integration/types';
+import { WIDGET_MIMETYPE } from '../../kernels/ipywidgets-message-coordination/constants';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
@@ -78,7 +80,8 @@ export class CellExecutionFactory {
         private readonly disposables: IDisposableRegistry,
         private readonly controller: NotebookController,
         private readonly outputTracker: CellOutputDisplayIdTracker,
-        private readonly cellHashProviderFactory: CellHashProviderFactory
+        private readonly cellHashProviderFactory: CellHashProviderFactory,
+        private readonly context: IExtensionContext
     ) {}
 
     public create(cell: NotebookCell, metadata: Readonly<KernelConnectionMetadata>) {
@@ -90,7 +93,8 @@ export class CellExecutionFactory {
             this.disposables,
             this.controller,
             this.outputTracker,
-            this.cellHashProviderFactory.getOrCreate(this.kernel)
+            this.cellHashProviderFactory.getOrCreate(this.kernel),
+            this.context
         );
     }
 }
@@ -156,7 +160,8 @@ export class CellExecution implements IDisposable {
         disposables: IDisposableRegistry,
         private readonly controller: NotebookController,
         private readonly outputDisplayIdTracker: CellOutputDisplayIdTracker,
-        private readonly cellHashProvider: ICellHashProvider
+        private readonly cellHashProvider: ICellHashProvider,
+        private readonly context: IExtensionContext
     ) {
         disposables.push(this);
         workspace.onDidCloseTextDocument(
@@ -221,9 +226,19 @@ export class CellExecution implements IDisposable {
         disposables: IDisposableRegistry,
         controller: NotebookController,
         outputTracker: CellOutputDisplayIdTracker,
-        cellHashProvider: ICellHashProvider
+        cellHashProvider: ICellHashProvider,
+        context: IExtensionContext
     ) {
-        return new CellExecution(cell, appService, metadata, disposables, controller, outputTracker, cellHashProvider);
+        return new CellExecution(
+            cell,
+            appService,
+            metadata,
+            disposables,
+            controller,
+            outputTracker,
+            cellHashProvider,
+            context
+        );
     }
     public async start(session: IJupyterSession) {
         if (this.cancelHandled) {
@@ -608,6 +623,15 @@ export class CellExecution implements IDisposable {
         output: ExecuteResult | DisplayData | nbformat.IStream | nbformat.IError | nbformat.IOutput,
         clearState: RefBool
     ) {
+        if (
+            this.context.extensionMode === ExtensionMode.Test &&
+            output.data &&
+            typeof output.data === 'object' &&
+            WIDGET_MIMETYPE in output.data
+        ) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (output.data[WIDGET_MIMETYPE] as any)['_vsc_test_cellIndex'] = this.cell.index;
+        }
         const cellOutput = cellOutputToVSCCellOutput(output);
         const displayId =
             'transient' in output &&

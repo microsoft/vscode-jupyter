@@ -9,6 +9,14 @@ export * from './constants';
 // Activating extension for Multiroot and Debugger CI tests for Windows takes just over 2 minutes sometimes, so 3 minutes seems like a safe margin
 
 export const EXTENSION_ROOT_DIR_FOR_TESTS = path.join(__dirname, '..', '..');
+export const EXTENSION_TEST_DIR_FOR_FILES = path.join(
+    EXTENSION_ROOT_DIR_FOR_TESTS,
+    'src',
+    'test',
+    'datascience',
+    'tmp'
+);
+export const JVSC_EXTENSION_ID_FOR_TESTS = 'ms-toolsai.jupyter';
 
 export const SMOKE_TEST_EXTENSIONS_DIR = path.join(
     EXTENSION_ROOT_DIR_FOR_TESTS,

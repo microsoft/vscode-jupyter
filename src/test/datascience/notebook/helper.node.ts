@@ -8,7 +8,7 @@ import * as path from '../../../platform/vscode-path/path';
 import * as tmp from 'tmp';
 import { IDisposable } from '../../../platform/common/types';
 import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
+import { EXTENSION_TEST_DIR_FOR_FILES, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import { commands, NotebookDocument, Uri } from 'vscode';
 import { traceInfo } from '../../../platform/logging';
 import { JupyterServer } from '../jupyterServer.node';
@@ -36,10 +36,10 @@ export async function createTemporaryNotebookFromFile(
     kernelName: string = 'Python 3'
 ): Promise<Uri> {
     const extension = path.extname(templateFile);
-    fs.ensureDirSync(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'tmp'));
+    fs.ensureDirSync(EXTENSION_TEST_DIR_FOR_FILES);
     const tempFile = tmp.tmpNameSync({
         postfix: extension,
-        dir: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'tmp'),
+        dir: EXTENSION_TEST_DIR_FOR_FILES,
         prefix: path.basename(templateFile, '.ipynb')
     });
     if (await fs.pathExists(templateFile)) {
