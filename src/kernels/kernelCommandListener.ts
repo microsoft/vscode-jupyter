@@ -37,7 +37,6 @@ export class KernelCommandListener implements IDataScienceCommandListener {
     ) {}
 
     public register(commandManager: ICommandManager): void {
-        console.error('Register Kernel command listener');
         this.disposableRegistry.push(
             commandManager.registerCommand(
                 Commands.NotebookEditorInterruptKernel,

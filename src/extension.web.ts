@@ -92,7 +92,6 @@ let activatedServiceContainer: IServiceContainer | undefined;
 // public functions
 
 export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
-    console.error('Activate Me3');
     try {
         let api: IExtensionApi;
         let ready: Promise<void>;
