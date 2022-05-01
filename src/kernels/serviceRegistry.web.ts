@@ -18,6 +18,8 @@ import { IKernelFinder, IKernelProvider } from './types';
 import { KernelProvider } from './kernelProvider.web';
 import { KernelFinder } from './kernelFinder.web';
 import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKernelIdProvider';
+import { IDataScienceCommandListener } from '../platform/common/types';
+import { KernelCommandListener } from './kernelCommandListener';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
@@ -54,6 +56,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         PreferredRemoteKernelIdProvider
     );
     serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
+    serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, KernelCommandListener);
 
     // Subdirectories
     registerWidgetTypes(serviceManager, isDevMode);

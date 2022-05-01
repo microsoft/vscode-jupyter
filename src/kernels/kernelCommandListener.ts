@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, optional } from 'inversify';
 import { ConfigurationTarget, Uri, window, workspace } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../platform/common/application/types';
 import { endCellAndDisplayErrorsInCell } from '../platform/errors/errorUtils';
@@ -29,7 +29,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IKernelProvider) private kernelProvider: IKernelProvider,
-        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
+        @optional() @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider | undefined,
         @inject(IConfigurationService) private configurationService: IConfigurationService,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(INotebookControllerManager) private notebookControllerManager: INotebookControllerManager,
@@ -37,6 +37,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
     ) {}
 
     public register(commandManager: ICommandManager): void {
+        console.error('Register Kernel command listener');
         this.disposableRegistry.push(
             commandManager.registerCommand(
                 Commands.NotebookEditorInterruptKernel,
@@ -81,9 +82,9 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         const uri =
             notebookUri ??
             window.activeNotebookEditor?.document.uri ??
-            this.interactiveWindowProvider.activeWindow?.notebookUri ??
+            this.interactiveWindowProvider?.activeWindow?.notebookUri ??
             (window.activeTextEditor?.document.uri &&
-                this.interactiveWindowProvider.get(window.activeTextEditor.document.uri)?.notebookUri);
+                this.interactiveWindowProvider?.get(window.activeTextEditor.document.uri)?.notebookUri);
         const document = workspace.notebookDocuments.find((document) => document.uri.toString() === uri?.toString());
 
         if (document === undefined) {
@@ -103,9 +104,9 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         const uri =
             notebookUri ??
             window.activeNotebookEditor?.document.uri ??
-            this.interactiveWindowProvider.activeWindow?.notebookUri ??
+            this.interactiveWindowProvider?.activeWindow?.notebookUri ??
             (window.activeTextEditor?.document.uri &&
-                this.interactiveWindowProvider.get(window.activeTextEditor.document.uri)?.notebookUri);
+                this.interactiveWindowProvider?.get(window.activeTextEditor.document.uri)?.notebookUri);
         const document = workspace.notebookDocuments.find((document) => document.uri.toString() === uri?.toString());
 
         if (document === undefined) {

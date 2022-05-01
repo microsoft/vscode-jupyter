@@ -29,7 +29,7 @@ import { NotebookWatcher } from '../webviews/extension-side/variablesView/notebo
 import { INotebookWatcher } from '../webviews/extension-side/variablesView/types';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from './activation/types';
 import { ExtensionRecommendationService } from './common/extensionRecommendation.node';
-import { GlobalActivation } from './common/globalActivation.node';
+import { GlobalActivation } from './common/globalActivation';
 import { PreReleaseChecker } from './common/prereleaseChecker.node';
 import { IConfigurationService, IDataScienceCommandListener, IExtensionContext } from './common/types';
 import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFactory.node';

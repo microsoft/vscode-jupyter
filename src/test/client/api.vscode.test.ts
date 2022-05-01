@@ -92,7 +92,7 @@ suite('3rd Party Kernel Service API', function () {
         kernels = await kernelService?.getActiveKernels();
         assert.isAtLeast(kernels!.length, 1);
         assert.strictEqual(
-            kernels![0].uri.toString(),
+            kernels![0].uri!.toString(),
             vscodeNotebook.activeNotebookEditor?.document.uri.toString(),
             'Kernel notebook is not the active notebook'
         );
@@ -133,7 +133,11 @@ suite('3rd Party Kernel Service API', function () {
 
         let kernels = await kernelService?.getActiveKernels();
         assert.isAtLeast(kernels!.length, 1);
-        assert.strictEqual(kernels![0].uri.toString(), nb.uri.toString(), 'Kernel notebook is not the active notebook');
+        assert.strictEqual(
+            kernels![0].uri!.toString(),
+            nb.uri.toString(),
+            'Kernel notebook is not the active notebook'
+        );
 
         assert.strictEqual(kernels![0].metadata, pythonKernel, 'Kernel Connection is not the same');
         const kernel = kernelService?.getKernel(nb.uri);

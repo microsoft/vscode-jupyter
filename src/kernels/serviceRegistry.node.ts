@@ -17,7 +17,7 @@ import { InteractiveWindowDebugger } from './debugging/interactiveWindowDebugger
 import { JupyterDebugService } from './debugging/jupyterDebugService.node';
 import { isLocalLaunch } from './helpers';
 import { registerInstallerTypes } from './installer/serviceRegistry.node';
-import { KernelCommandListener } from './kernelCommandListener.node';
+import { KernelCommandListener } from './kernelCommandListener';
 import { KernelDependencyService } from './kernelDependencyService.node';
 import { JupyterPaths } from './raw/finder/jupyterPaths.node';
 import { LocalKernelFinder } from './raw/finder/localKernelFinder.node';

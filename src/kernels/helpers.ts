@@ -1012,7 +1012,7 @@ export function removeNotebookSuffixAddedByExtension(notebookPath: string) {
                 .substring(notebookPath.lastIndexOf(jvscIdentifier) + jvscIdentifier.length)
                 .search(guidRegEx) !== -1
         ) {
-            return `${notebookPath.substring(0, notebookPath.lastIndexOf(jvscIdentifier))}.ipynb`;
+            return notebookPath.substring(0, notebookPath.lastIndexOf(jvscIdentifier));
         }
     }
     return notebookPath;

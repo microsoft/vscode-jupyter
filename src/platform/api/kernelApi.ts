@@ -29,6 +29,7 @@ import { Telemetry } from '../common/constants';
 import { KernelConnector } from '../../kernels/kernelConnector';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import { IServiceContainer } from '../ioc/types';
+import { JupyterNotebookView } from '../../notebooks/constants';
 
 @injectable()
 export class JupyterKernelServiceFactory {
@@ -111,21 +112,44 @@ class JupyterKernelService implements IExportedKernelService {
         const items = await this.notebookControllerManager.kernelConnections;
         return items.map((item) => this.translateKernelConnectionMetadataToExportedType(item));
     }
-    async getActiveKernels(): Promise<{ metadata: KernelConnectionMetadata; uri: Uri }[]> {
+    async getActiveKernels(): Promise<{ metadata: KernelConnectionMetadata; uri: Uri | undefined }[]> {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
             extensionId: this.callingExtensionId,
             pemUsed: 'getActiveKernels'
         });
-        const kernels: { metadata: KernelConnectionMetadata; uri: Uri }[] = [];
+        const kernels: { metadata: KernelConnectionMetadata; uri: Uri | undefined }[] = [];
+        const kernelsAlreadyListed = new Set<string>();
+        debugger;
         this.kernelProvider.kernels
-            .filter((item) => item.startedAtLeastOnce)
+            .filter(
+                (item) => item.startedAtLeastOnce || item.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel'
+            )
             .forEach((item) => {
+                const kernel = this.kernelProvider.get(item.id);
+                // When returning list of active sessions, we don't want to return something thats
+                // associated with a controller.
+                // Note: In VS Code, a controller starts a kernel, however the controller only keeps track of the kernel spec.
+                // Hence when we return this connection, we're actually returning the controller's kernel spec & the uri.
+                if (kernel && kernel.session?.kernelId) {
+                    kernelsAlreadyListed.add(kernel.session?.kernelId);
+                }
                 kernels.push({
                     metadata: this.translateKernelConnectionMetadataToExportedType(item.kernelConnectionMetadata),
                     uri: item.id
                 });
             });
-
+        this.notebookControllerManager.registeredNotebookControllers().forEach((item) => {
+            if (item.controller.notebookType !== JupyterNotebookView) {
+                return;
+            }
+            if (item.connection.kind !== 'connectToLiveRemoteKernel') {
+                return;
+            }
+            if (!item.connection.kernelModel.id || kernelsAlreadyListed.has(item.connection.kernelModel.id)) {
+                return;
+            }
+            kernels.push({ metadata: item.connection, uri: undefined });
+        });
         return kernels;
     }
     getKernel(uri: Uri): { metadata: KernelConnectionMetadata; connection: IKernelConnectionInfo } | undefined {
@@ -160,6 +184,7 @@ class JupyterKernelService implements IExportedKernelService {
         spec: KernelConnectionMetadata | ActiveKernel,
         uri: Uri
     ): Promise<IKernelConnectionInfo> {
+        debugger;
         await this.notebookControllerManager.loadNotebookControllers();
         const items = await this.notebookControllerManager.kernelConnections;
         const metadata = items.find((item) => item.id === spec.id);
