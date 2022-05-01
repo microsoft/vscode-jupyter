@@ -161,7 +161,6 @@ export abstract class BaseKernel implements IKernel {
             kernelConnectionMetadata,
             interruptTimeout,
             disposables,
-            controller,
             outputTracker,
             cellHashProviderFactory,
             context

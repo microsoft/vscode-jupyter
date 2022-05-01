@@ -191,7 +191,7 @@ export type LiveRemoteKernelConnectionMetadata = Readonly<{
  * Connection metadata for Live Local Kernels.
  * With this we are able connect to an existing kernel (instead of starting a new session).
  */
- export type LiveLocalKernelConnectionMetadata = Readonly<{
+export type LiveLocalKernelConnectionMetadata = Readonly<{
     /**
      * Python interpreter will be used for intellisense & the like.
      */

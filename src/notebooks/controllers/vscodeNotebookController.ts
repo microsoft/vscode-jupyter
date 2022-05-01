@@ -75,8 +75,7 @@ import {
     KernelConnectionMetadata,
     KernelSocketInformation,
     LiveRemoteKernelConnectionMetadata,
-    LocalKernelSpecConnectionMetadata,
-    PythonKernelConnectionMetadata
+    LocalKernelConnectionMetadata
 } from '../../kernels/types';
 import { InteractiveWindowView } from '../constants';
 import { CellExecutionCreator } from '../execution/cellExecutionCreator';
@@ -188,9 +187,7 @@ export class VSCodeNotebookController implements Disposable {
     public flagRemoteKernelAsOutdated() {
         this.isConnectionOutdated = true;
     }
-    public updateInterpreterDetails(
-        kernelConnection: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
-    ) {
+    public updateInterpreterDetails(kernelConnection: LocalKernelConnectionMetadata) {
         this.controller.label = getDisplayNameOrNameOfKernelConnection(kernelConnection);
     }
     public asWebviewUri(localResource: Uri): Uri {
