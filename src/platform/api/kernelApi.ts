@@ -119,7 +119,6 @@ class JupyterKernelService implements IExportedKernelService {
         });
         const kernels: { metadata: KernelConnectionMetadata; uri: Uri | undefined }[] = [];
         const kernelsAlreadyListed = new Set<string>();
-        debugger;
         this.kernelProvider.kernels
             .filter(
                 (item) => item.startedAtLeastOnce || item.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel'
@@ -184,7 +183,6 @@ class JupyterKernelService implements IExportedKernelService {
         spec: KernelConnectionMetadata | ActiveKernel,
         uri: Uri
     ): Promise<IKernelConnectionInfo> {
-        debugger;
         await this.notebookControllerManager.loadNotebookControllers();
         const items = await this.notebookControllerManager.kernelConnections;
         const metadata = items.find((item) => item.id === spec.id);
