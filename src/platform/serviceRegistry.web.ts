@@ -23,7 +23,7 @@ import { IStatusProvider } from './progress/types';
 import { WorkspaceService } from './common/application/workspace.web';
 import { DataScienceErrorHandler } from './errors/errorHandler';
 import { IDataScienceErrorHandler } from './errors/types';
-import { GlobalActivation } from './common/globalActivation.web';
+import { GlobalActivation } from './common/globalActivation';
 import { IExtensionSingleActivationService } from './activation/types';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
