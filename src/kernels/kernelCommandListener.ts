@@ -29,7 +29,9 @@ export class KernelCommandListener implements IDataScienceCommandListener {
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IKernelProvider) private kernelProvider: IKernelProvider,
-        @optional() @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider | undefined,
+        @optional()
+        @inject(IInteractiveWindowProvider)
+        private interactiveWindowProvider: IInteractiveWindowProvider | undefined,
         @inject(IConfigurationService) private configurationService: IConfigurationService,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(INotebookControllerManager) private notebookControllerManager: INotebookControllerManager,
