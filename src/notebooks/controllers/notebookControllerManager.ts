@@ -200,7 +200,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             return this.createActiveInterpreterController(notebookType, resource);
         } else {
             traceInfoIfCI('CreateDefaultRemoteController');
-            const controller = await this.createDefaultRemoteController(notebookType);
+            const controller = await this.createDefaultPythonRemoteController(notebookType);
             if (controller) {
                 return controller;
             }
@@ -394,7 +394,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         return this.getOrCreateControllerForActiveInterpreter(activeInterpreter, notebookType);
     }
     @traceDecoratorVerbose('Get default Remote Controller')
-    private async createDefaultRemoteController(
+    private async createDefaultPythonRemoteController(
         notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
     ) {
         // Get all remote kernels
@@ -506,10 +506,13 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // Don't attempt preferred kernel search for interactive window, but do make sure we
             // load all our controllers for interactive window
             const notebookMetadata = getNotebookMetadata(document);
-            if (document.notebookType === JupyterNotebookView) {
-                const resourceType = getResourceType(document.uri);
-                const isPythonNbOrInteractiveWindow =
-                    isPythonNotebook(notebookMetadata) || resourceType === 'interactive';
+            const resourceType = getResourceType(document.uri);
+            const isPythonNbOrInteractiveWindow = isPythonNotebook(notebookMetadata) || resourceType === 'interactive';
+            if (document.notebookType === JupyterNotebookView && !this.isLocalLaunch && isPythonNbOrInteractiveWindow) {
+                const defaultPythonController = await this.createDefaultPythonRemoteController(document.notebookType);
+                preferredConnection = defaultPythonController?.connection;
+            }
+            if (document.notebookType === JupyterNotebookView && !preferredConnection) {
                 const preferredInterpreter =
                     isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
                         ? await this.interpreters.getActiveInterpreter(document.uri)
