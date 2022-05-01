@@ -55,7 +55,7 @@ class WidgetManagerComponent {
             cdnsUsed: this.widgetsCanLoadFromCDN,
             isOnline: data.isOnline,
             timedout: data.timedout,
-            error: data.error
+            error: JSON.stringify(data.error)
         });
         console.error(`Failed to to Widget load class ${data.moduleName}${data.className}`, data);
     }

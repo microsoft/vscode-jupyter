@@ -49,6 +49,7 @@ export interface IWidgetScriptSourceProvider extends IDisposable {
      * This is called when ipywidgets needs a source for a particular widget.
      */
     getWidgetScriptSource(moduleName: string, moduleVersion: string): Promise<Readonly<WidgetScriptSource>>;
+    getWidgetScriptSources?(): Promise<Readonly<WidgetScriptSource[]>>;
 }
 
 export const IWidgetScriptSourceProviderFactory = Symbol('IWidgetScriptSourceProviderFactory');

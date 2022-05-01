@@ -67,7 +67,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
         assert.deepEqual(value, { moduleName: 'ModuleName' });
 
         // Ensure we searched the directories.
-        verify(fs.searchLocal(anything(), anything())).once();
+        verify(fs.searchLocal(anything(), anything())).atLeast(1);
     });
     test('Look for widgets in sysPath of interpreter defined in kernel metadata', async () => {
         const sysPrefix = 'sysPrefix Of Python in Metadata';
@@ -135,7 +135,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
         assert.deepEqual(value2, { moduleName: 'ModuleName' });
 
         // Ensure we search directories once.
-        verify(fs.searchLocal(anything(), anything())).once();
+        verify(fs.searchLocal(anything(), anything())).atLeast(1);
     });
     test('Ensure we search directory only once (cache results)', async () => {
         const sysPrefix = 'sysPrefix Of Python in Metadata';
