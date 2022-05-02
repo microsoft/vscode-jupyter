@@ -9,7 +9,6 @@ import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IMemento, GLOBAL_MEMENTO, ICryptoUtils } from '../../../platform/common/types';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
-import { getComparisonKey } from '../../../platform/vscode-path/resources';
 
 export const ActiveKernelIdList = 'Active_Kernel_Id_List';
 // This is the number of kernel ids that will be remembered between opening and closing VS code
@@ -32,7 +31,7 @@ export class PreferredRemoteKernelIdProvider {
         const list: KernelIdListEntry[] = this.globalMemento.get<KernelIdListEntry[]>(ActiveKernelIdList, []);
         if (list) {
             // Not using a map as we're only going to store the last 40 items.
-            const fileHash = this.crypto.createHash(getComparisonKey(uri), 'string');
+            const fileHash = this.crypto.createHash(uri.toString(), 'string');
             const entry = list.find((l) => l.fileHash === fileHash);
             traceInfo(`Preferred Remote kernel for ${getDisplayPath(uri)} is ${entry?.kernelId}`);
             return entry?.kernelId;
@@ -44,7 +43,7 @@ export class PreferredRemoteKernelIdProvider {
         const list: KernelIdListEntry[] = cloneDeep(
             this.globalMemento.get<KernelIdListEntry[]>(ActiveKernelIdList, [])
         );
-        const fileHash = this.crypto.createHash(getComparisonKey(uri), 'string');
+        const fileHash = this.crypto.createHash(uri.toString(), 'string');
         const index = list.findIndex((l) => l.fileHash === fileHash);
         // Always remove old spot (we'll push on the back for new ones)
         if (index >= 0) {
