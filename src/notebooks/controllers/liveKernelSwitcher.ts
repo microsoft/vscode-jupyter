@@ -1,18 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { inject, injectable, named } from 'inversify';
-import { Memento, NotebookDocument, Uri } from 'vscode';
+import { inject, injectable } from 'inversify';
+import { NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { IVSCodeNotebook, ICommandManager } from '../../platform/common/application/types';
-import { traceError } from '../../platform/logging';
-import { IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../platform/common/types';
-import { IKernelProvider, LiveRemoteKernelConnectionMetadata } from '../../kernels/types';
+import { traceError, traceInfo } from '../../platform/logging';
+import { IDisposableRegistry } from '../../platform/common/types';
 import { INotebookControllerManager } from '../types';
-import { switchKernel } from './kernelSelector';
-import { getFilePath } from '../../platform/common/platform/fs-paths';
-
-const MEMENTO_BASE_KEY = 'jupyter-notebook-remote-session-';
+import { PreferredRemoteKernelIdProvider } from '../../kernels/raw/finder/preferredRemoteKernelIdProvider';
+import { KernelConnectionMetadata } from '../../kernels/types';
+import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
+import { waitForCondition } from '../../platform/common/utils/async';
 
 /**
  * This class listens tracks notebook controller selection. When a notebook runs
@@ -23,56 +22,54 @@ const MEMENTO_BASE_KEY = 'jupyter-notebook-remote-session-';
 export class LiveKernelSwitcher implements IExtensionSingleActivationService {
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(INotebookControllerManager) private readonly controllerManager: INotebookControllerManager,
-        @inject(IMemento) @named(WORKSPACE_MEMENTO) private readonly memento: Memento,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(PreferredRemoteKernelIdProvider)
+        private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider
     ) {}
     public async activate(): Promise<void> {
-        // Listen to remove refresh events. We need to see when we get a remote kernel
-        this.controllerManager.remoteRefreshed(this.onLiveRefresh, this, this.disposables);
-
         // Listen to notebook open events. If we open a notebook that had a remote kernel started on it, reset it
         this.vscNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebook, this, this.disposables);
-    }
 
-    private getKey(notebookUri: Uri) {
-        return `${MEMENTO_BASE_KEY}${getFilePath(notebookUri)}`;
+        // For all currently open notebooks, need to run the same code
+        this.vscNotebook.notebookDocuments.forEach((d) => this.onDidOpenNotebook(d));
     }
 
     private onDidOpenNotebook(n: NotebookDocument) {
-        const key = this.getKey(n.uri);
-        const session = this.memento.get(key);
-        if (session) {
-            // When all controllers are loaded, see if one matches
-            this.controllerManager.kernelConnections
-                .then(async (list) => {
-                    const active = this.controllerManager.getSelectedNotebookController(n);
-                    const matching = list.find((l) => l.id === session);
-                    if (matching && active?.id !== matching.id) {
-                        // This controller is the one we want, but it's not currently set.
-                        await switchKernel(n.uri, this.vscNotebook, undefined, this.commandManager, matching);
-                    } else {
-                        // There's no match, so live connection must be gone
-                        await this.memento.update(key, undefined);
-                    }
-                })
-                .catch((e) => traceError(e));
-        }
+        // When all controllers are loaded, see if one matches
+        this.controllerManager.kernelConnections
+            .then(async (list) => {
+                const active = this.controllerManager.getSelectedNotebookController(n);
+                const preferredRemote = this.preferredRemoteKernelIdProvider.getPreferredRemoteKernelId(n.uri);
+                const matching = preferredRemote && list.find((l) => l.id === preferredRemote);
+                if (matching && active?.id !== matching.id) {
+                    traceInfo(`Switching remote kernel to ${preferredRemote} for ${n.uri}`);
+                    // This controller is the one we want, but it's not currently set.
+                    await this.switchKernel(n, matching);
+                }
+            })
+            .catch((e) => traceError(e));
     }
 
-    private onLiveRefresh(liveConnections: LiveRemoteKernelConnectionMetadata[]) {
-        // When a refresh happens, remember the live connection id for all notebooks
-        this.vscNotebook.notebookDocuments.forEach(async (n) => {
-            const kernel = this.kernelProvider.get(n.uri);
-            if (kernel) {
-                const match = liveConnections.find((c) => c.kernelModel.id === kernel.session?.kernelId);
-                if (match) {
-                    const key = this.getKey(n.uri);
-                    await this.memento.update(key, match.id);
-                }
-            }
-        });
+    private async switchKernel(n: NotebookDocument, kernel: Readonly<KernelConnectionMetadata>) {
+        // If this notebook is the active document, set the kernel
+        if (this.vscNotebook.activeNotebookEditor?.document === n) {
+            traceInfo(`Using notebook.selectKernel to force remote kernel for ${n.uri} to ${kernel.id}`);
+            // Do this in a loop as it may fail
+            const success = await waitForCondition(
+                async () => {
+                    await this.commandManager.executeCommand('notebook.selectKernel', {
+                        id: kernel.id,
+                        extension: JVSC_EXTENSION_ID
+                    });
+                    const selected = this.controllerManager.getSelectedNotebookController(n);
+                    return selected?.connection.id === kernel.id;
+                },
+                2000,
+                100
+            );
+            traceInfo(`Results of switching remote kernel: ${success}`);
+        }
     }
 }
