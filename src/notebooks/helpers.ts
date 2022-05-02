@@ -102,12 +102,12 @@ export async function updateNotebookDocumentMetadata(
 
 export function isPythonNotebook(metadata?: nbformat.INotebookMetadata) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const kernelSpec = metadata?.kernelspec as any as IJupyterKernelSpec | undefined;
+    const kernelSpec = metadata?.kernelspec as any as Partial<IJupyterKernelSpec> | undefined;
     if (metadata?.language_info?.name && metadata.language_info.name !== PYTHON_LANGUAGE) {
         return false;
     }
 
-    if (kernelSpec?.name.includes(PYTHON_LANGUAGE)) {
+    if (kernelSpec?.name?.includes(PYTHON_LANGUAGE)) {
         return true;
     }
 
