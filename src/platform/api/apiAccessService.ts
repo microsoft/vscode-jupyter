@@ -3,7 +3,7 @@
 
 import { injectable, inject, named } from 'inversify';
 import { ExtensionMode, Memento } from 'vscode';
-import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
+import { IApplicationShell } from '../common/application/types';
 import { JVSC_EXTENSION_ID, Telemetry } from '../common/constants';
 import { GLOBAL_MEMENTO, IExtensionContext, IMemento } from '../common/types';
 import { PromiseChain } from '../common/utils/async';
@@ -30,7 +30,6 @@ export class ApiAccessService {
     constructor(
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IApplicationEnvironment) private appEnv: IApplicationEnvironment,
         @inject(IExtensionContext) private context: IExtensionContext
     ) {}
     public async getAccessInformation(info: {
@@ -45,11 +44,6 @@ export class ApiAccessService {
                 );
             }
             return { extensionId: info.extensionId, accessAllowed: true };
-        }
-        // For now, this API is only available in insiders.
-        // This way, insider (exploratory API that provides insider/exploratory features are only available in insiders).
-        if (this.appEnv.channel !== 'insiders') {
-            return { extensionId: info.extensionId, accessAllowed: false };
         }
         // Some extensions like our own (stuff we publish for exploration) are always allowed to access the API.
         if (TrustedExtensionPublishers.has(publisherId)) {
