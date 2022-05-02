@@ -53,23 +53,23 @@ export class LiveKernelSwitcher implements IExtensionSingleActivationService {
     }
 
     private async switchKernel(n: NotebookDocument, kernel: Readonly<KernelConnectionMetadata>) {
-        // If this notebook is the active document, set the kernel
-        if (this.vscNotebook.activeNotebookEditor?.document === n) {
-            traceInfo(`Using notebook.selectKernel to force remote kernel for ${n.uri} to ${kernel.id}`);
-            // Do this in a loop as it may fail
-            const success = await waitForCondition(
-                async () => {
+        traceInfo(`Using notebook.selectKernel to force remote kernel for ${n.uri} to ${kernel.id}`);
+        // Do this in a loop as it may fail
+        const success = await waitForCondition(
+            async () => {
+                if (this.vscNotebook.activeNotebookEditor?.document === n) {
                     await this.commandManager.executeCommand('notebook.selectKernel', {
                         id: kernel.id,
                         extension: JVSC_EXTENSION_ID
                     });
                     const selected = this.controllerManager.getSelectedNotebookController(n);
                     return selected?.connection.id === kernel.id;
-                },
-                2000,
-                100
-            );
-            traceInfo(`Results of switching remote kernel: ${success}`);
-        }
+                }
+                return false;
+            },
+            2000,
+            100
+        );
+        traceInfo(`Results of switching remote kernel: ${success}`);
     }
 }
