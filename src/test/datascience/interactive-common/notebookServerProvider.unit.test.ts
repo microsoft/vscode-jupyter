@@ -11,7 +11,6 @@ import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { NotebookServerProvider } from '../../../kernels/jupyter/launcher/notebookServerProvider';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
-import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { DisplayOptions } from '../../../kernels/displayOptions';
 import { IJupyterExecution, INotebookServer } from '../../../kernels/jupyter/types';
 
@@ -51,12 +50,11 @@ suite('DataScience - NotebookServerProvider', () => {
         when(configurationService.getSettings(anything())).thenReturn(instance(pythonSettings));
         const serverStorage = mock(JupyterServerUriStorage);
         when(serverStorage.getUri()).thenResolve('local');
-        const serverSelector = mock(JupyterServerSelector);
+        when(serverStorage.getRemoteUri()).thenResolve();
         const eventEmitter = new EventEmitter<void>();
         disposables.push(eventEmitter);
         when(serverStorage.onDidChangeUri).thenReturn(eventEmitter.event);
         when((jupyterExecution as any).then).thenReturn(undefined);
-        when((serverSelector as any).then).thenReturn(undefined);
         when((serverStorage as any).then).thenReturn(undefined);
 
         // Create the server provider
@@ -65,7 +63,6 @@ suite('DataScience - NotebookServerProvider', () => {
             instance(jupyterExecution),
             instance(interpreterService),
             instance(serverStorage),
-            instance(serverSelector),
             disposables
         );
         source = new CancellationTokenSource();

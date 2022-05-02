@@ -10,6 +10,7 @@ import { trackKernelResourceInformation, sendKernelTelemetryWhenDone } from '../
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import {
     ConnectNotebookProviderOptions,
+    GetServerOptions,
     INotebook,
     INotebookProvider,
     INotebookProviderConnection,
@@ -49,7 +50,7 @@ export class NotebookProvider implements INotebookProvider {
             }
         });
         options.ui = this.startupUi;
-        if (this.rawNotebookProvider?.isSupported && options.kind === 'localJupyter') {
+        if (this.rawNotebookProvider?.isSupported && options.localJupyter) {
             throw new Error('Connect method should not be invoked for local Connections when Raw is supported');
         } else if (
             this.extensionChecker.isPythonExtensionInstalled ||
@@ -63,19 +64,29 @@ export class NotebookProvider implements INotebookProvider {
         }
     }
     public async createNotebook(options: NotebookCreationOptions): Promise<INotebook> {
-        const isLocal = isLocalConnection(options.kernelConnection);
+        const kernelConnection = options.kernelConnection;
+        const isLocal = isLocalConnection(kernelConnection);
         const rawLocalKernel = this.rawNotebookProvider?.isSupported && isLocal;
 
         // We want to cache a Promise<INotebook> from the create functions
         // but jupyterNotebookProvider.createNotebook can be undefined if the server is not available
         // so check for our connection here first
         if (!rawLocalKernel) {
-            await this.jupyterNotebookProvider.connect({
-                resource: options.resource,
-                token: options.token,
-                ui: options.ui,
-                kind: isLocal ? 'localJupyter' : 'remoteJupyter'
-            });
+            const serverOptions: GetServerOptions = isLocal
+                ? {
+                      resource: options.resource,
+                      token: options.token,
+                      ui: options.ui,
+                      localJupyter: true
+                  }
+                : {
+                      resource: options.resource,
+                      token: options.token,
+                      ui: options.ui,
+                      localJupyter: false,
+                      serverId: kernelConnection.serverId
+                  };
+            await this.jupyterNotebookProvider.connect(serverOptions);
         }
         Cancellation.throwIfCanceled(options.token);
         trackKernelResourceInformation(options.resource, { kernelConnection: options.kernelConnection });

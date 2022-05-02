@@ -111,7 +111,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
             let result: INotebookServer | undefined;
             let connection: IJupyterConnection | undefined;
             traceInfo(`Connecting to server`);
-            const isLocalConnection = !options || !options.uri;
 
             // Try to connect to our jupyter process. Check our setting for the number of tries
             let tryCount = 1;
@@ -133,7 +132,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     traceInfo(`Connection complete server`);
 
                     sendTelemetryEvent(
-                        isLocalConnection ? Telemetry.ConnectLocalJupyter : Telemetry.ConnectRemoteJupyter
+                        options.localJupyter ? Telemetry.ConnectLocalJupyter : Telemetry.ConnectRemoteJupyter
                     );
                     return result;
                 } catch (err) {
@@ -158,7 +157,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         }
 
                         // Something else went wrong
-                        if (!isLocalConnection) {
+                        if (!options.localJupyter) {
                             sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, undefined, err, true);
 
                             // Check for the self signed certs error specifically
@@ -224,7 +223,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         cancelToken: CancellationToken
     ): Promise<IJupyterConnection> {
         // If our uri is undefined or if it's set to local launch we need to launch a server locally
-        if (!options || !options.uri) {
+        if (options.localJupyter) {
             // If that works, then attempt to start the server
             traceInfo(`Launching server`);
             const useDefaultConfig = !options || options.skipUsingDefaultConfig ? false : true;
