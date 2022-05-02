@@ -10,6 +10,7 @@ import { IKernel, KernelConnectionMetadata } from '../../kernels/types';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { getResourceType } from '../../platform/common/utils';
 import { workspace } from 'vscode';
+import { getComparisonKey } from '../../platform/vscode-path/resources';
 
 // TODO: This should probably move to a 'notebook' subsection
 
@@ -46,7 +47,7 @@ export async function switchKernel(
             extension: JVSC_EXTENSION_ID
         });
     }
-    traceError(`Unable to select kernel as the Notebook document could not be identified`);
+    traceError(`Unable to select kernel as the Notebook document for ${resource} could not be identified`);
 }
 
 export function findNotebookEditor(
@@ -54,9 +55,10 @@ export function findNotebookEditor(
     notebooks: IVSCodeNotebook,
     interactiveWindowProvider: IInteractiveWindowProvider | undefined
 ) {
+    const key = resource ? getComparisonKey(resource, true) : 'false';
     const notebook =
         getResourceType(resource) === 'notebook'
-            ? notebooks.notebookDocuments.find((item) => item.uri.toString() === resource?.toString())
+            ? notebooks.notebookDocuments.find((item) => getComparisonKey(item.uri, true) === key)
             : undefined;
     const targetNotebookEditor =
         notebook && notebooks.activeNotebookEditor?.document === notebook ? notebooks.activeNotebookEditor : undefined;
