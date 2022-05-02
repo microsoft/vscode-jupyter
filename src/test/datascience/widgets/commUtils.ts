@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { NotebookEditor, NotebookRendererMessaging, notebooks } from 'vscode';
+import { NotebookCell, NotebookEditor, NotebookRendererMessaging, notebooks } from 'vscode';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
@@ -41,11 +41,11 @@ export class Utils {
     public dispose() {
         disposeAllDisposables(this.disposables);
     }
-    public async queryHtml(selector: string, outputId: string) {
+    public async queryHtml(cell: NotebookCell, selector?: string) {
         // Verify the slider widget is created.
         const request = {
             requestId: Date.now().toString(),
-            id: outputId,
+            cellIndex: cell.index,
             command: 'queryInnerHTML',
             selector
         };
@@ -54,13 +54,64 @@ export class Utils {
         void this.messageChannel.postMessage!(request, editor);
         return new Promise<string>((resolve, reject) => {
             const disposable = this.messageChannel.onDidReceiveMessage(({ message }) => {
-                traceInfo(`Received message (2) from Widget renderer ${JSON.stringify(message)}`);
+                traceInfo(`Received message (query) from Widget renderer ${JSON.stringify(message)}`);
                 if (message && message.requestId === request.requestId) {
                     disposable.dispose();
                     if (message.error) {
                         return reject(message.error);
                     }
-                    resolve(message.innerHTML);
+                    resolve(message.innerHTML || '');
+                }
+            });
+            this.disposables.push(disposable);
+        });
+    }
+    public async click(cell: NotebookCell, selector: string) {
+        // Verify the slider widget is created.
+        const request = {
+            requestId: Date.now().toString(),
+            cellIndex: cell.index,
+            command: 'clickElement',
+            selector
+        };
+        const editor = await this.editorPromise;
+        traceInfo(`Sending message to Widget renderer ${JSON.stringify(request)}`);
+        void this.messageChannel.postMessage!(request, editor);
+        return new Promise<void>((resolve, reject) => {
+            const disposable = this.messageChannel.onDidReceiveMessage(({ message }) => {
+                traceInfo(`Received message (click) from Widget renderer ${JSON.stringify(message)}`);
+                if (message && message.requestId === request.requestId) {
+                    disposable.dispose();
+                    if (message.error) {
+                        return reject(message.error);
+                    }
+                    resolve();
+                }
+            });
+            this.disposables.push(disposable);
+        });
+    }
+    public async setValue(cell: NotebookCell, selector: string, value: string) {
+        // Verify the slider widget is created.
+        const request = {
+            requestId: Date.now().toString(),
+            cellIndex: cell.index,
+            command: 'setElementValue',
+            selector,
+            value
+        };
+        const editor = await this.editorPromise;
+        traceInfo(`Sending message to Widget renderer ${JSON.stringify(request)}`);
+        void this.messageChannel.postMessage!(request, editor);
+        return new Promise<void>((resolve, reject) => {
+            const disposable = this.messageChannel.onDidReceiveMessage(({ message }) => {
+                traceInfo(`Received message (setValue) from Widget renderer ${JSON.stringify(message)}`);
+                if (message && message.requestId === request.requestId) {
+                    disposable.dispose();
+                    if (message.error) {
+                        return reject(message.error);
+                    }
+                    resolve();
                 }
             });
             this.disposables.push(disposable);

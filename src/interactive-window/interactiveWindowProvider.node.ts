@@ -168,7 +168,8 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
                 this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler),
                 preferredController,
                 editor,
-                inputUri
+                inputUri,
+                this.appShell
             );
             this._windows.push(result);
 

@@ -98,7 +98,9 @@ async function createSettings(): Promise<string> {
         // For instance if the start page UI opens up, then active editor, active notebook and the like are empty.
         'python.showStartPage': false,
         // Disable the restart ask so that restart just happens
-        'jupyter.askForKernelRestart': false
+        'jupyter.askForKernelRestart': false,
+        // To get widgets working.
+        'jupyter.widgetScriptSources': ['jsdelivr.com', 'unpkg.com']
     };
 
     if (IS_REMOTE_NATIVE_TEST()) {

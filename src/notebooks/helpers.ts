@@ -585,6 +585,19 @@ function convertOutputMimeToJupyterOutput(mime: string, value: Uint8Array) {
                     })
                 );
             }
+        } else if (
+            mime.toLowerCase().startsWith('application/vnd.holoviews_load.v') &&
+            mime.toLowerCase().endsWith('+json')
+        ) {
+            const stringValue = textDecoder.decode(value);
+            try {
+                // Holoviews mimetype isn't a json.
+                // Lets try to parse it as json & if it fails, treat it as a string.
+                // This is to allow backwards compat.
+                return stringValue.length > 0 ? JSON.parse(stringValue) : stringValue;
+            } catch {
+                return stringValue;
+            }
         } else if (mime.toLowerCase().includes('json')) {
             const stringValue = textDecoder.decode(value);
             return stringValue.length > 0 ? JSON.parse(stringValue) : stringValue;

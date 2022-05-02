@@ -7,7 +7,7 @@ import { IApplicationShell, IWorkspaceService } from '../platform/common/applica
 import { traceInfo, traceError } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types.node';
 import { IPythonExecutionFactory } from '../platform/common/process/types.node';
-import { Resource, IDisposableRegistry, IConfigurationService } from '../platform/common/types';
+import { Resource, IDisposableRegistry, IConfigurationService, IExtensionContext } from '../platform/common/types';
 import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../notebooks/constants';
 import { calculateWorkingDirectory } from '../platform/common/utils.node';
@@ -40,7 +40,8 @@ export class Kernel extends BaseKernel {
         workspaceService: IWorkspaceService,
         private readonly pythonExecutionFactory: IPythonExecutionFactory,
         statusProvider: IStatusProvider,
-        creator: KernelActionSource
+        creator: KernelActionSource,
+        context: IExtensionContext
     ) {
         super(
             id,
@@ -57,7 +58,8 @@ export class Kernel extends BaseKernel {
             outputTracker,
             cellHashProviderFactory,
             statusProvider,
-            creator
+            creator,
+            context
         );
     }
 
@@ -71,7 +73,7 @@ export class Kernel extends BaseKernel {
                 const fileContents = await this.fs.readLocalFile(AddRunCellHook.ScriptPath);
                 return fileContents.splitLines({ trim: false });
             }
-            traceError(`Cannot run non-existant script file: ${AddRunCellHook.ScriptPath}`);
+            traceError(`Cannot run non-existent script file: ${AddRunCellHook.ScriptPath}`);
         }
         return [];
     }

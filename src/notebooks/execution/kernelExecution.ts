@@ -9,7 +9,7 @@ import { CellExecutionQueue } from './cellExecutionQueue';
 import { KernelMessage } from '@jupyterlab/services';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { traceInfo, traceInfoIfCI, traceWarning } from '../../platform/logging';
-import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
+import { IDisposable, IDisposableRegistry, IExtensionContext } from '../../platform/common/types';
 import { createDeferred, waitForPromise } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { CellHashProviderFactory } from '../../interactive-window/editor-integration/cellHashProviderFactory';
@@ -47,7 +47,8 @@ export class KernelExecution implements IDisposable {
         disposables: IDisposableRegistry,
         controller: NotebookController,
         outputTracker: CellOutputDisplayIdTracker,
-        cellHashProviderFactory: CellHashProviderFactory
+        cellHashProviderFactory: CellHashProviderFactory,
+        context: IExtensionContext
     ) {
         this.executionFactory = new CellExecutionFactory(
             kernel,
@@ -55,7 +56,8 @@ export class KernelExecution implements IDisposable {
             disposables,
             controller,
             outputTracker,
-            cellHashProviderFactory
+            cellHashProviderFactory,
+            context
         );
     }
 

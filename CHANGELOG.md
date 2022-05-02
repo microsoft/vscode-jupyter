@@ -1,9 +1,92 @@
 # Changelog
 
-## 2022.3.100 (25 March 2022)
+## 2022.4.100 (2 May 2022)
 
 ### Enhancements
 
+1. Ensure widgets using IPyWidgets 8.0 get rendered correctly.
+   ([#8552](https://github.com/Microsoft/vscode-jupyter/issues/8552))
+1. Display a meaningful message in the cell that last ran when the kernel crashed.
+   ([#9375](https://github.com/Microsoft/vscode-jupyter/issues/9375))
+1. Add support for connecting to remote jupyter kernels from the web extension. The server needs to start with '--NotebookApp.allow*origin=\_baseurl*' in order to connect from a webpage.
+   ([#9663](https://github.com/Microsoft/vscode-jupyter/issues/9663))
+
+### Fixes
+
+1. Don't append another cell to a python file when the cell was empty.
+   ([#9452](https://github.com/Microsoft/vscode-jupyter/issues/9452))
+1. Mark cell as not executing when dismissing the prompt to restart a dead kernel.
+   ([#9538](https://github.com/Microsoft/vscode-jupyter/issues/9538))
+1. Fix problem with path names in overriding modules.
+   ([#9560](https://github.com/Microsoft/vscode-jupyter/issues/9560))
+1. Replace `Buffer` constructors with safer methods to reduce security concerns. (Thanks [caphosra](https://github.com/caphosra))
+   ([#9589](https://github.com/Microsoft/vscode-jupyter/issues/9589))
+1. Ensure `raw` cells do not stay in a pending execution state.
+   ([#9633](https://github.com/Microsoft/vscode-jupyter/issues/9633))
+1. Only set preferred kernel on exact matches.
+   ([#9685](https://github.com/Microsoft/vscode-jupyter/issues/9685))
+1. Use kernel name in preferred kernel sorting algorithm.
+   ([#9704](https://github.com/Microsoft/vscode-jupyter/issues/9704))
+1. Make sure that notebook metadata is updating when changing between python envs (or kernelspecs) that use the same python version number.
+   ([#9727](https://github.com/Microsoft/vscode-jupyter/issues/9727))
+1. Fix kernels not showing up at all if remote kernel fetch fails.
+   ([#9728](https://github.com/Microsoft/vscode-jupyter/issues/9728))
+1. Ask for allowing unauthorized connections for https jupyter servers without certification.
+   ([#9758](https://github.com/Microsoft/vscode-jupyter/issues/9758))
+1. Fixes problem with crashes in the python extension preventing the jupyter extension from running.
+   ([#9800](https://github.com/Microsoft/vscode-jupyter/issues/9800))
+1. Fix remote kernels not being reselected on reopening a notebook.
+   ([#9809](https://github.com/Microsoft/vscode-jupyter/issues/9809))
+1. Fix handling of kernel errors in web extension.
+   ([#9817](https://github.com/Microsoft/vscode-jupyter/issues/9817))
+
+### Code Health
+
+1. Finish layout of src folder into:
+
+    - intellisense
+    - interactive-window
+    - kernels
+    - notebooks
+    - platform
+    - telemetry
+    - test
+    - webviews
+      ([#8976](https://github.com/Microsoft/vscode-jupyter/issues/8976))
+
+1. Allow passing a Uri instead of a Notebook document to the kernel API.
+   ([#9495](https://github.com/Microsoft/vscode-jupyter/issues/9495))
+1. Clean up react17 reference in package.json it's not needed anymore.
+   ([#9543](https://github.com/Microsoft/vscode-jupyter/issues/9543))
+1. Remove events from shipping code. Not needed.
+   ([#9596](https://github.com/Microsoft/vscode-jupyter/issues/9596))
+1. Switch to using URIs wherever possible instead of strings for file paths.
+   ([#9599](https://github.com/Microsoft/vscode-jupyter/issues/9599))
+1. Remove usage of textDocumentNotebook proposed API that was unnecessary.
+   ([#9679](https://github.com/Microsoft/vscode-jupyter/issues/9679))
+1. Skip logging the entire server settings.
+   ([#9791](https://github.com/Microsoft/vscode-jupyter/issues/9791))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
+## 2022.3.100 (25 March 2022)
+
+### Enhancements
 
 ### Fixes
 
@@ -60,7 +143,7 @@
    ([#9173](https://github.com/Microsoft/vscode-jupyter/issues/9173))
 1. Match the node version used by VS code to build.
    ([#9325](https://github.com/Microsoft/vscode-jupyter/issues/9325))
-1. Remove ```src\ipywidgets``` from repository and move to a separate npm module.
+1. Remove `src\ipywidgets` from repository and move to a separate npm module.
    ([#9337](https://github.com/Microsoft/vscode-jupyter/issues/9337))
 
 ### Thanks
@@ -79,7 +162,6 @@ make this extension useful:
     [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
     [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
     [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
-
 
 ## 2022.2.103 (7 March 2022)
 
@@ -116,7 +198,7 @@ make this extension useful:
 ### Fixes
 
 1. Ensure we detect and set the `site_packages` directory only for environments that can be activated.
-This ensures we can correctly start Python Kernels in the Python Windows Store Apps.
+   This ensures we can correctly start Python Kernels in the Python Windows Store Apps.
    ([#9219](https://github.com/Microsoft/vscode-jupyter/issues/9212))
 
 ### Thanks
