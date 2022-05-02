@@ -3,7 +3,7 @@
 
 import { injectable, inject, named } from 'inversify';
 import { ExtensionMode, Memento } from 'vscode';
-import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
+import { IApplicationShell } from '../common/application/types';
 import { JVSC_EXTENSION_ID, Telemetry } from '../common/constants';
 import { GLOBAL_MEMENTO, IExtensionContext, IMemento } from '../common/types';
 import { PromiseChain } from '../common/utils/async';
@@ -30,7 +30,6 @@ export class ApiAccessService {
     constructor(
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IApplicationEnvironment) private appEnv: IApplicationEnvironment,
         @inject(IExtensionContext) private context: IExtensionContext
     ) {}
     public async getAccessInformation(info: {
