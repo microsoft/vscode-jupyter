@@ -46,11 +46,6 @@ export class ApiAccessService {
             }
             return { extensionId: info.extensionId, accessAllowed: true };
         }
-        // For now, this API is only available in insiders.
-        // This way, insider (exploratory API that provides insider/exploratory features are only available in insiders).
-        if (this.appEnv.channel !== 'insiders') {
-            return { extensionId: info.extensionId, accessAllowed: false };
-        }
         // Some extensions like our own (stuff we publish for exploration) are always allowed to access the API.
         if (TrustedExtensionPublishers.has(publisherId)) {
             return { extensionId: info.extensionId, accessAllowed: true };
