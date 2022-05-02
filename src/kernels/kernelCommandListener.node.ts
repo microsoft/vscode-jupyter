@@ -172,7 +172,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
                     { resource: kernel.resourceUri, notebook },
                     new DisplayOptions(false),
                     this.disposableRegistry
-                );  
+                );
             } catch (ex) {
                 if (currentCell) {
                     await endCellAndDisplayErrorsInCell(
