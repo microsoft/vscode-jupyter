@@ -11,8 +11,6 @@ import { IPythonApiProvider } from '../../../../platform/api/types';
 import { ICommandManager, IVSCodeNotebook } from '../../../../platform/common/application/types';
 import { Kernel } from '../../../../platform/../kernels/kernel.node';
 import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
-import { BufferDecoder } from '../../../../platform/common/process/decoder.node';
-import { ProcessService } from '../../../../platform/common/process/proc.node';
 import {
     GLOBAL_MEMENTO,
     IConfigurationService,
@@ -34,7 +32,13 @@ import {
     JVSC_EXTENSION_ID_FOR_TESTS
 } from '../../../constants.node';
 import { closeActiveWindows, initialize } from '../../../initialize.node';
-import { openNotebook, submitFromPythonFile, submitFromPythonFileUsingCodeWatcher } from '../../helpers.node';
+import {
+    installIPyKernel,
+    openNotebook,
+    submitFromPythonFile,
+    submitFromPythonFileUsingCodeWatcher,
+    uninstallIPyKernel
+} from '../../helpers.node';
 import { JupyterNotebookView } from '../../../../notebooks/constants';
 import { INotebookControllerManager } from '../../../../notebooks/types';
 import { BaseKernelError, WrappedError } from '../../../../platform/errors/types';
@@ -744,16 +748,6 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         assert.include(prompt.messages.join(' '), venvName);
     }
 
-    async function uninstallIPyKernel(pythonExecPath: string) {
-        // Uninstall ipykernel from the virtual env.
-        const proc = new ProcessService(new BufferDecoder());
-        await proc.exec(pythonExecPath, ['-m', 'pip', 'uninstall', 'ipykernel', '--yes']);
-    }
-    async function installIPyKernel(pythonExecPath: string) {
-        // Uninstall ipykernel from the virtual env.
-        const proc = new ProcessService(new BufferDecoder());
-        await proc.exec(pythonExecPath, ['-m', 'pip', 'install', 'ipykernel']);
-    }
     async function selectKernelFromIPyKernelPrompt() {
         return hijackPrompt(
             'showInformationMessage',

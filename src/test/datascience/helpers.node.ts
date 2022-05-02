@@ -7,10 +7,10 @@ import { noop } from 'lodash';
 import * as vscode from 'vscode';
 import { IPythonApiProvider } from '../../platform/api/types';
 import { arePathsSame } from '../../platform/common/platform/fileUtils.node';
-import { IJupyterSettings } from '../../platform/common/types';
+import { IJupyterSettings, Resource } from '../../platform/common/types';
 import { InteractiveWindow } from '../../interactive-window/interactiveWindow.node';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider.node';
-import { waitForCondition } from '../common.node';
+import { sleep, waitForCondition } from '../common.node';
 import {
     createTemporaryFile,
     defaultNotebookTestTimeout,
@@ -21,6 +21,9 @@ import { initialize } from '../initialize.node';
 import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../interactive-window/types';
 import { Commands } from '../../platform/common/constants';
+import { BufferDecoder } from '../../platform/common/process/decoder.node';
+import { ProcessService } from '../../platform/common/process/proc.node';
+import { getFilePath } from '../../platform/common/platform/fs-paths';
 export * from './helpers';
 
 // The default base set of data science settings to use
@@ -99,6 +102,15 @@ export async function insertIntoInputEditor(source: string) {
     return vscode.window.activeTextEditor;
 }
 
+export async function setActiveInterpreter(
+    apiProvider: IPythonApiProvider,
+    resource: Resource,
+    interpreter: vscode.Uri
+) {
+    const pythonApi = await apiProvider.getApi();
+    return pythonApi.setActiveInterpreter(getFilePath(interpreter), resource);
+}
+
 export async function submitFromPythonFile(
     interactiveWindowProvider: IInteractiveWindowProvider,
     source: string,
@@ -111,8 +123,7 @@ export async function submitFromPythonFile(
     const untitledPythonFile = await vscode.workspace.openTextDocument(tempFile.file);
     await vscode.window.showTextDocument(untitledPythonFile);
     if (apiProvider && activeInterpreterPath) {
-        const pythonApi = await apiProvider.getApi();
-        await pythonApi.setActiveInterpreter(activeInterpreterPath.fsPath, untitledPythonFile.uri);
+        await setActiveInterpreter(apiProvider, activeInterpreterPath, untitledPythonFile.uri);
     }
     const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(
         untitledPythonFile.uri
@@ -148,7 +159,7 @@ export async function submitFromPythonFileUsingCodeWatcher(
     return { activeInteractiveWindow, untitledPythonFile };
 }
 
-export async function runCurrentFile(
+export async function runNewPythonFile(
     interactiveWindowProvider: IInteractiveWindowProvider,
     source: string,
     disposables: vscode.Disposable[]
@@ -156,13 +167,35 @@ export async function runCurrentFile(
     const tempFile = await createTemporaryFile({ contents: source, extension: '.py' });
     disposables.push(tempFile);
     const untitledPythonFile = await vscode.workspace.openTextDocument(tempFile.file);
-    await vscode.window.showTextDocument(untitledPythonFile);
-    const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(
-        untitledPythonFile.uri
-    )) as InteractiveWindow;
-    await waitForInteractiveWindow(activeInteractiveWindow);
-    await vscode.commands.executeCommand(Commands.RunFileInInteractiveWindows, untitledPythonFile.uri);
+    const activeInteractiveWindow = await runCurrentFile(interactiveWindowProvider, untitledPythonFile);
     return { activeInteractiveWindow, untitledPythonFile };
+}
+
+export async function runCurrentFile(interactiveWindowProvider: IInteractiveWindowProvider, file: vscode.TextDocument) {
+    await vscode.window.showTextDocument(file);
+    const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(file.uri)) as InteractiveWindow;
+    await waitForInteractiveWindow(activeInteractiveWindow);
+    await vscode.commands.executeCommand(Commands.RunFileInInteractiveWindows, file.uri);
+    return activeInteractiveWindow;
+}
+
+export async function closeInteractiveWindow(interactiveWindow: IInteractiveWindow) {
+    if (interactiveWindow.notebookDocument) {
+        const editor = vscode.window.visibleNotebookEditors.find(
+            (n) => n.document === interactiveWindow.notebookDocument
+        );
+        if (editor) {
+            await vscode.window.showNotebookDocument(editor.document.uri, {
+                preserveFocus: false,
+                preview: false
+            });
+            await sleep(500); // Seems to be some flakiness in VS code closing a window.
+            await vscode.commands.executeCommand('interactive.input.focus');
+            await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+            await sleep(500); // Seems to be some flakiness in VS code closing a window.
+        }
+        interactiveWindow.dispose();
+    }
 }
 
 export async function waitForInteractiveWindow(
@@ -237,4 +270,15 @@ export async function waitForCodeLenses(document: vscode.Uri, command: string) {
     );
 
     return codeLenses;
+}
+
+export async function uninstallIPyKernel(pythonExecPath: string) {
+    // Uninstall ipykernel from the virtual env.
+    const proc = new ProcessService(new BufferDecoder());
+    await proc.exec(pythonExecPath, ['-m', 'pip', 'uninstall', 'ipykernel', '--yes']);
+}
+export async function installIPyKernel(pythonExecPath: string) {
+    // Uninstall ipykernel from the virtual env.
+    const proc = new ProcessService(new BufferDecoder());
+    await proc.exec(pythonExecPath, ['-m', 'pip', 'install', 'ipykernel']);
 }
