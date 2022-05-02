@@ -133,8 +133,10 @@ suite('UpdateNotebookMetadata', () => {
             orig_nbformat: 4,
             kernelspec: { display_name: 'Python Default', language: 'python', name: 'python3' },
             language_info: { name: 'python', version: '3.6.0' },
-            interpreter: {
-                hash: '61422c3ae25c0ee9ecef2ee9be55c6d65757e33588c0a04d2ee7dbadc81a89b7'
+            vscode: {
+                interpreter: {
+                    hash: '61422c3ae25c0ee9ecef2ee9be55c6d65757e33588c0a04d2ee7dbadc81a89b7'
+                }
             }
         });
         assert.strictEqual(value.changed, true);
@@ -162,8 +164,10 @@ suite('UpdateNotebookMetadata', () => {
             orig_nbformat: 4,
             kernelspec: { display_name: 'Python Default', language: 'python', name: 'python3' },
             language_info: { name: 'python', version: '3.6.0' },
-            interpreter: {
-                hash: '61422c3ae25c0ee9ecef2ee9be55c6d65757e33588c0a04d2ee7dbadc81a89b7'
+            vscode: {
+                interpreter: {
+                    hash: '61422c3ae25c0ee9ecef2ee9be55c6d65757e33588c0a04d2ee7dbadc81a89b7'
+                }
             }
         });
 
