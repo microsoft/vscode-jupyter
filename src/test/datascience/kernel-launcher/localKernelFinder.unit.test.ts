@@ -1675,8 +1675,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
                     orig_nbformat: 4,
                     vscode: {
                         interpreter: { hash: '6a50dc8584134c7de537c0052ff6d236bf874355e050c90523e0c5ff2a543a28' }
-                    }
-                    ,
+                    },
                     kernelspec: { name: 'python3', display_name: 'display_namea' }
                 }
             );
