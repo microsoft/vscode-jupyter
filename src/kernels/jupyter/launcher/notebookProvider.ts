@@ -11,7 +11,7 @@ import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import {
     ConnectNotebookProviderOptions,
     GetServerOptions,
-    INotebook,
+    IJupyterSession,
     INotebookProvider,
     INotebookProviderConnection,
     isLocalConnection,
@@ -63,7 +63,7 @@ export class NotebookProvider implements INotebookProvider {
             throw new Error('Python extension is not installed');
         }
     }
-    public async createNotebook(options: NotebookCreationOptions): Promise<INotebook> {
+    public async create(options: NotebookCreationOptions): Promise<IJupyterSession> {
         const kernelConnection = options.kernelConnection;
         const isLocal = isLocalConnection(kernelConnection);
         const rawLocalKernel = this.rawNotebookProvider?.isSupported && isLocal;

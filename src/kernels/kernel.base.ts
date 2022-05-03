@@ -47,9 +47,7 @@ import { executeSilently, getDisplayNameOrNameOfKernelConnection, isPythonKernel
 import {
     IJupyterSession,
     IKernel,
-    INotebook,
     INotebookProvider,
-    INotebookProviderConnection,
     InterruptResult,
     isLocalConnection,
     KernelActionSource,
@@ -67,9 +65,6 @@ import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayId
 import { IStatusProvider } from '../platform/progress/types';
 
 export abstract class BaseKernel implements IKernel {
-    get connection(): INotebookProviderConnection | undefined {
-        return this.notebook?.connection;
-    }
     get onStatusChanged(): Event<KernelMessage.Status> {
         return this._onStatusChanged.event;
     }
@@ -94,13 +89,13 @@ export abstract class BaseKernel implements IKernel {
         return this._info;
     }
     get status(): KernelMessage.Status {
-        if (this._notebookPromise && !this.notebook) {
+        if (this._jupyterSessionPromise && !this._session) {
             return 'starting';
         }
-        return this.notebook?.session?.status ?? (this.isKernelDead ? 'dead' : 'unknown');
+        return this._session?.status ?? (this.isKernelDead ? 'dead' : 'unknown');
     }
     get disposed(): boolean {
-        return this._disposed === true || this.notebook?.session.disposed === true;
+        return this._disposed === true || this._session?.disposed === true;
     }
     get disposing(): boolean {
         return this._disposing === true;
@@ -108,7 +103,7 @@ export abstract class BaseKernel implements IKernel {
     get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket.asObservable();
     }
-    protected notebook?: INotebook;
+    protected _session?: IJupyterSession;
     /**
      * If the session died, then ensure the status is set to `dead`.
      * We need to provide an accurate status.
@@ -117,19 +112,19 @@ export abstract class BaseKernel implements IKernel {
      */
     private isKernelDead?: boolean;
     public get session(): IJupyterSession | undefined {
-        return this.notebook?.session;
+        return this._session;
     }
     protected _disposed?: boolean;
     protected _disposing?: boolean;
-    protected _ignoreNotebookDisposedErrors?: boolean;
+    protected _ignoreJupyterSessionDisposedErrors?: boolean;
     private readonly _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
     protected readonly _onStatusChanged = new EventEmitter<KernelMessage.Status>();
     protected readonly _onRestarted = new EventEmitter<void>();
     private readonly _onStarted = new EventEmitter<void>();
     protected readonly _onDisposed = new EventEmitter<void>();
     protected readonly _onPreExecute = new EventEmitter<NotebookCell>();
-    protected _notebookPromise?: Promise<INotebook>;
-    private readonly hookedNotebookForEvents = new WeakSet<INotebook>();
+    protected _jupyterSessionPromise?: Promise<IJupyterSession>;
+    private readonly hookedSessionForEvents = new WeakSet<IJupyterSession>();
     protected eventHooks: ((ev: 'willInterrupt' | 'willRestart') => Promise<void>)[] = [];
     protected restarting?: Deferred<void>;
     protected startCancellation = new CancellationTokenSource();
@@ -180,13 +175,13 @@ export abstract class BaseKernel implements IKernel {
 
     public async executeHidden(code: string): Promise<nbformat.IOutput[]> {
         const stopWatch = new StopWatch();
-        const sessionPromise = this.startNotebook().then((nb) => nb.session);
+        const sessionPromise = this.startJupyterSession();
         const promise = sessionPromise.then((session) => executeSilently(session, code));
         this.trackNotebookCellPerceivedColdTime(stopWatch, sessionPromise, promise).catch(noop);
         return promise;
     }
     public async start(options?: IDisplayOptions): Promise<void> {
-        await this.startNotebook(options);
+        await this.startJupyterSession(options);
     }
     public get pendingCells(): readonly NotebookCell[] {
         return this.kernelExecution.queue;
@@ -195,7 +190,7 @@ export abstract class BaseKernel implements IKernel {
         traceCellMessage(cell, `kernel.executeCell, ${getDisplayPath(cell.notebook.uri)}`);
         sendKernelTelemetryEvent(this.resourceUri, Telemetry.ExecuteCell);
         const stopWatch = new StopWatch();
-        const sessionPromise = this.startNotebook().then((nb) => nb.session);
+        const sessionPromise = this.startJupyterSession();
         const promise = this.kernelExecution.executeCell(sessionPromise, cell);
         this.trackNotebookCellPerceivedColdTime(stopWatch, sessionPromise, promise).catch(noop);
         void promise.then((state) => traceInfo(`Cell ${cell.index} executed with state ${state}`));
@@ -210,9 +205,7 @@ export abstract class BaseKernel implements IKernel {
         }
         traceInfo(`Interrupt requested ${getDisplayPath(this.resourceUri || this.id)}`);
         this.startCancellation.cancel();
-        const interruptResultPromise = this.kernelExecution.interrupt(
-            this._notebookPromise?.then((item) => item.session)
-        );
+        const interruptResultPromise = this.kernelExecution.interrupt(this._jupyterSessionPromise);
 
         const status = this.statusProvider.set(DataScience.interruptKernelStatus());
         let result: InterruptResult | undefined;
@@ -238,22 +231,22 @@ export abstract class BaseKernel implements IKernel {
         if (this.disposingPromise) {
             return this.disposingPromise;
         }
-        this._ignoreNotebookDisposedErrors = true;
+        this._ignoreJupyterSessionDisposedErrors = true;
         this.startCancellation.cancel();
         const disposeImpl = async () => {
             traceInfo(`Dispose kernel ${(this.resourceUri || this.id).toString()}`);
             this.restarting = undefined;
             const promises: Promise<void>[] = [];
             promises.push(this.kernelExecution.cancel());
-            this.notebook = this.notebook
-                ? this.notebook
-                : this._notebookPromise
-                ? await this._notebookPromise
+            this._session = this._session
+                ? this._session
+                : this._jupyterSessionPromise
+                ? await this._jupyterSessionPromise
                 : undefined;
-            this._notebookPromise = undefined;
-            if (this.notebook) {
-                promises.push(this.notebook.session.dispose().catch(noop));
-                this.notebook = undefined;
+            this._jupyterSessionPromise = undefined;
+            if (this._session) {
+                promises.push(this._session.dispose().catch(noop));
+                this._session = undefined;
             }
             this._disposed = true;
             this._onDisposed.fire();
@@ -282,24 +275,24 @@ export abstract class BaseKernel implements IKernel {
 
         const stopWatch = new StopWatch();
         try {
-            // If the notebook died, then start a new notebook.
-            await (this._notebookPromise
-                ? this.kernelExecution.restart(this._notebookPromise?.then((item) => item.session))
+            // If the session died, then start a new session.
+            await (this._jupyterSessionPromise
+                ? this.kernelExecution.restart(this._jupyterSessionPromise)
                 : this.start(new DisplayOptions(false)));
             sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime);
         } catch (ex) {
             traceError(`Restart failed ${getDisplayPath(this.id)}`, ex);
-            this._ignoreNotebookDisposedErrors = true;
-            // If restart fails, kill the associated notebook.
-            const notebook = this.notebook;
-            this.notebook = undefined;
-            this._notebookPromise = undefined;
+            this._ignoreJupyterSessionDisposedErrors = true;
+            // If restart fails, kill the associated session.
+            const session = this._session;
+            this._session = undefined;
+            this._jupyterSessionPromise = undefined;
             this.restarting = undefined;
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
             // Note, this code might not be necessary, as such an error is thrown only when interrupting a kernel times out.
             sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime, undefined, ex);
-            await notebook?.session.dispose().catch(noop);
-            this._ignoreNotebookDisposedErrors = false;
+            await session?.dispose().catch(noop);
+            this._ignoreJupyterSessionDisposedErrors = false;
             throw ex;
         } finally {
             status.dispose();
@@ -307,7 +300,7 @@ export abstract class BaseKernel implements IKernel {
         }
 
         // Interactive window needs a restart sys info
-        await this.initializeAfterStart(this.notebook);
+        await this.initializeAfterStart(this._session);
 
         // Indicate a restart occurred if it succeeds
         this._onRestarted.fire();
@@ -320,8 +313,8 @@ export abstract class BaseKernel implements IKernel {
         if (this.perceivedJupyterStartupTelemetryCaptured) {
             return;
         }
-        const notebook = await started;
-        if (!notebook) {
+        const session = await started;
+        if (!session) {
             return;
         }
         // Setup telemetry
@@ -333,8 +326,10 @@ export abstract class BaseKernel implements IKernel {
             );
         }
     }
-    protected async startNotebook(options: IDisplayOptions = new DisplayOptions(false)): Promise<INotebook> {
-        traceVerbose(`Start Notebook in kernel.ts with disableUI = ${options.disableUI}`);
+    protected async startJupyterSession(
+        options: IDisplayOptions = new DisplayOptions(false)
+    ): Promise<IJupyterSession> {
+        traceVerbose(`Start Jupyter Session in kernel.ts with disableUI = ${options.disableUI}`);
         this._startedAtLeastOnce = true;
         if (!options.disableUI) {
             this.startupUI.disableUI = false;
@@ -366,35 +361,37 @@ export abstract class BaseKernel implements IKernel {
         if (this.restarting) {
             await this.restarting.promise;
         }
-        if (!this._notebookPromise) {
+        if (!this._jupyterSessionPromise) {
             // Don't create a new one unnecessarily.
             if (this.startCancellation.token.isCancellationRequested) {
                 this.startCancellation = new CancellationTokenSource();
             }
-            this._notebookPromise = this.createNotebook(new StopWatch()).catch((ex) => {
-                traceInfoIfCI(`Failed to create Notebook in Kernel.startNotebook for ${getDisplayPath(this.id)}`);
+            this._jupyterSessionPromise = this.createJupyterSession(new StopWatch()).catch((ex) => {
+                traceInfoIfCI(
+                    `Failed to create Jupyter Session in Kernel.startNotebook for ${getDisplayPath(this.id)}`
+                );
                 // If we fail also clear the promise.
                 this.startCancellation.cancel();
-                this._notebookPromise = undefined;
+                this._jupyterSessionPromise = undefined;
                 throw ex;
             });
         }
-        return this._notebookPromise;
+        return this._jupyterSessionPromise;
     }
 
-    private async createNotebook(stopWatch: StopWatch): Promise<INotebook> {
+    private async createJupyterSession(stopWatch: StopWatch): Promise<IJupyterSession> {
         let disposables: Disposable[] = [];
         try {
             // No need to block kernel startup on UI updates.
             traceInfo(
-                `Starting Notebook id = ${this.kernelConnectionMetadata.id} for ${getDisplayPath(this.id)} (disableUI=${
-                    this.startupUI.disableUI
-                })`
+                `Starting Jupyter Session id = ${this.kernelConnectionMetadata.id} for ${getDisplayPath(
+                    this.id
+                )} (disableUI=${this.startupUI.disableUI})`
             );
             this.createProgressIndicator(disposables);
             this.isKernelDead = false;
             this._onStatusChanged.fire('starting');
-            const notebook = await this.notebookProvider.createNotebook({
+            const session = await this.notebookProvider.create({
                 resource: this.resourceUri,
                 ui: this.startupUI,
                 kernelConnection: this.kernelConnectionMetadata,
@@ -402,23 +399,26 @@ export abstract class BaseKernel implements IKernel {
                 creator: this.creator
             });
             Cancellation.throwIfCanceled(this.startCancellation.token);
-            await this.initializeAfterStart(notebook);
+            await this.initializeAfterStart(session);
 
             sendKernelTelemetryEvent(
                 this.resourceUri,
                 Telemetry.PerceivedJupyterStartupNotebook,
                 stopWatch.elapsedTime
             );
-            this.notebook = notebook;
+            this._session = session;
             this._onStarted.fire();
-            return notebook;
+            return session;
         } catch (ex) {
             // Don't log errors if UI is disabled (e.g. auto starting a kernel)
             // Else we just pollute the logs with lots of noise.
             if (this.startupUI.disableUI) {
-                traceVerbose(`failed to create INotebook in kernel, UI Disabled = ${this.startupUI.disableUI}`, ex);
+                traceVerbose(
+                    `failed to create IJupyterSession in kernel, UI Disabled = ${this.startupUI.disableUI}`,
+                    ex
+                );
             } else {
-                traceError(`failed to create INotebook in kernel, UI Disabled = ${this.startupUI.disableUI}`, ex);
+                traceError(`failed to create IJupyterSession in kernel, UI Disabled = ${this.startupUI.disableUI}`, ex);
             }
             Cancellation.throwIfCanceled(this.startCancellation.token);
             if (ex instanceof JupyterConnectError) {
@@ -464,35 +464,35 @@ export abstract class BaseKernel implements IKernel {
 
     protected abstract sendTelemetryForPythonKernelExecutable(): Promise<void>;
 
-    protected async initializeAfterStart(notebook: INotebook | undefined) {
+    protected async initializeAfterStart(session: IJupyterSession | undefined) {
         traceVerbose(`Started running kernel initialization for ${getDisplayPath(this.id)}`);
-        if (!notebook) {
+        if (!session) {
             traceVerbose('Not running kernel initialization');
             return;
         }
-        if (!this.hookedNotebookForEvents.has(notebook)) {
-            this.hookedNotebookForEvents.add(notebook);
-            notebook.session.kernelSocket.subscribe(this._kernelSocket);
-            notebook.session.onDidDispose(() => {
+        if (!this.hookedSessionForEvents.has(session)) {
+            this.hookedSessionForEvents.add(session);
+            session.kernelSocket.subscribe(this._kernelSocket);
+            session.onDidDispose(() => {
                 traceInfoIfCI(
-                    `Kernel got disposed as a result of notebook.onDisposed ${getDisplayPath(
+                    `Kernel got disposed as a result of session.onDisposed ${getDisplayPath(
                         this.resourceUri || this.id
                     )}`
                 );
-                // Ignore when notebook is disposed as a result of failed restarts.
-                if (!this._ignoreNotebookDisposedErrors) {
+                // Ignore when session is disposed as a result of failed restarts.
+                if (!this._ignoreJupyterSessionDisposedErrors) {
                     traceInfo(
-                        `Kernel got disposed as a result of notebook.onDisposed ${getDisplayPath(
+                        `Kernel got disposed as a result of session.onDisposed ${getDisplayPath(
                             this.resourceUri || this.id
-                        )} & _ignoreNotebookDisposedErrors = false.`
+                        )} & _ignoreJupyterSessionDisposedErrors = false.`
                     );
-                    const isActiveNotebookDead = this.notebook === notebook;
+                    const isActiveSessionDead = this._session === session;
 
-                    this._notebookPromise = undefined;
-                    this.notebook = undefined;
+                    this._jupyterSessionPromise = undefined;
+                    this._session = undefined;
 
-                    // If the active notebook died, then kernel is dead.
-                    if (isActiveNotebookDead) {
+                    // If the active session died, then kernel is dead.
+                    if (isActiveSessionDead) {
                         this.isKernelDead = true;
                         this._onStatusChanged.fire('dead');
                     }
@@ -502,12 +502,12 @@ export abstract class BaseKernel implements IKernel {
                 traceVerbose(`IKernel Status change to ${status}`);
                 this._onStatusChanged.fire(status);
             };
-            this.disposables.push(notebook.session.onSessionStatusChanged(statusChangeHandler));
+            this.disposables.push(session.onSessionStatusChanged(statusChangeHandler));
         }
         if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
             // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
             // Restart sessions and retries might make this hard to do correctly otherwise.
-            notebook.session.registerCommTarget(Identifiers.DefaultCommTarget, noop);
+            session.registerCommTarget(Identifiers.DefaultCommTarget, noop);
 
             // Request completions to warm up the completion engine.
             this.requestEmptyCompletions();
@@ -521,14 +521,14 @@ export abstract class BaseKernel implements IKernel {
         if (this.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
             // Gather all of the startup code at one time and execute as one cell
             const startupCode = await this.gatherInternalStartupCode();
-            await this.executeSilently(notebook, startupCode, {
+            await this.executeSilently(session, startupCode, {
                 traceErrors: true,
                 traceErrorsMessage: 'Error executing jupyter extension internal startup code',
                 telemetryName: Telemetry.KernelStartupCodeFailure
             });
 
             // Run user specified startup commands
-            await this.executeSilently(notebook, this.getUserStartupCommands(), {
+            await this.executeSilently(session, this.getUserStartupCommands(), {
                 traceErrors: true,
                 traceErrorsMessage: 'Error executing user defined startup code',
                 telemetryName: Telemetry.UserStartupCodeFailure
@@ -555,7 +555,7 @@ export abstract class BaseKernel implements IKernel {
                 protocol_version: '',
                 status: 'ok'
             };
-            promises.push(notebook.session.requestKernelInfo().then((item) => item?.content));
+            promises.push(session.requestKernelInfo().then((item) => item?.content));
             // If this doesn't complete in 5 seconds for remote kernels, assume the kernel is busy & provide some default content.
             if (this.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel') {
                 promises.push(sleep(5_000).then(() => defaultResponse));
@@ -572,7 +572,7 @@ export abstract class BaseKernel implements IKernel {
         }
         if (this.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
             traceVerbose('End running kernel initialization, now waiting for idle');
-            await notebook.session.waitForIdle(this.launchTimeout);
+            await session.waitForIdle(this.launchTimeout);
             traceVerbose('End running kernel initialization, session is idle');
         }
     }
@@ -687,15 +687,15 @@ export abstract class BaseKernel implements IKernel {
     protected abstract getUpdateWorkingDirectoryAndPathCode(launchingFile?: Resource): Promise<string[]>;
 
     private async executeSilently(
-        notebook: INotebook | undefined,
+        session: IJupyterSession | undefined,
         code: string[],
         errorOptions?: SilentExecutionErrorOptions
     ) {
-        if (!notebook || code.join('').trim().length === 0) {
-            traceVerbose(`Not executing startup notebook: ${notebook ? 'Object' : 'undefined'}, code: ${code}`);
+        if (!session || code.join('').trim().length === 0) {
+            traceVerbose(`Not executing startup session: ${session ? 'Object' : 'undefined'}, code: ${code}`);
             return;
         }
-        await executeSilently(notebook.session, code.join('\n'), errorOptions);
+        await executeSilently(session, code.join('\n'), errorOptions);
     }
 }
 

@@ -123,7 +123,6 @@ export function isLocalConnection(
 }
 
 export interface IKernel extends IAsyncDisposable {
-    readonly connection: INotebookProviderConnection | undefined;
     readonly id: Uri;
     /**;
      * In the case of Notebooks, this is the same as the Notebook Uri.
@@ -250,11 +249,6 @@ export enum InterruptResult {
     Success = 'success',
     TimedOut = 'timeout',
     Restarted = 'restart'
-}
-
-export interface INotebook {
-    readonly connection: INotebookProviderConnection | undefined;
-    readonly session: IJupyterSession; // Temporary. This just makes it easier to write a notebook that works with VS code types.
 }
 
 export const IJupyterSession = Symbol('IJupyterSession');
@@ -417,7 +411,7 @@ export interface INotebookProvider {
     /**
      * Creates a notebook.
      */
-    createNotebook(options: NotebookCreationOptions): Promise<INotebook>;
+    create(options: NotebookCreationOptions): Promise<IJupyterSession>;
     /**
      * Connect to a notebook provider to prepare its connection and to get connection information
      */
