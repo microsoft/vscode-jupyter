@@ -92,7 +92,7 @@ suite('Interactive window', async function () {
         venvNoRegPath = interpreter2.uri;
         venvKernelPath = interpreter3.uri;
 
-        await installIPyKernel(venvKernelPath.fsPath);
+        await installIPyKernel(venvPythonPath.fsPath);
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
@@ -102,7 +102,7 @@ suite('Interactive window', async function () {
             await captureScreenShot(`Interactive-Tests-${this.currentTest?.title}`);
         }
         sinon.restore();
-        await uninstallIPyKernel(venvKernelPath.fsPath);
+        await uninstallIPyKernel(venvPythonPath.fsPath);
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
 
@@ -527,6 +527,8 @@ ${actualCode}
     });
 
     test('Switching active interpreter on a python file changes kernel in use', async () => {
+        const interpreterService = await api.serviceManager.get<IInterpreterService>(IInterpreterService);
+        const activeInterpreter = await interpreterService.getActiveInterpreter();
         const { activeInteractiveWindow, untitledPythonFile } = await runNewPythonFile(
             interactiveWindowProvider,
             'import sys\nprint(sys.executable)',
@@ -539,12 +541,10 @@ ${actualCode}
         const notebookControllerManager =
             api.serviceManager.get<INotebookControllerManager>(INotebookControllerManager);
         // Ensure we picked up the active interpreter for use as the kernel
-        const interpreterService = await api.serviceManager.get<IInterpreterService>(IInterpreterService);
 
         let controller = notebookDocument
             ? notebookControllerManager.getSelectedNotebookController(notebookDocument)
             : undefined;
-        const activeInterpreter = await interpreterService.getActiveInterpreter();
         assert.ok(
             areInterpreterPathsSame(controller?.connection.interpreter?.uri, activeInterpreter?.uri),
             `Controller does not match active interpreter for ${getDisplayPath(notebookDocument?.uri)} - active: ${
@@ -567,7 +567,7 @@ ${actualCode}
         await waitForLastCellToComplete(newIW, 1, true);
 
         // Make sure it's a new window
-        assert.isFalse(isEqual(newIW.notebookUri, activeInteractiveWindow.notebookUri), `New IW was not created`);
+        assert.notEqual(newIW, activeInteractiveWindow, `New IW was not created`);
 
         // Get the controller
         notebookDocument = vscode.workspace.notebookDocuments.find(

@@ -185,11 +185,7 @@ export async function closeInteractiveWindow(interactiveWindow: IInteractiveWind
             (n) => n.document === interactiveWindow.notebookDocument
         );
         if (editor) {
-            await vscode.window.showNotebookDocument(editor.document.uri, {
-                preserveFocus: false,
-                preview: false
-            });
-            await sleep(500); // Seems to be some flakiness in VS code closing a window.
+            await vscode.commands.executeCommand('workbench.action.focusSecondEditorGroup');
             await vscode.commands.executeCommand('interactive.input.focus');
             await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
             await sleep(500); // Seems to be some flakiness in VS code closing a window.
