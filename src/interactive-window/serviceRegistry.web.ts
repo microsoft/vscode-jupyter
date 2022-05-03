@@ -4,7 +4,7 @@
 
 import { IExtensionSingleActivationService } from '../platform/activation/types';
 import { IServiceManager } from '../platform/ioc/types';
-import { CommandRegistry } from './commands/commandRegistry';
+import { CommandRegistry } from './commands/commandRegistry.web';
 import { CellHashProviderFactory } from './editor-integration/cellHashProviderFactory';
 
 export function registerTypes(serviceManager: IServiceManager) {

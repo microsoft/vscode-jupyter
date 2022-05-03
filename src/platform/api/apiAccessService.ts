@@ -9,6 +9,7 @@ import { GLOBAL_MEMENTO, IExtensionContext, IMemento } from '../common/types';
 import { PromiseChain } from '../common/utils/async';
 import { Common, DataScience } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
+import { traceError } from '../logging';
 
 type ApiExtensionInfo = {
     extensionId: string;
@@ -54,7 +55,10 @@ export class ApiAccessService {
             // This cannot happen in the real world, unless someone has written an extension.
             // without testing it at all. Safe to display an error message.
             // This way extension author knows they need to contact us.
-            void this.appShell.showErrorMessage(`Please contact the Jupyter Extension to get access to the Kernel API`);
+            void this.appShell.showErrorMessage(
+                `Please contact the Jupyter Extension to get access to the Kernel API. Publisher ${publisherId}`
+            );
+            traceError(`Publisher ${publisherId} is not allowed to access the Kernel API.`);
             return { extensionId: info.extensionId, accessAllowed: false };
         }
         const extensionPermissions = this.globalState.get<ApiExtensionInfo | undefined>(API_ACCESS_GLOBAL_KEY);
