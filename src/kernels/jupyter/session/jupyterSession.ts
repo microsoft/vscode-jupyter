@@ -53,8 +53,7 @@ export class JupyterSession extends BaseJupyterSession {
             kernelConnectionMetadata,
             restartSessionUsed,
             workingDirectory,
-            interruptTimeout,
-            connInfo
+            interruptTimeout
         );
     }
 
