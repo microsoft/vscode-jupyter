@@ -19,8 +19,8 @@
             "path": "../vscode-python"
         },
         {
-            "name": "vscode-jupyter-kernelManager",
-            "path": "../vscode-jupyter-kernelManager"
+            "name": "vscode-jupyter-powertoys",
+            "path": "../vscode-jupyter-powertoys"
         }
     ],
     "settings": {
@@ -103,6 +103,25 @@
                     "!${workspaceFolder:vscode-jupyter}/**/node_modules**/*",
                     "${workspaceFolder:vscode-notebook-renderers}/out/**/*.js",
                     "!${workspaceFolder:vscode-notebook-renderers}/**/node_modules**/*"
+                ],
+                "skipFiles": ["<node_internals>/**"]
+            },
+            {
+                "type": "extensionHost",
+                "request": "launch",
+                "name": "Jupyter + Powertoys Extension",
+                "args": [
+                    "--enable-proposed-api",
+                    "--extensionDevelopmentPath=${workspaceFolder:vscode-jupyter}",
+                    "--extensionDevelopmentPath=${workspaceFolder:vscode-jupyter-powertoys}"
+                ],
+                "stopOnEntry": false,
+                "sourceMaps": true,
+                "outFiles": [
+                    "${workspaceFolder:vscode-jupyter}/out/**/*.js",
+                    "!${workspaceFolder:vscode-jupyter}/**/node_modules**/*",
+                    "${workspaceFolder:vscode-jupyter-powertoys}/out/**/*.js",
+                    "!${workspaceFolder:vscode-jupyter-powertoys}/**/node_modules**/*",
                 ],
                 "skipFiles": ["<node_internals>/**"]
             },
