@@ -94,7 +94,7 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
         traceInfo(`Finished disposing HostJupyterExecution  ${this._id}`);
     }
 
-    public async hostConnectToNotebookServer(
+    private async hostConnectToNotebookServer(
         options: INotebookServerOptions,
         cancelToken: CancellationToken
     ): Promise<INotebookServer> {
