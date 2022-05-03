@@ -12,7 +12,7 @@ import { IDisposable } from '../../platform/common/types';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider.node';
 import { IKernelProvider } from '../../platform/../kernels/types';
 import { captureScreenShot, createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../common.node';
-import { initialize, IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../initialize.node';
+import { initialize, IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST, IS_CONDA_TEST } from '../initialize.node';
 import {
     closeInteractiveWindow,
     createStandaloneInteractiveWindow,
@@ -522,7 +522,11 @@ ${actualCode}
         await uninstallIPyKernel(venNoKernelPath.fsPath);
         await setActiveInterpreter(pythonApiProvider, undefined, originalActiveInterpreter?.uri);
     }
-    test('Switching active interpreter on a python file changes kernel in use', async () => {
+    test('Switching active interpreter on a python file changes kernel in use', async function () {
+        // Virtual environments are not available in conda
+        if (IS_CONDA_TEST()) {
+            this.skip();
+        }
         await preSwitch();
 
         try {
