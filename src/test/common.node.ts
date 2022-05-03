@@ -119,7 +119,7 @@ export function retryAsync(this: any, wrapped: Function, retryCount: number = 2)
 
 async function setAutoSaveDelay(resource: string | Uri | undefined, config: ConfigurationTarget, delayinMS: number) {
     const vscode = require('vscode') as typeof import('vscode');
-    if (config === vscode.ConfigurationTarget.WorkspaceFolder && !IS_MULTI_ROOT_TEST) {
+    if (config === vscode.ConfigurationTarget.WorkspaceFolder && !IS_MULTI_ROOT_TEST()) {
         return;
     }
     const resourceUri = typeof resource === 'string' ? vscode.Uri.file(resource) : resource;
@@ -139,7 +139,7 @@ async function setPythonPathInWorkspace(
     pythonPath?: string
 ) {
     const vscode = require('vscode') as typeof import('vscode');
-    if (config === vscode.ConfigurationTarget.WorkspaceFolder && !IS_MULTI_ROOT_TEST) {
+    if (config === vscode.ConfigurationTarget.WorkspaceFolder && !IS_MULTI_ROOT_TEST()) {
         return;
     }
     const resourceUri = typeof resource === 'string' ? vscode.Uri.file(resource) : resource;
