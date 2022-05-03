@@ -125,7 +125,7 @@ export async function submitFromPythonFile(
     const untitledPythonFile = await vscode.workspace.openTextDocument(tempFile.file);
     await vscode.window.showTextDocument(untitledPythonFile);
     if (apiProvider && activeInterpreterPath) {
-        await setActiveInterpreter(apiProvider, activeInterpreterPath, untitledPythonFile.uri);
+        await setActiveInterpreter(apiProvider, untitledPythonFile.uri, activeInterpreterPath);
     }
     const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(
         untitledPythonFile.uri
