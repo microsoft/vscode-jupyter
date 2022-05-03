@@ -23,28 +23,22 @@ import { trackKernelResourceInformation } from '../../../telemetry/telemetry';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { isPythonKernelConnection } from '../../helpers';
-import { JupyterNotebook } from '../../jupyter/launcher/jupyterNotebook';
-import { ConnectNotebookProviderOptions, INotebook, IRawConnection, KernelConnectionMetadata } from '../../types';
+import { ConnectNotebookProviderOptions, IJupyterSession, IRawConnection, KernelConnectionMetadata } from '../../types';
 import { IKernelLauncher, IRawNotebookProvider, IRawNotebookSupportedService } from '../types';
 import { RawJupyterSession } from './rawJupyterSession.node';
 import { noop } from '../../../platform/common/utils/misc';
 import { Cancellation } from '../../../platform/common/cancellation';
+import { RawConnection } from './connection';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-class RawConnection implements IRawConnection {
-    public readonly type = 'raw';
-    public readonly localLaunch = true;
-    public readonly displayName = '';
-}
 
 @injectable()
 export class HostRawNotebookProvider implements IRawNotebookProvider {
     public get id(): string {
         return this._id;
     }
-    private notebooks = new Set<Promise<INotebook>>();
+    private sessions = new Set<Promise<IJupyterSession>>();
     private rawConnection = new RawConnection();
     private _id = uuid();
     private disposed = false;
@@ -65,8 +59,8 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         if (!this.disposed) {
             this.disposed = true;
             traceInfo(`Shutting down notebooks for ${this.id}`);
-            const notebooks = await Promise.all([...this.notebooks.values()]);
-            await Promise.all(notebooks.map((n) => n?.session.dispose()));
+            const notebooks = await Promise.all([...this.sessions.values()]);
+            await Promise.all(notebooks.map((session) => session.dispose()));
         }
     }
 
@@ -85,10 +79,10 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         kernelConnection: KernelConnectionMetadata,
         ui: IDisplayOptions,
         cancelToken: vscode.CancellationToken
-    ): Promise<INotebook> {
+    ): Promise<IJupyterSession> {
         traceInfo(`Creating raw notebook for ${getDisplayPath(resource)}`);
-        const notebookPromise = createDeferred<INotebook>();
-        this.trackDisposable(notebookPromise.promise);
+        const sessionPromise = createDeferred<IJupyterSession>();
+        this.trackDisposable(sessionPromise.promise);
         let rawSession: RawJupyterSession | undefined;
 
         traceVerbose(`Getting preferred kernel for ${getDisplayPath(resource)}`);
@@ -133,14 +127,11 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
                 throw new vscode.CancellationError();
             }
             if (rawSession.isConnected) {
-                // Create our notebook
-                const notebook = new JupyterNotebook(rawSession, this.rawConnection);
-
                 traceInfo(`Finished connecting ${this.id}`);
 
-                notebookPromise.resolve(notebook);
+                sessionPromise.resolve(rawSession);
             } else {
-                notebookPromise.reject(new Error(DataScience.rawConnectionBrokenError()));
+                sessionPromise.reject(new Error(DataScience.rawConnectionBrokenError()));
             }
         } catch (ex) {
             // Make sure we shut down our session in case we started a process
@@ -149,24 +140,24 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
             });
             // If there's an error, then reject the promise that is returned.
             // This original promise must be rejected as it is cached (check `setNotebook`).
-            notebookPromise.reject(ex);
+            sessionPromise.reject(ex);
         }
 
-        return notebookPromise.promise;
+        return sessionPromise.promise;
     }
 
-    private trackDisposable(notebook: Promise<INotebook>) {
-        void notebook.then((nb) => {
-            nb.session.onDidDispose(
+    private trackDisposable(sessionPromise: Promise<IJupyterSession>) {
+        void sessionPromise.then((session) => {
+            session.onDidDispose(
                 () => {
-                    this.notebooks.delete(notebook);
+                    this.sessions.delete(sessionPromise);
                 },
                 this,
                 this.disposables
             );
         });
 
-        // Save the notebook
-        this.notebooks.add(notebook);
+        // Save the session
+        this.sessions.add(sessionPromise);
     }
 }

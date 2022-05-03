@@ -252,17 +252,13 @@ export enum InterruptResult {
     Restarted = 'restart'
 }
 
-export interface INotebook {
-    readonly connection: INotebookProviderConnection | undefined;
-    readonly session: IJupyterSession; // Temporary. This just makes it easier to write a notebook that works with VS code types.
-}
-
 export const IJupyterSession = Symbol('IJupyterSession');
 /**
  * Closely represents Jupyter Labs Kernel.IKernelConnection.
  */
 export interface IJupyterSession extends IAsyncDisposable {
     readonly kind: 'localRaw' | 'remoteJupyter' | 'localJupyter';
+    readonly connection: INotebookProviderConnection;
     readonly disposed: boolean;
     readonly kernel?: Kernel.IKernelConnection;
     readonly status: KernelMessage.Status;
@@ -417,7 +413,7 @@ export interface INotebookProvider {
     /**
      * Creates a notebook.
      */
-    createNotebook(options: NotebookCreationOptions): Promise<INotebook>;
+    create(options: NotebookCreationOptions): Promise<IJupyterSession>;
     /**
      * Connect to a notebook provider to prepare its connection and to get connection information
      */

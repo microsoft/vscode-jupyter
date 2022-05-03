@@ -8,7 +8,7 @@ import {
     ConnectNotebookProviderOptions,
     GetServerOptions,
     IJupyterConnection,
-    INotebook,
+    IJupyterSession,
     isLocalConnection,
     NotebookCreationOptions
 } from '../../types';
@@ -37,7 +37,7 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
         return connection;
     }
 
-    public async createNotebook(options: NotebookCreationOptions): Promise<INotebook> {
+    public async createNotebook(options: NotebookCreationOptions): Promise<IJupyterSession> {
         const kernelConnection = options.kernelConnection;
         // Make sure we have a server
         const serverOptions: GetServerOptions = isLocalConnection(kernelConnection)

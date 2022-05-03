@@ -13,7 +13,6 @@ import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import {
     KernelConnectionMetadata,
-    INotebook,
     IJupyterConnection,
     ConnectNotebookProviderOptions,
     NotebookCreationOptions,
@@ -52,7 +51,7 @@ export interface INotebookServer extends IAsyncDisposable {
         cancelToken: CancellationToken,
         ui: IDisplayOptions,
         creator: KernelActionSource
-    ): Promise<INotebook>;
+    ): Promise<IJupyterSession>;
     readonly connection: IJupyterConnection;
 }
 
@@ -65,7 +64,7 @@ export interface INotebookServerFactory {
 export const IJupyterNotebookProvider = Symbol('IJupyterNotebookProvider');
 export interface IJupyterNotebookProvider {
     connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection>;
-    createNotebook(options: NotebookCreationOptions): Promise<INotebook>;
+    createNotebook(options: NotebookCreationOptions): Promise<IJupyterSession>;
 }
 
 export type INotebookServerOptions =

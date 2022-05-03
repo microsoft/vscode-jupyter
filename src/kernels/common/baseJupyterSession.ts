@@ -20,7 +20,13 @@ import { JupyterInvalidKernelError } from '../../platform/errors/jupyterInvalidK
 import { JupyterWaitForIdleError } from '../../platform/errors/jupyterWaitForIdleError';
 import { KernelInterruptTimeoutError } from '../../platform/errors/kernelInterruptTimeoutError';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
-import { IJupyterSession, ISessionWithSocket, KernelConnectionMetadata, KernelSocketInformation } from '../types';
+import {
+    IJupyterSession,
+    INotebookProviderConnection,
+    ISessionWithSocket,
+    KernelConnectionMetadata,
+    KernelSocketInformation
+} from '../types';
 import { ChainingExecuteRequester } from './chainingExecuteRequester';
 import { getResourceType } from '../../platform/common/utils';
 import { KernelProgressReporter } from '../../platform/progress/kernelProgressReporter';
@@ -120,7 +126,8 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         protected readonly kernelConnectionMetadata: KernelConnectionMetadata,
         private restartSessionUsed: (id: Kernel.IKernelConnection) => void,
         public workingDirectory: Uri,
-        private readonly interruptTimeout: number
+        private readonly interruptTimeout: number,
+        public readonly connection: INotebookProviderConnection
     ) {
         this.statusHandler = this.onStatusChanged.bind(this);
         this.ioPubHandler = (_s, m) => this.ioPubEventEmitter.fire(m);
