@@ -105,10 +105,12 @@ export async function insertIntoInputEditor(source: string) {
 export async function setActiveInterpreter(
     apiProvider: IPythonApiProvider,
     resource: Resource,
-    interpreter: vscode.Uri
+    interpreter: vscode.Uri | undefined
 ) {
-    const pythonApi = await apiProvider.getApi();
-    return pythonApi.setActiveInterpreter(getFilePath(interpreter), resource);
+    if (interpreter) {
+        const pythonApi = await apiProvider.getApi();
+        return pythonApi.setActiveInterpreter(getFilePath(interpreter), resource);
+    }
 }
 
 export async function submitFromPythonFile(

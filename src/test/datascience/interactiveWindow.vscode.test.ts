@@ -51,6 +51,7 @@ import * as path from 'path';
 import { getOSType, OSType } from '../../platform/common/utils/platform';
 import { IPythonApiProvider } from '../../platform/api/types';
 import { isEqual } from '../../platform/vscode-path/resources';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 
 suite('Interactive window', async function () {
     this.timeout(120_000);
@@ -58,7 +59,7 @@ suite('Interactive window', async function () {
     const disposables: IDisposable[] = [];
     let interactiveWindowProvider: InteractiveWindowProvider;
     const executable = getOSType() === OSType.Windows ? 'Scripts/python.exe' : 'bin/python'; // If running locally on Windows box.
-    let venvPythonPath = vscode.Uri.file(
+    let venNoKernelPath = vscode.Uri.file(
         path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnokernel', executable)
     );
     let venvNoRegPath = vscode.Uri.file(
@@ -68,6 +69,7 @@ suite('Interactive window', async function () {
         path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvkernel', executable)
     );
     let pythonApiProvider: IPythonApiProvider;
+    let originalActiveInterpreter: PythonEnvironment | undefined;
 
     setup(async function () {
         if (IS_REMOTE_NATIVE_TEST()) {
@@ -81,18 +83,18 @@ suite('Interactive window', async function () {
         await pythonApi.refreshInterpreters({ clearCache: true });
         const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const [interpreter1, interpreter2, interpreter3] = await Promise.all([
-            interpreterService.getInterpreterDetails(venvPythonPath),
+            interpreterService.getInterpreterDetails(venNoKernelPath),
             interpreterService.getInterpreterDetails(venvNoRegPath),
             interpreterService.getInterpreterDetails(venvKernelPath)
         ]);
         if (!interpreter1 || !interpreter2 || !interpreter3) {
             throw new Error('Unable to get information for interpreter 1');
         }
-        venvPythonPath = interpreter1.uri;
+        venNoKernelPath = interpreter1.uri;
         venvNoRegPath = interpreter2.uri;
         venvKernelPath = interpreter3.uri;
 
-        await installIPyKernel(venvPythonPath.fsPath);
+        originalActiveInterpreter = await interpreterService.getActiveInterpreter();
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
@@ -102,7 +104,8 @@ suite('Interactive window', async function () {
             await captureScreenShot(`Interactive-Tests-${this.currentTest?.title}`);
         }
         sinon.restore();
-        await uninstallIPyKernel(venvPythonPath.fsPath);
+        await uninstallIPyKernel(venNoKernelPath.fsPath);
+        await setActiveInterpreter(pythonApiProvider, undefined, originalActiveInterpreter?.uri);
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
 
@@ -527,6 +530,7 @@ ${actualCode}
     });
 
     test('Switching active interpreter on a python file changes kernel in use', async () => {
+        await installIPyKernel(venNoKernelPath.fsPath);
         const interpreterService = await api.serviceManager.get<IInterpreterService>(IInterpreterService);
         const activeInterpreter = await interpreterService.getActiveInterpreter();
         const { activeInteractiveWindow, untitledPythonFile } = await runNewPythonFile(
@@ -553,10 +557,10 @@ ${actualCode}
         );
 
         // Now switch the active interpreter to the other path
-        if (isEqual(activeInterpreter?.uri, venvPythonPath)) {
+        if (isEqual(activeInterpreter?.uri, venNoKernelPath)) {
             await setActiveInterpreter(pythonApiProvider, untitledPythonFile.uri, venvKernelPath);
         } else {
-            await setActiveInterpreter(pythonApiProvider, untitledPythonFile.uri, venvPythonPath);
+            await setActiveInterpreter(pythonApiProvider, untitledPythonFile.uri, venNoKernelPath);
         }
 
         // Close the interactive window and recreate it
