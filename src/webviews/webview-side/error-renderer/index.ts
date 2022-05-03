@@ -43,9 +43,87 @@ const handleInnerClick = (event: MouseEvent, context: RendererContext<any>) => {
     }
 };
 
+function generateViewMoreElement(outputId: string) {
+    const container = document.createElement('span');
+    const preSpan = document.createElement('span');
+    preSpan.textContent = 'Output exceeds the ';
+    const sizeLimitSpan = document.createElement('a');
+    sizeLimitSpan.textContent = 'size limit';
+    sizeLimitSpan.href = `command:workbench.action.openSettings?["notebook.output.textLineLimit"]`;
+    const descSpan = document.createElement('span');
+    descSpan.textContent = '. Open the full output data';
+    const openOutputCommandSpan = document.createElement('a');
+    openOutputCommandSpan.textContent = ' in a text editor';
+    openOutputCommandSpan.href = `command:workbench.action.openLargeOutput?${outputId}`;
+    container.appendChild(preSpan);
+    container.appendChild(sizeLimitSpan);
+    container.appendChild(descSpan);
+    container.appendChild(openOutputCommandSpan);
+    return container;
+}
+
+function handleANSIOutput(context: RendererContext<any>, converter: ansiToHtml, traceback: string[]) {
+    const tracebackElm = document.createElement('div');
+    tracebackElm.innerHTML = converter.toHtml(traceback.join('\n'))
+    tracebackElm.addEventListener('click', (e) => {
+        handleInnerClick(e, context);
+    });
+    return tracebackElm;
+}
+
+export function truncatedArrayOfString(id: string, traceback: string[], linesLimit: number, container: HTMLElement, context: RendererContext<any>, converter: ansiToHtml, outputItemJson: any) {
+    if (!traceback.some((item) => item.trim().length)) {
+        const header = document.createElement('div');
+        const headerMessage =
+            outputItemJson.name && outputItemJson.message
+                ? `${outputItemJson.name}: ${outputItemJson.message}`
+                : outputItemJson.name || outputItemJson.message;
+
+        if (headerMessage) {
+            header.classList.add('output-error-header');
+            header.innerText = headerMessage;
+            container.appendChild(header);
+        } else {
+            // We can't display nothing (other extesnsions might have differen formats of errors, like Julia, .NET, etc).
+            const tbEle = document.createElement('div');
+            container.appendChild(tbEle);
+            tbEle.innerHTML = traceback.join('<br>');
+        }
+        return;
+    }
+
+    let buffer = traceback.join('\n').split(/\r\n|\n|\r/g);
+    let lineCount = buffer.length;
+
+    if (lineCount < linesLimit) {
+        container.appendChild(handleANSIOutput(context, converter, traceback));
+        return;
+    }
+
+    container.appendChild(generateViewMoreElement(id));
+
+    const div = document.createElement('div');
+    container.appendChild(div);
+    div.appendChild(handleANSIOutput(context, converter, buffer.slice(0, linesLimit - 5)));
+
+    // view more ...
+    const viewMoreElm = document.createElement('div');
+    viewMoreElm.innerText = '...';
+    viewMoreElm.classList.add('error-view-more');
+    container.appendChild(viewMoreElm);
+
+    const div2 = document.createElement('div');
+    container.appendChild(div2);
+    div2.appendChild(handleANSIOutput(context, converter, buffer.slice(lineCount - 5)));
+}
+
+
 export const activate: ActivationFunction = (_context) => {
+    const latestContext = _context as (RendererContext<void> & { readonly settings: { readonly lineLimit: number } });
+
     return {
         renderOutputItem(outputItem: OutputItem, element: HTMLElement) {
+            const lineLimit = latestContext.settings.lineLimit;
             const converter = new ansiToHtml({
                 fg: 'var(--vscode-terminal-foreground)',
                 bg: 'var(--vscode-terminal-background)',
@@ -79,8 +157,8 @@ export const activate: ActivationFunction = (_context) => {
                 metadata?.outputType === 'error' && metadata?.transient && Array.isArray(metadata?.transient)
                     ? metadata?.transient
                     : Array.isArray(outputItemJson.stack)
-                    ? outputItemJson.stack.map((item: string) => escape(item))
-                    : [escape(outputItemJson.stack)];
+                        ? outputItemJson.stack.map((item: string) => escape(item))
+                        : [escape(outputItemJson.stack)];
 
             // there is traceback
             // Fix links in tracebacks.
@@ -115,35 +193,7 @@ export const activate: ActivationFunction = (_context) => {
                 return line;
             });
 
-            const html = traceback.some((item) => item.trim().length)
-                ? converter.toHtml(traceback.join('\n'))
-                : undefined;
-
-            if (html) {
-                const traceback = document.createElement('div');
-                container.appendChild(traceback);
-                traceback.innerHTML = html;
-                traceback.addEventListener('click', (e) => {
-                    handleInnerClick(e, _context);
-                });
-            } else {
-                const header = document.createElement('div');
-                const headerMessage =
-                    outputItemJson.name && outputItemJson.message
-                        ? `${outputItemJson.name}: ${outputItemJson.message}`
-                        : outputItemJson.name || outputItemJson.message;
-
-                if (headerMessage) {
-                    header.classList.add('output-error-header');
-                    header.innerText = headerMessage;
-                    container.appendChild(header);
-                } else {
-                    // We can't display nothing (other extesnsions might have differen formats of errors, like Julia, .NET, etc).
-                    const tbEle = document.createElement('div');
-                    container.appendChild(tbEle);
-                    tbEle.innerHTML = traceback.join('<br>');
-                }
-            }
+            truncatedArrayOfString(outputItem.id, traceback, lineLimit, container, _context, converter, outputItemJson);
         }
     };
 };
