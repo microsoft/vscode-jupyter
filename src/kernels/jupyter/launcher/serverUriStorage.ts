@@ -160,6 +160,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         } else {
             // This is a remote setting. Save in the settings as remote
             await this.updateServerType(Settings.JupyterServerRemoteLaunch);
+            await this.addToUriList(uri, Date.now(), uri);
 
             // Save in the storage (unique account per workspace)
             const key = this.getUriAccountKey();

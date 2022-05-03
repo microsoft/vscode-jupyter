@@ -111,7 +111,7 @@ suite('UpdateNotebookMetadata', () => {
         // Make sure that name is the same so that interpreter hash is actually checked
         const notebookMetadata = {
             orig_nbformat: 4,
-            interpreter: { hash: 'junk' },
+            vscode: { interpreter: { hash: 'junk' } },
             kernelspec: { display_name: 'New Display Name', language: 'python', name: 'python3' },
             language_info: { name: 'python', version: '3.6.0' }
         };
@@ -133,8 +133,10 @@ suite('UpdateNotebookMetadata', () => {
             orig_nbformat: 4,
             kernelspec: { display_name: 'Python Default', language: 'python', name: 'python3' },
             language_info: { name: 'python', version: '3.6.0' },
-            interpreter: {
-                hash: '61422c3ae25c0ee9ecef2ee9be55c6d65757e33588c0a04d2ee7dbadc81a89b7'
+            vscode: {
+                interpreter: {
+                    hash: '61422c3ae25c0ee9ecef2ee9be55c6d65757e33588c0a04d2ee7dbadc81a89b7'
+                }
             }
         });
         assert.strictEqual(value.changed, true);
@@ -142,9 +144,12 @@ suite('UpdateNotebookMetadata', () => {
     test('UpdateNotebookMetadata No Change', () => {
         const notebookMetadata = {
             orig_nbformat: 4,
-            interpreter: {
-                hash: '61422c3ae25c0ee9ecef2ee9be55c6d65757e33588c0a04d2ee7dbadc81a89b7'
+            vscode: {
+                interpreter: {
+                    hash: '61422c3ae25c0ee9ecef2ee9be55c6d65757e33588c0a04d2ee7dbadc81a89b7'
+                }
             },
+
             kernelspec: { display_name: 'Python Default', language: 'python', name: 'python3' },
             language_info: { name: 'python', version: '3.6.0' }
         };
@@ -162,8 +167,10 @@ suite('UpdateNotebookMetadata', () => {
             orig_nbformat: 4,
             kernelspec: { display_name: 'Python Default', language: 'python', name: 'python3' },
             language_info: { name: 'python', version: '3.6.0' },
-            interpreter: {
-                hash: '61422c3ae25c0ee9ecef2ee9be55c6d65757e33588c0a04d2ee7dbadc81a89b7'
+            vscode: {
+                interpreter: {
+                    hash: '61422c3ae25c0ee9ecef2ee9be55c6d65757e33588c0a04d2ee7dbadc81a89b7'
+                }
             }
         });
 
