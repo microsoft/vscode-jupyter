@@ -48,7 +48,6 @@ import {
     IJupyterSession,
     IKernel,
     INotebookProvider,
-    INotebookProviderConnection,
     InterruptResult,
     isLocalConnection,
     KernelActionSource,

@@ -23,7 +23,6 @@ import { IKernelLauncher, IKernelProcess } from '../types';
 import { RawSession } from './rawSession.node';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { DisplayOptions } from '../../displayOptions';
-import { RawConnection } from './connection';
 
 /*
 RawJupyterSession is the implementation of IJupyterSession that instead of
@@ -59,7 +58,14 @@ export class RawJupyterSession extends BaseJupyterSession {
         kernelConnection: KernelConnectionMetadata,
         private readonly launchTimeout: number
     ) {
-        super('localRaw', resource, kernelConnection, restartSessionUsed, workingDirectory, interruptTimeout);
+        super(
+            'localRaw',
+            resource,
+            kernelConnection,
+            restartSessionUsed,
+            workingDirectory,
+            interruptTimeout
+        );
     }
 
     public async waitForIdle(timeout: number): Promise<void> {
