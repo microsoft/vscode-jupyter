@@ -109,39 +109,6 @@ export function cleanEnvironment<T>(spec: T): T {
     return copy as T;
 }
 
-// const connectToLocalKernelsOnly: { yes?: boolean } = { yes: undefined };
-// export function isLocalLaunch() {
-//     return typeof connectToLocalKernelsOnly.yes === 'boolean' ? connectToLocalKernelsOnly.yes : true;
-// }
-// let callbacks: Function[] = [];
-// export function onLocalLaunchTypeChange(cb: Function): IDisposable {
-//     callbacks.push(cb);
-//     return {
-//         dispose: () => {
-//             callbacks = callbacks.filter((item) => item !== cb);
-//         }
-//     };
-// }
-// export const mementoKeyToIndicateIfConnectingToLocalKernelsOnly = 'connectToLocalKernelsOnly';
-// export function isLocalLaunchInMemento(globalMemento: Memento) {
-//     const connectToLocalOnly = globalMemento.get<boolean>(mementoKeyToIndicateIfConnectingToLocalKernelsOnly, true);
-//     if (typeof connectToLocalKernelsOnly.yes !== 'boolean') {
-//         connectToLocalKernelsOnly.yes = connectToLocalOnly;
-//     }
-//     callbacks.forEach((cb) => {
-//         try {
-//             cb();
-//         } catch {
-//             //
-//         }
-//     });
-//     return connectToLocalOnly;
-// }
-// export async function setIsLocalLaunch(localLaunch: boolean, globalMemento?: Memento) {
-//     connectToLocalKernelsOnly.yes = localLaunch;
-//     await globalMemento?.update(mementoKeyToIndicateIfConnectingToLocalKernelsOnly, localLaunch);
-// }
-
 export function getInterpreterHashInMetadata(
     notebookMetadata: nbformat.INotebookMetadata | undefined
 ): string | undefined {
