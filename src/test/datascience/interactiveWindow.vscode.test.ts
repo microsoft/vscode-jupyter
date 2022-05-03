@@ -7,7 +7,7 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { traceInfo, traceInfoIfCI } from '../../platform/logging';
-import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../platform/common/types';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider.node';
 import { IKernelProvider } from '../../platform/../kernels/types';
@@ -46,9 +46,6 @@ import { INotebookControllerManager } from '../../notebooks/types';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/interpreter';
-// eslint-disable-next-line local-rules/node-imports
-import * as path from 'path';
-import { getOSType, OSType } from '../../platform/common/utils/platform';
 import { IPythonApiProvider } from '../../platform/api/types';
 import { isEqual } from '../../platform/vscode-path/resources';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
@@ -58,16 +55,8 @@ suite('Interactive window', async function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let interactiveWindowProvider: InteractiveWindowProvider;
-    const executable = getOSType() === OSType.Windows ? 'Scripts/python.exe' : 'bin/python'; // If running locally on Windows box.
-    let venNoKernelPath = vscode.Uri.file(
-        path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnokernel', executable)
-    );
-    let venvNoRegPath = vscode.Uri.file(
-        path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvnoreg', executable)
-    );
-    let venvKernelPath = vscode.Uri.file(
-        path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/.venvkernel', executable)
-    );
+    let venNoKernelPath: vscode.Uri;
+    let venvKernelPath: vscode.Uri;
     let pythonApiProvider: IPythonApiProvider;
     let originalActiveInterpreter: PythonEnvironment | undefined;
 
@@ -515,18 +504,22 @@ ${actualCode}
         const pythonApi = await pythonApiProvider.getApi();
         await pythonApi.refreshInterpreters({ clearCache: true });
         const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const [interpreter1, interpreter2, interpreter3] = await Promise.all([
-            interpreterService.getInterpreterDetails(venNoKernelPath),
-            interpreterService.getInterpreterDetails(venvNoRegPath),
-            interpreterService.getInterpreterDetails(venvKernelPath)
-        ]);
-        if (!interpreter1 || !interpreter2 || !interpreter3) {
-            throw new Error('Unable to get information for interpreter 1');
+        const interpreters = await interpreterService.getInterpreters();
+        const venvNoKernelInterpreter = interpreters.find((i) => getFilePath(i.uri).includes('.venvnokernel'));
+        const venvKernelInterpreter = interpreters.find((i) => getFilePath(i.uri).includes('.venvkernel'));
+
+        if (!venvNoKernelInterpreter || !venvKernelInterpreter) {
+            throw new Error(
+                `Unable to find matching kernels. List of kernels is ${interpreters
+                    .map((i) => getFilePath(i.uri))
+                    .join('\n')}`
+            );
         }
-        venNoKernelPath = interpreter1.uri;
-        venvNoRegPath = interpreter2.uri;
-        venvKernelPath = interpreter3.uri;
+        venNoKernelPath = venvNoKernelInterpreter.uri;
+        venvKernelPath = venvKernelInterpreter.uri;
         originalActiveInterpreter = await interpreterService.getActiveInterpreter();
+
+        // No kernel should not have ipykernel in it yet, but we need two, so install it.
         await installIPyKernel(venNoKernelPath.fsPath);
         assert.ok(originalActiveInterpreter, `No active interpreter when running switch test`);
     }
