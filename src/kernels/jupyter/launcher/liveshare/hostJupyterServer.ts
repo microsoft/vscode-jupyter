@@ -92,9 +92,9 @@ export class HostJupyterServer implements INotebookServer {
         this.throwIfDisposedOrCancelled(cancelToken);
         // Compute launch information from the resource and the notebook metadata
         const sessionPromise = createDeferred<IJupyterSession>();
-        // Save the Sesion
+        // Save the Session
         this.trackDisposable(sessionPromise.promise);
-        const getExistingSession = async () => {
+        const startNewSession = async () => {
             this.throwIfDisposedOrCancelled(cancelToken);
             // Figure out the working directory we need for our new notebook. This is only necessary for local.
             const workingDirectory = isLocalConnection(kernelConnection)
@@ -116,7 +116,7 @@ export class HostJupyterServer implements INotebookServer {
         };
 
         try {
-            const session = await getExistingSession();
+            const session = await startNewSession();
             this.throwIfDisposedOrCancelled(cancelToken);
 
             if (session) {
