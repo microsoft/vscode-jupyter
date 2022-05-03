@@ -31,7 +31,7 @@ suite('DataScience - NotebookProvider', () => {
         notebookProvider = new NotebookProvider(
             instance(rawNotebookProvider),
             instance(jupyterNotebookProvider),
-            instance(extensionChecker),
+            instance(extensionChecker)
         );
     });
     teardown(() => cancelToken.dispose());

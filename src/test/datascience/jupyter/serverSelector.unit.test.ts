@@ -10,7 +10,6 @@ import { ApplicationShell } from '../../../platform/common/application/applicati
 import { ClipboardService } from '../../../platform/common/application/clipboard';
 import { IApplicationShell, IClipboard } from '../../../platform/common/application/types';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
-import { IJupyterSettings } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { MultiStepInput, MultiStepInputFactory } from '../../../platform/common/utils/multiStepInput';
 import { MockInputBox } from '../mockInputBox';
@@ -31,7 +30,6 @@ import { IJupyterExecution } from '../../../kernels/jupyter/types';
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - Jupyter Server URI Selector', () => {
     let quickPick: MockQuickPick | undefined;
-    let dsSettings: IJupyterSettings;
     let clipboard: IClipboard;
     let execution: IJupyterExecution;
     let applicationShell: IApplicationShell;
@@ -42,9 +40,6 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         inputSelection: string,
         hasFolders: boolean
     ): { selector: JupyterServerSelector; storage: JupyterServerUriStorage } {
-        dsSettings = {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any;
         clipboard = mock(ClipboardService);
         const configService = mock(ConfigurationService);
         applicationShell = mock(ApplicationShell);
@@ -59,12 +54,6 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         when(applicationShell.createInputBox()).thenReturn(input);
         when(applicationEnv.machineId).thenReturn(os.hostname());
         const multiStepFactory = new MultiStepInputFactory(instance(applicationShell));
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        when(configService.getSettings(anything())).thenReturn(dsSettings as any);
-        when(configService.updateSetting(anything(), anything(), anything(), anything())).thenCall((_s, v) => {
-            setting = v;
-            return Promise.resolve();
-        });
         when(workspaceService.getWorkspaceFolderIdentifier(anything())).thenReturn('1');
         when(workspaceService.hasWorkspaceFolders).thenReturn(hasFolders);
         const encryptedStorage = new MockEncryptedStorage();
