@@ -64,12 +64,12 @@ import {
     getDisplayNameOrNameOfKernelConnection,
     getKernelId,
     getLanguageInNotebookMetadata,
-    isLocalLaunch,
     isPythonKernelConnection
 } from '../../kernels/helpers';
 import { getResourceType } from '../../platform/common/utils';
 import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
 import { INotebookMetadata } from '@jupyterlab/nbformat';
+import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConnectionType';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -120,7 +120,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private preferredControllers = new Map<NotebookDocument, VSCodeNotebookController>();
 
     private get isLocalLaunch(): boolean {
-        return isLocalLaunch(this.configuration);
+        return this.serverConnectionType.isLocalLaunch;
     }
     private wasPythonInstalledWhenFetchingControllers?: boolean;
     private interactiveNoPythonController?: NoPythonKernelsNotebookController;
@@ -147,7 +147,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(IBrowserService) private readonly browser: IBrowserService,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(IsWebExtension) private readonly isWeb: boolean
+        @inject(IsWebExtension) private readonly isWeb: boolean,
+        @inject(ServerConnectionType) private readonly serverConnectionType: ServerConnectionType
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;

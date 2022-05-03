@@ -5,7 +5,6 @@
 
 import { inject, injectable, optional } from 'inversify';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { IConfigurationService } from '../../../platform/common/types';
 import { trackKernelResourceInformation, sendKernelTelemetryWhenDone } from '../../../telemetry/telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import {
@@ -18,10 +17,10 @@ import {
     NotebookCreationOptions
 } from '../../types';
 import { Cancellation } from '../../../platform/common/cancellation';
-import { Settings } from '../../../platform/common/constants';
 import { DisplayOptions } from '../../displayOptions';
 import { IRawNotebookProvider } from '../../raw/types';
 import { IJupyterNotebookProvider } from '../types';
+import { ServerConnectionType } from './serverConnectionType';
 
 @injectable()
 export class NotebookProvider implements INotebookProvider {
@@ -33,13 +32,11 @@ export class NotebookProvider implements INotebookProvider {
         @inject(IJupyterNotebookProvider)
         private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService
+        @inject(ServerConnectionType) private readonly serverConnectionType: ServerConnectionType
     ) {}
 
     // Attempt to connect to our server provider, and if we do, return the connection info
     public async connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection> {
-        const settings = this.configService.getSettings(undefined);
-        const serverType: string | undefined = settings.jupyterServerType;
         if (!options.ui.disableUI) {
             this.startupUi.disableUI = false;
         }
@@ -52,10 +49,7 @@ export class NotebookProvider implements INotebookProvider {
         options.ui = this.startupUi;
         if (this.rawNotebookProvider?.isSupported && options.localJupyter) {
             throw new Error('Connect method should not be invoked for local Connections when Raw is supported');
-        } else if (
-            this.extensionChecker.isPythonExtensionInstalled ||
-            serverType === Settings.JupyterServerRemoteLaunch
-        ) {
+        } else if (this.extensionChecker.isPythonExtensionInstalled || !this.serverConnectionType.isLocalLaunch) {
             return this.jupyterNotebookProvider.connect(options).finally(() => handler.dispose());
         } else {
             handler.dispose();

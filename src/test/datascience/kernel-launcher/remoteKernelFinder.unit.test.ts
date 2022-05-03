@@ -28,7 +28,6 @@ import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/pre
 import { IJupyterKernel, IJupyterSessionManager } from '../../../kernels/jupyter/types';
 import { KernelFinder } from '../../../kernels/kernelFinder.node';
 import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
-import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { LocalKernelFinder } from '../../../kernels/raw/finder/localKernelFinder.node';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
@@ -37,6 +36,7 @@ import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { RemoteKernelSpecsCacheKey } from '../../../kernels/kernelFinder.base';
 import { takeTopRankKernel } from './localKernelFinder.unit.test';
 import { computeUriHash } from '../../../kernels/jupyter/jupyterUtils';
+import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverConnectionType';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];
@@ -141,11 +141,6 @@ suite(`Remote Kernel Finder`, () => {
             false
         );
 
-        const configService = mock(ConfigurationService);
-        const dsSettings = {
-            jupyterServerType: 'remote'
-        } as any;
-        when(configService.getSettings(anything())).thenReturn(dsSettings as any);
         const notebookProvider = mock(NotebookProvider);
         when(notebookProvider.connect(anything())).thenResolve(connInfo);
         fs = mock(FileSystem);
@@ -155,6 +150,13 @@ suite(`Remote Kernel Finder`, () => {
         when(serverUriStorage.getUri()).thenResolve(connInfo.baseUrl);
         when(serverUriStorage.getRemoteUri()).thenResolve(connInfo.baseUrl);
         memento = new MockMemento();
+        const connectionType = mock<ServerConnectionType>();
+        when(connectionType.isLocalLaunch).thenReturn(false);
+        when(connectionType.setIsLocalLaunch(anything())).thenResolve();
+        const onDidChangeEvent = new EventEmitter<void>();
+        disposables.push(onDidChangeEvent);
+        when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);
+
         kernelFinder = new KernelFinder(
             instance(localKernelFinder),
             remoteKernelFinder,
@@ -162,10 +164,10 @@ suite(`Remote Kernel Finder`, () => {
             instance(interpreterService),
             preferredRemoteKernelIdProvider,
             instance(notebookProvider),
-            instance(configService),
             memento,
             instance(fs),
-            instance(serverUriStorage)
+            instance(serverUriStorage),
+            instance(connectionType)
         );
     });
     teardown(() => {

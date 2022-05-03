@@ -7,15 +7,13 @@ import { IExtensionSingleActivationService, IExtensionSyncActivationService } fr
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { IApplicationEnvironment } from '../platform/common/application/types';
 import { JVSC_EXTENSION_ID } from '../platform/common/constants';
-import { IConfigurationService, IDataScienceCommandListener } from '../platform/common/types';
-
+import { IDataScienceCommandListener } from '../platform/common/types';
 import { ProtocolParser } from '../platform/debugger/extension/helpers/protocolParser.node';
 import { IProtocolParser } from '../platform/debugger/extension/types.node';
 import { IServiceManager } from '../platform/ioc/types';
 import { setSharedProperty } from '../telemetry';
 import { InteractiveWindowDebugger } from './debugging/interactiveWindowDebugger.node';
 import { JupyterDebugService } from './debugging/jupyterDebugService.node';
-import { isLocalLaunch } from './helpers';
 import { registerInstallerTypes } from './installer/serviceRegistry.node';
 import { KernelCommandListener } from './kernelCommandListener';
 import { KernelDependencyService } from './kernelDependencyService.node';
@@ -53,31 +51,13 @@ import { registerTypes as registerWidgetTypes } from './ipywidgets-message-coord
 import { registerTypes as registerJupyterTypes } from './jupyter/serviceRegistry.node';
 import { KernelProvider } from './kernelProvider.node';
 import { KernelFinder } from './kernelFinder.node';
+import { ServerConnectionType } from './jupyter/launcher/serverConnectionType';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IRawNotebookSupportedService>(
         IRawNotebookSupportedService,
         RawNotebookSupportedService
     );
-    const isVSCInsiders = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment).channel === 'insiders';
-    const packageJson: { engines: { vscode: string } } | undefined =
-        vscode.extensions.getExtension(JVSC_EXTENSION_ID)?.packageJSON;
-    const isInsiderVersion = packageJson?.engines?.vscode?.toLowerCase()?.endsWith('insider');
-    setSharedProperty('isInsiderExtension', isVSCInsiders && isInsiderVersion ? 'true' : 'false');
-
-    // This will ensure all subsequent telemetry will get the context of whether it is a custom/native/old notebook editor.
-    // This is temporary, and once we ship native editor this needs to be removed.
-    setSharedProperty('ds_notebookeditor', 'native');
-    const isLocalConnection = isLocalLaunch(serviceManager.get<IConfigurationService>(IConfigurationService));
-    setSharedProperty('localOrRemoteConnection', isLocalConnection ? 'local' : 'remote');
-    const isPythonExtensionInstalled = serviceManager.get<IPythonExtensionChecker>(IPythonExtensionChecker);
-    setSharedProperty(
-        'isPythonExtensionInstalled',
-        isPythonExtensionInstalled.isPythonExtensionInstalled ? 'true' : 'false'
-    );
-    const rawService = serviceManager.get<IRawNotebookSupportedService>(IRawNotebookSupportedService);
-    setSharedProperty('rawKernelSupported', rawService.isSupported ? 'true' : 'false');
-
     serviceManager.addSingleton<PreferredRemoteKernelIdProvider>(
         PreferredRemoteKernelIdProvider,
         PreferredRemoteKernelIdProvider
@@ -154,4 +134,23 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     registerJupyterTypes(serviceManager, isDevMode);
     registerInstallerTypes(serviceManager);
     registerWidgetTypes(serviceManager, isDevMode);
+
+    const isVSCInsiders = serviceManager.get<IApplicationEnvironment>(IApplicationEnvironment).channel === 'insiders';
+    const packageJson: { engines: { vscode: string } } | undefined =
+        vscode.extensions.getExtension(JVSC_EXTENSION_ID)?.packageJSON;
+    const isInsiderVersion = packageJson?.engines?.vscode?.toLowerCase()?.endsWith('insider');
+    setSharedProperty('isInsiderExtension', isVSCInsiders && isInsiderVersion ? 'true' : 'false');
+
+    // This will ensure all subsequent telemetry will get the context of whether it is a custom/native/old notebook editor.
+    // This is temporary, and once we ship native editor this needs to be removed.
+    setSharedProperty('ds_notebookeditor', 'native');
+    const isLocalConnection = serviceManager.get<ServerConnectionType>(ServerConnectionType).isLocalLaunch;
+    setSharedProperty('localOrRemoteConnection', isLocalConnection ? 'local' : 'remote');
+    const isPythonExtensionInstalled = serviceManager.get<IPythonExtensionChecker>(IPythonExtensionChecker);
+    setSharedProperty(
+        'isPythonExtensionInstalled',
+        isPythonExtensionInstalled.isPythonExtensionInstalled ? 'true' : 'false'
+    );
+    const rawService = serviceManager.get<IRawNotebookSupportedService>(IRawNotebookSupportedService);
+    setSharedProperty('rawKernelSupported', rawService.isSupported ? 'true' : 'false');
 }

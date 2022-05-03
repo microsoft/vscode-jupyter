@@ -6,7 +6,7 @@ import { isPythonNotebook } from '../notebooks/helpers';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { createPromiseFromCancellation } from '../platform/common/cancellation';
 import { Settings, Telemetry } from '../platform/common/constants';
-import { IConfigurationService, Resource } from '../platform/common/types';
+import { Resource } from '../platform/common/types';
 import { getResourceType } from '../platform/common/utils';
 import { noop } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
@@ -16,14 +16,9 @@ import { traceError, traceDecoratorVerbose } from '../platform/logging';
 import { TraceOptions } from '../platform/logging/types';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { DisplayOptions } from './displayOptions';
-import {
-    rankKernels,
-    isLocalLaunch,
-    deserializeKernelConnection,
-    serializeKernelConnection,
-    isExactMatch
-} from './helpers';
+import { rankKernels, deserializeKernelConnection, serializeKernelConnection, isExactMatch } from './helpers';
 import { computeUriHash } from './jupyter/jupyterUtils';
+import { ServerConnectionType } from './jupyter/launcher/serverConnectionType';
 import { IJupyterServerUriStorage } from './jupyter/types';
 import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKernelIdProvider';
 import { ILocalKernelFinder, IRemoteKernelFinder } from './raw/types';
@@ -41,13 +36,13 @@ export abstract class BaseKernelFinder implements IKernelFinder {
     constructor(
         private readonly extensionChecker: IPythonExtensionChecker,
         private readonly interpreterService: IInterpreterService,
-        private readonly configurationService: IConfigurationService,
         private readonly preferredRemoteFinder: PreferredRemoteKernelIdProvider,
         private readonly notebookProvider: INotebookProvider,
         private readonly localKernelFinder: ILocalKernelFinder | undefined,
         private readonly remoteKernelFinder: IRemoteKernelFinder | undefined,
         private readonly globalState: Memento,
-        protected readonly serverUriStorage: IJupyterServerUriStorage
+        protected readonly serverUriStorage: IJupyterServerUriStorage,
+        protected readonly serverConnectionType: ServerConnectionType
     ) {}
 
     @traceDecoratorVerbose('Rank Kernels', TraceOptions.BeforeCall | TraceOptions.Arguments)
@@ -153,7 +148,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         cancelToken?: CancellationToken,
         useCache: 'ignoreCache' | 'useCache' = 'ignoreCache'
     ): Promise<KernelConnectionMetadata[]> {
-        if (isLocalLaunch(this.configurationService)) {
+        if (this.serverConnectionType.isLocalLaunch) {
             return [];
         }
         const connInfo = await this.getRemoteConnectionInfo(cancelToken);

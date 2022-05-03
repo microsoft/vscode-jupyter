@@ -31,6 +31,7 @@ import {
     INotebookServerFactory
 } from '../types';
 import { IJupyterSubCommandExecutionService } from '../types.node';
+import { ServerConnectionType } from './serverConnectionType';
 
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
 
@@ -48,23 +49,30 @@ export class JupyterExecutionBase implements IJupyterExecution {
         private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService | undefined,
         private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration,
         private readonly jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
-        private readonly notebookServerFactory: INotebookServerFactory
+        private readonly notebookServerFactory: INotebookServerFactory,
+        private readonly serverConnectionType: ServerConnectionType
     ) {
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
         this.disposableRegistry.push(this);
 
         if (workspace) {
-            const disposable = workspace.onDidChangeConfiguration((e) => {
-                if (e.affectsConfiguration('python.dataScience', undefined)) {
-                    // When config changes happen, recreate our commands.
-                    this.onSettingsChanged();
-                }
-                if (e.affectsConfiguration('jupyter.jupyterServerType', undefined)) {
+            workspace.onDidChangeConfiguration(
+                (e) => {
+                    if (e.affectsConfiguration('python.dataScience', undefined)) {
+                        // When config changes happen, recreate our commands.
+                        this.onSettingsChanged();
+                    }
+                },
+                this,
+                this.disposableRegistry
+            );
+            this.serverConnectionType.onDidChange(
+                () =>
                     // When server URI changes, clear our pending URI timeouts
-                    this.clearTimeouts();
-                }
-            });
-            this.disposableRegistry.push(disposable);
+                    this.clearTimeouts(),
+                this,
+                this.disposableRegistry
+            );
         }
     }
 

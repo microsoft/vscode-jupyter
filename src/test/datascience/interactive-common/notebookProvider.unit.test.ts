@@ -4,14 +4,14 @@ import { expect } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as vscode from 'vscode';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
-import { IWorkspaceService } from '../../../platform/common/application/types';
-import { ConfigurationService } from '../../../platform/common/configuration/service.node';
-import { IJupyterSettings } from '../../../platform/common/types';
 import { IJupyterSession, KernelConnectionMetadata } from '../../../platform/../kernels/types';
 import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
 import { DisplayOptions } from '../../../kernels/displayOptions';
 import { IJupyterNotebookProvider } from '../../../kernels/jupyter/types';
 import { IRawNotebookProvider } from '../../../kernels/raw/types';
+import { IDisposable } from '../../../platform/common/types';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverConnectionType';
 
 function Uri(filename: string): vscode.Uri {
     return vscode.Uri.file(filename);
@@ -22,32 +22,30 @@ suite('DataScience - NotebookProvider', () => {
     let notebookProvider: NotebookProvider;
     let jupyterNotebookProvider: IJupyterNotebookProvider;
     let rawNotebookProvider: IRawNotebookProvider;
-    let dataScienceSettings: IJupyterSettings;
     let cancelToken: vscode.CancellationTokenSource;
+    const disposables: IDisposable[] = [];
     setup(() => {
         jupyterNotebookProvider = mock<IJupyterNotebookProvider>();
         rawNotebookProvider = mock<IRawNotebookProvider>();
-        const workspaceService = mock<IWorkspaceService>();
-        const configService = mock<ConfigurationService>();
         cancelToken = new vscode.CancellationTokenSource();
-        // Set up our settings
-        dataScienceSettings = mock<IJupyterSettings>();
-        when(workspaceService.hasWorkspaceFolders).thenReturn(false);
-        when(dataScienceSettings.jupyterServerType).thenReturn('local');
-        when(dataScienceSettings.useDefaultConfigForJupyter).thenReturn(true);
+        disposables.push(cancelToken);
         when(rawNotebookProvider.isSupported).thenReturn(false);
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-        when(configService.getSettings(anything())).thenReturn(instance(dataScienceSettings) as any);
+        const connectionType = mock<ServerConnectionType>();
+        when(connectionType.isLocalLaunch).thenReturn(true);
+        const onDidChangeEvent = new vscode.EventEmitter<void>();
+        disposables.push(onDidChangeEvent);
+        when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);
 
         notebookProvider = new NotebookProvider(
             instance(rawNotebookProvider),
             instance(jupyterNotebookProvider),
             instance(extensionChecker),
-            instance(configService)
+            instance(connectionType)
         );
     });
-    teardown(() => cancelToken.dispose());
+    teardown(() => disposeAllDisposables(disposables));
     test('NotebookProvider getOrCreateNotebook jupyter provider does not have notebook already', async () => {
         const mockSession = mock<IJupyterSession>();
         instance(mockSession as any).then = undefined;

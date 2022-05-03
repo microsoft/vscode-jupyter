@@ -15,7 +15,6 @@ export function getDefaultSettings(): IJupyterExtraSettings {
         allowImportFromNotebook: true,
         jupyterLaunchTimeout: 10,
         jupyterLaunchRetries: 3,
-        jupyterServerType: 'local',
         // eslint-disable-next-line no-template-curly-in-string
         notebookFileRoot: '${fileDirname}',
         changeDirOnImportExport: false,

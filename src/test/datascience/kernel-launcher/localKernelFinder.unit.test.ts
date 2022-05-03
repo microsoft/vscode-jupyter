@@ -49,11 +49,11 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { KernelFinder } from '../../../kernels/kernelFinder.node';
-import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider';
 import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
 import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
+import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverConnectionType';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -227,14 +227,15 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
                 )
             );
 
-            const configService = mock(ConfigurationService);
-            const dsSettings = {
-                jupyterServerType: 'local'
-            } as any;
-            when(configService.getSettings(anything())).thenReturn(dsSettings as any);
             preferredRemote = mock(PreferredRemoteKernelIdProvider);
             const notebookProvider = mock(NotebookProvider);
             const serverUriStorage = mock(JupyterServerUriStorage);
+            const connectionType = mock<ServerConnectionType>();
+            when(connectionType.isLocalLaunch).thenReturn(true);
+            when(connectionType.setIsLocalLaunch(anything())).thenResolve();
+            const onDidChangeEvent = new EventEmitter<void>();
+            disposables.push(onDidChangeEvent);
+            when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);
             kernelFinder = new KernelFinder(
                 localKernelFinder,
                 instance(remoteKernelFinder),
@@ -242,10 +243,10 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
                 instance(interpreterService),
                 instance(preferredRemote),
                 instance(notebookProvider),
-                instance(configService),
                 instance(memento),
                 instance(fs),
-                instance(serverUriStorage)
+                instance(serverUriStorage),
+                instance(connectionType)
             );
         }
         teardown(() => {

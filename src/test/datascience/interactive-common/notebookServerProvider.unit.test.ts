@@ -30,7 +30,6 @@ suite('DataScience - NotebookServerProvider', () => {
     let configurationService: IConfigurationService;
     let jupyterExecution: IJupyterExecution;
     let interpreterService: IInterpreterService;
-    let pythonSettings: IWatchableJupyterSettings;
     const workingPython: PythonEnvironment = {
         uri: Uri.file('/foo/bar/python.exe'),
         version: new SemVer('3.6.6-final'),
@@ -45,8 +44,7 @@ suite('DataScience - NotebookServerProvider', () => {
         interpreterService = mock<IInterpreterService>();
 
         // Set up our settings
-        pythonSettings = mock<IWatchableJupyterSettings>();
-        when(pythonSettings.jupyterServerType).thenReturn('local');
+        const pythonSettings = mock<IWatchableJupyterSettings>();
         when(configurationService.getSettings(anything())).thenReturn(instance(pythonSettings));
         const serverStorage = mock(JupyterServerUriStorage);
         when(serverStorage.getUri()).thenResolve('local');

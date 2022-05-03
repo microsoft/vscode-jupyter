@@ -3,8 +3,9 @@
 import { injectable, inject, named } from 'inversify';
 import { Memento } from 'vscode';
 import { IPythonExtensionChecker } from '../platform/api/types';
-import { GLOBAL_MEMENTO, IConfigurationService, IMemento } from '../platform/common/types';
+import { GLOBAL_MEMENTO, IMemento } from '../platform/common/types';
 import { IInterpreterService } from '../platform/interpreter/contracts';
+import { ServerConnectionType } from './jupyter/launcher/serverConnectionType';
 import { IJupyterServerUriStorage } from './jupyter/types';
 import { BaseKernelFinder } from './kernelFinder.base';
 import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKernelIdProvider';
@@ -19,20 +20,20 @@ export class KernelFinder extends BaseKernelFinder {
         @inject(IInterpreterService) interpreterService: IInterpreterService,
         @inject(PreferredRemoteKernelIdProvider) preferredRemoteFinder: PreferredRemoteKernelIdProvider,
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
-        @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalState: Memento,
-        @inject(IJupyterServerUriStorage) serverUriStorage: IJupyterServerUriStorage
+        @inject(IJupyterServerUriStorage) serverUriStorage: IJupyterServerUriStorage,
+        @inject(ServerConnectionType) serverConnectionType: ServerConnectionType
     ) {
         super(
             extensionChecker,
             interpreterService,
-            configurationService,
             preferredRemoteFinder,
             notebookProvider,
             undefined, // Local not supported in web
             remoteKernelFinder,
             globalState,
-            serverUriStorage
+            serverUriStorage,
+            serverConnectionType
         );
     }
     protected async isValidCachedKernel(kernel: KernelConnectionMetadata): Promise<boolean> {

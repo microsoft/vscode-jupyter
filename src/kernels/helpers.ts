@@ -20,7 +20,7 @@ import {
 } from './types';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../platform/common/application/types';
-import { isCI, PYTHON_LANGUAGE, Settings, Telemetry } from '../platform/common/constants';
+import { isCI, PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
 import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../platform/logging';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
 import { DataScience } from '../platform/common/utils/localize';
@@ -31,7 +31,7 @@ import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironmen
 import { fsPathToUri } from '../platform/vscode-path/utils';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
 import { JupyterKernelSpec } from './jupyter/jupyterKernelSpec';
-import { IConfigurationService, Resource } from '../platform/common/types';
+import { Resource } from '../platform/common/types';
 import { getResourceType } from '../platform/common/utils';
 import { sendTelemetryEvent } from '../telemetry';
 import { isPythonNotebook } from '../notebooks/helpers';
@@ -107,17 +107,6 @@ export function cleanEnvironment<T>(spec: T): T {
     }
 
     return copy as T;
-}
-
-export function isLocalLaunch(configuration: IConfigurationService) {
-    const settings = configuration.getSettings(undefined);
-    const serverType: string | undefined = settings.jupyterServerType;
-
-    if (!serverType || serverType.toLowerCase() === Settings.JupyterServerLocalLaunch) {
-        return true;
-    }
-
-    return false;
 }
 
 export function getInterpreterHashInMetadata(
