@@ -595,7 +595,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 });
             }
             traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell');
-            success = (await kernel!.executeCell(cell)) !== NotebookCellRunState.Error;
+            success = (await kernel.executeCell(cell, kernel.controller)) !== NotebookCellRunState.Error;
             traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell.finished');
 
             // After execution see if we need to scroll to this cell or not.

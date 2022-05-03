@@ -75,8 +75,7 @@ import {
     KernelConnectionMetadata,
     KernelSocketInformation,
     LiveRemoteKernelConnectionMetadata,
-    LocalKernelSpecConnectionMetadata,
-    PythonKernelConnectionMetadata
+    LocalKernelConnectionMetadata
 } from '../../kernels/types';
 import { InteractiveWindowView } from '../constants';
 import { CellExecutionCreator } from '../execution/cellExecutionCreator';
@@ -188,9 +187,7 @@ export class VSCodeNotebookController implements Disposable {
     public flagRemoteKernelAsOutdated() {
         this.isConnectionOutdated = true;
     }
-    public updateInterpreterDetails(
-        kernelConnection: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
-    ) {
+    public updateInterpreterDetails(kernelConnection: LocalKernelConnectionMetadata) {
         this.controller.label = getDisplayNameOrNameOfKernelConnection(kernelConnection);
     }
     public asWebviewUri(localResource: Uri): Uri {
@@ -270,6 +267,7 @@ export class VSCodeNotebookController implements Disposable {
             !pyVersion ||
             pyVersion.major >= 4 ||
             (this.kernelConnection.kind !== 'startUsingLocalKernelSpec' &&
+                this.kernelConnection.kind !== 'connectToLiveLocalKernel' &&
                 this.kernelConnection.kind !== 'startUsingPythonInterpreter')
         ) {
             return;
@@ -313,6 +311,8 @@ export class VSCodeNotebookController implements Disposable {
                 void kernel.dispose();
             }
             this.associatedDocuments.delete(event.notebook);
+            // Possible we have a live local kernel associated with this.
+            // this.kernelProvider.kernels.forEach((item) => item.connectedResourceUris.delete(event.notebook.uri.toString()));
             this._onNotebookControllerSelectionChanged.fire();
             return;
         }
@@ -472,18 +472,31 @@ export class VSCodeNotebookController implements Disposable {
         let controller = this.controller;
         let kernelStarted = false;
         try {
-            kernel = await this.connectToKernel(doc, new DisplayOptions(false));
-            kernelStarted = true;
-            // If the controller changed, then ensure to create a new cell execution object.
-            if (kernel && kernel.controller.id !== controller.id) {
-                controller = kernel.controller;
-                exec = this.createCellExecutionIfNecessary(cell, kernel.controller);
-            }
-            currentContext = 'execution';
-            if (kernel.controller.id === this.id) {
+            // If we're dealing with live kernel connections, then get the kernel.
+            if (this.kernelConnection.kind === 'connectToLiveLocalKernel') {
+                const kernelId = this.kernelConnection.kernelId;
+                kernel = this.kernelProvider.kernels.find((k) => k.id.toString() === kernelId.toString());
+                if (!kernel) {
+                    throw new Error(`Could not find kernel with id ${getDisplayPath(kernelId)}`);
+                }
+                // If the controller changed, then ensure to create a new cell execution object.
+                exec = this.createCellExecutionIfNecessary(cell, controller);
+                currentContext = 'execution';
                 this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
+            } else {
+                kernel = await this.connectToKernel(doc, new DisplayOptions(false));
+                // If the controller changed, then ensure to create a new cell execution object.
+                if (kernel && kernel.controller.id !== controller.id) {
+                    controller = kernel.controller;
+                    exec = this.createCellExecutionIfNecessary(cell, kernel.controller);
+                }
+                currentContext = 'execution';
+                if (kernel.controller.id === this.id) {
+                    this.updateKernelInfoInNotebookWhenAvailable(kernel, doc);
+                }
             }
-            return await kernel.executeCell(cell);
+            kernelStarted = true;
+            return await kernel.executeCell(cell, controller);
         } catch (ex) {
             traceError(`Error in execution`, ex);
             if (!kernelStarted) {
@@ -565,6 +578,7 @@ export class VSCodeNotebookController implements Disposable {
             );
             if (
                 this.kernelConnection.kind === 'startUsingLocalKernelSpec' ||
+                this.kernelConnection.kind === 'connectToLiveLocalKernel' ||
                 this.kernelConnection.kind === 'startUsingRemoteKernelSpec'
             ) {
                 if (kernel.info.status === 'ok') {
@@ -602,6 +616,7 @@ export class VSCodeNotebookController implements Disposable {
                 );
                 break;
             case 'startUsingLocalKernelSpec':
+            case 'connectToLiveLocalKernel':
             case 'startUsingRemoteKernelSpec':
                 sendNotebookOrKernelLanguageTelemetry(
                     Telemetry.SwitchToExistingKernel,
@@ -670,6 +685,8 @@ function getKernelConnectionCategory(kernelConnection: KernelConnectionMetadata)
             return DataScience.kernelCategoryForJupyterSession();
         case 'startUsingRemoteKernelSpec':
             return DataScience.kernelCategoryForRemoteJupyterKernel();
+        case 'connectToLiveLocalKernel':
+            return DataScience.kernelCategoryForLocalLiveJupyterKernel();
         case 'startUsingLocalKernelSpec':
             return DataScience.kernelCategoryForJupyterKernel();
         case 'startUsingPythonInterpreter': {

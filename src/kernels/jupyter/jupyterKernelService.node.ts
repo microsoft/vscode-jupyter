@@ -102,6 +102,7 @@ export class JupyterKernelService implements IJupyterKernelService {
         if (
             kernel.kind !== 'connectToLiveRemoteKernel' &&
             kernel.kind !== 'startUsingRemoteKernelSpec' &&
+            kernel.kind !== 'connectToLiveLocalKernel' &&
             kernel.kernelSpec &&
             kernel.interpreter
         ) {
@@ -126,6 +127,7 @@ export class JupyterKernelService implements IJupyterKernelService {
         // Update the kernel environment to use the interpreter's latest
         if (
             kernel.kind !== 'connectToLiveRemoteKernel' &&
+            kernel.kind !== 'connectToLiveLocalKernel' &&
             kernel.kind !== 'startUsingRemoteKernelSpec' &&
             kernel.kernelSpec &&
             kernel.interpreter &&

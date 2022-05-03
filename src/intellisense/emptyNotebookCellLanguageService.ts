@@ -68,6 +68,7 @@ export class EmptyNotebookCellLanguageService implements IExtensionSingleActivat
                 break;
             }
             case 'startUsingRemoteKernelSpec':
+            case 'connectToLiveLocalKernel':
             case 'startUsingLocalKernelSpec': {
                 language = connection.kernelSpec.language;
                 break;

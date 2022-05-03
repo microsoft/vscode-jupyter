@@ -665,7 +665,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
             const expectedKernel = expectedKernels.find((item) => {
                 // if we have a global kernel, then we are expected to start a kernelspec.
                 if (expectedGlobalKernelSpecs.length) {
-                    return item.kind === 'startUsingLocalKernelSpec';
+                    return item.kind === 'startUsingLocalKernelSpec' || item.kind === 'connectToLiveLocalKernel';
                 }
                 return item.kind === 'startUsingPythonInterpreter';
             });

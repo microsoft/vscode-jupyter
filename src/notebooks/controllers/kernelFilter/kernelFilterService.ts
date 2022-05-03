@@ -39,7 +39,8 @@ export class KernelFilterService implements IDisposable {
         }
         const hidden = hiddenList.some((item) => {
             if (
-                kernelConnection.kind === 'startUsingLocalKernelSpec' &&
+                (kernelConnection.kind === 'startUsingLocalKernelSpec' ||
+                    kernelConnection.kind === 'connectToLiveLocalKernel') &&
                 item.type === 'jupyterKernelspec' &&
                 kernelConnection.kernelSpec.specFile
             ) {
@@ -101,7 +102,10 @@ export class KernelFilterService implements IDisposable {
             traceVerbose('Hiding default or live kernels via filter is not supported');
             return;
         }
-        if (connection.kind === 'startUsingLocalKernelSpec' && connection.kernelSpec.specFile) {
+        if (
+            (connection.kind === 'startUsingLocalKernelSpec' || connection.kind === 'connectToLiveLocalKernel') &&
+            connection.kernelSpec.specFile
+        ) {
             return <KernelSpecFiter>{
                 path: getDisplayPath(Uri.file(connection.kernelSpec.specFile)),
                 type: 'jupyterKernelspec'

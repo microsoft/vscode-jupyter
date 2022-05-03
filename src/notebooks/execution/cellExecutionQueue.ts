@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable, EventEmitter, NotebookCell } from 'vscode';
+import { Disposable, EventEmitter, NotebookCell, NotebookController } from 'vscode';
 import { traceInfo, traceError } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
 import { traceCellMessage } from '../helpers';
@@ -38,7 +38,8 @@ export class CellExecutionQueue implements Disposable {
     constructor(
         private readonly session: Promise<IJupyterSession>,
         private readonly executionFactory: CellExecutionFactory,
-        readonly metadata: Readonly<KernelConnectionMetadata>
+        readonly metadata: Readonly<KernelConnectionMetadata>,
+        private readonly controller: NotebookController
     ) {}
 
     public dispose() {
@@ -57,7 +58,7 @@ export class CellExecutionQueue implements Disposable {
             traceCellMessage(cell, 'Use existing cell execution');
             return;
         }
-        const cellExecution = this.executionFactory.create(cell, this.metadata);
+        const cellExecution = this.executionFactory.create(cell, this.metadata, this.controller);
         cellExecution.preExecute((c) => this._onPreExecute.fire(c), this, this.disposables);
         this.queueOfCellsToExecute.push(cellExecution);
 

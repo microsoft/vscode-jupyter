@@ -31,6 +31,7 @@ export async function sendTelemetryForPythonKernelExecutable(
     }
     if (
         kernelConnection.kind !== 'startUsingLocalKernelSpec' &&
+        kernelConnection.kind !== 'connectToLiveLocalKernel' &&
         kernelConnection.kind !== 'startUsingPythonInterpreter'
     ) {
         return;

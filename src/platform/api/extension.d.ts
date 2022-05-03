@@ -187,13 +187,29 @@ export type LiveRemoteKernelConnectionMetadata = Readonly<{
     kind: 'connectToLiveRemoteKernel';
     id: string;
 }>;
+/**
+ * Connection metadata for Live Local Kernels.
+ * With this we are able connect to an existing kernel (instead of starting a new session).
+ */
+export type LiveLocalKernelConnectionMetadata = Readonly<{
+    /**
+     * Python interpreter will be used for intellisense & the like.
+     */
+    interpreter?: PythonEnvironment;
+    /**
+     * The Id of the Local kernel we'd like to connect to.
+     */
+    kernelId: Uri;
+    kind: 'connectToLiveLocalKernel';
+    id: string;
+}>;
 
 export type KernelConnectionMetadata =
     | LocalKernelSpecConnectionMetadata
     | RemoteKernelSpecConnectionMetadata
     | PythonKernelConnectionMetadata
     | LiveRemoteKernelConnectionMetadata;
-export type ActiveKernel = LiveRemoteKernelConnectionMetadata;
+export type ActiveKernel = LiveRemoteKernelConnectionMetadata | LiveLocalKernelConnectionMetadata;
 
 export interface IKernelSocket {
     /**
