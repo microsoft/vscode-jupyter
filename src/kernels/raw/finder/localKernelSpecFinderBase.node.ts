@@ -23,6 +23,8 @@ import {
 } from '../../../kernels/types';
 import { JupyterKernelSpec } from '../../jupyter/jupyterKernelSpec';
 import { getComparisonKey } from '../../../platform/vscode-path/resources';
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
 type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment; kernelSpecFile: Uri };
 export const isDefaultPythonKernelSpecSpecName = /python\s\d*.?\d*$/;
@@ -30,6 +32,8 @@ export const oldKernelsSpecFolderName = '__old_vscode_kernelspecs';
 
 export abstract class LocalKernelSpecFinderBase {
     private _oldKernelSpecsFolder?: string;
+    private findKernelSpecsInPathCache = new Map<string, Promise<KernelSpecFileWithContainingInterpreter[]>>();
+
     protected get oldKernelSpecsFolder() {
         return this._oldKernelSpecsFolder || this.globalState.get<string>('OLD_KERNEL_SPECS_FOLDER__', '');
     }
@@ -61,6 +65,7 @@ export abstract class LocalKernelSpecFinderBase {
     @testOnlyMethod()
     public clearCache() {
         this.kernelSpecCache.clear();
+        this.findKernelSpecsInPathCache.clear();
     }
     /**
      * @param {boolean} dependsOnPythonExtension Whether this list of kernels fetched depends on whether the python extension is installed/not installed.
@@ -188,31 +193,48 @@ export abstract class LocalKernelSpecFinderBase {
         paths: (Uri | { interpreter: PythonEnvironment; kernelSearchPath: Uri })[],
         cancelToken?: CancellationToken
     ): Promise<KernelSpecFileWithContainingInterpreter[]> {
-        const searchResults = await Promise.all(
-            paths.map(async (searchItem) => {
-                const searchPath = isUri(searchItem) ? searchItem : searchItem.kernelSearchPath;
-                if (await this.fs.localDirectoryExists(searchPath.fsPath)) {
-                    const files = await this.fs.searchLocal(`**/kernel.json`, searchPath.fsPath, true);
-                    return {
-                        interpreter: isUri(searchItem) ? undefined : searchItem.interpreter,
-                        kernelSpecFiles: files.map((item) => uriPath.joinPath(searchPath, item))
-                    };
-                }
-            })
-        );
-        if (cancelToken?.isCancellationRequested) {
-            return [];
+        const items = await Promise.all(paths.map((searchItem) => this.findKernelSpecsInPath(searchItem, cancelToken)));
+        return flatten(items);
+    }
+    // Given a set of paths, search for kernel.json files and return back the full paths of all of them that we find
+    private async findKernelSpecsInPath(
+        searchItem: Uri | { interpreter: PythonEnvironment; kernelSearchPath: Uri },
+        cancelToken?: CancellationToken
+    ): Promise<KernelSpecFileWithContainingInterpreter[]> {
+        const cacheKey = isUri(searchItem)
+            ? getComparisonKey(searchItem)
+            : `${getComparisonKey(searchItem.interpreter.uri)}${getComparisonKey(searchItem.kernelSearchPath)}`;
+
+        const previousPromise = this.findKernelSpecsInPathCache.get(cacheKey);
+        if (previousPromise) {
+            return previousPromise;
         }
-        const kernelSpecFiles: KernelSpecFileWithContainingInterpreter[] = [];
-        searchResults.forEach((item) => {
-            if (item) {
-                for (const kernelSpecFile of item.kernelSpecFiles) {
-                    kernelSpecFiles.push({ interpreter: item.interpreter, kernelSpecFile });
+        const promise = (async () => {
+            const searchPath = isUri(searchItem) ? searchItem : searchItem.kernelSearchPath;
+            if (await this.fs.localDirectoryExists(searchPath.fsPath)) {
+                if (cancelToken?.isCancellationRequested) {
+                    return [];
                 }
+                const files = await this.fs.searchLocal(`**/kernel.json`, searchPath.fsPath, true);
+                return files
+                    .map((item) => uriPath.joinPath(searchPath, item))
+                    .map((item) => {
+                        return {
+                            interpreter: isUri(searchItem) ? undefined : searchItem.interpreter,
+                            kernelSpecFile: item
+                        };
+                    });
+            } else {
+                return [];
+            }
+        })();
+        this.findKernelSpecsInPathCache.set(cacheKey, promise);
+        promise.catch(() => {
+            if (this.findKernelSpecsInPathCache.get(cacheKey) === promise) {
+                this.findKernelSpecsInPathCache.delete(cacheKey);
             }
         });
-
-        return kernelSpecFiles;
+        return promise;
     }
 }
 

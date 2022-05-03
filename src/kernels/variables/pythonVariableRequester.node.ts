@@ -159,6 +159,9 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
                   )
                 : [];
 
+            if (kernel.disposed || kernel.disposing) {
+                return [];
+            }
             const varNameTypeMap = this.deserializeJupyterResult(results) as Map<String, String>;
 
             const vars = [];
