@@ -20,7 +20,7 @@ import { Cancellation } from '../../../platform/common/cancellation';
 import { DisplayOptions } from '../../displayOptions';
 import { IRawNotebookProvider } from '../../raw/types';
 import { IJupyterNotebookProvider } from '../types';
-import { isLocalLaunch } from '../../helpers';
+import { ServerConnectionType } from './serverConnectionType';
 
 @injectable()
 export class NotebookProvider implements INotebookProvider {
@@ -31,7 +31,8 @@ export class NotebookProvider implements INotebookProvider {
         private readonly rawNotebookProvider: IRawNotebookProvider | undefined,
         @inject(IJupyterNotebookProvider)
         private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
-        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
+        @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
+        @inject(ServerConnectionType) private readonly serverConnectionType: ServerConnectionType
     ) {}
 
     // Attempt to connect to our server provider, and if we do, return the connection info
@@ -48,7 +49,7 @@ export class NotebookProvider implements INotebookProvider {
         options.ui = this.startupUi;
         if (this.rawNotebookProvider?.isSupported && options.localJupyter) {
             throw new Error('Connect method should not be invoked for local Connections when Raw is supported');
-        } else if (this.extensionChecker.isPythonExtensionInstalled || !isLocalLaunch()) {
+        } else if (this.extensionChecker.isPythonExtensionInstalled || !this.serverConnectionType.isLocalLaunch) {
             return this.jupyterNotebookProvider.connect(options).finally(() => handler.dispose());
         } else {
             handler.dispose();

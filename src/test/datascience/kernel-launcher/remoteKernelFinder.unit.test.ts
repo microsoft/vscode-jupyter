@@ -6,11 +6,7 @@
 import type { Kernel, Session } from '@jupyterlab/services';
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
-import {
-    getDisplayNameOrNameOfKernelConnection,
-    mementoKeyToIndicateIfConnectingToLocalKernelsOnly,
-    setIsLocalLaunch
-} from '../../../kernels/helpers';
+import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { Disposable, EventEmitter, Uri } from 'vscode';
 import { MockMemento } from '../../mocks/mementos';
@@ -40,6 +36,7 @@ import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { RemoteKernelSpecsCacheKey } from '../../../kernels/kernelFinder.base';
 import { takeTopRankKernel } from './localKernelFinder.unit.test';
 import { computeUriHash } from '../../../kernels/jupyter/jupyterUtils';
+import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverConnectionType';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];
@@ -153,9 +150,12 @@ suite(`Remote Kernel Finder`, () => {
         when(serverUriStorage.getUri()).thenResolve(connInfo.baseUrl);
         when(serverUriStorage.getRemoteUri()).thenResolve(connInfo.baseUrl);
         memento = new MockMemento();
-        when(memento.update(mementoKeyToIndicateIfConnectingToLocalKernelsOnly, anything())).thenResolve();
-        when(memento.get(mementoKeyToIndicateIfConnectingToLocalKernelsOnly, anything())).thenReturn(true);
-        void setIsLocalLaunch(false);
+        const connectionType = mock<ServerConnectionType>();
+        when(connectionType.isLocalLaunch).thenReturn(false);
+        when(connectionType.setIsLocalLaunch(anything())).thenResolve();
+        const onDidChangeEvent = new EventEmitter<void>();
+        disposables.push(onDidChangeEvent);
+        when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);
 
         kernelFinder = new KernelFinder(
             instance(localKernelFinder),
@@ -166,7 +166,8 @@ suite(`Remote Kernel Finder`, () => {
             instance(notebookProvider),
             memento,
             instance(fs),
-            instance(serverUriStorage)
+            instance(serverUriStorage),
+            instance(connectionType)
         );
     });
     teardown(() => {

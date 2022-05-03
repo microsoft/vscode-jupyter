@@ -29,6 +29,7 @@ import {
     IJupyterServerUriStorage
 } from '../../types';
 import { IJupyterSubCommandExecutionService } from '../../types.node';
+import { ServerConnectionType } from '../serverConnectionType';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -50,7 +51,8 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
         @inject(IJupyterUriProviderRegistration) jupyterPickerRegistration: IJupyterUriProviderRegistration,
         @inject(IJupyterSessionManagerFactory) sessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(INotebookServerFactory) notebookServerFactory: INotebookServerFactory,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
+        @inject(ServerConnectionType) serverConnectionType: ServerConnectionType
     ) {
         super(
             interpreterService,
@@ -61,7 +63,8 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
             jupyterInterpreterService,
             jupyterPickerRegistration,
             sessionManagerFactory,
-            notebookServerFactory
+            notebookServerFactory,
+            serverConnectionType
         );
         this.serverCache = new ServerCache(workspace);
         this.serverUriStorage.onDidChangeUri(

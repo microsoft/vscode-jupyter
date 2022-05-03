@@ -16,6 +16,7 @@ import { HostJupyterExecution } from './launcher/liveshare/hostJupyterExecution'
 import { HostJupyterServerFactory } from './launcher/liveshare/hostJupyterServerFactory';
 import { NotebookProvider } from './launcher/notebookProvider';
 import { NotebookServerProvider } from './launcher/notebookServerProvider';
+import { ServerConnectionType } from './launcher/serverConnectionType';
 import { JupyterServerUriStorage } from './launcher/serverUriStorage';
 import { RemoteKernelFinder } from './remoteKernelFinder';
 import { JupyterServerSelector } from './serverSelector';
@@ -67,4 +68,5 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     );
     serviceManager.addSingleton<IJupyterServerProvider>(IJupyterServerProvider, NotebookServerProvider);
     serviceManager.addSingleton<IJupyterRequestCreator>(IJupyterRequestCreator, JupyterRequestCreator);
+    serviceManager.addSingleton<ServerConnectionType>(ServerConnectionType, ServerConnectionType);
 }

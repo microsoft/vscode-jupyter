@@ -5,7 +5,7 @@ import { anyString, anything, instance, mock, when, verify } from 'ts-mockito';
 
 import * as sinon from 'sinon';
 import * as os from 'os';
-import { QuickPickItem } from 'vscode';
+import { EventEmitter, QuickPickItem } from 'vscode';
 import { ApplicationShell } from '../../../platform/common/application/applicationShell';
 import { ClipboardService } from '../../../platform/common/application/clipboard';
 import { IApplicationShell, IClipboard } from '../../../platform/common/application/types';
@@ -26,7 +26,9 @@ import { Settings } from '../../../platform/common/constants';
 import { HostJupyterExecution } from '../../../kernels/jupyter/launcher/liveshare/hostJupyterExecution';
 import { DataScienceErrorHandler } from '../../../platform/errors/errorHandler';
 import { IJupyterExecution } from '../../../kernels/jupyter/types';
-import { setIsLocalLaunch } from '../../../kernels/helpers';
+import { IDisposable } from '../../../platform/common/types';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverConnectionType';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - Jupyter Server URI Selector', () => {
@@ -34,7 +36,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
     let clipboard: IClipboard;
     let execution: IJupyterExecution;
     let applicationShell: IApplicationShell;
-
+    const disposables: IDisposable[] = [];
     function createDataScienceObject(
         quickPickSelection: string,
         inputSelection: string,
@@ -59,13 +61,19 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         const encryptedStorage = new MockEncryptedStorage();
         execution = mock(HostJupyterExecution);
         const handler = mock(DataScienceErrorHandler);
+        const connectionType = mock<ServerConnectionType>();
+        when(connectionType.isLocalLaunch).thenReturn(false);
+        const onDidChangeEvent = new EventEmitter<void>();
+        disposables.push(onDidChangeEvent);
+        when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);
 
         const storage = new JupyterServerUriStorage(
             instance(workspaceService),
             instance(crypto),
             encryptedStorage,
             instance(applicationEnv),
-            new MockMemento()
+            new MockMemento(),
+            instance(connectionType)
         );
         const selector = new JupyterServerSelector(
             instance(clipboard),
@@ -80,8 +88,10 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         return { selector, storage };
     }
 
-    setup(() => setIsLocalLaunch(false));
-    teardown(() => sinon.restore());
+    teardown(() => {
+        sinon.restore();
+        disposeAllDisposables(disposables);
+    });
 
     test('Local pick server uri', async () => {
         const { selector, storage } = createDataScienceObject('$(zap) Default', '', true);

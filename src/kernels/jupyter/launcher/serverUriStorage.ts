@@ -10,8 +10,8 @@ import {
 import { Settings } from '../../../platform/common/constants';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { ICryptoUtils, IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
-import { isLocalLaunch, setIsLocalLaunch } from '../../helpers';
 import { IJupyterServerUriStorage } from '../types';
+import { ServerConnectionType } from './serverConnectionType';
 
 /**
  * Class for storing Jupyter Server URI values
@@ -28,7 +28,8 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         @inject(ICryptoUtils) private readonly crypto: ICryptoUtils,
         @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
         @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
+        @inject(ServerConnectionType) private readonly serverConnectionType: ServerConnectionType
     ) {
         // Cache our current state so we don't keep asking for it from the encrypted storage
         this.getUri().ignoreErrors();
@@ -155,10 +156,10 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         // Set the URI as our current state
         this.currentUriPromise = Promise.resolve(uri);
         if (uri === Settings.JupyterServerLocalLaunch) {
-            await setIsLocalLaunch(true, this.globalMemento);
+            await this.serverConnectionType.setIsLocalLaunch(true);
         } else {
             await this.addToUriList(uri, Date.now(), uri);
-            await setIsLocalLaunch(false, this.globalMemento);
+            await this.serverConnectionType.setIsLocalLaunch(false);
 
             // Save in the storage (unique account per workspace)
             const key = this.getUriAccountKey();
@@ -168,7 +169,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
     }
 
     private async getUriInternal(): Promise<string> {
-        if (isLocalLaunch()) {
+        if (this.serverConnectionType.isLocalLaunch) {
             return Settings.JupyterServerLocalLaunch;
         } else {
             // Should be stored in encrypted storage based on the workspace

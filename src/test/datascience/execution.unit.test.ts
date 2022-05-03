@@ -63,6 +63,7 @@ import { getOSType, OSType } from '../../platform/common/utils/platform';
 import { JupyterUriProviderRegistration } from '../../kernels/jupyter/jupyterUriProviderRegistration';
 import { JupyterSessionManagerFactory } from '../../kernels/jupyter/session/jupyterSessionManagerFactory';
 import { JupyterServerUriStorage } from '../../kernels/jupyter/launcher/serverUriStorage';
+import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConnectionType';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 class DisposableRegistry implements IAsyncDisposableRegistry {
@@ -1003,6 +1004,11 @@ suite('Jupyter Execution', async () => {
         const serverFactory = mock<INotebookServerFactory>();
         const provider = mock(JupyterUriProviderRegistration);
         const serverUriStorage = mock(JupyterServerUriStorage);
+        const connectionType = mock<ServerConnectionType>();
+        when(connectionType.isLocalLaunch).thenReturn(true);
+        const onDidChangeEvent = new EventEmitter<void>();
+        disposableRegistry.push(onDidChangeEvent);
+        when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);
         return {
             executionService: activeService.object,
             jupyterExecution: new HostJupyterExecution(
@@ -1016,7 +1022,8 @@ suite('Jupyter Execution', async () => {
                 instance(provider),
                 instance(sessionManagerFactory),
                 instance(serverFactory),
-                instance(serverUriStorage)
+                instance(serverUriStorage),
+                instance(connectionType)
             )
         };
     }

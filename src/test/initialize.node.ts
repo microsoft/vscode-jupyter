@@ -6,7 +6,7 @@ import { startJupyterServer } from './datascience/notebook/helper.node';
 import { PythonExtension, setTestExecution } from '../platform/common/constants';
 import { activateExtension, closeActiveWindows } from './initialize';
 import { IS_REMOTE_NATIVE_TEST } from './constants';
-import { setIsLocalLaunch } from '../kernels/helpers';
+import { ServerConnectionType } from '../kernels/jupyter/launcher/serverConnectionType';
 
 export * from './initialize';
 export * from './constants.node';
@@ -31,17 +31,16 @@ let jupyterServerStarted = false;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function initialize(): Promise<IExtensionTestApi> {
     await initializePython();
-    if (IS_REMOTE_NATIVE_TEST()) {
-        void setIsLocalLaunch(false);
-    }
-    const api = await activateExtension();
+    const api = (await activateExtension()) as IExtensionTestApi;
     // Ensure we start jupyter server before opening any notebooks or the like.
     if (!jupyterServerStarted) {
         jupyterServerStarted = true;
         await startJupyterServer();
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return api as any as IExtensionTestApi;
+    if (IS_REMOTE_NATIVE_TEST()) {
+        void api.serviceContainer.get<ServerConnectionType>(ServerConnectionType).setIsLocalLaunch(false);
+    }
+    return api;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

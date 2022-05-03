@@ -9,6 +9,9 @@ import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProv
 import { DisplayOptions } from '../../../kernels/displayOptions';
 import { IJupyterNotebookProvider } from '../../../kernels/jupyter/types';
 import { IRawNotebookProvider } from '../../../kernels/raw/types';
+import { IDisposable } from '../../../platform/common/types';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
+import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverConnectionType';
 
 function Uri(filename: string): vscode.Uri {
     return vscode.Uri.file(filename);
@@ -20,21 +23,29 @@ suite('DataScience - NotebookProvider', () => {
     let jupyterNotebookProvider: IJupyterNotebookProvider;
     let rawNotebookProvider: IRawNotebookProvider;
     let cancelToken: vscode.CancellationTokenSource;
+    const disposables: IDisposable[] = [];
     setup(() => {
         jupyterNotebookProvider = mock<IJupyterNotebookProvider>();
         rawNotebookProvider = mock<IRawNotebookProvider>();
         cancelToken = new vscode.CancellationTokenSource();
+        disposables.push(cancelToken);
         when(rawNotebookProvider.isSupported).thenReturn(false);
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
+        const connectionType = mock<ServerConnectionType>();
+        when(connectionType.isLocalLaunch).thenReturn(true);
+        const onDidChangeEvent = new vscode.EventEmitter<void>();
+        disposables.push(onDidChangeEvent);
+        when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);
 
         notebookProvider = new NotebookProvider(
             instance(rawNotebookProvider),
             instance(jupyterNotebookProvider),
-            instance(extensionChecker)
+            instance(extensionChecker),
+            instance(connectionType)
         );
     });
-    teardown(() => cancelToken.dispose());
+    teardown(() => disposeAllDisposables(disposables));
     test('NotebookProvider getOrCreateNotebook jupyter provider does not have notebook already', async () => {
         const mockSession = mock<IJupyterSession>();
         instance(mockSession as any).then = undefined;

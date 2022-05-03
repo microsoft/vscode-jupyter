@@ -16,14 +16,9 @@ import { traceError, traceDecoratorVerbose } from '../platform/logging';
 import { TraceOptions } from '../platform/logging/types';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { DisplayOptions } from './displayOptions';
-import {
-    rankKernels,
-    isLocalLaunch,
-    deserializeKernelConnection,
-    serializeKernelConnection,
-    isExactMatch
-} from './helpers';
+import { rankKernels, deserializeKernelConnection, serializeKernelConnection, isExactMatch } from './helpers';
 import { computeUriHash } from './jupyter/jupyterUtils';
+import { ServerConnectionType } from './jupyter/launcher/serverConnectionType';
 import { IJupyterServerUriStorage } from './jupyter/types';
 import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKernelIdProvider';
 import { ILocalKernelFinder, IRemoteKernelFinder } from './raw/types';
@@ -46,7 +41,8 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         private readonly localKernelFinder: ILocalKernelFinder | undefined,
         private readonly remoteKernelFinder: IRemoteKernelFinder | undefined,
         private readonly globalState: Memento,
-        protected readonly serverUriStorage: IJupyterServerUriStorage
+        protected readonly serverUriStorage: IJupyterServerUriStorage,
+        protected readonly serverConnectionType: ServerConnectionType
     ) {}
 
     @traceDecoratorVerbose('Rank Kernels', TraceOptions.BeforeCall | TraceOptions.Arguments)
@@ -152,7 +148,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         cancelToken?: CancellationToken,
         useCache: 'ignoreCache' | 'useCache' = 'ignoreCache'
     ): Promise<KernelConnectionMetadata[]> {
-        if (isLocalLaunch()) {
+        if (this.serverConnectionType.isLocalLaunch) {
             return [];
         }
         const connInfo = await this.getRemoteConnectionInfo(cancelToken);
