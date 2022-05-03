@@ -59,15 +59,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         kernelConnection: KernelConnectionMetadata,
         private readonly launchTimeout: number
     ) {
-        super(
-            'localRaw',
-            resource,
-            kernelConnection,
-            restartSessionUsed,
-            workingDirectory,
-            interruptTimeout,
-            new RawConnection()
-        );
+        super('localRaw', resource, kernelConnection, restartSessionUsed, workingDirectory, interruptTimeout);
     }
 
     public async waitForIdle(timeout: number): Promise<void> {

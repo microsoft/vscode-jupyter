@@ -123,7 +123,6 @@ export function isLocalConnection(
 }
 
 export interface IKernel extends IAsyncDisposable {
-    readonly connection: INotebookProviderConnection | undefined;
     readonly id: Uri;
     /**;
      * In the case of Notebooks, this is the same as the Notebook Uri.
@@ -258,7 +257,6 @@ export const IJupyterSession = Symbol('IJupyterSession');
  */
 export interface IJupyterSession extends IAsyncDisposable {
     readonly kind: 'localRaw' | 'remoteJupyter' | 'localJupyter';
-    readonly connection: INotebookProviderConnection;
     readonly disposed: boolean;
     readonly kernel?: Kernel.IKernelConnection;
     readonly status: KernelMessage.Status;

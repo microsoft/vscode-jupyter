@@ -66,9 +66,6 @@ import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayId
 import { IStatusProvider } from '../platform/progress/types';
 
 export abstract class BaseKernel implements IKernel {
-    get connection(): INotebookProviderConnection | undefined {
-        return this._session?.connection;
-    }
     get onStatusChanged(): Event<KernelMessage.Status> {
         return this._onStatusChanged.event;
     }

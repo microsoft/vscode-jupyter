@@ -126,8 +126,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         protected readonly kernelConnectionMetadata: KernelConnectionMetadata,
         private restartSessionUsed: (id: Kernel.IKernelConnection) => void,
         public workingDirectory: Uri,
-        private readonly interruptTimeout: number,
-        public readonly connection: INotebookProviderConnection
+        private readonly interruptTimeout: number
     ) {
         this.statusHandler = this.onStatusChanged.bind(this);
         this.ioPubHandler = (_s, m) => this.ioPubEventEmitter.fire(m);
