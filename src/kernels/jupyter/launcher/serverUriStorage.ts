@@ -137,6 +137,19 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
 
         return this.currentUriPromise;
     }
+    public async getRemoteUri(): Promise<string | undefined> {
+        const uri = await this.getUri();
+        switch (uri) {
+            case Settings.JupyterServerLocalLaunch:
+                return;
+            case Settings.JupyterServerRemoteLaunch:
+                // In `getUriInternal` its not possible for us to end up with Settings.JupyterServerRemoteLaunch.
+                // If we do, then this means the uri was never saved or not in encrypted store, hence no point returning and invalid entry.
+                return;
+            default:
+                return uri;
+        }
+    }
 
     public async setUri(uri: string) {
         // Set the URI as our current state
@@ -147,6 +160,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         } else {
             // This is a remote setting. Save in the settings as remote
             await this.updateServerType(Settings.JupyterServerRemoteLaunch);
+            await this.addToUriList(uri, Date.now(), uri);
 
             // Save in the storage (unique account per workspace)
             const key = this.getUriAccountKey();

@@ -3,12 +3,13 @@
 
 import { injectable, inject, named } from 'inversify';
 import { ExtensionMode, Memento } from 'vscode';
-import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
+import { IApplicationShell } from '../common/application/types';
 import { JVSC_EXTENSION_ID, Telemetry } from '../common/constants';
 import { GLOBAL_MEMENTO, IExtensionContext, IMemento } from '../common/types';
 import { PromiseChain } from '../common/utils/async';
 import { Common, DataScience } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
+import { traceError } from '../logging';
 
 type ApiExtensionInfo = {
     extensionId: string;
@@ -30,7 +31,6 @@ export class ApiAccessService {
     constructor(
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IApplicationEnvironment) private appEnv: IApplicationEnvironment,
         @inject(IExtensionContext) private context: IExtensionContext
     ) {}
     public async getAccessInformation(info: {
@@ -46,11 +46,6 @@ export class ApiAccessService {
             }
             return { extensionId: info.extensionId, accessAllowed: true };
         }
-        // For now, this API is only available in insiders.
-        // This way, insider (exploratory API that provides insider/exploratory features are only available in insiders).
-        if (this.appEnv.channel !== 'insiders') {
-            return { extensionId: info.extensionId, accessAllowed: false };
-        }
         // Some extensions like our own (stuff we publish for exploration) are always allowed to access the API.
         if (TrustedExtensionPublishers.has(publisherId)) {
             return { extensionId: info.extensionId, accessAllowed: true };
@@ -60,7 +55,10 @@ export class ApiAccessService {
             // This cannot happen in the real world, unless someone has written an extension.
             // without testing it at all. Safe to display an error message.
             // This way extension author knows they need to contact us.
-            void this.appShell.showErrorMessage(`Please contact the Jupyter Extension to get access to the Kernel API`);
+            void this.appShell.showErrorMessage(
+                `Please contact the Jupyter Extension to get access to the Kernel API. Publisher ${publisherId}`
+            );
+            traceError(`Publisher ${publisherId} is not allowed to access the Kernel API.`);
             return { extensionId: info.extensionId, accessAllowed: false };
         }
         const extensionPermissions = this.globalState.get<ApiExtensionInfo | undefined>(API_ACCESS_GLOBAL_KEY);

@@ -4,7 +4,6 @@ import { inject, injectable, optional } from 'inversify';
 import { JupyterInstallError } from './jupyterInstallError';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import {
-    CancellationError,
     CancellationError as VscCancellationError,
     CancellationTokenSource,
     ConfigurationTarget,
@@ -45,6 +44,7 @@ import {
 } from '../../kernels/jupyter/types';
 import { handleCertsError } from '../../kernels/jupyter/jupyterUtils';
 import { getFilePath } from '../common/platform/fs-paths';
+import { CancellationError } from '../common/cancellation';
 
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {
@@ -150,7 +150,9 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         err = WrappedError.unwrap(err);
 
         // Jupyter kernels, non zmq actually do the dependency install themselves
-        if (err instanceof JupyterKernelDependencyError) {
+        if (err instanceof CancellationError || err instanceof VscCancellationError) {
+            return KernelInterpreterDependencyResponse.cancel;
+        } else if (err instanceof JupyterKernelDependencyError) {
             traceWarning(`Jupyter Kernel Dependency Error, reason=${err.reason}`, err);
             if (err.reason === KernelInterpreterDependencyResponse.uiHidden) {
                 // At this point we're handling the error, and if the error was initially swallowed due to

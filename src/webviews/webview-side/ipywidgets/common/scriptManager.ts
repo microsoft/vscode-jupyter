@@ -165,7 +165,7 @@ export class ScriptManager extends EventEmitter {
             })
             .catch((ex) =>
                 // eslint-disable-next-line no-console
-                console.error(`Failed to load Widget Script from Extension for for ${moduleName}, ${moduleVersion}`, ex)
+                console.error(`Failed to load Widget Script from Extension for ${moduleName}, ${moduleVersion}`, ex)
             );
     }
 

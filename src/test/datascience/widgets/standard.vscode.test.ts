@@ -7,7 +7,7 @@ import { assert } from 'chai';
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
-import { commands, NotebookCell, Uri } from 'vscode';
+import { commands, ConfigurationTarget, NotebookCell, Uri, workspace } from 'vscode';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
@@ -39,10 +39,20 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
     const notebookPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'widgets', 'notebooks');
 
     this.timeout(120_000);
+    let previousWidgetScriptSourcesSettingValue: string[] | undefined = undefined;
+    const widgetScriptSourcesValue = ['jsdelivr.com', 'unpkg.com'];
     suiteSetup(async function () {
         traceInfo('Suite Setup VS Code Notebook - Execution');
         this.timeout(120_000);
         api = await initialize();
+        const config = workspace.getConfiguration('jupyter', undefined);
+        previousWidgetScriptSourcesSettingValue = config.get('widgetScriptSources') as string[];
+        if (
+            !Array.isArray(previousWidgetScriptSourcesSettingValue) ||
+            previousWidgetScriptSourcesSettingValue.join('') !== widgetScriptSourcesValue.join('')
+        ) {
+            await config.update('widgetScriptSources', widgetScriptSourcesValue, ConfigurationTarget.Global);
+        }
         await workAroundVSCodeNotebookStartPages();
         await startJupyterServer();
         await prewarmNotebooks();
@@ -68,7 +78,20 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
-    suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
+    suiteTeardown(async () => {
+        const config = workspace.getConfiguration('jupyter', undefined);
+        if (
+            !Array.isArray(previousWidgetScriptSourcesSettingValue) ||
+            previousWidgetScriptSourcesSettingValue.join('') !== widgetScriptSourcesValue.join('')
+        ) {
+            await config.update(
+                'widgetScriptSources',
+                previousWidgetScriptSourcesSettingValue,
+                ConfigurationTarget.Global
+            );
+        }
+        await closeNotebooksAndCleanUpAfterTests(disposables);
+    });
     async function initializeNotebook(options: { templateFile: string } | { notebookFile: string }) {
         const nbUri =
             'templateFile' in options

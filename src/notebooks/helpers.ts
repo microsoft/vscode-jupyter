@@ -102,12 +102,12 @@ export async function updateNotebookDocumentMetadata(
 
 export function isPythonNotebook(metadata?: nbformat.INotebookMetadata) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const kernelSpec = metadata?.kernelspec as any as IJupyterKernelSpec | undefined;
+    const kernelSpec = metadata?.kernelspec as any as Partial<IJupyterKernelSpec> | undefined;
     if (metadata?.language_info?.name && metadata.language_info.name !== PYTHON_LANGUAGE) {
         return false;
     }
 
-    if (kernelSpec?.name.includes(PYTHON_LANGUAGE)) {
+    if (kernelSpec?.name?.includes(PYTHON_LANGUAGE)) {
         return true;
     }
 
@@ -954,9 +954,16 @@ export function updateNotebookMetadata(
         // check above with language info would not see them as changed.
         const interpreter = getInterpreterFromKernelConnectionMetadata(kernelConnection);
         const interpreterHash = interpreter?.uri ? getInterpreterHash({ uri: interpreter?.uri }) : undefined;
-        const metadataInterpreterHash = metadata.interpreter
-            ? (metadata.interpreter as { hash: string }).hash
-            : undefined;
+        const metadataInterpreter: undefined | { hash?: string } =
+            'interpreter' in metadata // In the past we'd store interpreter.hash directly under metadata, but now we store it under metadata.vscode.
+                ? (metadata.interpreter as undefined | { hash?: string })
+                : 'vscode' in metadata &&
+                  metadata.vscode &&
+                  typeof metadata.vscode === 'object' &&
+                  'interpreter' in metadata.vscode
+                ? (metadata.vscode.interpreter as undefined | { hash?: string })
+                : undefined;
+        const metadataInterpreterHash = metadataInterpreter?.hash;
 
         if (metadata.kernelspec?.name !== name || (interpreterHash && interpreterHash !== metadataInterpreterHash)) {
             changed = true;
@@ -970,8 +977,10 @@ export function updateNotebookMetadata(
                 // We'll leave the kernel spec name as `python3`, this way it will work even in Jupyter or the like.
                 // Else if user opens a notebook that works in jupter,
                 // then in ours they cannot go back to jupyter as `python<hash>` is not necessarily a valid kernel in jupter.
-                metadata.interpreter = {
-                    hash: getInterpreterHash(kernelConnection.interpreter)
+                metadata.vscode = {
+                    interpreter: {
+                        hash: getInterpreterHash(kernelConnection.interpreter)
+                    }
                 };
             }
         }

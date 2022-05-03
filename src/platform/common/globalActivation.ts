@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import type { JSONObject } from '@lumino/coreutils';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, optional } from 'inversify';
 import * as vscode from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from './application/types';
 import { PYTHON_FILE, PYTHON_LANGUAGE, PYTHON_UNTITLED } from './constants';
@@ -27,11 +27,13 @@ export class GlobalActivation implements IExtensionSingleActivationService {
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IExtensionContext) private extensionContext: IExtensionContext,
-        @inject(IDataScienceCodeLensProvider) private dataScienceCodeLensProvider: IDataScienceCodeLensProvider,
+        @inject(IDataScienceCodeLensProvider)
+        @optional()
+        private dataScienceCodeLensProvider: IDataScienceCodeLensProvider | undefined,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
-        @inject(IRawNotebookSupportedService) private rawSupported: IRawNotebookSupportedService
+        @inject(IRawNotebookSupportedService) @optional() private rawSupported: IRawNotebookSupportedService | undefined
     ) {}
 
     public get activationStartTime(): number {
@@ -39,9 +41,14 @@ export class GlobalActivation implements IExtensionSingleActivationService {
     }
 
     public async activate(): Promise<void> {
-        this.extensionContext.subscriptions.push(
-            vscode.languages.registerCodeLensProvider([PYTHON_FILE, PYTHON_UNTITLED], this.dataScienceCodeLensProvider)
-        );
+        if (this.dataScienceCodeLensProvider) {
+            this.extensionContext.subscriptions.push(
+                vscode.languages.registerCodeLensProvider(
+                    [PYTHON_FILE, PYTHON_UNTITLED],
+                    this.dataScienceCodeLensProvider
+                )
+            );
+        }
 
         // Set our initial settings and sign up for changes
         this.onSettingsChanged();
@@ -77,7 +84,7 @@ export class GlobalActivation implements IExtensionSingleActivationService {
 
     private computeZmqAvailable() {
         const zmqContext = new ContextKey(EditorContexts.ZmqAvailable, this.commandManager);
-        void zmqContext.set(this.rawSupported.isSupported);
+        void zmqContext.set(this.rawSupported ? this.rawSupported.isSupported : false);
     }
 
     private onChangedActiveTextEditor() {

@@ -93,11 +93,7 @@ export type PythonKernelConnectionMetadata = Readonly<{
  * This ensure we don't update is somewhere unnecessarily (such updates would be unexpected).
  * Unexpected as connections are defined once & not changed, if we need to change then user needs to create a new connection.
  */
-export type KernelConnectionMetadata =
-    | Readonly<LiveRemoteKernelConnectionMetadata>
-    | Readonly<LocalKernelSpecConnectionMetadata>
-    | Readonly<RemoteKernelSpecConnectionMetadata>
-    | Readonly<PythonKernelConnectionMetadata>;
+export type KernelConnectionMetadata = RemoteKernelConnectionMetadata | LocalKernelConnectionMetadata;
 
 /**
  * Connection metadata for local kernels. Makes it easier to not have to check for the live connection type.
@@ -105,6 +101,13 @@ export type KernelConnectionMetadata =
 export type LocalKernelConnectionMetadata =
     | Readonly<LocalKernelSpecConnectionMetadata>
     | Readonly<PythonKernelConnectionMetadata>;
+
+/**
+ * Connection metadata for remote kernels. Makes it easier to not have to check for the live connection type.
+ */
+export type RemoteKernelConnectionMetadata =
+    | Readonly<LiveRemoteKernelConnectionMetadata>
+    | Readonly<RemoteKernelSpecConnectionMetadata>;
 
 export interface IKernelSpecQuickPickItem<T extends KernelConnectionMetadata = KernelConnectionMetadata>
     extends QuickPickItem {
@@ -254,14 +257,6 @@ export interface INotebook {
     readonly session: IJupyterSession; // Temporary. This just makes it easier to write a notebook that works with VS code types.
 }
 
-// Options for connecting to a notebook provider
-export type ConnectNotebookProviderOptions = {
-    ui: IDisplayOptions;
-    kind: 'localJupyter' | 'remoteJupyter';
-    token: CancellationToken | undefined;
-    resource: Resource;
-};
-
 export const IJupyterSession = Symbol('IJupyterSession');
 /**
  * Closely represents Jupyter Labs Kernel.IKernelConnection.
@@ -388,16 +383,24 @@ export interface IJupyterKernelSpec {
         | 'registeredByNewVersionOfExtForCustomKernelSpec';
 }
 
-export type GetServerOptions = {
-    ui: IDisplayOptions;
-    /**
-     * Whether we're only interested in local Jupyter Servers.
-     */
-    localJupyter: boolean;
-    token: CancellationToken | undefined;
-    resource: Resource;
-};
+export type GetServerOptions =
+    | {
+          ui: IDisplayOptions;
+          localJupyter: true;
+          token: CancellationToken | undefined;
+          resource: Resource;
+          serverId?: undefined;
+      }
+    | {
+          ui: IDisplayOptions;
+          localJupyter: false;
+          token: CancellationToken | undefined;
+          resource: Resource;
+          serverId: string;
+      };
 
+// Options for connecting to a notebook provider
+export type ConnectNotebookProviderOptions = GetServerOptions;
 /**
  * Options for getting a notebook
  */

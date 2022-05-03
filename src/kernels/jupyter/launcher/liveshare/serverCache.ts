@@ -103,8 +103,20 @@ export class ServerCache implements IAsyncDisposable {
     }
 
     public async generateDefaultOptions(options: INotebookServerOptions): Promise<INotebookServerOptions> {
+        if (options.localJupyter) {
+            return {
+                resource: options?.resource,
+                skipUsingDefaultConfig: options ? options.skipUsingDefaultConfig : false, // Default for this is false
+                workingDir:
+                    options && options.workingDir
+                        ? options.workingDir
+                        : await this.workspace.computeWorkingDirectory(options.resource),
+                ui: options.ui,
+                localJupyter: true
+            };
+        }
         return {
-            uri: options ? options.uri : undefined,
+            uri: options.uri,
             resource: options?.resource,
             skipUsingDefaultConfig: options ? options.skipUsingDefaultConfig : false, // Default for this is false
             workingDir:
@@ -112,13 +124,13 @@ export class ServerCache implements IAsyncDisposable {
                     ? options.workingDir
                     : await this.workspace.computeWorkingDirectory(options.resource),
             ui: options.ui,
-            localJupyter: options.localJupyter
+            localJupyter: false
         };
     }
 
     private generateKey(options: INotebookServerOptions): string {
         // combine all the values together to make a unique key
-        const uri = options.uri ? options.uri.toString() : '';
+        const uri = options.localJupyter ? '' : options.uri.toString();
         const useFlag = options.skipUsingDefaultConfig ? 'true' : 'false';
         return `uri=${uri};useFlag=${useFlag};local=${options.localJupyter};workingDir=${options.workingDir}`;
     }
