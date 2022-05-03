@@ -123,17 +123,20 @@ export function isLocalLaunch(configuration: IConfigurationService) {
 export function getInterpreterHashInMetadata(
     notebookMetadata: nbformat.INotebookMetadata | undefined
 ): string | undefined {
-    // If the user has kernelspec in metadata & the interpreter hash is stored in metadata, then its a perfect match.
-    // This is the preferred approach https://github.com/microsoft/vscode-jupyter/issues/5612
-    if (
-        typeof notebookMetadata === 'object' &&
-        'interpreter' in notebookMetadata &&
-        (notebookMetadata as any).interpreter &&
-        typeof (notebookMetadata as any).interpreter === 'object' &&
-        'hash' in (notebookMetadata as any).interpreter
-    ) {
-        return (notebookMetadata as any).interpreter.hash;
+    if (!notebookMetadata) {
+        return;
     }
+
+    const metadataInterpreter: undefined | { hash?: string } =
+        'interpreter' in notebookMetadata // In the past we'd store interpreter.hash directly under metadata, but now we store it under metadata.vscode.
+            ? (notebookMetadata.interpreter as undefined | { hash?: string })
+            : 'vscode' in notebookMetadata &&
+              notebookMetadata.vscode &&
+              typeof notebookMetadata.vscode === 'object' &&
+              'interpreter' in notebookMetadata.vscode
+            ? (notebookMetadata.vscode.interpreter as undefined | { hash?: string })
+            : undefined;
+    return metadataInterpreter?.hash;
 }
 export function rankKernels(
     kernels: KernelConnectionMetadata[],
@@ -243,7 +246,10 @@ export function isExactMatch(
         return false;
     }
 
-    if (notebookMetadata.interpreter && interpreterMatchesThatInNotebookMetadata(kernelConnection, notebookMetadata)) {
+    if (
+        getInterpreterHashInMetadata(notebookMetadata) &&
+        interpreterMatchesThatInNotebookMetadata(kernelConnection, notebookMetadata)
+    ) {
         // Case: Metadata has interpreter, in this case it should have an interpreter
         // and a kernel spec that should fully match, note that in this case matching
         // name on a default python kernel spec is ok (as the interpreter hash matches)

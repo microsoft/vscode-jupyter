@@ -141,6 +141,41 @@ suite('UpdateNotebookMetadata', () => {
         });
         assert.strictEqual(value.changed, true);
     });
+
+    test('UpdateNotebookMetadata old Interpreter Hash', () => {
+        // Make sure that name is the same so that interpreter hash is actually checked
+        const notebookMetadata = {
+            orig_nbformat: 4,
+            interpreter: { hash: 'junk' },
+            kernelspec: { display_name: 'New Display Name', language: 'python', name: 'python3' },
+            language_info: { name: 'python', version: '3.6.0' }
+        };
+
+        // Make sure we tag as registered by us so that we update the interpreter hash
+        const vscSpec = { ...pythonDefaultKernelSpec };
+        vscSpec.isRegisteredByVSC = 'registeredByNewVersionOfExt';
+
+        const kernelConnection: KernelConnectionMetadata = {
+            kind: 'startUsingPythonInterpreter',
+            id: 'python36',
+            interpreter: python36Global,
+            kernelSpec: vscSpec
+        };
+        const value = updateNotebookMetadata(notebookMetadata, kernelConnection);
+
+        // Verify display_name updated due to interpreter hash change
+        verifyMetadata(notebookMetadata, {
+            orig_nbformat: 4,
+            kernelspec: { display_name: 'Python Default', language: 'python', name: 'python3' },
+            language_info: { name: 'python', version: '3.6.0' },
+            vscode: {
+                interpreter: {
+                    hash: '61422c3ae25c0ee9ecef2ee9be55c6d65757e33588c0a04d2ee7dbadc81a89b7'
+                }
+            }
+        });
+        assert.strictEqual(value.changed, true);
+    });
     test('UpdateNotebookMetadata No Change', () => {
         const notebookMetadata = {
             orig_nbformat: 4,
@@ -164,6 +199,51 @@ suite('UpdateNotebookMetadata', () => {
 
         // Verify display_name updated due to interpreter hash change
         verifyMetadata(notebookMetadata, {
+            orig_nbformat: 4,
+            kernelspec: { display_name: 'Python Default', language: 'python', name: 'python3' },
+            language_info: { name: 'python', version: '3.6.0' },
+            vscode: {
+                interpreter: {
+                    hash: '61422c3ae25c0ee9ecef2ee9be55c6d65757e33588c0a04d2ee7dbadc81a89b7'
+                }
+            }
+        });
+
+        // Should be no change here
+        assert.strictEqual(value.changed, false);
+    });
+    test('UpdateNotebookMetadata No Change (old format)', () => {
+        const notebookMetadata = {
+            orig_nbformat: 4,
+            interpreter: {
+                hash: '61422c3ae25c0ee9ecef2ee9be55c6d65757e33588c0a04d2ee7dbadc81a89b7'
+            },
+
+            kernelspec: { display_name: 'Python Default', language: 'python', name: 'python3' },
+            language_info: { name: 'python', version: '3.6.0' }
+        };
+        const newNotebookMetadata = {
+            orig_nbformat: 4,
+            vscode: {
+                interpreter: {
+                    hash: '61422c3ae25c0ee9ecef2ee9be55c6d65757e33588c0a04d2ee7dbadc81a89b7'
+                }
+            },
+
+            kernelspec: { display_name: 'Python Default', language: 'python', name: 'python3' },
+            language_info: { name: 'python', version: '3.6.0' }
+        };
+
+        const kernelConnection: KernelConnectionMetadata = {
+            kind: 'startUsingPythonInterpreter',
+            id: 'python36',
+            interpreter: python36Global,
+            kernelSpec: pythonDefaultKernelSpec
+        };
+        const value = updateNotebookMetadata(notebookMetadata, kernelConnection);
+
+        // Verify display_name updated due to interpreter hash change
+        verifyMetadata(newNotebookMetadata, {
             orig_nbformat: 4,
             kernelspec: { display_name: 'Python Default', language: 'python', name: 'python3' },
             language_info: { name: 'python', version: '3.6.0' },
