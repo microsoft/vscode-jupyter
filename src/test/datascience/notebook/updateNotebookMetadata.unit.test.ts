@@ -142,7 +142,7 @@ suite('UpdateNotebookMetadata', () => {
         assert.strictEqual(value.changed, true);
     });
 
-    test.skip('UpdateNotebookMetadata old Interpreter Hash', () => {
+    test('UpdateNotebookMetadata old Interpreter Hash', () => {
         // Make sure that name is the same so that interpreter hash is actually checked
         const notebookMetadata = {
             orig_nbformat: 4,
@@ -218,7 +218,7 @@ suite('UpdateNotebookMetadata', () => {
         // Should be no change here
         assert.strictEqual(value.changed, false);
     });
-    test.skip('UpdateNotebookMetadata No Change (old format)', () => {
+    test('UpdateNotebookMetadata No Change (old format)', () => {
         const notebookMetadata = {
             orig_nbformat: 4,
             interpreter: {
