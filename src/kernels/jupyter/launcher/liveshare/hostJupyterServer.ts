@@ -40,7 +40,7 @@ import { Uri } from 'vscode';
 export class HostJupyterServer implements INotebookServer {
     private connectionInfoDisconnectHandler: IDisposable | undefined;
     private serverExitCode: number | undefined;
-    private notebooks = new Set<Promise<IJupyterSession>>();
+    private sessions = new Set<Promise<IJupyterSession>>();
     private disposed = false;
     constructor(
         @inject(IAsyncDisposableRegistry) private readonly asyncRegistry: IAsyncDisposableRegistry,
@@ -91,9 +91,9 @@ export class HostJupyterServer implements INotebookServer {
     ): Promise<IJupyterSession> {
         this.throwIfDisposedOrCancelled(cancelToken);
         // Compute launch information from the resource and the notebook metadata
-        const notebookPromise = createDeferred<IJupyterSession>();
-        // Save the notebook
-        this.trackDisposable(notebookPromise.promise);
+        const sessionPromise = createDeferred<IJupyterSession>();
+        // Save the Sesion
+        this.trackDisposable(sessionPromise.promise);
         const getExistingSession = async () => {
             this.throwIfDisposedOrCancelled(cancelToken);
             // Figure out the working directory we need for our new notebook. This is only necessary for local.
@@ -121,17 +121,17 @@ export class HostJupyterServer implements INotebookServer {
 
             if (session) {
                 traceInfo(`Finished connecting kernel ${kernelConnection.id}`);
-                notebookPromise.resolve(session);
+                sessionPromise.resolve(session);
             } else {
-                notebookPromise.reject(this.getDisposedError());
+                sessionPromise.reject(this.getDisposedError());
             }
         } catch (ex) {
             // If there's an error, then reject the promise that is returned.
             // This original promise must be rejected as it is cached (check `setNotebook`).
-            notebookPromise.reject(ex);
+            sessionPromise.reject(ex);
         }
 
-        return notebookPromise.promise;
+        return sessionPromise.promise;
     }
 
     public async createNotebook(
@@ -151,9 +151,9 @@ export class HostJupyterServer implements INotebookServer {
             throw new SessionDisposedError();
         }
         const stopWatch = new StopWatch();
-        // Create a notebook and return it.
+        // Create a session and return it.
         try {
-            const notebook = await this.createNotebookInstance(
+            const session = await this.createNotebookInstance(
                 resource,
                 this.sessionManager,
                 kernelConnection,
@@ -165,7 +165,7 @@ export class HostJupyterServer implements INotebookServer {
             const baseUrl = this.connection?.baseUrl || '';
             this.logRemoteOutput(DataScience.createdNewNotebook().format(baseUrl));
             sendKernelTelemetryEvent(resource, Telemetry.JupyterCreatingNotebook, stopWatch.elapsedTime);
-            return notebook;
+            return session;
         } catch (ex) {
             sendKernelTelemetryEvent(
                 resource,
@@ -193,8 +193,8 @@ export class HostJupyterServer implements INotebookServer {
             }
 
             traceInfo('Shutting down notebooks');
-            const notebooks = await Promise.all([...this.notebooks.values()]);
-            await Promise.all(notebooks.map((session) => session.dispose()));
+            const session = await Promise.all([...this.sessions.values()]);
+            await Promise.all(session.map((session) => session.dispose()));
             traceInfo(`Shut down session manager : ${this.sessionManager ? 'existing' : 'undefined'}`);
             if (this.sessionManager) {
                 // Session manager in remote case may take too long to shutdown. Don't wait that
@@ -237,15 +237,15 @@ export class HostJupyterServer implements INotebookServer {
         // Default is just say session was disposed
         return new SessionDisposedError();
     }
-    private trackDisposable(notebook: Promise<IJupyterSession>) {
-        notebook
+    private trackDisposable(sessionPromise: Promise<IJupyterSession>) {
+        sessionPromise
             .then((session) => {
-                session.onDidDispose(() => this.notebooks.delete(notebook), this, this.disposables);
+                session.onDidDispose(() => this.sessions.delete(sessionPromise), this, this.disposables);
             })
-            .catch(() => this.notebooks.delete(notebook));
+            .catch(() => this.sessions.delete(sessionPromise));
 
         // Save the notebook
-        this.notebooks.add(notebook);
+        this.sessions.add(sessionPromise);
     }
 
     private logRemoteOutput(output: string) {
