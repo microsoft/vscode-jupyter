@@ -424,9 +424,9 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
     ): Promise<IJupyterKernelSpec[]> {
         traceInfoIfCI(`Finding kernel specs for interpreters: ${interpreters.map((i) => i.uri).join('\n')}`);
         // Find all the possible places to look for this resource
-        const [interpreterPaths, rootSpecPaths, globalSpecRootPath] = await Promise.all([
-            this.findKernelPathsOfAllInterpreters(interpreters),
-            this.jupyterPaths.getKernelSpecRootPaths(),
+        const interpreterPaths = this.findKernelPathsOfAllInterpreters(interpreters);
+        const [rootSpecPaths, globalSpecRootPath] = await Promise.all([
+            this.jupyterPaths.getKernelSpecRootPaths(cancelToken),
             this.jupyterPaths.getKernelSpecRootPath()
         ]);
         // Exclude the glbal paths from the list.
@@ -491,9 +491,9 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
     /**
      * For the given resource, find atll the file paths for kernel specs that we want to associate with this
      */
-    private async findKernelPathsOfAllInterpreters(
+    private findKernelPathsOfAllInterpreters(
         interpreters: PythonEnvironment[]
-    ): Promise<{ interpreter: PythonEnvironment; kernelSearchPath: Uri }[]> {
+    ): { interpreter: PythonEnvironment; kernelSearchPath: Uri }[] {
         const kernelSpecPathsAlreadyListed = new ResourceSet();
         return interpreters
             .map((interpreter) => {
