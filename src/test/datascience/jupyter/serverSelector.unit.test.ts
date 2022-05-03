@@ -26,6 +26,7 @@ import { Settings } from '../../../platform/common/constants';
 import { HostJupyterExecution } from '../../../kernels/jupyter/launcher/liveshare/hostJupyterExecution';
 import { DataScienceErrorHandler } from '../../../platform/errors/errorHandler';
 import { IJupyterExecution } from '../../../kernels/jupyter/types';
+import { setIsLocalLaunch } from '../../../kernels/helpers';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - Jupyter Server URI Selector', () => {
@@ -33,7 +34,6 @@ suite('DataScience - Jupyter Server URI Selector', () => {
     let clipboard: IClipboard;
     let execution: IJupyterExecution;
     let applicationShell: IApplicationShell;
-    let setting: string;
 
     function createDataScienceObject(
         quickPickSelection: string,
@@ -80,6 +80,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         return { selector, storage };
     }
 
+    setup(() => setIsLocalLaunch(false));
     teardown(() => sinon.restore());
 
     test('Local pick server uri', async () => {
@@ -182,14 +183,12 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         await selector.selectJupyterURI(true);
         const value = await storage.getUri();
         assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
-        assert.equal(setting, 'remote');
     });
     test('Remote server uri no workspace', async () => {
         const { selector, storage } = createDataScienceObject('$(server) Existing', 'http://localhost:1111', false);
         await selector.selectJupyterURI(true);
         const value = await storage.getUri();
         assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
-        assert.equal(setting, 'remote');
     });
 
     test('Remote server uri no local', async () => {
