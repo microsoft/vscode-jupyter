@@ -865,7 +865,6 @@ export function updateNotebookMetadata(
 
     // If language isn't specified in the metadata, ensure we have that.
     if (!metadata?.language_info?.name) {
-        metadata = metadata || <nbformat.INotebookMetadata>{ orig_nbformat: 3, language_info: { name: '' } };
         metadata.language_info = metadata.language_info || { name: '' };
     }
 
@@ -964,7 +963,6 @@ export function updateNotebookMetadata(
                 ? (metadata.vscode.interpreter as undefined | { hash?: string })
                 : undefined;
         const metadataInterpreterHash = metadataInterpreter?.hash;
-
         if (metadata.kernelspec?.name !== name || (interpreterHash && interpreterHash !== metadataInterpreterHash)) {
             changed = true;
             metadata.kernelspec = {
@@ -982,6 +980,9 @@ export function updateNotebookMetadata(
                         hash: getInterpreterHash(kernelConnection.interpreter)
                     }
                 };
+                if ('interpreter' in metadata) {
+                    delete metadata['interpreter'];
+                }
             }
         }
     } else if (kernelSpecOrModel && !metadata.kernelspec) {
