@@ -60,7 +60,7 @@ import {
     INotebookStarter,
     IJupyterRequestCreator,
     IJupyterRequestAgentCreator,
-    INotebookServerFactory,
+    INotebookServerFactory
 } from './types';
 import { IJupyterCommandFactory, IJupyterSubCommandExecutionService } from './types.node';
 
