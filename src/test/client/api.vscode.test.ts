@@ -67,7 +67,7 @@ suite('3rd Party Kernel Service API', function () {
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
-    test.only('List kernel specs', async () => {
+    test('List kernel specs', async () => {
         const kernelService = await api.getKernelService();
 
         // Verify we can invoke the methods on the service.
