@@ -94,7 +94,6 @@ export class IPyWidgetScriptSource {
                     this.scriptProvider
                         .getWidgetScriptSources()
                         .then((sources) => {
-                            this.allWidgetScriptsSent = true;
                             sources.forEach((widgetSource) => {
                                 // Send to UI (even if there's an error) instead of hanging while waiting for a response.
                                 this.postEmitter.fire({
@@ -104,6 +103,7 @@ export class IPyWidgetScriptSource {
                             });
                         })
                         .finally(() => {
+                            this.allWidgetScriptsSent = true;
                             traceInfo(`${ConsoleForegroundColors.Green}Fetch Script for ${JSON.stringify(payload)}`);
                             this.sendWidgetSource(moduleName, moduleVersion).catch(
                                 traceError.bind(undefined, 'Failed to send widget sources upon ready')
