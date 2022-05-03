@@ -35,6 +35,7 @@ import {
     ProgressLocation,
     ProgressOptions,
     UIKind,
+    Uri,
     version,
     window,
     workspace
@@ -54,6 +55,7 @@ import {
     IOutputChannel,
     IsCodeSpace,
     IsDevMode,
+    IsPreRelease,
     IsWebExtension,
     WORKSPACE_MEMENTO
 } from './platform/common/types';
@@ -269,6 +271,14 @@ async function activateLegacy(
 
     serviceManager.addSingletonInstance<boolean>(IsDevMode, isDevMode);
     serviceManager.addSingletonInstance<boolean>(IsWebExtension, true);
+    const isPreReleasePromise = workspace.fs
+        .readFile(Uri.joinPath(context.extensionUri, 'package.json'))
+        .then((contents) => {
+            const packageJSONLive = JSON.parse(Buffer.from(contents).toString('utf8'));
+            return isDevMode || packageJSONLive?.__metadata?.preRelease === true;
+        }) as Promise<boolean>;
+    serviceManager.addSingletonInstance<Promise<boolean>>(IsPreRelease, isPreReleasePromise);
+
     if (isDevMode) {
         void commands.executeCommand('setContext', 'jupyter.development', true);
     }

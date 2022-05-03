@@ -294,7 +294,7 @@ async function activateLegacy(
         .readFile(path.join(context.extensionPath, 'package.json'), { encoding: 'utf-8' })
         .then((contents) => {
             const packageJSONLive = JSON.parse(contents);
-            return isDevMode || packageJSONLive?.__metadata?.preRelease;
+            return isDevMode || packageJSONLive?.__metadata?.preRelease === true;
         });
     serviceManager.addSingletonInstance<Promise<boolean>>(IsPreRelease, isPreReleasePromise);
     if (isDevMode) {
