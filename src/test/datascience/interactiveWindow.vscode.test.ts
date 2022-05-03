@@ -79,22 +79,6 @@ suite('Interactive window', async function () {
         api = await initialize();
         interactiveWindowProvider = api.serviceManager.get(IInteractiveWindowProvider);
         pythonApiProvider = api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider);
-        const pythonApi = await pythonApiProvider.getApi();
-        await pythonApi.refreshInterpreters({ clearCache: true });
-        const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const [interpreter1, interpreter2, interpreter3] = await Promise.all([
-            interpreterService.getInterpreterDetails(venNoKernelPath),
-            interpreterService.getInterpreterDetails(venvNoRegPath),
-            interpreterService.getInterpreterDetails(venvKernelPath)
-        ]);
-        if (!interpreter1 || !interpreter2 || !interpreter3) {
-            throw new Error('Unable to get information for interpreter 1');
-        }
-        venNoKernelPath = interpreter1.uri;
-        venvNoRegPath = interpreter2.uri;
-        venvKernelPath = interpreter3.uri;
-
-        originalActiveInterpreter = await interpreterService.getActiveInterpreter();
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
@@ -104,8 +88,6 @@ suite('Interactive window', async function () {
             await captureScreenShot(`Interactive-Tests-${this.currentTest?.title}`);
         }
         sinon.restore();
-        await uninstallIPyKernel(venNoKernelPath.fsPath);
-        await setActiveInterpreter(pythonApiProvider, undefined, originalActiveInterpreter?.uri);
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
 
@@ -529,65 +511,93 @@ ${actualCode}
         await waitForTextOutput(lastCell, '1');
     });
 
-    test('Switching active interpreter on a python file changes kernel in use', async () => {
-        await installIPyKernel(venNoKernelPath.fsPath);
-        const interpreterService = await api.serviceManager.get<IInterpreterService>(IInterpreterService);
-        const activeInterpreter = await interpreterService.getActiveInterpreter();
-        const { activeInteractiveWindow, untitledPythonFile } = await runNewPythonFile(
-            interactiveWindowProvider,
-            'import sys\nprint(sys.executable)',
-            disposables
-        );
-        await waitForLastCellToComplete(activeInteractiveWindow, 1, true);
-        let notebookDocument = vscode.workspace.notebookDocuments.find(
-            (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
-        )!;
-        const notebookControllerManager =
-            api.serviceManager.get<INotebookControllerManager>(INotebookControllerManager);
-        // Ensure we picked up the active interpreter for use as the kernel
-
-        let controller = notebookDocument
-            ? notebookControllerManager.getSelectedNotebookController(notebookDocument)
-            : undefined;
-        assert.ok(
-            areInterpreterPathsSame(controller?.connection.interpreter?.uri, activeInterpreter?.uri),
-            `Controller does not match active interpreter for ${getDisplayPath(notebookDocument?.uri)} - active: ${
-                activeInterpreter?.uri
-            } controller: ${controller?.connection.interpreter?.uri}`
-        );
-
-        // Now switch the active interpreter to the other path
-        if (isEqual(activeInterpreter?.uri, venNoKernelPath)) {
-            await setActiveInterpreter(pythonApiProvider, untitledPythonFile.uri, venvKernelPath);
-        } else {
-            await setActiveInterpreter(pythonApiProvider, untitledPythonFile.uri, venNoKernelPath);
+    async function preSwitch() {
+        const pythonApi = await pythonApiProvider.getApi();
+        await pythonApi.refreshInterpreters({ clearCache: true });
+        const interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const [interpreter1, interpreter2, interpreter3] = await Promise.all([
+            interpreterService.getInterpreterDetails(venNoKernelPath),
+            interpreterService.getInterpreterDetails(venvNoRegPath),
+            interpreterService.getInterpreterDetails(venvKernelPath)
+        ]);
+        if (!interpreter1 || !interpreter2 || !interpreter3) {
+            throw new Error('Unable to get information for interpreter 1');
         }
+        venNoKernelPath = interpreter1.uri;
+        venvNoRegPath = interpreter2.uri;
+        venvKernelPath = interpreter3.uri;
+        originalActiveInterpreter = await interpreterService.getActiveInterpreter();
+        await installIPyKernel(venNoKernelPath.fsPath);
+        assert.ok(originalActiveInterpreter, `No active interpreter when running switch test`);
+    }
+    async function postSwitch() {
+        await uninstallIPyKernel(venNoKernelPath.fsPath);
+        await setActiveInterpreter(pythonApiProvider, undefined, originalActiveInterpreter?.uri);
+    }
+    test('Switching active interpreter on a python file changes kernel in use', async () => {
+        await preSwitch();
 
-        // Close the interactive window and recreate it
-        await closeInteractiveWindow(activeInteractiveWindow);
+        try {
+            const interpreterService = await api.serviceManager.get<IInterpreterService>(IInterpreterService);
+            const activeInterpreter = await interpreterService.getActiveInterpreter();
+            const { activeInteractiveWindow, untitledPythonFile } = await runNewPythonFile(
+                interactiveWindowProvider,
+                'import sys\nprint(sys.executable)',
+                disposables
+            );
+            await waitForLastCellToComplete(activeInteractiveWindow, 1, true);
+            let notebookDocument = vscode.workspace.notebookDocuments.find(
+                (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
+            )!;
+            const notebookControllerManager =
+                api.serviceManager.get<INotebookControllerManager>(INotebookControllerManager);
+            // Ensure we picked up the active interpreter for use as the kernel
 
-        // Run again and make sure it uses the new interpreter
-        const newIW = await runCurrentFile(interactiveWindowProvider, untitledPythonFile);
-        await waitForLastCellToComplete(newIW, 1, true);
+            let controller = notebookDocument
+                ? notebookControllerManager.getSelectedNotebookController(notebookDocument)
+                : undefined;
+            assert.ok(
+                areInterpreterPathsSame(controller?.connection.interpreter?.uri, activeInterpreter?.uri),
+                `Controller does not match active interpreter for ${getDisplayPath(notebookDocument?.uri)} - active: ${
+                    activeInterpreter?.uri
+                } controller: ${controller?.connection.interpreter?.uri}`
+            );
 
-        // Make sure it's a new window
-        assert.notEqual(newIW, activeInteractiveWindow, `New IW was not created`);
+            // Now switch the active interpreter to the other path
+            if (isEqual(activeInterpreter?.uri, venNoKernelPath)) {
+                await setActiveInterpreter(pythonApiProvider, untitledPythonFile.uri, venvKernelPath);
+            } else {
+                await setActiveInterpreter(pythonApiProvider, untitledPythonFile.uri, venNoKernelPath);
+            }
 
-        // Get the controller
-        notebookDocument = vscode.workspace.notebookDocuments.find(
-            (doc) => doc.uri.toString() === newIW?.notebookUri?.toString()
-        )!;
-        controller = notebookDocument
-            ? notebookControllerManager.getSelectedNotebookController(notebookDocument)
-            : undefined;
+            // Close the interactive window and recreate it
+            await closeInteractiveWindow(activeInteractiveWindow);
 
-        // Controller path should not be the same as the old active interpreter
-        assert.isFalse(
-            areInterpreterPathsSame(controller?.connection.interpreter?.uri, activeInterpreter?.uri),
-            `Controller should not match active interpreter for ${getDisplayPath(
-                notebookDocument?.uri
-            )} after changing active interpreter`
-        );
+            // Run again and make sure it uses the new interpreter
+            const newIW = await runCurrentFile(interactiveWindowProvider, untitledPythonFile);
+            await waitForLastCellToComplete(newIW, 1, true);
+
+            // Make sure it's a new window
+            assert.notEqual(newIW, activeInteractiveWindow, `New IW was not created`);
+
+            // Get the controller
+            notebookDocument = vscode.workspace.notebookDocuments.find(
+                (doc) => doc.uri.toString() === newIW?.notebookUri?.toString()
+            )!;
+            controller = notebookDocument
+                ? notebookControllerManager.getSelectedNotebookController(notebookDocument)
+                : undefined;
+
+            // Controller path should not be the same as the old active interpreter
+            assert.isFalse(
+                areInterpreterPathsSame(controller?.connection.interpreter?.uri, activeInterpreter?.uri),
+                `Controller should not match active interpreter for ${getDisplayPath(
+                    notebookDocument?.uri
+                )} after changing active interpreter`
+            );
+        } finally {
+            await postSwitch();
+        }
     });
 
     // todo@joyceerhl
