@@ -35,6 +35,7 @@ export class IPyWidgetScriptSource {
     private kernel?: IKernel;
     private jupyterLab?: typeof jupyterlabService;
     private scriptProvider?: IPyWidgetScriptSourceProvider;
+    private allWidgetScriptsSent?: boolean;
     private disposables: IDisposable[] = [];
     /**
      * Key value pair of widget modules along with the version that needs to be loaded.
@@ -89,10 +90,11 @@ export class IPyWidgetScriptSource {
         } else if (message === IPyWidgetMessages.IPyWidgets_WidgetScriptSourceRequest) {
             if (payload) {
                 const { moduleName, moduleVersion } = payload as { moduleName: string; moduleVersion: string };
-                if (this.scriptProvider) {
+                if (this.scriptProvider && !this.allWidgetScriptsSent) {
                     this.scriptProvider
                         .getWidgetScriptSources()
                         .then((sources) => {
+                            this.allWidgetScriptsSent = true;
                             sources.forEach((widgetSource) => {
                                 // Send to UI (even if there's an error) instead of hanging while waiting for a response.
                                 this.postEmitter.fire({
