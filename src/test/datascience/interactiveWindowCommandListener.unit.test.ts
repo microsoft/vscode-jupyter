@@ -119,7 +119,6 @@ export const __ = '';
 //             allowImportFromNotebook: true,
 //             jupyterLaunchTimeout: 10,
 //             jupyterLaunchRetries: 3,
-//             jupyterServerType: 'local',
 //             changeDirOnImportExport: false,
 //             // eslint-disable-next-line no-template-curly-in-string
 //             notebookFileRoot: '${fileDirname}',

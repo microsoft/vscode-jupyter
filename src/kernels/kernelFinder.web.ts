@@ -3,7 +3,7 @@
 import { injectable, inject, named } from 'inversify';
 import { Memento } from 'vscode';
 import { IPythonExtensionChecker } from '../platform/api/types';
-import { GLOBAL_MEMENTO, IConfigurationService, IMemento } from '../platform/common/types';
+import { GLOBAL_MEMENTO, IMemento } from '../platform/common/types';
 import { IInterpreterService } from '../platform/interpreter/contracts';
 import { IJupyterServerUriStorage } from './jupyter/types';
 import { BaseKernelFinder } from './kernelFinder.base';
@@ -19,14 +19,12 @@ export class KernelFinder extends BaseKernelFinder {
         @inject(IInterpreterService) interpreterService: IInterpreterService,
         @inject(PreferredRemoteKernelIdProvider) preferredRemoteFinder: PreferredRemoteKernelIdProvider,
         @inject(INotebookProvider) notebookProvider: INotebookProvider,
-        @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalState: Memento,
         @inject(IJupyterServerUriStorage) serverUriStorage: IJupyterServerUriStorage
     ) {
         super(
             extensionChecker,
             interpreterService,
-            configurationService,
             preferredRemoteFinder,
             notebookProvider,
             undefined, // Local not supported in web

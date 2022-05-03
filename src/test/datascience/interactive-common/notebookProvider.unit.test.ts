@@ -4,9 +4,6 @@ import { expect } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as vscode from 'vscode';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
-import { IWorkspaceService } from '../../../platform/common/application/types';
-import { ConfigurationService } from '../../../platform/common/configuration/service.node';
-import { IJupyterSettings } from '../../../platform/common/types';
 import { IJupyterSession, KernelConnectionMetadata } from '../../../platform/../kernels/types';
 import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
 import { DisplayOptions } from '../../../kernels/displayOptions';
@@ -22,29 +19,19 @@ suite('DataScience - NotebookProvider', () => {
     let notebookProvider: NotebookProvider;
     let jupyterNotebookProvider: IJupyterNotebookProvider;
     let rawNotebookProvider: IRawNotebookProvider;
-    let dataScienceSettings: IJupyterSettings;
     let cancelToken: vscode.CancellationTokenSource;
     setup(() => {
         jupyterNotebookProvider = mock<IJupyterNotebookProvider>();
         rawNotebookProvider = mock<IRawNotebookProvider>();
-        const workspaceService = mock<IWorkspaceService>();
-        const configService = mock<ConfigurationService>();
         cancelToken = new vscode.CancellationTokenSource();
-        // Set up our settings
-        dataScienceSettings = mock<IJupyterSettings>();
-        when(workspaceService.hasWorkspaceFolders).thenReturn(false);
-        when(dataScienceSettings.jupyterServerType).thenReturn('local');
-        when(dataScienceSettings.useDefaultConfigForJupyter).thenReturn(true);
         when(rawNotebookProvider.isSupported).thenReturn(false);
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-        when(configService.getSettings(anything())).thenReturn(instance(dataScienceSettings) as any);
 
         notebookProvider = new NotebookProvider(
             instance(rawNotebookProvider),
             instance(jupyterNotebookProvider),
             instance(extensionChecker),
-            instance(configService)
         );
     });
     teardown(() => cancelToken.dispose());

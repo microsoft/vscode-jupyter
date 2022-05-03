@@ -7,15 +7,14 @@ import { IExtensionSingleActivationService, IExtensionSyncActivationService } fr
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { IApplicationEnvironment } from '../platform/common/application/types';
 import { JVSC_EXTENSION_ID } from '../platform/common/constants';
-import { IConfigurationService, IDataScienceCommandListener } from '../platform/common/types';
-
+import { GLOBAL_MEMENTO, IDataScienceCommandListener, IMemento } from '../platform/common/types';
 import { ProtocolParser } from '../platform/debugger/extension/helpers/protocolParser.node';
 import { IProtocolParser } from '../platform/debugger/extension/types.node';
 import { IServiceManager } from '../platform/ioc/types';
 import { setSharedProperty } from '../telemetry';
 import { InteractiveWindowDebugger } from './debugging/interactiveWindowDebugger.node';
 import { JupyterDebugService } from './debugging/jupyterDebugService.node';
-import { isLocalLaunch } from './helpers';
+import { isLocalLaunchInMemento } from './helpers';
 import { registerInstallerTypes } from './installer/serviceRegistry.node';
 import { KernelCommandListener } from './kernelCommandListener';
 import { KernelDependencyService } from './kernelDependencyService.node';
@@ -68,7 +67,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     // This will ensure all subsequent telemetry will get the context of whether it is a custom/native/old notebook editor.
     // This is temporary, and once we ship native editor this needs to be removed.
     setSharedProperty('ds_notebookeditor', 'native');
-    const isLocalConnection = isLocalLaunch(serviceManager.get<IConfigurationService>(IConfigurationService));
+    const isLocalConnection = isLocalLaunchInMemento(serviceManager.get<vscode.Memento>(IMemento, GLOBAL_MEMENTO));
     setSharedProperty('localOrRemoteConnection', isLocalConnection ? 'local' : 'remote');
     const isPythonExtensionInstalled = serviceManager.get<IPythonExtensionChecker>(IPythonExtensionChecker);
     setSharedProperty(

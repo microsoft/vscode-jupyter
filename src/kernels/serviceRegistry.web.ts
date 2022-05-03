@@ -20,6 +20,7 @@ import { KernelFinder } from './kernelFinder.web';
 import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKernelIdProvider';
 import { IDataScienceCommandListener } from '../platform/common/types';
 import { KernelCommandListener } from './kernelCommandListener';
+import { setIsLocalLaunch } from './helpers';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
@@ -41,6 +42,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     // This is temporary, and once we ship native editor this needs to be removed.
     setSharedProperty('ds_notebookeditor', 'native');
     setSharedProperty('localOrRemoteConnection', 'remote');
+    void setIsLocalLaunch(false);
     const isPythonExtensionInstalled = serviceManager.get<IPythonExtensionChecker>(IPythonExtensionChecker);
     setSharedProperty(
         'isPythonExtensionInstalled',

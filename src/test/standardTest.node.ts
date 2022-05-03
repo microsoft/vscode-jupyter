@@ -4,7 +4,7 @@ import { spawnSync } from 'child_process';
 import * as path from '../platform/vscode-path/path';
 import * as fs from 'fs-extra';
 import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from '@vscode/test-electron';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_REMOTE_NATIVE_TEST } from './constants.node';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants.node';
 import * as tmp from 'tmp';
 import { PythonExtension, PylanceExtension, setTestExecution } from '../platform/common/constants';
 
@@ -102,11 +102,6 @@ async function createSettings(): Promise<string> {
         // To get widgets working.
         'jupyter.widgetScriptSources': ['jsdelivr.com', 'unpkg.com']
     };
-
-    if (IS_REMOTE_NATIVE_TEST()) {
-        // Make this a remote instance.
-        defaultSettings['jupyter.jupyterServerType'] = 'remote';
-    }
     fs.ensureDirSync(path.dirname(settingsFile));
     fs.writeFileSync(settingsFile, JSON.stringify(defaultSettings, undefined, 4));
     return userDataDirectory;

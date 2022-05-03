@@ -6,7 +6,7 @@ import { isPythonNotebook } from '../notebooks/helpers';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { createPromiseFromCancellation } from '../platform/common/cancellation';
 import { Settings, Telemetry } from '../platform/common/constants';
-import { IConfigurationService, Resource } from '../platform/common/types';
+import { Resource } from '../platform/common/types';
 import { getResourceType } from '../platform/common/utils';
 import { noop } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
@@ -41,7 +41,6 @@ export abstract class BaseKernelFinder implements IKernelFinder {
     constructor(
         private readonly extensionChecker: IPythonExtensionChecker,
         private readonly interpreterService: IInterpreterService,
-        private readonly configurationService: IConfigurationService,
         private readonly preferredRemoteFinder: PreferredRemoteKernelIdProvider,
         private readonly notebookProvider: INotebookProvider,
         private readonly localKernelFinder: ILocalKernelFinder | undefined,
@@ -153,7 +152,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         cancelToken?: CancellationToken,
         useCache: 'ignoreCache' | 'useCache' = 'ignoreCache'
     ): Promise<KernelConnectionMetadata[]> {
-        if (isLocalLaunch(this.configurationService)) {
+        if (isLocalLaunch()) {
             return [];
         }
         const connInfo = await this.getRemoteConnectionInfo(cancelToken);

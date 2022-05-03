@@ -18,7 +18,9 @@ import {
     createInterpreterKernelSpec,
     getInterpreterKernelSpecName,
     getKernelId,
-    getKernelRegistrationInfo
+    getKernelRegistrationInfo,
+    mementoKeyToIndicateIfConnectingToLocalKernelsOnly,
+    setIsLocalLaunch
 } from '../../../platform/../kernels/helpers';
 import { PlatformService } from '../../../platform/common/platform/platformService.node';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
@@ -49,7 +51,6 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { KernelFinder } from '../../../kernels/kernelFinder.node';
-import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider';
 import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
 import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder';
@@ -227,11 +228,9 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
                 )
             );
 
-            const configService = mock(ConfigurationService);
-            const dsSettings = {
-                jupyterServerType: 'local'
-            } as any;
-            when(configService.getSettings(anything())).thenReturn(dsSettings as any);
+            when(memento.update(mementoKeyToIndicateIfConnectingToLocalKernelsOnly, anything())).thenResolve();
+            when(memento.get(mementoKeyToIndicateIfConnectingToLocalKernelsOnly, anything())).thenReturn(true);
+            void setIsLocalLaunch(true, instance(memento));
             preferredRemote = mock(PreferredRemoteKernelIdProvider);
             const notebookProvider = mock(NotebookProvider);
             const serverUriStorage = mock(JupyterServerUriStorage);
@@ -242,7 +241,6 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
                 instance(interpreterService),
                 instance(preferredRemote),
                 instance(notebookProvider),
-                instance(configService),
                 instance(memento),
                 instance(fs),
                 instance(serverUriStorage)

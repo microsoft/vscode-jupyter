@@ -43,7 +43,6 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         hasFolders: boolean
     ): { selector: JupyterServerSelector; storage: JupyterServerUriStorage } {
         dsSettings = {
-            jupyterServerType: Settings.JupyterServerLocalLaunch
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
         clipboard = mock(ClipboardService);
@@ -73,7 +72,6 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         const handler = mock(DataScienceErrorHandler);
 
         const storage = new JupyterServerUriStorage(
-            instance(configService),
             instance(workspaceService),
             instance(crypto),
             encryptedStorage,

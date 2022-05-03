@@ -120,7 +120,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private preferredControllers = new Map<NotebookDocument, VSCodeNotebookController>();
 
     private get isLocalLaunch(): boolean {
-        return isLocalLaunch(this.configuration);
+        return isLocalLaunch();
     }
     private wasPythonInstalledWhenFetchingControllers?: boolean;
     private interactiveNoPythonController?: NoPythonKernelsNotebookController;

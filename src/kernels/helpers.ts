@@ -18,9 +18,9 @@ import {
     IJupyterKernelSpec,
     IJupyterSession
 } from './types';
-import { Uri } from 'vscode';
+import { Memento, Uri } from 'vscode';
 import { IWorkspaceService } from '../platform/common/application/types';
-import { isCI, PYTHON_LANGUAGE, Settings, Telemetry } from '../platform/common/constants';
+import { isCI, PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
 import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../platform/logging';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
 import { DataScience } from '../platform/common/utils/localize';
@@ -31,7 +31,7 @@ import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironmen
 import { fsPathToUri } from '../platform/vscode-path/utils';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
 import { JupyterKernelSpec } from './jupyter/jupyterKernelSpec';
-import { IConfigurationService, Resource } from '../platform/common/types';
+import { IDisposable, Resource } from '../platform/common/types';
 import { getResourceType } from '../platform/common/utils';
 import { sendTelemetryEvent } from '../telemetry';
 import { isPythonNotebook } from '../notebooks/helpers';
@@ -109,15 +109,37 @@ export function cleanEnvironment<T>(spec: T): T {
     return copy as T;
 }
 
-export function isLocalLaunch(configuration: IConfigurationService) {
-    const settings = configuration.getSettings(undefined);
-    const serverType: string | undefined = settings.jupyterServerType;
-
-    if (!serverType || serverType.toLowerCase() === Settings.JupyterServerLocalLaunch) {
-        return true;
+const connectToLocalKernelsOnly: { yes?: boolean } = { yes: undefined };
+export function isLocalLaunch() {
+    return typeof connectToLocalKernelsOnly.yes === 'boolean' ? connectToLocalKernelsOnly.yes : true;
+}
+let callbacks: Function[] = [];
+export function onLocalLaunchTypeChange(cb: Function): IDisposable {
+    callbacks.push(cb);
+    return {
+        dispose: () => {
+            callbacks = callbacks.filter((item) => item !== cb);
+        }
+    };
+}
+export const mementoKeyToIndicateIfConnectingToLocalKernelsOnly = 'connectToLocalKernelsOnly';
+export function isLocalLaunchInMemento(globalMemento: Memento) {
+    const connectToLocalOnly = globalMemento.get<boolean>(mementoKeyToIndicateIfConnectingToLocalKernelsOnly, true);
+    if (typeof connectToLocalKernelsOnly.yes !== 'boolean') {
+        connectToLocalKernelsOnly.yes = connectToLocalOnly;
     }
-
-    return false;
+    callbacks.forEach((cb) => {
+        try {
+            cb();
+        } catch {
+            //
+        }
+    });
+    return connectToLocalOnly;
+}
+export async function setIsLocalLaunch(localLaunch: boolean, globalMemento?: Memento) {
+    connectToLocalKernelsOnly.yes = localLaunch;
+    await globalMemento?.update(mementoKeyToIndicateIfConnectingToLocalKernelsOnly, localLaunch);
 }
 
 export function getInterpreterHashInMetadata(

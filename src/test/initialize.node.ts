@@ -5,6 +5,8 @@ import { IS_SMOKE_TEST } from './constants.node';
 import { startJupyterServer } from './datascience/notebook/helper.node';
 import { PythonExtension, setTestExecution } from '../platform/common/constants';
 import { activateExtension, closeActiveWindows } from './initialize';
+import { IS_REMOTE_NATIVE_TEST } from './constants';
+import { setIsLocalLaunch } from '../kernels/helpers';
 
 export * from './initialize';
 export * from './constants.node';
@@ -29,6 +31,9 @@ let jupyterServerStarted = false;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function initialize(): Promise<IExtensionTestApi> {
     await initializePython();
+    if (IS_REMOTE_NATIVE_TEST()) {
+        void setIsLocalLaunch(false);
+    }
     const api = await activateExtension();
     // Ensure we start jupyter server before opening any notebooks or the like.
     if (!jupyterServerStarted) {

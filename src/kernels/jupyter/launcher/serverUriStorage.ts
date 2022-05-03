@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable, named } from 'inversify';
-import { ConfigurationTarget, EventEmitter, Memento } from 'vscode';
+import { EventEmitter, Memento } from 'vscode';
 import {
     IWorkspaceService,
     IEncryptedStorage,
@@ -9,7 +9,8 @@ import {
 } from '../../../platform/common/application/types';
 import { Settings } from '../../../platform/common/constants';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
-import { IConfigurationService, ICryptoUtils, IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
+import { ICryptoUtils, IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
+import { isLocalLaunch, setIsLocalLaunch } from '../../helpers';
 import { IJupyterServerUriStorage } from '../types';
 
 /**
@@ -23,7 +24,6 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         return this._onDidChangeUri.event;
     }
     constructor(
-        @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(ICryptoUtils) private readonly crypto: ICryptoUtils,
         @inject(IEncryptedStorage) private readonly encryptedStorage: IEncryptedStorage,
@@ -155,12 +155,10 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         // Set the URI as our current state
         this.currentUriPromise = Promise.resolve(uri);
         if (uri === Settings.JupyterServerLocalLaunch) {
-            // Just save directly into the settings
-            await this.updateServerType(Settings.JupyterServerLocalLaunch);
+            await setIsLocalLaunch(true, this.globalMemento);
         } else {
-            // This is a remote setting. Save in the settings as remote
-            await this.updateServerType(Settings.JupyterServerRemoteLaunch);
             await this.addToUriList(uri, Date.now(), uri);
+            await setIsLocalLaunch(false, this.globalMemento);
 
             // Save in the storage (unique account per workspace)
             const key = this.getUriAccountKey();
@@ -169,29 +167,15 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         this._onDidChangeUri.fire();
     }
 
-    private async updateServerType(val: string): Promise<void> {
-        if (this.workspaceService.hasWorkspaceFolders) {
-            return this.configService.updateSetting('jupyterServerType', val, undefined, ConfigurationTarget.Workspace);
-        } else {
-            return this.configService.updateSetting('jupyterServerType', val, undefined, ConfigurationTarget.Global);
-        }
-    }
-
     private async getUriInternal(): Promise<string> {
-        const uri = this.configService.getSettings(undefined).jupyterServerType;
-        if (uri === Settings.JupyterServerLocalLaunch || uri.length === 0) {
+        if (isLocalLaunch()) {
             return Settings.JupyterServerLocalLaunch;
         } else {
-            // If settings has a token in it, remove it
-            if (uri !== Settings.JupyterServerRemoteLaunch) {
-                await this.setUri(uri);
-            }
-
             // Should be stored in encrypted storage based on the workspace
             const key = this.getUriAccountKey();
             const storedUri = await this.encryptedStorage.retrieve(Settings.JupyterServerRemoteLaunchService, key);
 
-            return storedUri || uri;
+            return storedUri || Settings.JupyterServerLocalLaunch;
         }
     }
 

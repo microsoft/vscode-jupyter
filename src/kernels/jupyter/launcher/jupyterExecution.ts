@@ -31,6 +31,7 @@ import {
     INotebookServerFactory
 } from '../types';
 import { IJupyterSubCommandExecutionService } from '../types.node';
+import { onLocalLaunchTypeChange } from '../../helpers';
 
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
 
@@ -54,16 +55,17 @@ export class JupyterExecutionBase implements IJupyterExecution {
         this.disposableRegistry.push(this);
 
         if (workspace) {
-            const disposable = workspace.onDidChangeConfiguration((e) => {
+            let disposable = workspace.onDidChangeConfiguration((e) => {
                 if (e.affectsConfiguration('python.dataScience', undefined)) {
                     // When config changes happen, recreate our commands.
                     this.onSettingsChanged();
                 }
-                if (e.affectsConfiguration('jupyter.jupyterServerType', undefined)) {
-                    // When server URI changes, clear our pending URI timeouts
-                    this.clearTimeouts();
-                }
             });
+            this.disposableRegistry.push(disposable);
+            disposable = onLocalLaunchTypeChange(() =>
+                // When server URI changes, clear our pending URI timeouts
+                this.clearTimeouts()
+            );
             this.disposableRegistry.push(disposable);
         }
     }

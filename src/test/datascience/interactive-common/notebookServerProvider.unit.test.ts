@@ -6,7 +6,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { CancellationTokenSource, Disposable, EventEmitter, Uri } from 'vscode';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { IConfigurationService, IWatchableJupyterSettings } from '../../../platform/common/types';
+import { IConfigurationService } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { NotebookServerProvider } from '../../../kernels/jupyter/launcher/notebookServerProvider';
@@ -30,7 +30,6 @@ suite('DataScience - NotebookServerProvider', () => {
     let configurationService: IConfigurationService;
     let jupyterExecution: IJupyterExecution;
     let interpreterService: IInterpreterService;
-    let pythonSettings: IWatchableJupyterSettings;
     const workingPython: PythonEnvironment = {
         uri: Uri.file('/foo/bar/python.exe'),
         version: new SemVer('3.6.6-final'),
@@ -44,10 +43,6 @@ suite('DataScience - NotebookServerProvider', () => {
         jupyterExecution = mock<IJupyterExecution>();
         interpreterService = mock<IInterpreterService>();
 
-        // Set up our settings
-        pythonSettings = mock<IWatchableJupyterSettings>();
-        when(pythonSettings.jupyterServerType).thenReturn('local');
-        when(configurationService.getSettings(anything())).thenReturn(instance(pythonSettings));
         const serverStorage = mock(JupyterServerUriStorage);
         when(serverStorage.getUri()).thenResolve('local');
         when(serverStorage.getRemoteUri()).thenResolve();

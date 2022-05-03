@@ -6,7 +6,7 @@
 import type { Kernel, Session } from '@jupyterlab/services';
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
+import { getDisplayNameOrNameOfKernelConnection, mementoKeyToIndicateIfConnectingToLocalKernelsOnly, setIsLocalLaunch } from '../../../kernels/helpers';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { Disposable, EventEmitter, Uri } from 'vscode';
 import { MockMemento } from '../../mocks/mementos';
@@ -28,7 +28,6 @@ import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/pre
 import { IJupyterKernel, IJupyterSessionManager } from '../../../kernels/jupyter/types';
 import { KernelFinder } from '../../../kernels/kernelFinder.node';
 import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
-import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { LocalKernelFinder } from '../../../kernels/raw/finder/localKernelFinder.node';
 import { IFileSystem } from '../../../platform/common/platform/types.node';
@@ -141,11 +140,6 @@ suite(`Remote Kernel Finder`, () => {
             false
         );
 
-        const configService = mock(ConfigurationService);
-        const dsSettings = {
-            jupyterServerType: 'remote'
-        } as any;
-        when(configService.getSettings(anything())).thenReturn(dsSettings as any);
         const notebookProvider = mock(NotebookProvider);
         when(notebookProvider.connect(anything())).thenResolve(connInfo);
         fs = mock(FileSystem);
@@ -155,6 +149,10 @@ suite(`Remote Kernel Finder`, () => {
         when(serverUriStorage.getUri()).thenResolve(connInfo.baseUrl);
         when(serverUriStorage.getRemoteUri()).thenResolve(connInfo.baseUrl);
         memento = new MockMemento();
+        when(memento.update(mementoKeyToIndicateIfConnectingToLocalKernelsOnly, anything())).thenResolve();
+        when(memento.get(mementoKeyToIndicateIfConnectingToLocalKernelsOnly, anything())).thenReturn(true);
+        void setIsLocalLaunch(false);
+
         kernelFinder = new KernelFinder(
             instance(localKernelFinder),
             remoteKernelFinder,
@@ -162,7 +160,6 @@ suite(`Remote Kernel Finder`, () => {
             instance(interpreterService),
             preferredRemoteKernelIdProvider,
             instance(notebookProvider),
-            instance(configService),
             memento,
             instance(fs),
             instance(serverUriStorage)
