@@ -56,7 +56,7 @@ import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder'
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 
 [false, true].forEach((isWindows) => {
-    suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
+    suite.only(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
         let localKernelFinder: ILocalKernelFinder;
         let remoteKernelFinder: IRemoteKernelFinder;
         let kernelFinder: IKernelFinder;
@@ -1652,6 +1652,36 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
             );
             assert.isTrue(isExactMatch);
         });
+        test('isExactMatch vscode interpreter hash matches default name matches', async () => {
+            const testData: TestData = {};
+            await initialize(testData);
+            const nbUri = Uri.file('test.ipynb');
+
+            const isExactMatch = kernelFinder.isExactMatch(
+                nbUri,
+                {
+                    kind: 'startUsingLocalKernelSpec',
+                    id: '',
+                    kernelSpec: {
+                        argv: [],
+                        display_name: 'display_namea',
+                        name: 'python3', // default name here
+                        uri: Uri.file('path')
+                    },
+                    interpreter: { uri: Uri.file('a') } as any
+                },
+                {
+                    language_info: { name: PYTHON_LANGUAGE },
+                    orig_nbformat: 4,
+                    vscode: {
+                        interpreter: { hash: '6a50dc8584134c7de537c0052ff6d236bf874355e050c90523e0c5ff2a543a28' }
+                    }
+                    ,
+                    kernelspec: { name: 'python3', display_name: 'display_namea' }
+                }
+            );
+            assert.isTrue(isExactMatch);
+        });
         test('isExactMatch interpreter hash matches non-default name matches', async () => {
             const testData: TestData = {};
             await initialize(testData);
@@ -1674,6 +1704,35 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
                     language_info: { name: PYTHON_LANGUAGE },
                     orig_nbformat: 4,
                     interpreter: { hash: '6a50dc8584134c7de537c0052ff6d236bf874355e050c90523e0c5ff2a543a28' },
+                    kernelspec: { name: 'namea', display_name: 'display_namea' }
+                }
+            );
+            assert.isTrue(isExactMatch);
+        });
+        test('isExactMatch vscode interpreter hash matches non-default name matches', async () => {
+            const testData: TestData = {};
+            await initialize(testData);
+            const nbUri = Uri.file('test.ipynb');
+
+            const isExactMatch = kernelFinder.isExactMatch(
+                nbUri,
+                {
+                    kind: 'startUsingLocalKernelSpec',
+                    id: '',
+                    kernelSpec: {
+                        argv: [],
+                        display_name: 'display_namea',
+                        name: 'namea', // Non default name
+                        uri: Uri.file('path')
+                    },
+                    interpreter: { uri: Uri.file('a') } as any
+                },
+                {
+                    language_info: { name: PYTHON_LANGUAGE },
+                    orig_nbformat: 4,
+                    vscode: {
+                        interpreter: { hash: '6a50dc8584134c7de537c0052ff6d236bf874355e050c90523e0c5ff2a543a28' }
+                    },
                     kernelspec: { name: 'namea', display_name: 'display_namea' }
                 }
             );
