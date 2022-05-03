@@ -124,7 +124,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
             defaultNotebookTestTimeout,
             () =>
                 `Should have at least one remote kernelspec with different baseUrls, ${JSON.stringify(
-                    controllerManager.registeredNotebookControllers().map(item => item.connection.kind)
+                    controllerManager.registeredNotebookControllers().map((item) => item.connection.kind)
                 )}`
         );
     });
