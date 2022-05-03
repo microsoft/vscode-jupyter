@@ -21,7 +21,6 @@ import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider';
 import { ILocalResourceUriConverter, IWidgetScriptSourceProviderFactory, WidgetScriptSource } from './types';
 import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 import { ConsoleForegroundColors } from '../../platform/logging/types';
-import { noop } from '../../platform/common/utils/misc';
 
 export class IPyWidgetScriptSource {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -144,18 +143,6 @@ export class IPyWidgetScriptSource {
             this.sourceProviderFactory
         );
         this.initializeNotebook();
-        this.scriptProvider
-            .getWidgetScriptSources()
-            .then((sources) => {
-                sources.forEach((widgetSource) => {
-                    // Send to UI (even if there's an error) continues instead of hanging while waiting for a response.
-                    this.postEmitter.fire({
-                        message: IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse,
-                        payload: widgetSource
-                    });
-                });
-            })
-            .catch(noop);
         traceVerbose('IPyWidgetScriptSource.initialize');
     }
 
