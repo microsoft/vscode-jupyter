@@ -90,24 +90,31 @@ export class IPyWidgetScriptSource {
         } else if (message === IPyWidgetMessages.IPyWidgets_WidgetScriptSourceRequest) {
             if (payload) {
                 const { moduleName, moduleVersion } = payload as { moduleName: string; moduleVersion: string };
-                traceInfo(`${ConsoleForegroundColors.Green}Fetch Script for ${JSON.stringify(payload)}`);
-                this.sendWidgetSource(moduleName, moduleVersion).catch(
-                    traceError.bind(undefined, 'Failed to send widget sources upon ready')
-                );
-            }
-        } else if (message === IPyWidgetMessages.IPyWidgets_Ready && this.scriptProvider) {
-            this.scriptProvider
-                .getWidgetScriptSources()
-                .then((sources) => {
-                    sources.forEach((widgetSource) => {
-                        // Send to UI (even if there's an error) instead of hanging while waiting for a response.
-                        this.postEmitter.fire({
-                            message: IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse,
-                            payload: widgetSource
+                if (this.scriptProvider) {
+                    this.scriptProvider
+                        .getWidgetScriptSources()
+                        .then((sources) => {
+                            sources.forEach((widgetSource) => {
+                                // Send to UI (even if there's an error) instead of hanging while waiting for a response.
+                                this.postEmitter.fire({
+                                    message: IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse,
+                                    payload: widgetSource
+                                });
+                            });
+                        })
+                        .finally(() => {
+                            traceInfo(`${ConsoleForegroundColors.Green}Fetch Script for ${JSON.stringify(payload)}`);
+                            this.sendWidgetSource(moduleName, moduleVersion).catch(
+                                traceError.bind(undefined, 'Failed to send widget sources upon ready')
+                            );
                         });
-                    });
-                })
-                .catch(noop);
+                } else {
+                    traceInfo(`${ConsoleForegroundColors.Green}Fetch Script for ${JSON.stringify(payload)}`);
+                    this.sendWidgetSource(moduleName, moduleVersion).catch(
+                        traceError.bind(undefined, 'Failed to send widget sources upon ready')
+                    );
+                }
+            }
         }
     }
     public async initialize() {
