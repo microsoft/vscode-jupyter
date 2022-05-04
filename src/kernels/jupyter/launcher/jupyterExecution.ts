@@ -271,6 +271,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         cancelToken: CancellationToken
     ): Promise<IJupyterConnection> {
         if (!this.notebookStarter) {
+            // In desktop mode this must be defined, in web this code path never gets executed.
             throw new Error('Notebook Starter cannot be undefined');
         }
         return this.notebookStarter!.start(
