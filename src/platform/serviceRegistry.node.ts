@@ -77,10 +77,10 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
 
     // Root platform types
     serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
+    serviceManager.addSingletonInstance<IExtensionSideRenderer>(IExtensionSideRenderer, new ExtensionSideRenderer());
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
     serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
-    serviceManager.addSingletonInstance<IExtensionSideRenderer>(IExtensionSideRenderer, new ExtensionSideRenderer());
     serviceManager.addSingleton<IDataViewerDependencyService>(
         IDataViewerDependencyService,
         DataViewerDependencyService

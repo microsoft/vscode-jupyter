@@ -25,6 +25,7 @@ import { DataScienceErrorHandler } from './errors/errorHandler';
 import { IDataScienceErrorHandler } from './errors/types';
 import { GlobalActivation } from './common/globalActivation';
 import { IExtensionSingleActivationService } from './activation/types';
+import { ExtensionSideRenderer, IExtensionSideRenderer } from '../webviews/extension-side/renderer';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
@@ -35,6 +36,7 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
+    serviceManager.addSingletonInstance<IExtensionSideRenderer>(IExtensionSideRenderer, new ExtensionSideRenderer());
 
     registerCommonTypes(serviceManager);
     registerApiTypes(serviceManager);
