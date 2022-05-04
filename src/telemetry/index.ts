@@ -89,7 +89,7 @@ export function _resetSharedProperties(): void {
 }
 
 let telemetryReporter: TelemetryReporter | undefined;
-function getTelemetryReporter() {
+export function getTelemetryReporter() {
     if (telemetryReporter) {
         return telemetryReporter;
     }
