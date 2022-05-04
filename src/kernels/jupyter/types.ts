@@ -70,8 +70,6 @@ export interface IJupyterNotebookProvider {
 export type INotebookServerOptions =
     | {
           resource: Resource;
-          skipUsingDefaultConfig?: boolean;
-          workingDir?: string;
           ui: IDisplayOptions;
           /**
            * Whether we're only interested in local Jupyter Servers.
@@ -81,8 +79,6 @@ export type INotebookServerOptions =
     | {
           uri: string;
           resource: Resource;
-          skipUsingDefaultConfig?: boolean;
-          workingDir?: string;
           ui: IDisplayOptions;
           /**
            * Whether we're only interested in local Jupyter Servers.

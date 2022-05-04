@@ -24,8 +24,7 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
     ) {}
 
     public async connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection> {
-        const server = await this.serverProvider.getOrCreateServer(options);
-        const connection = await server.connection;
+        const { connection } = await this.serverProvider.getOrCreateServer(options);
         if (!options.localJupyter) {
             // Log this remote URI into our MRU list
             void this.serverStorage.addToUriList(
