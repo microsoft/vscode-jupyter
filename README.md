@@ -4,11 +4,11 @@ A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marke
 
 The Jupyter Extension includes the Jupyter Keymaps and the Jupyter Notebook Renderers extensions by default. The Jupyter Keymaps extension provides Jupyter-consistent keymaps and the Jupyter Notebook Renderers extension provides renderers for MIME types such as latex, plotly, vega, and the like. Both of these extensions can be disabled or uninstalled.
 
-| Link | Description |
-|------|-------------|
-| [File an issue](https://github.com/microsoft/vscode-jupyter/issues/new/choose) | Report problems and suggest enhancements |
-| [Go to docs](https://code.visualstudio.com/docs/datascience/jupyter-notebooks) | Jupyter extension and data science in VS Code documentation, tutorials, and more |
-| [Discussions](https://code.visualstudio.com/docs/datascience/jupyter-notebooks) | Post questions, and engage in community discussions |
+| Link                                                                            | Description                                                                      |
+| ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| [File an issue](https://github.com/microsoft/vscode-jupyter/issues/new/choose)  | Report problems and suggest enhancements                                         |
+| [Go to docs](https://code.visualstudio.com/docs/datascience/jupyter-notebooks)  | Jupyter extension and data science in VS Code documentation, tutorials, and more |
+| [Discussions](https://code.visualstudio.com/docs/datascience/jupyter-notebooks) | Post questions, and engage in community discussions                              |
 
 ## Notebook support
 
@@ -80,6 +80,22 @@ Open the Command Palette (Command+Shift+P on macOS and Ctrl+Shift+P on Windows/L
 | `Jupyter: Export to HTML Jupyter: Export to PDF` | Create a presentation-friendly version of your notebook in HTML or PDF |
 
 To see all available Jupyter Notebook commands, open the Command Palette and type `Jupyter` or `Notebook`.
+
+### Context Keys for Key bindings
+
+You can use the extension's context keys in 'when' clauses. Here's an example:
+
+```
+  {
+    "key": "ctrl+i",
+    "command": "jupyter.runAndDebugCell",
+    "when": "!jupyter.webExtension"
+  }
+```
+
+That keybinding states the `jupyter.runAndDebugCell` command should map to CTRL+I when not in the `jupyter.webExtension`.
+
+The full list of context keys can be found here: https://github.com/microsoft/vscode-jupyter/wiki/Extensibility-for-other-extensions#context-keys-for-keybindings
 
 ## Feature details
 
