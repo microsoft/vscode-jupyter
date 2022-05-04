@@ -104,6 +104,10 @@ function getTelemetryReporter() {
     return (telemetryReporter = new reporter(extensionId, extensionVersion, AppinsightsKey, true));
 }
 
+export function setTelemetryReporter(reporter: TelemetryReporter) {
+    telemetryReporter = reporter;
+}
+
 export function clearTelemetryReporter() {
     telemetryReporter = undefined;
 }
