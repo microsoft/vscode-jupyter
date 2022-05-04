@@ -6,6 +6,10 @@ import { ActivationFunction, OutputItem, RendererContext } from 'vscode-notebook
 import ansiToHtml from 'ansi-to-html';
 import escape from 'lodash/escape';
 
+let Localizations = {
+    "DataScience.outputSizeExceedLimit": "Output exceeds the <a href={0}>size limit</a>. Open the full output data <a href={1}>in a text editor</a>"
+}
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 const handleInnerClick = (event: MouseEvent, context: RendererContext<any>) => {
@@ -43,22 +47,17 @@ const handleInnerClick = (event: MouseEvent, context: RendererContext<any>) => {
     }
 };
 
+if (!String.prototype.format) {
+    String.prototype.format = function (this: string) {
+        const args = arguments;
+        return this.replace(/{(\d+)}/g, (match, number) => (args[number] === undefined ? match : args[number]));
+    };
+}
+
 function generateViewMoreElement(outputId: string) {
     const container = document.createElement('span');
-    const preSpan = document.createElement('span');
-    preSpan.textContent = 'Output exceeds the ';
-    const sizeLimitSpan = document.createElement('a');
-    sizeLimitSpan.textContent = 'size limit';
-    sizeLimitSpan.href = `command:workbench.action.openSettings?["notebook.output.textLineLimit"]`;
-    const descSpan = document.createElement('span');
-    descSpan.textContent = '. Open the full output data';
-    const openOutputCommandSpan = document.createElement('a');
-    openOutputCommandSpan.textContent = ' in a text editor';
-    openOutputCommandSpan.href = `command:workbench.action.openLargeOutput?${outputId}`;
-    container.appendChild(preSpan);
-    container.appendChild(sizeLimitSpan);
-    container.appendChild(descSpan);
-    container.appendChild(openOutputCommandSpan);
+    const infoInnerHTML = Localizations['DataScience.outputSizeExceedLimit'].format(`"command:workbench.action.openSettings?["notebook.output.textLineLimit"]"`, `"command:workbench.action.openLargeOutput?${outputId}"`);
+    container.innerHTML = infoInnerHTML
     return container;
 }
 
@@ -118,11 +117,39 @@ export function truncatedArrayOfString(id: string, traceback: string[], linesLim
 }
 
 
-export const activate: ActivationFunction = (_context) => {
-    const latestContext = _context as (RendererContext<void> & { readonly settings: { readonly lineLimit: number } });
+export const activate: ActivationFunction = (context) => {
+    const latestContext = context as (RendererContext<void> & { readonly settings: { readonly lineLimit: number } });
+    let loadLocalization: Promise<void>;
+
+    if (context.postMessage && context.onDidReceiveMessage) {
+        let _loadLocResolveFunc: () => void;
+        loadLocalization = new Promise<void>(resolve => {
+            _loadLocResolveFunc = resolve;
+        });
+        context.onDidReceiveMessage(e => {
+            switch (e.type) {
+                case 1:
+                    {
+                        // load localization
+                        Localizations = {
+                            ...Localizations,
+                            ...e.data
+                        };
+                        _loadLocResolveFunc();
+                    }
+            }
+        });
+
+        context.postMessage({
+            type: 1
+        });
+    } else {
+        loadLocalization = Promise.resolve();
+    }
 
     return {
-        renderOutputItem(outputItem: OutputItem, element: HTMLElement) {
+        renderOutputItem: async (outputItem: OutputItem, element: HTMLElement) => {
+            // await loadLocalization;
             const lineLimit = latestContext.settings.lineLimit;
             const converter = new ansiToHtml({
                 fg: 'var(--vscode-terminal-foreground)',
@@ -193,7 +220,7 @@ export const activate: ActivationFunction = (_context) => {
                 return line;
             });
 
-            truncatedArrayOfString(outputItem.id, traceback, lineLimit, container, _context, converter, outputItemJson);
+            truncatedArrayOfString(outputItem.id, traceback, lineLimit, container, context, converter, outputItemJson);
         }
     };
 };
