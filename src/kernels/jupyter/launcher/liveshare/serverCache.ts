@@ -4,7 +4,6 @@
 import '../../../../platform/common/extensions';
 
 import { CancellationToken } from 'vscode';
-import { IWorkspaceService } from '../../../../platform/common/application/types';
 import { traceInfo, traceError } from '../../../../platform/logging';
 import { IAsyncDisposable } from '../../../../platform/common/types';
 import { sleep } from '../../../../platform/common/utils/async';
@@ -20,7 +19,6 @@ export class ServerCache implements IAsyncDisposable {
     private cache: Map<string, IServerData> = new Map<string, IServerData>();
     private disposed = false;
 
-    constructor(private workspace: IWorkspaceService) {}
     public clearCache() {
         this.cache.clear();
     }
@@ -106,11 +104,6 @@ export class ServerCache implements IAsyncDisposable {
         if (options.localJupyter) {
             return {
                 resource: options?.resource,
-                skipUsingDefaultConfig: options ? options.skipUsingDefaultConfig : false, // Default for this is false
-                workingDir:
-                    options && options.workingDir
-                        ? options.workingDir
-                        : await this.workspace.computeWorkingDirectory(options.resource),
                 ui: options.ui,
                 localJupyter: true
             };
@@ -118,11 +111,6 @@ export class ServerCache implements IAsyncDisposable {
         return {
             uri: options.uri,
             resource: options?.resource,
-            skipUsingDefaultConfig: options ? options.skipUsingDefaultConfig : false, // Default for this is false
-            workingDir:
-                options && options.workingDir
-                    ? options.workingDir
-                    : await this.workspace.computeWorkingDirectory(options.resource),
             ui: options.ui,
             localJupyter: false
         };
@@ -131,7 +119,6 @@ export class ServerCache implements IAsyncDisposable {
     private generateKey(options: INotebookServerOptions): string {
         // combine all the values together to make a unique key
         const uri = options.localJupyter ? '' : options.uri.toString();
-        const useFlag = options.skipUsingDefaultConfig ? 'true' : 'false';
-        return `uri=${uri};useFlag=${useFlag};local=${options.localJupyter};workingDir=${options.workingDir}`;
+        return `uri=${uri};local=${options.localJupyter};`;
     }
 }

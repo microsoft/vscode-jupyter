@@ -66,7 +66,7 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
             notebookServerFactory,
             serverConnectionType
         );
-        this.serverCache = new ServerCache(workspace);
+        this.serverCache = new ServerCache();
         this.serverUriStorage.onDidChangeUri(
             () => {
                 this.serverCache.clearCache();

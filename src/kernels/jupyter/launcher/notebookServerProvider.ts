@@ -7,7 +7,7 @@ import { inject, injectable, optional } from 'inversify';
 import { CancellationError } from 'vscode';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceInfo } from '../../../platform/logging';
-import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../../platform/common/types';
+import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
 import { testOnlyMethod } from '../../../platform/common/utils/decorators';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
@@ -32,7 +32,6 @@ export class NotebookServerProvider implements IJupyterServerProvider {
     private serverPromise = new Map<string, Promise<INotebookServer>>();
     private ui = new DisplayOptions(true);
     constructor(
-        @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(IJupyterExecution) @optional() private readonly jupyterExecution: IJupyterExecution | undefined,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
@@ -185,12 +184,9 @@ export class NotebookServerProvider implements IJupyterServerProvider {
     }
 
     private async getNotebookServerOptions(options: GetServerOptions): Promise<INotebookServerOptions> {
-        const useDefaultConfig: boolean | undefined =
-            this.configuration.getSettings(undefined).useDefaultConfigForJupyter;
         if (options.localJupyter) {
             return {
                 resource: options.resource,
-                skipUsingDefaultConfig: !useDefaultConfig,
                 ui: this.ui,
                 localJupyter: true
             };
@@ -209,7 +205,6 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         return {
             uri,
             resource: options.resource,
-            skipUsingDefaultConfig: !useDefaultConfig,
             ui: this.ui,
             localJupyter: false
         };

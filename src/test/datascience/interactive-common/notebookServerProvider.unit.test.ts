@@ -6,7 +6,6 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { CancellationTokenSource, Disposable, EventEmitter, Uri } from 'vscode';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { IConfigurationService, IWatchableJupyterSettings } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { NotebookServerProvider } from '../../../kernels/jupyter/launcher/notebookServerProvider';
@@ -27,7 +26,6 @@ function createTypeMoq<T>(tag: string): typemoq.IMock<T> {
 /* eslint-disable  */
 suite('DataScience - NotebookServerProvider', () => {
     let serverProvider: NotebookServerProvider;
-    let configurationService: IConfigurationService;
     let jupyterExecution: IJupyterExecution;
     let interpreterService: IInterpreterService;
     const workingPython: PythonEnvironment = {
@@ -39,13 +37,9 @@ suite('DataScience - NotebookServerProvider', () => {
     const disposables: Disposable[] = [];
     let source: CancellationTokenSource;
     setup(() => {
-        configurationService = mock<IConfigurationService>();
         jupyterExecution = mock<IJupyterExecution>();
         interpreterService = mock<IInterpreterService>();
 
-        // Set up our settings
-        const pythonSettings = mock<IWatchableJupyterSettings>();
-        when(configurationService.getSettings(anything())).thenReturn(instance(pythonSettings));
         const serverStorage = mock(JupyterServerUriStorage);
         when(serverStorage.getUri()).thenResolve('local');
         when(serverStorage.getRemoteUri()).thenResolve();
@@ -57,7 +51,6 @@ suite('DataScience - NotebookServerProvider', () => {
 
         // Create the server provider
         serverProvider = new NotebookServerProvider(
-            instance(configurationService),
             instance(jupyterExecution),
             instance(interpreterService),
             instance(serverStorage),

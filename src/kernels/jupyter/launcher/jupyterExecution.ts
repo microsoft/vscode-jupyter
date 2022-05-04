@@ -234,33 +234,24 @@ export class JupyterExecutionBase implements IJupyterExecution {
         if (options.localJupyter) {
             // If that works, then attempt to start the server
             traceInfo(`Launching server`);
-            const useDefaultConfig = !options || options.skipUsingDefaultConfig ? false : true;
             const settings = this.configuration.getSettings(options.resource);
-
+            const useDefaultConfig = settings.useDefaultConfigForJupyter;
+            const workingDir = await this.workspace.computeWorkingDirectory(options.resource);
             // Expand the working directory. Create a dummy launching file in the root path (so we expand correctly)
             const workingDirectory = expandWorkingDir(
-                options.workingDir,
+                workingDir,
                 this.workspace.rootFolder ? urlPath.joinPath(this.workspace.rootFolder, `${uuid()}.txt`) : undefined,
                 this.workspace,
                 settings
             );
 
-            const connection = await this.startNotebookServer(
+            return this.startNotebookServer(
                 options.resource,
                 useDefaultConfig,
                 this.configuration.getSettings(undefined).jupyterCommandLineArguments,
                 Uri.file(workingDirectory),
                 cancelToken
             );
-            if (connection) {
-                return connection;
-            } else {
-                // Throw a cancellation error if we were canceled.
-                Cancellation.throwIfCanceled(cancelToken);
-
-                // Otherwise we can't connect
-                throw new Error(DataScience.jupyterNotebookFailure().format(''));
-            }
         } else {
             // Prepare our map of server URIs
             await this.updateServerUri(options.uri);
@@ -278,8 +269,12 @@ export class JupyterExecutionBase implements IJupyterExecution {
         customCommandLine: string[],
         workingDirectory: Uri,
         cancelToken: CancellationToken
-    ): Promise<IJupyterConnection | undefined> {
-        return this.notebookStarter?.start(
+    ): Promise<IJupyterConnection> {
+        if (!this.notebookStarter) {
+            // In desktop mode this must be defined, in web this code path never gets executed.
+            throw new Error('Notebook Starter cannot be undefined');
+        }
+        return this.notebookStarter!.start(
             resource,
             useDefaultConfig,
             customCommandLine,
