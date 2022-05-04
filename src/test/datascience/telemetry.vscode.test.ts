@@ -147,8 +147,6 @@ suite('Telemetry validation', function () {
 
         // Right now this is the guaranteed list. Might want to expand this.
         assertEvent(Telemetry.ExecuteCell);
-        assertEvent(Telemetry.ExecuteCellPerceivedCold);
-        assertEvent(Telemetry.FetchControllers);
         assertEvent(Telemetry.OpenNotebookAll);
         assertEvent(Telemetry.NotebookStart);
     });
