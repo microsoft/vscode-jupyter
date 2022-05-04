@@ -29,7 +29,7 @@
         -   [ ] `package.json`
         -   [ ] `package-lock.json`
         -   [ ] Confirm the 3rd part of the version ends with `100`.
-    -   [ ] Update the VS Code engine version in package.json to target the upcoming stable release. This will allow us to release before VS Code and be ready in the marketplace. [Example](https://github.com/microsoft/vscode-jupyter/pull/9494/files)
+    -   [ ] Update the VS Code engine version in package.json (for release version) to target the upcoming stable release. This will allow us to release before VS Code and be ready in the marketplace. [Example](https://github.com/microsoft/vscode-jupyter/pull/9494/files)
     -   [ ] Create a pull request against `main`
     -   [ ] Merge pull request into `main`
 -   [ ] GDPR bookkeeping (@greazer) (🤖; Notes in OneNote under Python VS Code -> Dev Process -> GDPR)
@@ -57,7 +57,7 @@
 -   [ ] Make sure the [appropriate pull requests](https://github.com/microsoft/vscode-docs/pulls) for the release notes(https://github.com/microsoft/vscode-docs/blob/vnext/release-notes/v<vscode version>.md, make note of the branch and file name).
     - [ ] Include all new new features under a section named `Jupyter` with screenshots or animated gifs.
     - [ ] Fixes, code health should remain in the Jupyter change log.
--   [ ] Make sure component governance is happy
+-   [ ] Make sure [Component Governance](https://dev.azure.com/monacotools/Monaco/_componentGovernance/191876) is happy
 -   [ ] Make sure there is nothing targeting this release that still needs to be validated
         (`is:issue sort:updated-desc milestone:"<milestone>" label:verification-needed -label:verified`)
 
@@ -72,7 +72,7 @@
         -   [ ] Tag is version number
         -   [ ] Branch is release branch
         -   [ ] Copy contents of release branch changelog into the release (just copy the markdown)
-        -   [ ] Save
+        -   [ ] Publish
 -   [ ] Determine if a hotfix is needed
     -   [ ] Ensure the version in package.json is updated as follows:
         * If released version is `YYYY.MM.100`, then hot fix will be `YYYY.MM.110`
@@ -92,4 +92,4 @@
     * Title `<Month> <year> Release Plan`
     * Add the labels `endgame-plan` to this issue
     * Pin this issue
--   [ ] [(Un-)pin](https://help.github.com/en/articles/pinning-an-issue-to-your-repository) [release plan issues](https://github.com/Microsoft/vscode-jupyter/labels/release%20plan) (🤖)
+-   [ ] [(Un-)pin](https://help.github.com/en/articles/pinning-an-issue-to-your-repository) [release plan issues](https://github.com/Microsoft/vscode-jupyter/labels/release-plan) (🤖)
