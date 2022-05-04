@@ -21,7 +21,6 @@ import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider';
 import { ILocalResourceUriConverter, IWidgetScriptSourceProviderFactory, WidgetScriptSource } from './types';
 import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 import { ConsoleForegroundColors } from '../../platform/logging/types';
-import { noop } from '../../platform/common/utils/misc';
 
 export class IPyWidgetScriptSource {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -36,6 +35,7 @@ export class IPyWidgetScriptSource {
     private kernel?: IKernel;
     private jupyterLab?: typeof jupyterlabService;
     private scriptProvider?: IPyWidgetScriptSourceProvider;
+    private allWidgetScriptsSent?: boolean;
     private disposables: IDisposable[] = [];
     /**
      * Key value pair of widget modules along with the version that needs to be loaded.
@@ -90,24 +90,32 @@ export class IPyWidgetScriptSource {
         } else if (message === IPyWidgetMessages.IPyWidgets_WidgetScriptSourceRequest) {
             if (payload) {
                 const { moduleName, moduleVersion } = payload as { moduleName: string; moduleVersion: string };
-                traceInfo(`${ConsoleForegroundColors.Green}Fetch Script for ${JSON.stringify(payload)}`);
-                this.sendWidgetSource(moduleName, moduleVersion).catch(
-                    traceError.bind(undefined, 'Failed to send widget sources upon ready')
-                );
-            }
-        } else if (message === IPyWidgetMessages.IPyWidgets_Ready && this.scriptProvider) {
-            this.scriptProvider
-                .getWidgetScriptSources()
-                .then((sources) => {
-                    sources.forEach((widgetSource) => {
-                        // Send to UI (even if there's an error) instead of hanging while waiting for a response.
-                        this.postEmitter.fire({
-                            message: IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse,
-                            payload: widgetSource
+                if (this.scriptProvider && !this.allWidgetScriptsSent) {
+                    this.scriptProvider
+                        .getWidgetScriptSources()
+                        .then((sources) => {
+                            sources.forEach((widgetSource) => {
+                                // Send to UI (even if there's an error) instead of hanging while waiting for a response.
+                                this.postEmitter.fire({
+                                    message: IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse,
+                                    payload: widgetSource
+                                });
+                            });
+                        })
+                        .finally(() => {
+                            this.allWidgetScriptsSent = true;
+                            traceInfo(`${ConsoleForegroundColors.Green}Fetch Script for ${JSON.stringify(payload)}`);
+                            this.sendWidgetSource(moduleName, moduleVersion).catch(
+                                traceError.bind(undefined, 'Failed to send widget sources upon ready')
+                            );
                         });
-                    });
-                })
-                .catch(noop);
+                } else {
+                    traceInfo(`${ConsoleForegroundColors.Green}Fetch Script for ${JSON.stringify(payload)}`);
+                    this.sendWidgetSource(moduleName, moduleVersion).catch(
+                        traceError.bind(undefined, 'Failed to send widget sources upon ready')
+                    );
+                }
+            }
         }
     }
     public async initialize() {
@@ -137,18 +145,6 @@ export class IPyWidgetScriptSource {
             this.sourceProviderFactory
         );
         this.initializeNotebook();
-        this.scriptProvider
-            .getWidgetScriptSources()
-            .then((sources) => {
-                sources.forEach((widgetSource) => {
-                    // Send to UI (even if there's an error) continues instead of hanging while waiting for a response.
-                    this.postEmitter.fire({
-                        message: IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse,
-                        payload: widgetSource
-                    });
-                });
-            })
-            .catch(noop);
         traceVerbose('IPyWidgetScriptSource.initialize');
     }
 
