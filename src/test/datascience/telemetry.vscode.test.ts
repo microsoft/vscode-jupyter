@@ -11,7 +11,7 @@ import TelemetryReporter, {
 import { assert } from 'chai';
 import { setTestExecution, Telemetry } from '../../platform/common/constants';
 import { traceInfo } from '../../platform/logging';
-import { setTelemetryReporter } from '../../telemetry';
+import { getTelemetryReporter, setTelemetryReporter } from '../../telemetry';
 import { captureScreenShot } from '../common.node';
 import { initialize } from '../initialize.node';
 import {
@@ -30,6 +30,7 @@ import { IInteractiveWindowProvider } from '../../interactive-window/types';
 suite('Telemetry validation', function () {
     const disposables: IDisposable[] = [];
     let eventsSent: Set<string> = new Set<string>();
+    let originalTelemetryReporter: TelemetryReporter | undefined;
     const testTelemetryReporter: TelemetryReporter = {
         telemetryLevel: 'all',
         sendTelemetryEvent: function (
@@ -100,6 +101,7 @@ suite('Telemetry validation', function () {
             const api = await initialize();
             interactiveWindowProvider = api.serviceManager.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
             setTestExecution(false);
+            originalTelemetryReporter = getTelemetryReporter();
             setTelemetryReporter(testTelemetryReporter);
             traceInfo('Suite Setup (completed)');
         } catch (e) {
@@ -132,6 +134,9 @@ suite('Telemetry validation', function () {
         eventsSent.clear();
     });
     suiteTeardown(async () => {
+        if (originalTelemetryReporter) {
+            setTelemetryReporter(originalTelemetryReporter);
+        }
         setTestExecution(true);
         await closeNotebooksAndCleanUpAfterTests(disposables);
     });
