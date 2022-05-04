@@ -245,22 +245,13 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 settings
             );
 
-            const connection = await this.startNotebookServer(
+            return this.startNotebookServer(
                 options.resource,
                 useDefaultConfig,
                 this.configuration.getSettings(undefined).jupyterCommandLineArguments,
                 Uri.file(workingDirectory),
                 cancelToken
             );
-            if (connection) {
-                return connection;
-            } else {
-                // Throw a cancellation error if we were canceled.
-                Cancellation.throwIfCanceled(cancelToken);
-
-                // Otherwise we can't connect
-                throw new Error(DataScience.jupyterNotebookFailure().format(''));
-            }
         } else {
             // Prepare our map of server URIs
             await this.updateServerUri(options.uri);
@@ -278,8 +269,11 @@ export class JupyterExecutionBase implements IJupyterExecution {
         customCommandLine: string[],
         workingDirectory: Uri,
         cancelToken: CancellationToken
-    ): Promise<IJupyterConnection | undefined> {
-        return this.notebookStarter?.start(
+    ): Promise<IJupyterConnection> {
+        if (!this.notebookStarter) {
+            throw new Error('Notebook Starter cannot be undefined');
+        }
+        return this.notebookStarter!.start(
             resource,
             useDefaultConfig,
             customCommandLine,
