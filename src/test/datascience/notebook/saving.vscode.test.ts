@@ -29,6 +29,8 @@ import {
     waitForExecutionCompletedWithErrors,
     waitForKernelToGetAutoSelected
 } from './helper.node';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+import cloneDeep = require('lodash/cloneDeep');
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
@@ -59,7 +61,7 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
     });
     suiteTeardown(closeNotebooksAndCleanUpAfterTests);
     test('Verify output & metadata when re-opening (slow)', async () => {
-        await openNotebook(testEmptyIPynb);
+        const notebook = await openNotebook(testEmptyIPynb);
 
         await insertCodeCell('print(1)', { index: 0 });
         await insertCodeCell('print(a)', { index: 1 });
@@ -87,8 +89,14 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
             15_000,
             'Cells did not finish executing'
         );
+        const notebookMetadata = cloneDeep(notebook.metadata);
+        assert.strictEqual(
+            notebookMetadata.custom.metadata.kernelspec.language,
+            'python',
+            `Kernel language not set correctly.`
+        );
 
-        function verifyCelMetadata() {
+        function verifyCellMetadata() {
             assert.lengthOf(cell1.outputs, 1, 'Incorrect output for cell 1');
             assert.lengthOf(cell2.outputs, 1, 'Incorrect output for cell 2');
             assert.lengthOf(cell3.outputs, 0, 'Incorrect output for cell 3'); // stream and interrupt error.
@@ -106,15 +114,16 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
             assert.isUndefined(cell4.executionSummary?.executionOrder, 'Execution count must be undefined for cell 4');
         }
 
-        verifyCelMetadata();
+        verifyCellMetadata();
 
         // Save and close this nb.
         await saveActiveNotebook();
         await closeActiveWindows();
 
         // Reopen the notebook & validate the metadata.
-        await openNotebook(testEmptyIPynb);
+        const secondNotebook = await openNotebook(testEmptyIPynb);
         initializeCells();
-        verifyCelMetadata();
+        verifyCellMetadata();
+        assert.deepEqual(notebookMetadata, secondNotebook.metadata);
     });
 });
