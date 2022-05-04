@@ -55,7 +55,8 @@ export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSi
     }
 
     private async preWarmInterpreterVariables() {
-        if (!this.extensionChecker.isPythonExtensionActive) {
+        if (!this.extensionChecker.isPythonExtensionActive
+            ) {
             return;
         }
         const interpreter = await this.jupyterInterpreterService.getSelectedInterpreter();
