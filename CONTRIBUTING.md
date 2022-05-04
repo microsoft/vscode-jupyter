@@ -226,6 +226,29 @@ smoothly, but it allows you to help out by noticing when a step is
 missed or to learn in case someday you become a project maintainer as
 well!
 
+### Architecture
+
+At a high level we have a bunch of folders. Each high level is described below;
+
+- src\extension.node.ts = entry point for node extension
+- src\extension.web.ts = entry point for web extension
+- src\kernels = code related to executing jupyter kernels
+- src\notebooks = code related to vscode notebook UI 
+- src\interactive-window = interactive window 
+- src\platform = grab bag of utilities common to rest of code
+- src\web-views = code related to web views we create. Variable view, data viewer, and plot viewer are all here. Both extension and UI side code.
+- src\intellisense = code related to starting pylance and combining pylance completions with kernel completions
+- src\test = all test related code
+- src\telemetry = all code related to gathering and sending telemetry
+- build = build scripts and config files
+- .github = github workflows and issue templates
+- news = markdown files used to generate the next release's changelog
+- pythonFiles = python files used to do things like view data in the data viewer
+- typings = .d.ts files used to provide types for node_modules without any typings
+- types = .ts files used to provide types for node_modules
+- images = gifs and jpgs for markdown files
+- docs = generated dependency graph files (obsolete at the moment)
+
 ### Helping others
 
 First and foremost, we try to be helpful to users of the extension.
