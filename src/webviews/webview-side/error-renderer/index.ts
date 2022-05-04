@@ -6,6 +6,11 @@ import { ActivationFunction, OutputItem, RendererContext } from 'vscode-notebook
 import ansiToHtml from 'ansi-to-html';
 import escape from 'lodash/escape';
 
+let Localizations = {
+    'DataScience.outputSizeExceedLimit':
+        'Output exceeds the <a href={0}>size limit</a>. Open the full output data <a href={1}>in a text editor</a>'
+};
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 const handleInnerClick = (event: MouseEvent, context: RendererContext<any>) => {
@@ -43,9 +48,131 @@ const handleInnerClick = (event: MouseEvent, context: RendererContext<any>) => {
     }
 };
 
-export const activate: ActivationFunction = (_context) => {
+if (!String.prototype.format) {
+    String.prototype.format = function (this: string) {
+        const args = arguments;
+        return this.replace(/{(\d+)}/g, (match, number) => (args[number] === undefined ? match : args[number]));
+    };
+}
+
+function generateViewMoreElement(outputId: string) {
+    const container = document.createElement('span');
+    const infoInnerHTML = Localizations['DataScience.outputSizeExceedLimit'].format(
+        `"command:workbench.action.openSettings?["notebook.output.textLineLimit"]"`,
+        `"command:workbench.action.openLargeOutput?${outputId}"`
+    );
+    container.innerHTML = infoInnerHTML;
+    return container;
+}
+
+function handleANSIOutput(context: RendererContext<any>, converter: ansiToHtml, traceback: string[]) {
+    const tracebackElm = document.createElement('div');
+    tracebackElm.innerHTML = converter.toHtml(traceback.join('\n'));
+    tracebackElm.addEventListener('click', (e) => {
+        handleInnerClick(e, context);
+    });
+    return tracebackElm;
+}
+
+export function truncatedArrayOfString(
+    id: string,
+    traceback: string[],
+    linesLimit: number,
+    container: HTMLElement,
+    context: RendererContext<any>,
+    converter: ansiToHtml,
+    outputItemJson: any
+) {
+    if (!traceback.some((item) => item.trim().length)) {
+        const header = document.createElement('div');
+        const headerMessage =
+            outputItemJson.name && outputItemJson.message
+                ? `${outputItemJson.name}: ${outputItemJson.message}`
+                : outputItemJson.name || outputItemJson.message;
+
+        if (headerMessage) {
+            header.classList.add('output-error-header');
+            header.innerText = headerMessage;
+            container.appendChild(header);
+        } else {
+            // We can't display nothing (other extesnsions might have differen formats of errors, like Julia, .NET, etc).
+            const tbEle = document.createElement('div');
+            container.appendChild(tbEle);
+            tbEle.innerHTML = traceback.join('<br>');
+        }
+        return;
+    }
+
+    let buffer = traceback.join('\n').split(/\r\n|\n|\r/g);
+    let lineCount = buffer.length;
+
+    if (lineCount < linesLimit) {
+        container.appendChild(handleANSIOutput(context, converter, traceback));
+        return;
+    }
+
+    container.appendChild(generateViewMoreElement(id));
+
+    const div = document.createElement('div');
+    container.appendChild(div);
+    div.appendChild(handleANSIOutput(context, converter, buffer.slice(0, linesLimit - 5)));
+
+    // view more ...
+    const viewMoreElm = document.createElement('div');
+    viewMoreElm.innerText = '...';
+    viewMoreElm.classList.add('error-view-more');
+    container.appendChild(viewMoreElm);
+
+    const div2 = document.createElement('div');
+    container.appendChild(div2);
+    div2.appendChild(handleANSIOutput(context, converter, buffer.slice(lineCount - 5)));
+}
+
+export const activate: ActivationFunction = (context) => {
+    const latestContext = context as RendererContext<void> & { readonly settings: { readonly lineLimit: number } };
+    let loadLocalization: Promise<void>;
+    let isReady = false;
+
+    if (context.postMessage && context.onDidReceiveMessage) {
+        const requestLocalization = () => {
+            context.postMessage!({
+                type: 2 /** MessageType.LoadLoc */
+            });
+        };
+
+        let _loadLocResolveFunc: () => void;
+        loadLocalization = new Promise<void>((resolve) => {
+            _loadLocResolveFunc = resolve;
+        });
+        context.onDidReceiveMessage((e) => {
+            switch (e.type) {
+                case 1:
+                    if (!isReady) {
+                        // renderer activates before extension
+                        requestLocalization();
+                    }
+                    break;
+                case 2:
+                    // load localization
+                    Localizations = {
+                        ...Localizations,
+                        ...e.data
+                    };
+                    isReady = true;
+                    _loadLocResolveFunc();
+                    break;
+            }
+        });
+
+        requestLocalization();
+    } else {
+        loadLocalization = Promise.resolve();
+    }
+
     return {
-        renderOutputItem(outputItem: OutputItem, element: HTMLElement) {
+        renderOutputItem: async (outputItem: OutputItem, element: HTMLElement) => {
+            await loadLocalization;
+            const lineLimit = latestContext.settings.lineLimit;
             const converter = new ansiToHtml({
                 fg: 'var(--vscode-terminal-foreground)',
                 bg: 'var(--vscode-terminal-background)',
@@ -115,35 +242,7 @@ export const activate: ActivationFunction = (_context) => {
                 return line;
             });
 
-            const html = traceback.some((item) => item.trim().length)
-                ? converter.toHtml(traceback.join('\n'))
-                : undefined;
-
-            if (html) {
-                const traceback = document.createElement('div');
-                container.appendChild(traceback);
-                traceback.innerHTML = html;
-                traceback.addEventListener('click', (e) => {
-                    handleInnerClick(e, _context);
-                });
-            } else {
-                const header = document.createElement('div');
-                const headerMessage =
-                    outputItemJson.name && outputItemJson.message
-                        ? `${outputItemJson.name}: ${outputItemJson.message}`
-                        : outputItemJson.name || outputItemJson.message;
-
-                if (headerMessage) {
-                    header.classList.add('output-error-header');
-                    header.innerText = headerMessage;
-                    container.appendChild(header);
-                } else {
-                    // We can't display nothing (other extesnsions might have differen formats of errors, like Julia, .NET, etc).
-                    const tbEle = document.createElement('div');
-                    container.appendChild(tbEle);
-                    tbEle.innerHTML = traceback.join('<br>');
-                }
-            }
+            truncatedArrayOfString(outputItem.id, traceback, lineLimit, container, context, converter, outputItemJson);
         }
     };
 };
