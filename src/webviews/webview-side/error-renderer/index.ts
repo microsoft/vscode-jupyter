@@ -7,8 +7,9 @@ import ansiToHtml from 'ansi-to-html';
 import escape from 'lodash/escape';
 
 let Localizations = {
-    "DataScience.outputSizeExceedLimit": "Output exceeds the <a href={0}>size limit</a>. Open the full output data <a href={1}>in a text editor</a>"
-}
+    'DataScience.outputSizeExceedLimit':
+        'Output exceeds the <a href={0}>size limit</a>. Open the full output data <a href={1}>in a text editor</a>'
+};
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -56,21 +57,32 @@ if (!String.prototype.format) {
 
 function generateViewMoreElement(outputId: string) {
     const container = document.createElement('span');
-    const infoInnerHTML = Localizations['DataScience.outputSizeExceedLimit'].format(`"command:workbench.action.openSettings?["notebook.output.textLineLimit"]"`, `"command:workbench.action.openLargeOutput?${outputId}"`);
-    container.innerHTML = infoInnerHTML
+    const infoInnerHTML = Localizations['DataScience.outputSizeExceedLimit'].format(
+        `"command:workbench.action.openSettings?["notebook.output.textLineLimit"]"`,
+        `"command:workbench.action.openLargeOutput?${outputId}"`
+    );
+    container.innerHTML = infoInnerHTML;
     return container;
 }
 
 function handleANSIOutput(context: RendererContext<any>, converter: ansiToHtml, traceback: string[]) {
     const tracebackElm = document.createElement('div');
-    tracebackElm.innerHTML = converter.toHtml(traceback.join('\n'))
+    tracebackElm.innerHTML = converter.toHtml(traceback.join('\n'));
     tracebackElm.addEventListener('click', (e) => {
         handleInnerClick(e, context);
     });
     return tracebackElm;
 }
 
-export function truncatedArrayOfString(id: string, traceback: string[], linesLimit: number, container: HTMLElement, context: RendererContext<any>, converter: ansiToHtml, outputItemJson: any) {
+export function truncatedArrayOfString(
+    id: string,
+    traceback: string[],
+    linesLimit: number,
+    container: HTMLElement,
+    context: RendererContext<any>,
+    converter: ansiToHtml,
+    outputItemJson: any
+) {
     if (!traceback.some((item) => item.trim().length)) {
         const header = document.createElement('div');
         const headerMessage =
@@ -116,9 +128,8 @@ export function truncatedArrayOfString(id: string, traceback: string[], linesLim
     div2.appendChild(handleANSIOutput(context, converter, buffer.slice(lineCount - 5)));
 }
 
-
 export const activate: ActivationFunction = (context) => {
-    const latestContext = context as (RendererContext<void> & { readonly settings: { readonly lineLimit: number } });
+    const latestContext = context as RendererContext<void> & { readonly settings: { readonly lineLimit: number } };
     let loadLocalization: Promise<void>;
     let isReady = false;
 
@@ -130,10 +141,10 @@ export const activate: ActivationFunction = (context) => {
         };
 
         let _loadLocResolveFunc: () => void;
-        loadLocalization = new Promise<void>(resolve => {
+        loadLocalization = new Promise<void>((resolve) => {
             _loadLocResolveFunc = resolve;
         });
-        context.onDidReceiveMessage(e => {
+        context.onDidReceiveMessage((e) => {
             switch (e.type) {
                 case 1:
                     if (!isReady) {
@@ -195,8 +206,8 @@ export const activate: ActivationFunction = (context) => {
                 metadata?.outputType === 'error' && metadata?.transient && Array.isArray(metadata?.transient)
                     ? metadata?.transient
                     : Array.isArray(outputItemJson.stack)
-                        ? outputItemJson.stack.map((item: string) => escape(item))
-                        : [escape(outputItemJson.stack)];
+                    ? outputItemJson.stack.map((item: string) => escape(item))
+                    : [escape(outputItemJson.stack)];
 
             // there is traceback
             // Fix links in tracebacks.

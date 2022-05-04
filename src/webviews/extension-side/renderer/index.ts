@@ -16,8 +16,7 @@ interface IRequestMessage {
 }
 
 export const IExtensionSideRenderer = Symbol('IExtensionSideRenderer');
-export interface IExtensionSideRenderer {
-}
+export interface IExtensionSideRenderer {}
 
 @injectable()
 export class ExtensionSideRenderer implements IDisposable {
@@ -26,13 +25,17 @@ export class ExtensionSideRenderer implements IDisposable {
     constructor() {
         this.disposables = [];
         this.errorRendererMessage = vscode.notebooks.createRendererMessaging('jupyter-error-renderer');
-        this.disposables.push(this.errorRendererMessage.onDidReceiveMessage((e: { editor: vscode.NotebookEditor, message: IRequestMessage }) => {
-            switch (e.message.type) {
-                case MessageType.LoadLoc:
-                    this.loadLoc(e.editor);
-                    break;
-            }
-        }));
+        this.disposables.push(
+            this.errorRendererMessage.onDidReceiveMessage(
+                (e: { editor: vscode.NotebookEditor; message: IRequestMessage }) => {
+                    switch (e.message.type) {
+                        case MessageType.LoadLoc:
+                            this.loadLoc(e.editor);
+                            break;
+                    }
+                }
+            )
+        );
 
         // broadcast extension init message
         void this.errorRendererMessage.postMessage({
@@ -43,13 +46,16 @@ export class ExtensionSideRenderer implements IDisposable {
     loadLoc(editor: vscode.NotebookEditor) {
         const locStrings = isTestExecution() ? '{}' : getCollectionJSON();
 
-        void this.errorRendererMessage.postMessage({
-            type: MessageType.LoadLoc,
-            data: locStrings
-        }, editor);
+        void this.errorRendererMessage.postMessage(
+            {
+                type: MessageType.LoadLoc,
+                data: locStrings
+            },
+            editor
+        );
     }
 
     dispose(): void {
-        this.disposables.forEach(d => d.dispose());
+        this.disposables.forEach((d) => d.dispose());
     }
 }
