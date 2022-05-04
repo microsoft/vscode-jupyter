@@ -120,8 +120,15 @@ export function truncatedArrayOfString(id: string, traceback: string[], linesLim
 export const activate: ActivationFunction = (context) => {
     const latestContext = context as (RendererContext<void> & { readonly settings: { readonly lineLimit: number } });
     let loadLocalization: Promise<void>;
+    let isReady = false;
 
     if (context.postMessage && context.onDidReceiveMessage) {
+        const requestLocalization = () => {
+            context.postMessage!({
+                type: 2 /** MessageType.LoadLoc */
+            });
+        };
+
         let _loadLocResolveFunc: () => void;
         loadLocalization = new Promise<void>(resolve => {
             _loadLocResolveFunc = resolve;
@@ -129,27 +136,31 @@ export const activate: ActivationFunction = (context) => {
         context.onDidReceiveMessage(e => {
             switch (e.type) {
                 case 1:
-                    {
-                        // load localization
-                        Localizations = {
-                            ...Localizations,
-                            ...e.data
-                        };
-                        _loadLocResolveFunc();
+                    if (!isReady) {
+                        // renderer activates before extension
+                        requestLocalization();
                     }
+                    break;
+                case 2:
+                    // load localization
+                    Localizations = {
+                        ...Localizations,
+                        ...e.data
+                    };
+                    isReady = true;
+                    _loadLocResolveFunc();
+                    break;
             }
         });
 
-        context.postMessage({
-            type: 1
-        });
+        requestLocalization();
     } else {
         loadLocalization = Promise.resolve();
     }
 
     return {
         renderOutputItem: async (outputItem: OutputItem, element: HTMLElement) => {
-            // await loadLocalization;
+            await loadLocalization;
             const lineLimit = latestContext.settings.lineLimit;
             const converter = new ansiToHtml({
                 fg: 'var(--vscode-terminal-foreground)',

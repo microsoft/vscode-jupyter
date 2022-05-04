@@ -5,12 +5,14 @@ import { IDisposable } from '../../../platform/common/types';
 import { getCollectionJSON } from '../../../platform/common/utils/localize';
 
 const enum MessageType {
-    LoadLoc = 1
+    ExtensionInit = 1,
+    LoadLoc = 2
 }
 
 interface IRequestMessage {
     type: MessageType;
-    data: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data?: any;
 }
 
 export const IExtensionSideRenderer = Symbol('IExtensionSideRenderer');
@@ -22,23 +24,26 @@ export class ExtensionSideRenderer implements IDisposable {
     private disposables: IDisposable[];
     private errorRendererMessage: vscode.NotebookRendererMessaging;
     constructor() {
-        console.log('error side renderer: constructor');
         this.disposables = [];
         this.errorRendererMessage = vscode.notebooks.createRendererMessaging('jupyter-error-renderer');
-        this.disposables.push(this.errorRendererMessage.onDidReceiveMessage((e: { editor: any, message: IRequestMessage }) => {
-            console.log('error side renderer receive message: ', e);
+        this.disposables.push(this.errorRendererMessage.onDidReceiveMessage((e: { editor: vscode.NotebookEditor, message: IRequestMessage }) => {
             switch (e.message.type) {
                 case MessageType.LoadLoc:
                     this.loadLoc(e.editor);
                     break;
             }
         }));
+
+        // broadcast extension init message
+        void this.errorRendererMessage.postMessage({
+            type: MessageType.ExtensionInit
+        });
     }
 
-    loadLoc(editor: any) {
+    loadLoc(editor: vscode.NotebookEditor) {
         const locStrings = isTestExecution() ? '{}' : getCollectionJSON();
 
-        this.errorRendererMessage.postMessage({
+        void this.errorRendererMessage.postMessage({
             type: MessageType.LoadLoc,
             data: locStrings
         }, editor);
