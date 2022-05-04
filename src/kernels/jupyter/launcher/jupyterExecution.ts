@@ -235,7 +235,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             // If that works, then attempt to start the server
             traceInfo(`Launching server`);
             const settings = this.configuration.getSettings(options.resource);
-            const useDefaultConfig = this.configuration.getSettings(options.resource).useDefaultConfigForJupyter;
+            const useDefaultConfig = settings.useDefaultConfigForJupyter;
             const workingDir = await this.workspace.computeWorkingDirectory(options.resource);
             // Expand the working directory. Create a dummy launching file in the root path (so we expand correctly)
             const workingDirectory = expandWorkingDir(
