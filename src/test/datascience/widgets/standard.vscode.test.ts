@@ -41,6 +41,8 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST)', function () {
     this.timeout(120_000);
     let previousWidgetScriptSourcesSettingValue: string[] | undefined = undefined;
     const widgetScriptSourcesValue = ['jsdelivr.com', 'unpkg.com'];
+    // Retry at least once, because ipywidgets can be flaky (network, comms, etc).
+    this.retries(1);
     suiteSetup(async function () {
         traceInfo('Suite Setup VS Code Notebook - Execution');
         this.timeout(120_000);
