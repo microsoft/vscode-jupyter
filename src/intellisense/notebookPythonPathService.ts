@@ -3,7 +3,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { extensions, Uri } from 'vscode';
+import { Disposable, extensions, Uri } from 'vscode';
 import { IInteractiveWindowProvider } from '../interactive-window/types';
 import { findAssociatedNotebookDocument } from '../notebooks/helpers';
 import { INotebookControllerManager } from '../notebooks/types';
@@ -12,7 +12,7 @@ import { IPythonApiProvider } from '../platform/api/types';
 import { IVSCodeNotebook } from '../platform/common/application/types';
 import { PylanceExtension, PythonExtension } from '../platform/common/constants';
 import { getFilePath } from '../platform/common/platform/fs-paths';
-import { IConfigurationService, IDisposableRegistry } from '../platform/common/types';
+import { IConfigurationService } from '../platform/common/types';
 import { IInterpreterService } from '../platform/interpreter/contracts';
 import * as semver from 'semver';
 import { traceInfo, traceVerbose } from '../platform/logging';
@@ -24,6 +24,8 @@ import { traceInfo, traceVerbose } from '../platform/logging';
  */
 @injectable()
 export class NotebookPythonPathService implements IExtensionSingleActivationService {
+    private extensionChangeHandler: Disposable | undefined;
+
     private _isEnabled: boolean | undefined;
 
     constructor(
@@ -32,20 +34,10 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
         @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+        @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {
-        const isPylanceExtensionInstalled = this._isPylanceExtensionInstalled();
-        if (!isPylanceExtensionInstalled) {
-            extensions.onDidChange(
-                async () => {
-                    if (this._isPylanceExtensionInstalled()) {
-                        await this.reset();
-                    }
-                },
-                this,
-                this.disposables
-            );
+        if (!this._isPylanceExtensionInstalled()) {
+            this.extensionChangeHandler = extensions.onDidChange(this.extensionsChangeHandler.bind(this));
         }
     }
 
@@ -64,6 +56,19 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
     private async reset() {
         this._isEnabled = undefined;
         await this.activate();
+    }
+
+    private _isPylanceExtensionInstalled() {
+        return extensions.getExtension(PylanceExtension) !== undefined;
+    }
+
+    private async extensionsChangeHandler(): Promise<void> {
+        if (this._isPylanceExtensionInstalled() && this.extensionChangeHandler) {
+            this.extensionChangeHandler.dispose();
+            this.extensionChangeHandler = undefined;
+
+            await this.reset();
+        }
     }
 
     /**
@@ -91,10 +96,6 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
         }
 
         return this._isEnabled;
-    }
-
-    private _isPylanceExtensionInstalled() {
-        return extensions.getExtension(PylanceExtension) !== undefined;
     }
 
     /**
