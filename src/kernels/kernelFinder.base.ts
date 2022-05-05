@@ -53,6 +53,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         cancelToken?: CancellationToken,
         useCache?: 'useCache' | 'ignoreCache'
     ): Promise<KernelConnectionMetadata[] | undefined> {
+        traceError('Where am I - rankKernels', new Error(''));
         const resourceType = getResourceType(resource);
         try {
             // Get list of all of the specs from the cache and without the cache (note, cached items will be validated before being returned)
@@ -132,6 +133,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         cancelToken?: CancellationToken,
         useCache: 'ignoreCache' | 'useCache' = 'ignoreCache'
     ): Promise<KernelConnectionMetadata[]> {
+        traceError('Where am I', new Error(''));
         return this.listKernelsUsingFinder(
             () =>
                 this.localKernelFinder

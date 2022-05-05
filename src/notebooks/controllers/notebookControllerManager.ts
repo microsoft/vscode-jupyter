@@ -270,6 +270,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
 
     private async loadNotebookControllersImpl(cancelToken: CancellationToken) {
+        traceError('Where am I - loadNotebookControllersImpl', new Error(''));
         const cachedConnections = await this.listKernels(cancelToken, 'useCache');
         const nonCachedConnectionsPromise = this.listKernels(cancelToken, 'ignoreCache');
 
