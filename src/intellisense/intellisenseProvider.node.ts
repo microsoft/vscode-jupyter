@@ -281,7 +281,6 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
     private onDidChangeConfiguration(event: ConfigurationChangeEvent) {
         if (
             event.affectsConfiguration('jupyter.pylanceHandlesNotebooks') ||
-            event.affectsConfiguration('python.pylanceLspNotebooksEnabled') ||
             event.affectsConfiguration('python.languageServer')
         ) {
             // Dispose all servers and start over for each open notebook
