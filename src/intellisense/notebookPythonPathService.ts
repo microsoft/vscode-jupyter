@@ -12,7 +12,7 @@ import { IPythonApiProvider } from '../platform/api/types';
 import { IVSCodeNotebook } from '../platform/common/application/types';
 import { PylanceExtension, PythonExtension } from '../platform/common/constants';
 import { getFilePath } from '../platform/common/platform/fs-paths';
-import { IConfigurationService } from '../platform/common/types';
+import { IConfigurationService, IDisposableRegistry } from '../platform/common/types';
 import { IInterpreterService } from '../platform/interpreter/contracts';
 import * as semver from 'semver';
 import { traceInfo, traceVerbose } from '../platform/logging';
@@ -32,8 +32,22 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
         @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService
-    ) {}
+        @inject(IConfigurationService) private readonly configService: IConfigurationService,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+    ) {
+        const isPylanceExtensionInstalled = this._isPylanceExtensionInstalled();
+        if (!isPylanceExtensionInstalled) {
+            extensions.onDidChange(
+                async () => {
+                    if (this._isPylanceExtensionInstalled()) {
+                        await this.reset();
+                    }
+                },
+                this,
+                this.disposables
+            );
+        }
+    }
 
     public async activate() {
         if (!this.isPylanceUsingLspNotebooks()) {
@@ -45,6 +59,11 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
                 api.registerJupyterPythonPathFunction((uri) => this._jupyterPythonPathFunction(uri));
             }
         });
+    }
+
+    private async reset() {
+        this._isEnabled = undefined;
+        await this.activate();
     }
 
     /**
@@ -62,9 +81,9 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
             this._isEnabled =
                 isInNotebooksExperiment &&
                 pythonVersion !== undefined &&
-                semver.satisfies(pythonVersion, '>=2022.6.0 || 2022.5.0-dev') &&
+                semver.satisfies(pythonVersion, '>=2022.7.0 || 2022.5.0-dev') &&
                 pylanceVersion !== undefined &&
-                semver.satisfies(pylanceVersion, '>=2022.4.4-pre.1 || 9999.0.0-dev');
+                semver.satisfies(pylanceVersion, '>=2022.5.1-pre.1 || 9999.0.0-dev');
 
             if (this._isEnabled) {
                 traceInfo('Pylance LSP Notebooks experiment is enabled.');
@@ -72,6 +91,10 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
         }
 
         return this._isEnabled;
+    }
+
+    private _isPylanceExtensionInstalled() {
+        return extensions.getExtension(PylanceExtension) !== undefined;
     }
 
     /**
