@@ -5,10 +5,8 @@
 import { CancellationToken, Event } from 'vscode';
 import { IAsyncDisposable, IDisplayOptions, IDisposable, Resource } from '../../platform/common/types';
 import {
-    ConnectNotebookProviderOptions,
     IJupyterSession,
     INotebookProviderConnection,
-    IRawConnection,
     KernelConnectionMetadata,
     LocalKernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
@@ -92,7 +90,6 @@ export interface IRawNotebookSupportedService {
 export const IRawNotebookProvider = Symbol('IRawNotebookProvider');
 export interface IRawNotebookProvider extends IAsyncDisposable {
     isSupported: boolean;
-    connect(connect: ConnectNotebookProviderOptions): Promise<IRawConnection | undefined>;
     createNotebook(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,
