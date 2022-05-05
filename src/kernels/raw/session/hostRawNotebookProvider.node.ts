@@ -26,7 +26,6 @@ import { isPythonKernelConnection } from '../../helpers';
 import { ConnectNotebookProviderOptions, IJupyterSession, IRawConnection, KernelConnectionMetadata } from '../../types';
 import { IKernelLauncher, IRawNotebookProvider, IRawNotebookSupportedService } from '../types';
 import { RawJupyterSession } from './rawJupyterSession.node';
-import { noop } from '../../../platform/common/utils/misc';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { RawConnection } from './connection';
 
@@ -107,7 +106,6 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
             rawSession = new RawJupyterSession(
                 this.kernelLauncher,
                 resource,
-                noop,
                 vscode.Uri.file(workingDirectory),
                 interruptTimeout,
                 kernelConnection,

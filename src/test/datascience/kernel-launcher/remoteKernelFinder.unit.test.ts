@@ -125,8 +125,6 @@ suite(`Remote Kernel Finder`, () => {
         when(jupyterSessionManagerFactory.create(anything())).thenResolve(instance(jupyterSessionManager));
         sessionCreatedEvent = new EventEmitter<Kernel.IKernelConnection>();
         sessionUsedEvent = new EventEmitter<Kernel.IKernelConnection>();
-        when(jupyterSessionManagerFactory.onRestartSessionCreated).thenReturn(sessionCreatedEvent.event);
-        when(jupyterSessionManagerFactory.onRestartSessionUsed).thenReturn(sessionUsedEvent.event);
         interpreterService = mock<IInterpreterService>();
         localKernelFinder = mock(LocalKernelFinder);
         when(localKernelFinder.listKernels(anything(), anything())).thenResolve([]);
@@ -134,7 +132,6 @@ suite(`Remote Kernel Finder`, () => {
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
         remoteKernelFinder = new RemoteKernelFinder(
-            disposables,
             instance(jupyterSessionManagerFactory),
             instance(interpreterService),
             instance(extensionChecker),

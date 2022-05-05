@@ -41,8 +41,6 @@ import { JupyterRequestCreator } from '../../../kernels/jupyter/session/jupyterR
 suite('DataScience - JupyterSession', () => {
     type IKernelChangedArgs = IChangedArgs<Kernel.IKernelConnection | null, Kernel.IKernelConnection | null, 'kernel'>;
     let jupyterSession: JupyterSession;
-    let restartSessionCreatedEvent: Deferred<void>;
-    let restartSessionUsedEvent: Deferred<void>;
     let connection: IJupyterConnection;
     let mockKernelSpec: ReadWrite<KernelConnectionMetadata>;
     let sessionManager: SessionManager;
@@ -90,8 +88,6 @@ suite('DataScience - JupyterSession', () => {
         id: 'liveKernel'
     };
     function createJupyterSession(resource: Resource = undefined) {
-        restartSessionCreatedEvent = createDeferred();
-        restartSessionUsedEvent = createDeferred();
         connection = mock<IJupyterConnection>();
         mockKernelSpec = {
             id: 'xyz',
@@ -144,12 +140,6 @@ suite('DataScience - JupyterSession', () => {
             instance(sessionManager),
             instance(contentsManager),
             channel,
-            () => {
-                restartSessionCreatedEvent.resolve();
-            },
-            () => {
-                restartSessionUsedEvent.resolve();
-            },
             Uri.file(''),
             1,
             instance(kernelService),
@@ -347,8 +337,6 @@ suite('DataScience - JupyterSession', () => {
                     mock<
                         ISignal<Session.ISessionConnection, KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>>
                     >();
-                restartSessionCreatedEvent = createDeferred();
-                restartSessionUsedEvent = createDeferred();
                 when(newSession.statusChanged).thenReturn(instance(newStatusChangedSignal));
                 when(newSession.kernelChanged).thenReturn(instance(newKernelChangedSignal));
                 when(newSession.iopubMessage).thenReturn(instance(newIoPubSignal));
@@ -405,7 +393,6 @@ suite('DataScience - JupyterSession', () => {
                     await jupyterSession.restart();
 
                     // We should kill session and switch to new session, startig a new restart session.
-                    await restartSessionCreatedEvent.promise;
                     await oldSessionShutDown.promise;
                     verify(session.shutdown()).once();
                     verify(session.dispose()).once();
