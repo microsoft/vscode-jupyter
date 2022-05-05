@@ -17,7 +17,6 @@ import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationTokenSource, Uri } from 'vscode';
 
-import { traceInfo } from '../../../platform/logging';
 import { ReadWrite, Resource } from '../../../platform/common/types';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -376,6 +375,7 @@ suite('DataScience - JupyterSession', () => {
 
                 test('Restart should create a new session & kill old session', async () => {
                     const oldSessionShutDown = createDeferred();
+                    const oldSessionDispose = createDeferred();
                     when(connection.localLaunch).thenReturn(true);
                     when(session.isRemoteSession).thenReturn(false);
                     when(session.isDisposed).thenReturn(false);
@@ -384,7 +384,7 @@ suite('DataScience - JupyterSession', () => {
                         return Promise.resolve();
                     });
                     when(session.dispose()).thenCall(() => {
-                        traceInfo('Shutting down');
+                        oldSessionDispose.resolve();
                         return Promise.resolve();
                     });
                     const sessionServerSettings: ServerConnection.ISettings = mock<ServerConnection.ISettings>();
@@ -392,8 +392,8 @@ suite('DataScience - JupyterSession', () => {
 
                     await jupyterSession.restart();
 
-                    // We should kill session and switch to new session, startig a new restart session.
-                    await oldSessionShutDown.promise;
+                    // We should kill session and switch to new session, starting a new restart session.
+                    await Promise.all([oldSessionShutDown.promise, oldSessionDispose.promise]);
                     verify(session.shutdown()).once();
                     verify(session.dispose()).once();
                     // Confirm kernel isn't restarted.

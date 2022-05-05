@@ -3,7 +3,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import type { Kernel, Session } from '@jupyterlab/services';
+import type { Session } from '@jupyterlab/services';
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
@@ -49,8 +49,6 @@ suite(`Remote Kernel Finder`, () => {
     let jupyterSessionManager: IJupyterSessionManager;
     const dummyEvent = new EventEmitter<number>();
     let interpreterService: IInterpreterService;
-    let sessionCreatedEvent: EventEmitter<Kernel.IKernelConnection>;
-    let sessionUsedEvent: EventEmitter<Kernel.IKernelConnection>;
     const connInfo: IJupyterConnection = {
         url: 'http://foobar',
         type: 'jupyter',
@@ -123,8 +121,6 @@ suite(`Remote Kernel Finder`, () => {
         jupyterSessionManager = mock(JupyterSessionManager);
         const jupyterSessionManagerFactory = mock(JupyterSessionManagerFactory);
         when(jupyterSessionManagerFactory.create(anything())).thenResolve(instance(jupyterSessionManager));
-        sessionCreatedEvent = new EventEmitter<Kernel.IKernelConnection>();
-        sessionUsedEvent = new EventEmitter<Kernel.IKernelConnection>();
         interpreterService = mock<IInterpreterService>();
         localKernelFinder = mock(LocalKernelFinder);
         when(localKernelFinder.listKernels(anything(), anything())).thenResolve([]);
@@ -210,30 +206,6 @@ suite(`Remote Kernel Finder`, () => {
         const liveKernels = kernels.filter((k) => k.kind === 'connectToLiveRemoteKernel');
         assert.equal(liveKernels.length, 3, 'Live kernels not found');
     });
-
-    test('Restart sessions are ignored', async () => {
-        when(jupyterSessionManager.getRunningKernels()).thenResolve(python3Kernels);
-        when(jupyterSessionManager.getRunningSessions()).thenResolve(python3Sessions);
-        when(jupyterSessionManager.getKernelSpecs()).thenResolve([
-            python3spec,
-            python2spec,
-            juliaSpec,
-            interpreterSpec
-        ]);
-        sessionCreatedEvent.fire({ id: python3Kernels[0].id, clientId: python3Kernels[0].id } as any);
-        let kernels = await remoteKernelFinder.listKernels(undefined, connInfo);
-        let liveKernels = kernels.filter((k) => k.kind === 'connectToLiveRemoteKernel');
-
-        // Should skip one
-        assert.equal(liveKernels.length, 2, 'Restart session was included');
-
-        // Mark it as used
-        sessionUsedEvent.fire({ id: python3Kernels[0].id, clientId: python3Kernels[0].id } as any);
-        kernels = await remoteKernelFinder.listKernels(undefined, connInfo);
-        liveKernels = kernels.filter((k) => k.kind === 'connectToLiveRemoteKernel');
-        assert.equal(liveKernels.length, 3, 'Restart session was not included');
-    });
-
     test('Can match based on notebook metadata', async () => {
         when(jupyterSessionManager.getRunningKernels()).thenResolve(python3Kernels);
         when(jupyterSessionManager.getRunningSessions()).thenResolve(python3Sessions);
