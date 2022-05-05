@@ -4,10 +4,7 @@
 import { inject, injectable, named, optional } from 'inversify';
 import { JupyterSessionManager } from './jupyterSessionManager';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import {
-    IConfigurationService,
-    IOutputChannel,
-    IPersistentStateFactory} from '../../../platform/common/types';
+import { IConfigurationService, IOutputChannel, IPersistentStateFactory } from '../../../platform/common/types';
 import { JUPYTER_OUTPUT_CHANNEL } from '../../../webviews/webview-side/common/constants';
 import { IJupyterConnection } from '../../types';
 import {
@@ -58,5 +55,4 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
         await result.initialize(connInfo);
         return result;
     }
-
 }

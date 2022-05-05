@@ -211,16 +211,16 @@ export class RawJupyterSession extends BaseJupyterSession {
     }
 
     protected startRestartSession(disableUI: boolean) {
-            const token = new CancellationTokenSource();
-            const promise = this.createRestartSession(disableUI, token.token);
-            this.restartSessionPromise = { token, promise };
-            promise.finally(() => {
-                token.dispose();
-                if (this.restartSessionPromise?.promise === promise){
-                    this.restartSessionPromise = undefined;
-                };
-            });
-            return promise;
+        const token = new CancellationTokenSource();
+        const promise = this.createRestartSession(disableUI, token.token);
+        this.restartSessionPromise = { token, promise };
+        promise.finally(() => {
+            token.dispose();
+            if (this.restartSessionPromise?.promise === promise) {
+                this.restartSessionPromise = undefined;
+            }
+        });
+        return promise;
     }
     protected async createRestartSession(
         disableUI: boolean,
