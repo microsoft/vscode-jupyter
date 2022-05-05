@@ -240,7 +240,19 @@ export class InterpreterSelector implements IInterpreterSelector {
     constructor(@inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider) {}
 
     public async getSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]> {
-        return this.apiProvider.getApi().then((api) => api.getSuggestions(resource));
+        const api = await this.apiProvider.getApi();
+
+        let suggestions =
+            'getKnownSuggestions' in api ? api.getKnownSuggestions(resource) : await api.getSuggestions(resource);
+
+        const deserializedSuggestions: IInterpreterQuickPickItem[] = [];
+        suggestions.forEach((item) => {
+            const interpreter = deserializePythonEnvironment(item.interpreter);
+            if (interpreter) {
+                deserializedSuggestions.push({ ...item, interpreter: interpreter });
+            }
+        });
+        return deserializedSuggestions;
     }
 }
 
