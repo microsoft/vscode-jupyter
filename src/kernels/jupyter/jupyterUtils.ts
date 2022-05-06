@@ -56,7 +56,7 @@ export async function handleSelfCertsError(
     );
     if (value === enableOption) {
         sendTelemetryEvent(Telemetry.SelfCertsMessageEnabled);
-        void config.updateSetting('allowUnauthorizedRemoteConnection', true, undefined, ConfigurationTarget.Workspace);
+        await config.updateSetting('allowUnauthorizedRemoteConnection', true, undefined, ConfigurationTarget.Workspace);
         return true;
     } else if (value === closeOption) {
         sendTelemetryEvent(Telemetry.SelfCertsMessageClose);
@@ -79,7 +79,7 @@ export async function handleExpiredCertsError(
     );
     if (value === enableOption) {
         sendTelemetryEvent(Telemetry.SelfCertsMessageEnabled);
-        void config.updateSetting('allowUnauthorizedRemoteConnection', true, undefined, ConfigurationTarget.Workspace);
+        await config.updateSetting('allowUnauthorizedRemoteConnection', true, undefined, ConfigurationTarget.Workspace);
         return true;
     } else if (value === closeOption) {
         sendTelemetryEvent(Telemetry.SelfCertsMessageClose);
