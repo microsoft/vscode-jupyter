@@ -77,20 +77,30 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
      */
     public isPylanceUsingLspNotebooks() {
         if (this._isEnabled === undefined) {
-            const isInNotebooksExperiment = this.configService.getSettings().pylanceLspNotebooksEnabled;
+            const isInTreatmentGroup = this.configService.getSettings().pylanceLspNotebooksEnabled;
             const pythonVersion = extensions.getExtension(PythonExtension)?.packageJSON.version;
             const pylanceVersion = extensions.getExtension(PylanceExtension)?.packageJSON.version;
 
             // Only enable the experiment if we're in the treatment group and the installed
             // versions of Python and Pylance support the experiment.
-            this._isEnabled =
-                isInNotebooksExperiment &&
-                pythonVersion &&
-                (semver.gte(pythonVersion, '2022.7.0') || semver.prerelease(pythonVersion)?.includes('dev')) &&
-                pylanceVersion &&
-                (semver.gte(pylanceVersion, '2022.5.1-pre.1') || semver.prerelease(pylanceVersion)?.includes('dev'));
-
-            traceInfo(`Pylance LSP Notebooks experiment is ${this._isEnabled ? "enabled" : "disabled"}.`);
+            this._isEnabled = false;
+            if (!isInTreatmentGroup) {
+                traceInfo(`LSP Notebooks experiment is disabled -- not in treatment group`);
+            } else if (!pythonVersion) {
+                traceInfo(`LSP Notebooks experiment is disabled -- Python disabled or not installed`);
+            } else if (semver.lt(pythonVersion, '2022.7.0') && !semver.prerelease(pythonVersion)?.includes('dev')) {
+                traceInfo(`LSP Notebooks experiment is disabled -- Python does not support experiment`);
+            } else if (!pylanceVersion) {
+                traceInfo(`LSP Notebooks experiment is disabled -- Pylance disabled or not installed`);
+            } else if (
+                semver.lt(pylanceVersion, '2022.5.1-pre.1') &&
+                !semver.prerelease(pylanceVersion)?.includes('dev')
+            ) {
+                traceInfo(`LSP Notebooks experiment is disabled -- Pylance does not support experiment`);
+            } else {
+                this._isEnabled = true;
+                traceInfo(`LSP Notebooks experiment is enabled`);
+            }
         }
 
         return this._isEnabled;
