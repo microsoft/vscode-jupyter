@@ -19,7 +19,7 @@ import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { IRemoteKernelFinder } from '../raw/types';
 import { IJupyterSessionManagerFactory, IJupyterSessionManager } from './types';
 import { sendKernelSpecTelemetry } from '../raw/finder/helper';
-import { traceError } from '../../platform/logging';
+import { traceError, traceInfoIfCI } from '../../platform/logging';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { computeUriHash } from './jupyterUtils';
 
@@ -131,6 +131,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
         ) {
             // Interpreter is possible. Same machine as VS code
             try {
+                traceInfoIfCI(`Getting interpreter details for localhost remote kernel: ${spec.name}`);
                 return await this.interpreterService.getInterpreterDetails(Uri.file(spec.argv[0]));
             } catch (ex) {
                 traceError(`Failure getting interpreter details for remote kernel: `, ex);
