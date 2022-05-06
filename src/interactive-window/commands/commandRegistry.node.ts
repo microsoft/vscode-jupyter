@@ -555,7 +555,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
                     this.interpreterService
                 ) {
                     const pythonEnv = await this.interpreterService.getInterpreterDetails(
-                        this.debugService.activeDebugSession.configuration.python
+                        Uri.file(this.debugService.activeDebugSession.configuration.python)
                     );
                     // Check that we have dependencies installed for data viewer
                     pythonEnv && (await this.dataViewerDependencyService.checkAndInstallMissingDependencies(pythonEnv));
