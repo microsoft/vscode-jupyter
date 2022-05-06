@@ -89,7 +89,7 @@ export function _resetSharedProperties(): void {
 }
 
 let telemetryReporter: TelemetryReporter | undefined;
-function getTelemetryReporter() {
+export function getTelemetryReporter() {
     if (telemetryReporter) {
         return telemetryReporter;
     }
@@ -102,6 +102,10 @@ function getTelemetryReporter() {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const reporter = require('@vscode/extension-telemetry').default as typeof TelemetryReporter;
     return (telemetryReporter = new reporter(extensionId, extensionVersion, AppinsightsKey, true));
+}
+
+export function setTelemetryReporter(reporter: TelemetryReporter) {
+    telemetryReporter = reporter;
 }
 
 export function clearTelemetryReporter() {

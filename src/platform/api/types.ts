@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable, Event, Uri } from 'vscode';
+import { Disposable, Event, QuickPickItem, Uri } from 'vscode';
 import * as lsp from 'vscode-languageserver-protocol';
 import { InterpreterUri, Resource } from '../common/types';
-import { IInterpreterQuickPickItem } from '../interpreter/configuration/types';
 import type { SemVer } from 'semver';
 import { EnvironmentType, IExportedKernelService, PythonVersion } from './extension';
 export type ILanguageServerConnection = Pick<
@@ -67,6 +66,17 @@ export type PythonEnvironment_PythonApi = InterpreterInformation_PythonApi & {
     envPath?: string;
 };
 
+export interface IInterpreterQuickPickItem_PythonApi extends QuickPickItem {
+    path: string;
+    /**
+     * The interpreter related to this quickpick item.
+     *
+     * @type {PythonEnvironment}
+     * @memberof IInterpreterQuickPickItem
+     */
+    interpreter: PythonEnvironment_PythonApi;
+}
+
 export type PythonApi = {
     /**
      * IInterpreterService
@@ -97,7 +107,8 @@ export type PythonApi = {
     /**
      * IWindowsStoreInterpreter
      */
-    getSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]>;
+    getSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem_PythonApi[]>;
+    getKnownSuggestions(resource: Resource): IInterpreterQuickPickItem_PythonApi[];
     /**
      * Retrieve interpreter path selected for Jupyter server from Python memento storage
      */

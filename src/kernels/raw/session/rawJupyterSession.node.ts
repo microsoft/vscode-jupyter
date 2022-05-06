@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { Kernel, KernelMessage } from '@jupyterlab/services';
+import type { KernelMessage } from '@jupyterlab/services';
 import type { Slot } from '@lumino/signaling';
 import { CancellationError, CancellationTokenSource, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
@@ -52,13 +52,12 @@ export class RawJupyterSession extends BaseJupyterSession {
     constructor(
         private readonly kernelLauncher: IKernelLauncher,
         resource: Resource,
-        restartSessionUsed: (id: Kernel.IKernelConnection) => void,
         workingDirectory: Uri,
         interruptTimeout: number,
         kernelConnection: KernelConnectionMetadata,
         private readonly launchTimeout: number
     ) {
-        super('localRaw', resource, kernelConnection, restartSessionUsed, workingDirectory, interruptTimeout);
+        super('localRaw', resource, kernelConnection, workingDirectory, interruptTimeout);
     }
 
     public async waitForIdle(timeout: number): Promise<void> {
@@ -212,12 +211,16 @@ export class RawJupyterSession extends BaseJupyterSession {
     }
 
     protected startRestartSession(disableUI: boolean) {
-        if (!this.restartSessionPromise) {
-            const token = new CancellationTokenSource();
-            const promise = this.createRestartSession(disableUI, token.token);
-            this.restartSessionPromise = { token, promise };
-            promise.finally(() => token.dispose());
-        }
+        const token = new CancellationTokenSource();
+        const promise = this.createRestartSession(disableUI, token.token);
+        this.restartSessionPromise = { token, promise };
+        promise.finally(() => {
+            token.dispose();
+            if (this.restartSessionPromise?.promise === promise) {
+                this.restartSessionPromise = undefined;
+            }
+        });
+        return promise;
     }
     protected async createRestartSession(
         disableUI: boolean,

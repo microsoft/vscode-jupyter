@@ -23,12 +23,10 @@ import { trackKernelResourceInformation } from '../../../telemetry/telemetry';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { isPythonKernelConnection } from '../../helpers';
-import { ConnectNotebookProviderOptions, IJupyterSession, IRawConnection, KernelConnectionMetadata } from '../../types';
+import { IJupyterSession, KernelConnectionMetadata } from '../../types';
 import { IKernelLauncher, IRawNotebookProvider, IRawNotebookSupportedService } from '../types';
 import { RawJupyterSession } from './rawJupyterSession.node';
-import { noop } from '../../../platform/common/utils/misc';
 import { Cancellation } from '../../../platform/common/cancellation';
-import { RawConnection } from './connection';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -39,7 +37,6 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         return this._id;
     }
     private sessions = new Set<Promise<IJupyterSession>>();
-    private rawConnection = new RawConnection();
     private _id = uuid();
     private disposed = false;
     constructor(
@@ -62,10 +59,6 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
             const notebooks = await Promise.all([...this.sessions.values()]);
             await Promise.all(notebooks.map((session) => session.dispose()));
         }
-    }
-
-    public async connect(_options: ConnectNotebookProviderOptions): Promise<IRawConnection | undefined> {
-        return this.rawConnection;
     }
 
     // Check to see if we have all that we need for supporting raw kernel launch
@@ -107,7 +100,6 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
             rawSession = new RawJupyterSession(
                 this.kernelLauncher,
                 resource,
-                noop,
                 vscode.Uri.file(workingDirectory),
                 interruptTimeout,
                 kernelConnection,

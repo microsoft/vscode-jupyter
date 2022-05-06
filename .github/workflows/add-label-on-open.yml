@@ -9,8 +9,8 @@ permissions:
 
 jobs:
   # From https://github.com/marketplace/actions/github-script#apply-a-label-to-an-issue.
-  add-needs-triage-label:
-    name: "Add 'needs-triage'"
+  add-triage-needed-label:
+    name: "Add 'triage-needed'"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/github-script@v4.0.2
@@ -21,5 +21,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              labels: ['needs-triage']
+              labels: ['triage-needed']
             })

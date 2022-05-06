@@ -27,7 +27,7 @@ import { findAssociatedNotebookDocument, getAssociatedJupyterNotebook } from '..
 import { INotebookLanguageClientProvider } from '../notebooks/types';
 import { mapJupyterKind } from './conversion.node';
 import { IInteractiveWindowProvider } from '../interactive-window/types';
-import { Settings } from '../platform/common/constants';
+import { isTestExecution, Settings } from '../platform/common/constants';
 import { INotebookCompletion } from './types';
 
 let IntellisenseTimeout = Settings.IntellisenseTimeout;
@@ -169,8 +169,10 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
         cancelToken?: CancellationToken
     ): Promise<INotebookCompletion> {
         const stopWatch = new StopWatch();
-        // If server is busy, then don't delay code completion.
-        if (session.status === 'busy') {
+        // If server is busy, then don't send code completions. Otherwise
+        // they can stack up and slow down the server significantly.
+        // However during testing we'll just wait.
+        if (session.status === 'busy' && !isTestExecution()) {
             return {
                 matches: [],
                 cursor: { start: 0, end: 0 },

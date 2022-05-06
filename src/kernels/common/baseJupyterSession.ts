@@ -118,7 +118,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         public readonly kind: 'localRaw' | 'remoteJupyter' | 'localJupyter',
         protected resource: Resource,
         protected readonly kernelConnectionMetadata: KernelConnectionMetadata,
-        private restartSessionUsed: (id: Kernel.IKernelConnection) => void,
         public workingDirectory: Uri,
         private readonly interruptTimeout: number
     ) {
@@ -175,44 +174,33 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             return;
         }
 
+        traceInfo(`Restarting ${this.session?.kernel?.id}`);
+
+        // Save old state for shutdown
+        const oldSession = this.session;
+        const oldStatusHandler = this.statusHandler;
+
+        // TODO? Why aren't we killing this old session here now?
+        // We should, If we're restarting and it fails, how is it ok to
+        // keep the old session (user could be restarting for a number of reasons).
+
+        // Just switch to the other session. It should already be ready
+
         // Start the restart session now in case it wasn't started
-        if (!this.restartSessionPromise) {
-            this.startRestartSession(false);
+        const newSession = await this.startRestartSession(false);
+        this.setSession(newSession);
+
+        if (newSession.kernel) {
+            traceInfo(`Got new session ${newSession.kernel.id}`);
+
+            // Rewire our status changed event.
+            newSession.statusChanged.connect(this.statusHandler);
         }
-
-        // Just kill the current session and switch to the other
-        if (this.restartSessionPromise) {
-            traceInfo(`Restarting ${this.session?.kernel?.id}`);
-
-            // Save old state for shutdown
-            const oldSession = this.session;
-            const oldStatusHandler = this.statusHandler;
-
-            // TODO? Why aren't we killing this old session here now?
-            // We should, If we're restarting and it fails, how is it ok to
-            // keep the old session (user could be restarting for a number of reasons).
-
-            // Just switch to the other session. It should already be ready
-            const newSession = await this.restartSessionPromise.promise;
-            this.setSession(newSession);
-
-            if (newSession.kernel) {
-                this.restartSessionUsed(newSession.kernel);
-                traceInfo(`Got new session ${newSession.kernel.id}`);
-
-                // Rewire our status changed event.
-                newSession.statusChanged.connect(this.statusHandler);
-            }
-            this.restartSessionPromise.token.dispose();
-            this.restartSessionPromise = undefined;
-            traceInfo('Started new restart session');
-            if (oldStatusHandler && oldSession) {
-                oldSession.statusChanged.disconnect(oldStatusHandler);
-            }
-            this.shutdownSession(oldSession, undefined, false).ignoreErrors();
-        } else {
-            throw new SessionDisposedError();
+        traceInfo('Started new restart session');
+        if (oldStatusHandler && oldSession) {
+            oldSession.statusChanged.disconnect(oldStatusHandler);
         }
+        this.shutdownSession(oldSession, undefined, false).ignoreErrors();
     }
 
     public requestExecute(
@@ -295,7 +283,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     }
 
     // Sub classes need to implement their own restarting specific code
-    protected abstract startRestartSession(disableUI: boolean): void;
+    protected abstract startRestartSession(disableUI: boolean): Promise<ISessionWithSocket>;
 
     protected async waitForIdleOnSession(
         session: ISessionWithSocket | undefined,
