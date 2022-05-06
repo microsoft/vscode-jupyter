@@ -67,24 +67,24 @@ export interface IJupyterNotebookProvider {
     createNotebook(options: NotebookCreationOptions): Promise<IJupyterSession>;
 }
 
-export type INotebookServerOptions =
-    | {
-          resource: Resource;
-          ui: IDisplayOptions;
-          /**
-           * Whether we're only interested in local Jupyter Servers.
-           */
-          localJupyter: true;
-      }
-    | {
-          uri: string;
-          resource: Resource;
-          ui: IDisplayOptions;
-          /**
-           * Whether we're only interested in local Jupyter Servers.
-           */
-          localJupyter: false;
-      };
+export type INotebookServerLocalOptions = {
+    resource: Resource;
+    ui: IDisplayOptions;
+    /**
+     * Whether we're only interested in local Jupyter Servers.
+     */
+    localJupyter: true;
+};
+export type INotebookServerRemoteOptions = {
+    uri: string;
+    resource: Resource;
+    ui: IDisplayOptions;
+    /**
+     * Whether we're only interested in local Jupyter Servers.
+     */
+    localJupyter: false;
+};
+export type INotebookServerOptions = INotebookServerLocalOptions | INotebookServerRemoteOptions;
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution extends IAsyncDisposable {
@@ -94,7 +94,6 @@ export interface IJupyterExecution extends IAsyncDisposable {
     getServer(options: INotebookServerOptions): Promise<INotebookServer | undefined>;
     getNotebookError(): Promise<string>;
     refreshCommands(): Promise<void>;
-    validateRemoteUri(uri: string): Promise<void>;
 }
 
 export interface IJupyterPasswordConnectInfo {

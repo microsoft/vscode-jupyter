@@ -23,13 +23,11 @@ import {
     INotebookServerOptions,
     INotebookServer,
     INotebookStarter,
-    IJupyterUriProviderRegistration,
-    IJupyterSessionManagerFactory,
     INotebookServerFactory,
     IJupyterServerUriStorage
 } from '../../types';
 import { IJupyterSubCommandExecutionService } from '../../types.node';
-import { ServerConnectionType } from '../serverConnectionType';
+import { JupyterConnection } from '../../jupyterConnection';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -48,11 +46,9 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
         @inject(IJupyterSubCommandExecutionService)
         @optional()
         jupyterInterpreterService: IJupyterSubCommandExecutionService | undefined,
-        @inject(IJupyterUriProviderRegistration) jupyterPickerRegistration: IJupyterUriProviderRegistration,
-        @inject(IJupyterSessionManagerFactory) sessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(INotebookServerFactory) notebookServerFactory: INotebookServerFactory,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(ServerConnectionType) serverConnectionType: ServerConnectionType
+        @inject(JupyterConnection) jupyterConnection: JupyterConnection
     ) {
         super(
             interpreterService,
@@ -61,10 +57,8 @@ export class HostJupyterExecution extends JupyterExecutionBase implements IJupyt
             configService,
             notebookStarter,
             jupyterInterpreterService,
-            jupyterPickerRegistration,
-            sessionManagerFactory,
             notebookServerFactory,
-            serverConnectionType
+            jupyterConnection
         );
         this.serverCache = new ServerCache();
         this.serverUriStorage.onDidChangeUri(

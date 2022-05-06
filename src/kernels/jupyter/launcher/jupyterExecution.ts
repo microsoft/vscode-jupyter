@@ -15,31 +15,24 @@ import { JupyterWaitForIdleError } from '../../../platform/errors/jupyterWaitFor
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, captureTelemetry } from '../../../telemetry';
-import { Telemetry, Identifiers } from '../../../webviews/webview-side/common/constants';
-import { expandWorkingDir, createRemoteConnectionInfo } from '../jupyterUtils';
+import { Telemetry } from '../../../webviews/webview-side/common/constants';
+import { expandWorkingDir } from '../jupyterUtils';
 import { IJupyterConnection } from '../../types';
 import {
     IJupyterExecution,
-    IJupyterUriProviderRegistration,
-    IJupyterServerUri,
     INotebookServerOptions,
     INotebookServer,
-    JupyterServerUriHandle,
     INotebookStarter,
-    IJupyterSessionManagerFactory,
-    IJupyterSessionManager,
     INotebookServerFactory
 } from '../types';
 import { IJupyterSubCommandExecutionService } from '../types.node';
-import { ServerConnectionType } from './serverConnectionType';
+import { JupyterConnection } from '../jupyterConnection';
 
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
 
 export class JupyterExecutionBase implements IJupyterExecution {
     private usablePythonInterpreter: PythonEnvironment | undefined;
     private disposed: boolean = false;
-    private uriToJupyterServerUri = new Map<string, IJupyterServerUri>();
-    private pendingTimeouts: (NodeJS.Timeout | number)[] = [];
     constructor(
         private readonly interpreterService: IInterpreterService,
         private readonly disposableRegistry: IDisposableRegistry,
@@ -47,10 +40,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
         private readonly configuration: IConfigurationService,
         private readonly notebookStarter: INotebookStarter | undefined,
         private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService | undefined,
-        private readonly jupyterPickerRegistration: IJupyterUriProviderRegistration,
-        private readonly jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         private readonly notebookServerFactory: INotebookServerFactory,
-        private readonly serverConnectionType: ServerConnectionType
+        private readonly jupyterConnection: JupyterConnection
     ) {
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
         this.disposableRegistry.push(this);
@@ -66,19 +57,11 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 this,
                 this.disposableRegistry
             );
-            this.serverConnectionType.onDidChange(
-                () =>
-                    // When server URI changes, clear our pending URI timeouts
-                    this.clearTimeouts(),
-                this,
-                this.disposableRegistry
-            );
         }
     }
 
     public dispose(): Promise<void> {
         this.disposed = true;
-        this.clearTimeouts();
         return Promise.resolve();
     }
 
@@ -200,32 +183,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return Promise.resolve(undefined);
     }
 
-    public async validateRemoteUri(uri: string): Promise<void> {
-        let connection: IJupyterConnection | undefined = undefined;
-        let sessionManager: IJupyterSessionManager | undefined = undefined;
-        try {
-            // Prepare our map of server URIs (needed in order to retrieve the uri during the connection)
-            await this.updateServerUri(uri);
-
-            // Create an active connection.
-            connection = await createRemoteConnectionInfo(uri, this.getServerUri.bind(this));
-
-            // Attempt to list the running kernels. It will return empty if there are none, but will
-            // throw if can't connect.
-            sessionManager = await this.jupyterSessionManagerFactory.create(connection, false);
-            await sessionManager.getRunningKernels();
-
-            // We should throw an exception if any of that fails.
-        } finally {
-            if (connection) {
-                connection.dispose();
-            }
-            if (sessionManager) {
-                void sessionManager.dispose();
-            }
-        }
-    }
-
     private async startOrConnect(
         options: INotebookServerOptions,
         cancelToken: CancellationToken
@@ -254,10 +211,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
             );
         } else {
             // Prepare our map of server URIs
-            await this.updateServerUri(options.uri);
+            await this.jupyterConnection.updateServerUri(options.uri);
 
             // If we have a URI spec up a connection info for it
-            return createRemoteConnectionInfo(options.uri, this.getServerUri.bind(this));
+            return this.jupyterConnection.createConnectionInfo(options.uri);
         }
     }
 
@@ -285,46 +242,5 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private onSettingsChanged() {
         // Clear our usableJupyterInterpreter so that we recompute our values
         this.usablePythonInterpreter = undefined;
-    }
-
-    private extractJupyterServerHandleAndId(uri: string): { handle: JupyterServerUriHandle; id: string } | undefined {
-        const url: URL = new URL(uri);
-
-        // Id has to be there too.
-        const id = url.searchParams.get(Identifiers.REMOTE_URI_ID_PARAM);
-        const uriHandle = url.searchParams.get(Identifiers.REMOTE_URI_HANDLE_PARAM);
-        return id && uriHandle ? { handle: uriHandle, id } : undefined;
-    }
-
-    private clearTimeouts() {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.pendingTimeouts.forEach((t) => clearTimeout(t as any));
-        this.pendingTimeouts = [];
-    }
-
-    private getServerUri(uri: string): IJupyterServerUri | undefined {
-        const idAndHandle = this.extractJupyterServerHandleAndId(uri);
-        if (idAndHandle) {
-            return this.uriToJupyterServerUri.get(uri);
-        }
-    }
-
-    private async updateServerUri(uri: string): Promise<void> {
-        const idAndHandle = this.extractJupyterServerHandleAndId(uri);
-        if (idAndHandle) {
-            const serverUri = await this.jupyterPickerRegistration.getJupyterServerUri(
-                idAndHandle.id,
-                idAndHandle.handle
-            );
-            this.uriToJupyterServerUri.set(uri, serverUri);
-            // See if there's an expiration date
-            if (serverUri.expiration) {
-                const timeoutInMS = serverUri.expiration.getTime() - Date.now();
-                // Week seems long enough (in case the expiration is ridiculous)
-                if (timeoutInMS > 0 && timeoutInMS < 604800000) {
-                    this.pendingTimeouts.push(setTimeout(() => this.updateServerUri(uri).ignoreErrors(), timeoutInMS));
-                }
-            }
-        }
     }
 }
