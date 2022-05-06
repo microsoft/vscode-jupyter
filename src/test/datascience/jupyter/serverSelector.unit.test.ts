@@ -30,7 +30,7 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
 import { JupyterConnection } from '../../../kernels/jupyter/jupyterConnection';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
-suite.only('DataScience - Jupyter Server URI Selector', () => {
+suite('DataScience - Jupyter Server URI Selector', () => {
     let quickPick: MockQuickPick | undefined;
     let clipboard: IClipboard;
     let connection: JupyterConnection;
