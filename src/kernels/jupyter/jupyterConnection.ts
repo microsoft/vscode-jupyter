@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { Identifiers } from '../../platform/common/constants';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { IJupyterConnection } from '../types';
@@ -16,7 +17,7 @@ import {
 } from './types';
 
 @injectable()
-export class JupyterConnection {
+export class JupyterConnection implements IExtensionSyncActivationService {
     private uriToJupyterServerUri = new Map<string, IJupyterServerUri>();
     private pendingTimeouts: (NodeJS.Timeout | number)[] = [];
     constructor(

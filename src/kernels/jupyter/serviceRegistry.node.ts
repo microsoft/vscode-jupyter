@@ -146,4 +146,5 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<IJupyterRequestAgentCreator>(IJupyterRequestAgentCreator, RequestAgentCreator);
     serviceManager.addSingleton<ServerConnectionType>(ServerConnectionType, ServerConnectionType);
     serviceManager.addSingleton<JupyterConnection>(JupyterConnection, JupyterConnection);
+    serviceManager.addBinding(JupyterConnection, IExtensionSingleActivationService);
 }
