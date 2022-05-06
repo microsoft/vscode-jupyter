@@ -16,7 +16,6 @@ import { traceDecoratorVerbose } from '../../../platform/logging';
 import { getUserHomeDir } from '../../../platform/common/utils/platform.node';
 import { fsPathToUri } from '../../../platform/vscode-path/utils';
 import { ResourceSet } from '../../../platform/vscode-path/map';
-import { cache } from '../../../platform/common/utils/decorators';
 
 const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
