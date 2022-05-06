@@ -26,7 +26,6 @@ import { isPythonKernelConnection } from '../../helpers';
 import { IJupyterSession, KernelConnectionMetadata } from '../../types';
 import { IKernelLauncher, IRawNotebookProvider, IRawNotebookSupportedService } from '../types';
 import { RawJupyterSession } from './rawJupyterSession.node';
-import { noop } from '../../../platform/common/utils/misc';
 import { Cancellation } from '../../../platform/common/cancellation';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -101,7 +100,6 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
             rawSession = new RawJupyterSession(
                 this.kernelLauncher,
                 resource,
-                noop,
                 vscode.Uri.file(workingDirectory),
                 interruptTimeout,
                 kernelConnection,

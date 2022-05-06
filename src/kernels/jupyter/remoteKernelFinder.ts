@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { Kernel } from '@jupyterlab/services';
 import { injectable, inject } from 'inversify';
 import { CancellationToken, Uri } from 'vscode';
 import { getKernelId } from '../helpers';
@@ -13,7 +12,7 @@ import {
     LiveRemoteKernelConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../types';
-import { IDisposableRegistry, IsWebExtension, Resource } from '../../platform/common/types';
+import { IsWebExtension, Resource } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
@@ -34,19 +33,11 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
      */
     private readonly kernelIdsToHide = new Set<string>();
     constructor(
-        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
         @inject(IsWebExtension) private isWebExtension: boolean
-    ) {
-        disposableRegistry.push(
-            this.jupyterSessionManagerFactory.onRestartSessionCreated(this.addKernelToIgnoreList.bind(this))
-        );
-        disposableRegistry.push(
-            this.jupyterSessionManagerFactory.onRestartSessionUsed(this.removeKernelFromIgnoreList.bind(this))
-        );
-    }
+    ) {}
 
     // Talk to the remote server to determine sessions
     @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'remote' })
@@ -129,21 +120,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
             }
         }
         return [];
-    }
-
-    /**
-     * Ensure kernels such as those associated with the restart session are not displayed in the kernel picker.
-     */
-    private addKernelToIgnoreList(kernel: Kernel.IKernelConnection): void {
-        this.kernelIdsToHide.add(kernel.id);
-        this.kernelIdsToHide.add(kernel.clientId);
-    }
-    /**
-     * Opposite of the add counterpart.
-     */
-    private removeKernelFromIgnoreList(kernel: Kernel.IKernelConnection): void {
-        this.kernelIdsToHide.delete(kernel.id);
-        this.kernelIdsToHide.delete(kernel.clientId);
     }
 
     private async getInterpreter(spec: IJupyterKernelSpec, baseUrl: string) {

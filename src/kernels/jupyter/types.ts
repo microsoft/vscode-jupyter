@@ -3,7 +3,7 @@
 // Licensed under the MIT License.
 'use strict';
 import type * as nbformat from '@jupyterlab/nbformat';
-import type { Kernel, Session, ContentsManager } from '@jupyterlab/services';
+import type { Session, ContentsManager } from '@jupyterlab/services';
 import { Event } from 'vscode';
 import { SemVer } from 'semver';
 import { Uri, QuickPickItem } from 'vscode';
@@ -110,14 +110,10 @@ export interface IJupyterPasswordConnect {
 
 export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
 export interface IJupyterSessionManagerFactory {
-    readonly onRestartSessionCreated: Event<Kernel.IKernelConnection>;
-    readonly onRestartSessionUsed: Event<Kernel.IKernelConnection>;
     create(connInfo: IJupyterConnection, failOnPassword?: boolean): Promise<IJupyterSessionManager>;
 }
 
 export interface IJupyterSessionManager extends IAsyncDisposable {
-    readonly onRestartSessionCreated: Event<Kernel.IKernelConnection>;
-    readonly onRestartSessionUsed: Event<Kernel.IKernelConnection>;
     startNew(
         resource: Resource,
         kernelConnection: KernelConnectionMetadata,

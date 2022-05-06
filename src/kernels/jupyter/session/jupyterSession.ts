@@ -37,8 +37,6 @@ export class JupyterSession extends BaseJupyterSession {
         private sessionManager: SessionManager,
         private contentsManager: ContentsManager,
         private readonly outputChannel: IOutputChannel,
-        private readonly restartSessionCreated: (id: Kernel.IKernelConnection) => void,
-        restartSessionUsed: (id: Kernel.IKernelConnection) => void,
         override readonly workingDirectory: Uri,
         private readonly idleTimeout: number,
         private readonly kernelService: IJupyterKernelService | undefined,
@@ -51,7 +49,6 @@ export class JupyterSession extends BaseJupyterSession {
             connInfo.localLaunch ? 'localJupyter' : 'remoteJupyter',
             resource,
             kernelConnectionMetadata,
-            restartSessionUsed,
             workingDirectory,
             interruptTimeout
         );
@@ -163,9 +160,6 @@ export class JupyterSession extends BaseJupyterSession {
             );
             result = await this.createSession({ token: cancelToken, ui });
             await this.waitForIdleOnSession(result, this.idleTimeout);
-            if (result.kernel) {
-                this.restartSessionCreated(result.kernel);
-            }
             return result;
         } catch (exc) {
             traceInfo(`Error waiting for restart session: ${exc}`);
@@ -180,12 +174,19 @@ export class JupyterSession extends BaseJupyterSession {
     }
 
     protected startRestartSession(disableUI: boolean) {
-        if (!this.restartSessionPromise && this.session && this.contentsManager) {
-            const token = new CancellationTokenSource();
-            const promise = this.createRestartSession(disableUI, this.session, token.token);
-            this.restartSessionPromise = { token, promise };
-            promise.finally(() => token.dispose());
+        if (!this.session) {
+            throw new Error('Session disposed or not initialized');
         }
+        const token = new CancellationTokenSource();
+        const promise = this.createRestartSession(disableUI, this.session, token.token);
+        this.restartSessionPromise = { token, promise };
+        promise.finally(() => {
+            token.dispose();
+            if (this.restartSessionPromise?.promise === promise) {
+                this.restartSessionPromise = undefined;
+            }
+        });
+        return promise;
     }
 
     private async createSession(options: {
