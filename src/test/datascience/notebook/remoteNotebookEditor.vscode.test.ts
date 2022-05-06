@@ -13,6 +13,7 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { traceInfoIfCI, traceInfo } from '../../../platform/logging';
 import { waitForCondition } from '../../common';
+import { captureScreenShot } from '../../common.node';
 import { openNotebook } from '../helpers.node';
 import { JupyterServer } from '../jupyterServer.node';
 import { hijackPrompt } from './helper';
@@ -71,6 +72,11 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
                 ],
                 disposables
             );
+        },
+        async (context: Mocha.Context) => {
+            if (context.currentTest?.isFailed()) {
+                await captureScreenShot(context.currentTest?.title || 'test');
+            }
         }
     );
 

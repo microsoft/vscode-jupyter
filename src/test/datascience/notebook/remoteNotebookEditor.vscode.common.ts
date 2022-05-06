@@ -37,7 +37,8 @@ export function sharedRemoteNotebookEditorTests(
     suite: Mocha.Suite,
     startJupyterServer: (notebook?: NotebookDocument) => Promise<void>,
     finishSuiteSetup: (serviceContainer: IServiceContainer) => void,
-    finishTestSetup: () => Promise<void>
+    finishTestSetup: () => Promise<void>,
+    handleTestTeardown: (context: Mocha.Context) => Promise<void>
 ) {
     suite.timeout(120_000);
     let api: IExtensionTestApi;
@@ -101,6 +102,7 @@ export function sharedRemoteNotebookEditorTests(
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
+        await handleTestTeardown(this);
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });

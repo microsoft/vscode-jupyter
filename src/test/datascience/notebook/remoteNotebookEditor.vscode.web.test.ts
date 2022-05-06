@@ -21,6 +21,9 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         },
         async () => {
             // Don't have any custom tests so don't need a post setup callback
+        },
+        async () => {
+            // No post test steps to run
         }
     );
 });
