@@ -101,6 +101,13 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 this.sessionManager.dispose(); // Note, shutting down all will kill all kernels on the same connection. We don't want that.
                 this.sessionManager = undefined;
             }
+            if (!this.kernelManager?.isDisposed) {
+                this.kernelManager?.dispose();
+            }
+            if (!this.specsManager?.isDisposed) {
+                this.specsManager?.dispose();
+                this.specsManager = undefined;
+            }
         } catch (e) {
             traceError(`Exception on session manager shutdown: `, e);
         } finally {
