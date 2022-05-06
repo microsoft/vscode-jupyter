@@ -114,7 +114,9 @@ export class JupyterServer {
                         useCert: true
                     });
                     await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
-                    resolve(`http://localhost:${port}/?token=${token}`);
+
+                    // Certs should be using https, not http
+                    resolve(`https://localhost:${port}/?token=${token}`);
                 } catch (ex) {
                     reject(ex);
                 }
