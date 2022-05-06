@@ -90,9 +90,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
                 pylanceVersion &&
                 (semver.gte(pylanceVersion, '2022.5.1-pre.1') || semver.prerelease(pylanceVersion)?.includes('dev'));
 
-            if (this._isEnabled) {
-                traceInfo('Pylance LSP Notebooks experiment is enabled.');
-            }
+            traceInfo(`Pylance LSP Notebooks experiment is ${this._isEnabled ? "enabled" : "disabled"}.`);
         }
 
         return this._isEnabled;
