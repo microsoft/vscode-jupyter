@@ -422,7 +422,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         interpreters: PythonEnvironment[],
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec[]> {
-        traceInfoIfCI(`Finding kernel specs for interpreters: ${interpreters.map((i) => i.uri).join('\n')}`);
+        traceInfoIfCI(
+            `Finding kernel specs for interpreters: ${interpreters
+                .map((i) => `${i.displayName} => ${i.uri}`)
+                .join('\n')}`
+        );
         // Find all the possible places to look for this resource
         const interpreterPaths = this.findKernelPathsOfAllInterpreters(interpreters);
         const [rootSpecPaths, globalSpecRootPath] = await Promise.all([
