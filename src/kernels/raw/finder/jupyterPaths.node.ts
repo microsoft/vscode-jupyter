@@ -16,7 +16,6 @@ import { traceDecoratorVerbose } from '../../../platform/logging';
 import { getUserHomeDir } from '../../../platform/common/utils/platform.node';
 import { fsPathToUri } from '../../../platform/vscode-path/utils';
 import { ResourceSet } from '../../../platform/vscode-path/map';
-import { cache } from '../../../platform/common/utils/decorators';
 
 const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
@@ -128,7 +127,6 @@ export class JupyterPaths {
      * https://jupyter-client.readthedocs.io/en/stable/kernels.html#kernel-specs
      */
     @traceDecoratorVerbose('Get KernelSpec root path')
-    @cache(10 * 60_000)
     public async getKernelSpecRootPaths(cancelToken?: CancellationToken): Promise<Uri[]> {
         // Paths specified in JUPYTER_PATH are supposed to come first in searching
         const paths = new ResourceSet(await this.getJupyterPathPaths(cancelToken));
