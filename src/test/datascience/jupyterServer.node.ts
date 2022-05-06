@@ -20,6 +20,7 @@ const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS ==
 
 import * as iconv from 'iconv-lite';
 import { sleep } from '../core';
+import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
 
 function getPythonPath(): string {
     if (process.env.CI_PYTHON_PATH && fs.existsSync(process.env.CI_PYTHON_PATH)) {
@@ -79,8 +80,10 @@ export class JupyterServer {
     private _disposables: IDisposable[] = [];
     private _jupyterServerWithToken?: Promise<string>;
     private _secondJupyterServerWithToken?: Promise<string>;
+    private _jupyterServerWithCert?: Promise<string>;
     private availablePort?: number;
     private availableSecondPort?: number;
+    private availableThirdPort?: number;
     private decoder = new BufferDecoder();
     public async dispose() {
         this._jupyterServerWithToken = undefined;
@@ -95,6 +98,31 @@ export class JupyterServer {
             await tcpPortUsed.waitUntilFree(this.availableSecondPort, 200, 5_000);
         }
     }
+
+    public async startJupyterWithCert(): Promise<string> {
+        if (!this._jupyterServerWithCert) {
+            this._jupyterServerWithCert = new Promise<string>(async (resolve, reject) => {
+                const token = this.generateToken();
+                const port = await this.getThirdFreePort();
+                // Possible previous instance of jupyter has not completely shutdown.
+                // Wait for it to shutdown fully so that we can re-use the same port.
+                await tcpPortUsed.waitUntilFree(port, 200, 10_000);
+                try {
+                    await this.startJupyterServer({
+                        port,
+                        token,
+                        useCert: true
+                    });
+                    await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
+                    resolve(`http://localhost:${port}/?token=${token}`);
+                } catch (ex) {
+                    reject(ex);
+                }
+            });
+        }
+        return this._jupyterServerWithCert;
+    }
+
     public async startJupyterWithToken(token = this.generateToken()): Promise<string> {
         if (!this._jupyterServerWithToken) {
             this._jupyterServerWithToken = new Promise<string>(async (resolve, reject) => {
@@ -158,7 +186,24 @@ export class JupyterServer {
         return this.availableSecondPort!;
     }
 
-    private startJupyterServer({ token, port }: { token: string; port: number }): Promise<void> {
+    private async getThirdFreePort() {
+        // Always use the same port (when using different ports, our code doesn't work as we need to re-load VSC).
+        // The remote uri is cached in a few places (known issue).
+        if (!this.availableThirdPort) {
+            this.availableThirdPort = await getFreePort({ host: 'localhost' }).then((p) => p);
+        }
+        return this.availableThirdPort!;
+    }
+
+    private startJupyterServer({
+        token,
+        port,
+        useCert
+    }: {
+        token: string;
+        port: number;
+        useCert?: boolean;
+    }): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
             try {
                 const args = [
@@ -170,6 +215,26 @@ export class JupyterServer {
                     `--NotebookApp.token=${token}`,
                     `--NotebookApp.allow_origin=*`
                 ];
+                if (useCert) {
+                    const pemFile = path.join(
+                        EXTENSION_ROOT_DIR,
+                        'src',
+                        'test',
+                        'datascience',
+                        'serverConfigFiles',
+                        'jcert.pem'
+                    );
+                    const keyFile = path.join(
+                        EXTENSION_ROOT_DIR,
+                        'src',
+                        'test',
+                        'datascience',
+                        'serverConfigFiles',
+                        'jkey.key'
+                    );
+                    args.push(`--certfile=${pemFile}`);
+                    args.push(`--keyfile=${keyFile}`);
+                }
                 traceInfoIfCI(`Starting Jupyter on CI with args ${args.join(' ')}`);
                 const result = this.execObservable(getPythonPath(), args, {
                     cwd: testFolder

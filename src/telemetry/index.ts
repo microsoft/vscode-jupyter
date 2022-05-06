@@ -676,7 +676,14 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.ConnectRemoteJupyterViaLocalHost]: never | undefined;
     [Telemetry.ConnectRemoteFailedJupyter]: TelemetryErrorProperties;
+    /**
+     * Jupyter server's certificate is not from a trusted authority.
+     */
     [Telemetry.ConnectRemoteSelfCertFailedJupyter]: never | undefined;
+    /**
+     * Jupyter server's certificate has expired.
+     */
+    [Telemetry.ConnectRemoteExpiredCertFailedJupyter]: never | undefined;
     [Telemetry.RegisterAndUseInterpreterAsKernel]: never | undefined;
     [Telemetry.UseInterpreterAsKernel]: never | undefined;
     [Telemetry.UseExistingKernel]: never | undefined;

@@ -3,17 +3,19 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import { commands, Uri } from 'vscode';
+import { commands, Uri, workspace } from 'vscode';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { RemoteKernelSpecConnectionMetadata } from '../../../kernels/types';
 import { INotebookControllerManager } from '../../../notebooks/types';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { DataScience } from '../../../platform/common/utils/localize';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { traceInfoIfCI, traceInfo } from '../../../platform/logging';
 import { waitForCondition } from '../../common';
 import { openNotebook } from '../helpers.node';
 import { JupyterServer } from '../jupyterServer.node';
+import { hijackPrompt } from './helper';
 import {
     createEmptyPythonNotebook,
     createTemporaryNotebook,
@@ -233,5 +235,31 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
             100,
             true
         );
+    });
+
+    test('Remote kernels work with https', async function () {
+        // Note, this test won't work in web yet.
+        const config = workspace.getConfiguration('jupyter');
+        await config.update('allowUnauthorizedRemoteConnection', false);
+        const prompt = await hijackPrompt(
+            'showErrorMessage',
+            { contains: 'certificate' },
+            { text: DataScience.jupyterSelfCertEnable() }
+        );
+        await startJupyterServer(undefined, true);
+        // Prompt should come up as soon as we connect.
+        await waitForCondition(() => prompt.displayed, defaultNotebookTestTimeout, 'Prompt not displayed');
+        await openNotebook(ipynbFile);
+        await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE, true);
+        let nbEditor = vscodeNotebook.activeNotebookEditor!;
+        assert.isOk(nbEditor, 'No active notebook');
+        // Cell 1 = `a = "Hello World"`
+        // Cell 2 = `print(a)`
+        let cell2 = nbEditor.document.getCells()![1]!;
+        await Promise.all([
+            runAllCellsInActiveNotebook(),
+            waitForExecutionCompletedSuccessfully(cell2),
+            waitForTextOutput(cell2, 'Hello World', 0, false)
+        ]);
     });
 });

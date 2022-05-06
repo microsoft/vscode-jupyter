@@ -54,9 +54,11 @@ export async function createTemporaryNotebookFromFile(
     return Uri.file(tempFile);
 }
 
-export async function startJupyterServer(notebook?: NotebookDocument): Promise<any> {
+export async function startJupyterServer(notebook?: NotebookDocument, useCert: boolean = false): Promise<any> {
     if (IS_REMOTE_NATIVE_TEST()) {
-        const uriString = await JupyterServer.instance.startJupyterWithToken();
+        const uriString = useCert
+            ? await JupyterServer.instance.startJupyterWithCert()
+            : await JupyterServer.instance.startJupyterWithToken();
         traceInfo(`Jupyter started and listening at ${uriString}`);
         return commands.executeCommand('jupyter.selectjupyteruri', false, Uri.parse(uriString), notebook);
     } else {

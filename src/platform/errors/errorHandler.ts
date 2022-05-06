@@ -42,7 +42,7 @@ import {
     IJupyterInterpreterDependencyManager,
     JupyterInterpreterDependencyResponse
 } from '../../kernels/jupyter/types';
-import { handleCertsError } from '../../kernels/jupyter/jupyterUtils';
+import { handleSelfCertsError } from '../../kernels/jupyter/jupyterUtils';
 import { getFilePath } from '../common/platform/fs-paths';
 import { CancellationError } from '../common/cancellation';
 
@@ -71,7 +71,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         if (err instanceof JupyterInstallError) {
             await this.dependencyManager?.installMissingDependencies(err);
         } else if (err instanceof JupyterSelfCertsError) {
-            await handleCertsError(this.applicationShell, this.configuration, err.message);
+            await handleSelfCertsError(this.applicationShell, this.configuration, err.message);
         } else if (err instanceof VscCancellationError || err instanceof CancellationError) {
             // Don't show the message for cancellation errors
             traceWarning(`Cancelled by user`, err);

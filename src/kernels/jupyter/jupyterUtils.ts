@@ -41,7 +41,7 @@ export function expandWorkingDir(
     return process.cwd();
 }
 
-export async function handleCertsError(
+export async function handleSelfCertsError(
     appShell: IApplicationShell,
     config: IConfigurationService,
     message: string
@@ -51,6 +51,29 @@ export async function handleCertsError(
     const closeOption: string = DataScience.jupyterSelfCertClose();
     const value = await appShell.showErrorMessage(
         DataScience.jupyterSelfCertFail().format(message),
+        enableOption,
+        closeOption
+    );
+    if (value === enableOption) {
+        sendTelemetryEvent(Telemetry.SelfCertsMessageEnabled);
+        void config.updateSetting('allowUnauthorizedRemoteConnection', true, undefined, ConfigurationTarget.Workspace);
+        return true;
+    } else if (value === closeOption) {
+        sendTelemetryEvent(Telemetry.SelfCertsMessageClose);
+    }
+    return false;
+}
+
+export async function handleExpiredCertsError(
+    appShell: IApplicationShell,
+    config: IConfigurationService,
+    message: string
+): Promise<boolean> {
+    // On a self cert error, warn the user and ask if they want to change the setting
+    const enableOption: string = DataScience.jupyterSelfCertEnable();
+    const closeOption: string = DataScience.jupyterSelfCertClose();
+    const value = await appShell.showErrorMessage(
+        DataScience.jupyterExpiredCertFail().format(message),
         enableOption,
         closeOption
     );
