@@ -86,7 +86,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
             this._isEnabled =
                 isInNotebooksExperiment &&
                 pythonVersion !== undefined &&
-                semver.satisfies(pythonVersion, '>=2022.7.0 || 2022.5.0-dev') &&
+                semver.satisfies(pythonVersion, '>=2022.7.0 || 2022.7.0-dev') &&
                 pylanceVersion !== undefined &&
                 semver.satisfies(pylanceVersion, '>=2022.5.1-pre.1 || 9999.0.0-dev');
 
