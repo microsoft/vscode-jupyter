@@ -244,7 +244,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         const prompt = await hijackPrompt(
             'showErrorMessage',
             { contains: 'certificate' },
-            { text: DataScience.jupyterSelfCertEnable() }
+            { text: DataScience.jupyterSelfCertEnable(), clickImmediately: true }
         );
         await startJupyterServer(undefined, true);
         // Prompt should come up as soon as we connect.
