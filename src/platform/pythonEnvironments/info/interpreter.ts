@@ -7,6 +7,7 @@ import * as uriPath from '../../vscode-path/resources';
 import { PythonEnvironment } from '.';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { getFilePath } from '../../common/platform/fs-paths';
+import { traceInfoIfCI } from '../../logging';
 
 export function getInterpreterHash(interpreter: PythonEnvironment | {uri: Uri}){
     const interpreterPath = getNormalizedInterpreterPath(interpreter.uri);
@@ -27,6 +28,7 @@ export function areInterpretersSame(i1: PythonEnvironment | undefined, i2: Pytho
 export function areInterpreterPathsSame(path1: Uri = Uri.file(''), path2:Uri = Uri.file(''), ostype = getOSType(), forceLowerCase: boolean = false){
     const norm1 = getNormalizedInterpreterPath(path1, ostype, ostype == OSType.Windows || forceLowerCase);
     const norm2 = getNormalizedInterpreterPath(path2, ostype, ostype == OSType.Windows || forceLowerCase);
+    traceInfoIfCI(`Comparing two interpreters: ${norm1} to ${norm2}`);
     return norm1 === norm2 || uriPath.isEqual(norm1, norm2, true);
 }
 /**
