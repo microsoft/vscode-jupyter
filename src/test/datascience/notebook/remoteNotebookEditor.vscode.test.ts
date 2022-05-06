@@ -253,9 +253,8 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
             { text: DataScience.jupyterSelfCertEnable(), clickImmediately: true }
         );
         await startJupyterServer(undefined, true);
-        // Prompt should come up as soon as we connect.
-        await waitForCondition(() => prompt.displayed, defaultNotebookTestTimeout, 'Prompt not displayed');
         await openNotebook(ipynbFile);
+        await waitForCondition(() => prompt.displayed, defaultNotebookTestTimeout, 'Prompt not displayed');
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE, true);
         let nbEditor = vscodeNotebook.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');

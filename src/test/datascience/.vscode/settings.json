@@ -30,6 +30,5 @@
     // Python experiments have to be on for insiders to work
     "python.experiments.enabled": true,
     "python.defaultInterpreterPath": "python",
-    "jupyter.generateSVGPlots": false,
-    "jupyter.allowUnauthorizedRemoteConnection": false
+    "jupyter.generateSVGPlots": false
 }

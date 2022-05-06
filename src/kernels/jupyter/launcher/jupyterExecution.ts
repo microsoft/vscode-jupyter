@@ -218,6 +218,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             // throw if can't connect.
             sessionManager = await this.jupyterSessionManagerFactory.create(connection, false);
             await sessionManager.getRunningKernels();
+            await sessionManager.getKernelSpecs();
 
             // We should throw an exception if any of that fails.
         } finally {
