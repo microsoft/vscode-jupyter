@@ -3,7 +3,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Disposable, extensions, Uri } from 'vscode';
+import { Disposable, extensions, Uri, workspace } from 'vscode';
 import { IInteractiveWindowProvider } from '../interactive-window/types';
 import { findAssociatedNotebookDocument } from '../notebooks/helpers';
 import { INotebookControllerManager } from '../notebooks/types';
@@ -81,10 +81,15 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
             const pythonVersion = extensions.getExtension(PythonExtension)?.packageJSON.version;
             const pylanceVersion = extensions.getExtension(PylanceExtension)?.packageJSON.version;
 
+            const pythonConfig = workspace.getConfiguration('python');
+            const languageServer = pythonConfig?.get<string>('languageServer');
+
             // Only enable the experiment if we're in the treatment group and the installed
             // versions of Python and Pylance support the experiment.
             this._isEnabled = false;
-            if (!isInTreatmentGroup) {
+            if (languageServer !== 'Pylance') {
+                traceInfo(`LSP Notebooks experiment is disabled -- not using Pylance`);
+            } else if (!isInTreatmentGroup) {
                 traceInfo(`LSP Notebooks experiment is disabled -- not in treatment group`);
             } else if (!pythonVersion) {
                 traceInfo(`LSP Notebooks experiment is disabled -- Python disabled or not installed`);
