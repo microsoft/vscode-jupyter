@@ -7,6 +7,7 @@ import { INotebookProvider } from '../types';
 import { JupyterCommandLineSelectorCommand } from './commands/commandLineSelector';
 import { CommandRegistry } from './commands/commandRegistry';
 import { JupyterServerSelectorCommand } from './commands/serverSelector';
+import { JupyterConnection } from './jupyterConnection';
 import { JupyterKernelService } from './jupyterKernelService.web';
 import { JupyterUriProviderRegistration } from './jupyterUriProviderRegistration';
 import { JupyterCommandLineSelector } from './launcher/commandLineSelector';
@@ -69,4 +70,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<IJupyterServerProvider>(IJupyterServerProvider, NotebookServerProvider);
     serviceManager.addSingleton<IJupyterRequestCreator>(IJupyterRequestCreator, JupyterRequestCreator);
     serviceManager.addSingleton<ServerConnectionType>(ServerConnectionType, ServerConnectionType);
+    serviceManager.addSingleton<JupyterConnection>(JupyterConnection, JupyterConnection);
+    serviceManager.addBinding(JupyterConnection, IExtensionSingleActivationService);
 }
