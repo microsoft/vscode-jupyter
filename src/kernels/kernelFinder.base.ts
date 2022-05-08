@@ -152,16 +152,17 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         if (this.serverConnectionType.isLocalLaunch) {
             return [];
         }
-        const connInfo = await this.getRemoteConnectionInfo(cancelToken);
 
         // If there are any errors in fetching the remote kernel specs without cache,
         // then fall back to the cache.
         // I.e. the cache will always be used if we can't fetch the remote kernel specs.
         return this.listKernelsUsingFinder(
-            () =>
-                this.remoteKernelFinder
+            async () => {
+                const connInfo = await this.getRemoteConnectionInfo(cancelToken);
+                return this.remoteKernelFinder
                     ? this.remoteKernelFinder.listKernels(resource, connInfo, cancelToken)
-                    : Promise.resolve([]),
+                    : Promise.resolve([]);
+            },
             cancelToken,
             'remote',
             useCache
