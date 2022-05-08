@@ -51,6 +51,7 @@ export async function handleSelfCertsError(
     const closeOption: string = DataScience.jupyterSelfCertClose();
     const value = await appShell.showErrorMessage(
         DataScience.jupyterSelfCertFail().format(message),
+        { modal: true },
         enableOption,
         closeOption
     );

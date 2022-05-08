@@ -23,6 +23,10 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
     public get onDidChangeUri() {
         return this._onDidChangeUri.event;
     }
+    private _onDidRemoveUri = new EventEmitter<string>();
+    public get onDidRemoveUri() {
+        return this._onDidRemoveUri.event;
+    }
     constructor(
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(ICryptoUtils) private readonly crypto: ICryptoUtils,
@@ -45,18 +49,23 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
             return f.uri !== uri && i < Settings.JupyterServerUriListMax - 1;
         });
 
-        // Add this entry into the liast
+        // Add this entry into the last.
         editedList.push({ uri, time, displayName: displayName || uri });
 
         return this.updateMemento(editedList);
     }
     public async removeUri(uri: string) {
+        const activeUri = await this.getUri();
         // Start with saved list.
         const uriList = await this.getSavedUriList();
 
         // Remove this uri if already found (going to add again with a new time)
         const editedList = uriList.filter((f) => f.uri !== uri);
-        return this.updateMemento(editedList);
+        await this.updateMemento(editedList);
+        if (activeUri === uri) {
+            await this.setUri(Settings.JupyterServerLocalLaunch);
+        }
+        this._onDidRemoveUri.fire(uri);
     }
     private async updateMemento(editedList: { uri: string; time: number; displayName?: string | undefined }[]) {
         // Sort based on time. Newest time first

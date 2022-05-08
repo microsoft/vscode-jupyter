@@ -77,6 +77,7 @@ export type INotebookServerLocalOptions = {
 };
 export type INotebookServerRemoteOptions = {
     uri: string;
+    serverId: string;
     resource: Resource;
     ui: IDisplayOptions;
     /**
@@ -219,6 +220,7 @@ export interface IJupyterUriProviderRegistration {
 export const IJupyterServerUriStorage = Symbol('IJupyterServerUriStorage');
 export interface IJupyterServerUriStorage {
     readonly onDidChangeUri: Event<void>;
+    readonly onDidRemoveUri: Event<string>;
     addToUriList(uri: string, time: number, displayName: string): Promise<void>;
     getSavedUriList(): Promise<{ uri: string; time: number; displayName?: string }[]>;
     removeUri(uri: string): Promise<void>;

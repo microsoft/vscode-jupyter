@@ -5,15 +5,14 @@
 import { assert } from 'chai';
 import { commands, Uri, workspace } from 'vscode';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
+import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider';
 import { RemoteKernelSpecConnectionMetadata } from '../../../kernels/types';
 import { INotebookControllerManager } from '../../../notebooks/types';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { IServiceContainer } from '../../../platform/ioc/types';
+import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfoIfCI, traceInfo } from '../../../platform/logging';
-import { waitForCondition } from '../../common';
-import { captureScreenShot } from '../../common.node';
+import { captureScreenShot, waitForCondition } from '../../common.node';
 import { openNotebook } from '../helpers.node';
 import { JupyterServer } from '../jupyterServer.node';
 import { hijackPrompt } from './helper';
@@ -29,13 +28,19 @@ import {
     waitForKernelToGetAutoSelected,
     waitForTextOutput
 } from './helper.node';
-import { sharedRemoteNotebookEditorTests } from './remoteNotebookEditor.vscode.common';
+import {
+    reopeningNotebookUsesSameRemoteKernel,
+    sharedRemoteNotebookEditorTests
+} from './remoteNotebookEditor.vscode.common';
+import { IServiceContainer } from '../../../platform/ioc/types';
 
 suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function () {
     let controllerManager: INotebookControllerManager;
     let jupyterServerSelector: JupyterServerSelector;
     let vscodeNotebook: IVSCodeNotebook;
     let ipynbFile: Uri;
+    let remoteKernelIdProvider: PreferredRemoteKernelIdProvider;
+    let svcContainer: IServiceContainer;
 
     // Use the shared code that runs the tests
     const disposables = sharedRemoteNotebookEditorTests(
@@ -50,6 +55,10 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
             );
             jupyterServerSelector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
             vscodeNotebook = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+            remoteKernelIdProvider = serviceContainer.get<PreferredRemoteKernelIdProvider>(
+                PreferredRemoteKernelIdProvider
+            );
+            svcContainer = serviceContainer;
         },
         async () => {
             // Don't use same file for this test (files get modified in tests and we might save stuff)
@@ -92,7 +101,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         // Wait til we get new controllers with a different base url.
         await waitForCondition(
             async () => {
-                const controllers = controllerManager.registeredNotebookControllers();
+                const controllers = controllerManager.getRegisteredNotebookControllers();
                 const remoteKernelSpecs = controllers
                     .filter((item) => item.connection.kind === 'startUsingRemoteKernelSpec')
                     .map((item) => item.connection as RemoteKernelSpecConnectionMetadata);
@@ -102,7 +111,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
             defaultNotebookTestTimeout,
             () =>
                 `Should have at least one remote kernelspec, ${JSON.stringify(
-                    controllerManager.registeredNotebookControllers()
+                    controllerManager.getRegisteredNotebookControllers()
                 )}`
         );
 
@@ -123,7 +132,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         // Wait til we get new controllers with a different base url.
         await waitForCondition(
             async () => {
-                const controllers = controllerManager.registeredNotebookControllers();
+                const controllers = controllerManager.getRegisteredNotebookControllers();
                 return controllers.some(
                     (item) =>
                         item.connection.kind === 'startUsingRemoteKernelSpec' && !baseUrls.has(item.connection.baseUrl)
@@ -132,14 +141,14 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
             defaultNotebookTestTimeout,
             () =>
                 `Should have at least one remote kernelspec with different baseUrls, ${JSON.stringify(
-                    controllerManager.registeredNotebookControllers().map((item) => item.connection.kind)
+                    controllerManager.getRegisteredNotebookControllers().map((item) => item.connection.kind)
                 )}`
         );
     });
 
     test('Local and Remote kernels are listed', async function () {
         await controllerManager.loadNotebookControllers();
-        const controllers = controllerManager.registeredNotebookControllers();
+        const controllers = controllerManager.getRegisteredNotebookControllers();
         assert.ok(
             controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec'),
             'Should have at least one remote kernelspec'
@@ -156,7 +165,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
     test('Remote kernels are removed when switching to local', async function () {
         await controllerManager.loadNotebookControllers();
         assert.ok(async () => {
-            const controllers = controllerManager.registeredNotebookControllers();
+            const controllers = controllerManager.getRegisteredNotebookControllers();
             return controllers.filter((item) => item.connection.kind === 'startUsingRemoteKernelSpec').length === 0;
         }, 'Should have at least one remote kernelspec');
 
@@ -166,13 +175,13 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
 
         await waitForCondition(
             async () => {
-                const controllers = controllerManager.registeredNotebookControllers();
+                const controllers = controllerManager.getRegisteredNotebookControllers();
                 return controllers.filter((item) => item.connection.kind === 'startUsingRemoteKernelSpec').length === 0;
             },
             defaultNotebookTestTimeout,
             () =>
                 `Should not have any remote controllers, existing ${JSON.stringify(
-                    controllerManager.registeredNotebookControllers()
+                    controllerManager.getRegisteredNotebookControllers()
                 )}`
         );
     });
@@ -184,7 +193,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         await jupyterServerSelector.setJupyterURIToLocal();
         await waitForCondition(
             async () => {
-                const controllers = controllerManager.registeredNotebookControllers();
+                const controllers = controllerManager.getRegisteredNotebookControllers();
                 return controllers.filter((item) => item.connection.kind === 'startUsingRemoteKernelSpec').length === 0;
             },
             defaultNotebookTestTimeout,
@@ -204,7 +213,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         // Verify we have a remote kernel spec.
         await waitForCondition(
             async () => {
-                const controllers = controllerManager.registeredNotebookControllers();
+                const controllers = controllerManager.getRegisteredNotebookControllers();
                 return controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec');
             },
             defaultNotebookTestTimeout,
@@ -266,5 +275,54 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
             waitForExecutionCompletedSuccessfully(cell2),
             waitForTextOutput(cell2, 'Hello World', 0, false)
         ]);
+    });
+    test('When switching from remote to local, then clear the preferred remote kernel', async function () {
+        await reopeningNotebookUsesSameRemoteKernel(ipynbFile, svcContainer, true);
+
+        const nbEditor = vscodeNotebook.activeNotebookEditor!;
+        assert.isOk(nbEditor, 'No active notebook');
+        const controllerManager = svcContainer.get<INotebookControllerManager>(INotebookControllerManager);
+
+        // Verify we're connected to a remote kernel.
+        const remoteController = controllerManager.getSelectedNotebookController(nbEditor.document);
+        assert.strictEqual(remoteController?.connection.kind, 'connectToLiveRemoteKernel');
+
+        // Verify we have a preferred remote kernel stored.
+        assert.isNotEmpty(
+            remoteKernelIdProvider.getPreferredRemoteKernelId(nbEditor.document.uri),
+            'Preferred remote kernel id cannot be empty'
+        );
+
+        // Switch to a local kernel.
+        await controllerManager.loadNotebookControllers();
+        const localKernelController = controllerManager
+            .getRegisteredNotebookControllers()
+            .find(
+                (item) =>
+                    item.connection.kind === 'startUsingLocalKernelSpec' ||
+                    item.connection.kind === 'startUsingPythonInterpreter'
+            );
+        await commands.executeCommand('notebook.selectKernel', {
+            id: localKernelController?.id,
+            extension: JVSC_EXTENSION_ID
+        });
+
+        // Wait for the controller to get selected.
+        await waitForCondition(
+            async () => controllerManager.getSelectedNotebookController(nbEditor.document) === localKernelController,
+            5_000,
+            `Controller not swtiched to local kernel, instead it is ${
+                controllerManager.getSelectedNotebookController(nbEditor.document)?.id
+            }`
+        );
+
+        // Wait for the preferred remote kernel id to be cleared for this notebook.
+        await waitForCondition(
+            async () => !remoteKernelIdProvider.getPreferredRemoteKernelId(nbEditor.document.uri),
+            5_000,
+            `Remote Kernel is not empty, instead the value is ${remoteKernelIdProvider.getPreferredRemoteKernelId(
+                nbEditor.document.uri
+            )}`
+        );
     });
 });

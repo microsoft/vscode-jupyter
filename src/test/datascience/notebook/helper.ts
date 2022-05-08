@@ -292,7 +292,7 @@ async function waitForKernelToChangeImpl(
 
     // Get the list of NotebookControllers for this document
     await notebookControllerManager.loadNotebookControllers();
-    const notebookControllers = notebookControllerManager.registeredNotebookControllers();
+    const notebookControllers = notebookControllerManager.getRegisteredNotebookControllers();
 
     // Find the kernel id that matches the name we want
     let id: string | undefined;
@@ -381,7 +381,7 @@ export async function waitForKernelToGetAutoSelected(
     // Get the list of NotebookControllers for this document
     await notebookControllerManager.loadNotebookControllers();
     traceInfoIfCI(`Wait for kernel - got notebook controllers`);
-    const notebookControllers = notebookControllerManager.registeredNotebookControllers();
+    const notebookControllers = notebookControllerManager.getRegisteredNotebookControllers();
 
     // Make sure we don't already have a selection (this function gets run even after opening a document)
     if (notebookControllerManager.getSelectedNotebookController(vscodeNotebook.activeNotebookEditor!.document)) {

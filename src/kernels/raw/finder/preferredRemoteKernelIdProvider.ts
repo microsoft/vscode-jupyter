@@ -38,7 +38,15 @@ export class PreferredRemoteKernelIdProvider {
         }
     }
 
-    public async storePreferredRemoteKernelId(uri: Uri, id: string | undefined): Promise<void> {
+    public async clearPreferredRemoteKernelId(uri: Uri): Promise<void> {
+        await this.storePreferredRemoteKernelIdInternal(uri);
+    }
+    public async storePreferredRemoteKernelId(uri: Uri, id: string): Promise<void> {
+        await this.storePreferredRemoteKernelIdInternal(uri, id);
+    }
+    public async storePreferredRemoteKernelIdInternal(uri: Uri, id?: string): Promise<void> {
+        let requiresUpdate = false;
+
         // Don't update in memory representation.
         const list: KernelIdListEntry[] = cloneDeep(
             this.globalMemento.get<KernelIdListEntry[]>(ActiveKernelIdList, [])
@@ -47,20 +55,25 @@ export class PreferredRemoteKernelIdProvider {
         const index = list.findIndex((l) => l.fileHash === fileHash);
         // Always remove old spot (we'll push on the back for new ones)
         if (index >= 0) {
+            requiresUpdate = true;
             list.splice(index, 1);
         }
 
         // If adding a new one, push
         if (id) {
+            requiresUpdate = true;
             list.push({ fileHash, kernelId: id });
         }
 
         // Prune list if too big
         sendTelemetryEvent(Telemetry.NumberOfSavedRemoteKernelIds, undefined, { count: list.length });
         while (list.length > MaximumKernelIdListSize) {
+            requiresUpdate = true;
             list.shift();
         }
         traceInfo(`Storing Preferred remote kernel for ${getDisplayPath(uri)} is ${id}`);
-        await this.globalMemento.update(ActiveKernelIdList, list);
+        if (requiresUpdate) {
+            await this.globalMemento.update(ActiveKernelIdList, list);
+        }
     }
 }

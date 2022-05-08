@@ -113,6 +113,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                 return items;
             } catch (ex) {
                 traceError(`Error fetching remote kernels:`, ex);
+                throw ex;
             } finally {
                 if (sessionManager) {
                     await sessionManager.dispose();

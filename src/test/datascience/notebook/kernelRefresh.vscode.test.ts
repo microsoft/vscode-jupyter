@@ -89,7 +89,7 @@ suite('DataScience - VSCode Notebook - (Conda Env Detection) (slow)', function (
             async () => {
                 return (
                     controllerManager
-                        .registeredNotebookControllers()
+                        .getRegisteredNotebookControllers()
                         .filter(
                             (item) =>
                                 item.controller.notebookType === JupyterNotebookView &&

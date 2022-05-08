@@ -70,6 +70,7 @@ import { getResourceType } from '../../platform/common/utils';
 import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
 import { INotebookMetadata } from '@jupyterlab/nbformat';
 import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConnectionType';
+import { computeUriHash } from '../../kernels/jupyter/jupyterUtils';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -182,6 +183,26 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // Make sure to reload whenever we do something that changes state
         const forceLoad = () => this.loadNotebookControllers(true);
         this.serverUriStorage.onDidChangeUri(forceLoad, this, this.disposables);
+        this.serverUriStorage.onDidRemoveUri(
+            (uri) => {
+                // Remove controllers associated with remote connections that are no longer available.
+                const controllers = Array.from(this.registeredControllers.values());
+                controllers.forEach((item) => {
+                    if (
+                        item.connection.kind !== 'connectToLiveRemoteKernel' &&
+                        item.connection.kind !== 'startUsingRemoteKernelSpec'
+                    ) {
+                        return;
+                    }
+                    if (item.connection.serverId !== computeUriHash(uri)) {
+                        return;
+                    }
+                    item.dispose();
+                });
+            },
+            this,
+            this.disposables
+        );
         this.kernelProvider.onDidStartKernel(forceLoad, this, this.disposables);
 
         // For kernel dispose we need to wait a bit, otherwise the list comes back the
@@ -239,7 +260,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
 
     // Function to expose currently registered controllers to test code only
-    public registeredNotebookControllers(): VSCodeNotebookController[] {
+    public getRegisteredNotebookControllers(): VSCodeNotebookController[] {
         return Array.from(this.registeredControllers.values());
     }
 
@@ -366,7 +387,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         this.createNotebookControllers([result], notebookType === 'interactive');
 
         // Return the created controller
-        return this.registeredNotebookControllers().find(
+        return this.getRegisteredNotebookControllers().find(
             (controller) =>
                 // We register each of our kernels as two controllers
                 // because controllers are currently per-notebookType. Find
@@ -400,7 +421,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     ) {
         // Get all remote kernels
         await this.loadNotebookControllers();
-        const controllers = this.registeredNotebookControllers();
+        const controllers = this.getRegisteredNotebookControllers();
         if (controllers.length === 0) {
             traceError('No remote controllers');
             return;

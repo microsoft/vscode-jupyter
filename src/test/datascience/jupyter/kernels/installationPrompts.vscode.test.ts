@@ -890,7 +890,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         // Get the controller that should be selected.
         const controllerManager = api.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
         const controller = controllerManager
-            .registeredNotebookControllers()
+            .getRegisteredNotebookControllers()
             .find(
                 (item) =>
                     item.controller.notebookType === JupyterNotebookView &&
@@ -899,7 +899,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             );
         if (!controller) {
             const registeredControllers = controllerManager
-                .registeredNotebookControllers()
+                .getRegisteredNotebookControllers()
                 .map((item) => item.id)
                 .join(',');
             throw new Error(
