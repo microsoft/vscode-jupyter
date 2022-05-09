@@ -55,7 +55,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         this.serverPromise.clear();
     }
     public async getOrCreateServer(options: GetServerOptions): Promise<INotebookServer> {
-        const serverOptions = await this.getNotebookServerOptions(options);
+        const serverOptions = this.getNotebookServerOptions(options);
 
         // If we are just fetching or only want to create for local, see if exists
         if (options.localJupyter && this.jupyterExecution) {
@@ -101,7 +101,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         if (!jupyterExecution) {
             throw new NotSupportedInWebError();
         }
-        const serverOptions = await this.getNotebookServerOptions(options);
+        const serverOptions = this.getNotebookServerOptions(options);
         traceInfo(`Checking for server existence.`);
 
         const disposables: IDisposable[] = [];
@@ -182,7 +182,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         }
     }
 
-    private async getNotebookServerOptions(options: GetServerOptions): Promise<INotebookServerOptions> {
+    private getNotebookServerOptions(options: GetServerOptions): INotebookServerOptions {
         if (options.localJupyter) {
             return {
                 resource: options.resource,
