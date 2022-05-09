@@ -2124,6 +2124,7 @@
         "download-api": "vscode-dts dev",
         "postdownload-api": "vscode-dts main",
         "generateTelemetry": "gulp generateTelemetryMd",
+        "validateTelemetryMD": "gulp validateTelemetryMD",
         "openInBrowser": "vscode-test-web --extensionDevelopmentPath=. ./src/test/datascience",
         "prepare": "husky install"
     },
