@@ -65,7 +65,7 @@ export class JupyterConnection implements IExtensionSyncActivationService {
             // Attempt to list the running kernels. It will return empty if there are none, but will
             // throw if can't connect.
             sessionManager = await this.jupyterSessionManagerFactory.create(connection, false);
-            await sessionManager.getRunningKernels();
+            await Promise.all([sessionManager.getRunningKernels(), sessionManager.getKernelSpecs]);
 
             // We should throw an exception if any of that fails.
         } finally {
