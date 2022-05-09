@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import { commands, Uri, workspace } from 'vscode';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider';
-import { RemoteKernelSpecConnectionMetadata } from '../../../kernels/types';
+import { isLocalConnection, RemoteKernelSpecConnectionMetadata } from '../../../kernels/types';
 import { INotebookControllerManager } from '../../../notebooks/types';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -285,7 +285,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
 
         // Verify we're connected to a remote kernel.
         const remoteController = controllerManager.getSelectedNotebookController(nbEditor.document);
-        assert.strictEqual(remoteController?.connection.kind, 'connectToLiveRemoteKernel');
+        assert.strictEqual(isLocalConnection(remoteController!.connection), false, 'Should be a remote connection');
 
         // Verify we have a preferred remote kernel stored.
         assert.isNotEmpty(

@@ -20,5 +20,5 @@ export class RemoteJupyterServerConnectionError extends BaseError {
 
 function getBaseUrl(url: string) {
     const uri = new URL(url);
-    return `${uri.protocol}//${uri.hostname}/`;
+    return `${uri.protocol}//${uri.host}/`;
 }
