@@ -1224,20 +1224,15 @@ Event can be removed. Not referenced anywhere
 ## Description
 
 
-No description provided
+
+
+ Telemetry sent when we have loaded some controllers.
 
 ## Properties
 
-- 
-        /**
-         * Whether this is from a cached result or not
-         */
-        cached: boolean;
-- 
-        /**
-         * Whether we've loaded local or remote controllers.
-         */
-        kind: 'local' | 'remote';
+
+No properties for event
+
 
 ## Locations Used
 
