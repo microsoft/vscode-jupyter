@@ -1554,6 +1554,9 @@ export interface IEventNamePropertyMapping {
     [Telemetry.KernelCrash]: never | undefined;
     [Telemetry.JupyterKernelHiddenViaFilter]: never | undefined;
     [Telemetry.JupyterKernelFilterUsed]: never | undefined;
+    /**
+     * Telemetry sent when we have loaded some controllers.
+     */
     [Telemetry.FetchControllers]: {
         /**
          * Whether this is from a cached result or not
