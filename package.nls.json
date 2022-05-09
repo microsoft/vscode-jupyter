@@ -20,6 +20,7 @@
     "DataScience.openExportFileYes": "Yes",
     "DataScience.openExportFileNo": "No",
     "DataScience.failedExportMessage": "Export failed.",
+    "DataScience.validationErrorMessageForRemoteUrlProtocolNeedsToBeHttpOrHttps": "Has to be http(s)",
     "DataScience.exportFailedGeneralMessage": "Please check the 'Jupyter' [output](command:jupyter.viewOutput) panel for further details.",
     "DataScience.exportToPDFDependencyMessage": "If you have not installed xelatex (TeX) you will need to do so before you can export to PDF, for further instructions go to https://nbconvert.readthedocs.io/en/latest/install.html#installing-tex. \r\nTo avoid installing xelatex (TeX) you might want to try exporting to HTML and using your browsers \"Print to PDF\" feature.",
     "DataScience.insecureSessionMessage": "Connecting over HTTP without a token may be an insecure connection. Do you want to connect to a possibly insecure server?",

@@ -238,7 +238,7 @@ export class JupyterServerSelector {
 
         // Double check http
         if (!inputText.toLowerCase().startsWith('http')) {
-            return 'Has to be http(s)';
+            return DataScience.validationErrorMessageForRemoteUrlProtocolNeedsToBeHttpOrHttps();
         }
         // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
         try {

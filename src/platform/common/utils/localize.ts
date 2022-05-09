@@ -1163,6 +1163,10 @@ export namespace DataScience {
         'DataScience.webNotSupported',
         `Operation not supported in web version of Jupyter extension.`
     );
+    export const validationErrorMessageForRemoteUrlProtocolNeedsToBeHttpOrHttps = localize(
+        'DataScience.validationErrorMessageForRemoteUrlProtocolNeedsToBeHttpOrHttps',
+        'Has to be http(s)'
+    );
 }
 
 export namespace Installer {
