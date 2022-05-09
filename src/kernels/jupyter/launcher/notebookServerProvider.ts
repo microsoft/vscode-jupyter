@@ -24,7 +24,6 @@ import {
 } from '../types';
 import { NotSupportedInWebError } from '../../../platform/errors/notSupportedInWebError';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
-import { computeUriHash } from '../jupyterUtils';
 
 const localCacheKey = 'LocalJupyterSererCacheKey';
 @injectable()
@@ -34,7 +33,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
     constructor(
         @inject(IJupyterExecution) @optional() private readonly jupyterExecution: IJupyterExecution | undefined,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
+        @inject(IJupyterServerUriStorage) serverUriStorage: IJupyterServerUriStorage,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {
         serverUriStorage.onDidChangeUri(
@@ -56,7 +55,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         this.serverPromise.clear();
     }
     public async getOrCreateServer(options: GetServerOptions): Promise<INotebookServer> {
-        const serverOptions = await this.getNotebookServerOptions(options);
+        const serverOptions = this.getNotebookServerOptions(options);
 
         // If we are just fetching or only want to create for local, see if exists
         if (options.localJupyter && this.jupyterExecution) {
@@ -102,7 +101,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         if (!jupyterExecution) {
             throw new NotSupportedInWebError();
         }
-        const serverOptions = await this.getNotebookServerOptions(options);
+        const serverOptions = this.getNotebookServerOptions(options);
         traceInfo(`Checking for server existence.`);
 
         const disposables: IDisposable[] = [];
@@ -183,7 +182,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         }
     }
 
-    private async getNotebookServerOptions(options: GetServerOptions): Promise<INotebookServerOptions> {
+    private getNotebookServerOptions(options: GetServerOptions): INotebookServerOptions {
         if (options.localJupyter) {
             return {
                 resource: options.resource,
@@ -192,18 +191,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             };
         }
 
-        // Since there's one server per session, don't use a resource to figure out these settings
-        const savedList = await this.serverUriStorage.getSavedUriList();
-        let uri = !options.localJupyter
-            ? savedList.find((item) => computeUriHash(item.uri) === options.serverId)?.uri
-            : undefined;
-
-        if (!uri) {
-            throw new Error('Remote Jupyter Server connection not provided');
-        }
-
         return {
-            uri,
             serverId: options.serverId,
             resource: options.resource,
             ui: this.ui,
