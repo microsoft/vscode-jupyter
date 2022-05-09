@@ -164,10 +164,9 @@ export function sharedRemoteNotebookEditorTests(
     return disposables;
 }
 
-export async function reopeningNotebookUsesSameRemoteKernel(
+export async function runCellAndVerifyUpdateOfPreferredRemoteKernelId(
     ipynbFile: Uri,
-    serviceContainer: IServiceContainer,
-    doNotSaveAndCloseNotebook = false
+    serviceContainer: IServiceContainer
 ) {
     const remoteKernelIdProvider = serviceContainer.get<PreferredRemoteKernelIdProvider>(
         PreferredRemoteKernelIdProvider
@@ -195,10 +194,15 @@ export async function reopeningNotebookUsesSameRemoteKernel(
         5_000,
         'Remote Kernel id not saved'
     );
+}
 
-    if (doNotSaveAndCloseNotebook) {
-        return;
-    }
+
+export async function reopeningNotebookUsesSameRemoteKernel(
+    ipynbFile: Uri,
+    serviceContainer: IServiceContainer
+) {
+    await runCellAndVerifyUpdateOfPreferredRemoteKernelId(ipynbFile, serviceContainer);
+    let nbEditor = window.activeNotebookEditor!;
 
     await saveActiveNotebook();
     await closeActiveWindows();
@@ -222,7 +226,7 @@ export async function reopeningNotebookUsesSameRemoteKernel(
     );
 
     // Execute second cell (same kernel so should be able to get results)
-    cell2 = nbEditor.document.getCells()![1]!;
+    const cell2 = nbEditor.document.getCells()![1]!;
     await Promise.all([
         runCell(cell2),
         waitForExecutionCompletedSuccessfully(cell2),

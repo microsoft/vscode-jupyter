@@ -39,12 +39,12 @@ export class PreferredRemoteKernelIdProvider {
     }
 
     public async clearPreferredRemoteKernelId(uri: Uri): Promise<void> {
-        await this.storePreferredRemoteKernelIdInternal(uri);
+        await this.updatePreferredRemoteKernelIdInternal(uri);
     }
     public async storePreferredRemoteKernelId(uri: Uri, id: string): Promise<void> {
-        await this.storePreferredRemoteKernelIdInternal(uri, id);
+        await this.updatePreferredRemoteKernelIdInternal(uri, id);
     }
-    public async storePreferredRemoteKernelIdInternal(uri: Uri, id?: string): Promise<void> {
+    public async updatePreferredRemoteKernelIdInternal(uri: Uri, id?: string): Promise<void> {
         let requiresUpdate = false;
 
         // Don't update in memory representation.

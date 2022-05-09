@@ -29,7 +29,7 @@ import {
     waitForTextOutput
 } from './helper.node';
 import {
-    reopeningNotebookUsesSameRemoteKernel,
+    runCellAndVerifyUpdateOfPreferredRemoteKernelId,
     sharedRemoteNotebookEditorTests
 } from './remoteNotebookEditor.vscode.common';
 import { IServiceContainer } from '../../../platform/ioc/types';
@@ -277,7 +277,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         ]);
     });
     test('When switching from remote to local, then clear the preferred remote kernel', async function () {
-        await reopeningNotebookUsesSameRemoteKernel(ipynbFile, svcContainer, true);
+        await runCellAndVerifyUpdateOfPreferredRemoteKernelId(ipynbFile, svcContainer);
 
         const nbEditor = vscodeNotebook.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');
