@@ -6,7 +6,6 @@ import * as uuid from 'uuid/v4';
 import { CancellationToken, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { Cancellation } from '../../../platform/common/cancellation';
-import { WrappedError } from '../../../platform/errors/types';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposableRegistry, IConfigurationService, Resource } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -26,8 +25,10 @@ import {
     INotebookServerFactory
 } from '../types';
 import { IJupyterSubCommandExecutionService } from '../types.node';
-import { JupyterExpiredCertsError } from '../../../platform/errors/jupyterExpiredCertsError';
 import { JupyterConnection } from '../jupyterConnection';
+import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
+import { LocalJupyterServerConnectionError } from '../../../platform/errors/localJupyterServerConnectionError';
+import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSelfCertsExpiredError';
 
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
 
@@ -153,24 +154,18 @@ export class JupyterExecutionBase implements IJupyterExecution {
                             sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter, undefined, undefined, err, true);
 
                             // Check for the self signed certs error specifically
-                            if (err.message.indexOf('reason: self signed certificate') >= 0) {
+                            if (JupyterSelfCertsError.isSelfCertsError(err)) {
                                 sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
                                 throw new JupyterSelfCertsError(connection.baseUrl);
-                            } else if (err.message.indexOf('reason: certificate has expired') >= 0) {
+                            } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(err)) {
                                 sendTelemetryEvent(Telemetry.ConnectRemoteExpiredCertFailedJupyter);
-                                throw new JupyterExpiredCertsError(connection.baseUrl);
+                                throw new JupyterSelfCertsExpiredError(connection.baseUrl);
                             } else {
-                                throw WrappedError.from(
-                                    DataScience.jupyterNotebookRemoteConnectFailed().format(connection.baseUrl, err),
-                                    err
-                                );
+                                throw new RemoteJupyterServerConnectionError(connection.baseUrl, options.serverId, err);
                             }
                         } else {
                             sendTelemetryEvent(Telemetry.ConnectFailedJupyter, undefined, undefined, err, true);
-                            throw WrappedError.from(
-                                DataScience.jupyterNotebookConnectFailed().format(connection.baseUrl, err),
-                                err
-                            );
+                            throw new LocalJupyterServerConnectionError(err);
                         }
                     } else {
                         throw err;
@@ -214,9 +209,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 cancelToken
             );
         } else {
-            // Prepare our map of server URIs
-            await this.jupyterConnection.updateServerUri(options.uri);
-
             // If we have a URI spec up a connection info for it
             return this.jupyterConnection.createConnectionInfo(options.uri);
         }

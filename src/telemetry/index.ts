@@ -31,6 +31,7 @@ import { InterruptResult, KernelInterpreterDependencyResponse } from '../kernels
 import { populateTelemetryWithErrorInfo } from '../platform/errors';
 import { IExportedKernelService } from '../platform/api/extension';
 import { PreferredKernelExactMatchReason } from '../notebooks/controllers/notebookControllerManager';
+import { SelectJupyterUriCommandSource } from '../kernels/jupyter/serverSelector';
 
 export const waitBeforeSending = 'waitBeforeSending';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -892,13 +893,7 @@ export interface IEventNamePropertyMapping {
          * nativeNotebookStatusBar - Invoked from Native notebook statusbar.
          * nativeNotebookToolbar - Invoked from Native notebook toolbar.
          */
-        commandSource:
-            | 'nonUser'
-            | 'commandPalette'
-            | 'toolbar'
-            | 'nativeNotebookStatusBar'
-            | 'nativeNotebookToolbar'
-            | 'prompt';
+        commandSource: SelectJupyterUriCommandSource;
     };
     [Telemetry.SetJupyterURIToLocal]: never | undefined;
     [Telemetry.SetJupyterURIToUserSpecified]: {

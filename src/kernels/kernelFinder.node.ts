@@ -42,12 +42,6 @@ export class KernelFinder extends BaseKernelFinder {
 
     protected async isValidCachedKernel(kernel: KernelConnectionMetadata): Promise<boolean> {
         switch (kernel.kind) {
-            case 'startUsingRemoteKernelSpec':
-            case 'connectToLiveRemoteKernel':
-                // If this is a a remote kernel, it's valid if the URI is still active
-                const uri = await this.serverUriStorage.getRemoteUri();
-                return uri && uri.includes(kernel.baseUrl) ? true : false;
-
             case 'startUsingPythonInterpreter':
                 // Interpreters have to still exist
                 return this.fs.localFileExists(kernel.interpreter.uri.fsPath);

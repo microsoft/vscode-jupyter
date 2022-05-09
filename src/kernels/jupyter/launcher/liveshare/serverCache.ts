@@ -109,6 +109,7 @@ export class ServerCache implements IAsyncDisposable {
             };
         }
         return {
+            serverId: options.serverId,
             uri: options.uri,
             resource: options?.resource,
             ui: options.ui,

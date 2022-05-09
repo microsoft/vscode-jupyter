@@ -13,7 +13,7 @@ import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError';
 import { KernelDiedError } from './kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError';
 import { KernelProcessExitedError } from './kernelProcessExitedError';
-import { IApplicationShell, IWorkspaceService } from '../common/application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { traceError, traceWarning } from '../logging';
 import { IBrowserService, IConfigurationService, Resource } from '../common/types';
 import { DataScience, Common } from '../common/utils/localize';
@@ -40,12 +40,15 @@ import { KernelDeadError } from './kernelDeadError';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import {
     IJupyterInterpreterDependencyManager,
+    IJupyterServerUriStorage,
     JupyterInterpreterDependencyResponse
 } from '../../kernels/jupyter/types';
 import { handleExpiredCertsError, handleSelfCertsError } from '../../kernels/jupyter/jupyterUtils';
 import { getFilePath } from '../common/platform/fs-paths';
 import { CancellationError } from '../common/cancellation';
 import { JupyterExpiredCertsError } from './jupyterExpiredCertsError';
+import { computeUriHash } from '../../kernels/jupyter/jupyterUtils';
+import { RemoteJupyterServerConnectionError } from './remoteJupyterServerConnectionError';
 
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {
@@ -59,7 +62,9 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         @inject(IKernelDependencyService)
         @optional()
         private readonly kernelDependency: IKernelDependencyService | undefined,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
+        @inject(ICommandManager) private readonly commandManager: ICommandManager
     ) {}
     private handledErrors = new WeakSet<Error>();
     public async handleError(err: Error): Promise<void> {
@@ -103,6 +108,8 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             return getIPyKernelMissingErrorMessageForCell(error.kernelConnectionMetadata) || error.message;
         } else if (error instanceof JupyterInstallError) {
             return getJupyterMissingErrorMessageForCell(error) || error.message;
+        } else if (error instanceof RemoteJupyterServerConnectionError) {
+            return error.message;
         } else if (error instanceof VscCancellationError || error instanceof CancellationError) {
             // Don't show the message for cancellation errors
             traceWarning(`Cancelled by user`, error);
@@ -177,6 +184,42 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             return response === JupyterInterpreterDependencyResponse.ok
                 ? KernelInterpreterDependencyResponse.ok
                 : KernelInterpreterDependencyResponse.cancel;
+        } else if (err instanceof RemoteJupyterServerConnectionError) {
+            const selection = await this.applicationShell.showErrorMessage(
+                DataScience.remoteJupyterConnectionFailedWithServer().format(err.baseUrl),
+                { detail: err.originalError.message || '', modal: true },
+                DataScience.removeRemoteJupyterConnectionButtonText(),
+                DataScience.changeRemoteJupyterConnectionButtonText(),
+                DataScience.selectDifferentKernel()
+            );
+            const serverId = err.serverId;
+            switch (selection) {
+                case DataScience.removeRemoteJupyterConnectionButtonText(): {
+                    // Start with saved list.
+                    const uriList = await this.serverUriStorage.getSavedUriList();
+
+                    // Remove this uri if already found (going to add again with a new time)
+                    const item = uriList.find((f) => computeUriHash(f.uri) === serverId);
+                    if (item) {
+                        await this.serverUriStorage.removeUri(item.uri);
+                    }
+                    // Wait until all of the remote controllers associated with this server have been removed.
+                    return KernelInterpreterDependencyResponse.cancel;
+                }
+                case DataScience.changeRemoteJupyterConnectionButtonText(): {
+                    await this.commandManager.executeCommand(
+                        Commands.SelectJupyterURI,
+                        true,
+                        'errorHandler',
+                        undefined
+                    );
+                    return KernelInterpreterDependencyResponse.cancel;
+                }
+                case DataScience.selectDifferentKernel(): {
+                    return KernelInterpreterDependencyResponse.selectDifferentKernel;
+                }
+            }
+            return KernelInterpreterDependencyResponse.cancel;
         } else if (err instanceof JupyterSelfCertsError) {
             // On a self cert error, warn the user and ask if they want to change the setting
             const enableOption: string = DataScience.jupyterSelfCertEnable();

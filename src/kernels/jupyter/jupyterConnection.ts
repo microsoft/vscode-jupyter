@@ -48,30 +48,25 @@ export class JupyterConnection implements IExtensionSyncActivationService {
         this.pendingTimeouts.forEach((t) => clearTimeout(t as any));
         this.pendingTimeouts = [];
     }
-    public createConnectionInfo(uri: string) {
+    public async createConnectionInfo(uri: string) {
+        // Prepare our map of server URIs
+        await this.updateServerUri(uri);
         return createRemoteConnectionInfo(uri, this.getServerUri.bind(this));
     }
     public async validateRemoteUri(uri: string): Promise<void> {
-        // Prepare our map of server URIs (needed in order to retrieve the uri during the connection)
-        await this.updateServerUri(uri);
-
-        // Create an active connection.
-        return this.validateRemoteConnection(await createRemoteConnectionInfo(uri, this.getServerUri.bind(this)));
+        return this.validateRemoteConnection(await this.createConnectionInfo(uri));
     }
 
-    public async validateRemoteConnection(connection: IJupyterConnection): Promise<void> {
+    private async validateRemoteConnection(connection: IJupyterConnection): Promise<void> {
         let sessionManager: IJupyterSessionManager | undefined = undefined;
         try {
             // Attempt to list the running kernels. It will return empty if there are none, but will
             // throw if can't connect.
             sessionManager = await this.jupyterSessionManagerFactory.create(connection, false);
-            await Promise.all([sessionManager.getRunningKernels(), sessionManager.getKernelSpecs]);
-
+            await Promise.all([sessionManager.getRunningKernels(), sessionManager.getKernelSpecs()]);
             // We should throw an exception if any of that fails.
         } finally {
-            if (connection) {
-                connection.dispose();
-            }
+            connection.dispose();
             if (sessionManager) {
                 void sessionManager.dispose();
             }

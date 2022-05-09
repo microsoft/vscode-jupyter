@@ -10,7 +10,7 @@ import { ICommandManager } from '../../../platform/common/application/types';
 import { Commands } from '../../../platform/common/constants';
 import { IDisposable } from '../../../platform/common/types';
 import { traceInfo } from '../../../platform/logging';
-import { JupyterServerSelector } from '../serverSelector';
+import { JupyterServerSelector, SelectJupyterUriCommandSource } from '../serverSelector';
 import { IJupyterServerUriStorage } from '../types';
 
 @injectable()
@@ -36,7 +36,7 @@ export class JupyterServerSelectorCommand implements IDisposable {
 
     private async selectJupyterUri(
         local: boolean = true,
-        source: Uri | 'nativeNotebookStatusBar' | 'commandPalette' | 'toolbar' = 'commandPalette',
+        source: Uri | SelectJupyterUriCommandSource = 'commandPalette',
         notebook: NotebookDocument | undefined
     ): Promise<undefined | string> {
         if (source instanceof Uri) {

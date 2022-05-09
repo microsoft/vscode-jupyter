@@ -8,6 +8,7 @@ import { createPromiseFromCancellation } from '../platform/common/cancellation';
 import { Settings, Telemetry } from '../platform/common/constants';
 import { Resource } from '../platform/common/types';
 import { getResourceType } from '../platform/common/utils';
+import { createDeferredFromPromise } from '../platform/common/utils/async';
 import { noop } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { isArray } from '../platform/common/utils/sysTypes';
@@ -151,13 +152,17 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         if (this.serverConnectionType.isLocalLaunch) {
             return [];
         }
-        const connInfo = await this.getRemoteConnectionInfo(cancelToken);
 
+        // If there are any errors in fetching the remote kernel specs without cache,
+        // then fall back to the cache.
+        // I.e. the cache will always be used if we can't fetch the remote kernel specs.
         return this.listKernelsUsingFinder(
-            () =>
-                this.remoteKernelFinder
+            async () => {
+                const connInfo = await this.getRemoteConnectionInfo(cancelToken);
+                return this.remoteKernelFinder
                     ? this.remoteKernelFinder.listKernels(resource, connInfo, cancelToken)
-                    : Promise.resolve([]),
+                    : Promise.resolve([]);
+            },
             cancelToken,
             'remote',
             useCache
@@ -172,27 +177,48 @@ export abstract class BaseKernelFinder implements IKernelFinder {
     ) {
         const kernelsFromCachePromise =
             useCache === 'ignoreCache' ? Promise.resolve([]) : this.getFromCache(kind, cancelToken);
-        let kernelsRetrievedFromCache: boolean | undefined;
+        let updateCache = true;
         const kernelsWithoutCachePromise = finder();
         let kernels: KernelConnectionMetadata[] = [];
         if (useCache === 'ignoreCache') {
-            kernels = await kernelsWithoutCachePromise;
+            try {
+                kernels = await kernelsWithoutCachePromise;
+            } catch (ex) {
+                // Since fetching the remote kernels failed, we fall back to the cache,
+                // at this point no need to display all of the kernel specs,
+                // Its possible the connection is dead, just display the live kernels we had.
+                // I.e. if user had a notebook connected to a remote kernel, then just display that live kernel.
+                kernels = await this.getFromCache(kind, cancelToken);
+                kernels = kernels.filter((item) => item.kind === 'connectToLiveRemoteKernel');
+                updateCache = false;
+            }
         } else {
             let kernelsFromCache: KernelConnectionMetadata[] | undefined;
             kernelsFromCachePromise
                 .then((items) => {
                     kernelsFromCache = items;
-                    kernelsRetrievedFromCache = true;
+                    updateCache = false;
                 })
                 .catch(noop);
 
             try {
-                await Promise.race([kernelsFromCachePromise, kernelsWithoutCachePromise]);
+                const kernelsWithoutCacheDeferred = createDeferredFromPromise(kernelsWithoutCachePromise);
+                try {
+                    await Promise.race([kernelsFromCachePromise, kernelsWithoutCacheDeferred.promise]);
+                } catch (ex) {
+                    // If we failed to get without cache, then await on the cache promise as a fallback.
+                    if (kernelsWithoutCacheDeferred.rejected) {
+                        await kernelsFromCachePromise;
+                    } else {
+                        throw ex;
+                    }
+                }
                 // If we finish the cache first, and we don't have any items, in the cache, then load without cache.
                 if (Array.isArray(kernelsFromCache) && kernelsFromCache.length > 0) {
                     kernels = kernelsFromCache;
                 } else {
                     kernels = await kernelsWithoutCachePromise;
+                    updateCache = true;
                 }
             } catch (ex) {
                 traceError(`Exception loading kernels: ${ex}`);
@@ -200,7 +226,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         }
 
         // Do not update the cache if we got kernels from the cache.
-        if (!kernelsRetrievedFromCache) {
+        if (updateCache) {
             void this.writeToCache(kind, kernels);
         }
         return kernels;

@@ -48,7 +48,6 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
     ): Promise<KernelConnectionMetadata[]> {
         // Get a jupyter session manager to talk to
         let sessionManager: IJupyterSessionManager | undefined;
-
         // This should only be used when doing remote.
         if (connInfo.type === 'jupyter') {
             try {
@@ -113,6 +112,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                 return items;
             } catch (ex) {
                 traceError(`Error fetching remote kernels:`, ex);
+                throw ex;
             } finally {
                 if (sessionManager) {
                     await sessionManager.dispose();

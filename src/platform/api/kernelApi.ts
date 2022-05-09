@@ -138,7 +138,7 @@ class JupyterKernelService implements IExportedKernelService {
                     uri: item.id
                 });
             });
-        this.notebookControllerManager.registeredNotebookControllers().forEach((item) => {
+        this.notebookControllerManager.getRegisteredNotebookControllers().forEach((item) => {
             if (item.controller.notebookType !== JupyterNotebookView) {
                 return;
             }
@@ -190,7 +190,7 @@ class JupyterKernelService implements IExportedKernelService {
         if (!metadata) {
             throw new Error('Not found');
         }
-        const controllers = this.notebookControllerManager.registeredNotebookControllers();
+        const controllers = this.notebookControllerManager.getRegisteredNotebookControllers();
         const controller = controllers.find((item) => item.connection.id === metadata.id);
         if (!controller) {
             throw new Error('Not found');

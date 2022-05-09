@@ -204,6 +204,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
 
         return {
             uri,
+            serverId: options.serverId,
             resource: options.resource,
             ui: this.ui,
             localJupyter: false
