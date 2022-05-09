@@ -26,6 +26,7 @@ import {
     INotebookServerFactory
 } from '../types';
 import { IJupyterSubCommandExecutionService } from '../types.node';
+import { JupyterExpiredCertsError } from '../../../platform/errors/jupyterExpiredCertsError';
 import { JupyterConnection } from '../jupyterConnection';
 
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
@@ -155,6 +156,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
                             if (err.message.indexOf('reason: self signed certificate') >= 0) {
                                 sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
                                 throw new JupyterSelfCertsError(connection.baseUrl);
+                            } else if (err.message.indexOf('reason: certificate has expired') >= 0) {
+                                sendTelemetryEvent(Telemetry.ConnectRemoteExpiredCertFailedJupyter);
+                                throw new JupyterExpiredCertsError(connection.baseUrl);
                             } else {
                                 throw WrappedError.from(
                                     DataScience.jupyterNotebookRemoteConnectFailed().format(connection.baseUrl, err),

@@ -24,7 +24,7 @@ import { IWorkspaceService, IApplicationShell, ICommandManager } from '../common
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
 import { IExtensions, IDisposableRegistry, Resource, IExtensionContext } from '../common/types';
 import { createDeferred } from '../common/utils/async';
-import { traceDecoratorVerbose, traceError, traceInfo, traceVerbose } from '../logging';
+import { traceDecoratorVerbose, traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../logging';
 import { getDisplayPath, getFilePath } from '../common/platform/fs-paths';
 import { IInterpreterSelector, IInterpreterQuickPickItem } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -396,6 +396,7 @@ export class InterpreterService implements IInterpreterService {
         if (activeInterpreter) {
             allInterpreters.push(activeInterpreter);
         }
+        traceInfoIfCI(`Full interpreter list length: ${allInterpreters.length}`);
         allInterpreters.forEach((interpreter) => {
             if (interpreter && !result.find((r) => areInterpreterPathsSame(r.uri, interpreter.uri))) {
                 result.push(interpreter);

@@ -26,7 +26,7 @@ import {
     JupyterServerUriHandle
 } from './types';
 import { IDataScienceErrorHandler, WrappedError } from '../../platform/errors/types';
-import { handleCertsError } from './jupyterUtils';
+import { handleExpiredCertsError, handleSelfCertsError } from './jupyterUtils';
 import { IConfigurationService } from '../../platform/common/types';
 import { JupyterConnection } from './jupyterConnection';
 
@@ -86,7 +86,13 @@ export class JupyterServerSelector {
         } catch (err) {
             if (err.message.indexOf('reason: self signed certificate') >= 0) {
                 sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
-                const handled = await handleCertsError(this.applicationShell, this.configService, err.message);
+                const handled = await handleSelfCertsError(this.applicationShell, this.configService, err.message);
+                if (!handled) {
+                    return;
+                }
+            } else if (err.message.indexOf('reason: certificate has expired') >= 0) {
+                sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
+                const handled = await handleExpiredCertsError(this.applicationShell, this.configService, err.message);
                 if (!handled) {
                     return;
                 }

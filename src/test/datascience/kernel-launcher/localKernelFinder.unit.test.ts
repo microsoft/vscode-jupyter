@@ -111,6 +111,10 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
             (testData.interpreters || []).forEach((item) =>
                 'interpreter' in item ? distinctInterpreters.add(item.interpreter) : distinctInterpreters.add(item)
             );
+            if (activeInterpreter) {
+                // Get interpreters also includes the active interpreter in the product.
+                distinctInterpreters.add(activeInterpreter);
+            }
             testData.interpreters = Array.from(distinctInterpreters);
             when(interpreterService.getInterpreters(anything())).thenResolve(Array.from(distinctInterpreters));
             when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);

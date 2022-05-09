@@ -76,16 +76,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         resource: Resource,
         cancelToken?: CancellationToken
     ): Promise<(LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata)[]> {
-        const activeInterpreterPromise = this.extensionChecker.isPythonExtensionInstalled
-            ? this.interpreterService.getActiveInterpreter(resource)
-            : undefined;
         const interpreters = this.extensionChecker.isPythonExtensionInstalled
             ? await this.interpreterService.getInterpreters(resource)
             : [];
-        const activeInterpreter = activeInterpreterPromise ? await activeInterpreterPromise : undefined;
-        if (activeInterpreter) {
-            interpreters.push(activeInterpreter);
-        }
+
+        traceInfoIfCI(`Listing kernels for ${interpreters.length} interpreters`);
         // If we don't have Python extension installed or don't discover any Python interpreters
         // then list all of the global python kernel specs.
         if (interpreters.length === 0 || !this.extensionChecker.isPythonExtensionInstalled) {
@@ -422,7 +417,11 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         interpreters: PythonEnvironment[],
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec[]> {
-        traceInfoIfCI(`Finding kernel specs for interpreters: ${interpreters.map((i) => i.uri).join('\n')}`);
+        traceInfoIfCI(
+            `Finding kernel specs for ${interpreters.length} interpreters: ${interpreters
+                .map((i) => `${i.displayName} => ${i.uri}`)
+                .join('\n')}`
+        );
         // Find all the possible places to look for this resource
         const interpreterPaths = this.findKernelPathsOfAllInterpreters(interpreters);
         const [rootSpecPaths, globalSpecRootPath] = await Promise.all([
