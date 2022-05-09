@@ -228,7 +228,7 @@ export class JupyterServerSelector {
         }
     }
 
-    private validateSelectJupyterURI = async (inputText: string): Promise<string | undefined> => {
+    public validateSelectJupyterURI = async (inputText: string): Promise<string | undefined> => {
         inputText = inputText.trim();
         try {
             new URL(inputText);
@@ -247,7 +247,7 @@ export class JupyterServerSelector {
             traceWarning('Uri verification error', err);
             if (JupyterSelfCertsError.isSelfCertsError(err)) {
                 sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
-                const handled = await handleExpiredCertsError(this.applicationShell, this.configService, err.message);
+                const handled = await handleSelfCertsError(this.applicationShell, this.configService, err.message);
                 if (!handled) {
                     return DataScience.jupyterSelfCertFailErrorMessageOnly();
                 }

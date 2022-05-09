@@ -65,7 +65,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         const onDidChangeEvent = new EventEmitter<void>();
         disposables.push(onDidChangeEvent);
         when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);
-
+        when(configService.updateSetting(anything(), anything(), anything(), anything())).thenResolve();
         const storage = new JupyterServerUriStorage(
             instance(workspaceService),
             instance(crypto),
@@ -239,9 +239,22 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         verify(connection.validateRemoteUri('https://localhost:1111')).atLeast(1);
     });
 
-    test('Remote authorization is asked and works', async () => {
+    test('Remote authorization is asked when ssl cert is invalid and works', async () => {
         const { selector, storage } = createDataScienceObject('$(server) Existing', 'https://localhost:1111', true);
         when(connection.validateRemoteUri(anyString())).thenReject(new Error('reason: self signed certificate'));
+        when(
+            applicationShell.showErrorMessage(anything(), deepEqual({ modal: true }), anything(), anything())
+        ).thenCall((_m, _opt, c1, _c2) => {
+            return Promise.resolve(c1);
+        });
+        await selector.selectJupyterURI(true);
+        const value = await storage.getUri();
+        assert.equal(value, 'https://localhost:1111', 'Validation failed');
+        verify(connection.validateRemoteUri('https://localhost:1111')).atLeast(1);
+    });
+    test('Remote authorization is asked when ssl cert has expired is invalid and works', async () => {
+        const { selector, storage } = createDataScienceObject('$(server) Existing', 'https://localhost:1111', true);
+        when(connection.validateRemoteUri(anyString())).thenReject(new Error('reason: certificate has expired'));
         when(
             applicationShell.showErrorMessage(anything(), deepEqual({ modal: true }), anything(), anything())
         ).thenCall((_m, _opt, c1, _c2) => {
