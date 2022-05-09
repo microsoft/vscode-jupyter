@@ -110,7 +110,6 @@ export class ServerCache implements IAsyncDisposable {
         }
         return {
             serverId: options.serverId,
-            uri: options.uri,
             resource: options?.resource,
             ui: options.ui,
             localJupyter: false
@@ -119,7 +118,6 @@ export class ServerCache implements IAsyncDisposable {
 
     private generateKey(options: INotebookServerOptions): string {
         // combine all the values together to make a unique key
-        const uri = options.localJupyter ? '' : options.uri.toString();
-        return `uri=${uri};local=${options.localJupyter};`;
+        return `serverId=${options.localJupyter ? '' : options.serverId};local=${options.localJupyter};`;
     }
 }

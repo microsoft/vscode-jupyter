@@ -6,10 +6,11 @@ import { IExtensionSyncActivationService } from '../../platform/activation/types
 import { Identifiers } from '../../platform/common/constants';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { IJupyterConnection } from '../types';
-import { createRemoteConnectionInfo } from './jupyterUtils';
+import { computeUriHash, createRemoteConnectionInfo } from './jupyterUtils';
 import { ServerConnectionType } from './launcher/serverConnectionType';
 import {
     IJupyterServerUri,
+    IJupyterServerUriStorage,
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
     IJupyterUriProviderRegistration,
@@ -27,7 +28,8 @@ export class JupyterConnection implements IExtensionSyncActivationService {
         private readonly jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IDisposableRegistry)
         private readonly disposables: IDisposableRegistry,
-        @inject(ServerConnectionType) private readonly serverConnectionType: ServerConnectionType
+        @inject(ServerConnectionType) private readonly serverConnectionType: ServerConnectionType,
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
     ) {
         disposables.push(this);
     }
@@ -48,13 +50,27 @@ export class JupyterConnection implements IExtensionSyncActivationService {
         this.pendingTimeouts.forEach((t) => clearTimeout(t as any));
         this.pendingTimeouts = [];
     }
-    public async createConnectionInfo(uri: string) {
+
+    public async createConnectionInfo(serverId: string) {
+        const uri = await this.getUriFromServerId(serverId);
+        if (!uri) {
+            throw new Error('Server Not found');
+        }
+        return this.createConnectionInfoFromUri(uri);
+    }
+    public async validateRemoteUri(uri: string): Promise<void> {
+        return this.validateRemoteConnection(await this.createConnectionInfoFromUri(uri));
+    }
+
+    private async getUriFromServerId(serverId: string) {
+        // Since there's one server per session, don't use a resource to figure out these settings
+        const savedList = await this.serverUriStorage.getSavedUriList();
+        return savedList.find((item) => computeUriHash(item.uri) === serverId)?.uri;
+    }
+    private async createConnectionInfoFromUri(uri: string) {
         // Prepare our map of server URIs
         await this.updateServerUri(uri);
         return createRemoteConnectionInfo(uri, this.getServerUri.bind(this));
-    }
-    public async validateRemoteUri(uri: string): Promise<void> {
-        return this.validateRemoteConnection(await this.createConnectionInfo(uri));
     }
 
     private async validateRemoteConnection(connection: IJupyterConnection): Promise<void> {

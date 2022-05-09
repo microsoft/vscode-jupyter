@@ -76,7 +76,6 @@ export type INotebookServerLocalOptions = {
     localJupyter: true;
 };
 export type INotebookServerRemoteOptions = {
-    uri: string;
     serverId: string;
     resource: Resource;
     ui: IDisplayOptions;
