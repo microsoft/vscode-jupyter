@@ -218,6 +218,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
                     kernels = kernelsFromCache;
                 } else {
                     kernels = await kernelsWithoutCachePromise;
+                    updateCache = true;
                 }
             } catch (ex) {
                 traceError(`Exception loading kernels: ${ex}`);
