@@ -335,10 +335,12 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // Never remove remote kernels that don't exist.
             // Always leave them there for user to select, and if the connection is not available/not valid,
             // then notify the user and remove them.
+            // Unless the user switches to using local kernels (i.e. doesn't have a remote kernel setup).
             if (
                 connectionIsNoLongerValid &&
                 (controller.connection.kind === 'connectToLiveRemoteKernel' ||
-                    controller.connection.kind === 'startUsingRemoteKernelSpec')
+                    controller.connection.kind === 'startUsingRemoteKernelSpec') &&
+                !this.isLocalLaunch
             ) {
                 controller.flagRemoteKernelAsOutdated();
                 return true;
