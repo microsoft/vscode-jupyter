@@ -48,7 +48,8 @@ import {
     IKernelProvider,
     KernelConnectionMetadata,
     PythonKernelConnectionMetadata,
-    IKernelFinder
+    IKernelFinder,
+    isLocalConnection
 } from '../../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from '../constants';
 import { isPythonNotebook, getNotebookMetadata } from '../helpers';
@@ -291,7 +292,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
 
     private async loadNotebookControllersImpl(cancelToken: CancellationToken) {
-        const cachedConnections = await this.listKernels(cancelToken, 'useCache');
+        let cachedConnections = await this.listKernels(cancelToken, 'useCache');
+        // Remove all remove kernels if we're no longer interested in them.
+        if (this.isLocalLaunch) {
+            cachedConnections = cachedConnections.filter((connection) => isLocalConnection(connection));
+        }
         const nonCachedConnectionsPromise = this.listKernels(cancelToken, 'ignoreCache');
 
         traceVerbose(`Found ${cachedConnections.length} cached controllers`);
