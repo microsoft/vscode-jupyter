@@ -196,11 +196,7 @@ export async function runCellAndVerifyUpdateOfPreferredRemoteKernelId(
     );
 }
 
-
-export async function reopeningNotebookUsesSameRemoteKernel(
-    ipynbFile: Uri,
-    serviceContainer: IServiceContainer
-) {
+export async function reopeningNotebookUsesSameRemoteKernel(ipynbFile: Uri, serviceContainer: IServiceContainer) {
     await runCellAndVerifyUpdateOfPreferredRemoteKernelId(ipynbFile, serviceContainer);
     let nbEditor = window.activeNotebookEditor!;
 
