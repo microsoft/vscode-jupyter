@@ -23,12 +23,12 @@ import {
     IJupyterUriProvider,
     IJupyterUriProviderRegistration,
     IJupyterServerUriStorage,
-    JupyterServerUriHandle,
-    IJupyterExecution
+    JupyterServerUriHandle
 } from './types';
 import { IDataScienceErrorHandler, WrappedError } from '../../platform/errors/types';
 import { handleExpiredCertsError, handleSelfCertsError } from './jupyterUtils';
 import { IConfigurationService } from '../../platform/common/types';
+import { JupyterConnection } from './jupyterConnection';
 
 const defaultUri = 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe';
 
@@ -55,11 +55,11 @@ export class JupyterServerSelector {
         @inject(IJupyterUriProviderRegistration)
         private extraUriProviders: IJupyterUriProviderRegistration,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(IJupyterExecution) private readonly execution: IJupyterExecution,
         @inject(IDataScienceErrorHandler)
         private readonly errorHandler: IDataScienceErrorHandler,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService
+        @inject(IConfigurationService) private readonly configService: IConfigurationService,
+        @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection
     ) {}
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
@@ -82,7 +82,7 @@ export class JupyterServerSelector {
     public async setJupyterURIToRemote(userURI: string): Promise<void> {
         // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
         try {
-            await this.execution.validateRemoteUri(userURI);
+            await this.jupyterConnection.validateRemoteUri(userURI);
         } catch (err) {
             if (err.message.indexOf('reason: self signed certificate') >= 0) {
                 sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);

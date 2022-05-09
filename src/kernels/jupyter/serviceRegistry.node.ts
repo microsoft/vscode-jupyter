@@ -23,6 +23,7 @@ import { JupyterInterpreterSubCommandExecutionService } from './interpreter/jupy
 import { NbConvertExportToPythonService } from './interpreter/nbconvertExportToPythonService.node';
 import { NbConvertInterpreterDependencyChecker } from './interpreter/nbconvertInterpreterDependencyChecker.node';
 import { CellOutputMimeTypeTracker } from './jupyterCellOutputMimeTypeTracker.node';
+import { JupyterConnection } from './jupyterConnection';
 import { JupyterKernelService } from './jupyterKernelService.node';
 import { JupyterUriProviderRegistration } from './jupyterUriProviderRegistration';
 import { JupyterCommandLineSelector } from './launcher/commandLineSelector';
@@ -144,4 +145,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<IJupyterRequestCreator>(IJupyterRequestCreator, JupyterRequestCreator);
     serviceManager.addSingleton<IJupyterRequestAgentCreator>(IJupyterRequestAgentCreator, RequestAgentCreator);
     serviceManager.addSingleton<ServerConnectionType>(ServerConnectionType, ServerConnectionType);
+    serviceManager.addSingleton<JupyterConnection>(JupyterConnection, JupyterConnection);
+    serviceManager.addBinding(JupyterConnection, IExtensionSingleActivationService);
 }

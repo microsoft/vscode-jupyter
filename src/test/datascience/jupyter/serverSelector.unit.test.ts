@@ -23,18 +23,17 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { JupyterUriProviderRegistration } from '../../../kernels/jupyter/jupyterUriProviderRegistration';
 import { Settings } from '../../../platform/common/constants';
-import { HostJupyterExecution } from '../../../kernels/jupyter/launcher/liveshare/hostJupyterExecution';
 import { DataScienceErrorHandler } from '../../../platform/errors/errorHandler';
-import { IJupyterExecution } from '../../../kernels/jupyter/types';
 import { IDisposable } from '../../../platform/common/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverConnectionType';
+import { JupyterConnection } from '../../../kernels/jupyter/jupyterConnection';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - Jupyter Server URI Selector', () => {
     let quickPick: MockQuickPick | undefined;
     let clipboard: IClipboard;
-    let execution: IJupyterExecution;
+    let connection: JupyterConnection;
     let applicationShell: IApplicationShell;
     const disposables: IDisposable[] = [];
     function createDataScienceObject(
@@ -59,7 +58,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         when(workspaceService.getWorkspaceFolderIdentifier(anything())).thenReturn('1');
         when(workspaceService.hasWorkspaceFolders).thenReturn(hasFolders);
         const encryptedStorage = new MockEncryptedStorage();
-        execution = mock(HostJupyterExecution);
+        connection = mock<JupyterConnection>();
         const handler = mock(DataScienceErrorHandler);
         const connectionType = mock<ServerConnectionType>();
         when(connectionType.isLocalLaunch).thenReturn(false);
@@ -80,10 +79,10 @@ suite('DataScience - Jupyter Server URI Selector', () => {
             multiStepFactory,
             instance(picker),
             storage,
-            instance(execution),
             instance(handler),
             instance(applicationShell),
-            instance(configService)
+            instance(configService),
+            instance(connection)
         );
         return { selector, storage };
     }
@@ -237,40 +236,40 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         await selector.selectJupyterURI(true);
         const value = await storage.getUri();
         assert.equal(value, 'https://localhost:1111', 'Validation failed');
-        verify(execution.validateRemoteUri('https://localhost:1111')).once();
+        verify(connection.validateRemoteUri('https://localhost:1111')).once();
     });
 
     test('Remote authorization is asked and works', async () => {
         const { selector, storage } = createDataScienceObject('$(server) Existing', 'https://localhost:1111', true);
-        when(execution.validateRemoteUri(anyString())).thenReject(new Error('reason: self signed certificate'));
+        when(connection.validateRemoteUri(anyString())).thenReject(new Error('reason: self signed certificate'));
         when(applicationShell.showErrorMessage(anything(), anything(), anything())).thenCall((_m, c1, _c2) => {
             return Promise.resolve(c1);
         });
         await selector.selectJupyterURI(true);
         const value = await storage.getUri();
         assert.equal(value, 'https://localhost:1111', 'Validation failed');
-        verify(execution.validateRemoteUri('https://localhost:1111')).once();
+        verify(connection.validateRemoteUri('https://localhost:1111')).once();
     });
 
     test('Remote authorization is asked and skipped', async () => {
         const { selector, storage } = createDataScienceObject('$(server) Existing', 'https://localhost:1111', true);
-        when(execution.validateRemoteUri(anyString())).thenReject(new Error('reason: self signed certificate'));
+        when(connection.validateRemoteUri(anyString())).thenReject(new Error('reason: self signed certificate'));
         when(applicationShell.showErrorMessage(anything(), anything(), anything())).thenCall((_m, _c1, c2) => {
             return Promise.resolve(c2);
         });
         await selector.selectJupyterURI(true);
         const value = await storage.getUri();
         assert.equal(value, 'local', 'Should not be a remote URI');
-        verify(execution.validateRemoteUri('https://localhost:1111')).once();
+        verify(connection.validateRemoteUri('https://localhost:1111')).once();
     });
 
     test('Remote authorization is asked and skipped for a different error', async () => {
         const { selector, storage } = createDataScienceObject('$(server) Existing', 'https://localhost:1111', true);
-        when(execution.validateRemoteUri(anyString())).thenReject(new Error('different error'));
+        when(connection.validateRemoteUri(anyString())).thenReject(new Error('different error'));
         await selector.selectJupyterURI(true);
         const value = await storage.getUri();
         assert.equal(value, 'local', 'Should not be a remote URI');
-        verify(execution.validateRemoteUri('https://localhost:1111')).once();
+        verify(connection.validateRemoteUri('https://localhost:1111')).once();
     });
 
     suite('Default Uri when selecting remote uri', () => {
