@@ -24,7 +24,6 @@ import {
 } from '../types';
 import { NotSupportedInWebError } from '../../../platform/errors/notSupportedInWebError';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
-import { computeUriHash } from '../jupyterUtils';
 
 const localCacheKey = 'LocalJupyterSererCacheKey';
 @injectable()
@@ -34,7 +33,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
     constructor(
         @inject(IJupyterExecution) @optional() private readonly jupyterExecution: IJupyterExecution | undefined,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
+        @inject(IJupyterServerUriStorage) serverUriStorage: IJupyterServerUriStorage,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {
         serverUriStorage.onDidChangeUri(
@@ -192,18 +191,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
             };
         }
 
-        // Since there's one server per session, don't use a resource to figure out these settings
-        const savedList = await this.serverUriStorage.getSavedUriList();
-        let uri = !options.localJupyter
-            ? savedList.find((item) => computeUriHash(item.uri) === options.serverId)?.uri
-            : undefined;
-
-        if (!uri) {
-            throw new Error('Remote Jupyter Server connection not provided');
-        }
-
         return {
-            uri,
             serverId: options.serverId,
             resource: options.resource,
             ui: this.ui,

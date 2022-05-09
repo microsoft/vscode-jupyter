@@ -9,6 +9,7 @@ import { EventEmitter } from 'vscode';
 import { JupyterConnection } from '../../../kernels/jupyter/jupyterConnection';
 import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverConnectionType';
 import {
+    IJupyterServerUriStorage,
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
     IJupyterUriProviderRegistration
@@ -23,17 +24,20 @@ suite('Jupyter Connection', async () => {
     let sessionManagerFactory: IJupyterSessionManagerFactory;
     let serverConnectionType: ServerConnectionType;
     let sessionManager: IJupyterSessionManager;
+    let serverUriStorage: IJupyterServerUriStorage;
     const disposables: IDisposable[] = [];
     setup(() => {
         registrationPicker = mock<IJupyterUriProviderRegistration>();
         sessionManagerFactory = mock<IJupyterSessionManagerFactory>();
         serverConnectionType = mock<ServerConnectionType>();
         sessionManager = mock<IJupyterSessionManager>();
+        serverUriStorage = mock<IJupyterServerUriStorage>();
         jupyterConnection = new JupyterConnection(
             instance(registrationPicker),
             instance(sessionManagerFactory),
             disposables,
-            instance(serverConnectionType)
+            instance(serverConnectionType),
+            instance(serverUriStorage)
         );
 
         (instance(sessionManager) as any).then = undefined;
