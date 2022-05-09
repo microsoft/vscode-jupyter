@@ -25,10 +25,10 @@ import {
     INotebookServerFactory
 } from '../types';
 import { IJupyterSubCommandExecutionService } from '../types.node';
-import { JupyterExpiredCertsError } from '../../../platform/errors/jupyterExpiredCertsError';
 import { JupyterConnection } from '../jupyterConnection';
 import { RemoteJupyterServerConnectionError } from '../../../platform/errors/remoteJupyterServerConnectionError';
 import { LocalJupyterServerConnectionError } from '../../../platform/errors/localJupyterServerConnectionError';
+import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSelfCertsExpiredError';
 
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
 
@@ -157,9 +157,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
                             if (JupyterSelfCertsError.isSelfCertsError(err)) {
                                 sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
                                 throw new JupyterSelfCertsError(connection.baseUrl);
-                            } else if (err.message.indexOf('reason: certificate has expired') >= 0) {
+                            } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(err)) {
                                 sendTelemetryEvent(Telemetry.ConnectRemoteExpiredCertFailedJupyter);
-                                throw new JupyterExpiredCertsError(connection.baseUrl);
+                                throw new JupyterSelfCertsExpiredError(connection.baseUrl);
                             } else {
                                 throw new RemoteJupyterServerConnectionError(connection.baseUrl, options.serverId, err);
                             }

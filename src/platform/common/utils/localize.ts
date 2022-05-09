@@ -354,6 +354,10 @@ export namespace DataScience {
         'DataScience.jupyterSelfCertFailErrorMessageOnly',
         'The security certificate used by server was not issued by a trusted certificate authority.\r\nThis may indicate an attempt to steal your information.'
     );
+    export const jupyterSelfCertExpiredErrorMessageOnly = localize(
+        'DataScience.jupyterSelfCertExpiredErrorMessageOnly',
+        'The security certificate used by server has expired.\r\nThis may indicate an attempt to steal your information.'
+    );
     export const jupyterSelfCertEnable = localize('DataScience.jupyterSelfCertEnable', 'Yes, connect anyways');
     export const jupyterSelfCertClose = localize('DataScience.jupyterSelfCertClose', 'No, close the connection');
     export const pythonInteractiveHelpLink = localize(

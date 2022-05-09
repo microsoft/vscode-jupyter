@@ -31,6 +31,7 @@ import { IConfigurationService } from '../../platform/common/types';
 import { JupyterConnection } from './jupyterConnection';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
 import { RemoteJupyterServerConnectionError } from '../../platform/errors/remoteJupyterServerConnectionError';
+import { JupyterSelfCertsExpiredError } from '../../platform/errors/jupyterSelfCertsExpiredError';
 
 const defaultUri = 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe';
 
@@ -95,7 +96,7 @@ export class JupyterServerSelector {
                 if (!handled) {
                     return;
                 }
-            } else if (err.message.indexOf('reason: certificate has expired') >= 0) {
+            } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(err)) {
                 sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
                 const handled = await handleExpiredCertsError(this.applicationShell, this.configService, err.message);
                 if (!handled) {
@@ -249,6 +250,12 @@ export class JupyterServerSelector {
                 const handled = await handleExpiredCertsError(this.applicationShell, this.configService, err.message);
                 if (!handled) {
                     return DataScience.jupyterSelfCertFailErrorMessageOnly();
+                }
+            } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(err)) {
+                sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
+                const handled = await handleExpiredCertsError(this.applicationShell, this.configService, err.message);
+                if (!handled) {
+                    return DataScience.jupyterSelfCertExpiredErrorMessageOnly();
                 }
             } else {
                 return DataScience.remoteJupyterConnectionFailedWithoutServerWithError().format(

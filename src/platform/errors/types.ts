@@ -91,6 +91,7 @@ export type ErrorCategory =
     | 'jupyterinstall'
     | 'jupyterselfcert'
     | 'jupyterexpiredcert'
+    | 'jupyterselfexpiredcert'
     | 'invalidkernel'
     | 'noipykernel'
     | 'fetcherror'
