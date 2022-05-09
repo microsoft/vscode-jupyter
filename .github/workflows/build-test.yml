@@ -246,7 +246,7 @@ jobs:
           skip-label: 'skip telemetry'
           failure-message: 'TELEMETRY.md should be updated when adding or removing telemetry. Please run "npm run generateTelemetry"'
 
-      - name: Check dependencies
+      - name: Validate TELEMETRY.md file
         run: npm run validateTelemetryMD
 
     #   - name: 'Check for news entry'
