@@ -96,9 +96,16 @@ export class JupyterServerSelector {
                 if (!handled) {
                     return;
                 }
+            } else if (err.message.indexOf('Failed to fetch') >= 0) {
+                sendTelemetryEvent(Telemetry.FetchError, undefined, { currentTask: 'connecting' });
+                void this.applicationShell.showErrorMessage(
+                    DataScience.jupyterNotebookRemoteConnectFailedWeb().format(userURI, err)
+                );
+                // Can't set the URI in this case.
+                return;
             } else {
                 await this.errorHandler.handleError(
-                    WrappedError.from(DataScience.jupyterNotebookRemoteConnectFailed().format(userURI, err), err)
+                    WrappedError.from(DataScience.jupyterNotebookRemoteConnectFailed().format(userURI), err)
                 );
                 // Can't set the URI in this case.
                 return;

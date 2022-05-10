@@ -1579,4 +1579,13 @@ export interface IEventNamePropertyMapping {
     [Telemetry.PreferredKernelExactMatch]: {
         matchedReason: PreferredKernelExactMatchReason;
     };
+    /**
+     * Event sent when trying to talk to a remote server and the browser gives us a generic fetch error
+     */
+    [Telemetry.FetchError]: {
+        /**
+         * What we were doing when the fetch error occurred
+         */
+        currentTask: 'connecting';
+    };
 }

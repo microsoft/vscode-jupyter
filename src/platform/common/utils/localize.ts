@@ -553,6 +553,10 @@ export namespace DataScience {
         'DataScience.jupyterNotebookRemoteConnectFailed',
         'Failed to connect to remote Jupyter notebook.\r\nCheck that the Jupyter Server URI setting has a valid running server specified.\r\n{0}\r\n{1}'
     );
+    export const jupyterNotebookRemoteConnectFailedWeb = localize(
+        'DataScience.jupyterNotebookRemoteConnectFailedWeb',
+        'Failed to connect to remote Jupyter notebook.\r\nCheck that the Jupyter Server URI can be reached from a browser.\r\n{0}. Click [here](https://aka.ms/vscjremoteweb) for more information.'
+    );
     export const jupyterRemoteConnectFailedModalMessage = localize(
         'DataScience.jupyterRemoteConnectFailedModalMessage',
         'Failed to connect to the remote Jupyter Server. View Jupyter log for further details.'
