@@ -836,14 +836,14 @@ export function hasErrorOutput(outputs: readonly NotebookCellOutput[]) {
 export function findAssociatedNotebookDocument(
     uri: Uri,
     vscodeNotebook: IVSCodeNotebook,
-    iwp: IInteractiveWindowProvider
+    iwp: IInteractiveWindowProvider | undefined
 ) {
     const ignoreCase = getOSType() === OSType.Windows;
     let notebook = vscodeNotebook.notebookDocuments.find((n) => {
         // Use the path part of the URI. It should match the path for the notebook
         return ignoreCase ? n.uri.path.toLowerCase() === uri.path.toLowerCase() : n.uri.path === uri.path;
     });
-    if (!notebook) {
+    if (!notebook && iwp) {
         // Might be an interactive window input
         const interactiveWindow = iwp.windows.find((w) => w.inputUri?.toString() === uri.toString());
         notebook = interactiveWindow?.notebookDocument;

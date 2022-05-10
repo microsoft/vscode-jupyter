@@ -2,15 +2,13 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { INotebookLanguageClientProvider } from '../notebooks/types';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
 import { IServiceManager } from '../platform/ioc/types';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { NotebookCellBangInstallDiagnosticsProvider } from './diagnosticsProvider';
 import { EmptyNotebookCellLanguageService } from './emptyNotebookCellLanguageService';
-import { IntellisenseProvider } from './intellisenseProvider.node';
-import { PythonKernelCompletionProvider } from './pythonKernelCompletionProvider.node';
-import { PythonKernelCompletionProviderRegistration } from './pythonKernelCompletionProviderRegistration.node';
+import { PythonKernelCompletionProvider } from './pythonKernelCompletionProvider';
+import { PythonKernelCompletionProviderRegistration } from './pythonKernelCompletionProviderRegistration';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<PythonKernelCompletionProvider>(
@@ -31,5 +29,4 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         IExtensionSingleActivationService,
         EmptyNotebookCellLanguageService
     );
-    serviceManager.addSingleton<INotebookLanguageClientProvider>(INotebookLanguageClientProvider, IntellisenseProvider);
 }

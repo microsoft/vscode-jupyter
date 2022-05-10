@@ -24,7 +24,7 @@ import { IDisposable } from '../../../../platform/common/types';
 import {
     PythonKernelCompletionProvider,
     setIntellisenseTimeout
-} from '../../../../intellisense/pythonKernelCompletionProvider.node';
+} from '../../../../intellisense/pythonKernelCompletionProvider';
 import { IExtensionTestApi, sleep } from '../../../common.node';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../../initialize.node';

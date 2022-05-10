@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../platform/common/extensions';
 
 // See the comment on convertCompletionItemKind below
 // Here's the monaco enum:

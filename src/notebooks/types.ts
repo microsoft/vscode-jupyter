@@ -1,7 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { Event, NotebookDocument, NotebookEditor, Uri } from 'vscode';
-import type * as vsc from 'vscode-languageclient/node';
+import {
+    CancellationToken,
+    CompletionContext,
+    CompletionItem,
+    Event,
+    NotebookDocument,
+    NotebookEditor,
+    Position,
+    TextDocument,
+    Uri
+} from 'vscode';
 import { Resource } from '../platform/common/types';
 import { KernelConnectionMetadata, LiveRemoteKernelConnectionMetadata } from '../kernels/types';
 import { IVSCodeNotebookController } from './controllers/types';
@@ -51,9 +60,16 @@ export interface INotebookCommunication {
     asWebviewUri(localResource: Uri): Uri;
 }
 
-export const INotebookLanguageClientProvider = Symbol('INotebookLanguageClientProvider');
-export interface INotebookLanguageClientProvider {
-    getLanguageClient(notebook: NotebookDocument): Promise<vsc.LanguageClient | undefined>;
+export const INotebookCompletionProvider = Symbol('INotebookCompletionProvider');
+
+export interface INotebookCompletionProvider {
+    getCompletions(
+        notebook: NotebookDocument,
+        document: TextDocument,
+        position: Position,
+        context: CompletionContext,
+        cancelToken: CancellationToken
+    ): Promise<CompletionItem[] | null | undefined>;
 }
 
 // For native editing, the provider acts like the IDocumentManager for normal docs

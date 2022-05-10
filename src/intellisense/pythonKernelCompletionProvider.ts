@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, optional } from 'inversify';
 import {
     CancellationToken,
     CompletionContext,
@@ -13,7 +13,6 @@ import {
     TextDocument,
     workspace
 } from 'vscode';
-import * as lsp from 'vscode-languageclient';
 import { IVSCodeNotebook } from '../platform/common/application/types';
 import { createPromiseFromCancellation } from '../platform/common/cancellation';
 import { traceError, traceInfoIfCI, traceVerbose } from '../platform/logging';
@@ -24,8 +23,8 @@ import { isNotebookCell } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { IJupyterSession, IKernelProvider } from '../kernels/types';
 import { findAssociatedNotebookDocument, getAssociatedJupyterNotebook } from '../notebooks/helpers';
-import { INotebookLanguageClientProvider } from '../notebooks/types';
-import { mapJupyterKind } from './conversion.node';
+import { INotebookCompletionProvider } from '../notebooks/types';
+import { mapJupyterKind } from './conversion';
 import { IInteractiveWindowProvider } from '../interactive-window/types';
 import { isTestExecution, Settings } from '../platform/common/constants';
 import { INotebookCompletion } from './types';
@@ -49,9 +48,12 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
     constructor(
         @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
-        @inject(INotebookLanguageClientProvider)
-        private readonly languageClientProvider: INotebookLanguageClientProvider,
+        @inject(IInteractiveWindowProvider)
+        @optional()
+        private readonly interactiveWindowProvider: IInteractiveWindowProvider | undefined,
+        @inject(INotebookCompletionProvider)
+        @optional()
+        private readonly notebookCompletionProvider: INotebookCompletionProvider | undefined,
         @inject(IConfigurationService) config: IConfigurationService,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
@@ -218,21 +220,8 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
         cancelToken: CancellationToken
     ) {
         const notebook = getAssociatedJupyterNotebook(document);
-        if (notebook) {
-            const client = await this.languageClientProvider.getLanguageClient(notebook);
-            if (client) {
-                // Use provider so it gets translated by middleware
-                const feature = client.getFeature(lsp.CompletionRequest.method);
-                const provider = feature.getProvider(document);
-                if (provider) {
-                    const results = await provider.provideCompletionItems(document, position, cancelToken, context);
-                    if (results && 'items' in results) {
-                        return results.items;
-                    } else {
-                        return results;
-                    }
-                }
-            }
+        if (notebook && this.notebookCompletionProvider) {
+            return this.notebookCompletionProvider.getCompletions(notebook, document, position, context, cancelToken);
         }
     }
 }
