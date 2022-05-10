@@ -82,7 +82,8 @@ suite('DataScience - Jupyter Server URI Selector', () => {
             instance(handler),
             instance(applicationShell),
             instance(configService),
-            instance(connection)
+            instance(connection),
+            false
         );
         return { selector, storage };
     }

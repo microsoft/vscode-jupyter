@@ -569,6 +569,10 @@ export namespace DataScience {
         'DataScience.removeRemoteJupyterConnectionButtonText',
         'Forget Connection'
     );
+    export const jupyterNotebookRemoteConnectFailedWeb = localize(
+        'DataScience.jupyterNotebookRemoteConnectFailedWeb',
+        'Failed to connect to remote Jupyter server.\r\nCheck that the Jupyter Server URI can be reached from a browser.\r\n{0}. Click [here](https://aka.ms/vscjremoteweb) for more information.'
+    );
     export const changeRemoteJupyterConnectionButtonText = localize(
         'DataScience.changeRemoteJupyterConnectionButtonText',
         'Manage Connections'

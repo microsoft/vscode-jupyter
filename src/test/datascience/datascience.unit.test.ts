@@ -51,7 +51,8 @@ suite('DataScience Tests', () => {
             instance(configService),
             instance(docManager),
             instance(workspaceService),
-            instance(rawNotebookSupported)
+            instance(rawNotebookSupported),
+            [] as any
         );
 
         onDidChangeSettings = sinon.stub();

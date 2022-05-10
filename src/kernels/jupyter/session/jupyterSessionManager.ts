@@ -325,7 +325,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ) as any,
             fetch: this.requestCreator.getFetchMethod(),
-            Request: this.requestCreator.getRequestCtor(connInfo.getAuthHeader),
+            Request: this.requestCreator.getRequestCtor(cookieString, allowUnauthorized, connInfo.getAuthHeader),
             Headers: this.requestCreator.getHeadersCtor()
         };
 

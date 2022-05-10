@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject, injectable, multiInject, named, optional } from 'inversify';
+import { inject, injectable, named, optional } from 'inversify';
 import { CodeLens, ConfigurationTarget, env, Range, Uri, commands } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IShowDataViewerFromVariablePanel } from '../../platform/messageTypes';
@@ -20,19 +20,13 @@ import {
 } from '../../platform/common/application/types';
 import { traceError } from '../../platform/logging';
 
-import {
-    IConfigurationService,
-    IDataScienceCommandListener,
-    IDisposable,
-    IDisposableRegistry,
-    IOutputChannel
-} from '../../platform/common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { isUri, noop } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { JUPYTER_OUTPUT_CHANNEL, Identifiers, Commands, Telemetry } from '../../platform/common/constants';
+import { Identifiers, Commands, Telemetry } from '../../platform/common/constants';
 import {
     IDataViewerDependencyService,
     IDataViewerFactory,
@@ -55,14 +49,10 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         @inject(IDataScienceCodeLensProvider)
         @optional()
         private dataScienceCodeLensProvider: IDataScienceCodeLensProvider | undefined,
-        @multiInject(IDataScienceCommandListener)
-        @optional()
-        private commandListeners: IDataScienceCommandListener[] | undefined,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDebugService) @optional() private debugService: IDebugService | undefined,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel,
         @inject(IExportCommands) @optional() private readonly exportCommand: IExportCommands | undefined,
         @inject(IJupyterVariableDataProviderFactory)
         @optional()
@@ -106,7 +96,6 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         this.registerCommand(Commands.GotoPrevCellInFile, this.gotoPrevCellInFile);
         this.registerCommand(Commands.AddCellBelow, this.addCellBelow);
         this.registerCommand(Commands.CreateNewNotebook, this.createNewNotebook);
-        this.registerCommand(Commands.ViewJupyterOutput, this.viewJupyterOutput);
         this.registerCommand(Commands.LatestExtension, this.openPythonExtensionPage);
         this.registerCommand(Commands.EnableDebugLogging, this.enableDebugLogging);
         this.registerCommand(Commands.ResetLoggingLevel, this.resetLoggingLevel);
@@ -114,11 +103,6 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
             Commands.EnableLoadingWidgetsFrom3rdPartySource,
             this.enableLoadingWidgetScriptsFromThirdParty
         );
-        if (this.commandListeners) {
-            this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
-                listener.register(this.commandManager);
-            });
-        }
     }
     public dispose() {
         this.disposables.forEach((d) => d.dispose());
@@ -491,10 +475,6 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
             )
             .then(noop, noop);
         await commands.executeCommand('ipynb.newUntitledIpynb');
-    }
-
-    private viewJupyterOutput() {
-        this.jupyterOutput.show(true);
     }
 
     private getCurrentCodeLens(): CodeLens | undefined {

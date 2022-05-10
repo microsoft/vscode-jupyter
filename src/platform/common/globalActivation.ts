@@ -2,13 +2,19 @@
 // Licensed under the MIT License.
 'use strict';
 import type { JSONObject } from '@lumino/coreutils';
-import { inject, injectable, optional } from 'inversify';
+import { inject, injectable, multiInject, optional } from 'inversify';
 import * as vscode from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from './application/types';
 import { PYTHON_FILE, PYTHON_LANGUAGE, PYTHON_UNTITLED } from './constants';
 import { ContextKey } from './contextKey';
 import './extensions';
-import { IConfigurationService, IDisposable, IDisposableRegistry, IExtensionContext } from './types';
+import {
+    IConfigurationService,
+    IDataScienceCommandListener,
+    IDisposable,
+    IDisposableRegistry,
+    IExtensionContext
+} from './types';
 import { debounceAsync, swallowExceptions } from './utils/decorators';
 import { noop } from './utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -33,7 +39,11 @@ export class GlobalActivation implements IExtensionSingleActivationService {
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
-        @inject(IRawNotebookSupportedService) @optional() private rawSupported: IRawNotebookSupportedService | undefined
+        @inject(IRawNotebookSupportedService)
+        @optional()
+        private rawSupported: IRawNotebookSupportedService | undefined,
+        @multiInject(IDataScienceCommandListener)
+        private commandListeners: IDataScienceCommandListener[]
     ) {}
 
     public get activationStartTime(): number {
@@ -66,6 +76,10 @@ export class GlobalActivation implements IExtensionSingleActivationService {
 
         // Figure out the ZMQ available context key
         this.computeZmqAvailable();
+
+        if (this.commandListeners) {
+            this.commandListeners.forEach((c) => c.register(this.commandManager));
+        }
     }
 
     public async dispose() {

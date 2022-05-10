@@ -27,7 +27,7 @@ import {
 } from './types';
 import { IDataScienceErrorHandler } from '../../platform/errors/types';
 import { handleExpiredCertsError, handleSelfCertsError, computeUriHash } from './jupyterUtils';
-import { IConfigurationService } from '../../platform/common/types';
+import { IConfigurationService, IsWebExtension } from '../../platform/common/types';
 import { JupyterConnection } from './jupyterConnection';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
 import { RemoteJupyterServerConnectionError } from '../../platform/errors/remoteJupyterServerConnectionError';
@@ -63,7 +63,8 @@ export class JupyterServerSelector {
         private readonly errorHandler: IDataScienceErrorHandler,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
-        @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection
+        @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
+        @inject(IsWebExtension) private readonly isWebExtension: boolean
     ) {}
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
@@ -103,6 +104,9 @@ export class JupyterServerSelector {
                     return;
                 }
             } else {
+                if (err.message.includes('Failed to fetch') && this.isWebExtension) {
+                    sendTelemetryEvent(Telemetry.FetchError, undefined, { currentTask: 'connecting' });
+                }
                 await this.errorHandler.handleError(
                     new RemoteJupyterServerConnectionError(userURI, computeUriHash(userURI), err)
                 );

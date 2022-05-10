@@ -159,7 +159,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         return this.listKernelsUsingFinder(
             async () => {
                 const connInfo = await this.getRemoteConnectionInfo(cancelToken);
-                return this.remoteKernelFinder
+                return this.remoteKernelFinder && connInfo
                     ? this.remoteKernelFinder.listKernels(resource, connInfo, cancelToken)
                     : Promise.resolve([]);
             },

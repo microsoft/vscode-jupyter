@@ -19,7 +19,8 @@ const JupyterWebSockets = new Map<string, WebSocketIsomorphic & IKernelSocket>()
 /* eslint-disable @typescript-eslint/no-explicit-any */
 @injectable()
 export class JupyterRequestCreator implements IJupyterRequestCreator {
-    public getRequestCtor(getAuthHeader?: () => any) {
+    public getRequestCtor(_cookieString?: string, _allowUnauthorized?: boolean, getAuthHeader?: () => any) {
+        // Only need the authorizing part. Cookie and rejectUnauthorized are set in the websocket ctor for node.
         class AuthorizingRequest extends nodeFetch.Request {
             constructor(input: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) {
                 super(input, init);
