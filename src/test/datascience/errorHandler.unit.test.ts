@@ -72,7 +72,8 @@ suite('DataScience Error Handler Unit Tests', () => {
             instance(kernelDependencyInstaller),
             instance(workspaceService),
             instance(uriStorage),
-            instance(cmdManager)
+            instance(cmdManager),
+            false
         );
         when(applicationShell.showErrorMessage(anything())).thenResolve();
         when(applicationShell.showErrorMessage(anything(), anything())).thenResolve();

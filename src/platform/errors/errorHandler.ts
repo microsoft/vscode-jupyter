@@ -15,7 +15,7 @@ import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError';
 import { KernelProcessExitedError } from './kernelProcessExitedError';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { traceError, traceWarning } from '../logging';
-import { IBrowserService, IConfigurationService, Resource } from '../common/types';
+import { IBrowserService, IConfigurationService, IsWebExtension, Resource } from '../common/types';
 import { DataScience, Common } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry, Commands } from '../../webviews/webview-side/common/constants';
@@ -64,7 +64,8 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         private readonly kernelDependency: IKernelDependencyService | undefined,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IsWebExtension) private readonly isWebExtension: boolean
     ) {}
     private handledErrors = new WeakSet<Error>();
     public async handleError(err: Error): Promise<void> {
@@ -91,6 +92,11 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             err instanceof JupyterConnectError
         ) {
             this.applicationShell.showErrorMessage(getUserFriendlyErrorMessage(err)).then(noop, noop);
+        } else if (err instanceof RemoteJupyterServerConnectionError && this.isWebExtension) {
+            // Special case for a failure on web
+            this.applicationShell
+                .showErrorMessage(DataScience.jupyterNotebookRemoteConnectFailedWeb().format(err.baseUrl))
+                .then(noop, noop);
         } else {
             // Some errors have localized and/or formatted error messages.
             const message = getCombinedErrorMessage(err.message || err.toString());
@@ -108,8 +114,10 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             return getIPyKernelMissingErrorMessageForCell(error.kernelConnectionMetadata) || error.message;
         } else if (error instanceof JupyterInstallError) {
             return getJupyterMissingErrorMessageForCell(error) || error.message;
-        } else if (error instanceof RemoteJupyterServerConnectionError) {
+        } else if (error instanceof RemoteJupyterServerConnectionError && !this.isWebExtension) {
             return error.message;
+        } else if (error instanceof RemoteJupyterServerConnectionError && this.isWebExtension) {
+            return DataScience.jupyterNotebookRemoteConnectFailedWeb().format(error.baseUrl);
         } else if (error instanceof VscCancellationError || error instanceof CancellationError) {
             // Don't show the message for cancellation errors
             traceWarning(`Cancelled by user`, error);

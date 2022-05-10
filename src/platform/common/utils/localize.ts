@@ -571,7 +571,7 @@ export namespace DataScience {
     );
     export const jupyterNotebookRemoteConnectFailedWeb = localize(
         'DataScience.jupyterNotebookRemoteConnectFailedWeb',
-        'Failed to connect to remote Jupyter notebook.\r\nCheck that the Jupyter Server URI can be reached from a browser.\r\n{0}. Click [here](https://aka.ms/vscjremoteweb) for more information.'
+        'Failed to connect to remote Jupyter server.\r\nCheck that the Jupyter Server URI can be reached from a browser.\r\n{0}. Click [here](https://aka.ms/vscjremoteweb) for more information.'
     );
     export const changeRemoteJupyterConnectionButtonText = localize(
         'DataScience.changeRemoteJupyterConnectionButtonText',
