@@ -61,6 +61,7 @@ import { IFileSystem } from './common/platform/types.node';
 import { FileSystem } from './common/platform/fileSystem.node';
 import { WorkspaceService } from './common/application/workspace.node';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from '../webviews/extension-side/renderer';
+import { OutputCommandListener } from './logging/outputCommandListener';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
@@ -127,4 +128,5 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
         IExtensionSingleActivationService,
         PreReleaseChecker
     );
+    serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, OutputCommandListener);
 }

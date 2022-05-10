@@ -155,7 +155,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
 
         return this.listKernelsUsingFinder(
             () =>
-                this.remoteKernelFinder
+                this.remoteKernelFinder && connInfo
                     ? this.remoteKernelFinder.listKernels(resource, connInfo, cancelToken)
                     : Promise.resolve([]),
             cancelToken,

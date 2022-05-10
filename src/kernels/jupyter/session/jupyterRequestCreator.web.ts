@@ -16,63 +16,50 @@ const JupyterWebSockets = new Map<string, WebSocketIsomorphic & IKernelSocket>()
 /* eslint-disable @typescript-eslint/no-explicit-any */
 @injectable()
 export class JupyterRequestCreator implements IJupyterRequestCreator {
-    public getRequestCtor(getAuthHeader?: () => any) {
+    public getRequestCtor(cookieString?: string, allowUnauthorized?: boolean, getAuthHeaders?: () => any) {
         class AuthorizingRequest extends Request {
             constructor(input: RequestInfo, init?: RequestInit) {
                 super(input, init);
 
                 // Add all of the authorization parts onto the headers.
                 const origHeaders = this.headers;
-                const authorizationHeader = getAuthHeader!();
-                const keys = Object.keys(authorizationHeader);
-                keys.forEach((k) => origHeaders.append(k, authorizationHeader[k].toString()));
-                origHeaders.set('Content-Type', 'application/json');
 
-                // Rewrite the 'append' method for the headers to disallow 'authorization' after this point
-                const origAppend = origHeaders.append.bind(origHeaders);
-                origHeaders.append = (k, v) => {
-                    if (k.toLowerCase() !== 'authorization') {
-                        origAppend(k, v);
-                    }
-                };
+                if (getAuthHeaders) {
+                    const authorizationHeader = getAuthHeaders();
+                    const keys = Object.keys(authorizationHeader);
+                    keys.forEach((k) => origHeaders.append(k, authorizationHeader[k].toString()));
+                    origHeaders.set('Content-Type', 'application/json');
+
+                    // Rewrite the 'append' method for the headers to disallow 'authorization' after this point
+                    const origAppend = origHeaders.append.bind(origHeaders);
+                    origHeaders.append = (k, v) => {
+                        if (k.toLowerCase() !== 'authorization') {
+                            origAppend(k, v);
+                        }
+                    };
+                }
+
+                // Append the other settings we might need too
+                if (allowUnauthorized) {
+                    // rejectUnauthorized not allowed in web so we can't do anything here.
+                }
+
+                if (cookieString) {
+                    this.headers.append('Cookie', cookieString);
+                }
             }
         }
 
-        return getAuthHeader ? AuthorizingRequest : Request;
+        return AuthorizingRequest;
     }
 
-    public getWebsocketCtor(cookieString?: string, allowUnauthorized?: boolean, getAuthHeaders?: () => any) {
+    public getWebsocketCtor(_cookieString?: string, _allowUnauthorized?: boolean, _getAuthHeaders?: () => any) {
         class JupyterWebSocket extends KernelSocketWrapper(WebSocketIsomorphic) {
             private kernelId: string | undefined;
             private timer: NodeJS.Timeout | number = 0;
 
             constructor(url: string, protocols?: string | string[] | undefined) {
-                let co = {};
-                let co_headers: { [key: string]: string } | undefined;
-
-                if (allowUnauthorized) {
-                    co = { ...co, rejectUnauthorized: false };
-                }
-
-                if (cookieString) {
-                    co_headers = { Cookie: cookieString };
-                }
-
-                // Auth headers have to be refetched every time we create a connection. They may have expired
-                // since the last connection.
-                if (getAuthHeaders) {
-                    const authorizationHeader = getAuthHeaders();
-                    co_headers = co_headers ? { ...co_headers, ...authorizationHeader } : authorizationHeader;
-                }
-                if (co_headers) {
-                    co = { ...co, headers: co_headers };
-                    console.log(`CO Headers: ${co}`);
-                }
-
                 super(url, protocols);
-
-                // TODO: How to send auth headers? Try debugging this to see what happens.
-
                 let timer: NodeJS.Timeout | undefined = undefined;
                 // Parse the url for the kernel id
                 const parsed = /.*\/kernels\/(.*)\/.*/.exec(url);

@@ -16,7 +16,7 @@ import { registerTypes as registerApiTypes } from './api/serviceRegistry.web';
 import { registerTypes as registerCommonTypes } from './common/serviceRegistry.web';
 import { registerTypes as registerActivationTypes } from './activation/serviceRegistry.web';
 import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
-import { IConfigurationService, IExtensionContext } from './common/types';
+import { IConfigurationService, IDataScienceCommandListener, IExtensionContext } from './common/types';
 import { IServiceManager } from './ioc/types';
 import { StatusProvider } from './progress/statusProvider';
 import { IStatusProvider } from './progress/types';
@@ -26,6 +26,7 @@ import { IDataScienceErrorHandler } from './errors/types';
 import { GlobalActivation } from './common/globalActivation';
 import { IExtensionSingleActivationService } from './activation/types';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from '../webviews/extension-side/renderer';
+import { OutputCommandListener } from './logging/outputCommandListener';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
@@ -37,6 +38,7 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
     serviceManager.addSingletonInstance<IExtensionSideRenderer>(IExtensionSideRenderer, new ExtensionSideRenderer());
+    serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, OutputCommandListener);
 
     registerCommonTypes(serviceManager);
     registerApiTypes(serviceManager);

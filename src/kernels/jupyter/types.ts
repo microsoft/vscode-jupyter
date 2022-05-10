@@ -259,7 +259,7 @@ export interface IJupyterRequestAgentCreator {
 export const IJupyterRequestCreator = Symbol('IJupyterRequestCreator');
 export interface IJupyterRequestCreator {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    getRequestCtor(getAuthHeader?: () => any): ClassType<Request>;
+    getRequestCtor(cookieString?: string, allowUnauthorized?: boolean, getAuthHeader?: () => any): ClassType<Request>;
     getFetchMethod(): (input: RequestInfo, init?: RequestInit) => Promise<Response>;
     getHeadersCtor(): ClassType<Headers>;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
