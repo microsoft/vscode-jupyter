@@ -35,6 +35,7 @@ import { Cancellation } from '../../../../platform/common/cancellation';
 import { getDisplayPath } from '../../../../platform/common/platform/fs-paths';
 import { INotebookServer } from '../../types';
 import { Uri } from 'vscode';
+import { RemoteJupyterServerConnectionError } from '../../../../platform/errors/remoteJupyterServerConnectionError';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export class HostJupyterServer implements INotebookServer {
@@ -149,6 +150,22 @@ export class HostJupyterServer implements INotebookServer {
         );
         if (!this.sessionManager || this.isDisposed) {
             throw new SessionDisposedError();
+        }
+        if (
+            this.sessionManager &&
+            !this.isDisposed &&
+            (kernelConnection.kind === 'connectToLiveRemoteKernel' ||
+                kernelConnection.kind === 'startUsingRemoteKernelSpec')
+        ) {
+            try {
+                await Promise.all([this.sessionManager.getRunningKernels(), this.sessionManager.getKernelSpecs()]);
+            } catch (ex) {
+                traceError(
+                    'Failed to fetch running kernels from remote server, connection may be outdated or remote server may be unreachable',
+                    ex
+                );
+                throw new RemoteJupyterServerConnectionError(kernelConnection.baseUrl, kernelConnection.serverId, ex);
+            }
         }
         const stopWatch = new StopWatch();
         // Create a session and return it.

@@ -8,7 +8,7 @@ import { isNil } from 'lodash';
 import { EventEmitter, QuickPickItem, ThemeIcon, Uri } from 'vscode';
 import { IApplicationShell, IClipboard } from '../../platform/common/application/types';
 import { Settings } from '../../platform/common/constants';
-import { traceDecoratorError, traceError } from '../../platform/logging';
+import { traceDecoratorError, traceError, traceWarning } from '../../platform/logging';
 import { DataScience } from '../../platform/common/utils/localize';
 import {
     IMultiStepInputFactory,
@@ -25,10 +25,13 @@ import {
     IJupyterServerUriStorage,
     JupyterServerUriHandle
 } from './types';
-import { IDataScienceErrorHandler, WrappedError } from '../../platform/errors/types';
-import { handleExpiredCertsError, handleSelfCertsError } from './jupyterUtils';
+import { IDataScienceErrorHandler } from '../../platform/errors/types';
+import { handleExpiredCertsError, handleSelfCertsError, computeUriHash } from './jupyterUtils';
 import { IConfigurationService } from '../../platform/common/types';
 import { JupyterConnection } from './jupyterConnection';
+import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
+import { RemoteJupyterServerConnectionError } from '../../platform/errors/remoteJupyterServerConnectionError';
+import { JupyterSelfCertsExpiredError } from '../../platform/errors/jupyterSelfCertsExpiredError';
 
 const defaultUri = 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe';
 
@@ -43,6 +46,7 @@ export type SelectJupyterUriCommandSource =
     | 'commandPalette'
     | 'nativeNotebookStatusBar'
     | 'nativeNotebookToolbar'
+    | 'errorHandler'
     | 'prompt';
 @injectable()
 export class JupyterServerSelector {
@@ -79,18 +83,20 @@ export class JupyterServerSelector {
         await this.serverUriStorage.setUri(Settings.JupyterServerLocalLaunch);
     }
 
-    public async setJupyterURIToRemote(userURI: string): Promise<void> {
+    public async setJupyterURIToRemote(userURI: string, ignoreValidation?: boolean): Promise<void> {
         // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
         try {
-            await this.jupyterConnection.validateRemoteUri(userURI);
+            if (!ignoreValidation) {
+                await this.jupyterConnection.validateRemoteUri(userURI);
+            }
         } catch (err) {
-            if (err.message.indexOf('reason: self signed certificate') >= 0) {
+            if (JupyterSelfCertsError.isSelfCertsError(err)) {
                 sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
                 const handled = await handleSelfCertsError(this.applicationShell, this.configService, err.message);
                 if (!handled) {
                     return;
                 }
-            } else if (err.message.indexOf('reason: certificate has expired') >= 0) {
+            } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(err)) {
                 sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
                 const handled = await handleExpiredCertsError(this.applicationShell, this.configService, err.message);
                 if (!handled) {
@@ -105,7 +111,7 @@ export class JupyterServerSelector {
                 return;
             } else {
                 await this.errorHandler.handleError(
-                    WrappedError.from(DataScience.jupyterNotebookRemoteConnectFailed().format(userURI), err)
+                    new RemoteJupyterServerConnectionError(userURI, computeUriHash(userURI), err)
                 );
                 // Can't set the URI in this case.
                 return;
@@ -225,21 +231,44 @@ export class JupyterServerSelector {
         });
 
         if (uri) {
-            await this.setJupyterURIToRemote(uri);
+            await this.setJupyterURIToRemote(uri, true);
         }
     }
 
-    private validateSelectJupyterURI = async (inputText: string): Promise<string | undefined> => {
+    public validateSelectJupyterURI = async (inputText: string): Promise<string | undefined> => {
+        inputText = inputText.trim();
         try {
-            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             new URL(inputText);
-
-            // Double check http
-            if (!inputText.toLowerCase().includes('http')) {
-                throw new Error('Has to be http');
-            }
         } catch {
             return DataScience.jupyterSelectURIInvalidURI();
+        }
+
+        // Double check http
+        if (!inputText.toLowerCase().startsWith('http')) {
+            return DataScience.validationErrorMessageForRemoteUrlProtocolNeedsToBeHttpOrHttps();
+        }
+        // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
+        try {
+            await this.jupyterConnection.validateRemoteUri(inputText);
+        } catch (err) {
+            traceWarning('Uri verification error', err);
+            if (JupyterSelfCertsError.isSelfCertsError(err)) {
+                sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
+                const handled = await handleSelfCertsError(this.applicationShell, this.configService, err.message);
+                if (!handled) {
+                    return DataScience.jupyterSelfCertFailErrorMessageOnly();
+                }
+            } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(err)) {
+                sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
+                const handled = await handleExpiredCertsError(this.applicationShell, this.configService, err.message);
+                if (!handled) {
+                    return DataScience.jupyterSelfCertExpiredErrorMessageOnly();
+                }
+            } else {
+                return DataScience.remoteJupyterConnectionFailedWithoutServerWithError().format(
+                    err.message || err.toString()
+                );
+            }
         }
     };
 

@@ -18,6 +18,7 @@ import { Commands as DSCommands } from '../../../webviews/webview-side/common/co
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { CommandSource } from '../../testing/common/constants';
 import { Channel } from './types';
+import { SelectJupyterUriCommandSource } from '../../../kernels/jupyter/serverSelector';
 
 export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
 
@@ -182,7 +183,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.ClearSavedJupyterUris]: [];
     [DSCommands.SelectJupyterURI]: [
         boolean | undefined,
-        Uri | 'toolbar' | 'nativeNotebookStatusBar' | undefined,
+        Uri | SelectJupyterUriCommandSource | undefined,
         NotebookDocument | undefined
     ];
     [DSCommands.SelectNativeJupyterUriFromToolBar]: [];

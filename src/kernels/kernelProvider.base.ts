@@ -112,12 +112,11 @@ export abstract class BaseKernelProvider implements IKernelProvider {
     protected disposeOldKernel(uri: Uri) {
         const notebook = workspace.notebookDocuments.find((nb) => nb.uri.toString() === uri.toString());
         if (notebook) {
-            traceInfoIfCI(
-                `Disposing kernel associated with ${getDisplayPath(notebook.uri)}, isClosed=${notebook.isClosed}`
-            );
-
             const kernelToDispose = this.kernelsByNotebook.get(notebook);
             if (kernelToDispose) {
+                traceInfoIfCI(
+                    `Disposing kernel associated with ${getDisplayPath(notebook.uri)}, isClosed=${notebook.isClosed}`
+                );
                 this.pendingDisposables.add(kernelToDispose.kernel);
                 kernelToDispose.kernel
                     .dispose()
@@ -127,9 +126,9 @@ export abstract class BaseKernelProvider implements IKernelProvider {
             }
             this.kernelsByNotebook.delete(notebook);
         } else {
-            traceInfoIfCI(`Disposing kernel associated with ${getDisplayPath(uri)}`);
             const kernelToDispose = this.kernelsByUri.get(uri.toString());
             if (kernelToDispose) {
+                traceInfoIfCI(`Disposing kernel associated with ${getDisplayPath(uri)}`);
                 this.pendingDisposables.add(kernelToDispose.kernel);
                 kernelToDispose.kernel
                     .dispose()

@@ -7,7 +7,7 @@ else
 fi
 
 # run prettier on all .ts files that are in the commit
-changed=$(git diff --cached --name-only --diff-filter=ACM | grep .ts$ | tr '\n' ' ')
+changed=$(git diff --diff-filter=ACM --cached --name-only | grep .ts$ | tr '\n' ' ')
 
 if [ -z "$changed" ]; then
     echo husky - No modified files to check

@@ -350,6 +350,14 @@ export namespace DataScience {
         'DataScience.jupyterExpiredCertFail',
         'The security certificate used by server {0} has expired.\r\nThis may indicate an attempt to steal your information.\r\nDo you want to enable the Allow Unauthorized Remote Connection setting for this workspace to allow you to connect?'
     );
+    export const jupyterSelfCertFailErrorMessageOnly = localize(
+        'DataScience.jupyterSelfCertFailErrorMessageOnly',
+        'The security certificate used by server was not issued by a trusted certificate authority.\r\nThis may indicate an attempt to steal your information.'
+    );
+    export const jupyterSelfCertExpiredErrorMessageOnly = localize(
+        'DataScience.jupyterSelfCertExpiredErrorMessageOnly',
+        'The security certificate used by server has expired.\r\nThis may indicate an attempt to steal your information.'
+    );
     export const jupyterSelfCertEnable = localize('DataScience.jupyterSelfCertEnable', 'Yes, connect anyways');
     export const jupyterSelfCertClose = localize('DataScience.jupyterSelfCertClose', 'No, close the connection');
     export const pythonInteractiveHelpLink = localize(
@@ -545,18 +553,31 @@ export namespace DataScience {
         'DataScience.jupyterNotebookFailure',
         'Jupyter notebook failed to launch. \r\n{0}'
     );
-    export const jupyterNotebookConnectFailed = localize(
-        'DataScience.jupyterNotebookConnectFailed',
-        'Failed to connect to Jupyter notebook. \r\n{0}\r\n{1}'
+    export const remoteJupyterConnectionFailedWithServerWithError = localize(
+        'DataScience.remoteJupyterConnectionFailedWithServerWithError',
+        'Failed to connect to the remote Jupyter Server {0}. Verify the server is running and reachable. ({1}).'
     );
-    export const jupyterNotebookRemoteConnectFailed = localize(
-        'DataScience.jupyterNotebookRemoteConnectFailed',
-        'Failed to connect to remote Jupyter notebook.\r\nCheck that the Jupyter Server URI setting has a valid running server specified.\r\n{0}\r\n{1}'
+    export const remoteJupyterConnectionFailedWithServer = localize(
+        'DataScience.remoteJupyterConnectionFailedWithServer',
+        'Failed to connect to the remote Jupyter Server {0}. Verify the server is running and reachable.'
+    );
+    export const remoteJupyterConnectionFailedWithoutServerWithError = localize(
+        'DataScience.remoteJupyterConnectionFailedWithoutServerWithError',
+        'Connection failure. Verify the server is running and reachable. ({0}).'
+    );
+    export const removeRemoteJupyterConnectionButtonText = localize(
+        'DataScience.removeRemoteJupyterConnectionButtonText',
+        'Forget Connection'
     );
     export const jupyterNotebookRemoteConnectFailedWeb = localize(
         'DataScience.jupyterNotebookRemoteConnectFailedWeb',
         'Failed to connect to remote Jupyter notebook.\r\nCheck that the Jupyter Server URI can be reached from a browser.\r\n{0}. Click [here](https://aka.ms/vscjremoteweb) for more information.'
     );
+    export const changeRemoteJupyterConnectionButtonText = localize(
+        'DataScience.changeRemoteJupyterConnectionButtonText',
+        'Manage Connections'
+    );
+
     export const jupyterRemoteConnectFailedModalMessage = localize(
         'DataScience.jupyterRemoteConnectFailedModalMessage',
         'Failed to connect to the remote Jupyter Server. View Jupyter log for further details.'
@@ -1145,6 +1166,10 @@ export namespace DataScience {
     export const webNotSupported = localize(
         'DataScience.webNotSupported',
         `Operation not supported in web version of Jupyter extension.`
+    );
+    export const validationErrorMessageForRemoteUrlProtocolNeedsToBeHttpOrHttps = localize(
+        'DataScience.validationErrorMessageForRemoteUrlProtocolNeedsToBeHttpOrHttps',
+        'Has to be http(s)'
     );
 }
 

@@ -91,6 +91,7 @@ export type ErrorCategory =
     | 'jupyterinstall'
     | 'jupyterselfcert'
     | 'jupyterexpiredcert'
+    | 'jupyterselfexpiredcert'
     | 'invalidkernel'
     | 'noipykernel'
     | 'fetcherror'
@@ -99,6 +100,8 @@ export type ErrorCategory =
     | 'unsupportedKernelSpec' // Left for historical purposes, not used anymore.
     | 'sessionDisposed'
     | 'nodeonly'
+    | 'remotejupyterserverconnection'
+    | 'localjupyterserverconnection'
     | 'unknown';
 
 // If there are errors, then the are added to the telementry properties.

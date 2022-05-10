@@ -21,7 +21,7 @@ export interface INotebookControllerManager {
     loadNotebookControllers(refresh?: boolean): Promise<void>;
     getSelectedNotebookController(document: NotebookDocument): IVSCodeNotebookController | undefined;
     // Marked test only, just for tests to access registered controllers
-    registeredNotebookControllers(): IVSCodeNotebookController[];
+    getRegisteredNotebookControllers(): IVSCodeNotebookController[];
     getActiveInterpreterOrDefaultController(
         notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView,
         resource: Resource

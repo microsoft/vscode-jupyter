@@ -8,4 +8,7 @@ export class JupyterSelfCertsError extends BaseError {
     constructor(message: string) {
         super('jupyterselfcert', message);
     }
+    public static isSelfCertsError(err: Error) {
+        return err.message.indexOf('reason: self signed certificate') >= 0;
+    }
 }
