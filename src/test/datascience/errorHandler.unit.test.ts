@@ -62,6 +62,7 @@ suite('DataScience Error Handler Unit Tests', () => {
         uriStorage = mock<IJupyterServerUriStorage>();
         cmdManager = mock<ICommandManager>();
         jupyterInterpreterService = mock<JupyterInterpreterService>();
+        extensions = mock<IExtensions>();
         when(dependencyManager.installMissingDependencies(anything())).thenResolve();
         when(workspaceService.workspaceFolders).thenReturn([]);
         kernelDependencyInstaller = mock<IKernelDependencyService>();
