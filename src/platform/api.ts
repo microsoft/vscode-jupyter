@@ -6,7 +6,6 @@
 import { ExtensionMode, NotebookController, NotebookDocument } from 'vscode';
 import { JupyterConnection } from '../kernels/jupyter/jupyterConnection';
 import { computeServerId, generateUriFromRemoteProvider } from '../kernels/jupyter/jupyterUtils';
-import { JupyterServerSelector } from '../kernels/jupyter/serverSelector';
 import { IJupyterUriProvider, IJupyterUriProviderRegistration, JupyterServerUriHandle } from '../kernels/jupyter/types';
 import { INotebookControllerManager, INotebookEditorProvider } from '../notebooks/types';
 import { IDataViewerDataProvider, IDataViewerFactory } from '../webviews/extension-side/dataviewer/types';
