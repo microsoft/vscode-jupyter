@@ -86,6 +86,7 @@ import { DisplayOptions } from '../../kernels/displayOptions';
 import { sendNotebookOrKernelLanguageTelemetry } from '../../platform/common/utils';
 import { ConsoleForegroundColors, TraceOptions } from '../../platform/logging/types';
 import { KernelConnector } from '../../kernels/kernelConnector';
+import { LiveRemoteKernelConnectionUsageTracker } from '../../kernels/raw/finder/liveRemoteKernelConnectionTracker';
 
 export class VSCodeNotebookController implements Disposable {
     private readonly _onNotebookControllerSelected: EventEmitter<{
@@ -152,7 +153,8 @@ export class VSCodeNotebookController implements Disposable {
         private readonly appShell: IApplicationShell,
         private readonly browser: IBrowserService,
         private readonly extensionChecker: IPythonExtensionChecker,
-        private serviceContainer: IServiceContainer
+        private serviceContainer: IServiceContainer,
+        private readonly liveKernelConnectionTracker: LiveRemoteKernelConnectionUsageTracker
     ) {
         disposableRegistry.push(this);
         this._onNotebookControllerSelected = new EventEmitter<{
@@ -541,6 +543,7 @@ export class VSCodeNotebookController implements Disposable {
             }
             traceInfo(`Updating preferred kernel for remote notebook ${kernelId}`);
             this.preferredRemoteKernelIdProvider.storePreferredRemoteKernelId(doc.uri, kernelId).catch(noop);
+            this.liveKernelConnectionTracker.trackKernelId(this.kernelConnection.serverId, kernelId, doc);
         };
 
         const kernelDisposedDisposable = kernel.onDisposed(() => disposeAllDisposables(handlerDisposables));
