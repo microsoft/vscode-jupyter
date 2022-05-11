@@ -96,9 +96,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
     }>;
-    private readonly _onControllersLoadedForRemote = new EventEmitter<{
-        serverId: string;
-    }>();
     private readonly _onNotebookControllerSelectionChanged = new EventEmitter<void>();
 
     // Promise to resolve when we have loaded our controllers
@@ -161,7 +158,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }>();
         this.disposables.push(this._onNotebookControllerSelected);
         this.disposables.push(this._onNotebookControllerSelectionChanged);
-        this.disposables.push(this._onControllersLoadedForRemote);
         this.kernelFilter.onDidChange(this.onDidChangeKernelFilter, this, this.disposables);
 
         let timer: NodeJS.Timeout | number | undefined;
@@ -375,15 +371,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         if (liveConnections.length > 0) {
             this.remoteRefreshedEmitter.fire(liveConnections);
         }
-
-        const serverIds = new Set<string>();
-        Array.from(this.registeredControllers.values()).forEach((item) => {
-            if (isLocalConnection(item.connection) || serverIds.has(item.connection.serverId)) {
-                return;
-            }
-            serverIds.add(item.connection.serverId);
-            this._onControllersLoadedForRemote.fire({ serverId: item.connection.serverId });
-        });
     }
 
     private listKernels(
