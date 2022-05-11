@@ -23,7 +23,7 @@ import { LiveRemoteKernelConnectionUsageTracker } from '../../../kernels/jupyter
 import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeNotebookController';
 import { JupyterNotebookView } from '../../../notebooks/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { computeUriHash } from '../../../kernels/jupyter/jupyterUtils';
+import { computeServerId } from '../../../kernels/jupyter/jupyterUtils';
 
 suite('Notebook Controller', () => {
     let notebookApi: IVSCodeNotebook;
@@ -49,7 +49,7 @@ suite('Notebook Controller', () => {
         baseUrl: 'http://one:1234/',
         id: 'connectionId2',
         kind: 'connectToLiveRemoteKernel',
-        serverId: computeUriHash(server2Uri),
+        serverId: computeServerId(server2Uri),
         kernelModel: {
             id: 'modelId2',
             lastActivityTime: new Date(),
