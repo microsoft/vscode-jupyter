@@ -308,13 +308,25 @@ export class VSCodeNotebookController implements Disposable {
             this.associatedDocuments.delete(event.notebook);
             this._onNotebookControllerSelectionChanged.fire();
 
-            if (!isLocalConnection(this.kernelConnection) && this.previousRemoteKernelId) {
-                this.liveKernelConnectionTracker.trackKernelIdAsNotUsed(
-                    this.kernelConnection.serverId,
-                    this.previousRemoteKernelId,
-                    event.notebook
-                );
-                this.previousRemoteKernelId = undefined;
+            if (!isLocalConnection(this.kernelConnection)) {
+                if (this.previousRemoteKernelId) {
+                    this.liveKernelConnectionTracker.trackKernelIdAsNotUsed(
+                        this.kernelConnection.serverId,
+                        this.previousRemoteKernelId,
+                        event.notebook
+                    );
+                    this.previousRemoteKernelId = undefined;
+                }
+                if (
+                    this.kernelConnection.kind === 'connectToLiveRemoteKernel' &&
+                    this.kernelConnection.kernelModel.id
+                ) {
+                    this.liveKernelConnectionTracker.trackKernelIdAsNotUsed(
+                        this.kernelConnection.serverId,
+                        this.kernelConnection.kernelModel.id,
+                        event.notebook
+                    );
+                }
             }
             return;
         }
