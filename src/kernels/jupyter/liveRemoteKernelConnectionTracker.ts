@@ -6,12 +6,11 @@ import { Memento, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
-import { JupyterServerUriStorage } from './launcher/serverUriStorage';
 import { LiveRemoteKernelConnectionMetadata } from '../types';
 import { computeServerId } from './jupyterUtils';
 import { IJupyterServerUriStorage } from './types';
 
-const mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources = 'removeKernelUrisAndSessionsUsedByResources';
+export const mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources = 'removeKernelUrisAndSessionsUsedByResources';
 
 type ServerId = string;
 type KernelId = string;
@@ -26,7 +25,7 @@ export class LiveRemoteKernelConnectionUsageTracker implements IExtensionSyncAct
     private usedRemoteKernelServerIdsAndSessions: UriSessionUsedByResources = {};
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IJupyterServerUriStorage) private readonly uriStorage: JupyterServerUriStorage,
+        @inject(IJupyterServerUriStorage) private readonly uriStorage: IJupyterServerUriStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento
     ) {}
     public activate(): void {
@@ -40,14 +39,19 @@ export class LiveRemoteKernelConnectionUsageTracker implements IExtensionSyncAct
     public wasKernelUsed(connection: LiveRemoteKernelConnectionMetadata) {
         return (
             connection.serverId in this.usedRemoteKernelServerIdsAndSessions &&
-            connection.id in this.usedRemoteKernelServerIdsAndSessions[connection.serverId]
+            typeof connection.kernelModel.id === 'string' &&
+            connection.kernelModel.id in this.usedRemoteKernelServerIdsAndSessions[connection.serverId]
         );
     }
     public trackKernelIdAsUsed(serverId: string, kernelId: string, notebook: NotebookDocument) {
         this.usedRemoteKernelServerIdsAndSessions[serverId] = this.usedRemoteKernelServerIdsAndSessions[serverId] || {};
         this.usedRemoteKernelServerIdsAndSessions[serverId][kernelId] =
             this.usedRemoteKernelServerIdsAndSessions[serverId][kernelId] || [];
-        this.usedRemoteKernelServerIdsAndSessions[serverId][kernelId].push(notebook.uri.toString());
+        const uris = this.usedRemoteKernelServerIdsAndSessions[serverId][kernelId];
+        if (uris.includes(notebook.uri.toString())) {
+            return;
+        }
+        uris.push(notebook.uri.toString());
         this.memento
             .update(
                 mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources,
@@ -67,6 +71,13 @@ export class LiveRemoteKernelConnectionUsageTracker implements IExtensionSyncAct
             return;
         }
         uris.splice(uris.indexOf(notebook.uri.toString()), 1);
+        if (uris.length === 0) {
+            delete this.usedRemoteKernelServerIdsAndSessions[serverId][kernelId];
+        }
+        if (Object.keys(this.usedRemoteKernelServerIdsAndSessions[serverId]).length === 0) {
+            delete this.usedRemoteKernelServerIdsAndSessions[serverId];
+        }
+
         this.memento
             .update(
                 mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources,
