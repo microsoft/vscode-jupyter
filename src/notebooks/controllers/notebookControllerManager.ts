@@ -443,8 +443,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // Sort out interactive or non-interactive controllers
             if (
                 item.connection.kind !== 'startUsingRemoteKernelSpec' ||
-                (notebookType === 'jupyter-notebook' && item.id.includes(InteractiveControllerIdSuffix)) ||
-                (notebookType === 'interactive' && !item.id.includes(InteractiveControllerIdSuffix))
+                item.controller.notebookType !== notebookType
             ) {
                 return false;
             }

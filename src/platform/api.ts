@@ -55,7 +55,7 @@ export interface IExtensionApi {
      * Returns the suggested controller for a give Jupyter server and notebook.
      */
     getSuggestedController(
-        id: string,
+        providerId: string,
         handle: JupyterServerUriHandle,
         notebook: NotebookDocument
     ): Promise<NotebookController | undefined>;
@@ -100,10 +100,14 @@ export function buildApi(
                 serviceContainer.get<IExportedKernelServiceFactory>(IExportedKernelServiceFactory);
             return kernelServiceFactory.getService();
         },
-        getSuggestedController: async (id: string, handle: JupyterServerUriHandle, notebook: NotebookDocument) => {
+        getSuggestedController: async (
+            providerId: string,
+            handle: JupyterServerUriHandle,
+            notebook: NotebookDocument
+        ) => {
             const controllers = serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
             const connection = serviceContainer.get<JupyterConnection>(JupyterConnection);
-            const uri = generateUriFromRemoteProvider(id, handle);
+            const uri = generateUriFromRemoteProvider(providerId, handle);
             await connection.updateServerUri(uri);
             const serverId = computeServerId(uri);
             const { controller } = await controllers.computePreferredNotebookController(notebook, serverId);
