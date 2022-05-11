@@ -291,7 +291,7 @@
                 "title": "%jupyter.command.jupyter.debug.title%",
                 "icon": "$(bug)",
                 "category": "Jupyter",
-                "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress && !jupyter.webExtension"
+                "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress"
             },
             {
                 "command": "jupyter.filterKernels",
@@ -304,28 +304,27 @@
                 "title": "%jupyter.command.jupyter.runByLine.title%",
                 "icon": "$(debug-line-by-line)",
                 "category": "Jupyter",
-                "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress && !jupyter.webExtension"
+                "enablement": "notebookKernelCount > 0 && !jupyter.notebookeditor.debuggingInProgress && !jupyter.notebookeditor.runByLineInProgress"
             },
             {
                 "command": "jupyter.runAndDebugCell",
                 "title": "%jupyter.command.jupyter.debugCell.title%",
                 "icon": "$(debug-alt-small)",
-                "category": "Jupyter",
-                "enablement": "!jupyter.webExtension"
+                "category": "Jupyter"
             },
             {
                 "command": "jupyter.runByLineNext",
                 "title": "%jupyter.command.jupyter.runByLineNext.title%",
                 "icon": "$(debug-line-by-line)",
                 "category": "Jupyter",
-                "enablement": "jupyter.notebookeditor.runByLineInProgress && !jupyter.webExtension"
+                "enablement": "jupyter.notebookeditor.runByLineInProgress"
             },
             {
                 "command": "jupyter.runByLineStop",
                 "title": "%jupyter.command.jupyter.runByLineStop.title%",
                 "icon": "$(debug-continue-small)",
                 "category": "Jupyter",
-                "enablement": "notebookKernelCount > 0 && jupyter.notebookeditor.runByLineInProgress && !jupyter.webExtension"
+                "enablement": "notebookKernelCount > 0 && jupyter.notebookeditor.runByLineInProgress"
             },
             {
                 "command": "jupyter.viewOutput",
@@ -383,25 +382,25 @@
                 "command": "jupyter.debugcell",
                 "title": "%jupyter.command.jupyter.debugcell.title%",
                 "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+                "enablement": "isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.debugstepover",
                 "title": "%jupyter.command.jupyter.debugstepover.title%",
                 "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+                "enablement": "isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.debugstop",
                 "title": "%jupyter.command.jupyter.debugstop.title%",
                 "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+                "enablement": "isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.debugcontinue",
                 "title": "%jupyter.command.jupyter.debugcontinue.title%",
                 "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+                "enablement": "isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.insertCellBelowPosition",
