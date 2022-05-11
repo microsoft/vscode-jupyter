@@ -57,7 +57,7 @@ class MockProvider implements IJupyterUriProvider {
 suite('DataScience URI Picker', () => {
     teardown(() => sinon.restore());
     suiteSetup(() => sinon.restore());
-    function createRegistration(providerIds: string[]) {
+    async function createRegistration(providerIds: string[]) {
         let registration: JupyterUriProviderRegistration | undefined;
         const extensionList: vscode.Extension<any>[] = [];
         const fileSystem = mock(FileSystem);
@@ -67,27 +67,29 @@ suite('DataScience URI Picker', () => {
         when(fileSystem.localFileExists(anything())).thenResolve(false);
         const memento = mock<vscode.Memento>();
         registration = new JupyterUriProviderRegistration(extensions, instance(memento));
-        providerIds.forEach((id) => {
-            const extension = TypeMoq.Mock.ofType<vscode.Extension<any>>();
-            const packageJson = TypeMoq.Mock.ofType<any>();
-            const contributes = TypeMoq.Mock.ofType<any>();
-            extension.setup((e) => e.packageJSON).returns(() => packageJson.object);
-            packageJson.setup((p) => p.contributes).returns(() => contributes.object);
-            contributes.setup((p) => p.pythonRemoteServerProvider).returns(() => [{ d: '' }]);
-            extension
-                .setup((e) => e.activate())
-                .returns(() => {
-                    return Promise.resolve();
-                });
-            extension.setup((e) => e.isActive).returns(() => false);
-            extensionList.push(extension.object);
-            registration?.registerProvider(new MockProvider(id));
-        });
+        await Promise.all(
+            providerIds.map((id) => {
+                const extension = TypeMoq.Mock.ofType<vscode.Extension<any>>();
+                const packageJson = TypeMoq.Mock.ofType<any>();
+                const contributes = TypeMoq.Mock.ofType<any>();
+                extension.setup((e) => e.packageJSON).returns(() => packageJson.object);
+                packageJson.setup((p) => p.contributes).returns(() => contributes.object);
+                contributes.setup((p) => p.pythonRemoteServerProvider).returns(() => [{ d: '' }]);
+                extension
+                    .setup((e) => e.activate())
+                    .returns(() => {
+                        return Promise.resolve();
+                    });
+                extension.setup((e) => e.isActive).returns(() => false);
+                extensionList.push(extension.object);
+                await registration?.registerProvider(new MockProvider(id));
+            })
+        );
         return registration;
     }
 
     test('Simple', async () => {
-        const registration = createRegistration(['1']);
+        const registration = await createRegistration(['1']);
         const pickers = await registration.getProviders();
         assert.equal(pickers.length, 1, 'Default picker should be there');
         const quickPick = pickers[0].getQuickPickEntryItems!();
@@ -100,7 +102,7 @@ suite('DataScience URI Picker', () => {
         assert.equal(uri.displayName, 'dummy', 'Display name not found');
     });
     test('Back', async () => {
-        const registration = createRegistration(['1']);
+        const registration = await createRegistration(['1']);
         const pickers = await registration.getProviders();
         assert.equal(pickers.length, 1, 'Default picker should be there');
         const quickPick = pickers[0].getQuickPickEntryItems!();
@@ -109,7 +111,7 @@ suite('DataScience URI Picker', () => {
         assert.equal(handle, 'back', 'Should be sending back');
     });
     test('Error', async () => {
-        const registration = createRegistration(['1']);
+        const registration = await createRegistration(['1']);
         const pickers = await registration.getProviders();
         assert.equal(pickers.length, 1, 'Default picker should be there');
         const quickPick = pickers[0].getQuickPickEntryItems!();
@@ -123,13 +125,13 @@ suite('DataScience URI Picker', () => {
         }
     });
     test('No picker call', async () => {
-        const registration = createRegistration(['1']);
+        const registration = await createRegistration(['1']);
         const uri = await registration.getJupyterServerUri('1', '1');
         // eslint-disable-next-line
         assert.equal(uri.baseUrl, 'http://foobar:3000', 'Base URL not found');
     });
     test('Two pickers', async () => {
-        const registration = createRegistration(['1', '2']);
+        const registration = await createRegistration(['1', '2']);
         let uri = await registration.getJupyterServerUri('1', '1');
         // eslint-disable-next-line
         assert.equal(uri.baseUrl, 'http://foobar:3000', 'Base URL not found');
@@ -139,7 +141,7 @@ suite('DataScience URI Picker', () => {
     });
     test('Two pickers with same id', async () => {
         try {
-            const registration = createRegistration(['1', '1']);
+            const registration = await createRegistration(['1', '1']);
             await registration.getJupyterServerUri('1', '1');
             // eslint-disable-next-line
             assert.fail('Should have failed if calling with same picker');
