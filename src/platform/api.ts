@@ -60,11 +60,6 @@ export interface IExtensionApi {
         handle: JupyterServerUriHandle,
         notebook: NotebookDocument
     ): Promise<NotebookController | undefined>;
-    /**
-     * Adds a remote Jupyter Server to the list of Remote Jupyter servers.
-     * This will result in the Jupyter extension listing kernels from this server as items in the kernel picker.
-     */
-    addRemoteJupyterServer(id: string, handle: JupyterServerUriHandle): Promise<void>;
 }
 
 export function buildApi(
@@ -114,13 +109,6 @@ export function buildApi(
             const serverId = computeServerId(uri);
             const { controller } = await controllers.computePreferredNotebookController(notebook, serverId);
             return controller?.controller;
-        },
-        addRemoteJupyterServer: async (id: string, handle: JupyterServerUriHandle) => {
-            const connection = serviceContainer.get<JupyterConnection>(JupyterConnection);
-            const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
-            const uri = generateUriFromRemoteProvider(id, handle);
-            await connection.updateServerUri(uri);
-            await selector.setJupyterURIToRemote(uri);
         }
     };
 
