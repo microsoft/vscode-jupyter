@@ -68,7 +68,7 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
 
         const list = this.extensions.all
             .filter((e) => e.packageJSON?.contributes?.pythonRemoteServerProvider || extensionIds.has(e.id))
-            .map((e) => (e.isActive ? Promise.resolve() : e.activate()));
+            .map((e) => (e.isActive ? Promise.resolve() : e.activate().then(noop, noop)));
         await Promise.all(list);
     }
 
