@@ -67,7 +67,7 @@ import {
     areKernelConnectionsEqual,
     getKernelRegistrationInfo
 } from '../../kernels/helpers';
-import { PreferredRemoteKernelIdProvider } from '../../kernels/raw/finder/preferredRemoteKernelIdProvider';
+import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/preferredRemoteKernelIdProvider';
 import {
     IKernel,
     IKernelProvider,

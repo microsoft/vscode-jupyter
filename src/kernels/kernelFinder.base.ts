@@ -21,7 +21,7 @@ import { rankKernels, deserializeKernelConnection, serializeKernelConnection, is
 import { computeUriHash } from './jupyter/jupyterUtils';
 import { ServerConnectionType } from './jupyter/launcher/serverConnectionType';
 import { IJupyterServerUriStorage } from './jupyter/types';
-import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKernelIdProvider';
+import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
 import { ILocalKernelFinder, IRemoteKernelFinder } from './raw/types';
 import { IKernelFinder, INotebookProvider, INotebookProviderConnection, KernelConnectionMetadata } from './types';
 

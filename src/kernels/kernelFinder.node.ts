@@ -9,7 +9,7 @@ import { IInterpreterService } from '../platform/interpreter/contracts';
 import { ServerConnectionType } from './jupyter/launcher/serverConnectionType';
 import { IJupyterServerUriStorage } from './jupyter/types';
 import { BaseKernelFinder } from './kernelFinder.base';
-import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKernelIdProvider';
+import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
 import { ILocalKernelFinder, IRemoteKernelFinder } from './raw/types';
 import { INotebookProvider, KernelConnectionMetadata } from './types';
 
