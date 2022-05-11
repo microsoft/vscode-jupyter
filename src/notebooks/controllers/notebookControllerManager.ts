@@ -71,7 +71,7 @@ import { getResourceType } from '../../platform/common/utils';
 import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
 import { INotebookMetadata } from '@jupyterlab/nbformat';
 import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConnectionType';
-import { computeUriHash } from '../../kernels/jupyter/jupyterUtils';
+import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -96,6 +96,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
     }>;
+    private readonly _onControllersLoadedForRemote = new EventEmitter<{
+        serverId: string;
+    }>();
     private readonly _onNotebookControllerSelectionChanged = new EventEmitter<void>();
 
     // Promise to resolve when we have loaded our controllers
@@ -119,7 +122,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     public get remoteRefreshed() {
         return this.remoteRefreshedEmitter.event;
     }
-    private preferredControllers = new Map<NotebookDocument, VSCodeNotebookController>();
+    private preferredControllers = new Map<NotebookDocument, IVSCodeNotebookController>();
 
     private get isLocalLaunch(): boolean {
         return this.serverConnectionType.isLocalLaunch;
@@ -158,6 +161,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }>();
         this.disposables.push(this._onNotebookControllerSelected);
         this.disposables.push(this._onNotebookControllerSelectionChanged);
+        this.disposables.push(this._onControllersLoadedForRemote);
         this.kernelFilter.onDidChange(this.onDidChangeKernelFilter, this, this.disposables);
 
         let timer: NodeJS.Timeout | number | undefined;
@@ -195,7 +199,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     ) {
                         return;
                     }
-                    if (item.connection.serverId !== computeUriHash(uri)) {
+                    if (item.connection.serverId !== computeServerId(uri)) {
                         return;
                     }
                     item.dispose();
@@ -223,7 +227,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             return this.createActiveInterpreterController(notebookType, resource);
         } else {
             traceInfoIfCI('CreateDefaultRemoteController');
-            const controller = await this.createDefaultPythonRemoteController(notebookType);
+            const notebook =
+                notebookType === JupyterNotebookView
+                    ? this.notebook.notebookDocuments.find((item) => item.notebookType === notebookType)
+                    : undefined;
+            const controller = await this.createDefaultRemoteController(notebookType, notebook);
             if (controller) {
                 return controller;
             }
@@ -367,6 +375,15 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         if (liveConnections.length > 0) {
             this.remoteRefreshedEmitter.fire(liveConnections);
         }
+
+        const serverIds = new Set<string>();
+        Array.from(this.registeredControllers.values()).forEach((item) => {
+            if (isLocalConnection(item.connection) || serverIds.has(item.connection.serverId)) {
+                return;
+            }
+            serverIds.add(item.connection.serverId);
+            this._onControllersLoadedForRemote.fire({ serverId: item.connection.serverId });
+        });
     }
 
     private listKernels(
@@ -423,12 +440,29 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         return this.getOrCreateControllerForActiveInterpreter(activeInterpreter, notebookType);
     }
     @traceDecoratorVerbose('Get default Remote Controller')
-    private async createDefaultPythonRemoteController(
-        notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
+    private async createDefaultRemoteController(
+        notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView,
+        notebook?: NotebookDocument
     ) {
+        const metadata = notebook ? getNotebookMetadata(notebook) : undefined;
+        const language =
+            !metadata || isPythonNotebook(metadata) || !metadata.language_info?.name
+                ? PYTHON_LANGUAGE
+                : metadata.language_info.name;
+        const kernelName = metadata ? metadata.kernelspec?.name : undefined;
         // Get all remote kernels
         await this.loadNotebookControllers();
-        const controllers = this.getRegisteredNotebookControllers();
+        const controllers = this.getRegisteredNotebookControllers().filter((item) => {
+            // Sort out interactive or non-interactive controllers
+            if (
+                item.connection.kind !== 'startUsingRemoteKernelSpec' ||
+                (notebookType === 'jupyter-notebook' && item.id.includes(InteractiveControllerIdSuffix)) ||
+                (notebookType === 'interactive' && !item.id.includes(InteractiveControllerIdSuffix))
+            ) {
+                return false;
+            }
+            return true;
+        });
         if (controllers.length === 0) {
             traceError('No remote controllers');
             return;
@@ -441,11 +475,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         let defaultPythonLanguageKernel: VSCodeNotebookController | undefined;
         controllers.forEach((item) => {
             // Sort out interactive or non-interactive controllers
-            if (
-                item.connection.kind !== 'startUsingRemoteKernelSpec' ||
-                (notebookType === 'jupyter-notebook' && item.id.includes(InteractiveControllerIdSuffix)) ||
-                (notebookType === 'interactive' && !item.id.includes(InteractiveControllerIdSuffix))
-            ) {
+            if (item.connection.kind !== 'startUsingRemoteKernelSpec') {
                 return;
             }
             if (item.connection.kernelSpec.name === 'python') {
@@ -457,7 +487,27 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             }
         });
 
-        return defaultPython3Kernel || defaultPythonKernel || defaultPythonLanguageKernel;
+        const defaultController = defaultPython3Kernel || defaultPythonKernel || defaultPythonLanguageKernel;
+
+        if (language === PYTHON_LANGUAGE) {
+            return defaultController;
+        } else {
+            let matchingKernelNameController: VSCodeNotebookController | undefined;
+            let matchingKernelLanguageController: VSCodeNotebookController | undefined;
+            controllers.forEach((item) => {
+                // Sort out interactive or non-interactive controllers
+                if (item.connection.kind !== 'startUsingRemoteKernelSpec') {
+                    return;
+                }
+                if (item.connection.kernelSpec.name === kernelName) {
+                    matchingKernelNameController = item;
+                } else if (item.connection.kernelSpec.language === language) {
+                    matchingKernelLanguageController = item;
+                }
+            });
+
+            return matchingKernelNameController || matchingKernelLanguageController || defaultController;
+        }
     }
     private removeNoPythonControllers() {
         this.notebookNoPythonController?.dispose();
@@ -510,16 +560,37 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             return;
         }
 
-        void this.computePreferredNotebookController(document);
+        void this.initializePreferredNotebookController(document);
         if (isPythonNotebook(getNotebookMetadata(document)) && this.extensionChecker.isPythonExtensionInstalled) {
             // If we know we're dealing with a Python notebook, load the active interpreter as a kernel asap.
             this.createActiveInterpreterController(JupyterNotebookView, document.uri).catch(noop);
         }
     }
 
+    public async initializePreferredNotebookController(document: NotebookDocument): Promise<void> {
+        const { preferredConnection, controller } = await this.computePreferredNotebookController(document);
+
+        if (controller) {
+            traceInfo(`TargetController found ID: ${controller.id} for document ${getDisplayPath(document.uri)}`);
+            await controller.controller.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
+
+            trackKernelResourceInformation(document.uri, {
+                kernelConnection: preferredConnection,
+                isPreferredKernel: true
+            });
+
+            // Save in our map so we can find it in test code.
+            this.preferredControllers.set(document, controller);
+        } else {
+            traceInfoIfCI(
+                `TargetController not found ID: ${preferredConnection?.id} for document ${getDisplayPath(document.uri)}`
+            );
+        }
+    }
     public async computePreferredNotebookController(
-        document: NotebookDocument
-    ): Promise<IVSCodeNotebookController | undefined> {
+        document: NotebookDocument,
+        serverId?: string
+    ): Promise<{ preferredConnection?: KernelConnectionMetadata; controller?: IVSCodeNotebookController }> {
         traceInfoIfCI(`Clear controller mapping for ${getDisplayPath(document.uri)}`);
         const loadControllersPromise = this.loadNotebookControllers();
         // Keep track of a token per document so that we can cancel the search if the doc is closed
@@ -538,12 +609,12 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             const resourceType = getResourceType(document.uri);
             const isPythonNbOrInteractiveWindow = isPythonNotebook(notebookMetadata) || resourceType === 'interactive';
             if (document.notebookType === JupyterNotebookView && !this.isLocalLaunch && isPythonNbOrInteractiveWindow) {
-                const defaultPythonController = await this.createDefaultPythonRemoteController(document.notebookType);
+                const defaultPythonController = await this.createDefaultRemoteController(document.notebookType);
                 preferredConnection = defaultPythonController?.connection;
             }
             if (document.notebookType === JupyterNotebookView && !preferredConnection) {
                 const preferredInterpreter =
-                    isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
+                    !serverId && isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
                         ? await this.interpreters.getActiveInterpreter(document.uri)
                         : undefined;
 
@@ -553,7 +624,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     notebookMetadata,
                     preferredSearchToken.token,
                     'useCache',
-                    preferredInterpreter
+                    preferredInterpreter,
+                    serverId
                 ));
 
                 // Also start the search to refresh the cache, don't need to await on this
@@ -563,7 +635,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     notebookMetadata,
                     preferredSearchToken.token,
                     'ignoreCache',
-                    preferredInterpreter
+                    preferredInterpreter,
+                    serverId
                 );
 
                 // If we didn't find an exact match in the cache, try awaiting for the non-cache version
@@ -571,7 +644,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     ({ preferredConnection } = await ignoreCacheFindPreferredPromise);
                 }
 
-                // Send telemetry on loooking for preferred don't await for sending it
+                // Send telemetry on looking for preferred don't await for sending it
                 this.sendPreferredKernelTelemetry(
                     document.uri,
                     notebookMetadata,
@@ -582,13 +655,13 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 // If we found a preferred kernel, set the association on the NotebookController
                 if (preferredSearchToken.token.isCancellationRequested && !preferredConnection) {
                     traceInfo('Find preferred kernel cancelled');
-                    return;
+                    return {};
                 }
                 if (!preferredConnection) {
                     traceInfoIfCI(
                         `PreferredConnection not found for NotebookDocument: ${getDisplayPath(document.uri)}`
                     );
-                    return;
+                    return {};
                 }
 
                 traceInfo(
@@ -629,28 +702,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 targetController = this.registeredControllers.get(preferredId);
             }
 
-            if (targetController) {
-                traceInfo(
-                    `TargetController found ID: ${targetController.id} for document ${getDisplayPath(document.uri)}`
-                );
-                await targetController.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
-
-                trackKernelResourceInformation(document.uri, {
-                    kernelConnection: preferredConnection,
-                    isPreferredKernel: true
-                });
-
-                // Save in our map so we can find it in test code.
-                this.preferredControllers.set(document, targetController);
-            } else {
-                traceInfoIfCI(
-                    `TargetController not found ID: ${preferredConnection?.id} for document ${getDisplayPath(
-                        document.uri
-                    )}`
-                );
-            }
+            return { preferredConnection, controller: targetController };
         } catch (ex) {
             traceError('Failed to find & set preferred controllers', ex);
+            return {};
         } finally {
             disposable.dispose();
         }
@@ -662,7 +717,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         notebookMetadata: INotebookMetadata | undefined,
         cancelToken: CancellationToken,
         useCache: 'useCache' | 'ignoreCache' | undefined,
-        preferredInterpreter: PythonEnvironment | undefined
+        preferredInterpreter: PythonEnvironment | undefined,
+        serverId: string | undefined
     ): Promise<{
         rankedConnections: KernelConnectionMetadata[] | undefined;
         preferredConnection: KernelConnectionMetadata | undefined;
@@ -671,8 +727,10 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         const rankedConnections = await this.kernelFinder.rankKernels(
             document.uri,
             notebookMetadata,
+            preferredInterpreter,
             cancelToken,
-            useCache
+            useCache,
+            serverId
         );
 
         if (rankedConnections && rankedConnections.length) {

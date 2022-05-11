@@ -14,6 +14,9 @@ export class JupyterUriProviderWrapper implements IJupyterUriProvider {
         return this.provider.id;
     }
     public getQuickPickEntryItems(): vscode.QuickPickItem[] {
+        if (!this.provider.getQuickPickEntryItems) {
+            return [];
+        }
         return this.provider.getQuickPickEntryItems().map((q) => {
             return {
                 ...q,
@@ -26,10 +29,13 @@ export class JupyterUriProviderWrapper implements IJupyterUriProvider {
             };
         });
     }
-    public handleQuickPick(
+    public async handleQuickPick(
         item: vscode.QuickPickItem,
         back: boolean
     ): Promise<JupyterServerUriHandle | 'back' | undefined> {
+        if (!this.provider.handleQuickPick) {
+            return;
+        }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if ((item as any).original) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -48,7 +48,7 @@ export class JupyterServerSelectorCommand implements IDisposable {
             // Find one that is the default for this remote
             if (notebook) {
                 // Recompute the preferred controller
-                await this.controllerManager.computePreferredNotebookController(notebook);
+                await this.controllerManager.initializePreferredNotebookController(notebook);
 
                 // That should have picked a preferred
                 const preferred = this.controllerManager.getPreferredNotebookController(notebook);

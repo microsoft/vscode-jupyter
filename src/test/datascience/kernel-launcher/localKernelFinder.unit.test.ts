@@ -243,8 +243,6 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
             kernelFinder = new KernelFinder(
                 localKernelFinder,
                 instance(remoteKernelFinder),
-                instance(extensionChecker),
-                instance(interpreterService),
                 instance(preferredRemote),
                 instance(notebookProvider),
                 instance(memento),

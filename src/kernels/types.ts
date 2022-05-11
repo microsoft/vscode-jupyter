@@ -526,8 +526,10 @@ export interface IKernelFinder {
     rankKernels(
         resource: Resource,
         option?: nbformat.INotebookMetadata,
+        preferredInterpreter?: PythonEnvironment,
         cancelToken?: CancellationToken,
-        useCache?: 'useCache' | 'ignoreCache'
+        useCache?: 'useCache' | 'ignoreCache',
+        serverId?: string
     ): Promise<KernelConnectionMetadata[] | undefined>;
     listKernels(
         resource: Resource,

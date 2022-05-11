@@ -31,7 +31,7 @@ import {
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { getOSType, OSType } from '../../platform/common/utils/platform';
 import { RemoteJupyterServerConnectionError } from '../../platform/errors/remoteJupyterServerConnectionError';
-import { computeUriHash } from '../../kernels/jupyter/jupyterUtils';
+import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
 import { Commands } from '../../platform/common/constants';
 
 suite('DataScience Error Handler Unit Tests', () => {
@@ -636,7 +636,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
         });
         test('Display error when connection to remote jupyter server fails', async () => {
             const uri = 'http://hello:1234/jupyter';
-            const serverId = computeUriHash(uri);
+            const serverId = computeServerId(uri);
             const error = new RemoteJupyterServerConnectionError(uri, serverId, new Error('ECONNRESET error'));
             const connection: RemoteKernelSpecConnectionMetadata = {
                 baseUrl: 'http://hello:1234/',
@@ -677,7 +677,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
         });
         test('Remove remote Uri if user choses to do so, when connection to remote jupyter server fails', async () => {
             const uri = 'http://hello:1234/jupyter';
-            const serverId = computeUriHash(uri);
+            const serverId = computeServerId(uri);
             const error = new RemoteJupyterServerConnectionError(uri, serverId, new Error('ECONNRESET error'));
             const connection: RemoteKernelSpecConnectionMetadata = {
                 baseUrl: 'http://hello:1234/',
@@ -713,7 +713,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
         });
         test('Change remote Uri if user choses to do so, when connection to remote jupyter server fails', async () => {
             const uri = 'http://hello:1234/jupyter';
-            const serverId = computeUriHash(uri);
+            const serverId = computeServerId(uri);
             const error = new RemoteJupyterServerConnectionError(uri, serverId, new Error('ECONNRESET error'));
             const connection: RemoteKernelSpecConnectionMetadata = {
                 baseUrl: 'http://hello:1234/',
@@ -745,7 +745,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
         });
         test('Select different kernel user choses to do so, when connection to remote jupyter server fails', async () => {
             const uri = 'http://hello:1234/jupyter';
-            const serverId = computeUriHash(uri);
+            const serverId = computeServerId(uri);
             const error = new RemoteJupyterServerConnectionError(uri, serverId, new Error('ECONNRESET error'));
             const connection: RemoteKernelSpecConnectionMetadata = {
                 baseUrl: 'http://hello:1234/',

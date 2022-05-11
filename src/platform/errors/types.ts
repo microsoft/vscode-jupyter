@@ -102,6 +102,7 @@ export type ErrorCategory =
     | 'nodeonly'
     | 'remotejupyterserverconnection'
     | 'localjupyterserverconnection'
+    | 'remotejupyterserveruriprovider'
     | 'unknown';
 
 // If there are errors, then the are added to the telementry properties.

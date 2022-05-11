@@ -21,7 +21,7 @@ import { IJupyterSessionManagerFactory, IJupyterSessionManager } from './types';
 import { sendKernelSpecTelemetry } from '../raw/finder/helper';
 import { traceError, traceInfoIfCI } from '../../platform/logging';
 import { IPythonExtensionChecker } from '../../platform/api/types';
-import { computeUriHash } from './jupyterUtils';
+import { computeServerId } from './jupyterUtils';
 
 // This class searches for a kernel that matches the given kernel name.
 // First it searches on a global persistent state, then on the installed python interpreters,
@@ -70,7 +70,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                             kernelSpec: s,
                             id: getKernelId(s, undefined, computeUriHash(connInfo.url)),
                             baseUrl: connInfo.baseUrl,
-                            serverId: computeUriHash(connInfo.url)
+                            serverId: computeServerId(connInfo.url)
                         };
                         return kernel;
                     })
@@ -101,7 +101,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                         },
                         baseUrl: connInfo.baseUrl,
                         id: s.kernel?.id || '',
-                        serverId: computeUriHash(connInfo.url)
+                        serverId: computeServerId(connInfo.url)
                     };
                     return kernel;
                 });

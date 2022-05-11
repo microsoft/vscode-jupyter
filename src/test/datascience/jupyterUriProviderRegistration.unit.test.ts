@@ -65,7 +65,8 @@ suite('DataScience URI Picker', () => {
         allStub.callsFake(() => extensionList);
         const extensions = new Extensions(instance(fileSystem));
         when(fileSystem.localFileExists(anything())).thenResolve(false);
-        registration = new JupyterUriProviderRegistration(extensions);
+        const memento = mock<vscode.Memento>();
+        registration = new JupyterUriProviderRegistration(extensions, instance(memento));
         providerIds.forEach((id) => {
             const extension = TypeMoq.Mock.ofType<vscode.Extension<any>>();
             const packageJson = TypeMoq.Mock.ofType<any>();
@@ -89,9 +90,9 @@ suite('DataScience URI Picker', () => {
         const registration = createRegistration(['1']);
         const pickers = await registration.getProviders();
         assert.equal(pickers.length, 1, 'Default picker should be there');
-        const quickPick = pickers[0].getQuickPickEntryItems();
+        const quickPick = pickers[0].getQuickPickEntryItems!();
         assert.equal(quickPick.length, 1, 'No quick pick items added');
-        const handle = await pickers[0].handleQuickPick(quickPick[0], false);
+        const handle = await pickers[0].handleQuickPick!(quickPick[0], false);
         assert.ok(handle, 'Handle not set');
         const uri = await registration.getJupyterServerUri('1', handle!);
         // eslint-disable-next-line
@@ -102,16 +103,16 @@ suite('DataScience URI Picker', () => {
         const registration = createRegistration(['1']);
         const pickers = await registration.getProviders();
         assert.equal(pickers.length, 1, 'Default picker should be there');
-        const quickPick = pickers[0].getQuickPickEntryItems();
+        const quickPick = pickers[0].getQuickPickEntryItems!();
         assert.equal(quickPick.length, 1, 'No quick pick items added');
-        const handle = await pickers[0].handleQuickPick(quickPick[0], true);
+        const handle = await pickers[0].handleQuickPick!(quickPick[0], true);
         assert.equal(handle, 'back', 'Should be sending back');
     });
     test('Error', async () => {
         const registration = createRegistration(['1']);
         const pickers = await registration.getProviders();
         assert.equal(pickers.length, 1, 'Default picker should be there');
-        const quickPick = pickers[0].getQuickPickEntryItems();
+        const quickPick = pickers[0].getQuickPickEntryItems!();
         assert.equal(quickPick.length, 1, 'No quick pick items added');
         try {
             await registration.getJupyterServerUri('1', 'foobar');
