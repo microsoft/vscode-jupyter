@@ -4,7 +4,7 @@
 'use strict';
 
 import { KernelMessage } from '@jupyterlab/services';
-import * as path from '../../../platform/vscode-path/path';
+import * as path from '../../vscode-path/path';
 import {
     debug,
     DebugAdapter,
@@ -36,7 +36,7 @@ import {
     KernelDebugMode
 } from '../types';
 import { assertIsDebugConfig, getMessageSourceAndHookIt, isShortNamePath, shortNameMatchesLongName } from './helper';
-import { IFileSystem } from '../../common/platform/types.node';
+// import { IFileSystem } from '../../common/platform/types.node';
 
 // For info on the custom requests implemented by jupyter see:
 // https://jupyter-client.readthedocs.io/en/stable/messaging.html#debug-request
@@ -59,7 +59,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         private session: DebugSession,
         private notebookDocument: NotebookDocument,
         private readonly jupyterSession: IJupyterSession,
-        private fs: IFileSystem,
+        // private fs: IFileSystem,
         private readonly kernel: IKernel | undefined,
         private readonly platformService: IPlatformService
     ) {
@@ -192,10 +192,11 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     dispose() {
         this.disposables.forEach((d) => d.dispose());
         // clean temp files
-        this.cellToFile.forEach((tempPath) => {
-            const norm = path.normalize(tempPath);
+        this.cellToFile.forEach((_tempPath) => {
+            // const norm = path.normalize(tempPath);
             try {
-                void this.fs.deleteLocalFile(norm);
+                // IANHU TODO: Need to handle this file delete in web case
+                //void this.fs.deleteLocalFile(norm);
             } catch {
                 traceError('Error deleting temporary debug files');
             }
