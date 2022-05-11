@@ -103,6 +103,7 @@ export type ErrorCategory =
     | 'remotejupyterserverconnection'
     | 'localjupyterserverconnection'
     | 'remotejupyterserveruriprovider'
+    | 'invalidremotejupyterserverurihandle'
     | 'unknown';
 
 // If there are errors, then the are added to the telementry properties.

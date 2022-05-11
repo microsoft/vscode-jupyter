@@ -9,7 +9,7 @@ import { Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../platform/common/application/types';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { Common, DataScience } from '../../platform/common/utils/localize';
-import { IBrowserService, IConfigurationService } from '../../platform/common/types';
+import { IBrowserService, IConfigurationService, IExtensions } from '../../platform/common/types';
 import {
     IKernelDependencyService,
     KernelConnectionMetadata,
@@ -46,6 +46,7 @@ suite('DataScience Error Handler Unit Tests', () => {
     let kernelDependencyInstaller: IKernelDependencyService;
     let uriStorage: IJupyterServerUriStorage;
     let cmdManager: ICommandManager;
+    let extensions: IExtensions;
     const jupyterInterpreter: PythonEnvironment = {
         displayName: 'Hello',
         uri: Uri.file('Some Path'),
@@ -65,6 +66,7 @@ suite('DataScience Error Handler Unit Tests', () => {
         when(workspaceService.workspaceFolders).thenReturn([]);
         kernelDependencyInstaller = mock<IKernelDependencyService>();
         when(kernelDependencyInstaller.areDependenciesInstalled(anything(), anything(), anything())).thenResolve(true);
+        when(extensions.getExtension(anything())).thenReturn({ packageJSON: { displayName: '' } } as any);
         dataScienceErrorHandler = new DataScienceErrorHandler(
             instance(applicationShell),
             instance(dependencyManager),
@@ -74,7 +76,8 @@ suite('DataScience Error Handler Unit Tests', () => {
             instance(workspaceService),
             instance(uriStorage),
             instance(cmdManager),
-            false
+            false,
+            instance(extensions)
         );
         when(applicationShell.showErrorMessage(anything())).thenResolve();
         when(applicationShell.showErrorMessage(anything(), anything())).thenResolve();

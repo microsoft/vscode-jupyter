@@ -553,6 +553,10 @@ export namespace DataScience {
         'DataScience.jupyterNotebookFailure',
         'Jupyter notebook failed to launch. \r\n{0}'
     );
+    export const remoteJupyterServerProvidedBy3rdPartyExtensionNoLongerValid = localize(
+        'DataScience.remoteJupyterServerProvidedBy3rdPartyExtensionNoLongerValid',
+        "The remote Jupyter Server contributed by the extension '{0}' is no longer available."
+    );
     export const remoteJupyterConnectionFailedWithServerWithError = localize(
         'DataScience.remoteJupyterConnectionFailedWithServerWithError',
         "Failed to connect to the remote Jupyter Server '{0}'. Verify the server is running and reachable. ({1})."
