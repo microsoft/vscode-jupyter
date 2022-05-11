@@ -54,6 +54,7 @@ import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProv
 import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverConnectionType';
+import { LiveRemoteKernelConnectionUsageTracker } from '../../../kernels/raw/finder/liveRemoteKernelConnectionTracker';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -69,6 +70,7 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
         let tempDirForKernelSpecs: Uri;
         let jupyterPaths: JupyterPaths;
         let preferredRemote: PreferredRemoteKernelIdProvider;
+        let liveKernelUsageTracker: LiveRemoteKernelConnectionUsageTracker;
         type TestData = {
             interpreters?: (
                 | PythonEnvironment
@@ -240,6 +242,7 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
             const onDidChangeEvent = new EventEmitter<void>();
             disposables.push(onDidChangeEvent);
             when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);
+            
             kernelFinder = new KernelFinder(
                 localKernelFinder,
                 instance(remoteKernelFinder),
@@ -248,7 +251,8 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
                 instance(memento),
                 instance(fs),
                 instance(serverUriStorage),
-                instance(connectionType)
+                instance(connectionType),
+                instance(liveKernelUsageTracker)
             );
         }
         teardown(() => {

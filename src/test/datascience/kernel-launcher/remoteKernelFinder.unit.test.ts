@@ -34,6 +34,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { takeTopRankKernel } from './localKernelFinder.unit.test';
 import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverConnectionType';
+import { LiveRemoteKernelConnectionUsageTracker } from '../../../kernels/raw/finder/liveRemoteKernelConnectionTracker';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];
@@ -46,6 +47,7 @@ suite(`Remote Kernel Finder`, () => {
     let jupyterSessionManager: IJupyterSessionManager;
     const dummyEvent = new EventEmitter<number>();
     let interpreterService: IInterpreterService;
+    let liveKernelUsageTracker: LiveRemoteKernelConnectionUsageTracker;
     const connInfo: IJupyterConnection = {
         url: 'http://foobar',
         type: 'jupyter',
@@ -146,7 +148,7 @@ suite(`Remote Kernel Finder`, () => {
         const onDidChangeEvent = new EventEmitter<void>();
         disposables.push(onDidChangeEvent);
         when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);
-
+        when(liveKernelUsageTracker.wasKernelUsed(anything())).thenReturn(true);
         kernelFinder = new KernelFinder(
             instance(localKernelFinder),
             remoteKernelFinder,
@@ -155,7 +157,8 @@ suite(`Remote Kernel Finder`, () => {
             memento,
             instance(fs),
             instance(serverUriStorage),
-            instance(connectionType)
+            instance(connectionType),
+            instance(liveKernelUsageTracker)
         );
     });
     teardown(() => {

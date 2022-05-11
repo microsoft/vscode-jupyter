@@ -36,7 +36,7 @@ export class LiveRemoteKernelConnectionUsageTracker implements IExtensionSyncAct
         this.uriStorage.onDidRemoveUri(this.onDidRemoveUri, this, this.disposables);
     }
 
-    public wasKernelUsedByANotebook(connection: LiveRemoteKernelConnectionMetadata) {
+    public wasKernelUsed(connection: LiveRemoteKernelConnectionMetadata) {
         return (
             connection.serverId in this.usedRemoteKernelServerIdsAndSessions &&
             connection.id in this.usedRemoteKernelServerIdsAndSessions[connection.serverId]

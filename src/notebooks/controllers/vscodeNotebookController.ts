@@ -98,8 +98,6 @@ export class VSCodeNotebookController implements Disposable {
     private readonly disposables: IDisposable[] = [];
     private notebookKernels = new WeakMap<NotebookDocument, IKernel>();
     public readonly controller: NotebookController;
-    private isConnectionOutdated?: boolean;
-    private outdatedMessageDisplayed?: boolean;
     /**
      * Used purely for testing purposes.
      */
@@ -187,9 +185,6 @@ export class VSCodeNotebookController implements Disposable {
     public updateRemoteKernelDetails(kernelConnection: LiveRemoteKernelConnectionMetadata) {
         this.controller.detail = getRemoteKernelSessionInformation(kernelConnection);
     }
-    public flagRemoteKernelAsOutdated() {
-        this.isConnectionOutdated = true;
-    }
     public updateInterpreterDetails(
         kernelConnection: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
     ) {
@@ -236,11 +231,6 @@ export class VSCodeNotebookController implements Disposable {
     @traceDecoratorVerbose('VSCodeNotebookController::handleExecution', TraceOptions.BeforeCall)
     private async handleExecution(cells: NotebookCell[], notebook: NotebookDocument) {
         if (cells.length < 1) {
-            return;
-        }
-        if (this.isConnectionOutdated && !this.outdatedMessageDisplayed) {
-            void this.appShell.showErrorMessage(DataScience.jupyterRemoteConnectFailedModalMessage(), { modal: true });
-            this.outdatedMessageDisplayed = true;
             return;
         }
         // Found on CI that sometimes VS Code calls this with old deleted cells.

@@ -350,11 +350,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // Unless the user switches to using local kernels (i.e. doesn't have a remote kernel setup).
             if (
                 connectionIsNoLongerValid &&
-                (controller.connection.kind === 'connectToLiveRemoteKernel' ||
-                    controller.connection.kind === 'startUsingRemoteKernelSpec') &&
+                controller.connection.kind === 'connectToLiveRemoteKernel' &&
                 !this.isLocalLaunch
             ) {
-                controller.flagRemoteKernelAsOutdated();
                 return true;
             }
             return connectionIsNoLongerValid;

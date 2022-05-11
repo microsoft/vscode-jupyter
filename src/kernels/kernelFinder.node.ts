@@ -8,6 +8,7 @@ import { ServerConnectionType } from './jupyter/launcher/serverConnectionType';
 import { IJupyterServerUriStorage } from './jupyter/types';
 import { BaseKernelFinder } from './kernelFinder.base';
 import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
+import { LiveRemoteKernelConnectionUsageTracker } from './raw/finder/liveRemoteKernelConnectionTracker';
 import { ILocalKernelFinder, IRemoteKernelFinder } from './raw/types';
 import { INotebookProvider, KernelConnectionMetadata } from './types';
 
@@ -21,7 +22,9 @@ export class KernelFinder extends BaseKernelFinder {
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalState: Memento,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IJupyterServerUriStorage) serverUriStorage: IJupyterServerUriStorage,
-        @inject(ServerConnectionType) serverConnectionType: ServerConnectionType
+        @inject(ServerConnectionType) serverConnectionType: ServerConnectionType,
+        @inject(LiveRemoteKernelConnectionUsageTracker)
+        private readonly liveKernelConnectionTracker: LiveRemoteKernelConnectionUsageTracker
     ) {
         super(
             preferredRemoteFinder,
@@ -50,6 +53,15 @@ export class KernelFinder extends BaseKernelFinder {
                         ? this.fs.localFileExists(kernel.interpreter.uri.fsPath)
                         : Promise.resolve(true);
                 });
+            case 'startUsingRemoteKernelSpec':
+                // Always fetch the latest kernels from remotes, no need to display cached remote kernels.
+                return false;
+            case 'connectToLiveRemoteKernel':
+                // Only list live kernels that was used by the user,
+                // Even if such a kernel no longer exists on the sever.
+                // This way things don't just disappear from the list &
+                // user will get notified when they attempt to re-use this kernel.
+                return this.liveKernelConnectionTracker.wasKernelUsed(kernel);
         }
 
         return true;
