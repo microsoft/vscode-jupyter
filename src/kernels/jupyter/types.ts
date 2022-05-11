@@ -215,7 +215,6 @@ export interface IJupyterUriProvider {
     getServerUri(handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
     /**
      * Gets a list of all valid Jupyter Server handles that can be passed into the `getServerUri` method.
-     * If
      */
     getHandles?(): Promise<JupyterServerUriHandle[]>;
 }
