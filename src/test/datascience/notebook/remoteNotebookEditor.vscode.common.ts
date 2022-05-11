@@ -6,7 +6,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { commands, Memento, NotebookDocument, Uri, window } from 'vscode';
+import { commands, CompletionList, Memento, NotebookDocument, Position, Uri, window } from 'vscode';
 import { IEncryptedStorage, IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
@@ -23,7 +23,8 @@ import {
     waitForTextOutput,
     closeNotebooksAndCleanUpAfterTests,
     createTemporaryNotebook,
-    createEmptyPythonNotebook
+    createEmptyPythonNotebook,
+    defaultNotebookTestTimeout
 } from './helper';
 import { openNotebook } from '../helpers';
 import { PYTHON_LANGUAGE, Settings } from '../../../platform/common/constants';
@@ -31,6 +32,7 @@ import { IS_REMOTE_NATIVE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from '../../consta
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider';
 import { INotebookControllerManager } from '../../../notebooks/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
+import { setIntellisenseTimeout } from '../../../intellisense/pythonKernelCompletionProvider';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 export function sharedRemoteNotebookEditorTests(
@@ -159,6 +161,42 @@ export function sharedRemoteNotebookEditorTests(
         await insertCodeCell('print("123412341234")', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
         await Promise.all([runCell(cell), waitForTextOutput(cell, '123412341234')]);
+    });
+
+    test('Remote kernels support completions', async function () {
+        setIntellisenseTimeout(30000);
+        await openNotebook(ipynbFile);
+        await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
+        let nbEditor = vscodeNotebook.activeNotebookEditor!;
+        assert.isOk(nbEditor, 'No active notebook');
+        // Cell 1 = `a = "Hello World"`
+        // Cell 2 = `print(a)`
+        let cell2 = nbEditor.document.getCells()![1]!;
+        await Promise.all([
+            runAllCellsInActiveNotebook(),
+            waitForExecutionCompletedSuccessfully(cell2),
+            waitForTextOutput(cell2, 'Hello World', 0, false)
+        ]);
+
+        // Insert a cell to get completions
+        const cell3 = await insertCodeCell('a.');
+        const position = new Position(0, 2);
+
+        await waitForCondition(
+            async () => {
+                const completions = (await commands.executeCommand(
+                    'vscode.executeCompletionItemProvider',
+                    cell3.document.uri,
+                    position
+                )) as CompletionList;
+                const items = completions.items.map((item) => item.label);
+                return items.length > 0;
+            },
+            defaultNotebookTestTimeout,
+            `Completions never return from cell`,
+            100,
+            true
+        );
     });
 
     return disposables;

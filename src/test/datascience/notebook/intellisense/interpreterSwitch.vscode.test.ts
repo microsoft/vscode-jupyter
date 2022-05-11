@@ -26,7 +26,7 @@ import {
 import { IVSCodeNotebook } from '../../../../platform/common/application/types';
 import { IPythonExecutionFactory } from '../../../../platform/common/process/types.node';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
-import { setIntellisenseTimeout } from '../../../../intellisense/pythonKernelCompletionProvider.node';
+import { setIntellisenseTimeout } from '../../../../intellisense/pythonKernelCompletionProvider';
 import { Settings } from '../../../../platform/common/constants';
 import { getOSType, OSType } from '../../../../platform/common/utils/platform';
 

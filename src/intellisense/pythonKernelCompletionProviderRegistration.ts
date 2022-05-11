@@ -6,7 +6,7 @@ import { languages } from 'vscode';
 import { IExtensionSingleActivationService } from '../platform/activation/types';
 import { NOTEBOOK_SELECTOR } from '../platform/common/constants';
 import { IDisposableRegistry, IConfigurationService } from '../platform/common/types';
-import { PythonKernelCompletionProvider } from './pythonKernelCompletionProvider.node';
+import { PythonKernelCompletionProvider } from './pythonKernelCompletionProvider';
 
 // Default set of trigger characters for jupyter
 const DefaultTriggerCharacters = ['.', '%'];
