@@ -35,12 +35,7 @@ import {
     IKernelDebugAdapterConfig,
     KernelDebugMode
 } from '../types';
-import {
-    assertIsDebugConfig,
-    getMessageSourceAndHookIt,
-    isShortNamePath,
-    shortNameMatchesLongName
-} from './helper.node';
+import { assertIsDebugConfig, getMessageSourceAndHookIt, isShortNamePath, shortNameMatchesLongName } from './helper';
 import { IFileSystem } from '../../common/platform/types.node';
 
 // For info on the custom requests implemented by jupyter see:
