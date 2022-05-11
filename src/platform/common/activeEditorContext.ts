@@ -2,20 +2,20 @@
 // Licensed under the MIT License.
 
 'use strict';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, optional } from 'inversify';
 import { NotebookEditor, TextEditor } from 'vscode';
 import { IKernel, IKernelProvider } from '../../kernels/types';
 import { getNotebookMetadata, isJupyterNotebook, isPythonNotebook } from '../../notebooks/helpers';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
-import { ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
-import { EditorContexts, PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { ContextKey } from '../../platform/common/contextKey';
-import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
-import { isNotebookCell, noop } from '../../platform/common/utils/misc';
-import { getActiveInteractiveWindow } from '../helpers';
+import { IExtensionSingleActivationService } from '../activation/types';
+import { ICommandManager, IDocumentManager, IVSCodeNotebook } from './application/types';
+import { EditorContexts, PYTHON_LANGUAGE } from './constants';
+import { ContextKey } from './contextKey';
+import { IDisposable, IDisposableRegistry } from './types';
+import { isNotebookCell, noop } from './utils/misc';
+import { getActiveInteractiveWindow } from '../../interactive-window/helpers';
 import { InteractiveWindowView, JupyterNotebookView } from '../../notebooks/constants';
 import { INotebookControllerManager } from '../../notebooks/types';
-import { IInteractiveWindowProvider, IInteractiveWindow } from '../types';
+import { IInteractiveWindowProvider, IInteractiveWindow } from '../../interactive-window/types';
 import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 
 @injectable()
@@ -37,7 +37,9 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private isJupyterKernelSelected: ContextKey;
     private hasNativeNotebookOrInteractiveWindowOpen: ContextKey;
     constructor(
-        @inject(IInteractiveWindowProvider) private readonly interactiveProvider: IInteractiveWindowProvider,
+        @inject(IInteractiveWindowProvider)
+        @optional()
+        private readonly interactiveProvider: IInteractiveWindowProvider,
         @inject(IDocumentManager) private readonly docManager: IDocumentManager,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
@@ -91,16 +93,20 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     public async activate(): Promise<void> {
         this.docManager.onDidChangeActiveTextEditor(this.onDidChangeActiveTextEditor, this, this.disposables);
         this.kernelProvider.onKernelStatusChanged(this.onDidKernelStatusChange, this, this.disposables);
-        this.interactiveProvider.onDidChangeActiveInteractiveWindow(
-            this.onDidChangeActiveInteractiveWindow,
-            this,
-            this.disposables
-        );
+        // Interactive provider might not be available
+        if (this.interactiveProvider) {
+            this.interactiveProvider.onDidChangeActiveInteractiveWindow(
+                this.onDidChangeActiveInteractiveWindow,
+                this,
+                this.disposables
+            );
+
+            if (this.interactiveProvider.activeWindow) {
+                this.onDidChangeActiveInteractiveWindow();
+            }
+        }
         if (this.vscNotebook.activeNotebookEditor) {
             this.onDidChangeActiveNotebookEditor(this.vscNotebook.activeNotebookEditor);
-        }
-        if (this.interactiveProvider.activeWindow) {
-            this.onDidChangeActiveInteractiveWindow();
         }
         this.vscNotebook.onDidChangeActiveNotebookEditor(this.onDidChangeActiveNotebookEditor, this, this.disposables);
 

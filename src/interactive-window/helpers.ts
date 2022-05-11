@@ -24,8 +24,11 @@ export function getInteractiveCellMetadata(cell: NotebookCell): InteractiveCellM
     }
 }
 export function getActiveInteractiveWindow(
-    interactiveWindowProvider: IInteractiveWindowProvider
+    interactiveWindowProvider: IInteractiveWindowProvider | undefined
 ): IInteractiveWindow | undefined {
+    if (!interactiveWindowProvider) {
+        return;
+    }
     if (interactiveWindowProvider.activeWindow) {
         return interactiveWindowProvider.activeWindow;
     }
