@@ -50,7 +50,7 @@ class TestRunner {
         console.log('Launch tests in test runner');
         await new Promise<void>((resolve, reject) => {
             const env: Record<string, string> = {
-                TEST_FILES_SUFFIX: 'smoke.test*',
+                TEST_FILES_SUFFIX: 'notebookCellExecution.perf.test',
                 IS_SMOKE_TEST: 'true',
                 CODE_TESTS_WORKSPACE: path.join(
                     EXTENSION_ROOT_DIR_FOR_TESTS,

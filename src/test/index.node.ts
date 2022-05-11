@@ -23,6 +23,7 @@ import { IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER } from './ciConstants.node';
 import {
     IS_MULTI_ROOT_TEST,
     IS_SMOKE_TEST,
+    IS_PERF_TEST,
     MAX_EXTENSION_ACTIVATION_TIME,
     TEST_RETRYCOUNT,
     TEST_TIMEOUT
@@ -184,14 +185,18 @@ export async function run(): Promise<void> {
         );
     });
 
+    console.log(`found ${testFiles.length} test files with suffix ${options.testFilesSuffix} and ignoreing ${ignoreGlob.join(', ')}`);
+
     // Setup test files that need to be run.
     testFiles.forEach((file) => mocha.addFile(path.join(testsRoot, file)));
 
-    /* eslint-disable no-console */
-    console.time('Time taken to activate the extension');
-    console.log('Starting & waiting for Jupyter extension to activate');
-    await activateExtensionScript();
-    console.timeEnd('Time taken to activate the extension');
+    if (!IS_PERF_TEST) {
+        /* eslint-disable no-console */
+        console.time('Time taken to activate the extension');
+        console.log('Starting & waiting for Jupyter extension to activate');
+        await activateExtensionScript();
+        console.timeEnd('Time taken to activate the extension');
+    }
 
     try {
         // Run the tests.
