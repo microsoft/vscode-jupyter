@@ -18,7 +18,7 @@ import {
     InputFlowAction
 } from '../../platform/common/utils/multiStepInput';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { Telemetry, Identifiers } from '../../webviews/webview-side/common/constants';
+import { Telemetry } from '../../webviews/webview-side/common/constants';
 import {
     IJupyterUriProvider,
     IJupyterUriProviderRegistration,
@@ -26,8 +26,13 @@ import {
     JupyterServerUriHandle
 } from './types';
 import { IDataScienceErrorHandler } from '../../platform/errors/types';
-import { handleExpiredCertsError, handleSelfCertsError, computeUriHash } from './jupyterUtils';
 import { IConfigurationService, IsWebExtension } from '../../platform/common/types';
+import {
+    handleExpiredCertsError,
+    handleSelfCertsError,
+    computeServerId,
+    generateUriFromRemoteProvider
+} from './jupyterUtils';
 import { JupyterConnection } from './jupyterConnection';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
 import { RemoteJupyterServerConnectionError } from '../../platform/errors/remoteJupyterServerConnectionError';
@@ -79,6 +84,32 @@ export class JupyterServerSelector {
         const multiStep = this.multiStepFactory.create<{}>();
         return multiStep.run(this.startSelectingURI.bind(this, allowLocal), {});
     }
+
+    @captureTelemetry(Telemetry.EnterJupyterURI)
+    @traceDecoratorError('Failed to enter Jupyter Uri')
+    public async enterJupyterURI(): Promise<string | undefined> {
+        let initialValue = defaultUri;
+        try {
+            const text = await this.clipboard.readText().catch(() => '');
+            const parsedUri = Uri.parse(text.trim(), true);
+            // Only display http/https uris.
+            initialValue = text && parsedUri && parsedUri.scheme.toLowerCase().startsWith('http') ? text : defaultUri;
+        } catch {
+            // We can ignore errors.
+        }
+        // Ask the user to enter a URI to connect to.
+        const uri = await this.applicationShell.showInputBox({
+            title: DataScience.jupyterSelectURIPrompt(),
+            value: initialValue || defaultUri,
+            validateInput: this.validateSelectJupyterURI,
+            prompt: ''
+        });
+
+        if (uri) {
+            await this.setJupyterURIToRemote(uri, true);
+            return computeServerId(uri);
+        }
+    }
     @captureTelemetry(Telemetry.SetJupyterURIToLocal)
     public async setJupyterURIToLocal(): Promise<void> {
         await this.serverUriStorage.setUri(Settings.JupyterServerLocalLaunch);
@@ -108,7 +139,7 @@ export class JupyterServerSelector {
                     sendTelemetryEvent(Telemetry.FetchError, undefined, { currentTask: 'connecting' });
                 }
                 await this.errorHandler.handleError(
-                    new RemoteJupyterServerConnectionError(userURI, computeUriHash(userURI), err)
+                    new RemoteJupyterServerConnectionError(userURI, computeServerId(userURI), err)
                 );
                 // Can't set the URI in this case.
                 return;
@@ -187,6 +218,9 @@ export class JupyterServerSelector {
         _input: IMultiStepInput<{}>,
         _state: {}
     ): Promise<InputStep<{}> | void> {
+        if (!provider.handleQuickPick) {
+            return;
+        }
         const result = await provider.handleQuickPick(item, true);
         if (result === 'back') {
             throw InputFlowAction.back;
@@ -197,18 +231,10 @@ export class JupyterServerSelector {
     }
     private async handleProviderQuickPick(id: string, result: JupyterServerUriHandle | undefined) {
         if (result) {
-            const uri = this.generateUriFromRemoteProvider(id, result);
+            const uri = generateUriFromRemoteProvider(id, result);
             await this.setJupyterURIToRemote(uri);
         }
     }
-
-    private generateUriFromRemoteProvider(id: string, result: JupyterServerUriHandle) {
-        // eslint-disable-next-line
-        return `${Identifiers.REMOTE_URI}?${Identifiers.REMOTE_URI_ID_PARAM}=${id}&${
-            Identifiers.REMOTE_URI_HANDLE_PARAM
-        }=${encodeURI(result)}`;
-    }
-
     private async selectRemoteURI(input: IMultiStepInput<{}>, _state: {}): Promise<InputStep<{}> | void> {
         let initialValue = defaultUri;
         try {
@@ -275,6 +301,9 @@ export class JupyterServerSelector {
         const providers = await this.extraUriProviders.getProviders();
         if (providers) {
             providers.forEach((p) => {
+                if (!p.getQuickPickEntryItems) {
+                    return;
+                }
                 const newProviderItems = p.getQuickPickEntryItems().map((i) => {
                     return { ...i, newChoice: false, provider: p };
                 });

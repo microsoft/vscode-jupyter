@@ -202,10 +202,21 @@ export interface IJupyterServerUri {
 export type JupyterServerUriHandle = string;
 
 export interface IJupyterUriProvider {
-    readonly id: string; // Should be a unique string (like a guid)
-    getQuickPickEntryItems(): QuickPickItem[];
-    handleQuickPick(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
+    /**
+     * Should be a unique string (like a guid)
+     */
+    readonly id: string;
+    onDidChangeHandlers?: Event<void>;
+    getQuickPickEntryItems?(): QuickPickItem[];
+    handleQuickPick?(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
+    /**
+     * Given the handle, returns the Jupyter Server information.
+     */
     getServerUri(handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
+    /**
+     * Gets a list of all valid Jupyter Server handles that can be passed into the `getServerUri` method.
+     */
+    getHandles?(): Promise<JupyterServerUriHandle[]>;
 }
 
 export const IJupyterUriProviderRegistration = Symbol('IJupyterUriProviderRegistration');

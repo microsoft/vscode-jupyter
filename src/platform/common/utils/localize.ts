@@ -555,11 +555,11 @@ export namespace DataScience {
     );
     export const remoteJupyterConnectionFailedWithServerWithError = localize(
         'DataScience.remoteJupyterConnectionFailedWithServerWithError',
-        'Failed to connect to the remote Jupyter Server {0}. Verify the server is running and reachable. ({1}).'
+        "Failed to connect to the remote Jupyter Server '{0}'. Verify the server is running and reachable. ({1})."
     );
     export const remoteJupyterConnectionFailedWithServer = localize(
         'DataScience.remoteJupyterConnectionFailedWithServer',
-        'Failed to connect to the remote Jupyter Server {0}. Verify the server is running and reachable.'
+        "Failed to connect to the remote Jupyter Server '{0}'. Verify the server is running and reachable."
     );
     export const remoteJupyterConnectionFailedWithoutServerWithError = localize(
         'DataScience.remoteJupyterConnectionFailedWithoutServerWithError',

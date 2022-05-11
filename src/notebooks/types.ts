@@ -40,7 +40,11 @@ export interface INotebookControllerManager {
         notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
     ): IVSCodeNotebookController | undefined;
     getPreferredNotebookController(document: NotebookDocument): IVSCodeNotebookController | undefined;
-    computePreferredNotebookController(document: NotebookDocument): Promise<IVSCodeNotebookController | undefined>;
+    initializePreferredNotebookController(document: NotebookDocument): Promise<void>;
+    computePreferredNotebookController(
+        document: NotebookDocument,
+        serverId?: string
+    ): Promise<{ preferredConnection?: KernelConnectionMetadata; controller?: IVSCodeNotebookController }>;
 }
 export enum CellOutputMimeTypes {
     error = 'application/vnd.code.notebook.error',

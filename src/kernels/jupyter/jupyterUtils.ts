@@ -8,13 +8,13 @@ import { ConfigurationTarget, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
 import { noop } from '../../platform/common/utils/misc';
 import { IJupyterConnection } from '../types';
-import { IJupyterServerUri } from './types';
+import { IJupyterServerUri, JupyterServerUriHandle } from './types';
 import { getJupyterConnectionDisplayName } from './launcher/helpers';
 import { IConfigurationService, IWatchableJupyterSettings, Resource } from '../../platform/common/types';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../../platform/common/constants';
+import { Identifiers, Telemetry } from '../../platform/common/constants';
 
 export function expandWorkingDir(
     workingDir: string | undefined,
@@ -133,6 +133,13 @@ export function createRemoteConnectionInfo(
     };
 }
 
-export function computeUriHash(uri: string) {
+export function computeServerId(uri: string) {
     return hashjs.sha256().update(uri).digest('hex');
+}
+
+export function generateUriFromRemoteProvider(id: string, result: JupyterServerUriHandle) {
+    // eslint-disable-next-line
+    return `${Identifiers.REMOTE_URI}?${Identifiers.REMOTE_URI_ID_PARAM}=${id}&${
+        Identifiers.REMOTE_URI_HANDLE_PARAM
+    }=${encodeURI(result)}`;
 }

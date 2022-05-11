@@ -150,8 +150,6 @@ suite(`Remote Kernel Finder`, () => {
         kernelFinder = new KernelFinder(
             instance(localKernelFinder),
             remoteKernelFinder,
-            instance(extensionChecker),
-            instance(interpreterService),
             preferredRemoteKernelIdProvider,
             instance(notebookProvider),
             memento,

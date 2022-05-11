@@ -3,9 +3,11 @@
 
 'use strict';
 
-import { ExtensionMode } from 'vscode';
-import { IJupyterUriProvider, IJupyterUriProviderRegistration } from '../kernels/jupyter/types';
-import { INotebookEditorProvider } from '../notebooks/types';
+import { ExtensionMode, NotebookController, NotebookDocument } from 'vscode';
+import { JupyterConnection } from '../kernels/jupyter/jupyterConnection';
+import { computeServerId, generateUriFromRemoteProvider } from '../kernels/jupyter/jupyterUtils';
+import { IJupyterUriProvider, IJupyterUriProviderRegistration, JupyterServerUriHandle } from '../kernels/jupyter/types';
+import { INotebookControllerManager, INotebookEditorProvider } from '../notebooks/types';
 import { IDataViewerDataProvider, IDataViewerFactory } from '../webviews/extension-side/dataviewer/types';
 import { IExportedKernelService } from './api/extension';
 import { IExportedKernelServiceFactory, IPythonApiProvider, PythonApi } from './api/types';
@@ -49,6 +51,14 @@ export interface IExtensionApi {
      * There are a specific set of extensions that are currently allowed to access this API.
      */
     getKernelService(): Promise<IExportedKernelService | undefined>;
+    /**
+     * Returns the suggested controller for a give Jupyter server and notebook.
+     */
+    getSuggestedController(
+        providerId: string,
+        handle: JupyterServerUriHandle,
+        notebook: NotebookDocument
+    ): Promise<NotebookController | undefined>;
 }
 
 export function buildApi(
@@ -89,6 +99,19 @@ export function buildApi(
             const kernelServiceFactory =
                 serviceContainer.get<IExportedKernelServiceFactory>(IExportedKernelServiceFactory);
             return kernelServiceFactory.getService();
+        },
+        getSuggestedController: async (
+            providerId: string,
+            handle: JupyterServerUriHandle,
+            notebook: NotebookDocument
+        ) => {
+            const controllers = serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
+            const connection = serviceContainer.get<JupyterConnection>(JupyterConnection);
+            const uri = generateUriFromRemoteProvider(providerId, handle);
+            await connection.updateServerUri(uri);
+            const serverId = computeServerId(uri);
+            const { controller } = await controllers.computePreferredNotebookController(notebook, serverId);
+            return controller?.controller;
         }
     };
 
