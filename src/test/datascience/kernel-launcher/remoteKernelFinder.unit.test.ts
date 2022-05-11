@@ -34,7 +34,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { takeTopRankKernel } from './localKernelFinder.unit.test';
 import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverConnectionType';
-import { LiveRemoteKernelConnectionUsageTracker } from '../../../kernels/raw/finder/liveRemoteKernelConnectionTracker';
+import { LiveRemoteKernelConnectionUsageTracker } from '../../../kernels/jupyter/liveRemoteKernelConnectionTracker';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];

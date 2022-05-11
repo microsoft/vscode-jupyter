@@ -7,7 +7,7 @@ import { ServerConnectionType } from './jupyter/launcher/serverConnectionType';
 import { IJupyterServerUriStorage } from './jupyter/types';
 import { BaseKernelFinder } from './kernelFinder.base';
 import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
-import { LiveRemoteKernelConnectionUsageTracker } from './raw/finder/liveRemoteKernelConnectionTracker';
+import { LiveRemoteKernelConnectionUsageTracker } from './jupyter/liveRemoteKernelConnectionTracker';
 import { IRemoteKernelFinder } from './raw/types';
 import { INotebookProvider, KernelConnectionMetadata } from './types';
 

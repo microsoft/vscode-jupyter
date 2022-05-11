@@ -71,8 +71,8 @@ import { getResourceType } from '../../platform/common/utils';
 import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
 import { INotebookMetadata } from '@jupyterlab/nbformat';
 import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConnectionType';
+import { LiveRemoteKernelConnectionUsageTracker } from '../../kernels/jupyter/liveRemoteKernelConnectionTracker';
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
-import { LiveRemoteKernelConnectionUsageTracker } from '../../kernels/raw/finder/liveRemoteKernelConnectionTracker';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.

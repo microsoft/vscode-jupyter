@@ -86,7 +86,7 @@ import { DisplayOptions } from '../../kernels/displayOptions';
 import { sendNotebookOrKernelLanguageTelemetry } from '../../platform/common/utils';
 import { ConsoleForegroundColors, TraceOptions } from '../../platform/logging/types';
 import { KernelConnector } from '../../kernels/kernelConnector';
-import { LiveRemoteKernelConnectionUsageTracker } from '../../kernels/raw/finder/liveRemoteKernelConnectionTracker';
+import { LiveRemoteKernelConnectionUsageTracker } from '../../kernels/jupyter/liveRemoteKernelConnectionTracker';
 
 export class VSCodeNotebookController implements Disposable {
     private readonly _onNotebookControllerSelected: EventEmitter<{

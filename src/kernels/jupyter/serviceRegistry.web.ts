@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IServiceManager } from '../../platform/ioc/types';
 import { IRemoteKernelFinder } from '../raw/types';
 import { INotebookProvider } from '../types';
@@ -19,6 +19,7 @@ import { NotebookProvider } from './launcher/notebookProvider';
 import { NotebookServerProvider } from './launcher/notebookServerProvider';
 import { ServerConnectionType } from './launcher/serverConnectionType';
 import { JupyterServerUriStorage } from './launcher/serverUriStorage';
+import { LiveRemoteKernelConnectionUsageTracker } from './liveRemoteKernelConnectionTracker';
 import { RemoteKernelFinder } from './remoteKernelFinder';
 import { JupyterServerSelector } from './serverSelector';
 import { BackingFileCreator } from './session/backingFileCreator.web';
@@ -71,5 +72,10 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<IJupyterRequestCreator>(IJupyterRequestCreator, JupyterRequestCreator);
     serviceManager.addSingleton<ServerConnectionType>(ServerConnectionType, ServerConnectionType);
     serviceManager.addSingleton<JupyterConnection>(JupyterConnection, JupyterConnection);
-    serviceManager.addBinding(JupyterConnection, IExtensionSingleActivationService);
+    serviceManager.addBinding(JupyterConnection, IExtensionSyncActivationService);
+    serviceManager.addSingleton<LiveRemoteKernelConnectionUsageTracker>(
+        LiveRemoteKernelConnectionUsageTracker,
+        LiveRemoteKernelConnectionUsageTracker
+    );
+    serviceManager.addBinding(LiveRemoteKernelConnectionUsageTracker, IExtensionSyncActivationService);
 }
