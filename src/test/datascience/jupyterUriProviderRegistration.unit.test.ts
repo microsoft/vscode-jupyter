@@ -66,6 +66,8 @@ suite('DataScience URI Picker', () => {
         const extensions = new Extensions(instance(fileSystem));
         when(fileSystem.localFileExists(anything())).thenResolve(false);
         const memento = mock<vscode.Memento>();
+        when(memento.get<string[]>(anything())).thenReturn([]);
+        when(memento.get<string[]>(anything(), anything())).thenReturn([]);
         registration = new JupyterUriProviderRegistration(extensions, instance(memento));
         await Promise.all(
             providerIds.map(async (id) => {
