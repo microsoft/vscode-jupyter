@@ -17,7 +17,7 @@ import { injectable } from 'inversify';
 import { IKernelFinder, IKernelProvider } from './types';
 import { KernelProvider } from './kernelProvider.web';
 import { KernelFinder } from './kernelFinder.web';
-import { PreferredRemoteKernelIdProvider } from './raw/finder/preferredRemoteKernelIdProvider';
+import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
 import { IDataScienceCommandListener } from '../platform/common/types';
 import { KernelCommandListener } from './kernelCommandListener';
 

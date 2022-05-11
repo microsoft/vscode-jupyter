@@ -8,7 +8,7 @@ import { IVSCodeNotebook, ICommandManager } from '../../platform/common/applicat
 import { traceError, traceInfo } from '../../platform/logging';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { INotebookControllerManager } from '../types';
-import { PreferredRemoteKernelIdProvider } from '../../kernels/raw/finder/preferredRemoteKernelIdProvider';
+import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/preferredRemoteKernelIdProvider';
 import { KernelConnectionMetadata } from '../../kernels/types';
 import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
 import { waitForCondition } from '../../platform/common/utils/async';

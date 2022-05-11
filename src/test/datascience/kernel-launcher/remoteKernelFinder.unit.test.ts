@@ -23,7 +23,7 @@ import { JupyterSessionManager } from '../../../kernels/jupyter/session/jupyterS
 import { JupyterSessionManagerFactory } from '../../../kernels/jupyter/session/jupyterSessionManagerFactory';
 import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../../../kernels/raw/types';
-import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider';
+import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
 import { IJupyterKernel, IJupyterSessionManager } from '../../../kernels/jupyter/types';
 import { KernelFinder } from '../../../kernels/kernelFinder.node';
 import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';

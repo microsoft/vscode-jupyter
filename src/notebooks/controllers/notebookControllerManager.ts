@@ -42,7 +42,7 @@ import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { NotebookCellLanguageService } from '../../intellisense/cellLanguageService';
-import { PreferredRemoteKernelIdProvider } from '../../kernels/raw/finder/preferredRemoteKernelIdProvider';
+import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/preferredRemoteKernelIdProvider';
 import {
     LiveRemoteKernelConnectionMetadata,
     IKernelProvider,

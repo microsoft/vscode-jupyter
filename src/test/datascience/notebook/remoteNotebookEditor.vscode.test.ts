@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import { commands, Uri, workspace } from 'vscode';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
-import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider';
+import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
 import { isLocalConnection, RemoteKernelSpecConnectionMetadata } from '../../../kernels/types';
 import { INotebookControllerManager } from '../../../notebooks/types';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
