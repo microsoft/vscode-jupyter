@@ -68,7 +68,7 @@ suite('DataScience URI Picker', () => {
         const memento = mock<vscode.Memento>();
         registration = new JupyterUriProviderRegistration(extensions, instance(memento));
         await Promise.all(
-            providerIds.map((id) => {
+            providerIds.map(async (id) => {
                 const extension = TypeMoq.Mock.ofType<vscode.Extension<any>>();
                 const packageJson = TypeMoq.Mock.ofType<any>();
                 const contributes = TypeMoq.Mock.ofType<any>();
