@@ -9,6 +9,7 @@ import { noop } from '../../platform/common/utils/misc';
 import { JupyterServerUriStorage } from './launcher/serverUriStorage';
 import { LiveRemoteKernelConnectionMetadata } from '../types';
 import { computeServerId } from './jupyterUtils';
+import { IJupyterServerUriStorage } from './types';
 
 const mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources = 'removeKernelUrisAndSessionsUsedByResources';
 
@@ -25,7 +26,7 @@ export class LiveRemoteKernelConnectionUsageTracker implements IExtensionSyncAct
     private usedRemoteKernelServerIdsAndSessions: UriSessionUsedByResources = {};
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(JupyterServerUriStorage) private readonly uriStorage: JupyterServerUriStorage,
+        @inject(IJupyterServerUriStorage) private readonly uriStorage: JupyterServerUriStorage,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly memento: Memento
     ) {}
     public activate(): void {
