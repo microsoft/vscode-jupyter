@@ -133,6 +133,7 @@ export class VSCodeNotebookController implements Disposable {
     }
 
     private readonly associatedDocuments = new WeakMap<NotebookDocument, Promise<void>>();
+    private previousRemoteKernelId?: string;
     constructor(
         private kernelConnection: KernelConnectionMetadata,
         id: string,
@@ -306,6 +307,15 @@ export class VSCodeNotebookController implements Disposable {
             }
             this.associatedDocuments.delete(event.notebook);
             this._onNotebookControllerSelectionChanged.fire();
+
+            if (!isLocalConnection(this.kernelConnection) && this.previousRemoteKernelId) {
+                this.liveKernelConnectionTracker.trackKernelIdAsNotUsed(
+                    this.kernelConnection.serverId,
+                    this.previousRemoteKernelId,
+                    event.notebook
+                );
+                this.previousRemoteKernelId = undefined;
+            }
             return;
         }
         // We're only interested in our Notebooks.
@@ -531,9 +541,10 @@ export class VSCodeNotebookController implements Disposable {
             if (!kernelId || isLocalConnection(this.kernelConnection)) {
                 return;
             }
+            this.previousRemoteKernelId = kernelId;
             traceInfo(`Updating preferred kernel for remote notebook ${kernelId}`);
             this.preferredRemoteKernelIdProvider.storePreferredRemoteKernelId(doc.uri, kernelId).catch(noop);
-            this.liveKernelConnectionTracker.trackKernelId(this.kernelConnection.serverId, kernelId, doc);
+            this.liveKernelConnectionTracker.trackKernelIdAsUsed(this.kernelConnection.serverId, kernelId, doc);
         };
 
         const kernelDisposedDisposable = kernel.onDisposed(() => disposeAllDisposables(handlerDisposables));

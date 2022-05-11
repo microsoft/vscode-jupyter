@@ -42,11 +42,30 @@ export class LiveRemoteKernelConnectionUsageTracker implements IExtensionSyncAct
             connection.id in this.usedRemoteKernelServerIdsAndSessions[connection.serverId]
         );
     }
-    public trackKernelId(serverId: string, kernelId: string, notebook: NotebookDocument) {
+    public trackKernelIdAsUsed(serverId: string, kernelId: string, notebook: NotebookDocument) {
         this.usedRemoteKernelServerIdsAndSessions[serverId] = this.usedRemoteKernelServerIdsAndSessions[serverId] || {};
         this.usedRemoteKernelServerIdsAndSessions[serverId][kernelId] =
             this.usedRemoteKernelServerIdsAndSessions[serverId][kernelId] || [];
         this.usedRemoteKernelServerIdsAndSessions[serverId][kernelId].push(notebook.uri.toString());
+        this.memento
+            .update(
+                mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources,
+                this.usedRemoteKernelServerIdsAndSessions
+            )
+            .then(noop, noop);
+    }
+    public trackKernelIdAsNotUsed(serverId: string, kernelId: string, notebook: NotebookDocument) {
+        if (!(serverId in this.usedRemoteKernelServerIdsAndSessions)) {
+            return;
+        }
+        if (!(kernelId in this.usedRemoteKernelServerIdsAndSessions[serverId])) {
+            return;
+        }
+        const uris = this.usedRemoteKernelServerIdsAndSessions[serverId][kernelId];
+        if (!Array.isArray(uris) || !uris.includes(notebook.uri.toString())) {
+            return;
+        }
+        uris.splice(uris.indexOf(notebook.uri.toString()), 1);
         this.memento
             .update(
                 mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources,
