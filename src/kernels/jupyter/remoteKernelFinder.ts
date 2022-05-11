@@ -68,7 +68,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                             kind: 'startUsingRemoteKernelSpec',
                             interpreter: await this.getInterpreter(s, connInfo.baseUrl),
                             kernelSpec: s,
-                            id: getKernelId(s, undefined, computeUriHash(connInfo.url)),
+                            id: getKernelId(s, undefined, computeServerId(connInfo.url)),
                             baseUrl: connInfo.baseUrl,
                             serverId: computeServerId(connInfo.url)
                         };
