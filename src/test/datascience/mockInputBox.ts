@@ -59,7 +59,9 @@ export class MockInputBox implements InputBox {
             }, 10);
         }, 10);
     }
-    public hide(): void {}
+    public hide(): void {
+        // Do nothing
+    }
     public dispose(): void {
         // Do nothing
     }
