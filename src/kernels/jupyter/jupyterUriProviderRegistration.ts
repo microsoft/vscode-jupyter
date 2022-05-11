@@ -7,6 +7,7 @@ import { GLOBAL_MEMENTO, IExtensions, IMemento } from '../../platform/common/typ
 import { swallowExceptions } from '../../platform/common/utils/decorators';
 import * as localize from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
+import { InvalidRemoteJupyterServerUriHandleError } from '../../platform/errors/invalidRemoteJupyterServerUriHandleError';
 import { JupyterUriProviderWrapper } from './jupyterUriProviderWrapper';
 import {
     IJupyterServerUri,
@@ -48,6 +49,13 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
         const providerPromise = this.providers.get(id);
         if (providerPromise) {
             const provider = await providerPromise;
+            if (provider.getHandles) {
+                const handles = await provider.getHandles();
+                if (!handles.includes(handle)) {
+                    const extensionId = this.providerExtensionMapping.get(id)!;
+                    throw new InvalidRemoteJupyterServerUriHandleError(id, handle, extensionId);
+                }
+            }
             return provider.getServerUri(handle);
         }
         throw new Error(localize.DataScience.unknownServerUri());
@@ -61,6 +69,7 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
     }
 
     private async loadOtherExtensions(): Promise<void> {
+        this.loadExistingProviderExtensionMapping();
         const extensionIds = new Set<string>();
         this.globalMemento
             .get<{ extensionId: string; providerId: string }[]>(REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY, [])
@@ -79,11 +88,7 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
     }
     @swallowExceptions()
     private async updateRegistrationInfo(providerId: string, extensionId: string): Promise<void> {
-        const registeredList = this.globalMemento.get<{ extensionId: string; providerId: string }[]>(
-            REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY,
-            []
-        );
-        registeredList.forEach((item) => this.providerExtensionMapping.set(item.providerId, item.extensionId));
+        this.loadExistingProviderExtensionMapping();
         this.providerExtensionMapping.set(providerId, extensionId);
 
         const newList: { extensionId: string; providerId: string }[] = [];
@@ -91,5 +96,12 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
             newList.push({ extensionId, providerId });
         });
         await this.globalMemento.update(REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY, newList);
+    }
+    private loadExistingProviderExtensionMapping() {
+        const registeredList = this.globalMemento.get<{ extensionId: string; providerId: string }[]>(
+            REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY,
+            []
+        );
+        registeredList.forEach((item) => this.providerExtensionMapping.set(item.providerId, item.extensionId));
     }
 }

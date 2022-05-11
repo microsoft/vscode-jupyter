@@ -288,6 +288,7 @@
     "DataScience.jupyterSelectPasswordPrompt": "Enter your password",
     "DataScience.removeRemoteJupyterServerEntryInQuickPick": "Remove",
     "DataScience.jupyterNotebookFailure": "Jupyter notebook failed to launch. \r\n{0}",
+    "DataScience.remoteJupyterServerProvidedBy3rdPartyExtensionNoLongerValid": "The remote Jupyter Server contributed by the extension '{0}' is no longer available.",
     "DataScience.remoteJupyterConnectionFailedWithServer": "Failed to connect to the remote Jupyter Server '{0}'. Verify the server is running and reachable.",
     "DataScience.remoteJupyterConnectionFailedWithServerWithError":"Failed to connect to the remote Jupyter Server '{0}'. Verify the server is running and reachable. ({1}).",
     "DataScience.remoteJupyterConnectionFailedWithoutServerWithError": "Connection failure. Verify the server is running and reachable. ({0}).",

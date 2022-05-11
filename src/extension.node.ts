@@ -127,7 +127,8 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
             registerRemoteServerProvider: noop,
             showDataViewer: () => Promise.resolve(),
             getKernelService: () => Promise.resolve(undefined),
-            getSuggestedController: () => Promise.resolve(undefined)
+            getSuggestedController: () => Promise.resolve(undefined),
+            addRemoteJupyterServer: () => Promise.resolve(undefined)
         };
     }
 }

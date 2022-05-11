@@ -6,6 +6,7 @@ import { IExtensionSyncActivationService } from '../../platform/activation/types
 import { Identifiers } from '../../platform/common/constants';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { RemoteJupyterServerUriProviderError } from '../../platform/errors/remoteJupyterServerUriProviderError';
+import { BaseError } from '../../platform/errors/types';
 import { IJupyterConnection } from '../types';
 import { computeServerId, createRemoteConnectionInfo } from './jupyterUtils';
 import { ServerConnectionType } from './launcher/serverConnectionType';
@@ -110,6 +111,9 @@ export class JupyterConnection implements IExtensionSyncActivationService {
                     }
                 }
             } catch (ex) {
+                if (ex instanceof BaseError) {
+                    throw ex;
+                }
                 throw new RemoteJupyterServerUriProviderError(idAndHandle.id, idAndHandle.handle, ex);
             }
         }
