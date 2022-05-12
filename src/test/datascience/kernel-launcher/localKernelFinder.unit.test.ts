@@ -54,7 +54,7 @@ import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProv
 import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverConnectionType';
-import { LiveRemoteKernelConnectionUsageTracker } from '../../../kernels/jupyter/liveRemoteKernelConnectionTracker';
+import { ILiveRemoteKernelConnectionUsageTracker } from '../../../kernels/jupyter/types';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -70,7 +70,7 @@ import { LiveRemoteKernelConnectionUsageTracker } from '../../../kernels/jupyter
         let tempDirForKernelSpecs: Uri;
         let jupyterPaths: JupyterPaths;
         let preferredRemote: PreferredRemoteKernelIdProvider;
-        let liveKernelUsageTracker: LiveRemoteKernelConnectionUsageTracker;
+        let liveKernelUsageTracker: ILiveRemoteKernelConnectionUsageTracker;
         type TestData = {
             interpreters?: (
                 | PythonEnvironment
@@ -232,7 +232,7 @@ import { LiveRemoteKernelConnectionUsageTracker } from '../../../kernels/jupyter
                     instance(memento)
                 )
             );
-
+            liveKernelUsageTracker = mock<ILiveRemoteKernelConnectionUsageTracker>();
             preferredRemote = mock(PreferredRemoteKernelIdProvider);
             const notebookProvider = mock(NotebookProvider);
             const serverUriStorage = mock(JupyterServerUriStorage);

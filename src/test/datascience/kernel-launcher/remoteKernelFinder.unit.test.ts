@@ -27,7 +27,11 @@ import {
     ActiveKernelIdList,
     PreferredRemoteKernelIdProvider
 } from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
-import { IJupyterKernel, IJupyterSessionManager } from '../../../kernels/jupyter/types';
+import {
+    IJupyterKernel,
+    IJupyterSessionManager,
+    ILiveRemoteKernelConnectionUsageTracker
+} from '../../../kernels/jupyter/types';
 import { KernelFinder } from '../../../kernels/kernelFinder.node';
 import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
@@ -37,7 +41,6 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { takeTopRankKernel } from './localKernelFinder.unit.test';
 import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverConnectionType';
-import { LiveRemoteKernelConnectionUsageTracker } from '../../../kernels/jupyter/liveRemoteKernelConnectionTracker';
 import { LocalKernelSpecsCacheKey, RemoteKernelSpecsCacheKey } from '../../../kernels/kernelFinder.base';
 
 suite(`Remote Kernel Finder`, () => {
@@ -51,7 +54,7 @@ suite(`Remote Kernel Finder`, () => {
     let jupyterSessionManager: IJupyterSessionManager;
     const dummyEvent = new EventEmitter<number>();
     let interpreterService: IInterpreterService;
-    let liveKernelUsageTracker: LiveRemoteKernelConnectionUsageTracker;
+    let liveKernelUsageTracker: ILiveRemoteKernelConnectionUsageTracker;
     const connInfo: IJupyterConnection = {
         url: 'http://foobar',
         type: 'jupyter',
@@ -153,7 +156,7 @@ suite(`Remote Kernel Finder`, () => {
         const onDidChangeEvent = new EventEmitter<void>();
         disposables.push(onDidChangeEvent);
         when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);
-        liveKernelUsageTracker = mock<LiveRemoteKernelConnectionUsageTracker>();
+        liveKernelUsageTracker = mock<ILiveRemoteKernelConnectionUsageTracker>();
         when(liveKernelUsageTracker.wasKernelUsed(anything())).thenReturn(true);
         kernelFinder = new KernelFinder(
             instance(localKernelFinder),
