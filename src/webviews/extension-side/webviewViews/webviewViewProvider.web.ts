@@ -9,12 +9,11 @@ import { WebviewView } from './webviewView.web';
 @injectable()
 export class WebviewViewProvider implements IWebviewViewProvider {
     constructor(
-        @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry
+        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
+        @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {}
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public async create(options: IWebviewViewOptions): Promise<IWebviewView> {
-        return new WebviewView(this.context, this.disposableRegistry, options);
+        return new WebviewView(this.disposableRegistry, this.context, options);
     }
 }

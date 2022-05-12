@@ -29,8 +29,8 @@ export abstract class Webview implements IWebview {
     protected loadPromise: Promise<void>;
 
     constructor(
-        protected context: IExtensionContext,
         protected disposableRegistry: IDisposableRegistry,
+        protected context: IExtensionContext,
         protected options: IWebviewOptions,
         additionalRootPaths: Uri[] = []
     ) {

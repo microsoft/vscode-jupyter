@@ -20,12 +20,12 @@ export class WebviewView extends Webview implements IWebviewView {
     }
     private readonly _onDidChangeVisibility = new EventEmitter<void>();
     constructor(
-        context: IExtensionContext,
         disposableRegistry: IDisposableRegistry,
+        context: IExtensionContext,
         private panelOptions: IWebviewViewOptions,
         additionalRootPaths: Uri[] = []
     ) {
-        super(context, disposableRegistry, panelOptions, additionalRootPaths);
+        super(disposableRegistry, context, panelOptions, additionalRootPaths);
     }
 
     protected createWebview(_webviewOptions: WebviewOptions): vscodeWebviewView {
