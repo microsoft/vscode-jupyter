@@ -67,28 +67,28 @@ suite(`Remote Kernel Finder`, () => {
         name: defaultPython3Name,
         argv: ['/usr/bin/python3'],
         language: 'python',
-        uri: Uri.file('specFilePath')
+        executable: 'specFilePath'
     };
     const python2spec: IJupyterKernelSpec = {
         display_name: 'Python 2 on Disk',
         name: 'python2',
         argv: ['/usr/bin/python'],
         language: 'python',
-        uri: Uri.file('specFilePath')
+        executable: 'specFilePath'
     };
     const juliaSpec: IJupyterKernelSpec = {
         display_name: 'Julia on Disk',
         name: 'julia',
         argv: ['/usr/bin/julia'],
         language: 'julia',
-        uri: Uri.file('specFilePath')
+        executable: 'specFilePath'
     };
     const interpreterSpec: IJupyterKernelSpec = {
         display_name: 'Conda interpreter kernel',
         name: defaultPython3Name,
         argv: ['python'],
         language: 'python',
-        uri: Uri.file('specFilePath')
+        executable: 'specFilePath'
     };
     const python3Kernels: IJupyterKernel[] = ['1', '2', '3'].map((id) => {
         return {

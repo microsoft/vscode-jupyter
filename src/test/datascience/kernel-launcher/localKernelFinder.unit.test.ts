@@ -16,9 +16,12 @@ import { EnvironmentVariablesProvider } from '../../../platform/common/variables
 import { InterpreterService } from '../../../platform/api/pythonApi';
 import {
     createInterpreterKernelSpec,
+    deserializeKernelConnection,
     getInterpreterKernelSpecName,
     getKernelId,
-    getKernelRegistrationInfo
+    getKernelRegistrationInfo,
+    getNameOfKernelConnection,
+    serializeKernelConnection
 } from '../../../platform/../kernels/helpers';
 import { PlatformService } from '../../../platform/common/platform/platformService.node';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
@@ -600,6 +603,21 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
              * Expected Python environment that will be used to start the kernel.
              */
             | { expectedInterpreter: PythonEnvironment };
+
+        function cloneWithAppropriateCase(obj: any) {
+            if (!obj || typeof obj !== 'object' || platform.getOSType() !== platform.OSType.Windows) {
+                return obj;
+            }
+            const result: any = {};
+            Object.keys(obj).forEach((k) => {
+                if (k === 'path') {
+                    result[k] = obj[k].toLowerCase();
+                } else {
+                    result[k] = cloneWithAppropriateCase(obj[k]);
+                }
+            });
+            return result;
+        }
         /**
          * Gets the list of kernels from the kernel provider and compares them against what's expected.
          */
@@ -646,6 +664,30 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
                     );
                 }
                 ids.set(kernel.id, kernel);
+            });
+
+            // Ensure serializing kernels does not change the data inside of them
+            actualKernels.forEach((kernel) => {
+                // Interpreter URI is weird, we have to force it to format itself or the
+                // internal state won't match
+                if (kernel.interpreter) {
+                    kernel.interpreter.uri.toString();
+                }
+
+                const serialize = serializeKernelConnection(kernel);
+                const deserialized = deserializeKernelConnection(serialize);
+                if (deserialized.interpreter) {
+                    deserialized.interpreter.uri.toString();
+                }
+
+                // On windows we can lose path casing so make it all lower case for both
+                const lowerCasedDeserialized = cloneWithAppropriateCase(deserialized);
+                const lowerCasedKernel = cloneWithAppropriateCase(kernel);
+                assert.deepEqual(
+                    lowerCasedDeserialized,
+                    lowerCasedKernel,
+                    `Kernel ${getNameOfKernelConnection(kernel)} fails being serialized`
+                );
             });
         }
         async function verifyKernel(
@@ -1638,7 +1680,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
                         argv: [],
                         display_name: 'display_namea',
                         name: 'python3', // default name here
-                        uri: Uri.file('path')
+                        executable: 'path'
                     },
                     interpreter: { uri: Uri.file('a') } as any
                 },
@@ -1665,7 +1707,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
                         argv: [],
                         display_name: 'display_namea',
                         name: 'namea', // Non default name
-                        uri: Uri.file('path')
+                        executable: 'path'
                     },
                     interpreter: { uri: Uri.file('a') } as any
                 },
@@ -1692,7 +1734,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
                         argv: [],
                         display_name: 'display_namea',
                         name: 'namea',
-                        uri: Uri.file('path')
+                        executable: 'path'
                     }
                 },
                 {
@@ -1717,7 +1759,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
                         argv: [],
                         display_name: 'display_namea',
                         name: 'python3', // default name here
-                        uri: Uri.file('path')
+                        executable: 'path'
                     }
                 },
                 {

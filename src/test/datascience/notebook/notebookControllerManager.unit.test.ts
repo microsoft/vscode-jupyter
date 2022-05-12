@@ -34,7 +34,7 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    uri: Uri.file('path')
+                    executable: 'path'
                 }
             });
 
@@ -48,7 +48,7 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    uri: Uri.file('path'),
+                    executable: 'path',
                     language: 'abc'
                 }
             });
@@ -63,7 +63,7 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    uri: Uri.file('path')
+                    executable: 'path'
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
@@ -80,7 +80,7 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    uri: Uri.file('path')
+                    executable: 'path'
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
@@ -98,7 +98,7 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    uri: Uri.file('path')
+                    executable: 'path'
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
@@ -118,7 +118,7 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    uri: Uri.file('path')
+                    executable: 'path'
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
@@ -138,7 +138,7 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    uri: Uri.file('path')
+                    executable: 'path'
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
@@ -158,7 +158,7 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    uri: Uri.file('path')
+                    executable: 'path'
                 },
                 interpreter: {
                     uri: Uri.file('pyPath'),
@@ -180,7 +180,7 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    uri: Uri.file('path'),
+                    executable: 'path',
                     language: 'python'
                 }
             });
@@ -195,7 +195,7 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    uri: Uri.file('path'),
+                    executable: 'path',
                     language: 'python'
                 },
                 interpreter: {
@@ -215,7 +215,7 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    uri: Uri.file('path'),
+                    executable: 'path',
                     language: 'python'
                 },
                 interpreter: {
@@ -236,7 +236,7 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    uri: Uri.file('path'),
+                    executable: 'path',
                     language: 'python'
                 },
                 interpreter: {
@@ -258,7 +258,7 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    uri: Uri.file('path'),
+                    executable: 'path',
                     language: 'python'
                 },
                 interpreter: {
@@ -279,7 +279,7 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    uri: Uri.file('path'),
+                    executable: 'path',
                     language: 'python'
                 },
                 interpreter: {
@@ -308,7 +308,7 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    uri: Uri.file('path'),
+                    executable: 'path',
                     language: 'python'
                 },
                 interpreter: {
@@ -337,7 +337,7 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    uri: Uri.file('path'),
+                    executable: 'path',
                     language: 'python'
                 },
                 interpreter: {
@@ -368,7 +368,7 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    uri: Uri.file('path'),
+                    executable: 'path',
                     language: 'python'
                 },
                 interpreter: {
@@ -388,7 +388,7 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    uri: Uri.file('path'),
+                    executable: 'path',
                     language: 'python'
                 },
                 interpreter: {
@@ -409,7 +409,7 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    uri: Uri.file('path'),
+                    executable: 'path',
                     language: 'python'
                 },
                 interpreter: {
@@ -430,7 +430,7 @@ suite('Notebook Controller Manager', () => {
                     argv: [],
                     display_name: 'kspecname',
                     name: 'kspec',
-                    uri: Uri.file('path'),
+                    executable: 'path',
                     language: 'python'
                 },
                 interpreter: {

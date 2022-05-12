@@ -474,7 +474,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
         const byDisplayName = new Map<string, IJupyterKernelSpec>();
         results.forEach((r) => {
             const existing = byDisplayName.get(r.display_name);
-            if (existing && existing.uri !== r.uri) {
+            if (existing && existing.executable !== r.executable) {
                 // This item is a dupe but has a different path to start the exe
                 unique.push(r);
             } else if (!existing) {

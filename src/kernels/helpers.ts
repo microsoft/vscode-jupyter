@@ -90,7 +90,7 @@ export function createInterpreterKernelSpec(
 
 export function cleanEnvironment<T>(spec: T): T {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const copy = cloneDeep(spec) as { env?: any };
+    const copy = cloneDeep(spec) as unknown as { env?: any };
 
     if (copy.env) {
         // Scrub the environment of the spec to make sure it has allowed values (they all must be strings)
@@ -106,7 +106,7 @@ export function cleanEnvironment<T>(spec: T): T {
         });
     }
 
-    return copy as T;
+    return copy as any;
 }
 
 export function isLocalLaunch(configuration: IConfigurationService) {
@@ -277,7 +277,7 @@ function isKernelSpecExactMatch(
         argv: [],
         display_name: notebookMetadataKernelSpec.display_name,
         name: notebookMetadataKernelSpec.name,
-        uri: Uri.file('')
+        executable: ''
     });
 
     if (allowPythonDefaultMatch && metadataNameIsDefaultName) {
@@ -853,7 +853,7 @@ function compareAgainstKernelDisplayNameInNotebookMetadata(
         argv: [],
         display_name: notebookMetadata.kernelspec.display_name,
         name: notebookMetadata.kernelspec.name,
-        uri: Uri.file('')
+        executable: ''
     });
     if (metadataPointsToADefaultKernelSpec) {
         // If we're dealing with default kernelspec names, then special handling.
@@ -1067,7 +1067,9 @@ export function getKernelId(spec: IJupyterKernelSpec, interpreter?: PythonEnviro
         argsForGenerationOfId = spec.argv.join('#').toLowerCase();
     }
     const prefixForRemoteKernels = remoteBaseUrl ? `${remoteBaseUrl}.` : '';
-    const specPath = getFilePath(getNormalizedInterpreterPath(fsPathToUri(spec.interpreterPath) || spec.uri));
+    const specPath = getFilePath(
+        getNormalizedInterpreterPath(fsPathToUri(spec.interpreterPath) || Uri.file(spec.executable))
+    );
     const interpreterPath = getFilePath(getNormalizedInterpreterPath(interpreter?.uri)) || '';
     return `${prefixForRemoteKernels}${
         spec.id || ''
@@ -1206,15 +1208,17 @@ export function getKernelPathFromKernelConnection(kernelConnection?: KernelConne
             kernelConnection.kind === 'startUsingLocalKernelSpec') &&
             kernelConnection.kernelSpec.language === PYTHON_LANGUAGE)
     ) {
-        return fsPathToUri(kernelSpec?.metadata?.interpreter?.path || kernelSpec?.interpreterPath) || kernelSpec?.uri;
+        return fsPathToUri(
+            kernelSpec?.metadata?.interpreter?.path || kernelSpec?.interpreterPath || kernelSpec?.executable
+        );
     } else {
         // For non python kernels, give preference to the executable path in the kernelspec
         // E.g. if we have a rust kernel, we should show the path to the rust executable not the interpreter (such as conda env that owns the rust runtime).
-        return (
-            model?.uri ||
-            kernelSpec?.uri ||
-            fsPathToUri(kernelSpec?.metadata?.interpreter?.path) ||
-            fsPathToUri(kernelSpec?.interpreterPath)
+        return fsPathToUri(
+            model?.executable ||
+                kernelSpec?.executable ||
+                kernelSpec?.metadata?.interpreter?.path ||
+                kernelSpec?.interpreterPath
         );
     }
 }

@@ -128,7 +128,7 @@ suite('DataScience Error Handler Unit Tests', () => {
                     argv: [],
                     display_name: '',
                     name: '',
-                    uri: Uri.file('')
+                    executable: ''
                 }
             };
         });

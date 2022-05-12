@@ -58,7 +58,7 @@ suite('DataScience - JupyterSession', () => {
         display_name: 'new kernel',
         language: 'python',
         name: 'newkernel',
-        uri: Uri.file('path'),
+        executable: 'path',
         lastActivityTime: new Date(),
         numberOfConnections: 1,
         model: {
@@ -100,7 +100,7 @@ suite('DataScience - JupyterSession', () => {
                 argv: [],
                 display_name: '',
                 name: '',
-                uri: Uri.file('')
+                executable: ''
             }
         };
         session = mock<ISessionWithSocket>();

@@ -18,7 +18,7 @@ import { initialize } from '../initialize.node';
 import { PortAttributesProviders } from '../../platform/common/net/portAttributeProvider.node';
 import { IDisposable } from '../../platform/common/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import { CancellationTokenSource, PortAutoForwardAction, Uri } from 'vscode';
+import { CancellationTokenSource, PortAutoForwardAction } from 'vscode';
 import { createRawKernel } from '../../kernels/raw/session/rawKernel.node';
 import { IKernelConnection, IKernelLauncher } from '../../kernels/raw/types';
 import { IJupyterKernelSpec } from '../../kernels/types';
@@ -37,7 +37,7 @@ suite('DataScience - Kernel Launcher', () => {
         argv: [PYTHON_PATH, '-m', 'ipykernel_launcher', '-f', `{connection_file}`],
         env: {},
         resources: {},
-        uri: Uri.file('')
+        executable: ''
     };
     const disposables: IDisposable[] = [];
     suiteSetup(async function () {
@@ -96,7 +96,7 @@ suite('DataScience - Kernel Launcher', () => {
         const spec: IJupyterKernelSpec = {
             name: 'foo',
             language: 'python',
-            uri: Uri.file('python'),
+            executable: 'python',
             display_name: 'foo',
             argv: [PYTHON_PATH, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
             env: {
@@ -130,7 +130,7 @@ suite('DataScience - Kernel Launcher', () => {
         const spec: IJupyterKernelSpec = {
             name: 'foo',
             language: 'python',
-            uri: Uri.file('python'),
+            executable: 'python',
             display_name: 'foo',
             argv: [PYTHON_PATH, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
             env: {

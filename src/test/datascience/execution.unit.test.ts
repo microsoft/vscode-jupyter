@@ -988,7 +988,7 @@ suite('Jupyter Execution', async () => {
         const kernelFinder = mock(LocalKernelFinder);
         const kernelSpec: IJupyterKernelSpec = {
             name: 'somename',
-            uri: Uri.file('python'),
+            executable: 'python',
             argv: ['python'],
             display_name: 'somename'
         };
