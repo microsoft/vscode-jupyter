@@ -4,7 +4,7 @@
 
 ### Fixes
 
-1. Fix regression when launching virtual environments that run from a network drive
+1. Fix regression when launching virtual environments that run from a network drive.
    ([#9969](https://github.com/Microsoft/vscode-jupyter/issues/9969))
 
 ### Thanks
