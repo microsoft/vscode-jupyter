@@ -162,33 +162,49 @@ suite('Live kernel Connection Tracker', async () => {
         );
 
         tracker.activate();
-        tracker.trackKernelIdAsUsed(remoteLiveKernel1.serverId, remoteLiveKernel1.kernelModel.id!, {
-            uri: Uri.file('a.ipynb')
-        } as any);
+        tracker.trackKernelIdAsUsed(
+            {
+                uri: Uri.file('a.ipynb')
+            } as any,
+            remoteLiveKernel1.serverId,
+            remoteLiveKernel1.kernelModel.id!
+        );
 
         assert.deepEqual(cachedItems[remoteLiveKernel1.serverId][remoteLiveKernel1.kernelModel.id!], [
             Uri.file('a.ipynb').toString()
         ]);
 
-        tracker.trackKernelIdAsUsed(remoteLiveKernel2.serverId, remoteLiveKernel2.kernelModel.id!, {
-            uri: Uri.file('a.ipynb')
-        } as any);
+        tracker.trackKernelIdAsUsed(
+            {
+                uri: Uri.file('a.ipynb')
+            } as any,
+            remoteLiveKernel2.serverId,
+            remoteLiveKernel2.kernelModel.id!
+        );
 
         assert.deepEqual(cachedItems[remoteLiveKernel2.serverId][remoteLiveKernel2.kernelModel.id!], [
             Uri.file('a.ipynb').toString()
         ]);
 
-        tracker.trackKernelIdAsUsed(remoteLiveKernel3.serverId, remoteLiveKernel3.kernelModel.id!, {
-            uri: Uri.file('a.ipynb')
-        } as any);
+        tracker.trackKernelIdAsUsed(
+            {
+                uri: Uri.file('a.ipynb')
+            } as any,
+            remoteLiveKernel3.serverId,
+            remoteLiveKernel3.kernelModel.id!
+        );
 
         assert.deepEqual(cachedItems[remoteLiveKernel3.serverId][remoteLiveKernel3.kernelModel.id!], [
             Uri.file('a.ipynb').toString()
         ]);
 
-        tracker.trackKernelIdAsUsed(remoteLiveKernel3.serverId, remoteLiveKernel3.kernelModel.id!, {
-            uri: Uri.file('b.ipynb')
-        } as any);
+        tracker.trackKernelIdAsUsed(
+            {
+                uri: Uri.file('b.ipynb')
+            } as any,
+            remoteLiveKernel3.serverId,
+            remoteLiveKernel3.kernelModel.id!
+        );
 
         assert.deepEqual(cachedItems[remoteLiveKernel3.serverId][remoteLiveKernel3.kernelModel.id!], [
             Uri.file('a.ipynb').toString(),
@@ -200,18 +216,26 @@ suite('Live kernel Connection Tracker', async () => {
         assert.isTrue(tracker.wasKernelUsed(remoteLiveKernel3));
 
         // Remove a kernel connection from some other document.
-        tracker.trackKernelIdAsNotUsed(remoteLiveKernel1.serverId, remoteLiveKernel1.kernelModel.id!, {
-            uri: Uri.file('xyz.ipynb')
-        } as any);
+        tracker.trackKernelIdAsNotUsed(
+            {
+                uri: Uri.file('xyz.ipynb')
+            } as any,
+            remoteLiveKernel1.serverId,
+            remoteLiveKernel1.kernelModel.id!
+        );
 
         assert.isTrue(tracker.wasKernelUsed(remoteLiveKernel1));
         assert.isTrue(tracker.wasKernelUsed(remoteLiveKernel2));
         assert.isTrue(tracker.wasKernelUsed(remoteLiveKernel3));
 
         // Remove a kernel connection from a tracked document.
-        tracker.trackKernelIdAsNotUsed(remoteLiveKernel1.serverId, remoteLiveKernel1.kernelModel.id!, {
-            uri: Uri.file('a.ipynb')
-        } as any);
+        tracker.trackKernelIdAsNotUsed(
+            {
+                uri: Uri.file('a.ipynb')
+            } as any,
+            remoteLiveKernel1.serverId,
+            remoteLiveKernel1.kernelModel.id!
+        );
 
         assert.isFalse(tracker.wasKernelUsed(remoteLiveKernel1));
         assert.isTrue(tracker.wasKernelUsed(remoteLiveKernel2));

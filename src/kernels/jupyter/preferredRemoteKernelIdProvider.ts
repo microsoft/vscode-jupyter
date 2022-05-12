@@ -44,7 +44,7 @@ export class PreferredRemoteKernelIdProvider {
     public async storePreferredRemoteKernelId(uri: Uri, id: string): Promise<void> {
         await this.updatePreferredRemoteKernelIdInternal(uri, id);
     }
-    public async updatePreferredRemoteKernelIdInternal(uri: Uri, id?: string): Promise<void> {
+    private async updatePreferredRemoteKernelIdInternal(uri: Uri, id?: string): Promise<void> {
         let requiresUpdate = false;
 
         // Don't update in memory representation.

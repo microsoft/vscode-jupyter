@@ -20,6 +20,7 @@ import { NotebookServerProvider } from './launcher/notebookServerProvider';
 import { ServerConnectionType } from './launcher/serverConnectionType';
 import { JupyterServerUriStorage } from './launcher/serverUriStorage';
 import { LiveRemoteKernelConnectionUsageTracker } from './liveRemoteKernelConnectionTracker';
+import { RemoteKernelConnectionHandler } from './remoteKernelConnectionHandler';
 import { RemoteKernelFinder } from './remoteKernelFinder';
 import { JupyterServerSelector } from './serverSelector';
 import { BackingFileCreator } from './session/backingFileCreator.web';
@@ -36,7 +37,8 @@ import {
     IJupyterServerProvider,
     IJupyterExecution,
     IJupyterRequestCreator,
-    INotebookServerFactory
+    INotebookServerFactory,
+    ILiveRemoteKernelConnectionUsageTracker
 } from './types';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
@@ -73,9 +75,13 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<ServerConnectionType>(ServerConnectionType, ServerConnectionType);
     serviceManager.addSingleton<JupyterConnection>(JupyterConnection, JupyterConnection);
     serviceManager.addBinding(JupyterConnection, IExtensionSyncActivationService);
-    serviceManager.addSingleton<LiveRemoteKernelConnectionUsageTracker>(
-        LiveRemoteKernelConnectionUsageTracker,
+    serviceManager.addSingleton<ILiveRemoteKernelConnectionUsageTracker>(
+        ILiveRemoteKernelConnectionUsageTracker,
         LiveRemoteKernelConnectionUsageTracker
     );
-    serviceManager.addBinding(LiveRemoteKernelConnectionUsageTracker, IExtensionSyncActivationService);
+    serviceManager.addBinding(ILiveRemoteKernelConnectionUsageTracker, IExtensionSyncActivationService);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        RemoteKernelConnectionHandler
+    );
 }

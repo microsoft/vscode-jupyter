@@ -5,10 +5,9 @@ import { Memento } from 'vscode';
 import { IFileSystem } from '../platform/common/platform/types.node';
 import { GLOBAL_MEMENTO, IMemento } from '../platform/common/types';
 import { ServerConnectionType } from './jupyter/launcher/serverConnectionType';
-import { IJupyterServerUriStorage } from './jupyter/types';
+import { IJupyterServerUriStorage, ILiveRemoteKernelConnectionUsageTracker } from './jupyter/types';
 import { BaseKernelFinder } from './kernelFinder.base';
 import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
-import { LiveRemoteKernelConnectionUsageTracker } from './jupyter/liveRemoteKernelConnectionTracker';
 import { ILocalKernelFinder, IRemoteKernelFinder } from './raw/types';
 import { INotebookProvider, KernelConnectionMetadata } from './types';
 
@@ -23,8 +22,8 @@ export class KernelFinder extends BaseKernelFinder {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IJupyterServerUriStorage) serverUriStorage: IJupyterServerUriStorage,
         @inject(ServerConnectionType) serverConnectionType: ServerConnectionType,
-        @inject(LiveRemoteKernelConnectionUsageTracker)
-        private readonly liveKernelConnectionTracker: LiveRemoteKernelConnectionUsageTracker
+        @inject(ILiveRemoteKernelConnectionUsageTracker)
+        private readonly liveKernelConnectionTracker: ILiveRemoteKernelConnectionUsageTracker
     ) {
         super(
             preferredRemoteFinder,

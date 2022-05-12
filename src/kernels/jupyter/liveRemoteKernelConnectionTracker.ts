@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
-import { Memento, NotebookDocument } from 'vscode';
+import { Memento, Uri } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { GLOBAL_MEMENTO, IDisposableRegistry, IMemento } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { LiveRemoteKernelConnectionMetadata } from '../types';
 import { computeServerId } from './jupyterUtils';
-import { IJupyterServerUriStorage } from './types';
+import { IJupyterServerUriStorage, ILiveRemoteKernelConnectionUsageTracker } from './types';
 
 export const mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources = 'removeKernelUrisAndSessionsUsedByResources';
 
@@ -21,7 +21,9 @@ type UriSessionUsedByResources = Record<ServerId, Record<KernelId, UriString[]>>
  * Class to track the remote kernels that have been used by notebooks.
  */
 @injectable()
-export class LiveRemoteKernelConnectionUsageTracker implements IExtensionSyncActivationService {
+export class LiveRemoteKernelConnectionUsageTracker
+    implements IExtensionSyncActivationService, ILiveRemoteKernelConnectionUsageTracker
+{
     private usedRemoteKernelServerIdsAndSessions: UriSessionUsedByResources = {};
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -43,15 +45,15 @@ export class LiveRemoteKernelConnectionUsageTracker implements IExtensionSyncAct
             connection.kernelModel.id in this.usedRemoteKernelServerIdsAndSessions[connection.serverId]
         );
     }
-    public trackKernelIdAsUsed(serverId: string, kernelId: string, notebook: NotebookDocument) {
+    public trackKernelIdAsUsed(resource: Uri, serverId: string, kernelId: string) {
         this.usedRemoteKernelServerIdsAndSessions[serverId] = this.usedRemoteKernelServerIdsAndSessions[serverId] || {};
         this.usedRemoteKernelServerIdsAndSessions[serverId][kernelId] =
             this.usedRemoteKernelServerIdsAndSessions[serverId][kernelId] || [];
         const uris = this.usedRemoteKernelServerIdsAndSessions[serverId][kernelId];
-        if (uris.includes(notebook.uri.toString())) {
+        if (uris.includes(resource.toString())) {
             return;
         }
-        uris.push(notebook.uri.toString());
+        uris.push(resource.toString());
         this.memento
             .update(
                 mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources,
@@ -59,7 +61,7 @@ export class LiveRemoteKernelConnectionUsageTracker implements IExtensionSyncAct
             )
             .then(noop, noop);
     }
-    public trackKernelIdAsNotUsed(serverId: string, kernelId: string, notebook: NotebookDocument) {
+    public trackKernelIdAsNotUsed(resource: Uri, serverId: string, kernelId: string) {
         if (!(serverId in this.usedRemoteKernelServerIdsAndSessions)) {
             return;
         }
@@ -67,10 +69,10 @@ export class LiveRemoteKernelConnectionUsageTracker implements IExtensionSyncAct
             return;
         }
         const uris = this.usedRemoteKernelServerIdsAndSessions[serverId][kernelId];
-        if (!Array.isArray(uris) || !uris.includes(notebook.uri.toString())) {
+        if (!Array.isArray(uris) || !uris.includes(resource.toString())) {
             return;
         }
-        uris.splice(uris.indexOf(notebook.uri.toString()), 1);
+        uris.splice(uris.indexOf(resource.toString()), 1);
         if (uris.length === 0) {
             delete this.usedRemoteKernelServerIdsAndSessions[serverId][kernelId];
         }

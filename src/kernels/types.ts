@@ -124,7 +124,7 @@ export function isLocalConnection(
 
 export interface IKernel extends IAsyncDisposable {
     readonly id: Uri;
-    /**;
+    /**
      * In the case of Notebooks, this is the same as the Notebook Uri.
      * But in the case of Interactive Window, this is the Uri of the file (such as the Python file).
      * However if we create an intearctive window without a file, then this is undefined.

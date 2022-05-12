@@ -42,7 +42,6 @@ import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { NotebookCellLanguageService } from '../../intellisense/cellLanguageService';
-import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/preferredRemoteKernelIdProvider';
 import {
     LiveRemoteKernelConnectionMetadata,
     IKernelProvider,
@@ -71,7 +70,6 @@ import { getResourceType } from '../../platform/common/utils';
 import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
 import { INotebookMetadata } from '@jupyterlab/nbformat';
 import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConnectionType';
-import { LiveRemoteKernelConnectionUsageTracker } from '../../kernels/jupyter/liveRemoteKernelConnectionTracker';
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
 
 // Even after shutting down a kernel, the server API still returns the old information.
@@ -97,7 +95,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
     }>;
-    private readonly _onNotebookControllerSelectionChanged = new EventEmitter<void>();
+    private readonly _onNotebookControllerSelectionChanged = new EventEmitter<{
+        notebook: NotebookDocument;
+        controller: IVSCodeNotebookController;
+        selected: boolean;
+    }>();
 
     // Promise to resolve when we have loaded our controllers
     private controllersPromise?: Promise<void>;
@@ -138,8 +140,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(PreferredRemoteKernelIdProvider)
-        private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
         @inject(NotebookCellLanguageService) private readonly languageService: NotebookCellLanguageService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
@@ -151,9 +151,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IsWebExtension) private readonly isWeb: boolean,
-        @inject(ServerConnectionType) private readonly serverConnectionType: ServerConnectionType,
-        @inject(LiveRemoteKernelConnectionUsageTracker)
-        private readonly liveKernelConnectionTracker: LiveRemoteKernelConnectionUsageTracker
+        @inject(ServerConnectionType) private readonly serverConnectionType: ServerConnectionType
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -859,7 +857,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         this.notebook,
                         this.commandManager,
                         this.kernelProvider,
-                        this.preferredRemoteKernelIdProvider,
                         this.context,
                         this.disposables,
                         this.languageService,
@@ -869,8 +866,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         this.appShell,
                         this.browser,
                         this.extensionChecker,
-                        this.serviceContainer,
-                        this.liveKernelConnectionTracker
+                        this.serviceContainer
                     );
                     // Hook up to if this NotebookController is selected or de-selected
                     controller.onNotebookControllerSelected(
@@ -879,7 +875,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         this.disposables
                     );
                     controller.onNotebookControllerSelectionChanged(
-                        () => this._onNotebookControllerSelectionChanged.fire(),
+                        (e) => this._onNotebookControllerSelectionChanged.fire({ ...e, controller }),
                         this,
                         this.disposables
                     );
