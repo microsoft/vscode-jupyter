@@ -582,10 +582,6 @@ export namespace DataScience {
         'Manage Connections'
     );
 
-    export const jupyterRemoteConnectFailedModalMessage = localize(
-        'DataScience.jupyterRemoteConnectFailedModalMessage',
-        'Failed to connect to the remote Jupyter Server. View Jupyter log for further details.'
-    );
     export const changeJupyterRemoteConnection = localize(
         'DataScience.changeJupyterRemoteConnection',
         'Change Jupyter Server connection.'

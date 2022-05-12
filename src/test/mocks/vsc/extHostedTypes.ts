@@ -2249,4 +2249,7 @@ export namespace vscMockExtHostedTypes {
     export class QuickInputButtons {
         static readonly Back: vscode.QuickInputButton = {} as any;
     }
+    export class NotebookRendererScript {
+        constructor(public uri: vscode.Uri, public provides: string | string[] = []) {}
+    }
 }
