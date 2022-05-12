@@ -21,7 +21,11 @@ export const INotebookKernelResolver = Symbol('INotebookKernelResolver');
 export const INotebookControllerManager = Symbol('INotebookControllerManager');
 export interface INotebookControllerManager {
     readonly onNotebookControllerSelected: Event<{ notebook: NotebookDocument; controller: IVSCodeNotebookController }>;
-    readonly onNotebookControllerSelectionChanged: Event<void>;
+    readonly onNotebookControllerSelectionChanged: Event<{
+        notebook: NotebookDocument;
+        controller: IVSCodeNotebookController;
+        selected: boolean;
+    }>;
     readonly kernelConnections: Promise<Readonly<KernelConnectionMetadata>[]>;
     readonly remoteRefreshed: Event<LiveRemoteKernelConnectionMetadata[]>;
     /**
@@ -40,7 +44,11 @@ export interface INotebookControllerManager {
         notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView
     ): IVSCodeNotebookController | undefined;
     getPreferredNotebookController(document: NotebookDocument): IVSCodeNotebookController | undefined;
-    computePreferredNotebookController(document: NotebookDocument): Promise<IVSCodeNotebookController | undefined>;
+    initializePreferredNotebookController(document: NotebookDocument): Promise<void>;
+    computePreferredNotebookController(
+        document: NotebookDocument,
+        serverId?: string
+    ): Promise<{ preferredConnection?: KernelConnectionMetadata; controller?: IVSCodeNotebookController }>;
 }
 export enum CellOutputMimeTypes {
     error = 'application/vnd.code.notebook.error',

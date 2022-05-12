@@ -2,28 +2,31 @@
 // Licensed under the MIT License.
 import type * as nbformat from '@jupyterlab/nbformat';
 import { CancellationToken, Memento } from 'vscode';
-import { isPythonNotebook } from '../notebooks/helpers';
-import { IPythonExtensionChecker } from '../platform/api/types';
 import { createPromiseFromCancellation } from '../platform/common/cancellation';
-import { Settings, Telemetry } from '../platform/common/constants';
+import { Telemetry } from '../platform/common/constants';
 import { Resource } from '../platform/common/types';
-import { getResourceType } from '../platform/common/utils';
 import { createDeferredFromPromise } from '../platform/common/utils/async';
 import { noop } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { isArray } from '../platform/common/utils/sysTypes';
-import { IInterpreterService } from '../platform/interpreter/contracts';
 import { traceError, traceDecoratorVerbose } from '../platform/logging';
 import { TraceOptions } from '../platform/logging/types';
+import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { DisplayOptions } from './displayOptions';
 import { rankKernels, deserializeKernelConnection, serializeKernelConnection, isExactMatch } from './helpers';
-import { computeUriHash } from './jupyter/jupyterUtils';
+import { computeServerId } from './jupyter/jupyterUtils';
 import { ServerConnectionType } from './jupyter/launcher/serverConnectionType';
 import { IJupyterServerUriStorage } from './jupyter/types';
 import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
 import { ILocalKernelFinder, IRemoteKernelFinder } from './raw/types';
-import { IKernelFinder, INotebookProvider, INotebookProviderConnection, KernelConnectionMetadata } from './types';
+import {
+    IKernelFinder,
+    INotebookProvider,
+    INotebookProviderConnection,
+    isLocalConnection,
+    KernelConnectionMetadata
+} from './types';
 
 // Two cache keys so we can get local and remote separately (exported for tests)
 export const LocalKernelSpecsCacheKey = 'JUPYTER_LOCAL_KERNELSPECS_V3';
@@ -35,8 +38,6 @@ export abstract class BaseKernelFinder implements IKernelFinder {
     private cache = new Map<'local' | 'remote', KernelConnectionMetadata[]>();
 
     constructor(
-        private readonly extensionChecker: IPythonExtensionChecker,
-        private readonly interpreterService: IInterpreterService,
         private readonly preferredRemoteFinder: PreferredRemoteKernelIdProvider,
         private readonly notebookProvider: INotebookProvider,
         private readonly localKernelFinder: ILocalKernelFinder | undefined,
@@ -51,22 +52,17 @@ export abstract class BaseKernelFinder implements IKernelFinder {
     public async rankKernels(
         resource: Resource,
         notebookMetadata?: nbformat.INotebookMetadata,
+        preferredInterpreter?: PythonEnvironment,
         cancelToken?: CancellationToken,
-        useCache?: 'useCache' | 'ignoreCache'
+        useCache?: 'useCache' | 'ignoreCache',
+        serverId?: string
     ): Promise<KernelConnectionMetadata[] | undefined> {
-        const resourceType = getResourceType(resource);
         try {
             // Get list of all of the specs from the cache and without the cache (note, cached items will be validated before being returned)
-            const kernels = await this.listKernels(resource, cancelToken, useCache);
-
-            const isPythonNbOrInteractiveWindow = isPythonNotebook(notebookMetadata) || resourceType === 'interactive';
-
-            // Always include the interpreter in the search if we can
-            const preferredInterpreter =
-                isPythonNbOrInteractiveWindow && this.extensionChecker.isPythonExtensionInstalled
-                    ? await this.interpreterService.getActiveInterpreter(resource)
-                    : undefined;
-
+            let kernels = await this.listKernels(resource, cancelToken, useCache);
+            if (serverId) {
+                kernels = kernels.filter((kernel) => !isLocalConnection(kernel) && kernel.serverId === serverId);
+            }
             const preferredRemoteKernelId =
                 resource &&
                 this.preferredRemoteFinder &&
@@ -102,10 +98,6 @@ export abstract class BaseKernelFinder implements IKernelFinder {
             }),
             this.listRemoteKernels(resource, cancelToken, useCache).catch((ex) => {
                 traceError('Failed to get remote kernels', ex);
-                // When remote kernels fail, turn off remote if we get a ECONNREFUSED error
-                if (ex.toString().toLowerCase().includes('econn')) {
-                    void this.serverUriStorage.setUri(Settings.JupyterServerLocalLaunch);
-                }
                 return [];
             })
         ]);
@@ -227,7 +219,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
 
         // Do not update the cache if we got kernels from the cache.
         if (updateCache) {
-            void this.writeToCache(kind, kernels);
+            await this.writeToCache(kind, kernels);
         }
         return kernels;
     }
@@ -264,7 +256,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
             ui,
             localJupyter: false,
             token: cancelToken,
-            serverId: computeUriHash(uri)
+            serverId: computeServerId(uri)
         });
     }
 

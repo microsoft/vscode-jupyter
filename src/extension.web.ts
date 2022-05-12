@@ -117,7 +117,9 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
             registerPythonApi: noop,
             registerRemoteServerProvider: noop,
             showDataViewer: () => Promise.resolve(),
-            getKernelService: () => Promise.resolve(undefined)
+            getKernelService: () => Promise.resolve(undefined),
+            getSuggestedController: () => Promise.resolve(undefined),
+            addRemoteJupyterServer: () => Promise.resolve(undefined)
         };
     }
 }
