@@ -309,7 +309,7 @@ suite(`Remote Kernel Finder`, () => {
                     argv: [],
                     display_name: '',
                     name: '',
-                    uri: Uri.file('')
+                    executable: ''
                 },
                 kind: 'startUsingRemoteKernelSpec',
                 serverId: 'serverId1'
@@ -358,7 +358,7 @@ suite(`Remote Kernel Finder`, () => {
                     argv: [],
                     display_name: '',
                     name: '',
-                    uri: Uri.file('')
+                    executable: ''
                 },
                 kind: 'startUsingRemoteKernelSpec',
                 serverId: 'serverId1'

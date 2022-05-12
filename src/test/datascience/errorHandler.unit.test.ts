@@ -691,7 +691,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     argv: [],
                     display_name: '',
                     name: '',
-                    uri: Uri.file('')
+                    executable: ''
                 },
                 kind: 'startUsingRemoteKernelSpec',
                 serverId
