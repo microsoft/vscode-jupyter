@@ -235,9 +235,9 @@ export interface IJupyterServerUriStorage {
     getSavedUriList(): Promise<{ uri: string; time: number; displayName?: string }[]>;
     removeUri(uri: string): Promise<void>;
     clearUriList(): Promise<void>;
-    getUri(): Promise<string>;
     getRemoteUri(): Promise<string | undefined>;
-    setUri(uri: string): Promise<void>;
+    setUriToLocal(): Promise<void>;
+    setUriToRemote(uri: string): Promise<void>;
 }
 
 export const IJupyterBackingFileCreator = Symbol('IJupyterBackingFileCreator');

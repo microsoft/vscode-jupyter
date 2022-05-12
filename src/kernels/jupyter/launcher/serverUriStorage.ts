@@ -63,7 +63,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         const editedList = uriList.filter((f) => f.uri !== uri);
         await this.updateMemento(editedList);
         if (activeUri === uri) {
-            await this.setUri(Settings.JupyterServerLocalLaunch);
+            await this.setUriToLocal();
         }
         this._onDidRemoveUri.fire(uri);
     }
@@ -160,6 +160,13 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
                 return uri;
         }
     }
+    public async setUriToLocal(): Promise<void> {
+        await this.setUri(Settings.JupyterServerLocalLaunch);
+    }
+    public async setUriToRemote(uri: string): Promise<void> {
+        await this.setUri(uri);
+        await this.addToUriList(uri, Date.now(), uri);
+    }
 
     public async setUri(uri: string) {
         // Set the URI as our current state
@@ -176,7 +183,6 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         }
         this._onDidChangeUri.fire();
     }
-
     private async getUriInternal(): Promise<string> {
         if (this.serverConnectionType.isLocalLaunch) {
             return Settings.JupyterServerLocalLaunch;
