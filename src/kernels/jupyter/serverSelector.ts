@@ -279,8 +279,12 @@ export class JupyterServerSelector {
                 if (!handled) {
                     return DataScience.jupyterSelfCertExpiredErrorMessageOnly();
                 }
-            } else {
+            } else if (!this.isWebExtension) {
                 return DataScience.remoteJupyterConnectionFailedWithoutServerWithError().format(
+                    err.message || err.toString()
+                );
+            } else {
+                return DataScience.remoteJupyterConnectionFailedWithoutServerWithErrorWeb().format(
                     err.message || err.toString()
                 );
             }
