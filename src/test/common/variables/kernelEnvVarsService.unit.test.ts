@@ -36,7 +36,7 @@ suite('Kernel Environment Variables Service', () => {
     };
     const kernelSpec: IJupyterKernelSpec = {
         name: 'kernel',
-        uri: pathFile,
+        executable: pathFile.fsPath,
         display_name: 'kernel',
         interpreterPath: pathFile.fsPath,
         argv: []

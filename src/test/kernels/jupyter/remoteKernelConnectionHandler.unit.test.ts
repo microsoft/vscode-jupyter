@@ -51,7 +51,7 @@ suite('Remote kernel connection handler', async () => {
             argv: [],
             display_name: '',
             name: '',
-            uri: Uri.file('')
+            executable: ''
         }
     };
     const localKernelSpec: LocalKernelConnectionMetadata = {
@@ -60,7 +60,7 @@ suite('Remote kernel connection handler', async () => {
             argv: [],
             display_name: '',
             name: '',
-            uri: Uri.file('')
+            executable: ''
         },
         kind: 'startUsingLocalKernelSpec'
     };
