@@ -96,7 +96,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
     test('Look for widgets in sysPath of kernel', async () => {
         const sysPrefix = 'sysPrefix Of Kernel';
         const kernelPath = Uri.file('kernel Path.exe');
-        when(interpreterService.getInterpreterDetails(kernelPath)).thenResolve({ sysPrefix } as any);
+        when(interpreterService.getInterpreterDetails(anything())).thenResolve({ sysPrefix } as any);
         const searchDirectory = path.join(sysPrefix, 'share', 'jupyter', 'nbextensions');
 
         when(kernel.kernelConnectionMetadata).thenReturn({
