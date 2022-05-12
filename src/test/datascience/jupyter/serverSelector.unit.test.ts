@@ -62,6 +62,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         const handler = mock(DataScienceErrorHandler);
         const connectionType = mock<ServerConnectionType>();
         when(connectionType.isLocalLaunch).thenReturn(false);
+        when(connection.validateRemoteUri(anything())).thenResolve();
         const onDidChangeEvent = new EventEmitter<void>();
         disposables.push(onDidChangeEvent);
         when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);

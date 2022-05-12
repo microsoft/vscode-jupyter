@@ -196,7 +196,6 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                 input.prompt = prompt;
                 input.ignoreFocusOut = true;
                 input.buttons = [...(this.steps.length > 1 ? [QuickInputButtons.Back] : []), ...(buttons || [])];
-                let validating = validate('');
                 disposables.push(
                     input.onDidTriggerButton((item) => {
                         if (item === QuickInputButtons.Back) {
@@ -209,19 +208,19 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                         const inputValue = input.value;
                         input.enabled = false;
                         input.busy = true;
-                        if (!(await validate(inputValue))) {
+                        const validationMessage = await validate(inputValue);
+                        if (!validationMessage) {
+                            input.validationMessage = '';
                             resolve(inputValue);
+                        } else {
+                            input.validationMessage = validationMessage;
                         }
                         input.enabled = true;
                         input.busy = false;
                     }),
-                    input.onDidChangeValue(async (text) => {
-                        const current = validate(text);
-                        validating = current;
-                        const validationMessage = await current;
-                        if (current === validating) {
-                            input.validationMessage = validationMessage;
-                        }
+                    input.onDidChangeValue(async () => {
+                        // Validation happens on acceptance. Just clear as the user types
+                        input.validationMessage = '';
                     }),
                     input.onDidHide(() => {
                         (async () => {
