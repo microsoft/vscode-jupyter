@@ -39,7 +39,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     constructor(
         @inject(IInteractiveWindowProvider)
         @optional()
-        private readonly interactiveProvider: IInteractiveWindowProvider,
+        private readonly interactiveProvider: IInteractiveWindowProvider | undefined,
         @inject(IDocumentManager) private readonly docManager: IDocumentManager,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
