@@ -163,9 +163,9 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
     public async setUriToLocal(): Promise<void> {
         await this.setUri(Settings.JupyterServerLocalLaunch);
     }
-    public async setUriToRemote(uri: string): Promise<void> {
+    public async setUriToRemote(uri: string, displayName: string): Promise<void> {
         await this.setUri(uri);
-        await this.addToUriList(uri, Date.now(), uri);
+        await this.addToUriList(uri, Date.now(), displayName);
     }
 
     public async setUri(uri: string) {
