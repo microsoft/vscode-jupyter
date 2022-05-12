@@ -144,7 +144,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
     }
     private getUris(): Promise<string[]> {
         if (!this.currentUriPromise) {
-            this.currentUriPromise = this.getUriInternal();
+            this.currentUriPromise = this.getUrisInternal();
         }
 
         return this.currentUriPromise;
@@ -175,7 +175,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         this._onDidChangeUri.fire();
     }
 
-    private async getUriInternal(): Promise<string[]> {
+    private async getUrisInternal(): Promise<string[]> {
         if (this.serverConnectionType.isLocalLaunch) {
             return [];
         } else {
