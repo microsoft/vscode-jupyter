@@ -7,7 +7,6 @@ import { inject, injectable } from 'inversify';
 import { isNil } from 'lodash';
 import { EventEmitter, QuickPickItem, ThemeIcon, Uri } from 'vscode';
 import { IApplicationShell, IClipboard } from '../../platform/common/application/types';
-import { Settings } from '../../platform/common/constants';
 import { traceDecoratorError, traceError, traceWarning } from '../../platform/logging';
 import { DataScience } from '../../platform/common/utils/localize';
 import {
@@ -112,7 +111,7 @@ export class JupyterServerSelector {
     }
     @captureTelemetry(Telemetry.SetJupyterURIToLocal)
     public async setJupyterURIToLocal(): Promise<void> {
-        await this.serverUriStorage.setUri(Settings.JupyterServerLocalLaunch);
+        await this.serverUriStorage.setUriToLocal();
     }
 
     public async setJupyterURIToRemote(userURI: string, ignoreValidation?: boolean): Promise<void> {
@@ -146,8 +145,8 @@ export class JupyterServerSelector {
             }
         }
 
-        await this.serverUriStorage.setUri(userURI);
-        await this.serverUriStorage.addToUriList(userURI, Date.now(), userURI);
+        const connection = await this.jupyterConnection.createConnectionInfo({ uri: userURI });
+        await this.serverUriStorage.setUriToRemote(userURI, connection.displayName);
 
         // Indicate setting a jupyter URI to a remote setting. Check if an azure remote or not
         sendTelemetryEvent(Telemetry.SetJupyterURIToUserSpecified, undefined, {
@@ -164,17 +163,10 @@ export class JupyterServerSelector {
         // newChoice element will be set if the user picked 'enter a new server'
 
         // Get the list of items and show what the current value is
-        const currentUri = await this.serverUriStorage.getUri();
-        const items = await this.getUriPickList(allowLocal, currentUri);
-        const activeItem = items.find(
-            (i) =>
-                i.url === currentUri ||
-                (i.label === this.localLabel && currentUri === Settings.JupyterServerLocalLaunch)
-        );
-        const currentValue =
-            currentUri === Settings.JupyterServerLocalLaunch
-                ? DataScience.jupyterSelectURINoneLabel()
-                : activeItem?.label;
+        const remoteUri = await this.serverUriStorage.getRemoteUri();
+        const items = await this.getUriPickList(allowLocal, remoteUri);
+        const activeItem = items.find((i) => i.url === remoteUri || (i.label === this.localLabel && !remoteUri));
+        const currentValue = !remoteUri ? DataScience.jupyterSelectURINoneLabel() : activeItem?.label;
         const placeholder = currentValue // This will show at the top (current value really)
             ? DataScience.jupyterSelectURIQuickPickCurrent().format(currentValue)
             : DataScience.jupyterSelectURIQuickPickPlaceholder();
@@ -295,7 +287,7 @@ export class JupyterServerSelector {
         }
     };
 
-    private async getUriPickList(allowLocal: boolean, currentUri: string): Promise<ISelectUriQuickPickItem[]> {
+    private async getUriPickList(allowLocal: boolean, currentRemoteUri?: string): Promise<ISelectUriQuickPickItem[]> {
         // Ask our providers to stick on items
         let providerItems: ISelectUriQuickPickItem[] = [];
         const providers = await this.extraUriProviders.getProviders();
@@ -331,7 +323,7 @@ export class JupyterServerSelector {
         savedURIList.forEach((uriItem) => {
             if (uriItem.uri) {
                 const uriDate = new Date(uriItem.time);
-                const isSelected = currentUri === uriItem.uri;
+                const isSelected = currentRemoteUri === uriItem.uri;
                 items.push({
                     label: !isNil(uriItem.displayName) ? uriItem.displayName : uriItem.uri,
                     detail: DataScience.jupyterSelectURIMRUDetail().format(uriDate.toLocaleString()),

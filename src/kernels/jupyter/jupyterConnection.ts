@@ -53,8 +53,8 @@ export class JupyterConnection implements IExtensionSyncActivationService {
         this.pendingTimeouts = [];
     }
 
-    public async createConnectionInfo(serverId: string) {
-        const uri = await this.getUriFromServerId(serverId);
+    public async createConnectionInfo(options: { serverId: string } | { uri: string }) {
+        const uri = 'uri' in options ? options.uri : await this.getUriFromServerId(options.serverId);
         if (!uri) {
             throw new Error('Server Not found');
         }
