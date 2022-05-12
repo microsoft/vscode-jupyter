@@ -37,16 +37,18 @@ import { DebuggingManager } from './debugger/jupyter/debuggingManager.node';
 import { IDebugLocationTracker, IDebuggingManager } from './debugger/types';
 import { DataScienceErrorHandler } from './errors/errorHandler';
 import { IDataScienceErrorHandler } from './errors/types';
-import { ExportBase } from './export/exportBase.node';
-import { ExportDialog } from './export/exportDialog.node';
-import { ExportFileOpener } from './export/exportFileOpener.node';
-import { ExportInterpreterFinder } from './export/exportInterpreterFinder.node';
-import { ExportToHTML } from './export/exportToHTML.node';
-import { ExportToPDF } from './export/exportToPDF.node';
-import { ExportToPython } from './export/exportToPython.node';
-import { ExportToPythonPlain } from './export/exportToPythonPlain.node';
-import { ExportUtil } from './export/exportUtil.node';
-import { FileConverter } from './export/fileConverter.node';
+import {
+    ExportBase,
+    ExportDialog,
+    ExportFileOpener,
+    ExportInterpreterFinder,
+    ExportToHTML,
+    ExportToPDF,
+    ExportToPython,
+    ExportToPythonPlain,
+    ExportUtil,
+    FileConverter
+} from './export/export.index.node';
 import { IFileConverter, INbConvertExport, ExportFormat, IExport, IExportDialog } from './export/types';
 import { GitHubIssueCommandListener } from './logging/gitHubIssueCommandListener.node';
 import { KernelProgressReporter } from './progress/kernelProgressReporter';
