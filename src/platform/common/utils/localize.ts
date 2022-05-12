@@ -571,7 +571,7 @@ export namespace DataScience {
     );
     export const remoteJupyterConnectionFailedWithoutServerWithErrorWeb = localize(
         'DataScience.remoteJupyterConnectionFailedWithoutServerWithErrorWeb',
-        'Connection failure. Verify the server is running and reachable from a browser. See https://aka.ms/vscjremoteweb for more information.'
+        'Connection failure. Verify the server is running and reachable from a browser. ({0}). See https://aka.ms/vscjremoteweb for more information.'
     );
     export const removeRemoteJupyterConnectionButtonText = localize(
         'DataScience.removeRemoteJupyterConnectionButtonText',

@@ -284,7 +284,9 @@ export class JupyterServerSelector {
                     err.message || err.toString()
                 );
             } else {
-                return DataScience.remoteJupyterConnectionFailedWithoutServerWithErrorWeb();
+                return DataScience.remoteJupyterConnectionFailedWithoutServerWithErrorWeb().format(
+                    err.message || err.toString()
+                );
             }
         }
     };
