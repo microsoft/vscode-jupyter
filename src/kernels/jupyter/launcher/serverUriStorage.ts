@@ -159,6 +159,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         this._onDidChangeUri.fire();
     }
     public async addRemoteUri(uri: string, displayName: string): Promise<void> {
+        await this.getUris();
         this.remoteUris.push(uri);
         // Set the URI as our current state
         this.currentUriPromise = Promise.resolve(this.remoteUris);
