@@ -10,7 +10,7 @@ import { ReadStream, WriteStream } from 'fs-extra';
 import * as path from '../../vscode-path/path';
 import * as vscode from 'vscode';
 import '../extensions';
-import { createDirNotEmptyError, isFileExistsError } from './errors.node';
+import { createDirNotEmptyError, isFileExistsError } from './errors';
 import { IRawFileSystem } from './types.node';
 
 const ENCODING = 'utf8';

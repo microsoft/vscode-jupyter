@@ -5,7 +5,7 @@ import * as tmp from 'tmp';
 import { promisify } from 'util';
 import * as vscode from 'vscode';
 import { traceError } from '../../logging';
-import { createDirNotEmptyError, isFileNotFoundError } from './errors.node';
+import { createDirNotEmptyError, isFileNotFoundError } from './errors';
 import { convertFileType, convertStat, getHashString } from './fileSystemUtils.node';
 import { arePathsSame } from './fileUtils.node';
 import { getDisplayPathFromLocalFile } from './fs-paths.node';

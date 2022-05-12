@@ -6,7 +6,7 @@ import * as path from '../../vscode-path/path';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { traceError } from '../../logging';
-import { isFileNotFoundError } from '../platform/errors.node';
+import { isFileNotFoundError } from '../platform/errors';
 import { IFileSystem } from '../platform/types.node';
 import { EnvironmentVariables, IEnvironmentVariablesService } from './types';
 
