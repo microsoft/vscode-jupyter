@@ -62,6 +62,6 @@ suite('DataScience - Server Selector Command', () => {
 
         handler();
 
-        verify(serverSelector.setJupyterURIToRemote('http://localhost:1234/')).once();
+        verify(serverSelector.addRemoteJupyterUri('http://localhost:1234/')).once();
     });
 });

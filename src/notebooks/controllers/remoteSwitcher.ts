@@ -18,7 +18,6 @@ import { JupyterServerSelector } from '../../kernels/jupyter/serverSelector';
 import { isJupyterNotebook } from '../helpers';
 import { INotebookControllerManager } from '../types';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
-import { Settings } from '../../platform/common/constants';
 
 @injectable()
 export class RemoteSwitcher implements IExtensionSingleActivationService {
@@ -65,11 +64,11 @@ export class RemoteSwitcher implements IExtensionSingleActivationService {
             return;
         }
         this.statusBarItem.show();
-        const uri = await this.serverUriStorage.getRemoteUri();
+        const uri = await this.serverUriStorage.getRemoteUris();
         const label = !uri
             ? DataScience.jupyterNativeNotebookUriStatusLabelForLocal()
             : DataScience.jupyterNativeNotebookUriStatusLabelForRemote();
-        const tooltipSuffix = uri === Settings.JupyterServerLocalLaunch ? '' : ` (${uri})`;
+        const tooltipSuffix = uri.length === 0 ? '' : ` (${uri.join(',')})`;
         const tooltip = `${DataScience.specifyLocalOrRemoteJupyterServerForConnections()}${tooltipSuffix}`;
         this.statusBarItem.text = `$(debug-disconnect) ${label}`;
         this.statusBarItem.tooltip = tooltip;

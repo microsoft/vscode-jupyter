@@ -43,7 +43,7 @@ export class JupyterServerSelectorCommand implements IDisposable {
             traceInfo(`Setting Jupyter Server URI to remote: ${source}`);
 
             // Set the uri directly
-            await this.serverSelector.setJupyterURIToRemote(source.toString(true));
+            await this.serverSelector.addRemoteJupyterUri(source.toString(true));
 
             // Find one that is the default for this remote
             if (notebook) {

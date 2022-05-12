@@ -105,7 +105,7 @@ export class JupyterServerSelector {
         });
 
         if (uri) {
-            await this.setJupyterURIToRemote(uri, true);
+            await this.addRemoteJupyterUri(uri, true);
             return computeServerId(uri);
         }
     }
@@ -114,7 +114,7 @@ export class JupyterServerSelector {
         await this.serverUriStorage.setUriToLocal();
     }
 
-    public async setJupyterURIToRemote(userURI: string, ignoreValidation?: boolean): Promise<void> {
+    public async addRemoteJupyterUri(userURI: string, ignoreValidation?: boolean): Promise<void> {
         // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
         try {
             if (!ignoreValidation) {
@@ -146,7 +146,7 @@ export class JupyterServerSelector {
         }
 
         const connection = await this.jupyterConnection.createConnectionInfo({ uri: userURI });
-        await this.serverUriStorage.setUriToRemote(userURI, connection.displayName);
+        await this.serverUriStorage.addRemoteUri(userURI, connection.displayName);
 
         // Indicate setting a jupyter URI to a remote setting. Check if an azure remote or not
         sendTelemetryEvent(Telemetry.SetJupyterURIToUserSpecified, undefined, {
@@ -163,7 +163,8 @@ export class JupyterServerSelector {
         // newChoice element will be set if the user picked 'enter a new server'
 
         // Get the list of items and show what the current value is
-        const remoteUri = await this.serverUriStorage.getRemoteUri();
+        const remoteUris = await this.serverUriStorage.getRemoteUris();
+        const remoteUri = remoteUris.length ? remoteUris[0] : undefined;
         const items = await this.getUriPickList(allowLocal, remoteUri);
         const activeItem = items.find((i) => i.url === remoteUri || (i.label === this.localLabel && !remoteUri));
         const currentValue = !remoteUri ? DataScience.jupyterSelectURINoneLabel() : activeItem?.label;
@@ -196,7 +197,7 @@ export class JupyterServerSelector {
         if (item.label === this.localLabel) {
             await this.setJupyterURIToLocal();
         } else if (!item.newChoice && !item.provider) {
-            await this.setJupyterURIToRemote(!isNil(item.url) ? item.url : item.label);
+            await this.addRemoteJupyterUri(!isNil(item.url) ? item.url : item.label);
         } else if (!item.provider) {
             return this.selectRemoteURI.bind(this);
         } else {
@@ -224,7 +225,7 @@ export class JupyterServerSelector {
     private async handleProviderQuickPick(id: string, result: JupyterServerUriHandle | undefined) {
         if (result) {
             const uri = generateUriFromRemoteProvider(id, result);
-            await this.setJupyterURIToRemote(uri);
+            await this.addRemoteJupyterUri(uri);
         }
     }
     private async selectRemoteURI(input: IMultiStepInput<{}>, _state: {}): Promise<InputStep<{}> | void> {
@@ -246,7 +247,7 @@ export class JupyterServerSelector {
         });
 
         if (uri) {
-            await this.setJupyterURIToRemote(uri, true);
+            await this.addRemoteJupyterUri(uri, true);
         }
     }
 

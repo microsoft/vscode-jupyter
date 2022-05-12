@@ -247,8 +247,8 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         cancelToken?: CancellationToken
     ): Promise<INotebookProviderConnection | undefined> {
         const ui = new DisplayOptions(false);
-        const uri = await this.serverUriStorage.getRemoteUri();
-        if (!uri) {
+        const uris = await this.serverUriStorage.getRemoteUris();
+        if (uris.length === 0) {
             return;
         }
         return this.notebookProvider.connect({
@@ -256,7 +256,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
             ui,
             localJupyter: false,
             token: cancelToken,
-            serverId: computeServerId(uri)
+            serverId: computeServerId(uris[0])
         });
     }
 

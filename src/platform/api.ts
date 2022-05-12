@@ -124,7 +124,7 @@ export function buildApi(
             const selector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
             const uri = generateUriFromRemoteProvider(providerId, handle);
             await connection.updateServerUri(uri);
-            await selector.setJupyterURIToRemote(uri);
+            await selector.addRemoteJupyterUri(uri);
         }
     };
 
