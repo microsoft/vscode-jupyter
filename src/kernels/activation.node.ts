@@ -5,7 +5,6 @@
 
 import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
-import { ActiveEditorContextService } from '../interactive-window/commands/activeEditorContext';
 import { isJupyterNotebook } from '../notebooks/helpers';
 import { IExtensionSingleActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
@@ -26,14 +25,12 @@ export class Activation implements IExtensionSingleActivationService {
         @inject(JupyterInterpreterService) private readonly jupyterInterpreterService: JupyterInterpreterService,
         @inject(IPythonExecutionFactory) private readonly factory: IPythonExecutionFactory,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(ActiveEditorContextService) private readonly contextService: ActiveEditorContextService,
         @inject(IRawNotebookSupportedService) private readonly rawSupported: IRawNotebookSupportedService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {}
     public async activate(): Promise<void> {
         this.disposables.push(this.vscNotebook.onDidOpenNotebookDocument(this.onDidOpenNotebookEditor, this));
         this.disposables.push(this.jupyterInterpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter, this));
-        void this.contextService.activate();
     }
 
     private onDidOpenNotebookEditor(e: NotebookDocument) {
