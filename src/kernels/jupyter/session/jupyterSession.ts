@@ -26,6 +26,7 @@ import {
 import { DisplayOptions } from '../../displayOptions';
 import { IJupyterBackingFileCreator, IJupyterKernelService, IJupyterRequestCreator } from '../types';
 import { Uri } from 'vscode';
+import { generateBackingIPyNbFileName } from './backingFileCreator.base';
 
 // function is
 export class JupyterSession extends BaseJupyterSession {
@@ -234,7 +235,7 @@ export class JupyterSession extends BaseJupyterSession {
 
         // Create our session options using this temporary notebook and our connection info
         const sessionOptions: Session.ISessionOptions = {
-            path: backingFile?.filePath || `${uuid()}.ipynb`, // Name has to be unique
+            path: backingFile?.filePath || generateBackingIPyNbFileName(this.resource), // Name has to be unique
             kernel: {
                 name: kernelName
             },

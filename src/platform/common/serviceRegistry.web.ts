@@ -25,6 +25,8 @@ import { ClipboardService } from './application/clipboard';
 import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
 import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
 import { BrowserService } from './net/browser';
+import { ActiveEditorContextService } from './activeEditorContext';
+import { IExtensionSingleActivationService } from '../activation/types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingletonInstance<boolean>(IsWindows, false);
@@ -40,6 +42,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
     serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        ActiveEditorContextService
+    );
 
     registerPlatformTypes(serviceManager);
 }

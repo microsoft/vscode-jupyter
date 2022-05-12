@@ -9,7 +9,7 @@ import {
     JupyterCompletionItem,
     generateSortString,
     filterCompletions
-} from '../../../../intellisense/pythonKernelCompletionProvider.node';
+} from '../../../../intellisense/pythonKernelCompletionProvider';
 import { MockDocument } from '../../mockDocument';
 
 suite('DataScience - Jupyter Completion Unit Tests', () => {

@@ -820,6 +820,10 @@ export interface IEventNamePropertyMapping {
     [Telemetry.SelfCertsMessageClose]: never | undefined;
     [Telemetry.SelfCertsMessageEnabled]: never | undefined;
     [Telemetry.SelectJupyterURI]: never | undefined;
+    /**
+     * Captures the telemetry when the Uri is manually entered by the user as part of the workflow when selecting a Kernel.
+     */
+    [Telemetry.EnterJupyterURI]: never | undefined;
     [Telemetry.SelectLocalJupyterKernel]: never | undefined;
     [Telemetry.SelectRemoteJupyterKernel]: never | undefined;
     [Telemetry.SessionIdleTimeout]: never | undefined;

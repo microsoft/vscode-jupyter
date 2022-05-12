@@ -553,13 +553,17 @@ export namespace DataScience {
         'DataScience.jupyterNotebookFailure',
         'Jupyter notebook failed to launch. \r\n{0}'
     );
+    export const remoteJupyterServerProvidedBy3rdPartyExtensionNoLongerValid = localize(
+        'DataScience.remoteJupyterServerProvidedBy3rdPartyExtensionNoLongerValid',
+        "The remote Jupyter Server contributed by the extension '{0}' is no longer available."
+    );
     export const remoteJupyterConnectionFailedWithServerWithError = localize(
         'DataScience.remoteJupyterConnectionFailedWithServerWithError',
-        'Failed to connect to the remote Jupyter Server {0}. Verify the server is running and reachable. ({1}).'
+        "Failed to connect to the remote Jupyter Server '{0}'. Verify the server is running and reachable. ({1})."
     );
     export const remoteJupyterConnectionFailedWithServer = localize(
         'DataScience.remoteJupyterConnectionFailedWithServer',
-        'Failed to connect to the remote Jupyter Server {0}. Verify the server is running and reachable.'
+        "Failed to connect to the remote Jupyter Server '{0}'. Verify the server is running and reachable."
     );
     export const remoteJupyterConnectionFailedWithoutServerWithError = localize(
         'DataScience.remoteJupyterConnectionFailedWithoutServerWithError',
@@ -578,10 +582,6 @@ export namespace DataScience {
         'Manage Connections'
     );
 
-    export const jupyterRemoteConnectFailedModalMessage = localize(
-        'DataScience.jupyterRemoteConnectFailedModalMessage',
-        'Failed to connect to the remote Jupyter Server. View Jupyter log for further details.'
-    );
     export const changeJupyterRemoteConnection = localize(
         'DataScience.changeJupyterRemoteConnection',
         'Change Jupyter Server connection.'

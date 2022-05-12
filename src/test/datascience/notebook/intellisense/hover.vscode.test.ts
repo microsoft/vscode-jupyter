@@ -17,7 +17,7 @@ import {
     createEmptyPythonNotebook,
     waitForHover
 } from '../helper.node';
-import { setIntellisenseTimeout } from '../../../../intellisense/pythonKernelCompletionProvider.node';
+import { setIntellisenseTimeout } from '../../../../intellisense/pythonKernelCompletionProvider';
 import { Settings } from '../../../../platform/common/constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */

@@ -2,7 +2,15 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { ConfigurationChangeEvent, NotebookDocument, Uri } from 'vscode';
+import {
+    CancellationToken,
+    CompletionContext,
+    ConfigurationChangeEvent,
+    NotebookDocument,
+    Position,
+    TextDocument,
+    Uri
+} from 'vscode';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { IVSCodeNotebook, IWorkspaceService } from '../platform/common/application/types';
@@ -11,11 +19,12 @@ import { IInterpreterService } from '../platform/interpreter/contracts';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { getInterpreterId } from '../platform/pythonEnvironments/info/interpreter';
 import { isJupyterNotebook, findAssociatedNotebookDocument } from '../notebooks/helpers';
-import { INotebookLanguageClientProvider, INotebookControllerManager } from '../notebooks/types';
+import { INotebookControllerManager, INotebookCompletionProvider } from '../notebooks/types';
 import { LanguageServer } from './languageServer.node';
 import { IInteractiveWindowProvider } from '../interactive-window/types';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { getComparisonKey } from '../platform/vscode-path/resources';
+import { CompletionRequest } from 'vscode-languageclient';
 
 const EmptyWorkspaceKey = '';
 
@@ -23,7 +32,7 @@ const EmptyWorkspaceKey = '';
  * This class sets up the concatenated intellisense for every notebook as it changes its kernel.
  */
 @injectable()
-export class IntellisenseProvider implements INotebookLanguageClientProvider, IExtensionSyncActivationService {
+export class IntellisenseProvider implements INotebookCompletionProvider, IExtensionSyncActivationService {
     private servers = new Map<string, Promise<LanguageServer | undefined>>();
     private activeInterpreterCache = new Map<string, PythonEnvironment | undefined>();
     private interpreterIdCache: Map<string, string> = new Map<string, string>();
@@ -70,6 +79,29 @@ export class IntellisenseProvider implements INotebookLanguageClientProvider, IE
         const interpreterId = interpreter ? this.getInterpreterIdFromCache(interpreter) : undefined;
         const server = interpreterId ? await this.servers.get(interpreterId) : undefined;
         return server?.client;
+    }
+
+    public async getCompletions(
+        notebook: NotebookDocument,
+        document: TextDocument,
+        position: Position,
+        context: CompletionContext,
+        cancelToken: CancellationToken
+    ) {
+        const client = await this.getLanguageClient(notebook);
+        if (client) {
+            // Use provider so it gets translated by middleware
+            const feature = client.getFeature(CompletionRequest.method);
+            const provider = feature.getProvider(document);
+            if (provider) {
+                const results = await provider.provideCompletionItems(document, position, cancelToken, context);
+                if (results && 'items' in results) {
+                    return results.items;
+                } else {
+                    return results;
+                }
+            }
+        }
     }
 
     private handleInterpreterChange() {

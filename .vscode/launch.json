@@ -99,15 +99,9 @@
         },
         {
             "name": "Web Tests",
-            "type": "extensionHost",
-            "debugWebWorkerHost": true,
+            "type": "node",
+            "program": "${workspaceFolder}/build/launchWebTest.js",
             "request": "launch",
-            "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}",
-                "--enable-proposed-api",
-                "--extensionDevelopmentKind=web",
-                "--extensionTestsPath=${workspaceFolder}/out/extension.web.bundle"
-            ],
             "outFiles": ["${workspaceFolder}/out/**/*.*"],
             "sourceMaps": true,
             "preLaunchTask": "compile-web-test",

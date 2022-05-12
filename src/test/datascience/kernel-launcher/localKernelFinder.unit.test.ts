@@ -49,11 +49,12 @@ import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { KernelFinder } from '../../../kernels/kernelFinder.node';
-import { PreferredRemoteKernelIdProvider } from '../../../kernels/raw/finder/preferredRemoteKernelIdProvider';
+import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
 import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
 import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverConnectionType';
+import { ILiveRemoteKernelConnectionUsageTracker } from '../../../kernels/jupyter/types';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -69,6 +70,7 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
         let tempDirForKernelSpecs: Uri;
         let jupyterPaths: JupyterPaths;
         let preferredRemote: PreferredRemoteKernelIdProvider;
+        let liveKernelUsageTracker: ILiveRemoteKernelConnectionUsageTracker;
         type TestData = {
             interpreters?: (
                 | PythonEnvironment
@@ -230,7 +232,7 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
                     instance(memento)
                 )
             );
-
+            liveKernelUsageTracker = mock<ILiveRemoteKernelConnectionUsageTracker>();
             preferredRemote = mock(PreferredRemoteKernelIdProvider);
             const notebookProvider = mock(NotebookProvider);
             const serverUriStorage = mock(JupyterServerUriStorage);
@@ -240,17 +242,17 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
             const onDidChangeEvent = new EventEmitter<void>();
             disposables.push(onDidChangeEvent);
             when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);
+
             kernelFinder = new KernelFinder(
                 localKernelFinder,
                 instance(remoteKernelFinder),
-                instance(extensionChecker),
-                instance(interpreterService),
                 instance(preferredRemote),
                 instance(notebookProvider),
                 instance(memento),
                 instance(fs),
                 instance(serverUriStorage),
-                instance(connectionType)
+                instance(connectionType),
+                instance(liveKernelUsageTracker)
             );
         }
         teardown(() => {
@@ -1165,10 +1167,14 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
 
                         // Try an empty python Notebook without any kernelspec in metadata.
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(nbUri, {
-                                language_info: { name: PYTHON_LANGUAGE },
-                                orig_nbformat: 4
-                            })
+                            await kernelFinder.rankKernels(
+                                nbUri,
+                                {
+                                    language_info: { name: PYTHON_LANGUAGE },
+                                    orig_nbformat: 4
+                                },
+                                activePythonEnv
+                            )
                         ) as LocalKernelConnectionMetadata;
                         assert.equal(kernel?.kernelSpec?.language, 'python');
                         assert.strictEqual(kernel?.kind, 'startUsingPythonInterpreter');
@@ -1182,14 +1188,18 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
 
                         // Generic Python notebooks (without display name).
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(nbUri, {
-                                kernelspec: {
-                                    display_name: '',
-                                    name: 'python'
+                            await kernelFinder.rankKernels(
+                                nbUri,
+                                {
+                                    kernelspec: {
+                                        display_name: '',
+                                        name: 'python'
+                                    },
+                                    language_info: { name: PYTHON_LANGUAGE },
+                                    orig_nbformat: 4
                                 },
-                                language_info: { name: PYTHON_LANGUAGE },
-                                orig_nbformat: 4
-                            })
+                                activePythonEnv
+                            )
                         ) as LocalKernelConnectionMetadata;
                         assert.equal(kernel?.kernelSpec?.language, 'python');
                         assert.strictEqual(kernel?.kind, 'startUsingPythonInterpreter');
@@ -1203,14 +1213,18 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
 
                         // Generic Python notebooks.
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(nbUri, {
-                                kernelspec: {
-                                    display_name: 'Python',
-                                    name: 'python'
+                            await kernelFinder.rankKernels(
+                                nbUri,
+                                {
+                                    kernelspec: {
+                                        display_name: 'Python',
+                                        name: 'python'
+                                    },
+                                    language_info: { name: PYTHON_LANGUAGE },
+                                    orig_nbformat: 4
                                 },
-                                language_info: { name: PYTHON_LANGUAGE },
-                                orig_nbformat: 4
-                            })
+                                activePythonEnv
+                            )
                         ) as LocalKernelConnectionMetadata;
                         assert.equal(kernel?.kernelSpec?.language, 'python');
                         assert.strictEqual(kernel?.kind, 'startUsingPythonInterpreter');
@@ -1224,14 +1238,18 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
 
                         // Generic Python 3 notebooks.
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(nbUri, {
-                                kernelspec: {
-                                    display_name: 'Python 3',
-                                    name: 'python3'
+                            await kernelFinder.rankKernels(
+                                nbUri,
+                                {
+                                    kernelspec: {
+                                        display_name: 'Python 3',
+                                        name: 'python3'
+                                    },
+                                    language_info: { name: PYTHON_LANGUAGE },
+                                    orig_nbformat: 4
                                 },
-                                language_info: { name: PYTHON_LANGUAGE },
-                                orig_nbformat: 4
-                            })
+                                activePythonEnv
+                            )
                         ) as LocalKernelConnectionMetadata;
                         assert.equal(kernel?.kernelSpec?.language, 'python');
                         assert.strictEqual(kernel?.kind, 'startUsingPythonInterpreter');
@@ -1245,14 +1263,18 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
 
                         // Generic Python 3 notebooks (kernels with IpyKernel installed).
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(nbUri, {
-                                kernelspec: {
-                                    display_name: 'Python 3 (IPyKernel)',
-                                    name: 'python3'
+                            await kernelFinder.rankKernels(
+                                nbUri,
+                                {
+                                    kernelspec: {
+                                        display_name: 'Python 3 (IPyKernel)',
+                                        name: 'python3'
+                                    },
+                                    language_info: { name: PYTHON_LANGUAGE },
+                                    orig_nbformat: 4
                                 },
-                                language_info: { name: PYTHON_LANGUAGE },
-                                orig_nbformat: 4
-                            })
+                                activePythonEnv
+                            )
                         ) as LocalKernelConnectionMetadata;
                         assert.equal(kernel?.kernelSpec?.language, 'python');
                         assert.strictEqual(kernel?.kind, 'startUsingPythonInterpreter');
@@ -1266,14 +1288,18 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
 
                         // Python 2
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(nbUri, {
-                                kernelspec: {
-                                    display_name: 'Python 2 on Disk',
-                                    name: 'python2'
+                            await kernelFinder.rankKernels(
+                                nbUri,
+                                {
+                                    kernelspec: {
+                                        display_name: 'Python 2 on Disk',
+                                        name: 'python2'
+                                    },
+                                    language_info: { name: PYTHON_LANGUAGE },
+                                    orig_nbformat: 4
                                 },
-                                language_info: { name: PYTHON_LANGUAGE },
-                                orig_nbformat: 4
-                            })
+                                activePythonEnv
+                            )
                         ) as LocalKernelConnectionMetadata;
                         assert.equal(kernel?.kernelSpec?.display_name, 'Python 2 on Disk');
                         assert.equal(kernel?.kernelSpec?.language, 'python');
@@ -1289,165 +1315,217 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
 
                         // Julia based on language
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(nbUri, {
-                                language_info: { name: 'julia' },
-                                orig_nbformat: 4
-                            })
+                            await kernelFinder.rankKernels(
+                                nbUri,
+                                {
+                                    language_info: { name: 'julia' },
+                                    orig_nbformat: 4
+                                },
+                                activePythonEnv
+                            )
                         );
                         await verifyKernel(kernel, { expectedGlobalKernelSpec: juliaKernelSpec });
 
                         // Julia based on kernelspec name & display name (without any language information)
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(nbUri, {
-                                kernelspec: {
-                                    display_name: juliaKernelSpec.display_name,
-                                    name: juliaKernelSpec.name
+                            await kernelFinder.rankKernels(
+                                nbUri,
+                                {
+                                    kernelspec: {
+                                        display_name: juliaKernelSpec.display_name,
+                                        name: juliaKernelSpec.name
+                                    },
+                                    orig_nbformat: 4
                                 },
-                                orig_nbformat: 4
-                            })
+                                activePythonEnv
+                            )
                         );
                         await verifyKernel(kernel, { expectedGlobalKernelSpec: juliaKernelSpec });
 
                         // R (match a specific R kernel based on the display name & name)
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(nbUri, {
-                                kernelspec: {
-                                    display_name: rV1KernelSpec.display_name,
-                                    name: rV1KernelSpec.name
+                            await kernelFinder.rankKernels(
+                                nbUri,
+                                {
+                                    kernelspec: {
+                                        display_name: rV1KernelSpec.display_name,
+                                        name: rV1KernelSpec.name
+                                    },
+                                    language_info: { name: 'r' },
+                                    orig_nbformat: 4
                                 },
-                                language_info: { name: 'r' },
-                                orig_nbformat: 4
-                            })
+                                activePythonEnv
+                            )
                         );
                         await verifyKernel(kernel, { expectedGlobalKernelSpec: rV1KernelSpec });
 
                         // R (match a specific R kernel based on the name)
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(nbUri, {
-                                kernelspec: {
-                                    display_name: '',
-                                    name: rV1KernelSpec.name
+                            await kernelFinder.rankKernels(
+                                nbUri,
+                                {
+                                    kernelspec: {
+                                        display_name: '',
+                                        name: rV1KernelSpec.name
+                                    },
+                                    language_info: { name: 'r' },
+                                    orig_nbformat: 4
                                 },
-                                language_info: { name: 'r' },
-                                orig_nbformat: 4
-                            })
+                                activePythonEnv
+                            )
                         );
                         await verifyKernel(kernel, { expectedGlobalKernelSpec: rV1KernelSpec });
 
                         // R (match a specific R kernel based on the display_name)
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(nbUri, {
-                                kernelspec: {
-                                    display_name: rV1KernelSpec.display_name,
-                                    name: ''
+                            await kernelFinder.rankKernels(
+                                nbUri,
+                                {
+                                    kernelspec: {
+                                        display_name: rV1KernelSpec.display_name,
+                                        name: ''
+                                    },
+                                    language_info: { name: 'r' },
+                                    orig_nbformat: 4
                                 },
-                                language_info: { name: 'r' },
-                                orig_nbformat: 4
-                            })
+                                activePythonEnv
+                            )
                         );
                         await verifyKernel(kernel, { expectedGlobalKernelSpec: rV1KernelSpec });
 
                         // Python 2 based on name
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(nbUri, {
-                                kernelspec: {
-                                    display_name: 'Some unknown name for Python 2',
-                                    name: 'python2'
+                            await kernelFinder.rankKernels(
+                                nbUri,
+                                {
+                                    kernelspec: {
+                                        display_name: 'Some unknown name for Python 2',
+                                        name: 'python2'
+                                    },
+                                    language_info: { name: PYTHON_LANGUAGE },
+                                    orig_nbformat: 4
                                 },
-                                language_info: { name: PYTHON_LANGUAGE },
-                                orig_nbformat: 4
-                            })
+                                activePythonEnv
+                            )
                         );
                         await verifyKernel(kernel, { expectedInterpreter: python2Global });
 
                         // Python 2 based on display name
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(nbUri, {
-                                kernelspec: {
-                                    display_name: python2Global.displayName || '',
-                                    name: 'python2'
+                            await kernelFinder.rankKernels(
+                                nbUri,
+                                {
+                                    kernelspec: {
+                                        display_name: python2Global.displayName || '',
+                                        name: 'python2'
+                                    },
+                                    language_info: { name: PYTHON_LANGUAGE },
+                                    orig_nbformat: 4
                                 },
-                                language_info: { name: PYTHON_LANGUAGE },
-                                orig_nbformat: 4
-                            })
+                                activePythonEnv
+                            )
                         );
                         await verifyKernel(kernel, { expectedInterpreter: python2Global });
 
                         // Match conda environment based on env display name of conda env.
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(nbUri, {
-                                kernelspec: {
-                                    display_name: '',
-                                    name: condaEnv1.envName || ''
+                            await kernelFinder.rankKernels(
+                                nbUri,
+                                {
+                                    kernelspec: {
+                                        display_name: '',
+                                        name: condaEnv1.envName || ''
+                                    },
+                                    language_info: { name: PYTHON_LANGUAGE },
+                                    orig_nbformat: 4
                                 },
-                                language_info: { name: PYTHON_LANGUAGE },
-                                orig_nbformat: 4
-                            })
+                                activePythonEnv
+                            )
                         );
                         await verifyKernel(kernel, { expectedInterpreter: condaEnv1 });
 
                         // Match conda environment based on env display name of conda env.
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(nbUri, {
-                                kernelspec: {
-                                    display_name: condaEnv1.displayName || '',
-                                    name: condaEnv1.envName || ''
+                            await kernelFinder.rankKernels(
+                                nbUri,
+                                {
+                                    kernelspec: {
+                                        display_name: condaEnv1.displayName || '',
+                                        name: condaEnv1.envName || ''
+                                    },
+                                    language_info: { name: PYTHON_LANGUAGE },
+                                    orig_nbformat: 4
                                 },
-                                language_info: { name: PYTHON_LANGUAGE },
-                                orig_nbformat: 4
-                            })
+                                activePythonEnv
+                            )
                         );
                         await verifyKernel(kernel, { expectedInterpreter: condaEnv1 });
 
                         // Match conda environment based on env name of conda env (even if name doesn't match).
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(nbUri, {
-                                kernelspec: {
-                                    display_name: condaEnv1.displayName || '',
-                                    name: 'someUnknownNameThatWillNeverMatch'
+                            await kernelFinder.rankKernels(
+                                nbUri,
+                                {
+                                    kernelspec: {
+                                        display_name: condaEnv1.displayName || '',
+                                        name: 'someUnknownNameThatWillNeverMatch'
+                                    },
+                                    language_info: { name: PYTHON_LANGUAGE },
+                                    orig_nbformat: 4
                                 },
-                                language_info: { name: PYTHON_LANGUAGE },
-                                orig_nbformat: 4
-                            })
+                                activePythonEnv
+                            )
                         );
                         await verifyKernel(kernel, { expectedInterpreter: condaEnv1 });
 
                         // Match based on interpreter hash even if name and display name do not match.
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(nbUri, {
-                                kernelspec: {
-                                    display_name: 'Will never match',
-                                    name: 'someUnknownNameThatWillNeverMatch'
+                            await kernelFinder.rankKernels(
+                                nbUri,
+                                {
+                                    kernelspec: {
+                                        display_name: 'Will never match',
+                                        name: 'someUnknownNameThatWillNeverMatch'
+                                    },
+                                    interpreter: {
+                                        hash: getInterpreterHash(condaEnv1)
+                                    },
+                                    language_info: { name: PYTHON_LANGUAGE },
+                                    orig_nbformat: 4
                                 },
-                                interpreter: {
-                                    hash: getInterpreterHash(condaEnv1)
-                                },
-                                language_info: { name: PYTHON_LANGUAGE },
-                                orig_nbformat: 4
-                            })
+                                activePythonEnv
+                            )
                         );
                         await verifyKernel(kernel, { expectedInterpreter: condaEnv1 });
 
                         // Match based on custom kernelspec name
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(nbUri, {
-                                kernelspec: {
-                                    display_name: 'Junk Display Name',
-                                    name: python2spec.name
+                            await kernelFinder.rankKernels(
+                                nbUri,
+                                {
+                                    kernelspec: {
+                                        display_name: 'Junk Display Name',
+                                        name: python2spec.name
+                                    },
+                                    language_info: { name: PYTHON_LANGUAGE },
+                                    orig_nbformat: 4
                                 },
-                                language_info: { name: PYTHON_LANGUAGE },
-                                orig_nbformat: 4
-                            })
+                                activePythonEnv
+                            )
                         ) as LocalKernelConnectionMetadata;
                         assert.equal(kernel?.kind, 'startUsingLocalKernelSpec');
                         assert.equal(kernel?.kernelSpec.name, 'python2Custom');
 
                         // Unknown kernel language
                         kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(nbUri, {
-                                language_info: { name: 'someunknownlanguage' },
-                                orig_nbformat: 4
-                            })
+                            await kernelFinder.rankKernels(
+                                nbUri,
+                                {
+                                    language_info: { name: 'someunknownlanguage' },
+                                    orig_nbformat: 4
+                                },
+                                activePythonEnv
+                            )
                         );
                         assert.isUndefined(kernel, 'Should not return a kernel');
                     }
@@ -1485,10 +1563,14 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
                         const kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(Uri.file('wow.py'), {
-                                language_info: { name: PYTHON_LANGUAGE },
-                                orig_nbformat: 4
-                            })
+                            await kernelFinder.rankKernels(
+                                Uri.file('wow.py'),
+                                {
+                                    language_info: { name: PYTHON_LANGUAGE },
+                                    orig_nbformat: 4
+                                },
+                                activePythonEnv
+                            )
                         ) as LocalKernelConnectionMetadata;
                         assert.strictEqual(
                             kernel?.kernelSpec?.language,
@@ -1530,7 +1612,7 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
                         const kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(Uri.file('wow.py'))
+                            await kernelFinder.rankKernels(Uri.file('wow.py'), undefined, activePythonEnv)
                         ) as LocalKernelConnectionMetadata;
                         assert.strictEqual(
                             kernel?.kernelSpec?.language,
@@ -1572,11 +1654,15 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
                         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
 
                         const kernel = takeTopRankKernel(
-                            await kernelFinder.rankKernels(Uri.file('wow.py'), {
-                                language_info: {
-                                    name: PYTHON_LANGUAGE
-                                }
-                            } as any)
+                            await kernelFinder.rankKernels(
+                                Uri.file('wow.py'),
+                                {
+                                    language_info: {
+                                        name: PYTHON_LANGUAGE
+                                    }
+                                } as any,
+                                activePythonEnv
+                            )
                         ) as LocalKernelConnectionMetadata;
                         assert.strictEqual(
                             kernel?.kernelSpec?.language,

@@ -18,10 +18,11 @@ import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms.
 import { PlotSaveHandler } from './outputs/plotSaveHandler.node';
 import { PlotViewHandler } from './outputs/plotViewHandler.node';
 import { RendererCommunication } from './outputs/rendererCommunication.node';
-import { INotebookLanguageClientProvider, INotebookControllerManager, INotebookEditorProvider } from './types';
+import { INotebookCompletionProvider, INotebookControllerManager, INotebookEditorProvider } from './types';
 import { NotebookUsageTracker } from './notebookUsageTracker';
 import { IDataScienceCommandListener } from '../platform/common/types';
 import { CondaControllerRefresher } from './controllers/condaControllerRefresher.node';
+import { IntellisenseProvider } from '../intellisense/intellisenseProvider.node';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
@@ -30,7 +31,6 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         GitHubIssueCodeLensProvider
     );
-    serviceManager.addBinding(INotebookLanguageClientProvider, IExtensionSingleActivationService);
     serviceManager.addSingleton<INotebookControllerManager>(INotebookControllerManager, NotebookControllerManager);
     serviceManager.addSingleton<PlotSaveHandler>(PlotSaveHandler, PlotSaveHandler);
     serviceManager.addSingleton<PlotViewHandler>(PlotViewHandler, PlotViewHandler);
@@ -60,4 +60,6 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         NotebookUsageTracker
     );
+    serviceManager.addSingleton<INotebookCompletionProvider>(INotebookCompletionProvider, IntellisenseProvider);
+    serviceManager.addBinding(INotebookCompletionProvider, IExtensionSyncActivationService);
 }

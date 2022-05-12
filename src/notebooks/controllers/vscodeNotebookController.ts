@@ -67,13 +67,11 @@ import {
     areKernelConnectionsEqual,
     getKernelRegistrationInfo
 } from '../../kernels/helpers';
-import { PreferredRemoteKernelIdProvider } from '../../kernels/raw/finder/preferredRemoteKernelIdProvider';
 import {
     IKernel,
     IKernelProvider,
     isLocalConnection,
     KernelConnectionMetadata,
-    KernelSocketInformation,
     LiveRemoteKernelConnectionMetadata,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
@@ -86,19 +84,21 @@ import { DisplayOptions } from '../../kernels/displayOptions';
 import { sendNotebookOrKernelLanguageTelemetry } from '../../platform/common/utils';
 import { ConsoleForegroundColors, TraceOptions } from '../../platform/logging/types';
 import { KernelConnector } from '../../kernels/kernelConnector';
+import { IVSCodeNotebookController } from './types';
 
-export class VSCodeNotebookController implements Disposable {
+export class VSCodeNotebookController implements Disposable, IVSCodeNotebookController {
     private readonly _onNotebookControllerSelected: EventEmitter<{
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
     }>;
-    private readonly _onNotebookControllerSelectionChanged = new EventEmitter<void>();
+    private readonly _onNotebookControllerSelectionChanged = new EventEmitter<{
+        selected: boolean;
+        notebook: NotebookDocument;
+    }>();
     private readonly _onDidDispose = new EventEmitter<void>();
     private readonly disposables: IDisposable[] = [];
     private notebookKernels = new WeakMap<NotebookDocument, IKernel>();
     public readonly controller: NotebookController;
-    private isConnectionOutdated?: boolean;
-    private outdatedMessageDisplayed?: boolean;
     /**
      * Used purely for testing purposes.
      */
@@ -142,7 +142,6 @@ export class VSCodeNotebookController implements Disposable {
         private readonly notebookApi: IVSCodeNotebook,
         private readonly commandManager: ICommandManager,
         private readonly kernelProvider: IKernelProvider,
-        private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
         private readonly context: IExtensionContext,
         disposableRegistry: IDisposableRegistry,
         private readonly languageService: NotebookCellLanguageService,
@@ -184,9 +183,6 @@ export class VSCodeNotebookController implements Disposable {
     }
     public updateRemoteKernelDetails(kernelConnection: LiveRemoteKernelConnectionMetadata) {
         this.controller.detail = getRemoteKernelSessionInformation(kernelConnection);
-    }
-    public flagRemoteKernelAsOutdated() {
-        this.isConnectionOutdated = true;
     }
     public updateInterpreterDetails(
         kernelConnection: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
@@ -234,11 +230,6 @@ export class VSCodeNotebookController implements Disposable {
     @traceDecoratorVerbose('VSCodeNotebookController::handleExecution', TraceOptions.BeforeCall)
     private async handleExecution(cells: NotebookCell[], notebook: NotebookDocument) {
         if (cells.length < 1) {
-            return;
-        }
-        if (this.isConnectionOutdated && !this.outdatedMessageDisplayed) {
-            void this.appShell.showErrorMessage(DataScience.jupyterRemoteConnectFailedModalMessage(), { modal: true });
-            this.outdatedMessageDisplayed = true;
             return;
         }
         // Found on CI that sometimes VS Code calls this with old deleted cells.
@@ -313,7 +304,8 @@ export class VSCodeNotebookController implements Disposable {
                 void kernel.dispose();
             }
             this.associatedDocuments.delete(event.notebook);
-            this._onNotebookControllerSelectionChanged.fire();
+            this._onNotebookControllerSelectionChanged.fire(event);
+
             return;
         }
         // We're only interested in our Notebooks.
@@ -331,7 +323,7 @@ export class VSCodeNotebookController implements Disposable {
 
         // If this NotebookController was selected, fire off the event
         this._onNotebookControllerSelected.fire({ notebook: event.notebook, controller: this });
-        this._onNotebookControllerSelectionChanged.fire();
+        this._onNotebookControllerSelectionChanged.fire(event);
         traceVerbose(`Controller selection change completed`);
         deferred.resolve();
     }
@@ -522,7 +514,6 @@ export class VSCodeNotebookController implements Disposable {
             return;
         }
         this.notebookKernels.set(doc, kernel);
-        let kernelSocket: KernelSocketInformation | undefined;
         const handlerDisposables: IDisposable[] = [];
         // If the notebook is closed, dispose everything.
         this.notebookApi.onDidCloseNotebookDocument(
@@ -534,20 +525,7 @@ export class VSCodeNotebookController implements Disposable {
             this,
             handlerDisposables
         );
-        const saveKernelInfo = () => {
-            const kernelId = kernelSocket?.options.id;
-            if (!kernelId || isLocalConnection(this.kernelConnection)) {
-                return;
-            }
-            traceInfo(`Updating preferred kernel for remote notebook ${kernelId}`);
-            this.preferredRemoteKernelIdProvider.storePreferredRemoteKernelId(doc.uri, kernelId).catch(noop);
-        };
-
         const kernelDisposedDisposable = kernel.onDisposed(() => disposeAllDisposables(handlerDisposables));
-        const subscriptionDisposables = kernel.kernelSocket.subscribe((item) => {
-            kernelSocket = item;
-            saveKernelInfo();
-        });
         const statusChangeDisposable = kernel.onStatusChanged(async () => {
             if (kernel.disposed || !kernel.info) {
                 return;
@@ -563,21 +541,11 @@ export class VSCodeNotebookController implements Disposable {
                 kernel.kernelConnectionMetadata,
                 kernel.info
             );
-            if (
-                this.kernelConnection.kind === 'startUsingLocalKernelSpec' ||
-                this.kernelConnection.kind === 'startUsingRemoteKernelSpec'
-            ) {
-                if (kernel.info.status === 'ok') {
-                    saveKernelInfo();
-                } else {
-                    disposeAllDisposables(handlerDisposables);
-                }
-            } else {
+            if (kernel.info.status === 'ok') {
                 disposeAllDisposables(handlerDisposables);
             }
         });
 
-        handlerDisposables.push({ dispose: () => subscriptionDisposables.unsubscribe() });
         handlerDisposables.push({ dispose: () => statusChangeDisposable.dispose() });
         handlerDisposables.push({ dispose: () => kernelDisposedDisposable?.dispose() });
     }
@@ -632,9 +600,6 @@ export class VSCodeNotebookController implements Disposable {
         // Before we start the notebook, make sure the metadata is set to this new kernel.
         await updateNotebookDocumentMetadata(document, this.documentManager, selectedKernelConnectionMetadata);
 
-        if (isLocalConnection(this.connection)) {
-            this.preferredRemoteKernelIdProvider.clearPreferredRemoteKernelId(document.uri).catch(noop);
-        }
         if (document.notebookType === InteractiveWindowView) {
             // Possible its an interactive window, in that case we'll create the kernel manually.
             return;

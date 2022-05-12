@@ -47,6 +47,14 @@ export class MockInputBox implements InputBox {
                     this.didHideEmitter.fire();
                 } else {
                     this.didAcceptEmitter.fire();
+
+                    // Accept may cause validation failure. Check for that
+                    setTimeout(() => {
+                        if (this.validationMessage) {
+                            this.value = this.validationMessage;
+                            this.didHideEmitter.fire();
+                        }
+                    }, 100);
                 }
             }, 10);
         }, 10);

@@ -58,13 +58,17 @@ suite('DataScience - Kernels Finder', () => {
     test('Python kernel returned if no matching kernel found', async () => {
         const interpreter = await interpreterService.getActiveInterpreter(resourceToUse);
         const kernelSpec = takeTopRankKernel(
-            await kernelFinder.rankKernels(resourceToUse, {
-                kernelspec: { display_name: 'foobar', name: 'foobar' },
-                orig_nbformat: 4,
-                language_info: {
-                    name: PYTHON_LANGUAGE
-                }
-            })
+            await kernelFinder.rankKernels(
+                resourceToUse,
+                {
+                    kernelspec: { display_name: 'foobar', name: 'foobar' },
+                    orig_nbformat: 4,
+                    language_info: {
+                        name: PYTHON_LANGUAGE
+                    }
+                },
+                interpreter
+            )
         );
         if (!kernelSpec?.interpreter) {
             throw new Error('Kernelspec & interpreter info should not be empty');
@@ -80,13 +84,17 @@ suite('DataScience - Kernels Finder', () => {
     test('Interpreter kernel returned if kernelspec metadata not provided', async () => {
         const interpreter = await interpreterService.getActiveInterpreter(resourceToUse);
         const kernelSpec = takeTopRankKernel(
-            await kernelFinder.rankKernels(resourceToUse, {
-                kernelspec: undefined,
-                orig_nbformat: 4,
-                language_info: {
-                    name: PYTHON_LANGUAGE
-                }
-            })
+            await kernelFinder.rankKernels(
+                resourceToUse,
+                {
+                    kernelspec: undefined,
+                    orig_nbformat: 4,
+                    language_info: {
+                        name: PYTHON_LANGUAGE
+                    }
+                },
+                interpreter
+            )
         );
         if (!kernelSpec?.interpreter) {
             throw new Error('Kernelspec & interpreter info should not be empty');

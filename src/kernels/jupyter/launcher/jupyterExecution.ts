@@ -210,7 +210,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             );
         } else {
             // If we have a URI spec up a connection info for it
-            return this.jupyterConnection.createConnectionInfo(options.serverId);
+            return this.jupyterConnection.createConnectionInfo({ serverId: options.serverId });
         }
     }
 
