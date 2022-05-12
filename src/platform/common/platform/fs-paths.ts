@@ -11,8 +11,8 @@ export function getFilePath(file: Uri | undefined) {
     if (file) {
         const fsPath = uriPath.originalFSPath(file);
 
-        // Remove separator on the front
-        if (fsPath && fsPath.startsWith(path.sep) && isWindows) {
+        // Remove separator on the front if not a network drive
+        if (fsPath && fsPath.startsWith(path.sep) && fsPath.length > 1 && fsPath[1] !== path.sep && isWindows) {
             return fsPath.slice(1);
         }
         return fsPath || '';

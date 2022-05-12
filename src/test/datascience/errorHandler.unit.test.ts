@@ -140,7 +140,7 @@ suite('DataScience Error Handler Unit Tests', () => {
                     argv: [],
                     display_name: '',
                     name: '',
-                    uri: Uri.file('')
+                    executable: ''
                 }
             };
         });
@@ -645,7 +645,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     argv: [],
                     display_name: '',
                     name: '',
-                    uri: Uri.file('')
+                    executable: ''
                 },
                 kind: 'startUsingRemoteKernelSpec',
                 serverId
@@ -686,7 +686,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     argv: [],
                     display_name: '',
                     name: '',
-                    uri: Uri.file('')
+                    executable: ''
                 },
                 kind: 'startUsingRemoteKernelSpec',
                 serverId
@@ -722,7 +722,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     argv: [],
                     display_name: '',
                     name: '',
-                    uri: Uri.file('')
+                    executable: ''
                 },
                 kind: 'startUsingRemoteKernelSpec',
                 serverId
@@ -754,7 +754,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     argv: [],
                     display_name: '',
                     name: '',
-                    uri: Uri.file('')
+                    executable: ''
                 },
                 kind: 'startUsingRemoteKernelSpec',
                 serverId
