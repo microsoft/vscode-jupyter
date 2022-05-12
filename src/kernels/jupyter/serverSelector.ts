@@ -145,7 +145,7 @@ export class JupyterServerSelector {
             }
         }
 
-        const connection = await this.jupyterConnection.createConnectionInfo(userURI);
+        const connection = await this.jupyterConnection.createConnectionInfo(computeServerId(userURI));
         await this.serverUriStorage.setUriToRemote(userURI, connection.displayName);
 
         // Indicate setting a jupyter URI to a remote setting. Check if an azure remote or not

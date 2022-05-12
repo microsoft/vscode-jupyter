@@ -59,6 +59,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         when(workspaceService.hasWorkspaceFolders).thenReturn(hasFolders);
         const encryptedStorage = new MockEncryptedStorage();
         connection = mock<JupyterConnection>();
+        when(connection.createConnectionInfo(anything())).thenResolve({ displayName: '' } as any);
         const handler = mock(DataScienceErrorHandler);
         const connectionType = mock<ServerConnectionType>();
         when(connectionType.isLocalLaunch).thenReturn(false);
