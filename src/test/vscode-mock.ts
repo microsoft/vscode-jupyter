@@ -147,7 +147,6 @@ mockedVSCode.FileSystemError = vscodeMocks.vscMockExtHostedTypes.FileSystemError
 (mockedVSCode as any).NotebookCellMetadata = vscodeMocks.vscMockExtHostedTypes.NotebookCellMetadata;
 (mockedVSCode as any).NotebookCellMetadata = vscodeMocks.vscMockExtHostedTypes.NotebookCellMetadata;
 (mockedVSCode as any).notebook = { notebookDocuments: [] };
-mockedVSCode.NotebookRendererScript = vscodeMocks.vscMockExtHostedTypes.NotebookRendererScript as any;
 mockedVSCode.workspace;
 // This API is used in src/telemetry/telemetry.ts
 const extensions = TypeMoq.Mock.ofType<typeof vscode.extensions>();
