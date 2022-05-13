@@ -5,6 +5,7 @@ import { IApplicationShell, IWorkspaceService } from '../../platform/common/appl
 import { traceError } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IFileSystem } from '../../platform/common/platform/types.node';
+import { FileSystem } from '../../platform/common/platform/fileSystem.node';
 import { DataScience } from '../../platform/common/utils/localize';
 import { saveSvgToPdf } from '../../webviews/extension-side/plotting/plotViewer.node';
 
@@ -20,9 +21,9 @@ const imageExtensionForMimeType: Record<string, string> = {
 export class PlotSaveHandler {
     constructor(
         @inject(IApplicationShell) private readonly shell: IApplicationShell,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IFileSystem) private readonly fs: FileSystem,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
-    ) {}
+    ) { }
 
     public async savePlot(notebook: NotebookDocument, outputId: string, mimeType: string) {
         if (notebook.isClosed) {
