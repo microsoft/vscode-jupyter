@@ -8,7 +8,7 @@ import { Position, TextEditor, Uri } from 'vscode';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IDocumentManager, IApplicationShell } from '../common/application/types';
 import { Telemetry, PYTHON_LANGUAGE } from '../common/constants';
-import { deleteFile, readFile } from '../common/platform/fileSystem';
+import { IFileSystem } from '../common/platform/types';
 import { IBrowserService } from '../common/types';
 import * as localize from '../common/utils/localize';
 import { ExportFormat } from './types';
@@ -17,9 +17,10 @@ import { ExportFormat } from './types';
 export class ExportFileOpener {
     constructor(
         @inject(IDocumentManager) protected readonly documentManager: IDocumentManager,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IBrowserService) private readonly browserService: IBrowserService
-    ) {}
+    ) { }
 
     public async openFile(format: ExportFormat, uri: Uri, openDirectly: boolean = false) {
         if (format === ExportFormat.python) {
@@ -45,8 +46,8 @@ export class ExportFileOpener {
         if (openDirectly) {
             editor = await this.documentManager.showTextDocument(uri);
         } else {
-            const contents = await readFile(uri);
-            await deleteFile(uri);
+            const contents = await this.fs.readFile(uri);
+            await this.fs.delete(uri);
             const doc = await this.documentManager.openTextDocument({ language: PYTHON_LANGUAGE, content: contents });
             editor = await this.documentManager.showTextDocument(doc);
         }

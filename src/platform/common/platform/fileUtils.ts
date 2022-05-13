@@ -10,6 +10,6 @@ export function normCasePath(filePath: string): string {
     return getOSType() === OSType.Windows ? path.normalize(filePath).toUpperCase() : path.normalize(filePath);
 }
 
-export function areStringPathsSame(path1: string, path2: string): boolean {
+export function arePathsSame(path1: string, path2: string): boolean {
     return normCasePath(path1) === normCasePath(path2);
 }

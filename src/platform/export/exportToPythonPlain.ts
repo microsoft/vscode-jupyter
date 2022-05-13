@@ -5,15 +5,19 @@
 
 import { CancellationToken, NotebookCell, NotebookCellKind, NotebookDocument, Uri } from 'vscode';
 import { appendLineFeed } from '../../webviews/webview-side/common';
+import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService } from '../common/types';
 import { IExport } from './types';
 
 // Handles exporting a NotebookDocument to python
 export class ExportToPythonPlainBase implements IExport {
-    public constructor(protected readonly configuration: IConfigurationService) {}
+    public constructor(
+        private readonly fs: IFileSystem,
 
-    async writeFile(_target: Uri, _contents: string): Promise<void> {
-        return;
+        protected readonly configuration: IConfigurationService) { }
+
+    async writeFile(target: Uri, contents: string): Promise<void> {
+        await this.fs.writeFile(target, contents);
     }
 
     getEOL(): string {

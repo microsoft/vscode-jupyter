@@ -1,7 +1,6 @@
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
-import { Uri } from 'vscode';
-import { IFileSystem } from '../common/platform/types.node';
+import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService } from '../common/types';
 import { ExportToPythonPlainBase } from './exportToPythonPlain';
 
@@ -9,14 +8,10 @@ import { ExportToPythonPlainBase } from './exportToPythonPlain';
 @injectable()
 export class ExportToPythonPlain extends ExportToPythonPlainBase {
     public constructor(
-        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IFileSystem) fs: IFileSystem,
         @inject(IConfigurationService) configuration: IConfigurationService
     ) {
-        super(configuration);
-    }
-
-    override async writeFile(target: Uri, contents: string): Promise<void> {
-        await this.fs.writeFile(target, contents);
+        super(fs, configuration);
     }
 
     override getEOL(): string {

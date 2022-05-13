@@ -45,7 +45,6 @@ import { loadKernelSpec } from '../../../kernels/raw/finder/localKernelSpecFinde
 import { LocalKnownPathKernelSpecFinder } from '../../../kernels/raw/finder/localKnownPathKernelSpecFinder.node';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../kernels/raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../../../kernels/raw/types';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { KernelFinder } from '../../../kernels/kernelFinder.node';
@@ -62,7 +61,7 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
         let kernelFinder: IKernelFinder;
         let interpreterService: IInterpreterService;
         let platformService: IPlatformService;
-        let fs: IFileSystem;
+        let fs: FileSystem;
         let extensionChecker: IPythonExtensionChecker;
         const disposables: IDisposable[] = [];
         let globalSpecPath: Uri | undefined;
@@ -73,14 +72,14 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
             interpreters?: (
                 | PythonEnvironment
                 | {
-                      interpreter: PythonEnvironment;
-                      /**
-                       * These are all of the kernelspecs found within the Python environment.
-                       * Could be python or non-python kernlespecs.
-                       * Could be default or custom kernelspecs.
-                       */
-                      kernelSpecs?: KernelSpec.ISpecModel[];
-                  }
+                    interpreter: PythonEnvironment;
+                    /**
+                     * These are all of the kernelspecs found within the Python environment.
+                     * Could be python or non-python kernlespecs.
+                     * Could be default or custom kernelspecs.
+                     */
+                    kernelSpecs?: KernelSpec.ISpecModel[];
+                }
             )[];
             /**
              * All of the globally installed KernelSpecs
@@ -585,20 +584,20 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
         };
         type ExpectedKernel =
             | {
-                  /**
-                   * Expected global kernelspec.
-                   */
-                  expectedGlobalKernelSpec: KernelSpec.ISpecModel;
-              }
+                /**
+                 * Expected global kernelspec.
+                 */
+                expectedGlobalKernelSpec: KernelSpec.ISpecModel;
+            }
             /**
              * Expected list of kernlespecs that are associated with a Python interpreter.
              */
             | {
-                  expectedInterpreterKernelSpecFile: {
-                      interpreter: PythonEnvironment;
-                      kernelspec: KernelSpec.ISpecModel;
-                  };
-              }
+                expectedInterpreterKernelSpecFile: {
+                    interpreter: PythonEnvironment;
+                    kernelspec: KernelSpec.ISpecModel;
+                };
+            }
             /**
              * Expected Python environment that will be used to start the kernel.
              */

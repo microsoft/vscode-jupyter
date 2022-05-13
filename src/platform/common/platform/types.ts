@@ -44,3 +44,32 @@ export interface IExecutables {
     delimiter: string;
     envVar: string;
 }
+
+export const IFileSystem = Symbol('IFileSystem');
+export interface IFileSystem {
+    // Local-only filesystem utilities
+    areLocalPathsSame(path1: string, path2: string): boolean;
+    createLocalDirectory(path: string): Promise<void>;
+    copyLocal(source: string, destination: string): Promise<void>;
+    createTemporaryLocalFile(options: { fileExtension: string; prefix: string }): Promise<TemporaryFile>;
+    createTemporaryLocalFile(fileExtension: string): Promise<TemporaryFile>;
+    deleteLocalDirectory(dirname: string): Promise<void>;
+    deleteLocalFile(path: string): Promise<void>;
+    ensureLocalDir(path: string): Promise<void>;
+    localDirectoryExists(dirname: string): Promise<boolean>;
+    localFileExists(filename: string): Promise<boolean>;
+    readLocalData(path: string): Promise<Buffer>;
+    readLocalFile(path: string): Promise<string>;
+    searchLocal(globPattern: string, cwd?: string, dot?: boolean): Promise<string[]>;
+    writeLocalFile(path: string, text: string | Buffer): Promise<void>;
+
+    // vscode.Uri-based filesystem utilities wrapping the VS Code filesystem API
+    arePathsSame(path1: vscode.Uri, path2: vscode.Uri): boolean;
+    copy(source: vscode.Uri, destination: vscode.Uri): Promise<void>;
+    createDirectory(uri: vscode.Uri): Promise<void>;
+    delete(uri: vscode.Uri): Promise<void>;
+    readFile(uri: vscode.Uri): Promise<string>;
+    stat(uri: vscode.Uri): Promise<vscode.FileStat>;
+    writeFile(uri: vscode.Uri, text: string | Buffer): Promise<void>;
+    getFiles(dir: vscode.Uri): Promise<vscode.Uri[]>;
+}

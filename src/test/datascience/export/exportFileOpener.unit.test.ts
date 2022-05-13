@@ -35,6 +35,7 @@ suite('DataScience - Export File Opener', () => {
         when(fileSystem.readFile(anything())).thenResolve();
         fileOpener = new ExportFileOpener(
             instance(documentManager),
+            instance(fileSystem),
             instance(applicationShell),
             instance(browserService)
         );

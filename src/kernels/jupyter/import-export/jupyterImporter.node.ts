@@ -17,7 +17,8 @@ import { Identifiers, CodeSnippets } from '../../../webviews/webview-side/common
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { noop } from '../../../platform/common/utils/misc';
 import { INotebookImporter, INbConvertInterpreterDependencyChecker, INbConvertExportToPythonService } from '../types';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystem } from '../../../platform/common/platform/types';
+import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 
 @injectable()
 export class JupyterImporter implements INotebookImporter {
@@ -41,7 +42,7 @@ export class JupyterImporter implements INotebookImporter {
     private template6Promise?: Promise<string | undefined>;
 
     constructor(
-        @inject(IFileSystem) private fs: IFileSystem,
+        @inject(IFileSystem) private fs: FileSystem,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
@@ -49,7 +50,7 @@ export class JupyterImporter implements INotebookImporter {
         @inject(INbConvertInterpreterDependencyChecker)
         private readonly nbConvertDependencyChecker: INbConvertInterpreterDependencyChecker,
         @inject(INbConvertExportToPythonService) private readonly exportToPythonService: INbConvertExportToPythonService
-    ) {}
+    ) { }
 
     public async importFromFile(sourceFile: Uri, interpreter: PythonEnvironment): Promise<string> {
         // If the user has requested it, add a cd command to the imported file so that relative paths still work

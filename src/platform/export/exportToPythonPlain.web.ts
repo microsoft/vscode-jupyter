@@ -4,19 +4,16 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Uri } from 'vscode';
-import { writeFile } from '../common/platform/fileSystem';
+import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService } from '../common/types';
 import { ExportToPythonPlainBase } from './exportToPythonPlain';
 
 // Handles exporting a NotebookDocument to python
 @injectable()
 export class ExportToPythonPlain extends ExportToPythonPlainBase {
-    public constructor(@inject(IConfigurationService) configuration: IConfigurationService) {
-        super(configuration);
-    }
-
-    override async writeFile(target: Uri, contents: string): Promise<void> {
-        await writeFile(target, contents);
+    public constructor(
+        @inject(IFileSystem) fs: IFileSystem,
+        @inject(IConfigurationService) configuration: IConfigurationService) {
+        super(fs, configuration);
     }
 }

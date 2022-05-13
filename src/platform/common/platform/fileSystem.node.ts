@@ -7,48 +7,30 @@ import * as vscode from 'vscode';
 import { traceError } from '../../logging';
 import { createDirNotEmptyError, isFileNotFoundError } from './errors.node';
 import { convertFileType, convertStat, getHashString } from './fileSystemUtils.node';
-import { arePathsSame } from './fileUtils.node';
-import { getDisplayPathFromLocalFile } from './fs-paths.node';
 import { TemporaryFile } from './types';
-import { FileType, IFileSystem } from './types.node';
-
-const ENCODING = 'utf8';
+import { FileType } from './types.node';
+import { FileSystem as FileSystemBase } from './fileSystem';
 
 /**
  * File system abstraction which wraps the VS Code API.
  */
 @injectable()
-export class FileSystem implements IFileSystem {
-    protected vscfs: vscode.FileSystem;
+export class FileSystem extends FileSystemBase {
     private globFiles: (pat: string, options?: { cwd: string; dot?: boolean }) => Promise<string[]>;
     constructor() {
+        super();
         this.globFiles = promisify(glob);
-        this.vscfs = vscode.workspace.fs;
     }
 
     public async appendLocalFile(path: string, text: string): Promise<void> {
         return fs.appendFile(path, text);
     }
 
-    public areLocalPathsSame(path1: string, path2: string): boolean {
-        return arePathsSame(path1, path2);
-    }
-
-    public async createLocalDirectory(path: string): Promise<void> {
-        await this.createDirectory(vscode.Uri.file(path));
-    }
-
     public createLocalWriteStream(path: string): fs.WriteStream {
         return fs.createWriteStream(path);
     }
 
-    public async copyLocal(source: string, destination: string): Promise<void> {
-        const srcUri = vscode.Uri.file(source);
-        const dstUri = vscode.Uri.file(destination);
-        await this.vscfs.copy(srcUri, dstUri, { overwrite: true });
-    }
-
-    public async createTemporaryLocalFile(
+    public override async createTemporaryLocalFile(
         options: string | { fileExtension: string; prefix: string }
     ): Promise<TemporaryFile> {
         const suffix = typeof options === 'string' ? options : options.fileExtension;
@@ -70,7 +52,7 @@ export class FileSystem implements IFileSystem {
         });
     }
 
-    public async deleteLocalDirectory(dirname: string) {
+    public override async deleteLocalDirectory(dirname: string) {
         const uri = vscode.Uri.file(dirname);
         // The "recursive" option disallows directories, even if they
         // are empty.  So we have to deal with this ourselves.
@@ -84,20 +66,8 @@ export class FileSystem implements IFileSystem {
         });
     }
 
-    public async deleteLocalFile(path: string): Promise<void> {
-        const uri = vscode.Uri.file(path);
-        return this.vscfs.delete(uri, {
-            recursive: false,
-            useTrash: false
-        });
-    }
-
-    public async ensureLocalDir(path: string): Promise<void> {
+    public override async ensureLocalDir(path: string): Promise<void> {
         return fs.ensureDir(path);
-    }
-
-    public getDisplayName(filename: string, cwd?: string): string {
-        return getDisplayPathFromLocalFile(filename, cwd);
     }
 
     public async getFileHash(filename: string): Promise<string> {
@@ -107,26 +77,15 @@ export class FileSystem implements IFileSystem {
         return getHashString(data);
     }
 
-    public async localDirectoryExists(dirname: string): Promise<boolean> {
+    public override async localDirectoryExists(dirname: string): Promise<boolean> {
         return this.localPathExists(dirname, FileType.Directory);
     }
 
-    public async localFileExists(filename: string): Promise<boolean> {
+    public override async localFileExists(filename: string): Promise<boolean> {
         return this.localPathExists(filename, FileType.File);
     }
 
-    public async readLocalData(filename: string): Promise<Buffer> {
-        const uri = vscode.Uri.file(filename);
-        const data = await this.vscfs.readFile(uri);
-        return Buffer.from(data);
-    }
-
-    public async readLocalFile(filename: string): Promise<string> {
-        const uri = vscode.Uri.file(filename);
-        return this.readFile(uri);
-    }
-
-    public async searchLocal(globPattern: string, cwd?: string, dot?: boolean): Promise<string[]> {
+    public override async searchLocal(globPattern: string, cwd?: string, dot?: boolean): Promise<string[]> {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let options: any;
         if (cwd) {
@@ -138,52 +97,6 @@ export class FileSystem implements IFileSystem {
 
         const found = await this.globFiles(globPattern, options);
         return Array.isArray(found) ? found : [];
-    }
-
-    public async getFiles(dir: vscode.Uri): Promise<vscode.Uri[]> {
-        const files = await this.vscfs.readDirectory(dir);
-        return files.filter((f) => f[1] === FileType.File).map((f) => vscode.Uri.file(f[0]));
-    }
-
-    public async writeLocalFile(filename: string, text: string | Buffer): Promise<void> {
-        const uri = vscode.Uri.file(filename);
-        return this.writeFile(uri, text);
-    }
-
-    // URI-based filesystem functions for interacting with files provided by VS Code
-    public arePathsSame(path1: vscode.Uri, path2: vscode.Uri): boolean {
-        if (path1.scheme === 'file' && path1.scheme === path2.scheme) {
-            return this.areLocalPathsSame(path1.fsPath, path2.fsPath);
-        } else {
-            return path1.toString() === path2.toString();
-        }
-    }
-
-    public async copy(source: vscode.Uri, destination: vscode.Uri): Promise<void> {
-        await this.vscfs.copy(source, destination);
-    }
-
-    public async createDirectory(uri: vscode.Uri): Promise<void> {
-        await this.vscfs.createDirectory(uri);
-    }
-
-    public async delete(uri: vscode.Uri): Promise<void> {
-        await this.vscfs.delete(uri);
-    }
-
-    public async readFile(uri: vscode.Uri): Promise<string> {
-        const result = await this.vscfs.readFile(uri);
-        const data = Buffer.from(result);
-        return data.toString(ENCODING);
-    }
-
-    public async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
-        return this.vscfs.stat(uri);
-    }
-
-    public async writeFile(uri: vscode.Uri, text: string | Buffer): Promise<void> {
-        const data = typeof text === 'string' ? Buffer.from(text) : text;
-        return this.vscfs.writeFile(uri, data);
     }
 
     private async lstat(filename: string): Promise<vscode.FileStat> {

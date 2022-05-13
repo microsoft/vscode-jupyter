@@ -14,6 +14,7 @@ import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
 import { swallowExceptions } from '../utils/decorators';
 import { IFileSystem } from '../platform/types.node';
+import { FileSystem } from '../platform/fileSystem.node';
 import { homePath } from '../platform/fs-paths.node';
 
 const CACHEKEY_FOR_CONDA_INFO = 'CONDA_INFORMATION_CACHE';
@@ -33,7 +34,7 @@ export class CondaService {
     constructor(
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IFileSystem) private readonly fs: FileSystem,
         @inject(IPlatformService) private readonly ps: IPlatformService,
         @inject(IDisposableRegistry) private readonly disposables: IDisposable[]
     ) {
