@@ -152,6 +152,7 @@
                 "CI_PYTHON_PATH": "<Python Path>",
                 "VSC_JUPYTER_PERF_TEST": "1",
                 "TEST_FILES_SUFFIX": "notebookCellExecution.perf.test",
+                "VSC_JUPYTER_TEST_TIMEOUT": "60000",
             },
             "sourceMaps": true,
             "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],

@@ -74,13 +74,14 @@ function configure(): SetupOptions {
     // So the solution is to run them separately and first on CI.
     const grep = IS_CI_SERVER_TEST_DEBUGGER ? 'Debug' : defaultGrep;
     const testFilesSuffix = process.env.TEST_FILES_SUFFIX || '.test*';
+    const testTimeout = process.env.VSC_JUPYTER_TEST_TIMEOUT || TEST_TIMEOUT;
 
     const options: SetupOptions & { retries: number; invert: boolean } = {
         ui: 'tdd',
         color: true,
         rootHooks: rootHooks,
         invert,
-        timeout: TEST_TIMEOUT,
+        timeout: testTimeout,
         retries: IS_CI_SERVER ? TEST_RETRYCOUNT : 0,
         grep,
         testFilesSuffix,
@@ -185,11 +186,10 @@ export async function run(): Promise<void> {
         );
     });
 
-    console.log(`found ${testFiles.length} test files with suffix ${options.testFilesSuffix} and ignoreing ${ignoreGlob.join(', ')}`);
-
     // Setup test files that need to be run.
     testFiles.forEach((file) => mocha.addFile(path.join(testsRoot, file)));
 
+    // for performance tests, extension activation is part of the test run
     if (!IS_PERF_TEST) {
         /* eslint-disable no-console */
         console.time('Time taken to activate the extension');

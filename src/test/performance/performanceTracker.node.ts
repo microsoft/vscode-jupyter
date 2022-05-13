@@ -4,7 +4,6 @@ import { extensions } from 'vscode';
 import { JVSC_EXTENSION_ID, AppinsightsKey, Telemetry } from '../../platform/common/constants';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { IS_CI_SERVER } from '../ciConstants.node';
-import { JVSC_EXTENSION_ID_FOR_TESTS } from '../constants';
 import { sleep } from '../core';
 
 export class PerformanceTracker implements IDisposable {
@@ -12,7 +11,7 @@ export class PerformanceTracker implements IDisposable {
     durations: Record<string, number> = {};
     checkpointCount = 0;
     telemetryReporter: TelemetryReporter | undefined;
-    telemetryEnabled = true || IS_CI_SERVER;
+    telemetryEnabled = true || IS_CI_SERVER && !process.env.VSC_JUPYTER_WARMUP;
 
     constructor(private testName: string) {
         if (this.telemetryEnabled) {
@@ -30,7 +29,7 @@ export class PerformanceTracker implements IDisposable {
 
     public finishAndReport(result: string) {
         this.durations.totalTime = this.stopWatch.elapsedTime;
-        console.log(`test ${result} with times ${this.durations}`); // not showing in debug console?
+        console.log(`test ${result} with times: ${JSON.stringify(this.durations)}`);
         this.telemetryReporter?.sendDangerousTelemetryEvent(
             Telemetry.RunTest,
             {

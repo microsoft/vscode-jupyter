@@ -5,9 +5,9 @@ import { IDisposable } from '../../platform/common/types';
 import { IExtensionTestApi } from '../common';
 import { createEmptyPythonNotebook, insertCodeCell, runCell, waitForTextOutput } from '../datascience/notebook/helper';
 import { activateExtension, initializePython } from '../initialize.node';
-import { PerformanceTracker } from './performanceTracker';
+import { PerformanceTracker } from './performanceTracker.node';
 
-suite('Initial Notebook Cell Execution Perf Test', () => {
+suite('Initial Notebook Cell Execution Perf Test', function () {
     let tracker: PerformanceTracker;
     setup(function () {
         sinon.restore();
@@ -21,7 +21,6 @@ suite('Initial Notebook Cell Execution Perf Test', () => {
     test('Initial Notebook Cell Execution Perf Test', async function () {
         const disposables: IDisposable[] = [];
         sinon.restore();
-
         await initializePython();
         tracker.markTime('pythonExtensionActivation');
 

@@ -7,22 +7,38 @@
 process.env.VSC_JUPYTER_SMOKE_TEST = '1';
 
 import { spawn } from 'child_process';
+import glob from 'glob';
 import * as path from '../platform/vscode-path/path';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants.node';
 
 class TestRunner {
     public async start() {
         console.log('Start Test Runner');
-        await this.launchTest();
+        const testFiles = await new Promise<string[]>((resolve, reject) => {
+            glob(`**/*perf.test.js`, (error, files) => {
+                if (error) {
+                    return reject(error);
+                }
+                resolve(files);
+            });
+        });
+
+        // warm up with a basic notebook operation before running the tests
+        await this.launchTest('notebookCellExecution.perf.test', true);
+
+        testFiles.forEach((file) => this.launchTest(file));
     }
 
-    private async launchTest() {
+    private async launchTest(testFile: string, warmupRun?: boolean) {
         console.log('Launch tests in test runner');
         await new Promise<void>((resolve, reject) => {
             const env: Record<string, string> = {
-                TEST_FILES_SUFFIX: 'notebookCellExecution.perf.test',
+                TEST_FILES_SUFFIX: testFile,
+                VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders',
                 VSC_JUPYTER_PERF_TEST: '1',
                 CODE_TESTS_WORKSPACE: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience'),
+                VSC_JUPYTER_WARMUP_RUN: warmupRun ? '1' : '0',
+                VSC_JUPYTER_TEST_TIMEOUT: '60000',
                 ...process.env
             };
             const proc = spawn('node', [path.join(__dirname, 'standardTest.node.js')], {
