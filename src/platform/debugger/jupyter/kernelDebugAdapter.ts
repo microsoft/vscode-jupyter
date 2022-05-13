@@ -36,6 +36,7 @@ import {
     KernelDebugMode
 } from '../types';
 import { assertIsDebugConfig, getMessageSourceAndHookIt, isShortNamePath, shortNameMatchesLongName } from './helper';
+import { executeSilently } from '../../../kernels/helpers';
 // import { IFileSystem } from '../../common/platform/types.node';
 
 // For info on the custom requests implemented by jupyter see:
@@ -183,7 +184,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     }
 
     public async disconnect() {
-        await this.deleteDumpCells();
         await this.session.customRequest('disconnect', { restart: false });
         this.endSession.fire(this.session);
         this.disconected = true;
@@ -191,17 +191,10 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     }
 
     dispose() {
-        this.disposables.forEach((d) => d.dispose());
-        // clean temp files
-        this.cellToFile.forEach((_tempPath) => {
-            // const norm = path.normalize(tempPath);
-            try {
-                // IANHU TODO: Need to handle this file delete in web case
-                //void this.fs.deleteLocalFile(norm);
-            } catch {
-                traceError('Error deleting temporary debug files');
-            }
+        this.deleteDumpCells().catch(() => {
+            traceError('Error deleting temporary debug files.');
         });
+        this.disposables.forEach((d) => d.dispose());
     }
 
     public stackTrace(args: DebugProtocol.StackTraceArguments): Thenable<DebugProtocol.StackTraceResponse['body']> {
@@ -274,15 +267,29 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
 
     // Use our jupyter session to delete all the cells
     private async deleteDumpCells() {
-        if (this.jupyterSession) {
-            this.cellToFile.forEach((tempFile) => {
-                const deleteSnippit = `import os
-try:
-    os.remove("${tempFile}")
-except:
-    pass`;
+        const fileValues = [...this.cellToFile.values()];
+        // Need to have our Jupyter Session and some dumpCell files to delete
+        if (this.jupyterSession && fileValues.length) {
+            // Create our python string of file names
+            const fileListString = fileValues
+                .map((filePath) => {
+                    return '"' + filePath + '"';
+                })
+                .join(',');
 
-                this.jupyterSession.requestExecute({ code: deleteSnippit, silent: true, store_history: false });
+            // Insert into our delete snippet
+            const deleteFilesCode = `import os
+_VSCODE_fileList = [${fileListString}]
+for file in _VSCODE_fileList:
+    try:
+        os.remove(file)
+    except:
+        pass
+del _VSCODE_fileList`;
+
+            return executeSilently(this.jupyterSession, deleteFilesCode, {
+                traceErrors: true,
+                traceErrorsMessage: 'Error deleting temporary debugging files'
             });
         }
     }
