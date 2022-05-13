@@ -11,7 +11,7 @@ export class PerformanceTracker implements IDisposable {
     durations: Record<string, number> = {};
     checkpointCount = 0;
     telemetryReporter: TelemetryReporter | undefined;
-    telemetryEnabled = true || IS_CI_SERVER && !process.env.VSC_JUPYTER_WARMUP;
+    telemetryEnabled = IS_CI_SERVER && !process.env.VSC_JUPYTER_WARMUP;
 
     constructor(private testName: string) {
         if (this.telemetryEnabled) {
