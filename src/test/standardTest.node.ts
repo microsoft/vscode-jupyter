@@ -108,7 +108,6 @@ async function createSettings(): Promise<string> {
 async function start() {
     console.log('*'.repeat(100));
     console.log('Start Standard tests');
-    console.log('extensionDevPath: ' + extensionDevelopmentPath);
     const platform = computePlatform();
     const vscodeExecutablePath = await downloadAndUnzipVSCode(channel, platform);
     const baseLaunchArgs = requiresPythonExtensionToBeInstalled() ? [] : ['--disable-extensions'];

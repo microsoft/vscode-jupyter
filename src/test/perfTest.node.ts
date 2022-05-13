@@ -1,11 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-/* eslint-disable no-console, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
-
-// Must always be on top to setup expected env.
-process.env.VSC_JUPYTER_SMOKE_TEST = '1';
-
 import { spawn } from 'child_process';
 import glob from 'glob';
 import * as path from '../platform/vscode-path/path';
