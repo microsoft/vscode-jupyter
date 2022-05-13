@@ -3,13 +3,12 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, optional } from 'inversify';
 import { NotebookDocument, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
 import { getLocString } from '../../webviews/webview-side/react-common/locReactSide';
 import { ICommandNameArgumentTypeMapping } from '../../platform/common/application/commands';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { traceInfo } from '../../platform/logging';
-import { IFileSystem } from '../../platform/common/platform/types.node';
 import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { isUri } from '../../platform/common/utils/misc';
@@ -19,9 +18,9 @@ import { getActiveInteractiveWindow } from '../helpers';
 import { getNotebookMetadata, isPythonNotebook } from '../../notebooks/helpers';
 import { INotebookControllerManager } from '../../notebooks/types';
 import { Commands, Telemetry } from '../../platform/common/constants';
-import { FileConverter } from '../../platform/export/fileConverter.node';
 import { IFileConverter, ExportFormat } from '../../platform/export/types';
 import { IExportCommands, IInteractiveWindowProvider } from '../types';
+import { arePathsSame } from '../../platform/common/platform/fileSystem';
 
 interface IExportQuickPickItem extends QuickPickItem {
     handler(): void;
@@ -32,13 +31,12 @@ export class ExportCommands implements IExportCommands, IDisposable {
     private readonly disposables: IDisposable[] = [];
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IFileConverter) private fileConverter: FileConverter,
+        @inject(IFileConverter) private fileConverter: IFileConverter,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
-        @inject(IInteractiveWindowProvider) private readonly interactiveProvider: IInteractiveWindowProvider,
+        @inject(IInteractiveWindowProvider) @optional() private readonly interactiveProvider: IInteractiveWindowProvider | undefined,
         @inject(INotebookControllerManager) private readonly controllers: INotebookControllerManager
-    ) {}
+    ) { }
     public register() {
         this.registerCommand(Commands.ExportAsPythonScript, (sourceDocument, interpreter?) =>
             this.export(sourceDocument, ExportFormat.python, undefined, interpreter)
@@ -62,7 +60,7 @@ export class ExportCommands implements IExportCommands, IDisposable {
     private registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     >(command: E, callback: (...args: U) => any) {
         const disposable = this.commandManager.registerCommand(command, callback, this);
         this.disposables.push(disposable);
@@ -71,7 +69,7 @@ export class ExportCommands implements IExportCommands, IDisposable {
     private async nativeNotebookExport(context?: Uri | { notebookEditor: { notebookUri: Uri } }) {
         const notebookUri = isUri(context) ? context : context?.notebookEditor?.notebookUri;
         const document = notebookUri
-            ? this.notebooks.notebookDocuments.find((item) => this.fs.arePathsSame(item.uri, notebookUri))
+            ? this.notebooks.notebookDocuments.find((item) => arePathsSame(item.uri, notebookUri))
             : this.notebooks.activeNotebookEditor?.document;
 
         if (document) {
@@ -95,7 +93,7 @@ export class ExportCommands implements IExportCommands, IDisposable {
             // so we need to get the active editor
             sourceDocument =
                 this.notebooks.activeNotebookEditor?.document ||
-                getActiveInteractiveWindow(this.interactiveProvider)?.notebookDocument;
+                (this.interactiveProvider ? getActiveInteractiveWindow(this.interactiveProvider)?.notebookDocument : undefined);
             if (!sourceDocument) {
                 traceInfo('Export called without a valid exportable document active');
                 return;
