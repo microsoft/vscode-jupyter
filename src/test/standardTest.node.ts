@@ -23,7 +23,7 @@ function requiresPythonExtensionToBeInstalled() {
     if (process.env.VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT) {
         return;
     }
-    return isRunningVSCodeTests || IS_SMOKE_TEST || IS_PERF_TEST;
+    return isRunningVSCodeTests || IS_SMOKE_TEST() || IS_PERF_TEST();
 }
 
 const channel = (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL || '').toLowerCase().includes('insiders')

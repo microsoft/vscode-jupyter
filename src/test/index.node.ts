@@ -190,7 +190,7 @@ export async function run(): Promise<void> {
     testFiles.forEach((file) => mocha.addFile(path.join(testsRoot, file)));
 
     // for performance tests, extension activation is part of the test run
-    if (!IS_PERF_TEST) {
+    if (!IS_PERF_TEST()) {
         /* eslint-disable no-console */
         console.time('Time taken to activate the extension');
         console.log('Starting & waiting for Jupyter extension to activate');
