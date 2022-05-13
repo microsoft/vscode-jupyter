@@ -42,7 +42,6 @@ import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { NotebookCellLanguageService } from '../../intellisense/cellLanguageService';
-import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/preferredRemoteKernelIdProvider';
 import {
     LiveRemoteKernelConnectionMetadata,
     IKernelProvider,
@@ -96,7 +95,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         notebook: NotebookDocument;
         controller: VSCodeNotebookController;
     }>;
-    private readonly _onNotebookControllerSelectionChanged = new EventEmitter<void>();
+    private readonly _onNotebookControllerSelectionChanged = new EventEmitter<{
+        notebook: NotebookDocument;
+        controller: IVSCodeNotebookController;
+        selected: boolean;
+    }>();
 
     // Promise to resolve when we have loaded our controllers
     private controllersPromise?: Promise<void>;
@@ -137,8 +140,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(PreferredRemoteKernelIdProvider)
-        private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider,
         @inject(NotebookCellLanguageService) private readonly languageService: NotebookCellLanguageService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
@@ -347,11 +348,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // Unless the user switches to using local kernels (i.e. doesn't have a remote kernel setup).
             if (
                 connectionIsNoLongerValid &&
-                (controller.connection.kind === 'connectToLiveRemoteKernel' ||
-                    controller.connection.kind === 'startUsingRemoteKernelSpec') &&
+                controller.connection.kind === 'connectToLiveRemoteKernel' &&
                 !this.isLocalLaunch
             ) {
-                controller.flagRemoteKernelAsOutdated();
                 return true;
             }
             return connectionIsNoLongerValid;
@@ -858,7 +857,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         this.notebook,
                         this.commandManager,
                         this.kernelProvider,
-                        this.preferredRemoteKernelIdProvider,
                         this.context,
                         this.disposables,
                         this.languageService,
@@ -877,7 +875,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         this.disposables
                     );
                     controller.onNotebookControllerSelectionChanged(
-                        () => this._onNotebookControllerSelectionChanged.fire(),
+                        (e) => this._onNotebookControllerSelectionChanged.fire({ ...e, controller }),
                         this,
                         this.disposables
                     );

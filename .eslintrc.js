@@ -119,7 +119,6 @@ module.exports = {
         'src/test/performance/load.perf.test.ts',
         'src/test/datascience/mockLanguageServerCache.ts',
         'src/test/datascience/data-viewing/dataViewerPDependencyService.unit.test.ts',
-        'src/test/datascience/mockInputBox.ts',
         'src/test/datascience/crossProcessLock.unit.test.ts',
         'src/test/datascience/mockLanguageServerAnalysisOptions.ts',
         'src/test/datascience/mockLanguageServerProxy.ts',

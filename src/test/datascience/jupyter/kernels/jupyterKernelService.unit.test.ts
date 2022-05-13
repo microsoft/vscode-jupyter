@@ -41,7 +41,7 @@ suite('DataScience - JupyterKernelService', () => {
                 name: '70cbf3ad892a7619808baecec09fc6109e05177247350ed666cd97ce04371665',
                 argv: ['python'],
                 language: 'python',
-                uri: Uri.file('python'),
+                executable: 'python',
                 display_name: 'Python 3 Environment'
             },
             interpreter: {
@@ -60,7 +60,7 @@ suite('DataScience - JupyterKernelService', () => {
                 name: '92d78b5b048d9cbeebb9834099d399dea5384db6f02b0829c247cc4679e7cb5d',
                 argv: ['python'],
                 language: 'python',
-                uri: Uri.file('python'),
+                executable: 'python',
                 display_name: 'Conda Environment'
             },
             interpreter: {
@@ -78,7 +78,7 @@ suite('DataScience - JupyterKernelService', () => {
                 name: 'python3',
                 argv: ['/usr/bin/python3'],
                 language: 'python',
-                uri: Uri.file('/usr/bin/python3'),
+                executable: '/usr/bin/python3',
                 display_name: 'Python 3 on Disk',
                 metadata: {
                     interpreter: {
@@ -104,7 +104,7 @@ suite('DataScience - JupyterKernelService', () => {
                 name: 'julia',
                 argv: ['/usr/bin/julia'],
                 language: 'julia',
-                uri: Uri.file('/usr/bin/julia'),
+                executable: '/usr/bin/julia',
                 display_name: 'Julia on Disk'
             },
             id: '3'
@@ -116,7 +116,7 @@ suite('DataScience - JupyterKernelService', () => {
                 name: 'python2',
                 argv: ['/usr/bin/python'],
                 language: 'python',
-                uri: Uri.file('/usr/bin/python'),
+                executable: '/usr/bin/python',
                 display_name: 'Python 2 on Disk'
             },
             interpreter: {
@@ -134,7 +134,7 @@ suite('DataScience - JupyterKernelService', () => {
                 name: 'python3',
                 argv: ['/usr/bin/python3'],
                 language: 'python',
-                uri: Uri.file('/usr/bin/python3'),
+                executable: '/usr/bin/python3',
                 display_name: 'Python 3 on Disk',
                 metadata: {
                     interpreter: {
@@ -160,7 +160,7 @@ suite('DataScience - JupyterKernelService', () => {
                 name: 'julia',
                 argv: ['/usr/bin/julia'],
                 language: 'julia',
-                uri: Uri.file('/usr/bin/julia'),
+                executable: '/usr/bin/julia',
                 display_name: 'Julia on Disk'
             },
             id: '6'
@@ -172,7 +172,7 @@ suite('DataScience - JupyterKernelService', () => {
                 name: 'python2',
                 argv: ['/usr/bin/python'],
                 language: 'python',
-                uri: Uri.file('/usr/bin/python'),
+                executable: '/usr/bin/python',
                 display_name: 'Python 2 on Disk'
             },
             interpreter: {
@@ -190,7 +190,7 @@ suite('DataScience - JupyterKernelService', () => {
                 name: 'python3',
                 argv: ['/usr/bin/python3'],
                 language: 'python',
-                uri: Uri.file('/usr/bin/python3'),
+                executable: '/usr/bin/python3',
                 display_name: 'Python 3 on Disk',
                 metadata: {
                     interpreter: {
@@ -216,7 +216,7 @@ suite('DataScience - JupyterKernelService', () => {
                 name: 'julia',
                 argv: ['/usr/bin/julia'],
                 language: 'julia',
-                uri: Uri.file('/usr/bin/julia'),
+                executable: '/usr/bin/julia',
                 display_name: 'Julia on Disk'
             },
             id: '9'
@@ -228,7 +228,7 @@ suite('DataScience - JupyterKernelService', () => {
                 name: 'python2',
                 argv: ['/usr/bin/python'],
                 language: 'python',
-                uri: Uri.file('/usr/bin/python'),
+                executable: '/usr/bin/python',
                 display_name: 'Python 2 on Disk'
             },
             interpreter: {
@@ -246,7 +246,7 @@ suite('DataScience - JupyterKernelService', () => {
                 name: 'e10e222d04b8ec3cc7034c3de1b1269b088e2bcd875030a8acab068e59af3990',
                 argv: ['python', '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
                 language: 'python',
-                uri: Uri.file('python'),
+                executable: 'python',
                 display_name: 'Conda base environment',
                 metadata: {
                     interpreter: {
@@ -275,7 +275,7 @@ suite('DataScience - JupyterKernelService', () => {
                 name: 'sampleEnv',
                 argv: ['/usr/don/home/envs/sample/bin/python'],
                 language: 'python',
-                uri: Uri.file('/usr/don/home/envs/sample/bin/python'),
+                executable: '/usr/don/home/envs/sample/bin/python',
                 display_name: 'Kernel with custom env Variable',
                 metadata: {
                     interpreter: {
@@ -304,7 +304,7 @@ suite('DataScience - JupyterKernelService', () => {
                 name: 'sampleEnvJulia',
                 argv: ['/usr/don/home/envs/sample/bin/julia'],
                 language: 'julia',
-                uri: Uri.file('/usr/don/home/envs/sample/bin/python'),
+                executable: '/usr/don/home/envs/sample/bin/python',
                 display_name: 'Julia Kernel with custom env Variable',
                 metadata: {
                     interpreter: {
@@ -333,7 +333,7 @@ suite('DataScience - JupyterKernelService', () => {
                 name: 'nameGeneratedByUsWhenRegisteringKernelSpecs',
                 argv: ['/usr/don/home/envs/sample/bin/julia'],
                 language: 'julia',
-                uri: Uri.file('/usr/don/home/envs/sample/bin/python'),
+                executable: '/usr/don/home/envs/sample/bin/python',
                 display_name: 'Julia Kernel with custom env Variable',
                 metadata: {
                     interpreter: {

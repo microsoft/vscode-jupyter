@@ -53,7 +53,9 @@ export class NotebookProvider implements INotebookProvider {
             return this.jupyterNotebookProvider.connect(options).finally(() => handler.dispose());
         } else {
             handler.dispose();
-            await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
+            if (!this.startupUi.disableUI) {
+                await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
+            }
             throw new Error('Python extension is not installed');
         }
     }

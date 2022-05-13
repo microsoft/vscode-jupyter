@@ -5,7 +5,7 @@ import { Memento } from 'vscode';
 import { IFileSystemNode } from '../platform/common/platform/types.node';
 import { GLOBAL_MEMENTO, IMemento } from '../platform/common/types';
 import { ServerConnectionType } from './jupyter/launcher/serverConnectionType';
-import { IJupyterServerUriStorage } from './jupyter/types';
+import { IJupyterServerUriStorage, ILiveRemoteKernelConnectionUsageTracker } from './jupyter/types';
 import { BaseKernelFinder } from './kernelFinder.base';
 import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
 import { ILocalKernelFinder, IRemoteKernelFinder } from './raw/types';
@@ -21,7 +21,9 @@ export class KernelFinder extends BaseKernelFinder {
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalState: Memento,
         @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
         @inject(IJupyterServerUriStorage) serverUriStorage: IJupyterServerUriStorage,
-        @inject(ServerConnectionType) serverConnectionType: ServerConnectionType
+        @inject(ServerConnectionType) serverConnectionType: ServerConnectionType,
+        @inject(ILiveRemoteKernelConnectionUsageTracker)
+        private readonly liveKernelConnectionTracker: ILiveRemoteKernelConnectionUsageTracker
     ) {
         super(
             preferredRemoteFinder,
@@ -50,6 +52,15 @@ export class KernelFinder extends BaseKernelFinder {
                         ? this.fs.localFileExists(kernel.interpreter.uri.fsPath)
                         : Promise.resolve(true);
                 });
+            case 'startUsingRemoteKernelSpec':
+                // Always fetch the latest kernels from remotes, no need to display cached remote kernels.
+                return false;
+            case 'connectToLiveRemoteKernel':
+                // Only list live kernels that was used by the user,
+                // Even if such a kernel no longer exists on the sever.
+                // This way things don't just disappear from the list &
+                // user will get notified when they attempt to re-use this kernel.
+                return this.liveKernelConnectionTracker.wasKernelUsed(kernel);
         }
 
         return true;

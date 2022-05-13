@@ -3,7 +3,7 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { CancellationToken, Memento } from 'vscode';
 import { createPromiseFromCancellation } from '../platform/common/cancellation';
-import { Settings, Telemetry } from '../platform/common/constants';
+import { Telemetry } from '../platform/common/constants';
 import { Resource } from '../platform/common/types';
 import { createDeferredFromPromise } from '../platform/common/utils/async';
 import { noop } from '../platform/common/utils/misc';
@@ -98,10 +98,6 @@ export abstract class BaseKernelFinder implements IKernelFinder {
             }),
             this.listRemoteKernels(resource, cancelToken, useCache).catch((ex) => {
                 traceError('Failed to get remote kernels', ex);
-                // When remote kernels fail, turn off remote if we get a ECONNREFUSED error
-                if (ex.toString().toLowerCase().includes('econn')) {
-                    void this.serverUriStorage.setUri(Settings.JupyterServerLocalLaunch);
-                }
                 return [];
             })
         ]);

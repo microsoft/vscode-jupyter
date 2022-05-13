@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IServiceManager } from '../../platform/ioc/types';
 import { IRemoteKernelFinder } from '../raw/types';
 import { INotebookProvider } from '../types';
@@ -37,6 +37,8 @@ import { NotebookStarter } from './launcher/notebookStarter.node';
 import { ServerConnectionType } from './launcher/serverConnectionType';
 import { ServerPreload } from './launcher/serverPreload.node';
 import { JupyterServerUriStorage } from './launcher/serverUriStorage';
+import { LiveRemoteKernelConnectionUsageTracker } from './liveRemoteKernelConnectionTracker';
+import { RemoteKernelConnectionHandler } from './remoteKernelConnectionHandler';
 import { RemoteKernelFinder } from './remoteKernelFinder';
 import { JupyterServerSelector } from './serverSelector';
 import { BackingFileCreator } from './session/backingFileCreator.node';
@@ -61,7 +63,8 @@ import {
     INotebookStarter,
     IJupyterRequestCreator,
     IJupyterRequestAgentCreator,
-    INotebookServerFactory
+    INotebookServerFactory,
+    ILiveRemoteKernelConnectionUsageTracker
 } from './types';
 import { IJupyterCommandFactory, IJupyterSubCommandExecutionService } from './types.node';
 
@@ -146,5 +149,14 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<IJupyterRequestAgentCreator>(IJupyterRequestAgentCreator, RequestAgentCreator);
     serviceManager.addSingleton<ServerConnectionType>(ServerConnectionType, ServerConnectionType);
     serviceManager.addSingleton<JupyterConnection>(JupyterConnection, JupyterConnection);
-    serviceManager.addBinding(JupyterConnection, IExtensionSingleActivationService);
+    serviceManager.addBinding(JupyterConnection, IExtensionSyncActivationService);
+    serviceManager.addSingleton<ILiveRemoteKernelConnectionUsageTracker>(
+        ILiveRemoteKernelConnectionUsageTracker,
+        LiveRemoteKernelConnectionUsageTracker
+    );
+    serviceManager.addBinding(ILiveRemoteKernelConnectionUsageTracker, IExtensionSyncActivationService);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        RemoteKernelConnectionHandler
+    );
 }

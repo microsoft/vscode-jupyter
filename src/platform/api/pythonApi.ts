@@ -35,12 +35,19 @@ export function deserializePythonEnvironment(
     pythonVersion: Partial<PythonEnvironment_PythonApi> | undefined
 ): PythonEnvironment | undefined {
     if (pythonVersion) {
-        return {
+        const result = {
             ...pythonVersion,
             sysPrefix: pythonVersion.sysPrefix || '',
             uri: Uri.file(pythonVersion.path || ''),
             envPath: fsPathToUri(pythonVersion.envPath)
         };
+
+        // Cleanup stuff that shouldn't be there.
+        delete result.path;
+        if (!pythonVersion.envPath) {
+            delete result.envPath;
+        }
+        return result;
     }
 }
 
@@ -48,11 +55,14 @@ export function serializePythonEnvironment(
     jupyterVersion: PythonEnvironment | undefined
 ): PythonEnvironment_PythonApi | undefined {
     if (jupyterVersion) {
-        return {
+        const result = {
             ...jupyterVersion,
             path: getFilePath(jupyterVersion.uri),
             envPath: jupyterVersion.envPath ? getFilePath(jupyterVersion.envPath) : undefined
         };
+        // Cleanup stuff that shouldn't be there.
+        delete (result as any).uri;
+        return result;
     }
 }
 

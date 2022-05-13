@@ -20,7 +20,8 @@ import {
     IJupyterKernelSpec,
     GetServerOptions,
     IKernelSocket,
-    KernelActionSource
+    KernelActionSource,
+    LiveRemoteKernelConnectionMetadata
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
 
@@ -235,9 +236,9 @@ export interface IJupyterServerUriStorage {
     getSavedUriList(): Promise<{ uri: string; time: number; displayName?: string }[]>;
     removeUri(uri: string): Promise<void>;
     clearUriList(): Promise<void>;
-    getUri(): Promise<string>;
     getRemoteUri(): Promise<string | undefined>;
-    setUri(uri: string): Promise<void>;
+    setUriToLocal(): Promise<void>;
+    setUriToRemote(uri: string, displayName: string): Promise<void>;
 }
 
 export const IJupyterBackingFileCreator = Symbol('IJupyterBackingFileCreator');
@@ -293,4 +294,20 @@ export interface INotebookStarter extends IDisposable {
         workingDirectory: Uri,
         cancelToken: CancellationToken
     ): Promise<IJupyterConnection>;
+}
+
+export const ILiveRemoteKernelConnectionUsageTracker = Symbol('ILiveRemoteKernelConnectionUsageTracker');
+export interface ILiveRemoteKernelConnectionUsageTracker {
+    /**
+     * Whether the provided remote kernel was ever used by any notebook within the extension.
+     */
+    wasKernelUsed(connection: LiveRemoteKernelConnectionMetadata): boolean;
+    /**
+     * Tracks the fact that the provided remote kernel for a given server was used by a notebook defined by the uri.
+     */
+    trackKernelIdAsUsed(resource: Uri, serverId: string, kernelId: string): void;
+    /**
+     * Tracks the fact that the provided remote kernel for a given server is no longer used by a notebook defined by the uri.
+     */
+    trackKernelIdAsNotUsed(resource: Uri, serverId: string, kernelId: string): void;
 }

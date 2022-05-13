@@ -3,7 +3,7 @@
 
 import type { KernelMessage } from '@jupyterlab/services';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { EventEmitter, Uri } from 'vscode';
+import { EventEmitter } from 'vscode';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { KernelAutoRestartMonitor } from '../../kernels/kernelAutoRestartMonitor.node';
 import { IJupyterSession, IKernel, IKernelProvider, KernelConnectionMetadata } from '../../kernels/types';
@@ -27,7 +27,7 @@ suite('Jupyter Execution', async () => {
             argv: [],
             display_name: 'Hello',
             name: 'hello',
-            uri: Uri.file('path')
+            executable: 'path'
         },
         kind: 'startUsingLocalKernelSpec'
     };

@@ -15,7 +15,7 @@ import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError';
 import { KernelProcessExitedError } from './kernelProcessExitedError';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { traceError, traceWarning } from '../logging';
-import { IBrowserService, IConfigurationService, IsWebExtension, Resource } from '../common/types';
+import { IBrowserService, IConfigurationService, IExtensions, IsWebExtension, Resource } from '../common/types';
 import { DataScience, Common } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry, Commands } from '../../webviews/webview-side/common/constants';
@@ -50,6 +50,7 @@ import { JupyterExpiredCertsError } from './jupyterExpiredCertsError';
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
 import { RemoteJupyterServerConnectionError } from './remoteJupyterServerConnectionError';
 import { RemoteJupyterServerUriProviderError } from './remoteJupyterServerUriProviderError';
+import { InvalidRemoteJupyterServerUriHandleError } from './invalidRemoteJupyterServerUriHandleError';
 
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {
@@ -66,7 +67,8 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IsWebExtension) private readonly isWebExtension: boolean
+        @inject(IsWebExtension) private readonly isWebExtension: boolean,
+        @inject(IExtensions) private readonly extensions: IExtensions
     ) {}
     private handledErrors = new WeakSet<Error>();
     public async handleError(err: Error): Promise<void> {
@@ -176,6 +178,13 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                 DataScience.remoteJupyterConnectionFailedWithServerWithError().format(serverName, message),
                 errorContext
             );
+        } else if (error instanceof InvalidRemoteJupyterServerUriHandleError) {
+            const extensionName =
+                this.extensions.getExtension(error.extensionId)?.packageJSON.displayName || error.extensionId;
+            return getUserFriendlyErrorMessage(
+                DataScience.remoteJupyterServerProvidedBy3rdPartyExtensionNoLongerValid().format(extensionName),
+                errorContext
+            );
         }
 
         return getUserFriendlyErrorMessage(error, errorContext);
@@ -217,11 +226,14 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                 : KernelInterpreterDependencyResponse.cancel;
         } else if (
             err instanceof RemoteJupyterServerConnectionError ||
-            err instanceof RemoteJupyterServerUriProviderError
+            err instanceof RemoteJupyterServerUriProviderError ||
+            err instanceof InvalidRemoteJupyterServerUriHandleError
         ) {
             const savedList = await this.serverUriStorage.getSavedUriList();
             const message =
-                err instanceof RemoteJupyterServerConnectionError
+                err instanceof InvalidRemoteJupyterServerUriHandleError
+                    ? ''
+                    : err instanceof RemoteJupyterServerConnectionError
                     ? err.originalError.message || ''
                     : err.originalError?.message || err.message;
             const serverId = err instanceof RemoteJupyterServerConnectionError ? err.serverId : err.serverId;
@@ -231,8 +243,14 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                 err instanceof RemoteJupyterServerUriProviderError ? `${err.providerId}:${err.handle}` : '';
             const serverName =
                 displayName && baseUrl ? `${displayName} (${baseUrl})` : displayName || baseUrl || idAndHandle;
+            const extensionName =
+                err instanceof InvalidRemoteJupyterServerUriHandleError
+                    ? this.extensions.getExtension(err.extensionId)?.packageJSON.displayName || err.extensionId
+                    : '';
             const selection = await this.applicationShell.showErrorMessage(
-                DataScience.remoteJupyterConnectionFailedWithServer().format(serverName),
+                err instanceof InvalidRemoteJupyterServerUriHandleError
+                    ? DataScience.remoteJupyterServerProvidedBy3rdPartyExtensionNoLongerValid().format(extensionName)
+                    : DataScience.remoteJupyterConnectionFailedWithServer().format(serverName),
                 { detail: message, modal: true },
                 DataScience.removeRemoteJupyterConnectionButtonText(),
                 DataScience.changeRemoteJupyterConnectionButtonText(),

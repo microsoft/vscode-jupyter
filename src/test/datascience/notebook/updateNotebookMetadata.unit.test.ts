@@ -24,7 +24,7 @@ suite('UpdateNotebookMetadata', () => {
         argv: ['python', '-f', '{connection_file}'],
         display_name: 'Python Default',
         name: 'python3',
-        uri: Uri.file('python')
+        executable: 'python'
     };
     const python37Global: PythonEnvironment = {
         uri: Uri.file('/usr/bin/python36'),

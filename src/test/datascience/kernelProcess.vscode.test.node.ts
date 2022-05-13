@@ -22,7 +22,7 @@ import { noop } from '../core';
 import { EventEmitter } from 'events';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceInfo } from '../../platform/logging';
-import { CancellationTokenSource, Uri } from 'vscode';
+import { CancellationTokenSource } from 'vscode';
 import { IKernelConnection } from '../../kernels/raw/types';
 import { KernelEnvironmentVariablesService } from '../../kernels/raw/launcher/kernelEnvVarsService.node';
 import { KernelProcess } from '../../kernels/raw/launcher/kernelProcess.node';
@@ -125,7 +125,7 @@ suite('DataScience - Kernel Process', () => {
                 interrupt_mode: 'message',
                 display_name: '',
                 name: '',
-                uri: Uri.file('')
+                executable: ''
             },
             kind: 'startUsingLocalKernelSpec'
         };
@@ -162,7 +162,7 @@ suite('DataScience - Kernel Process', () => {
                 interrupt_mode: 'message',
                 display_name: '',
                 name: '',
-                uri: Uri.file('')
+                executable: ''
             },
             kind: 'startUsingLocalKernelSpec'
         };
@@ -197,7 +197,7 @@ suite('DataScience - Kernel Process', () => {
                 interrupt_mode: 'message',
                 display_name: '',
                 name: '',
-                uri: Uri.file('')
+                executable: ''
             },
             kind: 'startUsingLocalKernelSpec'
         };
@@ -232,7 +232,7 @@ suite('DataScience - Kernel Process', () => {
                 interrupt_mode: 'message',
                 display_name: '',
                 name: '',
-                uri: Uri.file('')
+                executable: ''
             },
             kind: 'startUsingLocalKernelSpec'
         };

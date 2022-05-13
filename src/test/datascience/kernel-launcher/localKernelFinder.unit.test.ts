@@ -16,9 +16,12 @@ import { EnvironmentVariablesProvider } from '../../../platform/common/variables
 import { InterpreterService } from '../../../platform/api/pythonApi';
 import {
     createInterpreterKernelSpec,
+    deserializeKernelConnection,
     getInterpreterKernelSpecName,
     getKernelId,
-    getKernelRegistrationInfo
+    getKernelRegistrationInfo,
+    getNameOfKernelConnection,
+    serializeKernelConnection
 } from '../../../platform/../kernels/helpers';
 import { PlatformService } from '../../../platform/common/platform/platformService.node';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
@@ -53,6 +56,7 @@ import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProv
 import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverConnectionType';
+import { ILiveRemoteKernelConnectionUsageTracker } from '../../../kernels/jupyter/types';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -68,6 +72,7 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
         let tempDirForKernelSpecs: Uri;
         let jupyterPaths: JupyterPaths;
         let preferredRemote: PreferredRemoteKernelIdProvider;
+        let liveKernelUsageTracker: ILiveRemoteKernelConnectionUsageTracker;
         type TestData = {
             interpreters?: (
                 | PythonEnvironment
@@ -229,7 +234,7 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
                     instance(memento)
                 )
             );
-
+            liveKernelUsageTracker = mock<ILiveRemoteKernelConnectionUsageTracker>();
             preferredRemote = mock(PreferredRemoteKernelIdProvider);
             const notebookProvider = mock(NotebookProvider);
             const serverUriStorage = mock(JupyterServerUriStorage);
@@ -239,6 +244,7 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
             const onDidChangeEvent = new EventEmitter<void>();
             disposables.push(onDidChangeEvent);
             when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);
+
             kernelFinder = new KernelFinder(
                 localKernelFinder,
                 instance(remoteKernelFinder),
@@ -247,7 +253,8 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
                 instance(memento),
                 instance(fs),
                 instance(serverUriStorage),
-                instance(connectionType)
+                instance(connectionType),
+                instance(liveKernelUsageTracker)
             );
         }
         teardown(() => {
@@ -602,6 +609,21 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
              * Expected Python environment that will be used to start the kernel.
              */
             | { expectedInterpreter: PythonEnvironment };
+
+        function cloneWithAppropriateCase(obj: any) {
+            if (!obj || typeof obj !== 'object' || platform.getOSType() !== platform.OSType.Windows) {
+                return obj;
+            }
+            const result: any = {};
+            Object.keys(obj).forEach((k) => {
+                if (k === 'path') {
+                    result[k] = obj[k].toLowerCase();
+                } else {
+                    result[k] = cloneWithAppropriateCase(obj[k]);
+                }
+            });
+            return result;
+        }
         /**
          * Gets the list of kernels from the kernel provider and compares them against what's expected.
          */
@@ -648,6 +670,30 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
                     );
                 }
                 ids.set(kernel.id, kernel);
+            });
+
+            // Ensure serializing kernels does not change the data inside of them
+            actualKernels.forEach((kernel) => {
+                // Interpreter URI is weird, we have to force it to format itself or the
+                // internal state won't match
+                if (kernel.interpreter) {
+                    kernel.interpreter.uri.toString();
+                }
+
+                const serialize = serializeKernelConnection(kernel);
+                const deserialized = deserializeKernelConnection(serialize);
+                if (deserialized.interpreter) {
+                    deserialized.interpreter.uri.toString();
+                }
+
+                // On windows we can lose path casing so make it all lower case for both
+                const lowerCasedDeserialized = cloneWithAppropriateCase(deserialized);
+                const lowerCasedKernel = cloneWithAppropriateCase(kernel);
+                assert.deepEqual(
+                    lowerCasedDeserialized,
+                    lowerCasedKernel,
+                    `Kernel ${getNameOfKernelConnection(kernel)} fails being serialized`
+                );
             });
         }
         async function verifyKernel(
@@ -1725,7 +1771,7 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
                         argv: [],
                         display_name: 'display_namea',
                         name: 'python3', // default name here
-                        uri: Uri.file('path')
+                        executable: 'path'
                     },
                     interpreter: { uri: Uri.file('a') } as any
                 },
@@ -1752,7 +1798,7 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
                         argv: [],
                         display_name: 'display_namea',
                         name: 'python3', // default name here
-                        uri: Uri.file('path')
+                        executable: 'path'
                     },
                     interpreter: { uri: Uri.file('a') } as any
                 },
@@ -1781,7 +1827,7 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
                         argv: [],
                         display_name: 'display_namea',
                         name: 'namea', // Non default name
-                        uri: Uri.file('path')
+                        executable: 'path'
                     },
                     interpreter: { uri: Uri.file('a') } as any
                 },
@@ -1808,7 +1854,7 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
                         argv: [],
                         display_name: 'display_namea',
                         name: 'namea', // Non default name
-                        uri: Uri.file('path')
+                        executable: 'path'
                     },
                     interpreter: { uri: Uri.file('a') } as any
                 },
@@ -1837,7 +1883,7 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
                         argv: [],
                         display_name: 'display_namea',
                         name: 'namea',
-                        uri: Uri.file('path')
+                        executable: 'path'
                     }
                 },
                 {
@@ -1862,7 +1908,7 @@ import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverCo
                         argv: [],
                         display_name: 'display_namea',
                         name: 'python3', // default name here
-                        uri: Uri.file('path')
+                        executable: 'path'
                     }
                 },
                 {

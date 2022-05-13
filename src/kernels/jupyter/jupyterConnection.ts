@@ -6,6 +6,7 @@ import { IExtensionSyncActivationService } from '../../platform/activation/types
 import { Identifiers } from '../../platform/common/constants';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { RemoteJupyterServerUriProviderError } from '../../platform/errors/remoteJupyterServerUriProviderError';
+import { BaseError } from '../../platform/errors/types';
 import { IJupyterConnection } from '../types';
 import { computeServerId, createRemoteConnectionInfo } from './jupyterUtils';
 import { ServerConnectionType } from './launcher/serverConnectionType';
@@ -52,8 +53,8 @@ export class JupyterConnection implements IExtensionSyncActivationService {
         this.pendingTimeouts = [];
     }
 
-    public async createConnectionInfo(serverId: string) {
-        const uri = await this.getUriFromServerId(serverId);
+    public async createConnectionInfo(options: { serverId: string } | { uri: string }) {
+        const uri = 'uri' in options ? options.uri : await this.getUriFromServerId(options.serverId);
         if (!uri) {
             throw new Error('Server Not found');
         }
@@ -110,6 +111,9 @@ export class JupyterConnection implements IExtensionSyncActivationService {
                     }
                 }
             } catch (ex) {
+                if (ex instanceof BaseError) {
+                    throw ex;
+                }
                 throw new RemoteJupyterServerUriProviderError(idAndHandle.id, idAndHandle.handle, ex);
             }
         }
