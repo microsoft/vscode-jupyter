@@ -106,7 +106,7 @@ export function KernelSocketWrapper<T extends ClassType<IWebSocketLike>>(SuperCl
         }
 
         public override emit(event: string | symbol, ...args: any[]): boolean {
-            return this.handleEvent((ev, args) => super.emit(ev, args), event, args);
+            return this.handleEvent((ev, ...args) => super.emit(ev, ...args), event, ...args);
         }
 
         public addReceiveHook(hook: (data: WebSocketWS.Data) => Promise<void>) {
