@@ -13,7 +13,8 @@ import { ExportToPythonPlainBase } from './exportToPythonPlain';
 export class ExportToPythonPlain extends ExportToPythonPlainBase {
     public constructor(
         @inject(IFileSystem) fs: IFileSystem,
-        @inject(IConfigurationService) configuration: IConfigurationService) {
+        @inject(IConfigurationService) configuration: IConfigurationService
+    ) {
         super(fs, configuration);
     }
 }

@@ -20,7 +20,7 @@ export class ExportFileOpener {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IBrowserService) private readonly browserService: IBrowserService
-    ) { }
+    ) {}
 
     public async openFile(format: ExportFormat, uri: Uri, openDirectly: boolean = false) {
         if (format === ExportFormat.python) {

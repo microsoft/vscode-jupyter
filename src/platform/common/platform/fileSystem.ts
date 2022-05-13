@@ -20,9 +20,9 @@ export class FileSystem implements IFileSystem {
         this.vscfs = vscode.workspace.fs;
     }
 
-    createTemporaryLocalFile(options: { fileExtension: string; prefix: string; }): Promise<TemporaryFile>;
+    createTemporaryLocalFile(options: { fileExtension: string; prefix: string }): Promise<TemporaryFile>;
     createTemporaryLocalFile(fileExtension: string): Promise<TemporaryFile>;
-    createTemporaryLocalFile(_fileExtension: unknown): Promise<import("./types").TemporaryFile> {
+    createTemporaryLocalFile(_fileExtension: unknown): Promise<import('./types').TemporaryFile> {
         throw new Error('Method not supported on Web.');
     }
 

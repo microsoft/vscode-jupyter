@@ -39,7 +39,7 @@ export class ExportCommands implements IExportCommands, IDisposable {
         @optional()
         private readonly interactiveProvider: IInteractiveWindowProvider | undefined,
         @inject(INotebookControllerManager) private readonly controllers: INotebookControllerManager
-    ) { }
+    ) {}
     public register() {
         this.registerCommand(Commands.ExportAsPythonScript, (sourceDocument, interpreter?) =>
             this.export(sourceDocument, ExportFormat.python, undefined, interpreter)
@@ -63,7 +63,7 @@ export class ExportCommands implements IExportCommands, IDisposable {
     private registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     >(command: E, callback: (...args: U) => any) {
         const disposable = this.commandManager.registerCommand(command, callback, this);
         this.disposables.push(disposable);

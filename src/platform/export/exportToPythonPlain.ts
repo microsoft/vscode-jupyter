@@ -14,7 +14,8 @@ export class ExportToPythonPlainBase implements IExport {
     public constructor(
         private readonly fs: IFileSystem,
 
-        protected readonly configuration: IConfigurationService) { }
+        protected readonly configuration: IConfigurationService
+    ) {}
 
     async writeFile(target: Uri, contents: string): Promise<void> {
         await this.fs.writeFile(target, contents);
