@@ -76,7 +76,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         private readonly configurationSettings: IConfigurationService,
         private readonly localResourceUriConverter: ILocalResourceUriConverter,
         private readonly fs: IFileSystemNode
-    ) { }
+    ) {}
     public dispose() {
         this.cache.clear();
     }

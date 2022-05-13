@@ -14,7 +14,7 @@ import { EXTENSION_ROOT_DIR } from '../../constants.node';
 
 @injectable()
 export class Extensions implements IExtensions {
-    constructor(@inject(IFileSystemNode) private readonly fs: IFileSystemNode) { }
+    constructor(@inject(IFileSystemNode) private readonly fs: IFileSystemNode) {}
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public get all(): readonly Extension<any>[] {
         return extensions.all;

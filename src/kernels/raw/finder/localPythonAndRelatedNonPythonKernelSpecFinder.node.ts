@@ -192,7 +192,8 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                     const matchingInterpreter = await this.findMatchingInterpreter(item.kernelSpec, interpreters);
                     if (!matchingInterpreter) {
                         traceVerbose(
-                            `Kernel Spec for ${item.kernelSpec.display_name
+                            `Kernel Spec for ${
+                                item.kernelSpec.display_name
                             } ignored as we cannot find a matching interpreter ${JSON.stringify(item)}`
                         );
                         return;
@@ -218,7 +219,8 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                         isDefaultKernelSpec(kernelspec)
                     ) {
                         traceVerbose(
-                            `Hiding default kernel spec '${kernelspec.display_name}', '${kernelspec.name
+                            `Hiding default kernel spec '${kernelspec.display_name}', '${
+                                kernelspec.name
                             }', ${getDisplayPathFromLocalFile(kernelspec.argv[0])}`
                         );
                         return false;

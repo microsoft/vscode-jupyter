@@ -34,7 +34,7 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
         private readonly fs: IFileSystemNode,
         private readonly interpreterService: IInterpreterService,
         private readonly factory: IPythonExecutionFactory
-    ) { }
+    ) {}
     public async getWidgetScriptSource(moduleName: string): Promise<Readonly<WidgetScriptSource>> {
         const sources = await this.getWidgetScriptSources();
         const found = sources.find((item) => item.moduleName.toLowerCase() === moduleName.toLowerCase());

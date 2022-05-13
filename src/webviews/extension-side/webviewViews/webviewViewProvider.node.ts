@@ -12,7 +12,7 @@ export class WebviewViewProvider implements IWebviewViewProvider {
     constructor(
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IFileSystemNode) private readonly fs: IFileSystemNode
-    ) { }
+    ) {}
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public async create(options: IWebviewViewOptions): Promise<IWebviewView> {

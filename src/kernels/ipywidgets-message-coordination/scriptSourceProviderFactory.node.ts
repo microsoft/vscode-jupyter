@@ -24,7 +24,7 @@ export class ScriptSourceProviderFactory implements IWidgetScriptSourceProviderF
         @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IPythonExecutionFactory) private readonly factory: IPythonExecutionFactory
-    ) { }
+    ) {}
 
     public getProviders(
         kernel: IKernel,

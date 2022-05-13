@@ -42,7 +42,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
     private importedDataFrameScripts = new WeakMap<NotebookDocument, boolean>();
     private importedGetVariableInfoScripts = new WeakMap<NotebookDocument, boolean>();
 
-    constructor(@inject(IFileSystemNode) private fs: IFileSystemNode) { }
+    constructor(@inject(IFileSystemNode) private fs: IFileSystemNode) {}
 
     public async getDataFrameInfo(
         targetVariable: IJupyterVariable,
@@ -55,14 +55,14 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         // Then execute a call to get the info and turn it into JSON
         const results = kernel.session
             ? await executeSilently(
-                kernel.session,
-                `import builtins\nbuiltins.print(${DataFrameLoading.DataFrameInfoFunc}(${expression}))`,
-                {
-                    traceErrors: true,
-                    traceErrorsMessage: 'Failure in execute_request for getDataFrameInfo',
-                    telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-                }
-            )
+                  kernel.session,
+                  `import builtins\nbuiltins.print(${DataFrameLoading.DataFrameInfoFunc}(${expression}))`,
+                  {
+                      traceErrors: true,
+                      traceErrorsMessage: 'Failure in execute_request for getDataFrameInfo',
+                      telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+                  }
+              )
             : [];
 
         const fileName = path.basename(
@@ -88,14 +88,14 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         // Then execute a call to get the rows and turn it into JSON
         const results = kernel.session
             ? await executeSilently(
-                kernel.session,
-                `import builtins\nbuiltins.print(${DataFrameLoading.DataFrameRowFunc}(${expression}, ${start}, ${end}))`,
-                {
-                    traceErrors: true,
-                    traceErrorsMessage: 'Failure in execute_request for getDataFrameRows',
-                    telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-                }
-            )
+                  kernel.session,
+                  `import builtins\nbuiltins.print(${DataFrameLoading.DataFrameRowFunc}(${expression}, ${start}, ${end}))`,
+                  {
+                      traceErrors: true,
+                      traceErrorsMessage: 'Failure in execute_request for getDataFrameRows',
+                      telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+                  }
+              )
             : [];
 
         return parseDataFrame(this.deserializeJupyterResult<DataFrameSplitFormat>(results));
@@ -121,14 +121,14 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
                     '[' + attributeNames.reduce((accumulator, currVal) => accumulator + `"${currVal}", `, '') + ']';
                 const attributes = kernel.session
                     ? await executeSilently(
-                        kernel.session,
-                        `import builtins\nbuiltins.print(${GetVariableInfo.VariablePropertiesFunc}(${matchingVariable.name}, ${stringifiedAttributeNameList}))`,
-                        {
-                            traceErrors: true,
-                            traceErrorsMessage: 'Failure in execute_request for getVariableProperties',
-                            telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-                        }
-                    )
+                          kernel.session,
+                          `import builtins\nbuiltins.print(${GetVariableInfo.VariablePropertiesFunc}(${matchingVariable.name}, ${stringifiedAttributeNameList}))`,
+                          {
+                              traceErrors: true,
+                              traceErrorsMessage: 'Failure in execute_request for getVariableProperties',
+                              telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+                          }
+                      )
                     : [];
                 result = { ...result, ...this.deserializeJupyterResult(attributes) };
             } else {
@@ -149,14 +149,14 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             // VariableTypesFunc takes in list of vars and the corresponding var names
             const results = kernel.session
                 ? await executeSilently(
-                    kernel.session,
-                    `import builtins\n_rwho_ls = %who_ls\nbuiltins.print(${GetVariableInfo.VariableTypesFunc}(_rwho_ls))`,
-                    {
-                        traceErrors: true,
-                        traceErrorsMessage: 'Failure in execute_request for getVariableNamesAndTypesFromKernel',
-                        telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-                    }
-                )
+                      kernel.session,
+                      `import builtins\n_rwho_ls = %who_ls\nbuiltins.print(${GetVariableInfo.VariableTypesFunc}(_rwho_ls))`,
+                      {
+                          traceErrors: true,
+                          traceErrorsMessage: 'Failure in execute_request for getVariableNamesAndTypesFromKernel',
+                          telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+                      }
+                  )
                 : [];
 
             if (kernel.disposed || kernel.disposing) {
@@ -195,14 +195,14 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         // Then execute a call to get the info and turn it into JSON
         const results = kernel.session
             ? await executeSilently(
-                kernel.session,
-                `import builtins\nbuiltins.print(${GetVariableInfo.VariableInfoFunc}(${targetVariable.name}))`,
-                {
-                    traceErrors: true,
-                    traceErrorsMessage: 'Failure in execute_request for getFullVariable',
-                    telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-                }
-            )
+                  kernel.session,
+                  `import builtins\nbuiltins.print(${GetVariableInfo.VariableInfoFunc}(${targetVariable.name}))`,
+                  {
+                      traceErrors: true,
+                      traceErrorsMessage: 'Failure in execute_request for getFullVariable',
+                      telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+                  }
+              )
             : [];
 
         // Combine with the original result (the call only returns the new fields)

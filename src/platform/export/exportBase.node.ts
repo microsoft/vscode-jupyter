@@ -19,7 +19,7 @@ export class ExportBase implements INbConvertExport {
         protected jupyterService: IJupyterSubCommandExecutionService,
         @inject(IFileSystemNode) protected readonly fs: IFileSystemNode,
         @inject(INotebookImporter) protected readonly importer: INotebookImporter
-    ) { }
+    ) {}
 
     public async export(
         _source: Uri,
@@ -27,7 +27,7 @@ export class ExportBase implements INbConvertExport {
         _interpreter: PythonEnvironment,
         _token: CancellationToken
         // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
-    ): Promise<void> { }
+    ): Promise<void> {}
 
     @reportAction(ReportableAction.PerformingExport)
     public async executeCommand(

@@ -27,7 +27,7 @@ class PythonEnvironment {
             exec(file: string, args: string[]): Promise<ExecutionResult<string>>;
             shellExec(command: string, timeout: number): Promise<ExecutionResult<string>>;
         }
-    ) { }
+    ) {}
 
     public getExecutionInfo(pythonArgs: string[] = []): PythonExecInfo {
         const python = this.deps.getPythonArgv(this.interpreter.uri);

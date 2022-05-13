@@ -559,7 +559,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         if (
             interpreter.envType !== EnvironmentType.Conda &&
             cachedData.activationCommands.join(',').toLowerCase() !==
-            (activationCommandsForNonCondaEnvironments || []).join(',').toLowerCase()
+                (activationCommandsForNonCondaEnvironments || []).join(',').toLowerCase()
         ) {
             return;
         }
@@ -677,7 +677,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             const jsonContents = await this.fs.readLocalFile(tmpFile.filePath);
             const envVars = await parse(jsonContents);
             traceInfo(
-                `Got activated conda env vars ourselves for ${getDisplayPath(interpreter.uri)} in ${stopWatch.elapsedTime
+                `Got activated conda env vars ourselves for ${getDisplayPath(interpreter.uri)} in ${
+                    stopWatch.elapsedTime
                 }`
             );
             return envVars;

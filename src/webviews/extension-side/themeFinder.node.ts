@@ -19,7 +19,10 @@ interface IThemeData {
 export class ThemeFinder implements IThemeFinder {
     private themeCache: { [key: string]: IThemeData | undefined } = {};
 
-    constructor(@inject(IExtensions) private extensions: IExtensions, @inject(IFileSystemNode) private fs: IFileSystemNode) { }
+    constructor(
+        @inject(IExtensions) private extensions: IExtensions,
+        @inject(IFileSystemNode) private fs: IFileSystemNode
+    ) {}
 
     public async findThemeRootJson(themeName: string): Promise<string | undefined> {
         // find our data

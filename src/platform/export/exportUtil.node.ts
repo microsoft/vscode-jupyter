@@ -10,7 +10,7 @@ import { sleep } from '../common/utils/async';
 
 @injectable()
 export class ExportUtil {
-    constructor(@inject(IFileSystemNode) private fs: IFileSystemNode) { }
+    constructor(@inject(IFileSystemNode) private fs: IFileSystemNode) {}
 
     public async generateTempDir(): Promise<TemporaryDirectory> {
         const resultDir = path.join(os.tmpdir(), uuid());

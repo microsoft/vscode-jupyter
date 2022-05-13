@@ -25,7 +25,7 @@ export class WorkspaceActivation implements IExtensionSingleActivationService {
         @inject(IFileSystemNode) private readonly fileSystem: IFileSystemNode,
         @inject(IActiveResourceService) private readonly activeResourceService: IActiveResourceService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
-    ) { }
+    ) {}
 
     public async activate(): Promise<void> {
         this.addHandlers();

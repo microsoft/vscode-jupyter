@@ -20,7 +20,7 @@ export class FileDownloader implements IFileDownloader {
         @inject(IHttpClient) private readonly httpClient: IHttpClient,
         @inject(IFileSystemNode) private readonly dsfs: IFileSystemNode,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell
-    ) { }
+    ) {}
     public async downloadFile(uri: string, options: DownloadOptions): Promise<string> {
         if (options.outputChannel) {
             options.outputChannel.appendLine(Http.downloadingFile().format(uri));

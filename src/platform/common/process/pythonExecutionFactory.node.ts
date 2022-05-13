@@ -95,7 +95,8 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
 
             if (isDaemonPoolCreationOption(options)) {
                 traceInfo(
-                    `Creating daemon pool for ${getDisplayPath(options.interpreter.uri)} with env variables count ${Object.keys(activatedEnvVars || {}).length
+                    `Creating daemon pool for ${getDisplayPath(options.interpreter.uri)} with env variables count ${
+                        Object.keys(activatedEnvVars || {}).length
                     }`
                 );
                 const daemon = new PythonDaemonExecutionServicePool(
@@ -111,7 +112,8 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                 return daemon as unknown as T;
             } else {
                 traceInfo(
-                    `Creating daemon process for ${getDisplayPath(options.interpreter.uri)} with env variables count ${Object.keys(activatedEnvVars || {}).length
+                    `Creating daemon process for ${getDisplayPath(options.interpreter.uri)} with env variables count ${
+                        Object.keys(activatedEnvVars || {}).length
                     }`
                 );
                 const factory = new PythonDaemonFactory(

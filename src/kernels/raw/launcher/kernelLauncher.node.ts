@@ -58,7 +58,7 @@ export class KernelLauncher implements IKernelLauncher {
         @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths
-    ) { }
+    ) {}
 
     public static async cleanupStartPort() {
         try {

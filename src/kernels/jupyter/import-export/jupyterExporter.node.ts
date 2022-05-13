@@ -33,7 +33,7 @@ export class JupyterExporter implements INotebookExporter {
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(INotebookEditorProvider) protected ipynbProvider: INotebookEditorProvider,
         @inject(IDataScienceErrorHandler) protected errorHandler: IDataScienceErrorHandler
-    ) { }
+    ) {}
 
     public dispose() {
         // Do nothing

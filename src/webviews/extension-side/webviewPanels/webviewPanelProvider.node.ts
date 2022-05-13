@@ -15,7 +15,7 @@ export class WebviewPanelProvider implements IWebviewPanelProvider {
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
         @inject(IExtensionContext) private readonly context: IExtensionContext
-    ) { }
+    ) {}
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public async create(options: IWebviewPanelOptions): Promise<IWebviewPanel> {

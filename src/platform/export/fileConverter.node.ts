@@ -33,7 +33,7 @@ export class FileConverter implements IFileConverter {
         @inject(ExportInterpreterFinder) private exportInterpreterFinder: ExportInterpreterFinder,
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService
-    ) { }
+    ) {}
 
     // Import a notebook file on disk to a .py file
     public async importIpynb(source: Uri): Promise<void> {

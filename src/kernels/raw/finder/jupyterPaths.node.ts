@@ -172,8 +172,8 @@ export class JupyterPaths {
                 }
                 const jupyterPathVars = vars.JUPYTER_PATH
                     ? vars.JUPYTER_PATH.split(path.delimiter).map((jupyterPath) => {
-                        return path.join(jupyterPath, 'kernels');
-                    })
+                          return path.join(jupyterPath, 'kernels');
+                      })
                     : [];
 
                 if (jupyterPathVars.length > 0) {
