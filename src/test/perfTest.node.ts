@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { spawn } from 'child_process';
-import glob from 'glob';
+import * as glob from 'glob';
 import * as path from '../platform/vscode-path/path';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants.node';
 
@@ -19,9 +19,14 @@ class TestRunner {
         });
 
         // warm up with a basic notebook operation before running the tests
+        console.log(`Launching warmup test for initial VS Code startup`);
         await this.launchTest('notebookCellExecution.perf.test', true);
 
-        testFiles.forEach((file) => this.launchTest(file));
+        testFiles.forEach(async (file) => {
+            const fileName = path.basename(file, '.js');
+            console.log(`Launching test for file: ${fileName}`);
+            await this.launchTest(fileName);
+        });
     }
 
     private async launchTest(testFile: string, warmupRun?: boolean) {
@@ -56,7 +61,7 @@ class TestRunner {
 }
 
 new TestRunner().start().catch((ex) => {
-    console.error('Error in running Smoke Tests', ex);
+    console.error('Error in running Perf Tests', ex);
     // Exit with non zero exit code, so CI fails.
     process.exit(1);
 });
