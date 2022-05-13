@@ -59,6 +59,10 @@ export function KernelSocketWrapper<T extends ClassType<IWebSocketLike>>(SuperCl
             this.sendHooks = [];
         }
 
+        protected patchSuperEmit(patch: (event: string | symbol, ...args: any[]) => boolean) {
+            super.emit = patch;
+        }
+
         public sendToRealKernel(data: any, a2: any) {
             // This will skip the send hooks. It's coming from
             // the UI side.
@@ -80,7 +84,11 @@ export function KernelSocketWrapper<T extends ClassType<IWebSocketLike>>(SuperCl
             }
         }
 
-        public override emit(event: string | symbol, ...args: any[]): boolean {
+        protected handleEvent(
+            superHandler: (event: string | symbol, ...args: any[]) => boolean,
+            event: string | symbol,
+            ...args: any[]
+        ): boolean {
             if (event === 'message' && this.receiveHooks.length) {
                 // Stick the receive hooks into the message chain. We use chain
                 // to ensure that:
@@ -89,12 +97,16 @@ export function KernelSocketWrapper<T extends ClassType<IWebSocketLike>>(SuperCl
                 // c) Next message happens after this one (so this side can handle the message before another event goes through)
                 this.msgChain = this.msgChain
                     .then(() => Promise.all(this.receiveHooks.map((p) => p(args[0]))))
-                    .then(() => super.emit(event, ...args));
+                    .then(() => superHandler(event, ...args));
                 // True value indicates there were handlers. We definitely have 'message' handlers.
                 return true;
             } else {
-                return super.emit(event, ...args);
+                return superHandler(event, ...args);
             }
+        }
+
+        public override emit(event: string | symbol, ...args: any[]): boolean {
+            return this.handleEvent((ev, args) => super.emit(ev, args), event, args);
         }
 
         public addReceiveHook(hook: (data: WebSocketWS.Data) => Promise<void>) {
