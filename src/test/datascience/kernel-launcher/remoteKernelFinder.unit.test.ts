@@ -29,7 +29,7 @@ import { KernelFinder } from '../../../kernels/kernelFinder.node';
 import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { LocalKernelFinder } from '../../../kernels/raw/finder/localKernelFinder.node';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { takeTopRankKernel } from './localKernelFinder.unit.test';
@@ -41,7 +41,7 @@ suite(`Remote Kernel Finder`, () => {
     let remoteKernelFinder: IRemoteKernelFinder;
     let localKernelFinder: ILocalKernelFinder;
     let kernelFinder: IKernelFinder;
-    let fs: IFileSystem;
+    let fs: IFileSystemNode;
     let memento: MockMemento;
     let jupyterSessionManager: IJupyterSessionManager;
     const dummyEvent = new EventEmitter<number>();

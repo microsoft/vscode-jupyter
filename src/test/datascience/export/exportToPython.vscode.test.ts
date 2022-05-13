@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import * as path from '../../../platform/vscode-path/path';
 import { CancellationTokenSource, Uri } from 'vscode';
 import { IDocumentManager } from '../../../platform/common/application/types';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { ExportInterpreterFinder } from '../../../platform/export/exportInterpreterFinder.node';
 import { INbConvertExport, ExportFormat } from '../../../platform/export/types';
 import { IExtensionTestApi } from '../../common.node';
@@ -22,7 +22,7 @@ suite('DataScience - Export Python', function () {
     teardown(closeActiveWindows);
     suiteTeardown(closeActiveWindows);
     test('Export To Python', async () => {
-        const fileSystem = api.serviceContainer.get<IFileSystem>(IFileSystem);
+        const fileSystem = api.serviceContainer.get<IFileSystemNode>(IFileSystemNode);
         const exportToPython = api.serviceContainer.get<INbConvertExport>(INbConvertExport, ExportFormat.python);
         const target = Uri.file((await fileSystem.createTemporaryLocalFile('.py')).filePath);
         const token = new CancellationTokenSource();

@@ -16,7 +16,7 @@ import {
 } from '../../platform/common/process/types.node';
 import { anything, capture, instance, mock, when } from 'ts-mockito';
 import { LocalKernelSpecConnectionMetadata } from '../../kernels/types';
-import { IFileSystem } from '../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { noop } from '../core';
 import { EventEmitter } from 'events';
@@ -63,7 +63,7 @@ suite('DataScience - Kernel Process', () => {
     function launchKernel(metadata: LocalKernelSpecConnectionMetadata, connectionFile: string) {
         const processExecutionFactory = mock<IProcessServiceFactory>();
         const connection = mock<IKernelConnection>();
-        const fs = mock<IFileSystem>();
+        const fs = mock<IFileSystemNode>();
         const extensionChecker = mock<IPythonExtensionChecker>();
         const kernelEnvVarsService = mock<KernelEnvironmentVariablesService>();
         processService = mock<IProcessService>();

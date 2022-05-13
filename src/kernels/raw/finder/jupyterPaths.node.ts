@@ -7,7 +7,7 @@ import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken, Memento, Uri } from 'vscode';
 import { IPlatformService } from '../../../platform/common/platform/types';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { traceError } from '../../../platform/logging';
 import { IDisposableRegistry, IMemento, GLOBAL_MEMENTO, IExtensionContext } from '../../../platform/common/types';
 import { tryGetRealPath } from '../../../platform/common/utils.node';
@@ -36,7 +36,7 @@ export class JupyterPaths {
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
         @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {
         this.envVarsProvider.onDidEnvironmentVariablesChange(
@@ -172,8 +172,8 @@ export class JupyterPaths {
                 }
                 const jupyterPathVars = vars.JUPYTER_PATH
                     ? vars.JUPYTER_PATH.split(path.delimiter).map((jupyterPath) => {
-                          return path.join(jupyterPath, 'kernels');
-                      })
+                        return path.join(jupyterPath, 'kernels');
+                    })
                     : [];
 
                 if (jupyterPathVars.length > 0) {

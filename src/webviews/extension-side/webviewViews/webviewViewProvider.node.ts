@@ -3,7 +3,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { IWebviewViewProvider, IWebviewViewOptions, IWebviewView } from '../../../platform/common/application/types';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import { WebviewView } from './webviewView.node';
 
@@ -11,8 +11,8 @@ import { WebviewView } from './webviewView.node';
 export class WebviewViewProvider implements IWebviewViewProvider {
     constructor(
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
-        @inject(IFileSystem) private readonly fs: IFileSystem
-    ) {}
+        @inject(IFileSystemNode) private readonly fs: IFileSystemNode
+    ) { }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public async create(options: IWebviewViewOptions): Promise<IWebviewView> {

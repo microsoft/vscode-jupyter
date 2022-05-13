@@ -6,7 +6,7 @@
 import * as path from '../../platform/vscode-path/path';
 import { Uri } from 'vscode';
 import { traceError } from '../../platform/logging';
-import { IFileSystem } from '../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { IPythonExecutionFactory } from '../../platform/common/process/types.node';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
@@ -31,10 +31,10 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
     constructor(
         private readonly kernel: IKernel,
         private readonly localResourceUriConverter: ILocalResourceUriConverter,
-        private readonly fs: IFileSystem,
+        private readonly fs: IFileSystemNode,
         private readonly interpreterService: IInterpreterService,
         private readonly factory: IPythonExecutionFactory
-    ) {}
+    ) { }
     public async getWidgetScriptSource(moduleName: string): Promise<Readonly<WidgetScriptSource>> {
         const sources = await this.getWidgetScriptSources();
         const found = sources.find((item) => item.moduleName.toLowerCase() === moduleName.toLowerCase());

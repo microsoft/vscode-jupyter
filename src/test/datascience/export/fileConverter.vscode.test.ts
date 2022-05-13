@@ -8,7 +8,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as sinon from 'sinon';
 import { Uri } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import {
     IConfigurationService,
     IDisposable,
@@ -28,7 +28,7 @@ suite('DataScience - File Converter', () => {
     let exportHtml: INbConvertExport;
     let exportPdf: INbConvertExport;
     let exportPythonPlain: IExport;
-    let fileSystem: IFileSystem;
+    let fileSystem: IFileSystemNode;
     let exportUtil: ExportUtil;
     let filePicker: IExportDialog;
     let appShell: IApplicationShell;
@@ -41,7 +41,7 @@ suite('DataScience - File Converter', () => {
         exportUtil = mock<ExportUtil>();
         const reporter = mock(ProgressReporter);
         filePicker = mock<IExportDialog>();
-        fileSystem = mock<IFileSystem>();
+        fileSystem = mock<IFileSystemNode>();
         exportPython = mock<INbConvertExport>();
         exportHtml = mock<INbConvertExport>();
         exportPdf = mock<INbConvertExport>();
@@ -61,10 +61,10 @@ suite('DataScience - File Converter', () => {
         // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
         when(appShell.showErrorMessage(anything())).thenResolve();
         // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
-        when(exportUtil.generateTempDir()).thenResolve({ path: 'test', dispose: () => {} });
+        when(exportUtil.generateTempDir()).thenResolve({ path: 'test', dispose: () => { } });
         when(exportUtil.makeFileInDirectory(anything(), anything(), anything())).thenResolve('foo');
         // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
-        when(fileSystem.createTemporaryLocalFile(anything())).thenResolve({ filePath: 'test', dispose: () => {} });
+        when(fileSystem.createTemporaryLocalFile(anything())).thenResolve({ filePath: 'test', dispose: () => { } });
         when(exportPdf.export(anything(), anything(), anything(), anything())).thenResolve();
         when(exportPythonPlain.export(anything(), anything(), anything())).thenResolve();
         when(filePicker.showDialog(anything(), anything())).thenResolve(Uri.file('foo'));

@@ -8,14 +8,14 @@ import { traceError } from '../../logging';
 import { createDirNotEmptyError, isFileNotFoundError } from './errors.node';
 import { convertFileType, convertStat, getHashString } from './fileSystemUtils.node';
 import { TemporaryFile } from './types';
-import { FileType } from './types.node';
+import { FileType, IFileSystemNode } from './types.node';
 import { FileSystem as FileSystemBase } from './fileSystem';
 
 /**
  * File system abstraction which wraps the VS Code API.
  */
 @injectable()
-export class FileSystem extends FileSystemBase {
+export class FileSystem extends FileSystemBase implements IFileSystemNode {
     private globFiles: (pat: string, options?: { cwd: string; dot?: boolean }) => Promise<string[]>;
     constructor() {
         super();
@@ -30,7 +30,7 @@ export class FileSystem extends FileSystemBase {
         return fs.createWriteStream(path);
     }
 
-    public override async createTemporaryLocalFile(
+    public async createTemporaryLocalFile(
         options: string | { fileExtension: string; prefix: string }
     ): Promise<TemporaryFile> {
         const suffix = typeof options === 'string' ? options : options.fileExtension;
@@ -52,7 +52,7 @@ export class FileSystem extends FileSystemBase {
         });
     }
 
-    public override async deleteLocalDirectory(dirname: string) {
+    public async deleteLocalDirectory(dirname: string) {
         const uri = vscode.Uri.file(dirname);
         // The "recursive" option disallows directories, even if they
         // are empty.  So we have to deal with this ourselves.
@@ -66,7 +66,7 @@ export class FileSystem extends FileSystemBase {
         });
     }
 
-    public override async ensureLocalDir(path: string): Promise<void> {
+    public async ensureLocalDir(path: string): Promise<void> {
         return fs.ensureDir(path);
     }
 
@@ -77,15 +77,15 @@ export class FileSystem extends FileSystemBase {
         return getHashString(data);
     }
 
-    public override async localDirectoryExists(dirname: string): Promise<boolean> {
+    public async localDirectoryExists(dirname: string): Promise<boolean> {
         return this.localPathExists(dirname, FileType.Directory);
     }
 
-    public override async localFileExists(filename: string): Promise<boolean> {
+    public async localFileExists(filename: string): Promise<boolean> {
         return this.localPathExists(filename, FileType.File);
     }
 
-    public override async searchLocal(globPattern: string, cwd?: string, dot?: boolean): Promise<string[]> {
+    public async searchLocal(globPattern: string, cwd?: string, dot?: boolean): Promise<string[]> {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let options: any;
         if (cwd) {

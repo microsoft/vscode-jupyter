@@ -9,7 +9,7 @@ import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import {
     createCondaEnv,
     createPythonEnv,
@@ -22,12 +22,12 @@ use(chaiAsPromised);
 
 suite('PythonEnvironment', () => {
     let processService: TypeMoq.IMock<IProcessService>;
-    let fileSystem: TypeMoq.IMock<IFileSystem>;
+    let fileSystem: TypeMoq.IMock<IFileSystemNode>;
     const pythonPath = Uri.file('path/to/python');
 
     setup(() => {
         processService = TypeMoq.Mock.ofType<IProcessService>(undefined, TypeMoq.MockBehavior.Strict);
-        fileSystem = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
+        fileSystem = TypeMoq.Mock.ofType<IFileSystemNode>(undefined, TypeMoq.MockBehavior.Strict);
     });
 
     test('getInterpreterInformation should return an object if the python path is valid', async () => {
@@ -231,14 +231,14 @@ suite('PythonEnvironment', () => {
 
 suite('CondaEnvironment', () => {
     let processService: TypeMoq.IMock<IProcessService>;
-    let fileSystem: TypeMoq.IMock<IFileSystem>;
+    let fileSystem: TypeMoq.IMock<IFileSystemNode>;
     const args = ['-a', 'b', '-c'];
     const pythonPath = Uri.file('path/to/python');
     const condaFile = 'path/to/conda';
 
     setup(() => {
         processService = TypeMoq.Mock.ofType<IProcessService>(undefined, TypeMoq.MockBehavior.Strict);
-        fileSystem = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
+        fileSystem = TypeMoq.Mock.ofType<IFileSystemNode>(undefined, TypeMoq.MockBehavior.Strict);
     });
 
     test('getExecutionInfo with a named environment should return execution info using the environment name', () => {

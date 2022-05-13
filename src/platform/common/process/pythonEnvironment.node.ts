@@ -1,7 +1,7 @@
-import { IFileSystem } from '../platform/types.node';
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IFileSystemNode } from '../platform/types.node';
 import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
 import { InterpreterInformation } from '../../pythonEnvironments/info';
 import { getExecutablePath } from '../../pythonEnvironments/info/executable.node';
@@ -27,7 +27,7 @@ class PythonEnvironment {
             exec(file: string, args: string[]): Promise<ExecutionResult<string>>;
             shellExec(command: string, timeout: number): Promise<ExecutionResult<string>>;
         }
-    ) {}
+    ) { }
 
     public getExecutionInfo(pythonArgs: string[] = []): PythonExecInfo {
         const python = this.deps.getPythonArgv(this.interpreter.uri);
@@ -98,7 +98,7 @@ export function createPythonEnv(
     interpreter: PyEnv,
     // These are used to generate the deps.
     procs: IProcessService,
-    fs: IFileSystem
+    fs: IFileSystemNode
 ): PythonEnvironment {
     const deps = createDeps(
         async (filename: Uri) => fs.localFileExists(getFilePath(filename)),
@@ -127,7 +127,7 @@ export function createCondaEnv(
     interpreter: PyEnv,
     // These are used to generate the deps.
     procs: IProcessService,
-    fs: IFileSystem
+    fs: IFileSystemNode
 ): PythonEnvironment {
     const runArgs = ['run'];
     if (condaInfo.name === '') {

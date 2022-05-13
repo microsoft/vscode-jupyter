@@ -14,7 +14,7 @@ import { ExportInterpreterFinder } from './exportInterpreterFinder.node';
 import { ExportUtil } from './exportUtil.node';
 import { ExportFormat, INbConvertExport, IExportDialog, IFileConverter, IExport } from './types';
 import { Telemetry } from '../common/constants';
-import { IFileSystem } from '../common/platform/types.node';
+import { IFileSystemNode } from '../common/platform/types.node';
 
 // Class is responsible for file conversions (ipynb, py, pdf, html) and managing nb convert for some of those conversions
 @injectable()
@@ -24,7 +24,7 @@ export class FileConverter implements IFileConverter {
         @inject(INbConvertExport) @named(ExportFormat.html) private readonly exportToHTML: INbConvertExport,
         @inject(INbConvertExport) @named(ExportFormat.python) private readonly exportToPython: INbConvertExport,
         @inject(IExport) @named(ExportFormat.python) private readonly exportToPythonPlain: IExport,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
         @inject(IExportDialog) private readonly filePicker: IExportDialog,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(ExportUtil) private readonly exportUtil: ExportUtil,
@@ -33,7 +33,7 @@ export class FileConverter implements IFileConverter {
         @inject(ExportInterpreterFinder) private exportInterpreterFinder: ExportInterpreterFinder,
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService
-    ) {}
+    ) { }
 
     // Import a notebook file on disk to a .py file
     public async importIpynb(source: Uri): Promise<void> {

@@ -8,13 +8,13 @@ import * as path from '../../../platform/vscode-path/path';
 import { Event, Extension, extensions, Uri } from 'vscode';
 import { IExtensions } from '../types';
 import { DataScience } from '../utils/localize';
-import { IFileSystem } from '../platform/types.node';
+import { IFileSystemNode } from '../platform/types.node';
 import * as stacktrace from 'stack-trace';
 import { EXTENSION_ROOT_DIR } from '../../constants.node';
 
 @injectable()
 export class Extensions implements IExtensions {
-    constructor(@inject(IFileSystem) private readonly fs: IFileSystem) {}
+    constructor(@inject(IFileSystemNode) private readonly fs: IFileSystemNode) { }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public get all(): readonly Extension<any>[] {
         return extensions.all;

@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import { anything, instance, mock, when, verify, capture } from 'ts-mockito';
 import { FileSystem } from '../../../../platform/common/platform/fileSystem.node';
-import { IFileSystem } from '../../../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../../../platform/common/platform/types.node';
 import { KernelDependencyService } from '../../../../platform/../kernels/kernelDependencyService.node';
 import { IKernelDependencyService, LocalKernelConnectionMetadata } from '../../../../platform/../kernels/types';
 import { IEnvironmentActivationService } from '../../../../platform/interpreter/activation/types';
@@ -25,7 +25,7 @@ import { getOSType, OSType } from '../../../../platform/common/utils/platform';
 suite('DataScience - JupyterKernelService', () => {
     let kernelService: JupyterKernelService;
     let kernelDependencyService: IKernelDependencyService;
-    let fs: IFileSystem;
+    let fs: IFileSystemNode;
     let appEnv: IEnvironmentActivationService;
     let testWorkspaceFolder: Uri;
     const pathVariable = getOSType() === OSType.Windows ? 'PATH' : 'Path';

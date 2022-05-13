@@ -59,14 +59,16 @@ import { ApplicationShell } from './common/application/applicationShell';
 import { CommandManager } from './common/application/commandManager';
 import { ICommandManager, IWorkspaceService, IApplicationShell } from './common/application/types';
 import { ConfigurationService } from './common/configuration/service.node';
-import { IFileSystem } from './common/platform/types.node';
+import { IFileSystem, IFileSystemNode } from './common/platform/types.node';
 import { FileSystem } from './common/platform/fileSystem.node';
 import { WorkspaceService } from './common/application/workspace.node';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from '../webviews/extension-side/renderer';
 import { OutputCommandListener } from './logging/outputCommandListener';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
-    serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
+    serviceManager.addSingleton<FileSystem>(FileSystem, FileSystem);
+    serviceManager.addBinding(FileSystem, IFileSystemNode);
+    serviceManager.addBinding(FileSystem, IFileSystem);
     serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
     serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
     serviceManager.addSingleton<IApplicationShell>(IApplicationShell, ApplicationShell);

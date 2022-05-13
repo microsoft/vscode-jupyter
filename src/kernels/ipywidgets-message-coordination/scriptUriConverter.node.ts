@@ -2,8 +2,7 @@ import { EventEmitter, Event, Uri } from 'vscode';
 import { ILocalResourceUriConverter } from './types';
 import * as path from '../../platform/vscode-path/path';
 import { inject, injectable } from 'inversify';
-import { IFileSystem } from '../../platform/common/platform/types.node';
-import { FileSystem } from '../../platform/common/platform/fileSystem.node';
+import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { IExtensionContext } from '../../platform/common/types';
 import { getOSType, OSType } from '../../platform/common/utils/platform';
 import { sha256 } from 'hash.js';
@@ -83,7 +82,7 @@ export class ScriptUriConverter implements ILocalResourceUriConverter {
     }
 
     constructor(
-        @inject(IFileSystem) private readonly fs: FileSystem,
+        @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
         @inject(IExtensionContext) extensionContext: IExtensionContext
     ) {
         this._rootScriptFolder = path.join(extensionContext.extensionPath, 'tmp', 'scripts');

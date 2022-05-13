@@ -14,7 +14,7 @@ import {
 } from 'vscode';
 import { IWebview, IWebviewOptions, WebviewMessage } from '../../../platform/common/application/types';
 import { traceError } from '../../../platform/logging';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import * as localize from '../../../platform/common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
@@ -30,7 +30,7 @@ export abstract class Webview implements IWebview {
     protected loadPromise: Promise<void>;
 
     constructor(
-        protected fs: IFileSystem,
+        protected fs: IFileSystemNode,
         protected disposableRegistry: IDisposableRegistry,
         protected options: IWebviewOptions,
         additionalRootPaths: Uri[] = []
@@ -109,11 +109,9 @@ export abstract class Webview implements IWebview {
             <head>
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
-                <meta http-equiv="Content-Security-Policy" content="img-src 'self' data: https: http: blob: ${
-                    this.webviewHost.webview.cspSource
-                }; default-src 'unsafe-inline' 'unsafe-eval' data: https: http: blob: ${
-            this.webviewHost.webview.cspSource
-        };">
+                <meta http-equiv="Content-Security-Policy" content="img-src 'self' data: https: http: blob: ${this.webviewHost.webview.cspSource
+            }; default-src 'unsafe-inline' 'unsafe-eval' data: https: http: blob: ${this.webviewHost.webview.cspSource
+            };">
                 <meta name="theme-color" content="#000000">
                 <meta name="theme" content="${Identifiers.GeneratedThemeName}"/>
                 <title>VS Code Python React UI</title>

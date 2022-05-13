@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
 import { Uri } from 'vscode';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IDisposableRegistry, IExtensionContext } from '../../../platform/common/types';
 import { IWebviewPanel, IWebviewPanelOptions, IWebviewPanelProvider } from '../../../platform/common/application/types';
 import { WebviewPanel } from './webviewPanel.node';
@@ -13,9 +13,9 @@ import { WebviewPanel } from './webviewPanel.node';
 export class WebviewPanelProvider implements IWebviewPanelProvider {
     constructor(
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
         @inject(IExtensionContext) private readonly context: IExtensionContext
-    ) {}
+    ) { }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public async create(options: IWebviewPanelOptions): Promise<IWebviewPanel> {

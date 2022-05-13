@@ -10,7 +10,7 @@ import { EventName } from '../../../telemetry/constants';
 import { IWorkspaceService } from '../application/types';
 import { ignoreLogging, traceDecoratorVerbose, traceError, traceInfo } from '../../logging';
 import { getDisplayPath } from '../platform/fs-paths';
-import { IFileSystem } from '../platform/types.node';
+import { IFileSystemNode } from '../platform/types.node';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../types';
 import { ProcessService } from './proc.node';
 import { PythonDaemonFactory } from './pythonDaemonFactory.node';
@@ -40,7 +40,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     private readonly daemonsPerPythonService = new Map<string, Promise<IPythonDaemonExecutionService>>();
     private readonly disposables: IDisposableRegistry;
     private readonly logger: IProcessLogger;
-    private readonly fileSystem: IFileSystem;
+    private readonly fileSystem: IFileSystemNode;
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
@@ -53,7 +53,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         // Acquire other objects here so that if we are called during dispose they are available.
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.logger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
-        this.fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
+        this.fileSystem = this.serviceContainer.get<IFileSystemNode>(IFileSystemNode);
     }
     @traceDecoratorVerbose('Creating execution process')
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
@@ -95,8 +95,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
 
             if (isDaemonPoolCreationOption(options)) {
                 traceInfo(
-                    `Creating daemon pool for ${getDisplayPath(options.interpreter.uri)} with env variables count ${
-                        Object.keys(activatedEnvVars || {}).length
+                    `Creating daemon pool for ${getDisplayPath(options.interpreter.uri)} with env variables count ${Object.keys(activatedEnvVars || {}).length
                     }`
                 );
                 const daemon = new PythonDaemonExecutionServicePool(
@@ -112,8 +111,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                 return daemon as unknown as T;
             } else {
                 traceInfo(
-                    `Creating daemon process for ${getDisplayPath(options.interpreter.uri)} with env variables count ${
-                        Object.keys(activatedEnvVars || {}).length
+                    `Creating daemon process for ${getDisplayPath(options.interpreter.uri)} with env variables count ${Object.keys(activatedEnvVars || {}).length
                     }`
                 );
                 const factory = new PythonDaemonFactory(
@@ -179,7 +177,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
 function createPythonService(
     interpreter: PythonEnvironment,
     procService: IProcessService,
-    fs: IFileSystem,
+    fs: IFileSystemNode,
     conda?: [
         string,
         {

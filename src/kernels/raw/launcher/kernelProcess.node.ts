@@ -36,7 +36,7 @@ import {
     traceDecoratorVerbose,
     ignoreLogging
 } from '../../../platform/logging';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import {
     IProcessServiceFactory,
     IPythonExecutionFactory,
@@ -94,7 +94,7 @@ export class KernelProcess implements IKernelProcess {
         private readonly processExecutionFactory: IProcessServiceFactory,
         private readonly _connection: IKernelConnection,
         kernelConnectionMetadata: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
-        private readonly fileSystem: IFileSystem,
+        private readonly fileSystem: IFileSystemNode,
         private readonly resource: Resource,
         private readonly extensionChecker: IPythonExtensionChecker,
         private readonly kernelEnvVarsService: KernelEnvironmentVariablesService,

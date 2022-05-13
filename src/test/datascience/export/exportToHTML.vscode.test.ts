@@ -5,7 +5,7 @@
 import { assert } from 'chai';
 import * as path from '../../../platform/vscode-path/path';
 import { CancellationTokenSource, Uri } from 'vscode';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { ExportInterpreterFinder } from '../../../platform/export/exportInterpreterFinder.node';
 import { INbConvertExport, ExportFormat } from '../../../platform/export/types';
 import { IExtensionTestApi } from '../../common.node';
@@ -21,7 +21,7 @@ suite('DataScience - Export HTML', function () {
     teardown(closeActiveWindows);
     suiteTeardown(closeActiveWindows);
     test('Export To HTML', async () => {
-        const fileSystem = api.serviceContainer.get<IFileSystem>(IFileSystem);
+        const fileSystem = api.serviceContainer.get<IFileSystemNode>(IFileSystemNode);
         const exportToHTML = api.serviceContainer.get<INbConvertExport>(INbConvertExport, ExportFormat.html);
         const exportInterpreterFinder = api.serviceContainer.get<ExportInterpreterFinder>(ExportInterpreterFinder);
         const file = await fileSystem.createTemporaryLocalFile('.html');

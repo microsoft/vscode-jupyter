@@ -23,7 +23,7 @@ export class PlotSaveHandler {
         @inject(IApplicationShell) private readonly shell: IApplicationShell,
         @inject(IFileSystem) private readonly fs: FileSystem,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
-    ) {}
+    ) { }
 
     public async savePlot(notebook: NotebookDocument, outputId: string, mimeType: string) {
         if (notebook.isClosed) {

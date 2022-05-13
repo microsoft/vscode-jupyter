@@ -9,7 +9,7 @@ import * as requestTypes from 'request';
 import { Progress } from 'vscode';
 import { IApplicationShell } from '../application/types';
 import { Octicons } from '../constants';
-import { IFileSystem } from '../platform/types.node';
+import { IFileSystemNode } from '../platform/types.node';
 import { DownloadOptions, IFileDownloader, IHttpClient } from '../types';
 import { Http } from '../utils/localize';
 import { noop } from '../utils/misc';
@@ -18,9 +18,9 @@ import { noop } from '../utils/misc';
 export class FileDownloader implements IFileDownloader {
     constructor(
         @inject(IHttpClient) private readonly httpClient: IHttpClient,
-        @inject(IFileSystem) private readonly dsfs: IFileSystem,
+        @inject(IFileSystemNode) private readonly dsfs: IFileSystemNode,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell
-    ) {}
+    ) { }
     public async downloadFile(uri: string, options: DownloadOptions): Promise<string> {
         if (options.outputChannel) {
             options.outputChannel.appendLine(Http.downloadingFile().format(uri));

@@ -3,6 +3,7 @@
 
 import * as fs from 'fs';
 import * as vscode from 'vscode';
+import { IFileSystem, TemporaryFile } from './types';
 export { IFileSystem } from './types';
 
 //===========================
@@ -63,4 +64,17 @@ export interface IRawFileSystem {
     createReadStream(filename: string): ReadStream;
     // Create a streaming wrappr around an open file (for writing).
     createWriteStream(filename: string): WriteStream;
+}
+
+export const IFileSystemNode = Symbol('IFileSystemNode');
+export interface IFileSystemNode extends IFileSystem {
+    appendLocalFile(path: string, text: string): Promise<void>;
+    createTemporaryLocalFile(options: { fileExtension: string; prefix: string }): Promise<TemporaryFile>;
+    createTemporaryLocalFile(fileExtension: string): Promise<TemporaryFile>;
+    deleteLocalDirectory(dirname: string): Promise<void>;
+    ensureLocalDir(path: string): Promise<void>;
+    getFileHash(filename: string): Promise<string>;
+    localDirectoryExists(dirname: string): Promise<boolean>;
+    localFileExists(filename: string): Promise<boolean>;
+    searchLocal(globPattern: string, cwd?: string, dot?: boolean): Promise<string[]>;
 }

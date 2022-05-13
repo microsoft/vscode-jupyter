@@ -3,7 +3,7 @@
 
 import * as path from '../platform/vscode-path/path';
 import { setSharedProperty } from '.';
-import { IFileSystem } from '../platform/common/platform/types.node';
+import { IFileSystemNode } from '../platform/common/platform/types.node';
 import { EXTENSION_ROOT_DIR } from '../platform/constants.node';
 
 /**
@@ -13,7 +13,7 @@ import { EXTENSION_ROOT_DIR } from '../platform/constants.node';
  * case as 'MarketPlace'.
  *
  */
-export async function setExtensionInstallTelemetryProperties(fs: IFileSystem) {
+export async function setExtensionInstallTelemetryProperties(fs: IFileSystemNode) {
     // Look for PythonCodingPack file under `%USERPROFILE%/.vscode/extensions`
     // folder. If that file exists treat this extension as installed from coding
     // pack.

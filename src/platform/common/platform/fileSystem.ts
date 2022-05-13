@@ -6,7 +6,7 @@
 import { injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { arePathsSame } from './fileUtils';
-import { IFileSystem, TemporaryFile } from './types';
+import { IFileSystem } from './types';
 
 const ENCODING = 'utf8';
 
@@ -18,25 +18,6 @@ export class FileSystem implements IFileSystem {
     protected vscfs: vscode.FileSystem;
     constructor() {
         this.vscfs = vscode.workspace.fs;
-    }
-
-    createTemporaryLocalFile(options: { fileExtension: string; prefix: string }): Promise<TemporaryFile>;
-    createTemporaryLocalFile(fileExtension: string): Promise<TemporaryFile>;
-    createTemporaryLocalFile(_fileExtension: unknown): Promise<import('./types').TemporaryFile> {
-        throw new Error('Method not supported on Web.');
-    }
-
-    ensureLocalDir(_path: string): Promise<void> {
-        throw new Error('Method not supported on Web.');
-    }
-    localDirectoryExists(_dirname: string): Promise<boolean> {
-        throw new Error('Method not supported on Web.');
-    }
-    localFileExists(_filename: string): Promise<boolean> {
-        throw new Error('Method not supported on Web.');
-    }
-    searchLocal(_globPattern: string, _cwd?: string | undefined, _dot?: boolean | undefined): Promise<string[]> {
-        throw new Error('Method not supported on Web.');
     }
 
     // API based on VS Code fs API
@@ -55,20 +36,6 @@ export class FileSystem implements IFileSystem {
 
     async createLocalDirectory(path: string): Promise<void> {
         await this.createDirectory(vscode.Uri.file(path));
-    }
-
-    async deleteLocalDirectory(dirname: string) {
-        const uri = vscode.Uri.file(dirname);
-        // The "recursive" option disallows directories, even if they
-        // are empty.  So we have to deal with this ourselves.
-        const files = await this.vscfs.readDirectory(uri);
-        if (files && files.length > 0) {
-            throw new Error(`directory "${dirname}" not empty`);
-        }
-        return this.vscfs.delete(uri, {
-            recursive: true,
-            useTrash: false
-        });
     }
 
     async copyLocal(source: string, destination: string): Promise<void> {

@@ -4,7 +4,7 @@ import { sendActivationTelemetry } from '../../telemetry/envFileTelemetry.node';
 import { IPythonExtensionChecker } from '../api/types';
 import { IWorkspaceService, IActiveResourceService, IDocumentManager } from '../common/application/types';
 import { PYTHON_LANGUAGE } from '../common/constants';
-import { IFileSystem } from '../common/platform/types.node';
+import { IFileSystemNode } from '../common/platform/types.node';
 import { IDisposable, Resource } from '../common/types';
 import { Deferred } from '../common/utils/async';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -22,10 +22,10 @@ export class WorkspaceActivation implements IExtensionSingleActivationService {
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem,
+        @inject(IFileSystemNode) private readonly fileSystem: IFileSystemNode,
         @inject(IActiveResourceService) private readonly activeResourceService: IActiveResourceService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
-    ) {}
+    ) { }
 
     public async activate(): Promise<void> {
         this.addHandlers();

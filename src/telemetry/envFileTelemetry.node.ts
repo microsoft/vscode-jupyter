@@ -8,7 +8,7 @@ import { Resource } from '../platform/common/types';
 import { SystemVariables } from '../platform/common/variables/systemVariables.node';
 
 import { sendTelemetryEvent } from '.';
-import { IFileSystem } from '../platform/common/platform/types.node';
+import { IFileSystemNode } from '../platform/common/platform/types.node';
 import { EventName } from './constants';
 
 let _defaultEnvFileSetting: string | undefined;
@@ -27,7 +27,7 @@ export function sendFileCreationTelemetry() {
 }
 
 export async function sendActivationTelemetry(
-    fileSystem: IFileSystem,
+    fileSystem: IFileSystemNode,
     workspaceService: IWorkspaceService,
     resource: Resource
 ) {

@@ -3,7 +3,7 @@ import * as path from '../../platform/vscode-path/path';
 import { CancellationToken, Uri } from 'vscode';
 import { INotebookImporter } from '../../kernels/jupyter/types';
 import { IJupyterSubCommandExecutionService } from '../../kernels/jupyter/types.node';
-import { IFileSystem } from '../common/platform/types.node';
+import { IFileSystemNode } from '../common/platform/types.node';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../common/process/types.node';
 
 import { reportAction } from '../progress/decorator.node';
@@ -17,9 +17,9 @@ export class ExportBase implements INbConvertExport {
         @inject(IPythonExecutionFactory) protected readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IJupyterSubCommandExecutionService)
         protected jupyterService: IJupyterSubCommandExecutionService,
-        @inject(IFileSystem) protected readonly fs: IFileSystem,
+        @inject(IFileSystemNode) protected readonly fs: IFileSystemNode,
         @inject(INotebookImporter) protected readonly importer: INotebookImporter
-    ) {}
+    ) { }
 
     public async export(
         _source: Uri,
@@ -27,7 +27,7 @@ export class ExportBase implements INbConvertExport {
         _interpreter: PythonEnvironment,
         _token: CancellationToken
         // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
-    ): Promise<void> {}
+    ): Promise<void> { }
 
     @reportAction(ReportableAction.PerformingExport)
     public async executeCommand(

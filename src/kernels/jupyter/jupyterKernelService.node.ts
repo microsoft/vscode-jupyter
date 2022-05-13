@@ -19,7 +19,7 @@ import {
     traceDecoratorError
 } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
-import { IFileSystem } from '../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { Resource, ReadWrite, IDisplayOptions } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { IEnvironmentVariablesService } from '../../platform/common/variables/types';
@@ -51,11 +51,11 @@ import { IJupyterKernelService } from './types';
 export class JupyterKernelService implements IJupyterKernelService {
     constructor(
         @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
         @inject(IEnvironmentVariablesService) private readonly envVarsService: IEnvironmentVariablesService,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths
-    ) {}
+    ) { }
 
     /**
      * Makes sure that the kernel pointed to is a valid jupyter kernel (it registers it) and
