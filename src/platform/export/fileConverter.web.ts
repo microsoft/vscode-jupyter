@@ -66,6 +66,7 @@ export class FileConverter implements IFileConverter {
             await this.performPlainExport(format, sourceDocument, target, token);
             await this.exportFileOpener.openFile(format, target, true);
         } else {
+            throw new Error('Method not implemented.');
         }
     }
 
