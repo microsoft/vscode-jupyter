@@ -4,9 +4,9 @@
 import * as path from '../../platform/vscode-path/path';
 import { traceError } from '../../platform/logging';
 import { getEnvironmentVariable } from '../../platform/common/utils/platform.node';
-import { pathExists, readFile, arePathsSame } from '../../platform/common/platform/fileUtils.node';
+import { pathExists, readFile } from '../../platform/common/platform/fileUtils.node';
 import { Uri } from 'vscode';
-import { normCasePath } from '../../platform/common/platform/fileUtils';
+import { normCasePath, arePathsSame } from '../../platform/common/platform/fileUtils';
 
 function getSearchHeight() {
     // PIPENV_MAX_DEPTH tells pipenv the maximum number of directories to recursively search for
