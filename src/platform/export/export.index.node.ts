@@ -4,8 +4,8 @@
 'use strict';
 
 export * from './exportBase.node';
-export * from './exportDialog.node';
-export * from './exportFileOpener.node';
+export * from './exportDialog';
+export * from './exportFileOpener';
 export * from './exportInterpreterFinder.node';
 export * from './exportToHTML.node';
 export * from './exportToPDF.node';

@@ -9,7 +9,7 @@ import * as localize from '../common/utils/localize';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { ProgressReporter } from '../progress/progressReporter.node';
-import { ExportFileOpener } from './exportFileOpener.node';
+import { ExportFileOpener } from './exportFileOpener';
 import { ExportInterpreterFinder } from './exportInterpreterFinder.node';
 import { ExportUtil } from './exportUtil.node';
 import { ExportFormat, INbConvertExport, IExportDialog, IFileConverter, IExport } from './types';
