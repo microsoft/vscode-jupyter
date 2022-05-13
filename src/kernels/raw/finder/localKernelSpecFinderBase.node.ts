@@ -60,7 +60,7 @@ export abstract class LocalKernelSpecFinderBase {
         protected readonly workspaceService: IWorkspaceService,
         protected readonly extensionChecker: IPythonExtensionChecker,
         protected readonly globalState: Memento
-    ) { }
+    ) {}
 
     @testOnlyMethod()
     public clearCache() {
@@ -254,7 +254,8 @@ export async function loadKernelSpec(
     let kernelJson: ReadWrite<IJupyterKernelSpec>;
     try {
         traceVerbose(
-            `Loading kernelspec from ${getDisplayPath(specPath)} for ${interpreter?.uri ? getDisplayPath(interpreter.uri) : ''
+            `Loading kernelspec from ${getDisplayPath(specPath)} for ${
+                interpreter?.uri ? getDisplayPath(interpreter.uri) : ''
             }`
         );
         kernelJson = JSON.parse(await fs.readLocalFile(specPath.fsPath));

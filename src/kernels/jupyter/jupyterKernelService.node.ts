@@ -55,7 +55,7 @@ export class JupyterKernelService implements IJupyterKernelService {
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
         @inject(IEnvironmentVariablesService) private readonly envVarsService: IEnvironmentVariablesService,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths
-    ) { }
+    ) {}
 
     /**
      * Makes sure that the kernel pointed to is a valid jupyter kernel (it registers it) and
