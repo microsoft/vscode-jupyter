@@ -183,6 +183,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     }
 
     public async disconnect() {
+        await this.deleteDumpCells();
         await this.session.customRequest('disconnect', { restart: false });
         this.endSession.fire(this.session);
         this.disconected = true;
@@ -269,6 +270,21 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         }
 
         return undefined;
+    }
+
+    // Use our jupyter session to delete all the cells
+    private async deleteDumpCells() {
+        if (this.jupyterSession) {
+            this.cellToFile.forEach((tempFile) => {
+                const deleteSnippit = `import os
+try:
+    os.remove("${tempFile}")
+except:
+    pass`;
+
+                this.jupyterSession.requestExecute({ code: deleteSnippit, silent: true, store_history: false });
+            });
+        }
     }
 
     private async sendRequestToJupyterSession(message: DebugProtocol.ProtocolMessage) {
