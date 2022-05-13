@@ -18,5 +18,5 @@ export function createInteractiveIdentity(): Uri {
 }
 
 export function getInteractiveWindowTitle(owner: Uri): string {
-    return localize.DataScience.interactiveWindowTitleFormat().format(path.basename(owner.fsPath));
+    return localize.DataScience.interactiveWindowTitleFormat().format(path.basename(owner.path));
 }

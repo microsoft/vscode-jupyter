@@ -5,10 +5,7 @@
 import { expect } from 'chai';
 import rewiremock from 'rewiremock';
 import * as typemoq from 'typemoq';
-import {
-    InteractiveShiftEnterBanner,
-    InteractiveShiftEnterStateKeys
-} from '../../interactive-window/shiftEnterBanner.node';
+import { InteractiveShiftEnterBanner, InteractiveShiftEnterStateKeys } from '../../interactive-window/shiftEnterBanner';
 
 import { IApplicationShell } from '../../platform/common/application/types';
 import {
