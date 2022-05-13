@@ -2063,6 +2063,9 @@
                 "type": "Python Kernel Debug Adapter",
                 "label": "Python Kernel Debug Adapter"
             }
+        ],
+        "markdown.previewStyles": [
+            "resources/jupyter-markdown-style.css"
         ]
     },
     "enabledApiProposals": [
