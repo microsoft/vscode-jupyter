@@ -20,7 +20,7 @@ export class ExportDialog implements IExportDialog {
     constructor(
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService
-    ) { }
+    ) {}
 
     public async showDialog(
         format: ExportFormat,
@@ -60,7 +60,7 @@ export class ExportDialog implements IExportDialog {
             defaultFileName || !source
                 ? defaultFileName || ''
                 : // eslint-disable-next-line local-rules/dont-use-fspath
-                `${path.basename(source.fsPath, path.extname(source.fsPath))}${extension}`;
+                  `${path.basename(source.fsPath, path.extname(source.fsPath))}${extension}`;
 
         const options: SaveDialogOptions = {
             defaultUri: await this.getDefaultUri(source, targetFileName),

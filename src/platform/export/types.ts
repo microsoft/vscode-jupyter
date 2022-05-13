@@ -10,7 +10,12 @@ export enum ExportFormat {
 
 export const IFileConverter = Symbol('IFileConverter');
 export interface IFileConverter {
-    export(format: ExportFormat, sourceDocument: NotebookDocument, defaultFileName?: string, candidateInterpreter?: PythonEnvironment): Promise<undefined>;
+    export(
+        format: ExportFormat,
+        sourceDocument: NotebookDocument,
+        defaultFileName?: string,
+        candidateInterpreter?: PythonEnvironment
+    ): Promise<undefined>;
     importIpynb(source: Uri): Promise<void>;
 }
 

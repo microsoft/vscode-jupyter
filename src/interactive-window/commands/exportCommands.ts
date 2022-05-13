@@ -34,9 +34,11 @@ export class ExportCommands implements IExportCommands, IDisposable {
         @inject(IFileConverter) private fileConverter: IFileConverter,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
-        @inject(IInteractiveWindowProvider) @optional() private readonly interactiveProvider: IInteractiveWindowProvider | undefined,
+        @inject(IInteractiveWindowProvider)
+        @optional()
+        private readonly interactiveProvider: IInteractiveWindowProvider | undefined,
         @inject(INotebookControllerManager) private readonly controllers: INotebookControllerManager
-    ) { }
+    ) {}
     public register() {
         this.registerCommand(Commands.ExportAsPythonScript, (sourceDocument, interpreter?) =>
             this.export(sourceDocument, ExportFormat.python, undefined, interpreter)
@@ -60,7 +62,7 @@ export class ExportCommands implements IExportCommands, IDisposable {
     private registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     >(command: E, callback: (...args: U) => any) {
         const disposable = this.commandManager.registerCommand(command, callback, this);
         this.disposables.push(disposable);
@@ -93,7 +95,9 @@ export class ExportCommands implements IExportCommands, IDisposable {
             // so we need to get the active editor
             sourceDocument =
                 this.notebooks.activeNotebookEditor?.document ||
-                (this.interactiveProvider ? getActiveInteractiveWindow(this.interactiveProvider)?.notebookDocument : undefined);
+                (this.interactiveProvider
+                    ? getActiveInteractiveWindow(this.interactiveProvider)?.notebookDocument
+                    : undefined);
             if (!sourceDocument) {
                 traceInfo('Export called without a valid exportable document active');
                 return;

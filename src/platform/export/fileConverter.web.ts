@@ -16,7 +16,7 @@ export class FileConverter implements IFileConverter {
         @inject(IExport) @named(ExportFormat.python) private readonly exportToPythonPlain: IExport,
         @inject(IExportDialog) private readonly filePicker: IExportDialog,
         @inject(ExportFileOpener) private readonly exportFileOpener: ExportFileOpener
-    ) { }
+    ) {}
 
     async export(
         format: ExportFormat,
