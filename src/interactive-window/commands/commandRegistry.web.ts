@@ -33,6 +33,6 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
     }
 
     dispose(): void {
-        this.disposables.forEach((d) => d.dispose());
+        /** Do nothing. */
     }
 }
