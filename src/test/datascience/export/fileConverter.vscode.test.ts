@@ -15,7 +15,7 @@ import {
     IExtensions,
     IWatchableJupyterSettings
 } from '../../../platform/common/types';
-import { ExportFileOpener } from '../../../platform/export/exportFileOpener.node';
+import { ExportFileOpener } from '../../../platform/export/exportFileOpener';
 import { ExportInterpreterFinder } from '../../../platform/export/exportInterpreterFinder.node';
 import { ExportUtil } from '../../../platform/export/exportUtil.node';
 import { FileConverter } from '../../../platform/export/fileConverter.node';

@@ -1,9 +1,14 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 import { inject, injectable } from 'inversify';
-import { Position, Uri } from 'vscode';
+import { Position, TextEditor, Uri } from 'vscode';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IDocumentManager, IApplicationShell } from '../common/application/types';
 import { Telemetry, PYTHON_LANGUAGE } from '../common/constants';
-import { IFileSystem } from '../common/platform/types.node';
+import { deleteFile, readFile } from '../common/platform/fileSystem';
 import { IBrowserService } from '../common/types';
 import * as localize from '../common/utils/localize';
 import { ExportFormat } from './types';
@@ -12,14 +17,13 @@ import { ExportFormat } from './types';
 export class ExportFileOpener {
     constructor(
         @inject(IDocumentManager) protected readonly documentManager: IDocumentManager,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IBrowserService) private readonly browserService: IBrowserService
-    ) {}
+    ) { }
 
-    public async openFile(format: ExportFormat, uri: Uri) {
+    public async openFile(format: ExportFormat, uri: Uri, openDirectly: boolean = false) {
         if (format === ExportFormat.python) {
-            await this.openPythonFile(uri);
+            await this.openPythonFile(uri, openDirectly);
             sendTelemetryEvent(Telemetry.ExportNotebookAs, undefined, {
                 format: format,
                 successful: true,
@@ -35,11 +39,18 @@ export class ExportFileOpener {
         }
     }
 
-    private async openPythonFile(uri: Uri): Promise<void> {
-        const contents = await this.fs.readFile(uri);
-        await this.fs.delete(uri);
-        const doc = await this.documentManager.openTextDocument({ language: PYTHON_LANGUAGE, content: contents });
-        const editor = await this.documentManager.showTextDocument(doc);
+    private async openPythonFile(uri: Uri, openDirectly: boolean): Promise<void> {
+        let editor: TextEditor;
+
+        if (openDirectly) {
+            editor = await this.documentManager.showTextDocument(uri);
+        } else {
+            const contents = await readFile(uri);
+            await deleteFile(uri);
+            const doc = await this.documentManager.openTextDocument({ language: PYTHON_LANGUAGE, content: contents });
+            editor = await this.documentManager.showTextDocument(doc);
+        }
+
         // Edit the document so that it is dirty (add a space at the end)
         await editor.edit((editBuilder) => {
             editBuilder.insert(new Position(editor.document.lineCount, 0), '\n');

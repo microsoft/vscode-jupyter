@@ -1,5 +1,10 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 import { inject, injectable } from 'inversify';
-import * as path from '../../platform/vscode-path/path';
+import * as path from '../vscode-path/path';
 import { SaveDialogOptions, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../common/application/types';
 import * as localize from '../common/utils/localize';
@@ -15,7 +20,7 @@ export class ExportDialog implements IExportDialog {
     constructor(
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService
-    ) {}
+    ) { }
 
     public async showDialog(
         format: ExportFormat,
@@ -54,7 +59,8 @@ export class ExportDialog implements IExportDialog {
         const targetFileName =
             defaultFileName || !source
                 ? defaultFileName || ''
-                : `${path.basename(source.fsPath, path.extname(source.fsPath))}${extension}`;
+                : // eslint-disable-next-line local-rules/dont-use-fspath
+                `${path.basename(source.fsPath, path.extname(source.fsPath))}${extension}`;
 
         const options: SaveDialogOptions = {
             defaultUri: await this.getDefaultUri(source, targetFileName),
