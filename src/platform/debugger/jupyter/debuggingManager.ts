@@ -17,10 +17,10 @@ import {
     EventEmitter,
     NotebookEditor
 } from 'vscode';
-import * as path from '../../../platform/vscode-path/path';
+import * as path from '../../vscode-path/path';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { IConfigurationService, IDisposable } from '../../common/types';
-import { KernelDebugAdapter } from './kernelDebugAdapter.node';
+import { KernelDebugAdapter } from './kernelDebugAdapter';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ContextKey } from '../../common/contextKey';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../common/application/types';
@@ -31,11 +31,11 @@ import { IPlatformService } from '../../common/platform/types';
 import { IDebuggingManager, IKernelDebugAdapterConfig, KernelDebugMode } from '../types';
 import { DebuggingTelemetry, pythonKernelDebugAdapter } from '../constants';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { DebugCellController, RunByLineController } from './debugControllers.node';
-import { assertIsDebugConfig, IpykernelCheckResult, isUsingIpykernel6OrLater } from './helper.node';
-import { Debugger } from './debugger.node';
+import { DebugCellController, RunByLineController } from './debugControllers';
+import { assertIsDebugConfig, IpykernelCheckResult, isUsingIpykernel6OrLater } from './helper';
+import { Debugger } from './debugger';
 import { INotebookControllerManager } from '../../../notebooks/types';
-import { IFileSystem } from '../../common/platform/types.node';
+import { IFileSystem } from '../../common/platform/types';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.

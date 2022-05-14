@@ -34,6 +34,8 @@ import { ExportFileOpener } from './export/exportFileOpener';
 import { ExportToPythonPlain } from './export/exportToPythonPlain.web';
 import { IFileSystem } from './common/platform/types';
 import { FileSystem } from './common/platform/fileSystem';
+import { IDebuggingManager } from './debugger/types';
+import { DebuggingManager } from './debugger/jupyter/debuggingManager';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
@@ -56,4 +58,8 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     registerApiTypes(serviceManager);
     registerActivationTypes(serviceManager);
     registerDevToolTypes(context, serviceManager, isDevMode);
+
+    serviceManager.addSingleton<IDebuggingManager>(IDebuggingManager, DebuggingManager, undefined, [
+        IExtensionSingleActivationService
+    ]);
 }
