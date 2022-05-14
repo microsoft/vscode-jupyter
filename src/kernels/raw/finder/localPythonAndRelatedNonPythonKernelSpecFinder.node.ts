@@ -403,13 +403,6 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
                 traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on display name.`);
                 return true;
             }
-
-            // We used to use Python 2 or Python 3 to match an interpreter based on version
-            // but this seems too ambitious. The kernel spec should just launch with the default
-            // python and no environment. Otherwise how do we know which interpreter is the best
-            // match?
-            traceInfoIfCI(`Kernel ${kernelSpec.name} does not match ${i.displayName} interpreter.`);
-
             return false;
         });
     }

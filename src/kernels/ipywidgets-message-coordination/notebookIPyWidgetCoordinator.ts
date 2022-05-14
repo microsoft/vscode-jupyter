@@ -212,6 +212,7 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         this.messageCoordinators.delete(notebook);
 
         this.attachedEditors.delete(notebook);
+        editors.forEach((editor) => this.previouslyInitialized.delete(editor));
     }
     private attachCoordinator(
         document: NotebookDocument,

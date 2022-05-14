@@ -82,6 +82,7 @@ export class CommonMessageCoordinator {
     }
 
     public dispose() {
+        this.cachedMessages = [];
         this.ipyWidgetMessageDispatcher?.dispose(); // NOSONAR
         this.ipyWidgetScriptSource?.dispose(); // NOSONAR
     }
