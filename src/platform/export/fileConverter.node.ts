@@ -9,12 +9,12 @@ import * as localize from '../common/utils/localize';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { ProgressReporter } from '../progress/progressReporter.node';
-import { ExportFileOpener } from './exportFileOpener.node';
+import { ExportFileOpener } from './exportFileOpener';
 import { ExportInterpreterFinder } from './exportInterpreterFinder.node';
 import { ExportUtil } from './exportUtil.node';
 import { ExportFormat, INbConvertExport, IExportDialog, IFileConverter, IExport } from './types';
 import { Telemetry } from '../common/constants';
-import { IFileSystem } from '../common/platform/types.node';
+import { IFileSystemNode } from '../common/platform/types.node';
 
 // Class is responsible for file conversions (ipynb, py, pdf, html) and managing nb convert for some of those conversions
 @injectable()
@@ -24,7 +24,7 @@ export class FileConverter implements IFileConverter {
         @inject(INbConvertExport) @named(ExportFormat.html) private readonly exportToHTML: INbConvertExport,
         @inject(INbConvertExport) @named(ExportFormat.python) private readonly exportToPython: INbConvertExport,
         @inject(IExport) @named(ExportFormat.python) private readonly exportToPythonPlain: IExport,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
         @inject(IExportDialog) private readonly filePicker: IExportDialog,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(ExportUtil) private readonly exportUtil: ExportUtil,

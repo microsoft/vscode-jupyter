@@ -28,7 +28,7 @@ import { KernelProgressReporter } from '../../../platform/progress/kernelProgres
 import { ReportableAction } from '../../../platform/progress/types';
 import { IJupyterConnection } from '../../types';
 import { IJupyterSubCommandExecutionService } from '../types.node';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { INotebookStarter } from '../types';
 
 /**
@@ -49,7 +49,7 @@ export class NotebookStarter implements INotebookStarter {
     constructor(
         @inject(IJupyterSubCommandExecutionService)
         private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IOutputChannel)
         @named(JUPYTER_OUTPUT_CHANNEL)

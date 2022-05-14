@@ -11,7 +11,6 @@ import { Uri } from 'vscode';
 import { JupyterSettings } from '../../../platform/common/configSettings';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IConfigurationService, WidgetCDNs } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
@@ -32,7 +31,7 @@ suite('DataScience - ipywidget - CDN', () => {
     let scriptSourceProvider: IWidgetScriptSourceProvider;
     let configService: IConfigurationService;
     let settings: JupyterSettings;
-    let fileSystem: IFileSystem;
+    let fileSystem: FileSystem;
     let webviewUriConverter: ILocalResourceUriConverter;
     let tempFileCount = 0;
     suiteSetup(function () {

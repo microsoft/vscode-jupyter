@@ -10,13 +10,23 @@ export enum ExportFormat {
 
 export const IFileConverter = Symbol('IFileConverter');
 export interface IFileConverter {
-    export(format: ExportFormat, sourceDocument: NotebookDocument, defaultFileName?: string): Promise<undefined>;
+    export(
+        format: ExportFormat,
+        sourceDocument: NotebookDocument,
+        defaultFileName?: string,
+        candidateInterpreter?: PythonEnvironment
+    ): Promise<undefined>;
     importIpynb(source: Uri): Promise<void>;
 }
 
 export const INbConvertExport = Symbol('INbConvertExport');
 export interface INbConvertExport {
-    export(source: Uri, target: Uri, interpreter: PythonEnvironment, token: CancellationToken): Promise<void>;
+    export(
+        source: Uri,
+        target: Uri,
+        interpreter: PythonEnvironment | undefined,
+        token: CancellationToken
+    ): Promise<void>;
 }
 
 export const IExport = Symbol('IExport');

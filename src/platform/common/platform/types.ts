@@ -44,3 +44,22 @@ export interface IExecutables {
     delimiter: string;
     envVar: string;
 }
+
+export const IFileSystem = Symbol('IFileSystem');
+export interface IFileSystem {
+    areLocalPathsSame(path1: string, path2: string): boolean;
+    createLocalDirectory(path: string): Promise<void>;
+    copyLocal(source: string, destination: string): Promise<void>;
+    deleteLocalFile(path: string): Promise<void>;
+    readLocalData(path: string): Promise<Buffer>;
+    readLocalFile(path: string): Promise<string>;
+    writeLocalFile(path: string, text: string | Buffer): Promise<void>;
+    arePathsSame(path1: vscode.Uri, path2: vscode.Uri): boolean;
+    copy(source: vscode.Uri, destination: vscode.Uri): Promise<void>;
+    createDirectory(uri: vscode.Uri): Promise<void>;
+    delete(uri: vscode.Uri): Promise<void>;
+    readFile(uri: vscode.Uri): Promise<string>;
+    stat(uri: vscode.Uri): Promise<vscode.FileStat>;
+    writeFile(uri: vscode.Uri, text: string | Buffer): Promise<void>;
+    getFiles(dir: vscode.Uri): Promise<vscode.Uri[]>;
+}

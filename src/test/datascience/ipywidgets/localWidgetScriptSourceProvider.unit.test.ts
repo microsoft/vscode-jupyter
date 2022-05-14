@@ -6,7 +6,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IPythonExecutionFactory } from '../../../platform/common/process/types.node';
 import { IKernel } from '../../../platform/../kernels/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
@@ -20,7 +20,7 @@ import {
 suite('DataScience - ipywidget - Local Widget Script Source', () => {
     let scriptSourceProvider: IWidgetScriptSourceProvider;
     let resourceConverter: ILocalResourceUriConverter;
-    let fs: IFileSystem;
+    let fs: IFileSystemNode;
     let kernel: IKernel;
     let interpreterService: IInterpreterService;
     const filesToLookSearchFor = `*${path.sep}index.js`;

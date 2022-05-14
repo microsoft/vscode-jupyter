@@ -20,7 +20,7 @@ import { FileDownloader } from '../../../platform/common/net/fileDownloader.node
 import { HttpClient } from '../../../platform/common/net/httpClient.node';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { PlatformService } from '../../../platform/common/platform/platformService.node';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IHttpClient } from '../../../platform/common/types';
 import { Http } from '../../../platform/common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
@@ -68,7 +68,7 @@ class DelayedReadMemoryStream extends Readable {
 suite('File Downloader', () => {
     let fileDownloader: FileDownloader;
     let httpClient: IHttpClient;
-    let fs: IFileSystem;
+    let fs: IFileSystemNode;
     let appShell: IApplicationShell;
     suiteTeardown(() => {
         rewiremock.disable();

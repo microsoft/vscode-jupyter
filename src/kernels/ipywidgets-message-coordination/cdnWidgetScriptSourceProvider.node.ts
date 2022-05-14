@@ -9,7 +9,7 @@ import * as path from '../../platform/vscode-path/path';
 import { Uri } from 'vscode';
 import { traceError, traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { TemporaryFile } from '../../platform/common/platform/types';
-import { IFileSystem } from '../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { IConfigurationService, WidgetCDNs } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { ILocalResourceUriConverter, IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
@@ -75,7 +75,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     constructor(
         private readonly configurationSettings: IConfigurationService,
         private readonly localResourceUriConverter: ILocalResourceUriConverter,
-        private readonly fs: IFileSystem
+        private readonly fs: IFileSystemNode
     ) {}
     public dispose() {
         this.cache.clear();

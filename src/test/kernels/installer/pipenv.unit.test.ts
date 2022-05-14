@@ -3,6 +3,7 @@ import * as pathModule from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import * as platformApis from '../../../platform/common/utils/platform.node';
 import * as fileUtils from '../../../platform/common/platform/fileUtils.node';
+import * as fileUtilsCommon from '../../../platform/common/platform/fileUtils';
 import { TEST_LAYOUT_ROOT } from '../../../test/pythonEnvironments/constants';
 import {
     isPipenvEnvironmentRelatedToFolder,
@@ -24,7 +25,7 @@ suite('Pipenv helper', () => {
             getEnvVar = sinon.stub(platformApis, 'getEnvironmentVariable');
             readFile = sinon.stub(fileUtils, 'readFile');
             pathExists = sinon.stub(fileUtils, 'pathExists');
-            arePathsSame = sinon.stub(fileUtils, 'arePathsSame');
+            arePathsSame = sinon.stub(fileUtilsCommon, 'arePathsSame');
         });
 
         teardown(() => {

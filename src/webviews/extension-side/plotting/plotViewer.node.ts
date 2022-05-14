@@ -16,8 +16,8 @@ import {
     IWorkspaceService,
     IApplicationShell
 } from '../../../platform/common/application/types';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import * as localize from '../../../platform/common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { ICodeCssGenerator, IThemeFinder } from '../types';
@@ -36,7 +36,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
         @inject(IThemeFinder) themeFinder: IThemeFinder,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
-        @inject(IFileSystem) private fs: IFileSystem
+        @inject(IFileSystemNode) private fs: IFileSystemNode
     ) {
         super(
             configuration,
@@ -161,7 +161,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
     }
 }
 
-export async function saveSvgToPdf(svg: string, fs: IFileSystem, file: Uri) {
+export async function saveSvgToPdf(svg: string, fs: IFileSystemNode, file: Uri) {
     traceInfo('Attempting pdf write...');
     // Import here since pdfkit is so huge.
     // eslint-disable-next-line @typescript-eslint/no-require-imports

@@ -6,7 +6,7 @@ import { IExtensionSyncActivationService, IExtensionSingleActivationService } fr
 import { IDataScienceCommandListener } from '../platform/common/types';
 import { IServiceManager } from '../platform/ioc/types';
 import { CommandRegistry } from './commands/commandRegistry.node';
-import { ExportCommands } from './commands/exportCommands.node';
+import { ExportCommands } from './commands/exportCommands';
 import { CellHashProviderFactory } from './editor-integration/cellHashProviderFactory';
 import { CodeLensFactory } from './editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';

@@ -10,7 +10,7 @@ import { IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfo, traceVerbose, traceError, traceDecoratorError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { ReadWrite } from '../../../platform/common/types';
 import { testOnlyMethod } from '../../../platform/common/utils/decorators';
 import { isUri, noop } from '../../../platform/common/utils/misc';
@@ -56,7 +56,7 @@ export abstract class LocalKernelSpecFinderBase {
     private pathToKernelSpec = new Map<string, Promise<IJupyterKernelSpec | undefined>>();
 
     constructor(
-        protected readonly fs: IFileSystem,
+        protected readonly fs: IFileSystemNode,
         protected readonly workspaceService: IWorkspaceService,
         protected readonly extensionChecker: IPythonExtensionChecker,
         protected readonly globalState: Memento
@@ -243,7 +243,7 @@ export abstract class LocalKernelSpecFinderBase {
  */
 export async function loadKernelSpec(
     specPath: Uri,
-    fs: IFileSystem,
+    fs: IFileSystemNode,
     interpreter?: PythonEnvironment,
     cancelToken?: CancellationToken
 ): Promise<IJupyterKernelSpec | undefined> {

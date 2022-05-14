@@ -4,7 +4,7 @@
 import '../../../platform/common/extensions';
 
 import { Uri, ViewColumn, WebviewOptions, WebviewPanel as vscodeWebviewPanel, window } from 'vscode';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import { IWebviewPanel, IWebviewPanelOptions } from '../../../platform/common/application/types';
 import { Webview } from '../webviews/webview.node';
@@ -19,7 +19,7 @@ export class WebviewPanel extends Webview implements IWebviewPanel {
     }
 
     constructor(
-        fs: IFileSystem,
+        fs: IFileSystemNode,
         disposableRegistry: IDisposableRegistry,
         panelOptions: IWebviewPanelOptions,
         additionalRootPaths: Uri[] = []

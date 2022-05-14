@@ -4,7 +4,7 @@ import * as path from '../../platform/vscode-path/path';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
 import { traceError } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
-import { IFileSystem } from '../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { DataScience } from '../../platform/common/utils/localize';
 import { saveSvgToPdf } from '../../webviews/extension-side/plotting/plotViewer.node';
 
@@ -20,7 +20,7 @@ const imageExtensionForMimeType: Record<string, string> = {
 export class PlotSaveHandler {
     constructor(
         @inject(IApplicationShell) private readonly shell: IApplicationShell,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {}
 

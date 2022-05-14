@@ -8,14 +8,14 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as sinon from 'sinon';
 import { Uri } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import {
     IConfigurationService,
     IDisposable,
     IExtensions,
     IWatchableJupyterSettings
 } from '../../../platform/common/types';
-import { ExportFileOpener } from '../../../platform/export/exportFileOpener.node';
+import { ExportFileOpener } from '../../../platform/export/exportFileOpener';
 import { ExportInterpreterFinder } from '../../../platform/export/exportInterpreterFinder.node';
 import { ExportUtil } from '../../../platform/export/exportUtil.node';
 import { FileConverter } from '../../../platform/export/fileConverter.node';
@@ -28,7 +28,7 @@ suite('DataScience - File Converter', () => {
     let exportHtml: INbConvertExport;
     let exportPdf: INbConvertExport;
     let exportPythonPlain: IExport;
-    let fileSystem: IFileSystem;
+    let fileSystem: IFileSystemNode;
     let exportUtil: ExportUtil;
     let filePicker: IExportDialog;
     let appShell: IApplicationShell;
@@ -41,7 +41,7 @@ suite('DataScience - File Converter', () => {
         exportUtil = mock<ExportUtil>();
         const reporter = mock(ProgressReporter);
         filePicker = mock<IExportDialog>();
-        fileSystem = mock<IFileSystem>();
+        fileSystem = mock<IFileSystemNode>();
         exportPython = mock<INbConvertExport>();
         exportHtml = mock<INbConvertExport>();
         exportPdf = mock<INbConvertExport>();

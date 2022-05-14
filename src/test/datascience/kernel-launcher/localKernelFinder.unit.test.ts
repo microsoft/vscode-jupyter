@@ -48,7 +48,6 @@ import { loadKernelSpec } from '../../../kernels/raw/finder/localKernelSpecFinde
 import { LocalKnownPathKernelSpecFinder } from '../../../kernels/raw/finder/localKnownPathKernelSpecFinder.node';
 import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from '../../../kernels/raw/finder/localPythonAndRelatedNonPythonKernelSpecFinder.node';
 import { ILocalKernelFinder, IRemoteKernelFinder } from '../../../kernels/raw/types';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { KernelFinder } from '../../../kernels/kernelFinder.node';
@@ -66,7 +65,7 @@ import { ILiveRemoteKernelConnectionUsageTracker } from '../../../kernels/jupyte
         let kernelFinder: IKernelFinder;
         let interpreterService: IInterpreterService;
         let platformService: IPlatformService;
-        let fs: IFileSystem;
+        let fs: FileSystem;
         let extensionChecker: IPythonExtensionChecker;
         const disposables: IDisposable[] = [];
         let globalSpecPath: Uri | undefined;

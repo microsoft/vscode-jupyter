@@ -3,7 +3,8 @@
 
 import * as fs from 'fs';
 import * as vscode from 'vscode';
-import { TemporaryFile } from './types';
+import { IFileSystem, TemporaryFile } from './types';
+export { IFileSystem } from './types';
 
 //===========================
 // filesystem operations
@@ -65,35 +66,16 @@ export interface IRawFileSystem {
     createWriteStream(filename: string): WriteStream;
 }
 
-export const IFileSystem = Symbol('IFileSystem');
-export interface IFileSystem {
-    // Local-only filesystem utilities
+export const IFileSystemNode = Symbol('IFileSystemNode');
+export interface IFileSystemNode extends IFileSystem {
     appendLocalFile(path: string, text: string): Promise<void>;
-    areLocalPathsSame(path1: string, path2: string): boolean;
-    createLocalDirectory(path: string): Promise<void>;
     createLocalWriteStream(path: string): WriteStream;
-    copyLocal(source: string, destination: string): Promise<void>;
     createTemporaryLocalFile(options: { fileExtension: string; prefix: string }): Promise<TemporaryFile>;
     createTemporaryLocalFile(fileExtension: string): Promise<TemporaryFile>;
     deleteLocalDirectory(dirname: string): Promise<void>;
-    deleteLocalFile(path: string): Promise<void>;
     ensureLocalDir(path: string): Promise<void>;
-    getDisplayName(path: string): string;
-    getFileHash(path: string): Promise<string>;
+    getFileHash(filename: string): Promise<string>;
     localDirectoryExists(dirname: string): Promise<boolean>;
     localFileExists(filename: string): Promise<boolean>;
-    readLocalData(path: string): Promise<Buffer>;
-    readLocalFile(path: string): Promise<string>;
     searchLocal(globPattern: string, cwd?: string, dot?: boolean): Promise<string[]>;
-    writeLocalFile(path: string, text: string | Buffer): Promise<void>;
-
-    // vscode.Uri-based filesystem utilities wrapping the VS Code filesystem API
-    arePathsSame(path1: vscode.Uri, path2: vscode.Uri): boolean;
-    copy(source: vscode.Uri, destination: vscode.Uri): Promise<void>;
-    createDirectory(uri: vscode.Uri): Promise<void>;
-    delete(uri: vscode.Uri): Promise<void>;
-    readFile(uri: vscode.Uri): Promise<string>;
-    stat(uri: vscode.Uri): Promise<FileStat>;
-    writeFile(uri: vscode.Uri, text: string | Buffer): Promise<void>;
-    getFiles(dir: vscode.Uri): Promise<vscode.Uri[]>;
 }

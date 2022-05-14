@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { IFileSystem } from '../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { IPythonExecutionFactory } from '../../platform/common/process/types.node';
 import { IConfigurationService, IHttpClient, WidgetCDNs } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
@@ -21,7 +21,7 @@ export class ScriptSourceProviderFactory implements IWidgetScriptSourceProviderF
 
     constructor(
         @inject(IConfigurationService) private readonly configurationSettings: IConfigurationService,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IPythonExecutionFactory) private readonly factory: IPythonExecutionFactory
     ) {}

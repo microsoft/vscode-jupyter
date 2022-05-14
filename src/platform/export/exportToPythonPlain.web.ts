@@ -1,5 +1,9 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
 import { inject, injectable } from 'inversify';
-import * as os from 'os';
 import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService } from '../common/types';
 import { ExportToPythonPlainBase } from './exportToPythonPlain';
@@ -12,9 +16,5 @@ export class ExportToPythonPlain extends ExportToPythonPlainBase {
         @inject(IConfigurationService) configuration: IConfigurationService
     ) {
         super(fs, configuration);
-    }
-
-    override getEOL(): string {
-        return os.EOL;
     }
 }
