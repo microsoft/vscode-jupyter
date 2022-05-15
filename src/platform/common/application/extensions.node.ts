@@ -40,7 +40,8 @@ export class Extensions implements IExtensions {
                         return result[1];
                     }
                 })
-                .filter((item) => item && !item.toLowerCase().startsWith(jupyterExtRoot)) as string[];
+                .filter((item) => item && !item.toLowerCase().startsWith(jupyterExtRoot))
+                .filter((item) => this.all.some((ext) => item!.includes(ext.extensionUri.path))) as string[];
             stacktrace.parse(new Error('Ex')).forEach((item) => {
                 const fileName = item.getFileName();
                 if (fileName && !fileName.toLowerCase().startsWith(jupyterExtRoot)) {
