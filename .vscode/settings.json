@@ -48,6 +48,7 @@
         "source.fixAll.eslint": true,
         "source.fixAll.tslint": true
     },
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
     "python.languageServer": "Pylance",
     "python.analysis.logLevel": "Trace",
     "python.linting.pylintEnabled": false,

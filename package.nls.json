@@ -292,6 +292,7 @@
     "DataScience.remoteJupyterConnectionFailedWithServer": "Failed to connect to the remote Jupyter Server '{0}'. Verify the server is running and reachable.",
     "DataScience.remoteJupyterConnectionFailedWithServerWithError":"Failed to connect to the remote Jupyter Server '{0}'. Verify the server is running and reachable. ({1}).",
     "DataScience.remoteJupyterConnectionFailedWithoutServerWithError": "Connection failure. Verify the server is running and reachable. ({0}).",
+    "DataScience.remoteJupyterConnectionFailedWithoutServerWithErrorWeb": "Connection failure. Verify the server is running and reachable from a browser. ({0}). See 'https://aka.ms/vscjremoteweb' for more information.",
     "DataScience.jupyterNotebookRemoteConnectFailedWeb": "Failed to connect to remote Jupyter server.\r\nCheck that the Jupyter Server URI can be reached from a browser.\r\n{0}. Click [here](https://aka.ms/vscjremoteweb) for more information.",
     "DataScience.jupyterNotebookRemoteConnectSelfCertsFailed": "Failed to connect to remote Jupyter notebook.\r\nSpecified server is using self signed certs. Enable Allow Unauthorized Remote Connection setting to connect anyways\r\n{0}\r\n{1}",
     "DataScience.changeJupyterRemoteConnection": "Change Jupyter Server connection.",

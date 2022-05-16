@@ -3,13 +3,12 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, optional } from 'inversify';
 import { NotebookDocument, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
 import { getLocString } from '../../webviews/webview-side/react-common/locReactSide';
 import { ICommandNameArgumentTypeMapping } from '../../platform/common/application/commands';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { traceInfo } from '../../platform/logging';
-import { IFileSystem } from '../../platform/common/platform/types.node';
 import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { isUri } from '../../platform/common/utils/misc';
@@ -19,9 +18,9 @@ import { getActiveInteractiveWindow } from '../helpers';
 import { getNotebookMetadata, isPythonNotebook } from '../../notebooks/helpers';
 import { INotebookControllerManager } from '../../notebooks/types';
 import { Commands, Telemetry } from '../../platform/common/constants';
-import { FileConverter } from '../../platform/export/fileConverter.node';
 import { IFileConverter, ExportFormat } from '../../platform/export/types';
 import { IExportCommands, IInteractiveWindowProvider } from '../types';
+import { IFileSystem } from '../../platform/common/platform/types';
 
 interface IExportQuickPickItem extends QuickPickItem {
     handler(): void;
@@ -32,11 +31,13 @@ export class ExportCommands implements IExportCommands, IDisposable {
     private readonly disposables: IDisposable[] = [];
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IFileConverter) private fileConverter: FileConverter,
+        @inject(IFileConverter) private fileConverter: IFileConverter,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
-        @inject(IInteractiveWindowProvider) private readonly interactiveProvider: IInteractiveWindowProvider,
+        @inject(IInteractiveWindowProvider)
+        @optional()
+        private readonly interactiveProvider: IInteractiveWindowProvider | undefined,
         @inject(INotebookControllerManager) private readonly controllers: INotebookControllerManager
     ) {}
     public register() {
@@ -95,7 +96,9 @@ export class ExportCommands implements IExportCommands, IDisposable {
             // so we need to get the active editor
             sourceDocument =
                 this.notebooks.activeNotebookEditor?.document ||
-                getActiveInteractiveWindow(this.interactiveProvider)?.notebookDocument;
+                (this.interactiveProvider
+                    ? getActiveInteractiveWindow(this.interactiveProvider)?.notebookDocument
+                    : undefined);
             if (!sourceDocument) {
                 traceInfo('Export called without a valid exportable document active');
                 return;

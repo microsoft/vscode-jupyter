@@ -36,7 +36,7 @@ import { KernelFinder } from '../../../kernels/kernelFinder.node';
 import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { LocalKernelFinder } from '../../../kernels/raw/finder/localKernelFinder.node';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { takeTopRankKernel } from './localKernelFinder.unit.test';
@@ -49,7 +49,7 @@ suite(`Remote Kernel Finder`, () => {
     let remoteKernelFinder: IRemoteKernelFinder;
     let localKernelFinder: ILocalKernelFinder;
     let kernelFinder: IKernelFinder;
-    let fs: IFileSystem;
+    let fs: IFileSystemNode;
     let memento: Memento;
     let jupyterSessionManager: IJupyterSessionManager;
     const dummyEvent = new EventEmitter<number>();
@@ -73,28 +73,28 @@ suite(`Remote Kernel Finder`, () => {
         name: defaultPython3Name,
         argv: ['/usr/bin/python3'],
         language: 'python',
-        uri: Uri.file('specFilePath')
+        executable: 'specFilePath'
     };
     const python2spec: IJupyterKernelSpec = {
         display_name: 'Python 2 on Disk',
         name: 'python2',
         argv: ['/usr/bin/python'],
         language: 'python',
-        uri: Uri.file('specFilePath')
+        executable: 'specFilePath'
     };
     const juliaSpec: IJupyterKernelSpec = {
         display_name: 'Julia on Disk',
         name: 'julia',
         argv: ['/usr/bin/julia'],
         language: 'julia',
-        uri: Uri.file('specFilePath')
+        executable: 'specFilePath'
     };
     const interpreterSpec: IJupyterKernelSpec = {
         display_name: 'Conda interpreter kernel',
         name: defaultPython3Name,
         argv: ['python'],
         language: 'python',
-        uri: Uri.file('specFilePath')
+        executable: 'specFilePath'
     };
     const python3Kernels: IJupyterKernel[] = ['1', '2', '3'].map((id) => {
         return {
@@ -309,7 +309,7 @@ suite(`Remote Kernel Finder`, () => {
                     argv: [],
                     display_name: '',
                     name: '',
-                    uri: Uri.file('')
+                    executable: ''
                 },
                 kind: 'startUsingRemoteKernelSpec',
                 serverId: 'serverId1'
@@ -358,7 +358,7 @@ suite(`Remote Kernel Finder`, () => {
                     argv: [],
                     display_name: '',
                     name: '',
-                    uri: Uri.file('')
+                    executable: ''
                 },
                 kind: 'startUsingRemoteKernelSpec',
                 serverId: 'serverId1'

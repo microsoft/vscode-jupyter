@@ -29,8 +29,16 @@ import { ExtensionSideRenderer, IExtensionSideRenderer } from '../webviews/exten
 import { OutputCommandListener } from './logging/outputCommandListener';
 import { IDebuggingManager } from './debugger/types';
 import { DebuggingManager } from './debugger/jupyter/debuggingManager';
+import { ExportDialog } from './export/exportDialog';
+import { ExportFormat, IExport, IExportDialog, IFileConverter } from './export/types';
+import { FileConverter } from './export/fileConverter.web';
+import { ExportFileOpener } from './export/exportFileOpener';
+import { ExportToPythonPlain } from './export/exportToPythonPlain.web';
+import { IFileSystem } from './common/platform/types';
+import { FileSystem } from './common/platform/fileSystem';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
+    serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
     serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
     serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
     serviceManager.addSingleton<IApplicationShell>(IApplicationShell, ApplicationShell);
@@ -41,6 +49,10 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
     serviceManager.addSingletonInstance<IExtensionSideRenderer>(IExtensionSideRenderer, new ExtensionSideRenderer());
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, OutputCommandListener);
+    serviceManager.addSingleton<ExportFileOpener>(ExportFileOpener, ExportFileOpener);
+    serviceManager.addSingleton<IExportDialog>(IExportDialog, ExportDialog);
+    serviceManager.addSingleton<IFileConverter>(IFileConverter, FileConverter);
+    serviceManager.addSingleton<IExport>(IExport, ExportToPythonPlain, ExportFormat.python);
 
     registerCommonTypes(serviceManager);
     registerApiTypes(serviceManager);

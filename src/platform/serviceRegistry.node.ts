@@ -37,16 +37,18 @@ import { DebuggingManager } from './debugger/jupyter/debuggingManager';
 import { IDebugLocationTracker, IDebuggingManager } from './debugger/types';
 import { DataScienceErrorHandler } from './errors/errorHandler';
 import { IDataScienceErrorHandler } from './errors/types';
-import { ExportBase } from './export/exportBase.node';
-import { ExportDialog } from './export/exportDialog.node';
-import { ExportFileOpener } from './export/exportFileOpener.node';
-import { ExportInterpreterFinder } from './export/exportInterpreterFinder.node';
-import { ExportToHTML } from './export/exportToHTML.node';
-import { ExportToPDF } from './export/exportToPDF.node';
-import { ExportToPython } from './export/exportToPython.node';
-import { ExportToPythonPlain } from './export/exportToPythonPlain.node';
-import { ExportUtil } from './export/exportUtil.node';
-import { FileConverter } from './export/fileConverter.node';
+import {
+    ExportBase,
+    ExportDialog,
+    ExportFileOpener,
+    ExportInterpreterFinder,
+    ExportToHTML,
+    ExportToPDF,
+    ExportToPython,
+    ExportToPythonPlain,
+    ExportUtil,
+    FileConverter
+} from './export/export.index.node';
 import { IFileConverter, INbConvertExport, ExportFormat, IExport, IExportDialog } from './export/types';
 import { GitHubIssueCommandListener } from './logging/gitHubIssueCommandListener.node';
 import { KernelProgressReporter } from './progress/kernelProgressReporter';
@@ -57,14 +59,16 @@ import { ApplicationShell } from './common/application/applicationShell';
 import { CommandManager } from './common/application/commandManager';
 import { ICommandManager, IWorkspaceService, IApplicationShell } from './common/application/types';
 import { ConfigurationService } from './common/configuration/service.node';
-import { IFileSystem } from './common/platform/types.node';
+import { IFileSystem, IFileSystemNode } from './common/platform/types.node';
 import { FileSystem } from './common/platform/fileSystem.node';
 import { WorkspaceService } from './common/application/workspace.node';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from '../webviews/extension-side/renderer';
 import { OutputCommandListener } from './logging/outputCommandListener';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
-    serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
+    serviceManager.addSingleton<FileSystem>(FileSystem, FileSystem);
+    serviceManager.addBinding(FileSystem, IFileSystemNode);
+    serviceManager.addBinding(FileSystem, IFileSystem);
     serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
     serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
     serviceManager.addSingleton<IApplicationShell>(IApplicationShell, ApplicationShell);

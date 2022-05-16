@@ -5,12 +5,12 @@ import * as path from '../../platform/vscode-path/path';
 import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
 import { TemporaryDirectory } from '../common/platform/types';
-import { IFileSystem } from '../common/platform/types.node';
+import { IFileSystemNode } from '../common/platform/types.node';
 import { sleep } from '../common/utils/async';
 
 @injectable()
 export class ExportUtil {
-    constructor(@inject(IFileSystem) private fs: IFileSystem) {}
+    constructor(@inject(IFileSystemNode) private fs: IFileSystemNode) {}
 
     public async generateTempDir(): Promise<TemporaryDirectory> {
         const resultDir = path.join(os.tmpdir(), uuid());

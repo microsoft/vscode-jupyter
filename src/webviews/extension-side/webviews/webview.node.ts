@@ -14,7 +14,7 @@ import {
 } from 'vscode';
 import { IWebview, IWebviewOptions, WebviewMessage } from '../../../platform/common/application/types';
 import { traceError } from '../../../platform/logging';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import * as localize from '../../../platform/common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
@@ -30,7 +30,7 @@ export abstract class Webview implements IWebview {
     protected loadPromise: Promise<void>;
 
     constructor(
-        protected fs: IFileSystem,
+        protected fs: IFileSystemNode,
         protected disposableRegistry: IDisposableRegistry,
         protected options: IWebviewOptions,
         additionalRootPaths: Uri[] = []

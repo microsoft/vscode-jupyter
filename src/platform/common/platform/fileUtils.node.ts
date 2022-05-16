@@ -10,6 +10,8 @@ import { IConfigurationService } from '../types';
 import { chain, iterable } from '../utils/async';
 import { IServiceContainer } from '../../ioc/types';
 import { getOSType, OSType } from '../utils/platform';
+import { normCasePath } from './fileUtils';
+export { arePathsSame } from './fileUtils';
 
 let internalServiceContainer: IServiceContainer;
 export function initializeExternalDependencies(serviceContainer: IServiceContainer): void {
@@ -88,14 +90,6 @@ export function normalizePath(filename: string): string {
 
 export function resolvePath(filename: string): string {
     return path.resolve(filename);
-}
-
-export function normCasePath(filePath: string): string {
-    return getOSType() === OSType.Windows ? path.normalize(filePath).toUpperCase() : path.normalize(filePath);
-}
-
-export function arePathsSame(path1: string, path2: string): boolean {
-    return normCasePath(path1) === normCasePath(path2);
 }
 
 export function getWorkspaceFolders(): string[] {

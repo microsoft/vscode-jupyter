@@ -4,7 +4,7 @@ import { inject, injectable } from 'inversify';
 import * as path from '../../platform/vscode-path/path';
 import { CancellationToken, NotebookDocument } from 'vscode';
 import { traceError } from '../../platform/logging';
-import { IFileSystem } from '../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { DataScience } from '../../platform/common/utils/localize';
 import { stripAnsi } from '../../platform/common/utils/regexp';
 import { JupyterDataRateLimitError } from '../../platform/errors/jupyterDataRateLimitError';
@@ -42,7 +42,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
     private importedDataFrameScripts = new WeakMap<NotebookDocument, boolean>();
     private importedGetVariableInfoScripts = new WeakMap<NotebookDocument, boolean>();
 
-    constructor(@inject(IFileSystem) private fs: IFileSystem) {}
+    constructor(@inject(IFileSystemNode) private fs: IFileSystemNode) {}
 
     public async getDataFrameInfo(
         targetVariable: IJupyterVariable,

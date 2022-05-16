@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 'use strict';
-import * as path from 'path-browserify';
 import * as React from 'react';
+import * as path from '../../../platform/vscode-path/path';
 
 // This special function finds relative paths when loading inside of vscode. It's not defined
 // when loading outside, so the Image component should still work.

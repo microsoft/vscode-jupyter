@@ -22,7 +22,7 @@ import {
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../../kernels/types';
-import { IFileSystem } from '../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { KernelEnvironmentVariablesService } from '../../kernels/raw/launcher/kernelEnvVarsService.node';
 import { IDisposable, IJupyterSettings, IOutputChannel } from '../../platform/common/types';
@@ -51,7 +51,7 @@ suite('kernel Process', () => {
         transport: 'tcp'
     };
     let connectionMetadata: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata;
-    let fs: IFileSystem;
+    let fs: IFileSystemNode;
     let extensionChecker: IPythonExtensionChecker;
     let kernelEnvVarsService: KernelEnvironmentVariablesService;
     let pythonExecFactory: IPythonExecutionFactory;
@@ -74,7 +74,7 @@ suite('kernel Process', () => {
         processService = mock<IProcessService>();
         processServiceFactory = mock<IProcessServiceFactory>();
         connectionMetadata = mock<LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata>();
-        fs = mock<IFileSystem>();
+        fs = mock<IFileSystemNode>();
         extensionChecker = mock<IPythonExtensionChecker>();
         kernelEnvVarsService = mock<KernelEnvironmentVariablesService>();
         pythonExecFactory = mock<IPythonExecutionFactory>();
@@ -143,7 +143,7 @@ suite('kernel Process', () => {
             argv: ['dotnet', 'csharp', '{connection_file}'],
             display_name: 'C# .NET',
             name: 'csharp',
-            uri: Uri.file('dotnet')
+            executable: 'dotnet'
         };
         const tempFile = 'temporary file.json';
         when(connectionMetadata.kind).thenReturn('startUsingLocalKernelSpec');
@@ -165,7 +165,7 @@ suite('kernel Process', () => {
             argv: ['dotnet', 'csharp', '{connection_file}'],
             display_name: 'C# .NET',
             name: 'csharp',
-            uri: Uri.file('dotnet')
+            executable: 'dotnet'
         };
         const tempFile = 'temporary file.json';
         when(connectionMetadata.kind).thenReturn('startUsingLocalKernelSpec');
@@ -184,7 +184,7 @@ suite('kernel Process', () => {
             argv: ['dotnet', 'csharp', '{connection_file}'],
             display_name: 'C# .NET',
             name: 'csharp',
-            uri: Uri.file('dotnet')
+            executable: 'dotnet'
         };
         const tempFile = 'temporary file.json';
         when(connectionMetadata.kind).thenReturn('startUsingLocalKernelSpec');
@@ -206,7 +206,7 @@ suite('kernel Process', () => {
             argv: ['dotnet', 'csharp', '{connection_file}'],
             display_name: 'C# .NET',
             name: 'csharp',
-            uri: Uri.file('dotnet')
+            executable: 'dotnet'
         };
         const tempFile = path.join('tmp', 'temporary file.json');
         const jupyterRuntimeDir = Uri.file(path.join('hello', 'jupyter', 'runtime'));
@@ -244,7 +244,7 @@ suite('kernel Process', () => {
             argv: ['dotnet', 'csharp', '{connection_file}'],
             display_name: 'C# .NET',
             name: 'csharp',
-            uri: Uri.file('dotnet')
+            executable: 'dotnet'
         };
         const tempFile = path.join('tmp', 'temporary file.json');
         when(jupyterPaths.getRuntimeDir()).thenResolve();
@@ -277,7 +277,7 @@ suite('kernel Process', () => {
             argv: ['python', '-f', '{connection_file}'],
             display_name: 'Python',
             name: 'Python3',
-            uri: Uri.file('python')
+            executable: 'python'
         };
         const tempFile = path.join('tmp', 'temporary file.json');
         const jupyterRuntimeDir = Uri.file(path.join('hello', 'jupyter', 'runtime'));
@@ -327,7 +327,7 @@ suite('kernel Process', () => {
             argv: ['python', '-f', '{connection_file}'],
             display_name: 'Python',
             name: 'Python3',
-            uri: Uri.file('python')
+            executable: 'python'
         };
         const tempFile = path.join('tmp', 'temporary file.json');
         when(fs.createTemporaryLocalFile(deepEqual(tempFileCreationOptions))).thenResolve({
@@ -375,7 +375,7 @@ suite('kernel Process', () => {
             argv: ['python', '-f', '{connection_file}'],
             display_name: 'Python',
             name: 'Python3',
-            uri: Uri.file('python')
+            executable: 'python'
         };
         when(pythonExecFactory.createDaemon(anything())).thenResolve(instance(pythonProcess));
         when(connectionMetadata.kind).thenReturn('startUsingPythonInterpreter');

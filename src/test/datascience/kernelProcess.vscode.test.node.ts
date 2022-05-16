@@ -16,13 +16,13 @@ import {
 } from '../../platform/common/process/types.node';
 import { anything, capture, instance, mock, when } from 'ts-mockito';
 import { LocalKernelSpecConnectionMetadata } from '../../kernels/types';
-import { IFileSystem } from '../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { noop } from '../core';
 import { EventEmitter } from 'events';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceInfo } from '../../platform/logging';
-import { CancellationTokenSource, Uri } from 'vscode';
+import { CancellationTokenSource } from 'vscode';
 import { IKernelConnection } from '../../kernels/raw/types';
 import { KernelEnvironmentVariablesService } from '../../kernels/raw/launcher/kernelEnvVarsService.node';
 import { KernelProcess } from '../../kernels/raw/launcher/kernelProcess.node';
@@ -63,7 +63,7 @@ suite('DataScience - Kernel Process', () => {
     function launchKernel(metadata: LocalKernelSpecConnectionMetadata, connectionFile: string) {
         const processExecutionFactory = mock<IProcessServiceFactory>();
         const connection = mock<IKernelConnection>();
-        const fs = mock<IFileSystem>();
+        const fs = mock<IFileSystemNode>();
         const extensionChecker = mock<IPythonExtensionChecker>();
         const kernelEnvVarsService = mock<KernelEnvironmentVariablesService>();
         processService = mock<IProcessService>();
@@ -125,7 +125,7 @@ suite('DataScience - Kernel Process', () => {
                 interrupt_mode: 'message',
                 display_name: '',
                 name: '',
-                uri: Uri.file('')
+                executable: ''
             },
             kind: 'startUsingLocalKernelSpec'
         };
@@ -162,7 +162,7 @@ suite('DataScience - Kernel Process', () => {
                 interrupt_mode: 'message',
                 display_name: '',
                 name: '',
-                uri: Uri.file('')
+                executable: ''
             },
             kind: 'startUsingLocalKernelSpec'
         };
@@ -197,7 +197,7 @@ suite('DataScience - Kernel Process', () => {
                 interrupt_mode: 'message',
                 display_name: '',
                 name: '',
-                uri: Uri.file('')
+                executable: ''
             },
             kind: 'startUsingLocalKernelSpec'
         };
@@ -232,7 +232,7 @@ suite('DataScience - Kernel Process', () => {
                 interrupt_mode: 'message',
                 display_name: '',
                 name: '',
-                uri: Uri.file('')
+                executable: ''
             },
             kind: 'startUsingLocalKernelSpec'
         };

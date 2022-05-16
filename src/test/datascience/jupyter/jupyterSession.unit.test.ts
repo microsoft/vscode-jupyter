@@ -31,7 +31,7 @@ import { MockOutputChannel } from '../../mockClasses';
 import { JupyterKernelService } from '../../../kernels/jupyter/jupyterKernelService.node';
 import { JupyterSession } from '../../../kernels/jupyter/session/jupyterSession';
 import { DisplayOptions } from '../../../kernels/displayOptions';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { BackingFileCreator } from '../../../kernels/jupyter/session/backingFileCreator.node';
 import * as path from '../../../platform/vscode-path/path';
 import { JupyterRequestCreator } from '../../../kernels/jupyter/session/jupyterRequestCreator.node';
@@ -55,7 +55,7 @@ suite('DataScience - JupyterSession', () => {
         display_name: 'new kernel',
         language: 'python',
         name: 'newkernel',
-        uri: Uri.file('path'),
+        executable: 'path',
         lastActivityTime: new Date(),
         numberOfConnections: 1,
         model: {
@@ -95,7 +95,7 @@ suite('DataScience - JupyterSession', () => {
                 argv: [],
                 display_name: '',
                 name: '',
-                uri: Uri.file('')
+                executable: ''
             }
         };
         session = mock<ISessionWithSocket>();
@@ -124,7 +124,7 @@ suite('DataScience - JupyterSession', () => {
         specManager = mock(KernelSpecManager);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(sessionManager.connectTo(anything())).thenReturn(newActiveRemoteKernel.model as any);
-        const fs = mock<IFileSystem>();
+        const fs = mock<FileSystem>();
         const tmpFile = path.join('tmp', 'tempfile.json');
         const backingFileCreator = new BackingFileCreator();
         const requestCreator = new JupyterRequestCreator();

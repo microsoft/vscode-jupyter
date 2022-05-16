@@ -16,7 +16,7 @@ import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfo, traceError } from '../../../platform/logging';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IMemento, GLOBAL_MEMENTO } from '../../../platform/common/types';
 import { captureTelemetry } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
@@ -30,7 +30,7 @@ import { sendKernelSpecTelemetry } from './helper';
 @injectable()
 export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
     constructor(
-        @inject(IFileSystem) fs: IFileSystem,
+        @inject(IFileSystemNode) fs: IFileSystemNode,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
         @inject(IPythonExtensionChecker) extensionChecker: IPythonExtensionChecker,
@@ -124,7 +124,7 @@ export class LocalKnownPathKernelSpecFinder extends LocalKernelSpecFinderBase {
         const byDisplayName = new Map<string, IJupyterKernelSpec>();
         results.forEach((r) => {
             const existing = byDisplayName.get(r.display_name);
-            if (existing && existing.uri !== r.uri) {
+            if (existing && existing.executable !== r.executable) {
                 // This item is a dupe but has a different path to start the exe
                 unique.push(r);
             } else if (!existing) {

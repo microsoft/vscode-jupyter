@@ -5,7 +5,7 @@
 import { NotebookController, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../platform/common/application/types';
 import { traceInfo, traceError } from '../platform/logging';
-import { IFileSystem } from '../platform/common/platform/types.node';
+import { IFileSystemNode } from '../platform/common/platform/types.node';
 import { IPythonExecutionFactory } from '../platform/common/process/types.node';
 import { Resource, IDisposableRegistry, IConfigurationService, IExtensionContext } from '../platform/common/types';
 import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory';
@@ -32,7 +32,7 @@ export class Kernel extends BaseKernel {
         launchTimeout: number,
         interruptTimeout: number,
         appShell: IApplicationShell,
-        private readonly fs: IFileSystem,
+        private readonly fs: IFileSystemNode,
         controller: NotebookController,
         configService: IConfigurationService,
         outputTracker: CellOutputDisplayIdTracker,

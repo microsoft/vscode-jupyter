@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import type { KernelSpec } from '@jupyterlab/services';
-import { Uri } from 'vscode';
 import { PythonEnvironment_PythonApi } from '../../platform/api/types';
 import { IJupyterKernelSpec } from '../types';
 
@@ -10,7 +9,7 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
     public name: string;
     public originalName?: string;
     public language: string;
-    public uri: Uri;
+    public executable: string;
     public readonly env: NodeJS.ProcessEnv | undefined;
     public display_name: string;
     public argv: string[];
@@ -30,7 +29,7 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
         this.name = specModel.name;
         this.argv = specModel.argv;
         this.language = specModel.language;
-        this.uri = specModel.argv && specModel.argv.length > 0 ? Uri.file(specModel.argv[0]) : Uri.file('');
+        this.executable = specModel.argv && specModel.argv.length > 0 ? specModel.argv[0] : '';
         this.display_name = specModel.display_name;
         this.metadata = specModel.metadata;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

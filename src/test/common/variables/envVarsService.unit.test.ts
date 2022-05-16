@@ -9,17 +9,17 @@ import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from '../../../platform/vscode-path/path';
 import * as TypeMoq from 'typemoq';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { EnvironmentVariablesService, parseEnvFile } from '../../../platform/common/variables/environment.node';
 
 use(chaiAsPromised);
 
 suite('Environment Variables Service', () => {
     const filename = 'x/y/z/.env';
-    let fs: TypeMoq.IMock<IFileSystem>;
+    let fs: TypeMoq.IMock<IFileSystemNode>;
     let variablesService: EnvironmentVariablesService;
     setup(() => {
-        fs = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Loose);
+        fs = TypeMoq.Mock.ofType<IFileSystemNode>(undefined, TypeMoq.MockBehavior.Loose);
         variablesService = new EnvironmentVariablesService(fs.object);
     });
     function setFile(fileName: string, text: string) {

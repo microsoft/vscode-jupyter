@@ -4,7 +4,7 @@
 
 import { Event, EventEmitter, Uri, WebviewOptions, WebviewView as vscodeWebviewView } from 'vscode';
 import { IWebviewView, IWebviewViewOptions } from '../../../platform/common/application/types';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import { Webview } from '../webviews/webview.node';
 
@@ -21,7 +21,7 @@ export class WebviewView extends Webview implements IWebviewView {
     }
     private readonly _onDidChangeVisibility = new EventEmitter<void>();
     constructor(
-        fs: IFileSystem,
+        fs: IFileSystemNode,
         disposableRegistry: IDisposableRegistry,
         private panelOptions: IWebviewViewOptions,
         additionalRootPaths: Uri[] = []
