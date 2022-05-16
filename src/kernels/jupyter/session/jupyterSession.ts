@@ -253,6 +253,18 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
         await this.disposeBackingFile();
     }
 
+    async createTempfile(): Promise<string> {
+        const tempFile = await this.contentsManager.newUntitled({ type: 'file' });
+        return tempFile.path;
+    }
+
+    async getDownloadPath(file: string): Promise<string> {
+        const baseUrl = this.connInfo.baseUrl;
+        const token = this.connInfo.token;
+        const url = `${baseUrl}/files/${file}?token=${token}`;
+        return url;
+    }
+
     private async createSession(options: {
         token: CancellationToken;
         ui: IDisplayOptions;

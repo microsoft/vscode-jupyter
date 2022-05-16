@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 'use strict';
-
 import * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import { Uri, CancellationToken, NotebookDocument } from 'vscode';
@@ -55,6 +54,8 @@ export class ExportBase implements INbConvertExport, IExportBase {
 
         if (kernel.session!.isServerSession()) {
             let contents = await this.exportUtil.getContent(sourceDocument);
+            // const tempTarget = await kernel.session!.createTempfile();
+            // const outputFolder = path.dirname(tempTarget);
 
             await kernel.session!.invokeWithFileSynced(contents, async (file) => {
                 const pwd = await this.getCWD(kernel);
@@ -70,6 +71,9 @@ export class ExportBase implements INbConvertExport, IExportBase {
                 if (outputs.length === 0) {
                     return;
                 }
+
+                // const downloadUrl = await session.getDownloadPath(file.filePath);
+                // console.log(downloadUrl);
 
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const output: nbformat.IStream = outputs[0] as any;
