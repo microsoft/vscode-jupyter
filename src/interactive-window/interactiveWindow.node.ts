@@ -15,11 +15,9 @@ import {
     Range,
     workspace,
     WorkspaceEdit,
-    notebooks,
     NotebookEditor,
     Disposable,
     window,
-    ThemeColor,
     NotebookController
 } from 'vscode';
 import { IPythonExtensionChecker } from '../platform/api/types';
@@ -558,7 +556,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         // Scroll if the initial placement of this cell was scrolled as well
         const settings = this.configuration.getSettings(this.owningResource);
         if (settings.alwaysScrollOnNewCell || wasScrolled) {
-            this.revealCell(cell, false);
+            this.revealCell(cell);
         }
 
         let detachKernel = async () => noop();
@@ -600,7 +598,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
             // After execution see if we need to scroll to this cell or not.
             if (settings.alwaysScrollOnNewCell || wasScrolled) {
-                this.revealCell(cell, false);
+                this.revealCell(cell);
             }
         } finally {
             await detachKernel();
@@ -659,35 +657,19 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             .getCells()
             .find((cell) => getInteractiveCellMetadata(cell)?.id === id);
         if (matchingCell) {
-            this.revealCell(matchingCell, true);
+            this.revealCell(matchingCell);
         }
     }
 
-    private revealCell(notebookCell: NotebookCell, useDecoration: boolean) {
+    private revealCell(notebookCell: NotebookCell) {
         const notebookRange = new NotebookRange(notebookCell.index, notebookCell.index + 1);
         this.pendingNotebookScrolls.push(notebookRange);
-        const decorationType = useDecoration
-            ? notebooks.createNotebookEditorDecorationType({
-                  backgroundColor: new ThemeColor('peekViewEditor.background'),
-                  top: {}
-              })
-            : undefined;
         // This will always try to reveal the whole cell--input + output combined
         setTimeout(() => {
             this.notebookEditor.revealRange(notebookRange, NotebookEditorRevealType.Default);
 
             // No longer pending
             this.pendingNotebookScrolls.shift();
-
-            // Also add a decoration to make it look highlighted (peek background color)
-            if (decorationType) {
-                this.notebookEditor.setDecorations(decorationType, notebookRange);
-
-                // Fire another timeout to dispose of the decoration
-                setTimeout(() => {
-                    decorationType.dispose();
-                }, 2000);
-            }
         }, 200); // Rendering output is async so the output is not guaranteed to immediately exist
     }
 
@@ -795,7 +777,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         // of the history. The jupyter.alwaysScrollOnNewCell setting overrides this to always scroll
         // to newly-inserted cells.
         if (settings.alwaysScrollOnNewCell || shouldScroll) {
-            this.revealCell(cell, false);
+            this.revealCell(cell);
         }
 
         return { cell, wasScrolled: shouldScroll };
