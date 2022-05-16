@@ -30,7 +30,7 @@ class TestRunner {
     }
 
     private async launchTest(testFile: string, warmupRun?: boolean) {
-        console.log('Launch tests in test runner');
+        console.log('Launch bootstrapper for test run');
         await new Promise<void>((resolve, reject) => {
             const env: Record<string, string> = {
                 TEST_FILES_SUFFIX: testFile,
@@ -41,10 +41,14 @@ class TestRunner {
                 VSC_JUPYTER_TEST_TIMEOUT: '60000',
                 ...process.env
             };
-            const proc = spawn('node', [path.join(__dirname, 'standardTest.node.js')], {
-                cwd: EXTENSION_ROOT_DIR_FOR_TESTS,
-                env
-            });
+            const proc = spawn(
+                'node',
+                [path.join(__dirname, 'testBootstrap.node.js'), path.join(__dirname, 'standardTest.node.js')],
+                {
+                    cwd: EXTENSION_ROOT_DIR_FOR_TESTS,
+                    env
+                }
+            );
             proc.stdout.pipe(process.stdout);
             proc.stderr.pipe(process.stderr);
             proc.on('error', reject);
@@ -62,6 +66,5 @@ class TestRunner {
 
 new TestRunner().start().catch((ex) => {
     console.error('Error in running Perf Tests', ex);
-    // Exit with non zero exit code, so CI fails.
     process.exit(1);
 });
