@@ -98,6 +98,7 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
     private readonly attachedEditors = new WeakMap<NotebookDocument, WeakSet<NotebookEditor>>();
     private readonly notebookDisposables = new WeakMap<NotebookDocument, Disposable[]>();
     private readonly previouslyInitialized = new WeakSet<NotebookEditor>();
+    private readonly selectedController = new WeakMap<NotebookDocument, IVSCodeNotebookController>();
     /**
      * Public for testing purposes
      */
@@ -120,33 +121,41 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         this.controllerManager.onNotebookControllerSelected(this.onDidSelectController, this, this.disposableRegistry);
     }
     public onDidSelectController(e: { notebook: NotebookDocument; controller: IVSCodeNotebookController }) {
-        // Dispose previous message coordinators.
-        traceVerbose(`Setting setActiveController for ${getDisplayPath(e.notebook.uri)}`);
-        const previousCoordinators = this.messageCoordinators.get(e.notebook);
-        if (previousCoordinators) {
-            this.messageCoordinators.delete(e.notebook);
-            this.attachedEditors.delete(e.notebook);
-            this.notebook.notebookEditors
-                .filter((editor) => editor.document === e.notebook)
-                .forEach((editor) => {
-                    const comms = this.notebookCommunications.get(editor);
-                    this.previouslyInitialized.delete(editor);
-                    this.notebookCommunications.delete(editor);
-                    if (comms) {
-                        comms.dispose();
-                    }
-                });
-            previousCoordinators.then((item) => item.dispose()).catch(noop);
-        }
-        // Swap the controller in the communication objects (if we have any).
-        const editors = this.notebookEditors.get(e.notebook) || [];
-        const notebookComms = editors
-            .filter((editor) => this.notebookCommunications.has(editor))
-            .map((editor) => this.notebookCommunications.get(editor)!);
-        notebookComms.forEach((comm) => comm.changeController(e.controller));
+        // Skip handling this if it's the same controller.
+        // TODO: NotebookControllerManager shouldn't even fire this event if it's the same controller, but
+        // other code may be relying on this behavior
+        const lastResolvedController = this.selectedController.get(e.notebook);
+        if (lastResolvedController != e.controller) {
+            this.selectedController.set(e.notebook, e.controller);
+            // Dispose previous message coordinators.
+            const previousCoordinators = this.messageCoordinators.get(e.notebook);
+            if (previousCoordinators) {
+                this.messageCoordinators.delete(e.notebook);
+                this.attachedEditors.delete(e.notebook);
+                this.notebook.notebookEditors
+                    .filter((editor) => editor.document === e.notebook)
+                    .forEach((editor) => {
+                        const comms = this.notebookCommunications.get(editor);
+                        this.previouslyInitialized.delete(editor);
+                        this.notebookCommunications.delete(editor);
+                        if (comms) {
+                            comms.dispose();
+                        }
+                    });
+                previousCoordinators.then((item) => item.dispose()).catch(noop);
+            }
+            // Swap the controller in the communication objects (if we have any).
+            const editors = this.notebookEditors.get(e.notebook) || [];
+            const notebookComms = editors
+                .filter((editor) => this.notebookCommunications.has(editor))
+                .map((editor) => this.notebookCommunications.get(editor)!);
+            notebookComms.forEach((comm) => comm.changeController(e.controller));
 
-        // Possible user has split the notebook editor, if that's the case we need to hookup comms with this new editor as well.
-        this.notebook.notebookEditors.forEach((editor) => this.initializeNotebookCommunication(editor, e.controller));
+            // Possible user has split the notebook editor, if that's the case we need to hookup comms with this new editor as well.
+            this.notebook.notebookEditors.forEach((editor) =>
+                this.initializeNotebookCommunication(editor, e.controller)
+            );
+        }
     }
     private initializeNotebookCommunication(editor: NotebookEditor, controller: IVSCodeNotebookController | undefined) {
         const notebook = editor.document;
@@ -179,6 +188,13 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         // Create a handler for this notebook if we don't already have one. Since there's one of the notebookMessageCoordinator's for the
         // entire VS code session, we have a map of notebook document to message coordinator
         traceVerbose(`Resolving notebook UI Comms (resolve) for ${getDisplayPath(document.uri)}`);
+
+        // Remember the controller selected when resolving so we
+        // don't re-resolve the same controller.
+        const selectedController = this.controllerManager.getSelectedNotebookController(document);
+        if (selectedController) {
+            this.selectedController.set(document, selectedController);
+        }
         let promise = this.messageCoordinators.get(document);
         if (promise === undefined) {
             promise = CommonMessageCoordinator.create(document, this.serviceContainer);
@@ -212,6 +228,7 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         this.messageCoordinators.delete(notebook);
 
         this.attachedEditors.delete(notebook);
+        this.selectedController.delete(notebook);
         editors.forEach((editor) => this.previouslyInitialized.delete(editor));
     }
     private attachCoordinator(

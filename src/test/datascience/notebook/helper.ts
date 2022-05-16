@@ -254,10 +254,6 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
     await closeActiveWindows();
     disposeAllDisposables(disposables);
     await shutdownAllNotebooks();
-
-    // Sleep a bit. VS code needs to clear out the documents, otherwise
-    // it won't reset the scripts
-    await sleep(1000);
 }
 
 let waitForKernelPendingPromise: Promise<void> | undefined;
