@@ -11,6 +11,8 @@ import { Extensions } from '../../platform/common/application/extensions.node';
 import { FileSystem } from '../../platform/common/platform/fileSystem.node';
 import { JupyterUriProviderRegistration } from '../../kernels/jupyter/jupyterUriProviderRegistration';
 import { IJupyterUriProvider, JupyterServerUriHandle, IJupyterServerUri } from '../../kernels/jupyter/types';
+import { IDisposable } from '../../platform/common/types';
+import { disposeAllDisposables } from '../../platform/common/helpers';
 
 class MockProvider implements IJupyterUriProvider {
     public get id() {
@@ -55,7 +57,11 @@ class MockProvider implements IJupyterUriProvider {
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience URI Picker', () => {
-    teardown(() => sinon.restore());
+    const disposables: IDisposable[] = [];
+    teardown(() => {
+        sinon.restore();
+        disposeAllDisposables(disposables);
+    });
     suiteSetup(() => sinon.restore());
     async function createRegistration(providerIds: string[]) {
         let registration: JupyterUriProviderRegistration | undefined;
@@ -68,7 +74,7 @@ suite('DataScience URI Picker', () => {
         const memento = mock<vscode.Memento>();
         when(memento.get<string[]>(anything())).thenReturn([]);
         when(memento.get<string[]>(anything(), anything())).thenReturn([]);
-        registration = new JupyterUriProviderRegistration(extensions, instance(memento));
+        registration = new JupyterUriProviderRegistration(extensions, disposables, instance(memento));
         await Promise.all(
             providerIds.map(async (id) => {
                 const extension = TypeMoq.Mock.ofType<vscode.Extension<any>>();

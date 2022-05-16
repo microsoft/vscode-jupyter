@@ -29,8 +29,8 @@ import {
 } from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
 import {
     IJupyterKernel,
-    IJupyterSessionManager,
-    ILiveRemoteKernelConnectionUsageTracker
+    IJupyterRemoteCachedKernelValidator,
+    IJupyterSessionManager
 } from '../../../kernels/jupyter/types';
 import { KernelFinder } from '../../../kernels/kernelFinder.node';
 import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
@@ -54,7 +54,7 @@ suite(`Remote Kernel Finder`, () => {
     let jupyterSessionManager: IJupyterSessionManager;
     const dummyEvent = new EventEmitter<number>();
     let interpreterService: IInterpreterService;
-    let liveKernelUsageTracker: ILiveRemoteKernelConnectionUsageTracker;
+    let cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator;
     const connInfo: IJupyterConnection = {
         url: 'http://foobar',
         type: 'jupyter',
@@ -156,8 +156,8 @@ suite(`Remote Kernel Finder`, () => {
         const onDidChangeEvent = new EventEmitter<void>();
         disposables.push(onDidChangeEvent);
         when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);
-        liveKernelUsageTracker = mock<ILiveRemoteKernelConnectionUsageTracker>();
-        when(liveKernelUsageTracker.wasKernelUsed(anything())).thenReturn(true);
+        cachedRemoteKernelValidator = mock<IJupyterRemoteCachedKernelValidator>();
+        when(cachedRemoteKernelValidator.isValid(anything())).thenResolve(true);
         kernelFinder = new KernelFinder(
             instance(localKernelFinder),
             remoteKernelFinder,
@@ -167,7 +167,7 @@ suite(`Remote Kernel Finder`, () => {
             instance(fs),
             instance(serverUriStorage),
             instance(connectionType),
-            instance(liveKernelUsageTracker)
+            instance(cachedRemoteKernelValidator)
         );
     });
     teardown(() => {
@@ -316,7 +316,7 @@ suite(`Remote Kernel Finder`, () => {
             },
             liveRemoteKernel
         ];
-        when(liveKernelUsageTracker.wasKernelUsed(anything())).thenReturn(false);
+        when(cachedRemoteKernelValidator.isValid(anything())).thenResolve(false);
         when(memento.get<KernelConnectionMetadata[]>(LocalKernelSpecsCacheKey, anything())).thenReturn([]);
         when(memento.get<KernelConnectionMetadata[]>(RemoteKernelSpecsCacheKey, anything())).thenReturn(cachedKernels);
         when(jupyterSessionManager.getRunningKernels()).thenResolve([]);
@@ -326,7 +326,7 @@ suite(`Remote Kernel Finder`, () => {
         const kernels = await kernelFinder.listKernels(Uri.file('a.ipynb'), undefined, 'useCache');
         assert.lengthOf(kernels, 0);
 
-        verify(liveKernelUsageTracker.wasKernelUsed(liveRemoteKernel)).once();
+        verify(cachedRemoteKernelValidator.isValid(liveRemoteKernel)).once();
     });
     test('Return cached remote live kernel if used', async () => {
         const liveRemoteKernel: LiveRemoteKernelConnectionMetadata = {
@@ -365,8 +365,8 @@ suite(`Remote Kernel Finder`, () => {
             },
             liveRemoteKernel
         ];
-        when(liveKernelUsageTracker.wasKernelUsed(anything())).thenReturn(false);
-        when(liveKernelUsageTracker.wasKernelUsed(liveRemoteKernel)).thenReturn(true);
+        when(cachedRemoteKernelValidator.isValid(anything())).thenResolve(false);
+        when(cachedRemoteKernelValidator.isValid(liveRemoteKernel)).thenResolve(true);
         when(memento.get<KernelConnectionMetadata[]>(LocalKernelSpecsCacheKey, anything())).thenReturn([]);
         when(memento.get<KernelConnectionMetadata[]>(RemoteKernelSpecsCacheKey, anything())).thenReturn(cachedKernels);
         when(jupyterSessionManager.getRunningKernels()).thenResolve([]);
@@ -377,6 +377,6 @@ suite(`Remote Kernel Finder`, () => {
         assert.lengthOf(kernels, 1);
         assert.deepEqual(kernels, [liveRemoteKernel]);
 
-        verify(liveKernelUsageTracker.wasKernelUsed(liveRemoteKernel)).once();
+        verify(cachedRemoteKernelValidator.isValid(liveRemoteKernel)).once();
     });
 });

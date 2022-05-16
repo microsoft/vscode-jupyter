@@ -3,20 +3,18 @@
 
 import { inject, injectable } from 'inversify';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { Identifiers } from '../../platform/common/constants';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { RemoteJupyterServerUriProviderError } from '../../platform/errors/remoteJupyterServerUriProviderError';
 import { BaseError } from '../../platform/errors/types';
 import { IJupyterConnection } from '../types';
-import { computeServerId, createRemoteConnectionInfo } from './jupyterUtils';
+import { computeServerId, createRemoteConnectionInfo, extractJupyterServerHandleAndId } from './jupyterUtils';
 import { ServerConnectionType } from './launcher/serverConnectionType';
 import {
     IJupyterServerUri,
     IJupyterServerUriStorage,
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
-    IJupyterUriProviderRegistration,
-    JupyterServerUriHandle
+    IJupyterUriProviderRegistration
 } from './types';
 
 @injectable()
@@ -92,7 +90,7 @@ export class JupyterConnection implements IExtensionSyncActivationService {
     }
 
     public async updateServerUri(uri: string): Promise<void> {
-        const idAndHandle = this.extractJupyterServerHandleAndId(uri);
+        const idAndHandle = extractJupyterServerHandleAndId(uri);
         if (idAndHandle) {
             try {
                 const serverUri = await this.jupyterPickerRegistration.getJupyterServerUri(
@@ -120,17 +118,9 @@ export class JupyterConnection implements IExtensionSyncActivationService {
     }
 
     private getServerUri(uri: string): IJupyterServerUri | undefined {
-        const idAndHandle = this.extractJupyterServerHandleAndId(uri);
+        const idAndHandle = extractJupyterServerHandleAndId(uri);
         if (idAndHandle) {
             return this.uriToJupyterServerUri.get(uri);
         }
-    }
-    private extractJupyterServerHandleAndId(uri: string): { handle: JupyterServerUriHandle; id: string } | undefined {
-        const url: URL = new URL(uri);
-
-        // Id has to be there too.
-        const id = url.searchParams.get(Identifiers.REMOTE_URI_ID_PARAM);
-        const uriHandle = url.searchParams.get(Identifiers.REMOTE_URI_HANDLE_PARAM);
-        return id && uriHandle ? { handle: uriHandle, id } : undefined;
     }
 }

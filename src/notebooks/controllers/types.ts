@@ -4,8 +4,9 @@
 
 import * as vscode from 'vscode';
 import { KernelConnectionMetadata } from '../../kernels/types';
+import { IDisposable } from '../../platform/common/types';
 
-export interface IVSCodeNotebookController {
+export interface IVSCodeNotebookController extends IDisposable {
     readonly connection: KernelConnectionMetadata;
     readonly controller: vscode.NotebookController;
     readonly id: string;
