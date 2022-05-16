@@ -28,7 +28,7 @@ import { IExtensionSingleActivationService } from './activation/types';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from '../webviews/extension-side/renderer';
 import { OutputCommandListener } from './logging/outputCommandListener';
 import { IDebuggingManager } from './debugger/types';
-import { DebuggingManager } from './debugger/jupyter/debuggingManager';
+import { DebuggingManager } from './debugger/jupyter/notebook/debuggingManager';
 import { ExportDialog } from './export/exportDialog';
 import { ExportFormat, IExport, IExportDialog, IFileConverter } from './export/types';
 import { FileConverter } from './export/fileConverter.web';

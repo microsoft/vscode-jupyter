@@ -33,7 +33,7 @@ import { GlobalActivation } from './common/globalActivation';
 import { PreReleaseChecker } from './common/prereleaseChecker.node';
 import { IConfigurationService, IDataScienceCommandListener, IExtensionContext } from './common/types';
 import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFactory.node';
-import { DebuggingManager } from './debugger/jupyter/debuggingManager';
+import { DebuggingManager } from './debugger/jupyter/notebook/debuggingManager';
 import { IDebugLocationTracker, IDebuggingManager } from './debugger/types';
 import { DataScienceErrorHandler } from './errors/errorHandler';
 import { IDataScienceErrorHandler } from './errors/types';
