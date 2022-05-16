@@ -35,7 +35,7 @@ import { DebugCellController, RunByLineController } from './debugControllers.nod
 import { assertIsDebugConfig, IpykernelCheckResult, isUsingIpykernel6OrLater } from './helper.node';
 import { Debugger } from './debugger.node';
 import { INotebookControllerManager } from '../../../notebooks/types';
-import { IFileSystem } from '../../common/platform/types.node';
+import { IFileSystem } from '../../common/platform/types';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.

@@ -8,7 +8,7 @@
 import { assert, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from '../../../platform/vscode-path/path';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystem } from '../../../platform/common/platform/types';
 import { EnvironmentVariablesService } from '../../../platform/common/variables/environment.node';
 import { IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
 import { IEnvironmentActivationService } from '../../../platform/interpreter/activation/types';
