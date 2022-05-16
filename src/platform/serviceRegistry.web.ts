@@ -28,12 +28,13 @@ import { IExtensionSingleActivationService } from './activation/types';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from '../webviews/extension-side/renderer';
 import { OutputCommandListener } from './logging/outputCommandListener';
 import { ExportDialog } from './export/exportDialog';
-import { ExportFormat, IExport, IExportDialog, IFileConverter } from './export/types';
+import { ExportFormat, IExport, IExportDialog, IFileConverter, INbConvertExport } from './export/types';
 import { FileConverter } from './export/fileConverter.web';
 import { ExportFileOpener } from './export/exportFileOpener';
 import { ExportToPythonPlain } from './export/exportToPythonPlain.web';
 import { IFileSystem } from './common/platform/types';
 import { FileSystem } from './common/platform/fileSystem';
+import { ExportToHTML } from './export/exportBase.web';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
@@ -51,6 +52,7 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IExportDialog>(IExportDialog, ExportDialog);
     serviceManager.addSingleton<IFileConverter>(IFileConverter, FileConverter);
     serviceManager.addSingleton<IExport>(IExport, ExportToPythonPlain, ExportFormat.python);
+    serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToHTML, ExportFormat.html);
 
     registerCommonTypes(serviceManager);
     registerApiTypes(serviceManager);

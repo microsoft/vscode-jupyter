@@ -8,12 +8,13 @@ import { CancellationToken, CancellationTokenSource, NotebookDocument, Uri } fro
 import { traceError } from '../logging';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { ExportFileOpener } from './exportFileOpener';
-import { ExportFormat, IExport, IExportDialog, IFileConverter } from './types';
+import { ExportFormat, IExport, IExportDialog, IFileConverter, INbConvertExport } from './types';
 
 @injectable()
 export class FileConverter implements IFileConverter {
     constructor(
         @inject(IExport) @named(ExportFormat.python) private readonly exportToPythonPlain: IExport,
+        @inject(INbConvertExport) @named(ExportFormat.html) private readonly exportToHTML: INbConvertExport,
         @inject(IExportDialog) private readonly filePicker: IExportDialog,
         @inject(ExportFileOpener) private readonly exportFileOpener: ExportFileOpener
     ) {}
@@ -66,7 +67,8 @@ export class FileConverter implements IFileConverter {
             await this.performPlainExport(format, sourceDocument, target, token);
             await this.exportFileOpener.openFile(format, target, true);
         } else {
-            throw new Error('Method not implemented.');
+            await this.performNbConvertExport(format, sourceDocument, target, token);
+            await this.exportFileOpener.openFile(format, target, true);
         }
     }
 
@@ -79,6 +81,19 @@ export class FileConverter implements IFileConverter {
         switch (format) {
             case ExportFormat.python:
                 await this.exportToPythonPlain.export(sourceDocument, target, cancelToken);
+                break;
+        }
+    }
+
+    private async performNbConvertExport(
+        format: ExportFormat,
+        sourceDocument: NotebookDocument,
+        target: Uri,
+        cancelToken: CancellationToken
+    ) {
+        switch (format) {
+            case ExportFormat.html:
+                await this.exportToHTML.export(sourceDocument.uri, target, undefined, cancelToken);
                 break;
         }
     }

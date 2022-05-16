@@ -20,7 +20,13 @@ import { JupyterInvalidKernelError } from '../../platform/errors/jupyterInvalidK
 import { JupyterWaitForIdleError } from '../../platform/errors/jupyterWaitForIdleError';
 import { KernelInterruptTimeoutError } from '../../platform/errors/kernelInterruptTimeoutError';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
-import { IJupyterSession, ISessionWithSocket, KernelConnectionMetadata, KernelSocketInformation } from '../types';
+import {
+    IJupyterServerSession,
+    IJupyterSession,
+    ISessionWithSocket,
+    KernelConnectionMetadata,
+    KernelSocketInformation
+} from '../types';
 import { ChainingExecuteRequester } from './chainingExecuteRequester';
 import { getResourceType } from '../../platform/common/utils';
 import { KernelProgressReporter } from '../../platform/progress/kernelProgressReporter';
@@ -126,6 +132,9 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         this.unhandledMessageHandler = (_s, m) => {
             traceInfo(`Unhandled message found: ${m.header.msg_type}`);
         };
+    }
+    isServerSession(): this is IJupyterServerSession {
+        return false;
     }
     public async dispose(): Promise<void> {
         await this.shutdownImplementation(false);

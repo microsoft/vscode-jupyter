@@ -19,7 +19,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { IAsyncDisposable, IDisplayOptions, Resource } from '../platform/common/types';
 import { WebSocketData } from '../platform/api/extension';
-import { IJupyterKernel } from './jupyter/types';
+import { IBackupFile, IJupyterKernel } from './jupyter/types';
 import { PythonEnvironment_PythonApi } from '../platform/api/types';
 
 export type LiveKernelModel = IJupyterKernel &
@@ -262,6 +262,7 @@ export interface IJupyterSession extends IAsyncDisposable {
     readonly status: KernelMessage.Status;
     readonly kernelId: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
+    isServerSession(): this is IJupyterServerSession;
     onSessionStatusChanged: Event<KernelMessage.Status>;
     onDidDispose: Event<void>;
     onIOPubMessage: Event<KernelMessage.IIOPubMessage>;
@@ -291,6 +292,11 @@ export interface IJupyterSession extends IAsyncDisposable {
     removeMessageHook(msgId: string, hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void;
     requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg | undefined>;
     shutdown(): Promise<void>;
+}
+
+export interface IJupyterServerSession extends IJupyterSession {
+    readonly kind: 'remoteJupyter' | 'localJupyter';
+    invokeWithFileSynced(handler: (file: IBackupFile) => Promise<void>): Promise<void>;
 }
 
 export type ISessionWithSocket = Session.ISessionConnection & {

@@ -241,6 +241,11 @@ export interface IJupyterServerUriStorage {
     setUriToRemote(uri: string, displayName: string): Promise<void>;
 }
 
+export interface IBackupFile {
+    dispose: () => Promise<unknown>;
+    filePath: string;
+}
+
 export const IJupyterBackingFileCreator = Symbol('IJupyterBackingFileCreator');
 export interface IJupyterBackingFileCreator {
     createBackingFile(
@@ -249,7 +254,7 @@ export interface IJupyterBackingFileCreator {
         kernel: KernelConnectionMetadata,
         connInfo: IJupyterConnection,
         contentsManager: ContentsManager
-    ): Promise<{ dispose: () => Promise<unknown>; filePath: string } | undefined>;
+    ): Promise<IBackupFile | undefined>;
 }
 
 export const IJupyterKernelService = Symbol('IJupyterKernelService');
