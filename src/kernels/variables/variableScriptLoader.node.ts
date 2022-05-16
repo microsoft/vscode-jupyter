@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as path from '../../platform/vscode-path/path';
-import { IFileSystem } from '../../platform/common/platform/types.node';
+import { IFileSystem } from '../../platform/common/platform/types';
 import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
 import { IJupyterVariable } from './types';
 

@@ -35,7 +35,7 @@ import { DebugCellController } from './debugCellControllers.node';
 import { assertIsDebugConfig, IpykernelCheckResult, isUsingIpykernel6OrLater } from '../helper.node';
 import { Debugger } from '../debugger.node';
 import { INotebookControllerManager } from '../../../../notebooks/types';
-import { IFileSystem } from '../../../common/platform/types.node';
+import { IFileSystem } from '../../../common/platform/types';
 import { RunByLineController } from './runByLineController.node';
 
 /**

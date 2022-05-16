@@ -32,7 +32,7 @@ import {
 import { Commands, defaultNotebookFormat, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants';
 import '../platform/common/extensions';
 import { traceInfoIfCI } from '../platform/logging';
-import { IFileSystem } from '../platform/common/platform/types.node';
+import { IFileSystem } from '../platform/common/platform/types';
 import * as uuid from 'uuid/v4';
 
 import { IConfigurationService, InteractiveWindowMode, Resource } from '../platform/common/types';
