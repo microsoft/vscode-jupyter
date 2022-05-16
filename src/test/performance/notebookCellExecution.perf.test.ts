@@ -3,6 +3,7 @@ import * as sinon from 'sinon';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { IDisposable } from '../../platform/common/types';
 import { IExtensionTestApi } from '../common';
+import { captureScreenShot } from '../common.node';
 import { createEmptyPythonNotebook, insertCodeCell, runCell, waitForTextOutput } from '../datascience/notebook/helper';
 import { activateExtension, initializePython } from '../initialize.node';
 import { PerformanceTracker } from './performanceTracker';
@@ -16,6 +17,9 @@ suite('Initial Notebook Cell Execution Perf Test', function () {
     teardown(async function () {
         // results are reported in global test hooks
         this.currentTest!.perfCheckpoints = tracker.finish();
+        if (this.currentTest?.isFailed()) {
+            await captureScreenShot(this.currentTest?.title);
+        }
     });
     test('Initial Notebook Cell Execution Perf Test', async function () {
         const disposables: IDisposable[] = [];
