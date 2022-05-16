@@ -123,7 +123,6 @@ export function shortNameMatchesLongName(shortNamePath: string, longNamePath: st
     return r.test(longNamePath);
 }
 
-
 export async function cellDebugSetup(kernel: IKernel, debugAdapter: IKernelDebugAdapter): Promise<void> {
     // remove this if when https://github.com/microsoft/debugpy/issues/706 is fixed and ipykernel ships it
     // executing this code restarts debugpy and fixes https://github.com/microsoft/vscode-jupyter/issues/7251
