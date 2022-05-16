@@ -13,7 +13,8 @@ export function populateTelemetryWithErrorInfo(props: Partial<TelemetryErrorProp
     props.failed = true;
     // Don't blow away what we already have.
     props.failureCategory = props.failureCategory || getErrorCategory(error);
-    if (props.failureCategory === 'unknown' && isErrorType(error, FetchError)) {
+    // FetchError is undefined on Web.
+    if (props.failureCategory === 'unknown' && isErrorType(error, FetchError.name || 'FetchError')) {
         props.failureCategory = 'fetcherror';
     }
     props.stackTrace = serializeStackTrace(error);
@@ -81,7 +82,10 @@ function getCallSite(frame: stackTrace.StackFrame) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Constructor<T> = { new (...args: any[]): T };
-function isErrorType<T>(error: Error, expectedType: Constructor<T>) {
+function isErrorType<T>(error: Error, expectedType: Constructor<T> | string) {
+    if (typeof expectedType === 'string') {
+        return error.name === expectedType;
+    }
     if (error instanceof expectedType) {
         return true;
     }
