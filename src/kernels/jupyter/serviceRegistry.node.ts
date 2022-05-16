@@ -25,6 +25,7 @@ import { NbConvertInterpreterDependencyChecker } from './interpreter/nbconvertIn
 import { CellOutputMimeTypeTracker } from './jupyterCellOutputMimeTypeTracker.node';
 import { JupyterConnection } from './jupyterConnection';
 import { JupyterKernelService } from './jupyterKernelService.node';
+import { JupyterRemoteCachedKernelValidator } from './jupyterRemoteCachedKernelValidator';
 import { JupyterUriProviderRegistration } from './jupyterUriProviderRegistration';
 import { JupyterCommandLineSelector } from './launcher/commandLineSelector';
 import { JupyterNotebookProvider } from './launcher/jupyterNotebookProvider';
@@ -64,7 +65,8 @@ import {
     IJupyterRequestCreator,
     IJupyterRequestAgentCreator,
     INotebookServerFactory,
-    ILiveRemoteKernelConnectionUsageTracker
+    ILiveRemoteKernelConnectionUsageTracker,
+    IJupyterRemoteCachedKernelValidator
 } from './types';
 import { IJupyterCommandFactory, IJupyterSubCommandExecutionService } from './types.node';
 
@@ -158,5 +160,9 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         RemoteKernelConnectionHandler
+    );
+    serviceManager.addSingleton<IJupyterRemoteCachedKernelValidator>(
+        IJupyterRemoteCachedKernelValidator,
+        JupyterRemoteCachedKernelValidator
     );
 }
