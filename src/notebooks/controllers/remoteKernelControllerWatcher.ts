@@ -11,6 +11,7 @@ import {
 import { isLocalConnection } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IDisposableRegistry } from '../../platform/common/types';
+import { noop } from '../../platform/common/utils/misc';
 import { INotebookControllerManager } from '../types';
 
 @injectable()
@@ -23,7 +24,8 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
         @inject(INotebookControllerManager) private readonly controllers: INotebookControllerManager
     ) {}
     activate(): void {
-        this.providerRegistry.onProvidersChanged(this.addProviderHandlers, this, this.disposables);
+        this.providerRegistry.onDidChangeProviders(this.addProviderHandlers, this, this.disposables);
+        this.addProviderHandlers().catch(noop);
     }
     private async addProviderHandlers() {
         const providers = await this.providerRegistry.getProviders();
@@ -62,14 +64,12 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
         );
         const controllers = this.controllers.getRegisteredNotebookControllers();
         controllers.forEach((controller) => {
-            const info = serverJupyterProviderMap.get(controller.connection.id);
-            if (!isLocalConnection(controller.connection) || !info) {
+            const connection = controller.connection;
+            if (isLocalConnection(connection)) {
                 return;
             }
-            if (!info) {
-                return;
-            }
-            if (!handles.includes(info.handle)) {
+            const info = serverJupyterProviderMap.get(connection.serverId);
+            if (info && !handles.includes(info.handle)) {
                 // Looks like the 3rd party provider has updated its handles and this server is no longer available.
                 controller.dispose();
             }

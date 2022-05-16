@@ -14,7 +14,7 @@ import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { INotebookControllerManager, INotebookEditorProvider } from './types';
 import { NotebookUsageTracker } from './notebookUsageTracker';
 import { NotebookEditorProvider } from './notebookEditorProvider';
-import { RemoteKernelControllerWatcher } from './controllers/jupyterUriHandleWatcher';
+import { RemoteKernelControllerWatcher } from './controllers/remoteKernelControllerWatcher';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);

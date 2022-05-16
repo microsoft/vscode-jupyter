@@ -223,7 +223,7 @@ export interface IJupyterUriProvider {
 export const IJupyterUriProviderRegistration = Symbol('IJupyterUriProviderRegistration');
 
 export interface IJupyterUriProviderRegistration {
-    onProvidersChanged: Event<void>;
+    onDidChangeProviders: Event<void>;
     getProviders(): Promise<ReadonlyArray<IJupyterUriProvider>>;
     registerProvider(picker: IJupyterUriProvider): void;
     getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;

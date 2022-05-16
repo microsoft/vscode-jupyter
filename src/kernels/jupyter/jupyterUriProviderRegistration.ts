@@ -23,7 +23,7 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
     private loadedOtherExtensionsPromise: Promise<void> | undefined;
     private providers = new Map<string, Promise<IJupyterUriProvider>>();
     private providerExtensionMapping = new Map<string, string>();
-    public readonly onProvidersChanged = this._onProvidersChanged.event;
+    public readonly onDidChangeProviders = this._onProvidersChanged.event;
 
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,

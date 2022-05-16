@@ -23,7 +23,7 @@ import { NotebookUsageTracker } from './notebookUsageTracker';
 import { IDataScienceCommandListener } from '../platform/common/types';
 import { CondaControllerRefresher } from './controllers/condaControllerRefresher.node';
 import { IntellisenseProvider } from '../intellisense/intellisenseProvider.node';
-import { RemoteKernelControllerWatcher } from './controllers/jupyterUriHandleWatcher';
+import { RemoteKernelControllerWatcher } from './controllers/remoteKernelControllerWatcher';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
