@@ -37,7 +37,6 @@ import {
 } from '../types';
 import { assertIsDebugConfig, getMessageSourceAndHookIt, isShortNamePath, shortNameMatchesLongName } from './helper';
 import { executeSilently } from '../../../kernels/helpers';
-// import { IFileSystem } from '../../common/platform/types.node';
 
 // For info on the custom requests implemented by jupyter see:
 // https://jupyter-client.readthedocs.io/en/stable/messaging.html#debug-request
@@ -60,7 +59,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         private session: DebugSession,
         private notebookDocument: NotebookDocument,
         private readonly jupyterSession: IJupyterSession,
-        // private fs: IFileSystem,
         private readonly kernel: IKernel | undefined,
         private readonly platformService: IPlatformService
     ) {
@@ -191,6 +189,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     }
 
     dispose() {
+        // On dispose, delete our temp cell files
         this.deleteDumpCells().catch(() => {
             traceError('Error deleting temporary debug files.');
         });

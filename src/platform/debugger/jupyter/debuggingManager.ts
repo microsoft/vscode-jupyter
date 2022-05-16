@@ -35,7 +35,6 @@ import { DebugCellController, RunByLineController } from './debugControllers';
 import { assertIsDebugConfig, IpykernelCheckResult, isUsingIpykernel6OrLater } from './helper';
 import { Debugger } from './debugger';
 import { INotebookControllerManager } from '../../../notebooks/types';
-//import { IFileSystem } from '../../common/platform/types.node';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
@@ -57,7 +56,6 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        //@inject(IFileSystem) private fs: IFileSystem,
         @inject(IConfigurationService) private settings: IConfigurationService,
         @inject(IPlatformService) private platform: IPlatformService
     ) {
@@ -380,8 +378,6 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                         session,
                         debug.document,
                         kernel.session,
-                        // IANHU TOOD: Need to resolve
-                        //this.fs,
                         kernel,
                         this.platform
                     );
