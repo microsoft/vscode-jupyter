@@ -9,7 +9,7 @@ import { CancellationToken, Uri } from 'vscode';
 import { JupyterSettings } from '../../../platform/common/configSettings';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystem } from '../../../platform/common/platform/types';
 import { ObservableExecutionResult, Output } from '../../../platform/common/process/types.node';
 import { IConfigurationService, IJupyterSettings } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';

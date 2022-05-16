@@ -12,7 +12,7 @@ import { ICommandManager, IApplicationShell } from '../platform/common/applicati
 import { PYTHON_LANGUAGE, NOTEBOOK_SELECTOR } from '../platform/common/constants';
 import { ContextKey } from '../platform/common/contextKey';
 import { traceInfo } from '../platform/logging';
-import { IFileSystem } from '../platform/common/platform/types.node';
+import { IFileSystem } from '../platform/common/platform/types';
 import { IDisposableRegistry, IConfigurationService } from '../platform/common/types';
 import { Commands, EditorContexts } from '../webviews/webview-side/common/constants';
 import { sleep, waitForCondition } from '../platform/common/utils/async';

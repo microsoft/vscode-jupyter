@@ -18,7 +18,7 @@ import { IApplicationEnvironment, IApplicationShell, ICommandManager } from '../
 import { Commands, MARKDOWN_LANGUAGE } from '../common/constants';
 import { traceError } from '../logging';
 import { IPlatformService } from '../common/platform/types';
-import { IFileSystem } from '../common/platform/types.node';
+import { IFileSystem } from '../common/platform/types';
 import { IDataScienceCommandListener, IDisposableRegistry, IExtensionContext } from '../common/types';
 import { GitHubIssue } from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';

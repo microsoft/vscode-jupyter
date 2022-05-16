@@ -32,7 +32,7 @@ import { IS_CONDA_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import { Disposable, Memento } from 'vscode';
 import { instance, mock, verify } from 'ts-mockito';
 import { defaultNotebookTestTimeout } from '../notebook/helper.node';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystem } from '../../../platform/common/platform/types';
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
     let api: IExtensionTestApi;

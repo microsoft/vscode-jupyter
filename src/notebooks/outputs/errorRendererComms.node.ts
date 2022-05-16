@@ -11,7 +11,7 @@ import {
     IVSCodeNotebook
 } from '../../platform/common/application/types';
 import { arePathsSame } from '../../platform/common/platform/fileUtils.node';
-import { IFileSystem } from '../../platform/common/platform/types.node';
+import { IFileSystem } from '../../platform/common/platform/types';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { InteractiveWindowMessages } from '../../platform/messageTypes';
 import { linkCommandAllowList, LineQueryRegex } from './linkProvider.node';

@@ -12,7 +12,7 @@ import {
     IVSCodeNotebook,
     IWorkspaceService
 } from '../../../platform/common/application/types';
-import { IFileSystem } from '../../../platform/common/platform/types.node';
+import { IFileSystem } from '../../../platform/common/platform/types';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../../platform/common/types';
 import { DataScienceCodeLensProvider } from '../../../interactive-window/editor-integration/codelensprovider';
 import { IServiceContainer } from '../../../platform/ioc/types';

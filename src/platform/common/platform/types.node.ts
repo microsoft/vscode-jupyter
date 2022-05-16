@@ -4,7 +4,6 @@
 import * as fs from 'fs';
 import * as vscode from 'vscode';
 import { IFileSystem, TemporaryFile } from './types';
-export { IFileSystem } from './types';
 
 //===========================
 // filesystem operations
