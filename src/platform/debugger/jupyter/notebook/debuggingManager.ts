@@ -20,7 +20,7 @@ import {
 import * as path from '../../../vscode-path/path';
 import { IKernel, IKernelProvider } from '../../../../kernels/types';
 import { IConfigurationService, IDisposable } from '../../../common/types';
-import { KernelDebugAdapter } from '../kernelDebugAdapter.node';
+import { KernelDebugAdapter } from '../kernelDebugAdapter';
 import { IExtensionSingleActivationService } from '../../../activation/types';
 import { ContextKey } from '../../../common/contextKey';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
@@ -31,12 +31,11 @@ import { IPlatformService } from '../../../common/platform/types';
 import { IDebuggingManager, IKernelDebugAdapterConfig, KernelDebugMode } from '../../types';
 import { DebuggingTelemetry, pythonKernelDebugAdapter } from '../../constants';
 import { sendTelemetryEvent } from '../../../../telemetry';
-import { DebugCellController } from './debugCellControllers.node';
-import { assertIsDebugConfig, IpykernelCheckResult, isUsingIpykernel6OrLater } from '../helper.node';
-import { Debugger } from '../debugger.node';
+import { DebugCellController } from './debugCellControllers';
+import { assertIsDebugConfig, IpykernelCheckResult, isUsingIpykernel6OrLater } from '../helper';
+import { Debugger } from '../debugger';
 import { INotebookControllerManager } from '../../../../notebooks/types';
-import { IFileSystem } from '../../../common/platform/types';
-import { RunByLineController } from './runByLineController.node';
+import { RunByLineController } from './runByLineController';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
@@ -58,7 +57,6 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(IFileSystem) private fs: IFileSystem,
         @inject(IConfigurationService) private settings: IConfigurationService,
         @inject(IPlatformService) private platform: IPlatformService
     ) {
@@ -381,7 +379,6 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                         session,
                         debug.document,
                         kernel.session,
-                        this.fs,
                         kernel,
                         this.platform
                     );

@@ -14,7 +14,7 @@ import { sendTelemetryEvent } from '../../../../telemetry';
 import { DebuggingTelemetry } from '../../constants';
 import { IDebuggingDelegate, IKernelDebugAdapter, KernelDebugMode } from '../../types';
 import { Commands } from '../../../common/constants';
-import { cellDebugSetup } from '../helper.node';
+import { cellDebugSetup } from '../helper';
 
 export class RunByLineController implements IDebuggingDelegate {
     private lastPausedThreadId: number | undefined;
