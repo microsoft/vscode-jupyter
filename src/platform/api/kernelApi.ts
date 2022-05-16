@@ -113,7 +113,7 @@ class JupyterKernelService implements IExportedKernelService {
         const items = await this.notebookControllerManager.kernelConnections;
         return items.map((item) => this.translateKernelConnectionMetadataToExportedType(item));
     }
-    async getActiveKernels(): Promise<{ metadata: KernelConnectionMetadata; uri: Uri | undefined }[]> {
+    getActiveKernels(): { metadata: KernelConnectionMetadata; uri: Uri | undefined }[] {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
             extensionId: this.callingExtensionId,
             pemUsed: 'getActiveKernels'

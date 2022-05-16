@@ -36,6 +36,9 @@ export class RawSession implements ISessionWithSocket {
     private readonly _kernelChanged: Signal<this, Session.ISessionConnection.IKernelChangedArgs>;
     private readonly _terminated: Signal<this, void>;
     private readonly _ioPubMessage: Signal<this, KernelMessage.IIOPubMessage>;
+    private readonly _unhandledMessage: Signal<this, KernelMessage.IMessage>;
+    private readonly _anyMessage: Signal<this, Kernel.IAnyMessageArgs>;
+    private readonly _disposed: Signal<this, void>;
     private readonly _connectionStatusChanged: Signal<this, Kernel.ConnectionStatus>;
     private readonly exitHandler: IDisposable;
     private readonly signaling: typeof import('@lumino/signaling');
@@ -62,7 +65,10 @@ export class RawSession implements ISessionWithSocket {
         this._kernelChanged = new signaling.Signal<this, Session.ISessionConnection.IKernelChangedArgs>(this);
         this._ioPubMessage = new signaling.Signal<this, KernelMessage.IIOPubMessage>(this);
         this._terminated = new signaling.Signal<this, void>(this);
+        this._anyMessage = new signaling.Signal<this, Kernel.IAnyMessageArgs>(this);
+        this._unhandledMessage = new signaling.Signal<this, KernelMessage.IMessage>(this);
         this._connectionStatusChanged = new signaling.Signal<this, Kernel.ConnectionStatus>(this);
+        this._disposed = new signaling.Signal<this, void>(this);
         // Unique ID for this session instance
         this._id = uuid();
 
@@ -74,17 +80,19 @@ export class RawSession implements ISessionWithSocket {
         this._kernel.statusChanged.connect(this.onKernelStatus, this);
         this._kernel.iopubMessage.connect(this.onIOPubMessage, this);
         this._kernel.connectionStatusChanged.connect(this.onKernelConnectionStatus, this);
+        this._kernel.unhandledMessage.connect(this.onUnhandledMessage, this);
+        this._kernel.anyMessage.connect(this.onAnyMessage, this);
+        this._kernel.disposed.connect(this.onDisposed, this);
         this.exitHandler = kernelProcess.exited(this.handleUnhandledExitingOfKernelProcess, this);
     }
     public get connectionStatus() {
         return this._kernel.connectionStatus;
     }
     public get connectionStatusChanged(): ISignal<this, Kernel.ConnectionStatus> {
-        return this._kernel.connectionStatusChanged;
+        return this._connectionStatusChanged;
     }
     public get disposed(): ISignal<this, void> {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return this._kernel.disposed as any;
+        return this._disposed;
     }
     isRemoteSession?: boolean | undefined;
 
@@ -100,6 +108,16 @@ export class RawSession implements ISessionWithSocket {
             await this._kernel.shutdown();
             this._kernel.dispose();
             await this.kernelProcess.dispose().catch(noop);
+        }
+        try {
+            this._kernel.statusChanged.disconnect(this.onKernelStatus, this);
+            this._kernel.iopubMessage.disconnect(this.onIOPubMessage, this);
+            this._kernel.connectionStatusChanged.disconnect(this.onKernelConnectionStatus, this);
+            this._kernel.unhandledMessage.disconnect(this.onUnhandledMessage, this);
+            this._kernel.anyMessage.disconnect(this.onAnyMessage, this);
+            this._kernel.disposed.disconnect(this.onDisposed, this);
+        } catch {
+            //
         }
         this.isDisposed = true;
         this.signaling.Signal.disconnectAll(this);
@@ -180,10 +198,10 @@ export class RawSession implements ISessionWithSocket {
         return this._ioPubMessage;
     }
     get unhandledMessage(): ISignal<this, KernelMessage.IMessage> {
-        return this._kernel.unhandledMessage;
+        return this._unhandledMessage;
     }
     get anyMessage(): ISignal<this, Kernel.IAnyMessageArgs> {
-        return this._kernel.anyMessage;
+        return this._anyMessage;
     }
     get path(): string {
         throw new Error('Not yet implemented');
@@ -241,8 +259,17 @@ export class RawSession implements ISessionWithSocket {
         }
         this._ioPubMessage.emit(msg);
     }
+    private onAnyMessage(_sender: Kernel.IKernelConnection, msg: Kernel.IAnyMessageArgs) {
+        this._anyMessage.emit(msg);
+    }
+    private onUnhandledMessage(_sender: Kernel.IKernelConnection, msg: KernelMessage.IMessage) {
+        this._unhandledMessage.emit(msg);
+    }
     private onKernelConnectionStatus(_sender: Kernel.IKernelConnection, state: Kernel.ConnectionStatus) {
         this._connectionStatusChanged.emit(state);
+    }
+    private onDisposed(_sender: Kernel.IKernelConnection) {
+        this._disposed.emit();
     }
     private handleUnhandledExitingOfKernelProcess(e: { exitCode?: number | undefined; reason?: string | undefined }) {
         if (this.isDisposing) {
