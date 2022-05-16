@@ -14,7 +14,7 @@ import { Activation } from '../kernels/activation.node';
 import { CodeCssGenerator } from '../webviews/extension-side/codeCssGenerator.node';
 import { DataViewer } from '../webviews/extension-side/dataviewer/dataViewer.node';
 import { DataViewerDependencyService } from '../webviews/extension-side/dataviewer/dataViewerDependencyService.node';
-import { DataViewerFactory } from '../webviews/extension-side/dataviewer/dataViewerFactory.node';
+import { DataViewerFactory } from '../webviews/extension-side/dataviewer/dataViewerFactory';
 import {
     IDataViewer,
     IDataViewerDependencyService,
@@ -25,7 +25,7 @@ import { PlotViewerProvider } from '../webviews/extension-side/plotting/plotView
 import { IPlotViewer, IPlotViewerProvider } from '../webviews/extension-side/plotting/types';
 import { ThemeFinder } from '../webviews/extension-side/themeFinder.node';
 import { ICodeCssGenerator, IThemeFinder } from '../webviews/extension-side/types';
-import { NotebookWatcher } from '../webviews/extension-side/variablesView/notebookWatcher.node';
+import { NotebookWatcher } from '../webviews/extension-side/variablesView/notebookWatcher';
 import { INotebookWatcher } from '../webviews/extension-side/variablesView/types';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from './activation/types';
 import { ExtensionRecommendationService } from './common/extensionRecommendation.node';
