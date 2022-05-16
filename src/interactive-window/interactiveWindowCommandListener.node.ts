@@ -440,7 +440,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             context === undefined
                 ? interactiveWindow?.notebookEditor?.selections
                 : [new NotebookRange(context.index, context.index + 1)];
-        const document = context === undefined ? interactiveWindow?.notebookEditor?.document : context.notebook;
+        const document = context === undefined ? interactiveWindow?.notebookEditor?.notebook : context.notebook;
 
         if (ranges !== undefined && document !== undefined) {
             await chainWithPendingUpdates(document, (edit) => {

@@ -62,7 +62,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         return this._windows.find(
             (win) =>
                 window.activeNotebookEditor !== undefined &&
-                win.notebookUri?.toString() === window.activeNotebookEditor?.document.uri.toString()
+                win.notebookUri?.toString() === window.activeNotebookEditor?.notebook.uri.toString()
         );
     }
     public get windows(): ReadonlyArray<IInteractiveWindow> {

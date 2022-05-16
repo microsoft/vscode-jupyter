@@ -110,7 +110,7 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
         await insertCodeCell('%pip install pandas', {
             index: 0
         });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
 
         await runCell(cell);
 
@@ -121,7 +121,7 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
         await insertCodeCell(`import pandas as pd\ndf = pd.read_csv("${namesCsvPath}")\n`, {
             index: 1
         });
-        const cell2 = vscodeNotebook.activeNotebookEditor?.document.cellAt(1)!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(1)!;
 
         await runCell(cell2);
 
@@ -136,7 +136,7 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
 
         // Now add the cell to check intellisense.
         await insertCodeCell(cellCode);
-        const cell4 = vscodeNotebook.activeNotebookEditor!.document.cellAt(3);
+        const cell4 = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(3);
 
         const token = new CancellationTokenSource().token;
         // If we're testing string completions, ensure the cursor position is inside the string quotes.
@@ -210,27 +210,27 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
         );
     }
     test('Dataframe completions', async () => {
-        const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.document.uri.fsPath);
+        const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.notebook.uri.fsPath);
         await testCompletions('df.', '.', fileName, 'Age', 'N', 'Name');
     });
     test('Dataframe column completions', async () => {
-        const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.document.uri.fsPath);
+        const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.notebook.uri.fsPath);
         await testCompletions('df.Name.', '.', fileName, 'add_prefix', 'add_s', 'add_suffix');
     });
     test('Dataframe assignment completions', async () => {
-        const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.document.uri.fsPath);
+        const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.notebook.uri.fsPath);
         await testCompletions('var_name = df.', '.', fileName, 'Age', 'N', 'Name');
     });
     test('Dataframe assignment column completions', async () => {
-        const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.document.uri.fsPath);
+        const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.notebook.uri.fsPath);
         await testCompletions(fileName.substring(0, 1), fileName);
     });
     test('File path completions with double quotes', async () => {
-        const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.document.uri.fsPath);
+        const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.notebook.uri.fsPath);
         await testCompletions(`"${fileName.substring(0, 1)}"`, undefined, fileName);
     });
     test('File path completions with single quotes', async () => {
-        const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.document.uri.fsPath);
+        const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.notebook.uri.fsPath);
         await testCompletions(`'${fileName.substring(0, 1)}'`, undefined, fileName);
     });
     test('Provider is registered', async () => {
@@ -251,7 +251,7 @@ suite('DataScience - VSCode Intellisense Notebook - (Code Completion via Jupyter
             }
         );
         await insertCodeCell('a.', { index: 1 });
-        const cell2 = vscodeNotebook.activeNotebookEditor!.document.cellAt(1);
+        const cell2 = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
 
         const position = new Position(0, 2);
         traceInfo('Get completions in test');

@@ -43,7 +43,7 @@ export class InterpreterStatusBarVisibility
     }
     public get hidden() {
         return this.vscNotebook.activeNotebookEditor &&
-            isJupyterNotebook(this.vscNotebook.activeNotebookEditor.document)
+            isJupyterNotebook(this.vscNotebook.activeNotebookEditor.notebook)
             ? true
             : false;
     }

@@ -588,7 +588,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                 : Telemetry.SelectRemoteJupyterKernel;
             sendKernelTelemetryEvent(document.uri, telemetryEvent);
             this.notebookApi.notebookEditors
-                .filter((editor) => editor.document === document)
+                .filter((editor) => editor.notebook === document)
                 .forEach((editor) =>
                     this.postMessage(
                         { message: IPyWidgetMessages.IPyWidgets_onKernelChanged, payload: undefined },

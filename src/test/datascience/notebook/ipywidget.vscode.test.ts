@@ -63,11 +63,11 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
     test('Can run a widget notebook (webview-test)', async function () {
         await openNotebook(testWidgetNb);
         await waitForKernelToGetAutoSelected();
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
 
         // This flag will be resolved when the widget loads
         const flag = createDeferred<boolean>();
-        flagForWebviewLoad(flag, vscodeNotebook.activeNotebookEditor?.document!);
+        flagForWebviewLoad(flag, vscodeNotebook.activeNotebookEditor?.notebook!);
 
         // Execute cell. It should load and render the widget
         await runCell(cell);
@@ -80,7 +80,7 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
     test('Can run a widget notebook twice (webview-test)', async function () {
         await openNotebook(testWidgetNb);
         await waitForKernelToGetAutoSelected();
-        let cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        let cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         // Execute cell. It should load and render the widget
         await runCell(cell);
 
@@ -92,11 +92,11 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
 
         await openNotebook(testWidgetNb);
         await waitForKernelToGetAutoSelected();
-        cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
 
         // This flag will be resolved when the widget loads
         const flag = createDeferred<boolean>();
-        flagForWebviewLoad(flag, vscodeNotebook.activeNotebookEditor?.document!);
+        flagForWebviewLoad(flag, vscodeNotebook.activeNotebookEditor?.notebook!);
 
         // Execute cell. It should load and render the widget
         await runCell(cell);
@@ -112,11 +112,11 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
         await openNotebook(testWidgetNb);
         await waitForKernelToGetAutoSelected();
         // 6th cell has code that needs requireJS
-        const cell = vscodeNotebook.activeNotebookEditor?.document.getCells()![6]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.getCells()![6]!;
 
         // This flag will be resolved when the widget loads
         const flag = createDeferred<boolean>();
-        flagForWebviewLoad(flag, vscodeNotebook.activeNotebookEditor?.document!);
+        flagForWebviewLoad(flag, vscodeNotebook.activeNotebookEditor?.notebook!);
 
         // Execute cell. It should load and render the widget
         await runCell(cell);
@@ -143,7 +143,7 @@ suite('DataScience - VSCode Notebook - IPyWidget test', () => {
     function getNotebookCommunications(notebook: NotebookDocument) {
         const items: INotebookCommunication[] = [];
         window.visibleNotebookEditors.forEach((editor) => {
-            if (editor.document !== notebook) {
+            if (editor.notebook !== notebook) {
                 return;
             }
             const comm = widgetCoordinator.notebookCommunications.get(editor);

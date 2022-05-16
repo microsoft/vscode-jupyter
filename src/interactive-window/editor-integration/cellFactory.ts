@@ -140,7 +140,7 @@ export function hasCells(document: TextDocument, settings?: IJupyterSettings): b
 }
 
 export function generateCellRangesFromDocument(document: TextDocument, settings?: IJupyterSettings): ICellRange[] {
-    // Implmentation of getCells here based on Don's Jupyter extension work
+    // Implementation of getCells here based on Don's Jupyter extension work
     const matcher = new CellMatcher(settings);
     const cells: ICellRange[] = [];
     for (let index = 0; index < document.lineCount; index += 1) {

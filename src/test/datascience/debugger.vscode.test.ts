@@ -86,7 +86,7 @@ suite('VSCode Notebook - Run By Line', function () {
         this.skip();
         // Run by line seems to end up on the second line of the function, not the first
         const cell = await insertCodeCell('a=1\na', { index: 0 });
-        const doc = vscodeNotebook.activeNotebookEditor?.document!;
+        const doc = vscodeNotebook.activeNotebookEditor?.notebook!;
         traceInfo(`Inserted cell`);
 
         await commandManager.executeCommand(Commands.RunByLine, cell);
@@ -129,7 +129,7 @@ suite('VSCode Notebook - Run By Line', function () {
 
     test('Interrupt during debugging', async function () {
         const cell = await insertCodeCell('a=1\na', { index: 0 });
-        const doc = vscodeNotebook.activeNotebookEditor?.document!;
+        const doc = vscodeNotebook.activeNotebookEditor?.notebook!;
 
         await commandManager.executeCommand(Commands.RunByLine, cell);
         const { debugAdapter } = await getDebugSessionAndAdapter(debuggingManager, doc);
@@ -149,7 +149,7 @@ suite('VSCode Notebook - Run By Line', function () {
         // See https://github.com/microsoft/vscode-jupyter/issues/9130
         this.skip();
         const cell = await insertCodeCell('def foo():\n    print(1)\n\nfoo()', { index: 0 });
-        const doc = vscodeNotebook.activeNotebookEditor?.document!;
+        const doc = vscodeNotebook.activeNotebookEditor?.notebook!;
 
         await commandManager.executeCommand(Commands.RunByLine, cell);
         const { debugAdapter, session } = await getDebugSessionAndAdapter(debuggingManager, doc);
@@ -182,7 +182,7 @@ suite('VSCode Notebook - Run By Line', function () {
         // https://github.com/microsoft/vscode-jupyter/issues/8757
         const cell0 = await insertCodeCell('def foo():\n    print(1)');
         const cell1 = await insertCodeCell('foo()');
-        const doc = vscodeNotebook.activeNotebookEditor?.document!;
+        const doc = vscodeNotebook.activeNotebookEditor?.notebook!;
 
         await runCell(cell0);
         await commandManager.executeCommand(Commands.RunByLine, cell1);
@@ -209,7 +209,7 @@ suite('VSCode Notebook - Run By Line', function () {
                 index: 0
             }
         );
-        const doc = vscodeNotebook.activeNotebookEditor?.document!;
+        const doc = vscodeNotebook.activeNotebookEditor?.notebook!;
         const cell = doc.getCells()[0];
 
         void commandManager.executeCommand(Commands.RunByLine, cell);

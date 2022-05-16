@@ -61,7 +61,7 @@ export function findNotebookEditor(
             ? notebooks.notebookDocuments.find((item) => getComparisonKey(item.uri, true) === key)
             : undefined;
     const targetNotebookEditor =
-        notebook && notebooks.activeNotebookEditor?.document === notebook ? notebooks.activeNotebookEditor : undefined;
+        notebook && notebooks.activeNotebookEditor?.notebook === notebook ? notebooks.activeNotebookEditor : undefined;
     const targetInteractiveNotebookEditor =
         resource && getResourceType(resource) === 'interactive'
             ? interactiveWindowProvider?.get(resource)?.notebookEditor

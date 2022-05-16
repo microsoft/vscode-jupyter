@@ -57,7 +57,7 @@ export class LiveKernelSwitcher implements IExtensionSingleActivationService {
         // Do this in a loop as it may fail
         const success = await waitForCondition(
             async () => {
-                if (this.vscNotebook.activeNotebookEditor?.document === n) {
+                if (this.vscNotebook.activeNotebookEditor?.notebook === n) {
                     await this.commandManager.executeCommand('notebook.selectKernel', {
                         id: kernel.id,
                         extension: JVSC_EXTENSION_ID
