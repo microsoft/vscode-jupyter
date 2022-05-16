@@ -43,7 +43,7 @@ export class JupyterRemoteCachedKernelValidator implements IJupyterRemoteCachedK
         const providers = await providersPromise;
         const provider = providers.find((item) => item.id === info.id);
         if (!provider) {
-            // Extension may have been uninstalled.
+            traceWarning(`Extension may have been uninstalled for provider ${info.id}, handle ${info.handle}`);
             return false;
         }
         if (provider.getHandles) {
