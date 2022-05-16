@@ -10,7 +10,7 @@ import { ActiveResourceService } from './application/activeResource.node';
 import { ApplicationEnvironment } from './application/applicationEnvironment.node';
 import { ClipboardService } from './application/clipboard';
 import { ReloadVSCodeCommandHandler } from './application/commands/reloadCommand.node';
-import { DebugService } from './application/debugService.node';
+import { DebugService } from './application/debugService';
 import { DocumentManager } from './application/documentManager';
 import { EncryptedStorage } from './application/encryptedStorage';
 import { Extensions } from './application/extensions.node';

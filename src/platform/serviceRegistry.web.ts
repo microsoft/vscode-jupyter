@@ -36,6 +36,10 @@ import { ExportFileOpener } from './export/exportFileOpener';
 import { ExportToPythonPlain } from './export/exportToPythonPlain.web';
 import { IFileSystem } from './common/platform/types';
 import { FileSystem } from './common/platform/fileSystem';
+import { NotebookWatcher } from '../webviews/extension-side/variablesView/notebookWatcher';
+import { DataViewerFactory } from '../webviews/extension-side/dataviewer/dataViewerFactory';
+import { IDataViewerFactory } from '../webviews/extension-side/dataviewer/types';
+import { INotebookWatcher } from '../webviews/extension-side/variablesView/types';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
@@ -58,6 +62,9 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     registerApiTypes(serviceManager);
     registerActivationTypes(serviceManager);
     registerDevToolTypes(context, serviceManager, isDevMode);
+
+    serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
+    serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
 
     serviceManager.addSingleton<IDebuggingManager>(IDebuggingManager, DebuggingManager, undefined, [
         IExtensionSingleActivationService
