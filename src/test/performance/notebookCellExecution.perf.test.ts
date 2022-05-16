@@ -5,18 +5,17 @@ import { IDisposable } from '../../platform/common/types';
 import { IExtensionTestApi } from '../common';
 import { createEmptyPythonNotebook, insertCodeCell, runCell, waitForTextOutput } from '../datascience/notebook/helper';
 import { activateExtension, initializePython } from '../initialize.node';
-import { PerformanceTracker } from './performanceTracker.node';
+import { PerformanceTracker } from './performanceTracker';
 
 suite('Initial Notebook Cell Execution Perf Test', function () {
     let tracker: PerformanceTracker;
     setup(function () {
         sinon.restore();
-        tracker = new PerformanceTracker(this.currentTest!.title);
+        tracker = new PerformanceTracker();
     });
     teardown(async function () {
-        let result = this.currentTest?.isFailed() ? 'failed' : this.currentTest?.isPassed() ? 'passed' : 'skipped';
-        tracker.finishAndReport(result);
-        await tracker.dispose();
+        // results are reported in global test hooks
+        this.currentTest!.perfCheckpoints = tracker.finish();
     });
     test('Initial Notebook Cell Execution Perf Test', async function () {
         const disposables: IDisposable[] = [];

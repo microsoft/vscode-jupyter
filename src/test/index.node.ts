@@ -31,7 +31,7 @@ import {
 import { noop } from './core';
 import { stopJupyterServer } from './datascience/notebook/helper.node';
 import { initialize } from './initialize.node';
-import { rootHooks } from './testHooks';
+import { rootHooks } from './testHooks.node';
 
 type SetupOptions = Mocha.MochaOptions & {
     testFilesSuffix: string;
