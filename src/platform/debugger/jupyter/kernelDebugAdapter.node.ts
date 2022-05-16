@@ -4,7 +4,7 @@
 'use strict';
 
 import { KernelMessage } from '@jupyterlab/services';
-import * as path from '../../../platform/vscode-path/path';
+import * as path from '../../vscode-path/path';
 import {
     debug,
     DebugAdapter,
@@ -57,7 +57,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
     onDidEndSession: Event<DebugSession> = this.endSession.event;
     public readonly debugCell: NotebookCell | undefined;
-    private disconected: boolean = false;
+    private disconnected: boolean = false;
     private kernelEventHook = (_event: 'willRestart' | 'willInterrupt') => this.disconnect();
 
     constructor(
@@ -109,7 +109,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
                     if (
                         this.configuration.__cellIndex === cellStateChange.cell.index &&
                         cellStateChange.state === NotebookCellExecutionState.Idle &&
-                        !this.disconected
+                        !this.disconnected
                     ) {
                         sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'normally' });
                         void this.disconnect();
@@ -190,7 +190,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     public async disconnect() {
         await this.session.customRequest('disconnect', { restart: false });
         this.endSession.fire(this.session);
-        this.disconected = true;
+        this.disconnected = true;
         this.kernel?.removeEventHook(this.kernelEventHook);
     }
 

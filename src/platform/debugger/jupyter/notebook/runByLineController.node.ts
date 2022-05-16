@@ -1,45 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as path from '../../../platform/vscode-path/path';
+import * as path from '../../../vscode-path/path';
 import { DebugProtocolMessage, NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { parseForComments } from '../../../webviews/webview-side/common';
-import { ICommandManager } from '../../common/application/types';
-import { traceInfoIfCI, traceVerbose } from '../../logging';
-import { IConfigurationService } from '../../common/types';
-import { noop } from '../../common/utils/misc';
-import { IKernel } from '../../../kernels/types';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { DebuggingTelemetry } from '../constants';
-import { IDebuggingDelegate, IKernelDebugAdapter, KernelDebugMode } from '../types';
-import { Commands } from '../../common/constants';
-
-export class DebugCellController implements IDebuggingDelegate {
-    constructor(
-        private readonly debugAdapter: IKernelDebugAdapter,
-        public readonly debugCell: NotebookCell,
-        private readonly kernel: IKernel,
-        private readonly commandManager: ICommandManager
-    ) {
-        sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunAndDebugCell);
-    }
-
-    public async willSendEvent(_msg: DebugProtocolMessage): Promise<boolean> {
-        return false;
-    }
-
-    public async willSendRequest(request: DebugProtocol.Request): Promise<void> {
-        if (request.command === 'configurationDone') {
-            await cellDebugSetup(this.kernel, this.debugAdapter);
-
-            void this.commandManager.executeCommand('notebook.cell.execute', {
-                ranges: [{ start: this.debugCell.index, end: this.debugCell.index + 1 }],
-                document: this.debugCell.document.uri
-            });
-        }
-    }
-}
+import { parseForComments } from '../../../../webviews/webview-side/common';
+import { ICommandManager } from '../../../common/application/types';
+import { traceInfoIfCI, traceVerbose } from '../../../logging';
+import { IConfigurationService } from '../../../common/types';
+import { noop } from '../../../common/utils/misc';
+import { IKernel } from '../../../../kernels/types';
+import { sendTelemetryEvent } from '../../../../telemetry';
+import { DebuggingTelemetry } from '../../constants';
+import { IDebuggingDelegate, IKernelDebugAdapter, KernelDebugMode } from '../../types';
+import { Commands } from '../../../common/constants';
+import { cellDebugSetup } from '../helper.node';
 
 export class RunByLineController implements IDebuggingDelegate {
     private lastPausedThreadId: number | undefined;
@@ -169,13 +144,4 @@ export class RunByLineController implements IDebuggingDelegate {
             document: this.debugCell.document.uri
         });
     }
-}
-
-async function cellDebugSetup(kernel: IKernel, debugAdapter: IKernelDebugAdapter): Promise<void> {
-    // remove this if when https://github.com/microsoft/debugpy/issues/706 is fixed and ipykernel ships it
-    // executing this code restarts debugpy and fixes https://github.com/microsoft/vscode-jupyter/issues/7251
-    const code = 'import debugpy\ndebugpy.debug_this_thread()';
-    await kernel.executeHidden(code);
-
-    await debugAdapter.dumpAllCells();
 }
