@@ -23,6 +23,7 @@ import { NotebookUsageTracker } from './notebookUsageTracker';
 import { IDataScienceCommandListener } from '../platform/common/types';
 import { CondaControllerRefresher } from './controllers/condaControllerRefresher.node';
 import { IntellisenseProvider } from '../intellisense/intellisenseProvider.node';
+import { RemoteKernelControllerWatcher } from './controllers/jupyterUriHandleWatcher';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
@@ -62,4 +63,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<INotebookCompletionProvider>(INotebookCompletionProvider, IntellisenseProvider);
     serviceManager.addBinding(INotebookCompletionProvider, IExtensionSyncActivationService);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        RemoteKernelControllerWatcher
+    );
 }
