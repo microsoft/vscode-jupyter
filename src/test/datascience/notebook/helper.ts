@@ -34,7 +34,7 @@ import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceInfo, traceInfoIfCI } from '../../../platform/logging';
-import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
+import { GLOBAL_MEMENTO, IDisposable, IMemento, IsWebExtension } from '../../../platform/common/types';
 import { createDeferred, sleep } from '../../../platform/common/utils/async';
 import { IKernelProvider } from '../../../platform/../kernels/types';
 import { noop } from '../../core';
@@ -55,6 +55,7 @@ import * as uuid from 'uuid/v4';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { waitForCondition } from '../../common';
+import { VSCodeNotebook } from '../../../platform/common/application/notebook';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -69,6 +70,7 @@ export async function getServices() {
         notebookControllerManager: api.serviceContainer.get<INotebookControllerManager>(
             INotebookControllerManager
         ) as INotebookControllerManager,
+        isWebExtension: api.serviceContainer.get<boolean>(IsWebExtension),
         serviceContainer: api.serviceContainer
     };
 }
@@ -250,9 +252,13 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
     if (!isInsiders()) {
         return false;
     }
+    const api = await initialize();
     VSCodeNotebookController.kernelAssociatedWithDocument = undefined;
+    const notebooks = api.serviceManager.get<IVSCodeNotebook>(IVSCodeNotebook) as VSCodeNotebook;
+    await notebooks.closeActiveNotebooks();
     await closeActiveWindows();
     disposeAllDisposables(disposables);
+    await shutdownAllNotebooks();
 }
 
 let waitForKernelPendingPromise: Promise<void> | undefined;
@@ -367,7 +373,8 @@ export async function waitForKernelToGetAutoSelected(
     skipAutoSelection: boolean = false
 ) {
     traceInfoIfCI('Wait for kernel to get auto selected');
-    const { vscodeNotebook, notebookControllerManager } = await getServices();
+    const { vscodeNotebook, notebookControllerManager, isWebExtension } = await getServices();
+    const useRemoteKernelSpec = preferRemoteKernelSpec || isWebExtension; // Web is only remote
 
     // Wait for the active editor to come up
     if (!vscodeNotebook.activeNotebookEditor) {
@@ -412,7 +419,7 @@ export async function waitForKernelToGetAutoSelected(
     // Find one that matches the expected language or the preferred
     const expectedLower = expectedLanguage?.toLowerCase();
     const language = expectedLower || 'python';
-    const preferredKind = preferRemoteKernelSpec ? 'startUsingRemoteKernelSpec' : preferred?.connection.kind;
+    const preferredKind = useRemoteKernelSpec ? 'startUsingRemoteKernelSpec' : preferred?.connection.kind;
     let match: IVSCodeNotebookController | undefined;
     if (preferred) {
         if (
@@ -430,16 +437,20 @@ export async function waitForKernelToGetAutoSelected(
             (d) =>
                 d.connection.kind != 'connectToLiveRemoteKernel' &&
                 language === d.connection.kernelSpec?.language?.toLowerCase() &&
-                (!preferRemoteKernelSpec || d.connection.kind.includes('Remote'))
+                (!useRemoteKernelSpec || d.connection.kind.includes('Remote'))
         );
     }
 
-    const criteria = { labelOrId: match!.id };
     if (!match) {
         traceInfoIfCI(
             `Houston, we have a problem, no match. Expected language ${expectedLanguage}. Expected kind ${preferredKind}.`
         );
+        assert.fail(
+            `No notebook controller found for ${expectedLanguage} when useRemote is ${useRemoteKernelSpec} and preferred kind is ${preferredKind}. NotebookControllers count: ${notebookControllers.length}`
+        );
     }
+
+    const criteria = { labelOrId: match!.id };
     traceInfo(`Preferred kernel for selection is ${match?.id}, criteria = ${JSON.stringify(criteria)}`);
     assert.ok(match, 'No kernel to auto select');
     return waitForKernelToChange(criteria, timeout, skipAutoSelection);

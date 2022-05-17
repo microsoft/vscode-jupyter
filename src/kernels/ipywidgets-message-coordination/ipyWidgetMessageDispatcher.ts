@@ -164,10 +164,10 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
 
         // If we have any pending targets, register them now
-        const notebook = this.getKernel();
-        if (notebook) {
-            this.subscribeToKernelSocket(notebook);
-            this.registerCommTargets(notebook);
+        const kernel = this.getKernel();
+        if (kernel) {
+            this.subscribeToKernelSocket(kernel);
+            this.registerCommTargets(kernel);
         }
         traceVerbose('IPyWidgetMessageDispatcher.initialize');
     }

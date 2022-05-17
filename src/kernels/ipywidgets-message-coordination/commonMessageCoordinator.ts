@@ -18,7 +18,7 @@ import {
 import { Common, DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { stripAnsi } from '../../platform/common/utils/regexp';
-import { InteractiveWindowMessages } from '../../platform/messageTypes';
+import { InteractiveWindowMessages, IPyWidgetMessages } from '../../platform/messageTypes';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
@@ -33,6 +33,8 @@ import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherF
 import { IPyWidgetScriptSource } from './ipyWidgetScriptSource';
 import { IIPyWidgetMessageDispatcher, ILocalResourceUriConverter, IWidgetScriptSourceProviderFactory } from './types';
 import { ConsoleForegroundColors } from '../../platform/logging/types';
+import { INotebookCommunication } from '../../notebooks/types';
+import { createDeferred } from '../../platform/common/utils/async';
 
 /**
  * This class wraps all of the ipywidgets communication with a backing notebook
@@ -59,8 +61,9 @@ export class CommonMessageCoordinator {
     private disposables: IDisposableRegistry;
     private jupyterOutput: IOutputChannel;
     private readonly configService: IConfigurationService;
+    private webview: INotebookCommunication | undefined;
 
-    private constructor(
+    public constructor(
         private readonly document: NotebookDocument,
         private readonly serviceContainer: IServiceContainer
     ) {
@@ -71,19 +74,61 @@ export class CommonMessageCoordinator {
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
 
-    public static async create(
-        document: NotebookDocument,
-        serviceContainer: IServiceContainer
-    ): Promise<CommonMessageCoordinator> {
-        const result = new CommonMessageCoordinator(document, serviceContainer);
-        await result.initialize();
-        traceVerbose('Created and initailized CommonMessageCoordinator');
-        return result;
-    }
-
     public dispose() {
+        this.cachedMessages = [];
         this.ipyWidgetMessageDispatcher?.dispose(); // NOSONAR
         this.ipyWidgetScriptSource?.dispose(); // NOSONAR
+    }
+
+    public async attach(webview: INotebookCommunication) {
+        if (this.webview !== webview) {
+            // New webview, make sure to initialize.
+            await this.initialize();
+
+            // Save the webview
+            this.webview = webview;
+            const promise = createDeferred<void>();
+
+            // Attach message requests to this webview (should dupe to all of them)
+            this.postMessage(
+                (e) => {
+                    traceInfoIfCI(`${ConsoleForegroundColors.Green}Widget Coordinator sent ${e.message}`);
+                    // Special case for webview URI translation
+                    if (e.message === InteractiveWindowMessages.ConvertUriForUseInWebViewRequest) {
+                        this.onMessage(InteractiveWindowMessages.ConvertUriForUseInWebViewResponse, {
+                            request: e.payload,
+                            response: webview.asWebviewUri(e.payload)
+                        });
+                    } else {
+                        void webview.postMessage({ type: e.message, payload: e.payload });
+                    }
+                },
+                this,
+                this.disposables
+            );
+            webview.onDidReceiveMessage(
+                (m) => {
+                    traceInfoIfCI(`${ConsoleForegroundColors.Green}Widget Coordinator received ${m.type}`);
+                    this.onMessage(m.type, m.payload);
+
+                    // Special case the WidgetManager loaded message. It means we're ready
+                    // to use a kernel. (IPyWidget Dispatcher uses this too)
+                    if (m.type === IPyWidgetMessages.IPyWidgets_Ready) {
+                        promise.resolve();
+                    }
+                },
+                this,
+                this.disposables
+            );
+            // In case the webview loaded earlier and it already sent the IPyWidgetMessages.IPyWidgets_Ready message
+            // This way we don't make assumptions, we just query widgets and ask its its ready (avoids timing issues etc).
+            webview
+                .postMessage({ type: IPyWidgetMessages.IPyWidgets_IsReadyRequest, payload: undefined })
+                .then(noop, noop);
+
+            // Wait for the widgets ready message
+            await promise.promise;
+        }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
