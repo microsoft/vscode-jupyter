@@ -135,6 +135,8 @@ export type PythonApi = {
         resource: Resource,
         interpreter?: PythonEnvironment_PythonApi
     ): Promise<string[] | undefined>;
+
+    registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>): void;
     /**
      * This API will re-trigger environment discovery. Extensions can wait on the returned
      * promise to get the updated interpreters list. If there is a refresh already going on
