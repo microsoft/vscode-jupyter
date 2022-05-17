@@ -445,6 +445,9 @@ export async function waitForKernelToGetAutoSelected(
         traceInfoIfCI(
             `Houston, we have a problem, no match. Expected language ${expectedLanguage}. Expected kind ${preferredKind}.`
         );
+        assert.fail(
+            `No notebook controller found for ${expectedLanguage} when useRemote is ${useRemoteKernelSpec} and preferred kind is ${preferredKind}. NotebookControllers count: ${notebookControllers.length}`
+        );
     }
 
     const criteria = { labelOrId: match!.id };
