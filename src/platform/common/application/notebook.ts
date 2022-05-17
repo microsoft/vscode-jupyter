@@ -19,8 +19,12 @@ import {
     NotebookDocumentContentOptions,
     Uri,
     NotebookDocumentShowOptions,
-    NotebookCellExecutionStateChangeEvent
+    NotebookCellExecutionStateChangeEvent,
+    commands,
+    EventEmitter
 } from 'vscode';
+import { IDisposableRegistry } from '../types';
+import { testOnlyMethod } from '../utils/decorators';
 import { isUri } from '../utils/misc';
 import { IApplicationEnvironment, IVSCodeNotebook } from './types';
 
@@ -29,7 +33,9 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     public readonly onDidChangeNotebookEditorSelection: Event<NotebookEditorSelectionChangeEvent>;
     public readonly onDidChangeActiveNotebookEditor: Event<NotebookEditor | undefined>;
     public readonly onDidOpenNotebookDocument: Event<NotebookDocument>;
-    public readonly onDidCloseNotebookDocument: Event<NotebookDocument>;
+    public get onDidCloseNotebookDocument(): Event<NotebookDocument> {
+        return this._onDidCloseNotebookDocument.event;
+    }
     public readonly onDidChangeVisibleNotebookEditors: Event<readonly NotebookEditor[]>;
     public readonly onDidSaveNotebookDocument: Event<NotebookDocument>;
     public get onDidChangeNotebookCellExecutionState(): Event<NotebookCellExecutionStateChangeEvent> {
@@ -44,11 +50,15 @@ export class VSCodeNotebook implements IVSCodeNotebook {
     public get activeNotebookEditor(): NotebookEditor | undefined {
         return window.activeNotebookEditor;
     }
-    constructor(@inject(IApplicationEnvironment) readonly env: IApplicationEnvironment) {
+    private _onDidCloseNotebookDocument = new EventEmitter<NotebookDocument>();
+    constructor(
+        @inject(IApplicationEnvironment) readonly env: IApplicationEnvironment,
+        @inject(IDisposableRegistry) private diposables: IDisposableRegistry
+    ) {
         this.onDidChangeNotebookEditorSelection = window.onDidChangeNotebookEditorSelection;
         this.onDidChangeActiveNotebookEditor = window.onDidChangeActiveNotebookEditor;
         this.onDidOpenNotebookDocument = workspace.onDidOpenNotebookDocument;
-        this.onDidCloseNotebookDocument = workspace.onDidCloseNotebookDocument;
+        workspace.onDidCloseNotebookDocument((n) => this._onDidCloseNotebookDocument.fire(n), this, this.diposables);
         this.onDidChangeVisibleNotebookEditors = window.onDidChangeVisibleNotebookEditors;
         this.onDidSaveNotebookDocument = workspace.onDidSaveNotebookDocument;
     }
@@ -97,5 +107,19 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         rendererScripts?: NotebookRendererScript[]
     ): NotebookController {
         return notebooks.createNotebookController(id, viewType, label, handler, rendererScripts);
+    }
+
+    @testOnlyMethod()
+    public async closeActiveNotebooks() {
+        // We could have untitled notebooks, close them by reverting changes.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const documents = new Set<NotebookDocument>();
+        while (window.activeNotebookEditor) {
+            documents.add(window.activeNotebookEditor.document);
+            await commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
+        }
+
+        // That command does not cause notebook on close to fire. Fire this for every active editor
+        documents.forEach((d) => this._onDidCloseNotebookDocument.fire(d));
     }
 }

@@ -55,6 +55,7 @@ import * as uuid from 'uuid/v4';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { waitForCondition } from '../../common';
+import { VSCodeNotebook } from '../../../platform/common/application/notebook';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -250,7 +251,10 @@ export async function closeNotebooks(disposables: IDisposable[] = []) {
     if (!isInsiders()) {
         return false;
     }
+    const api = await initialize();
     VSCodeNotebookController.kernelAssociatedWithDocument = undefined;
+    const notebooks = api.serviceManager.get<IVSCodeNotebook>(IVSCodeNotebook) as VSCodeNotebook;
+    await notebooks.closeActiveNotebooks();
     await closeActiveWindows();
     disposeAllDisposables(disposables);
     await shutdownAllNotebooks();

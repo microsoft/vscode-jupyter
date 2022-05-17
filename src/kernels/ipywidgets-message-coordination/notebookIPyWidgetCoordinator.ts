@@ -13,16 +13,13 @@ import {
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { Cancellation } from '../../platform/common/cancellation';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import { traceVerbose, traceInfoIfCI } from '../../platform/logging';
+import { traceVerbose } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
-import { IDisposableRegistry, IAsyncDisposableRegistry, IDisposable } from '../../platform/common/types';
-import { createDeferred } from '../../platform/common/utils/async';
+import { IDisposableRegistry, IDisposable } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
-import { InteractiveWindowMessages, IPyWidgetMessages } from '../../platform/messageTypes';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { CommonMessageCoordinator } from './commonMessageCoordinator';
 import { INotebookCommunication, INotebookControllerManager } from '../../notebooks/types';
-import { ConsoleForegroundColors } from '../../platform/logging/types';
 import { IVSCodeNotebookController } from '../../notebooks/controllers/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 
@@ -95,10 +92,7 @@ class NotebookCommunication implements INotebookCommunication, IDisposable {
 @injectable()
 export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationService {
     private readonly messageCoordinators = new WeakMap<NotebookDocument, Promise<CommonMessageCoordinator>>();
-    private readonly attachedEditors = new WeakMap<NotebookDocument, WeakSet<NotebookEditor>>();
     private readonly notebookDisposables = new WeakMap<NotebookDocument, Disposable[]>();
-    private readonly previouslyInitialized = new WeakSet<NotebookEditor>();
-    private readonly selectedController = new WeakMap<NotebookDocument, IVSCodeNotebookController>();
     /**
      * Public for testing purposes
      */
@@ -107,7 +101,6 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
-        @inject(IAsyncDisposableRegistry) private readonly asyncDisposableRegistry: IAsyncDisposableRegistry,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(INotebookControllerManager) private readonly controllerManager: INotebookControllerManager
     ) {}
@@ -121,41 +114,30 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         this.controllerManager.onNotebookControllerSelected(this.onDidSelectController, this, this.disposableRegistry);
     }
     public onDidSelectController(e: { notebook: NotebookDocument; controller: IVSCodeNotebookController }) {
-        // Skip handling this if it's the same controller.
-        // TODO: NotebookControllerManager shouldn't even fire this event if it's the same controller, but
-        // other code may be relying on this behavior
-        const lastResolvedController = this.selectedController.get(e.notebook);
-        if (lastResolvedController != e.controller) {
-            this.selectedController.set(e.notebook, e.controller);
-            // Dispose previous message coordinators.
-            const previousCoordinators = this.messageCoordinators.get(e.notebook);
-            if (previousCoordinators) {
-                this.messageCoordinators.delete(e.notebook);
-                this.attachedEditors.delete(e.notebook);
-                this.notebook.notebookEditors
-                    .filter((editor) => editor.document === e.notebook)
-                    .forEach((editor) => {
-                        const comms = this.notebookCommunications.get(editor);
-                        this.previouslyInitialized.delete(editor);
-                        this.notebookCommunications.delete(editor);
-                        if (comms) {
-                            comms.dispose();
-                        }
-                    });
-                previousCoordinators.then((item) => item.dispose()).catch(noop);
-            }
-            // Swap the controller in the communication objects (if we have any).
-            const editors = this.notebookEditors.get(e.notebook) || [];
-            const notebookComms = editors
-                .filter((editor) => this.notebookCommunications.has(editor))
-                .map((editor) => this.notebookCommunications.get(editor)!);
-            notebookComms.forEach((comm) => comm.changeController(e.controller));
-
-            // Possible user has split the notebook editor, if that's the case we need to hookup comms with this new editor as well.
-            this.notebook.notebookEditors.forEach((editor) =>
-                this.initializeNotebookCommunication(editor, e.controller)
-            );
+        // Dispose previous message coordinators.
+        const previousCoordinators = this.messageCoordinators.get(e.notebook);
+        if (previousCoordinators) {
+            this.messageCoordinators.delete(e.notebook);
+            this.notebook.notebookEditors
+                .filter((editor) => editor.document === e.notebook)
+                .forEach((editor) => {
+                    const comms = this.notebookCommunications.get(editor);
+                    this.notebookCommunications.delete(editor);
+                    if (comms) {
+                        comms.dispose();
+                    }
+                });
+            previousCoordinators.then((item) => item.dispose()).catch(noop);
         }
+        // Swap the controller in the communication objects (if we have any).
+        const editors = this.notebookEditors.get(e.notebook) || [];
+        const notebookComms = editors
+            .filter((editor) => this.notebookCommunications.has(editor))
+            .map((editor) => this.notebookCommunications.get(editor)!);
+        notebookComms.forEach((comm) => comm.changeController(e.controller));
+
+        // Possible user has split the notebook editor, if that's the case we need to hookup comms with this new editor as well.
+        this.notebook.notebookEditors.forEach((editor) => this.initializeNotebookCommunication(editor, e.controller));
     }
     private initializeNotebookCommunication(editor: NotebookEditor, controller: IVSCodeNotebookController | undefined) {
         const notebook = editor.document;
@@ -188,22 +170,15 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         // Create a handler for this notebook if we don't already have one. Since there's one of the notebookMessageCoordinator's for the
         // entire VS code session, we have a map of notebook document to message coordinator
         traceVerbose(`Resolving notebook UI Comms (resolve) for ${getDisplayPath(document.uri)}`);
-
-        // Remember the controller selected when resolving so we
-        // don't re-resolve the same controller.
-        const selectedController = this.controllerManager.getSelectedNotebookController(document);
-        if (selectedController) {
-            this.selectedController.set(document, selectedController);
-        }
         let promise = this.messageCoordinators.get(document);
         if (promise === undefined) {
-            promise = CommonMessageCoordinator.create(document, this.serviceContainer);
+            const coordinator = new CommonMessageCoordinator(document, this.serviceContainer);
+            promise = coordinator.attach(webview).then(() => coordinator);
             this.messageCoordinators.set(document, promise);
-            this.asyncDisposableRegistry.push({
-                dispose: async () => promise?.then((item) => item.dispose()).catch(noop)
-            });
         }
-        return Cancellation.race(() => promise!.then(this.attachCoordinator.bind(this, document, webview)), token);
+        return Cancellation.race(async () => {
+            await promise;
+        }, token);
     }
     private addNotebookDisposables(notebook: NotebookDocument, disposables: IDisposable[]) {
         const currentDisposables: IDisposable[] = this.notebookDisposables.get(notebook) || [];
@@ -226,65 +201,5 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         const coordinator = this.messageCoordinators.get(notebook);
         void coordinator?.then((c) => c.dispose());
         this.messageCoordinators.delete(notebook);
-
-        this.attachedEditors.delete(notebook);
-        this.selectedController.delete(notebook);
-        editors.forEach((editor) => this.previouslyInitialized.delete(editor));
-    }
-    private attachCoordinator(
-        document: NotebookDocument,
-        webview: INotebookCommunication,
-        c: CommonMessageCoordinator
-    ): Promise<void> {
-        const promise = createDeferred<void>();
-        const attachedEditors = this.attachedEditors.get(document) || new Set<NotebookEditor>();
-        this.attachedEditors.set(document, attachedEditors);
-        if (attachedEditors.has(webview.editor) || this.previouslyInitialized.has(webview.editor)) {
-            traceVerbose(`Coordinator already attached for ${getDisplayPath(document.uri)}`);
-            promise.resolve();
-        } else {
-            attachedEditors.add(webview.editor);
-            const disposables: IDisposable[] = [];
-            traceVerbose(`Attach Coordinator for ${getDisplayPath(document.uri)}`);
-            // Attach message requests to this webview (should dupe to all of them)
-            c.postMessage(
-                (e) => {
-                    traceInfoIfCI(`${ConsoleForegroundColors.Green}Widget Coordinator sent ${e.message}`);
-                    // Special case for webview URI translation
-                    if (e.message === InteractiveWindowMessages.ConvertUriForUseInWebViewRequest) {
-                        c.onMessage(InteractiveWindowMessages.ConvertUriForUseInWebViewResponse, {
-                            request: e.payload,
-                            response: webview.asWebviewUri(e.payload)
-                        });
-                    } else {
-                        void webview.postMessage({ type: e.message, payload: e.payload });
-                    }
-                },
-                this,
-                disposables
-            );
-            webview.onDidReceiveMessage(
-                (m) => {
-                    traceInfoIfCI(`${ConsoleForegroundColors.Green}Widget Coordinator received ${m.type}`);
-                    c.onMessage(m.type, m.payload);
-
-                    // Special case the WidgetManager loaded message. It means we're ready
-                    // to use a kernel. (IPyWidget Dispatcher uses this too)
-                    if (m.type === IPyWidgetMessages.IPyWidgets_Ready) {
-                        promise.resolve();
-                        this.previouslyInitialized.add(webview.editor);
-                    }
-                },
-                this,
-                disposables
-            );
-            // In case the webview loaded earlier and it already sent the IPyWidgetMessages.IPyWidgets_Ready message
-            // This way we don't make assumptions, we just query widgets and ask its its ready (avoids timing issues etc).
-            webview
-                .postMessage({ type: IPyWidgetMessages.IPyWidgets_IsReadyRequest, payload: undefined })
-                .then(noop, noop);
-            this.addNotebookDisposables(document, disposables);
-        }
-        return promise.promise;
     }
 }
