@@ -27,17 +27,23 @@ export const rootHooks: Mocha.RootHookObject = {
         }
 
         let result = this.currentTest?.isFailed() ? 'failed' : this.currentTest?.isPassed() ? 'passed' : 'skipped';
-        const measures = this.currentTest?.duration ? { duration: this.currentTest.duration } : undefined;
-        if (this.currentTest?.title) {
-            telemetryReporter.sendDangerousTelemetryEvent(
-                Telemetry.RunTest,
-                {
-                    testName: this.currentTest?.title,
-                    testResult: result
-                },
-                measures
-            );
+
+        const measures = this.currentTest?.perfCheckpoints
+            ? this.currentTest?.perfCheckpoints
+            : this.currentTest?.duration
+            ? { duration: this.currentTest.duration }
+            : undefined;
+
+        let dimensions: Record<string, string> = {
+            testName: this.currentTest!.title,
+            testResult: result
+        };
+
+        if (process.env.VSC_JUPYTER_WARMUP) {
+            dimensions = { ...dimensions, perfWarmup: 'true' };
         }
+
+        telemetryReporter.sendDangerousTelemetryEvent(Telemetry.RunTest, dimensions, measures);
     },
     afterAll: async () => {
         if (!IS_CI_SERVER) {
