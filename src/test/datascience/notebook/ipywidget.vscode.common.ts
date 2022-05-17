@@ -25,17 +25,11 @@ import { InteractiveWindowMessages } from '../../../platform/messageTypes';
 import { NotebookIPyWidgetCoordinator } from '../../../kernels/ipywidgets-message-coordination/notebookIPyWidgetCoordinator';
 import { INotebookCommunication } from '../../../notebooks/types';
 import { initialize } from '../../initialize';
-import { IServiceContainer } from '../../../platform/ioc/types';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfo } from '../../../platform/logging';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-export function sharedIPyWidgetStandardTests(
-    suite: Mocha.Suite,
-    finishSuiteSetup: (serviceContainer: IServiceContainer) => void,
-    finishTestSetup: () => Promise<void>,
-    handleTestTeardown: (context: Mocha.Context) => Promise<void>
-) {
+export function sharedIPyWidgetStandardTests(suite: Mocha.Suite) {
     suite.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
@@ -47,7 +41,6 @@ export function sharedIPyWidgetStandardTests(
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         widgetCoordinator = api.serviceContainer.get<NotebookIPyWidgetCoordinator>(NotebookIPyWidgetCoordinator);
-        await finishSuiteSetup(api.serviceContainer);
     });
     setup(async function () {
         sinon.restore();
@@ -65,11 +58,9 @@ export function sharedIPyWidgetStandardTests(
             ],
             disposables
         );
-        await finishTestSetup();
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
-        await handleTestTeardown(this);
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });

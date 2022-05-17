@@ -4,16 +4,5 @@ import { sharedIPyWidgetStandardTests } from './ipywidget.vscode.common';
 
 suite('DataScience - VSCode Notebook - Standard IPyWidgets web', function () {
     // Use the shared code that runs the tests
-    sharedIPyWidgetStandardTests(
-        this,
-        (_s) => {
-            // Don't have any custom tests so don't need the service container
-        },
-        async () => {
-            // Don't have any custom tests so don't need a post setup callback
-        },
-        async () => {
-            // No post test steps to run
-        }
-    );
+    sharedIPyWidgetStandardTests(this);
 });
