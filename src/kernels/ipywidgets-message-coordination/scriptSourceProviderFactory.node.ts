@@ -7,7 +7,7 @@ import { IPythonExecutionFactory } from '../../platform/common/process/types.nod
 import { IConfigurationService, IHttpClient, WidgetCDNs } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { IKernel } from '../types';
-import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider.node';
+import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider';
 import { LocalWidgetScriptSourceProvider } from './localWidgetScriptSourceProvider.node';
 import { RemoteWidgetScriptSourceProvider } from './remoteWidgetScriptSourceProvider';
 import { ILocalResourceUriConverter, IWidgetScriptSourceProvider, IWidgetScriptSourceProviderFactory } from './types';
@@ -26,25 +26,21 @@ export class ScriptSourceProviderFactory implements IWidgetScriptSourceProviderF
         @inject(IPythonExecutionFactory) private readonly factory: IPythonExecutionFactory
     ) {}
 
-    public getProviders(
-        kernel: IKernel,
-        uriConverter: ILocalResourceUriConverter,
-        httpClient: IHttpClient | undefined
-    ) {
+    public getProviders(kernel: IKernel, uriConverter: ILocalResourceUriConverter, httpClient: IHttpClient) {
         const scriptProviders: IWidgetScriptSourceProvider[] = [];
 
         // If we're allowed to use CDN providers, then use them, and use in order of preference.
         if (this.configuredScriptSources.length > 0) {
-            scriptProviders.push(new CDNWidgetScriptSourceProvider(this.configurationSettings, uriConverter, this.fs));
+            scriptProviders.push(
+                new CDNWidgetScriptSourceProvider(this.configurationSettings, uriConverter, this.fs, httpClient)
+            );
         }
         switch (kernel.kernelConnectionMetadata.kind) {
             case 'connectToLiveRemoteKernel':
             case 'startUsingRemoteKernelSpec':
-                if (httpClient) {
-                    scriptProviders.push(
-                        new RemoteWidgetScriptSourceProvider(kernel.kernelConnectionMetadata.baseUrl, httpClient)
-                    );
-                }
+                scriptProviders.push(
+                    new RemoteWidgetScriptSourceProvider(kernel.kernelConnectionMetadata.baseUrl, httpClient)
+                );
                 break;
 
             default:

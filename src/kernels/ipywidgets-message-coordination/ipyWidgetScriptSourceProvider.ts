@@ -54,7 +54,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         private readonly configurationSettings: IConfigurationService,
         private readonly workspaceService: IWorkspaceService,
         private readonly stateFactory: IPersistentStateFactory,
-        private readonly httpClient: IHttpClient | undefined,
+        private readonly httpClient: IHttpClient,
         private readonly sourceProviderFactory: IWidgetScriptSourceProviderFactory
     ) {
         this.userConfiguredCDNAtLeastOnce = this.stateFactory.createGlobalPersistentState<boolean>(

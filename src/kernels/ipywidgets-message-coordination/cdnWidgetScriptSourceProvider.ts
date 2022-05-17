@@ -3,14 +3,11 @@
 
 'use strict';
 
-import * as download from 'download';
 import { sha256 } from 'hash.js';
-import * as path from '../../platform/vscode-path/path';
-import { Uri } from 'vscode';
+import * as urlPath from '../../platform/vscode-path/resources';
 import { traceError, traceInfo, traceInfoIfCI } from '../../platform/logging';
-import { TemporaryFile } from '../../platform/common/platform/types';
-import { IFileSystemNode } from '../../platform/common/platform/types.node';
-import { IConfigurationService, WidgetCDNs } from '../../platform/common/types';
+import { IFileSystem, TemporaryFileUri } from '../../platform/common/platform/types';
+import { IConfigurationService, IHttpClient, WidgetCDNs } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { ILocalResourceUriConverter, IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 import { ConsoleForegroundColors } from '../../platform/logging/types';
@@ -75,7 +72,8 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     constructor(
         private readonly configurationSettings: IConfigurationService,
         private readonly localResourceUriConverter: ILocalResourceUriConverter,
-        private readonly fs: IFileSystemNode
+        private readonly fs: IFileSystem,
+        private readonly httpClient: IHttpClient
     ) {}
     public dispose() {
         this.cache.clear();
@@ -94,8 +92,8 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     ): Promise<WidgetScriptSource> {
         // First see if we already have it downloaded.
         const key = this.getModuleKey(moduleName, moduleVersion);
-        const diskPath = path.join(this.localResourceUriConverter.rootScriptFolder.fsPath, key, 'index.js');
-        let tempFile: TemporaryFile | undefined;
+        const diskPath = urlPath.joinPath(this.localResourceUriConverter.rootScriptFolder, key, 'index.js');
+        let tempFile: TemporaryFileUri | undefined;
 
         // Log the location that we are going to search on disk (don't remove, can allow third parties to drop
         // files locally and test new versions of their extensions.
@@ -104,11 +102,11 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         );
 
         // Might be on disk, try there first.
-        if (diskPath && (await this.fs.localFileExists(diskPath))) {
+        if (diskPath && (await this.fs.exists(diskPath))) {
             traceInfo(
                 `${ConsoleForegroundColors.Green}Widget Script ${moduleName}#${moduleVersion} found at path: ${diskPath}`
             );
-            const scriptUri = (await this.localResourceUriConverter.asWebviewUri(Uri.file(diskPath))).toString();
+            const scriptUri = (await this.localResourceUriConverter.asWebviewUri(diskPath)).toString();
             return { moduleName, scriptUri, source: 'cdn' };
         }
 
@@ -116,27 +114,27 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         try {
             traceInfo(`${ConsoleForegroundColors.Green}Widget Script ${moduleName}#${moduleVersion} searching`);
             // Make sure the disk path directory exists. We'll be downloading it to there.
-            await this.fs.createLocalDirectory(path.dirname(diskPath));
+            await this.fs.createDirectory(urlPath.dirname(diskPath));
 
             // Then get the first one that returns.
             tempFile = await this.downloadFastestCDN(moduleName, moduleVersion);
             if (tempFile) {
                 traceInfo(
-                    `${ConsoleForegroundColors.Green}Wiget ${moduleName} successfully downloaded to temp file ${tempFile.filePath}`
+                    `${ConsoleForegroundColors.Green}Wiget ${moduleName} successfully downloaded to temp file ${tempFile.file}`
                 );
                 traceInfoIfCI(
-                    `Widget Script downloaded for ${moduleName}:${moduleVersion}, already downloaded ${await this.fs.localFileExists(
+                    `Widget Script downloaded for ${moduleName}:${moduleVersion}, already downloaded ${await this.fs.exists(
                         diskPath
                     )}`
                 );
-                if (!(await this.fs.localFileExists(diskPath))) {
+                if (!(await this.fs.exists(diskPath))) {
                     traceInfo(`${ConsoleForegroundColors.Green}Wiget ${moduleName} being copied into ${diskPath}`);
                     // Need to copy from the temporary file to our real file (note: VSC filesystem fails to copy so just use straight file system)
-                    await this.fs.copyLocal(tempFile.filePath, diskPath);
+                    await this.fs.copy(tempFile.file, diskPath);
                 }
 
                 // Now we can generate the script URI so the local converter doesn't try to copy it.
-                const scriptUri = (await this.localResourceUriConverter.asWebviewUri(Uri.file(diskPath))).toString();
+                const scriptUri = (await this.localResourceUriConverter.asWebviewUri(diskPath)).toString();
                 traceInfo(
                     `${ConsoleForegroundColors.Green}Wiget ${moduleName} downloaded into ${scriptUri} from cdn (${diskPath})`
                 );
@@ -159,7 +157,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     }
 
     private async downloadFastestCDN(moduleName: string, moduleVersion: string) {
-        const deferred = createDeferred<TemporaryFile | undefined>();
+        const deferred = createDeferred<TemporaryFileUri | undefined>();
         Promise.all(
             // For each CDN, try to download it.
             this.cdnProviders.map((cdn) =>
@@ -191,7 +189,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         moduleName: string,
         moduleVersion: string,
         cdn: WidgetCDNs
-    ): Promise<TemporaryFile | undefined> {
+    ): Promise<TemporaryFileUri | undefined> {
         // First validate CDN
         const downloadUrl = await this.generateDownloadUri(moduleName, moduleVersion, cdn);
         if (downloadUrl) {
@@ -220,25 +218,27 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         return sanitize(sha256().update(`${moduleName}${moduleVersion}`).digest('hex'));
     }
 
-    private async downloadFile(downloadUrl: string): Promise<TemporaryFile | undefined> {
+    private async downloadFile(downloadUrl: string): Promise<TemporaryFileUri | undefined> {
         // Create a temp file to download the results to
-        const tempFile = await this.fs.createTemporaryLocalFile('.js');
+        const tempFile = await this.fs.createTemporaryFile({ fileExtension: '.js' });
 
         // Otherwise do an http get on the url. Retry at least 5 times
         let retryCount = 5;
         let success = false;
         while (retryCount > 0 && !success) {
             try {
-                traceInfo(
-                    `${ConsoleForegroundColors.Green}Downloading from CDN ${downloadUrl} into ${tempFile.filePath}`
-                );
-                await download(downloadUrl, path.dirname(tempFile.filePath), {
-                    filename: path.basename(tempFile.filePath)
-                });
-                traceInfo(
-                    `${ConsoleForegroundColors.Green}Successfully downloaded from CDN ${downloadUrl} into ${tempFile.filePath}`
-                );
-                success = true;
+                traceInfo(`${ConsoleForegroundColors.Green}Downloading from CDN ${downloadUrl} into ${tempFile.file}`);
+                const response = await this.httpClient.downloadFile(downloadUrl);
+                if (response.status === 200) {
+                    const contents = await response.text();
+                    await this.fs.writeFile(tempFile.file, contents);
+                    traceInfo(
+                        `${ConsoleForegroundColors.Green}Successfully downloaded from CDN ${downloadUrl} into ${tempFile.file}`
+                    );
+                    success = true;
+                } else {
+                    traceError(`Error downloading from ${downloadUrl}: ${response.statusText}`);
+                }
             } catch (exc) {
                 traceInfo(`Error downloading from ${downloadUrl}: `, exc);
             } finally {

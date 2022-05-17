@@ -9,6 +9,7 @@ import { FileStat, FileType, Uri } from 'vscode';
 import { FileSystem } from '../../platform/common/platform/fileSystem.node';
 import { convertStat } from '../../platform/common/platform/fileSystemUtils.node';
 import { createDeferred } from '../../platform/common/utils/async';
+import { IExtensionContext } from '../../platform/common/types';
 
 // This is necessary for unit tests and functional tests, since they
 // do not run under VS Code so they do not have access to the actual
@@ -108,8 +109,8 @@ export class FakeVSCodeFileSystemAPI {
 export class MockFileSystem extends FileSystem {
     private contentOverloads = new Map<string, string>();
 
-    constructor() {
-        super();
+    constructor(extensionContext: IExtensionContext) {
+        super(extensionContext);
         this.vscfs = new FakeVSCodeFileSystemAPI();
     }
     public override async readLocalFile(filePath: string): Promise<string> {

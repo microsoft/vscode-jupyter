@@ -8,7 +8,7 @@ import { ApplicationShell } from '../../../platform/common/application/applicati
 import { IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
 import { WorkspaceService } from '../../../platform/common/application/workspace.node';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
-import { HttpClient } from '../../../platform/common/net/httpClient.node';
+import { HttpClient } from '../../../platform/common/net/httpClient';
 import { PersistentState, PersistentStateFactory } from '../../../platform/common/persistentState';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { IPythonExecutionFactory } from '../../../platform/common/process/types.node';
@@ -16,7 +16,7 @@ import { IConfigurationService, IJupyterSettings } from '../../../platform/commo
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { IKernel, RemoteKernelSpecConnectionMetadata } from '../../../platform/../kernels/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { CDNWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider.node';
+import { CDNWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider';
 import { IPyWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/ipyWidgetScriptSourceProvider';
 import { LocalWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/localWidgetScriptSourceProvider.node';
 import { RemoteWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/remoteWidgetScriptSourceProvider';

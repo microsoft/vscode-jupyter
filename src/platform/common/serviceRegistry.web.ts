@@ -12,7 +12,8 @@ import {
     IExtensions,
     ICryptoUtils,
     IAsyncDisposableRegistry,
-    IBrowserService
+    IBrowserService,
+    IHttpClient
 } from './types';
 import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.web';
 import { Extensions } from './application/extensions.web';
@@ -28,6 +29,7 @@ import { BrowserService } from './net/browser';
 import { ActiveEditorContextService } from './activeEditorContext';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { DebugService } from './application/debugService';
+import { HttpClient } from './net/httpClient';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingletonInstance<boolean>(IsWindows, false);
@@ -44,6 +46,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
     serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
+    serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         ActiveEditorContextService

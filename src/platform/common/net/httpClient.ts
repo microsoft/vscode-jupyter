@@ -5,24 +5,23 @@
 
 import { inject, injectable } from 'inversify';
 import { parse, ParseError } from 'jsonc-parser';
-import type * as requestTypes from 'request';
-import { IHttpClient } from '../../common/types';
+import { IHttpClient } from '../types';
 import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
 import { traceError } from '../../logging';
+import * as fetch from 'cross-fetch';
 
 @injectable()
 export class HttpClient implements IHttpClient {
-    public readonly requestOptions: requestTypes.CoreOptions;
+    public readonly requestOptions: RequestInit;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        this.requestOptions = { proxy: workspaceService.getConfiguration('http').get('proxy', '') };
+        this.requestOptions = { headers: { proxy: workspaceService.getConfiguration('http').get('proxy', '') } };
     }
 
-    public async downloadFile(uri: string): Promise<requestTypes.Request> {
+    public async downloadFile(uri: string): Promise<Response> {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const request = (await import('request')) as any as typeof requestTypes;
-        return request(uri, this.requestOptions);
+        return fetch.fetch(uri, this.requestOptions);
     }
 
     public async getJSON<T>(uri: string, strict: boolean = true): Promise<T> {
@@ -46,33 +45,19 @@ export class HttpClient implements IHttpClient {
 
     public async exists(uri: string): Promise<boolean> {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const request = require('request') as typeof requestTypes;
-        return new Promise<boolean>((resolve) => {
-            try {
-                request
-                    .get(uri, this.requestOptions)
-                    .on('response', (response) => resolve(response.statusCode === 200))
-                    .on('error', () => resolve(false));
-            } catch {
-                resolve(false);
-            }
-        });
+        try {
+            const response = await this.downloadFile(uri);
+            return response.status === 200;
+        } catch {
+            return false;
+        }
     }
     private async getContents(uri: string): Promise<string> {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const request = require('request') as typeof requestTypes;
-        return new Promise<string>((resolve, reject) => {
-            request(uri, this.requestOptions, (ex, response, body) => {
-                if (ex) {
-                    return reject(ex);
-                }
-                if (response.statusCode !== 200) {
-                    return reject(
-                        new Error(`Failed with status ${response.statusCode}, ${response.statusMessage}, Uri ${uri}`)
-                    );
-                }
-                resolve(body);
-            });
-        });
+        const response = await this.downloadFile(uri);
+        if (response.status === 200) {
+            return response.text();
+        } else {
+            throw new Error(response.statusText);
+        }
     }
 }

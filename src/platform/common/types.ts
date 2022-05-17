@@ -3,7 +3,6 @@
 'use strict';
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import { Request as RequestResult } from 'request';
 import { ConfigurationTarget, Disposable, Event, Extension, ExtensionContext, OutputChannel, Uri, Range } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
@@ -11,6 +10,7 @@ import { CommandsWithoutArgs } from './application/commands';
 import { ICommandManager } from './application/types';
 import { Experiments } from './experiments/groups';
 import { ISystemVariables } from './variables/types';
+
 export const IsCodeSpace = Symbol('IsCodeSpace');
 export const IsDevMode = Symbol('IsDevMode');
 export const IsWebExtension = Symbol('IsWebExtension');
@@ -191,29 +191,9 @@ export type DownloadOptions = {
     extension: 'tmp' | string;
 };
 
-export const IFileDownloader = Symbol('IFileDownloader');
-/**
- * File downloader, that'll display progress in the status bar.
- *
- * @export
- * @interface IFileDownloader
- */
-export interface IFileDownloader {
-    /**
-     * Download file and display progress in statusbar.
-     * Optionnally display progress in the provided output channel.
-     *
-     * @param {string} uri
-     * @param {DownloadOptions} options
-     * @returns {Promise<string>}
-     * @memberof IFileDownloader
-     */
-    downloadFile(uri: string, options: DownloadOptions): Promise<string>;
-}
-
 export const IHttpClient = Symbol('IHttpClient');
 export interface IHttpClient {
-    downloadFile(uri: string): Promise<RequestResult>;
+    downloadFile(uri: string): Promise<Response>;
     /**
      * Downloads file from uri as string and parses them into JSON objects
      * @param uri The uri to download the JSON from

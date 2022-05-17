@@ -14,7 +14,7 @@ import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { IConfigurationService, WidgetCDNs } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
-import { CDNWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider.node';
+import { CDNWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider';
 import {
     ILocalResourceUriConverter,
     IWidgetScriptSourceProvider

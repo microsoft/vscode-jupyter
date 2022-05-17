@@ -4,13 +4,12 @@
 
 /* eslint-disable  */
 
-import { createHash } from 'crypto';
 import * as fs from 'fs-extra';
 import { ReadStream, WriteStream } from 'fs-extra';
 import * as path from '../../vscode-path/path';
 import * as vscode from 'vscode';
 import '../extensions';
-import { createDirNotEmptyError, isFileExistsError } from './errors.node';
+import { createDirNotEmptyError, isFileExistsError } from './errors';
 import { IRawFileSystem } from './types.node';
 
 const ENCODING = 'utf8';
@@ -276,12 +275,4 @@ export class RawFileSystem implements IRawFileSystem {
         //   This functionality has been requested for the VS Code API.
         return this.fsExtra.createWriteStream(filename);
     }
-}
-
-// We *could* use ICryptoUtils, but it's a bit overkill, issue tracked
-// in https://github.com/microsoft/vscode-python/issues/8438.
-export function getHashString(data: string): string {
-    const hash = createHash('sha512');
-    hash.update(data);
-    return hash.digest('hex');
 }

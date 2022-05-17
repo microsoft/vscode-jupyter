@@ -1,14 +1,15 @@
-import { EventEmitter, Event, Uri } from 'vscode';
+import { EventEmitter, Event, Uri, FileType } from 'vscode';
 import { ILocalResourceUriConverter } from './types';
-import * as path from '../../platform/vscode-path/path';
+import * as uriPath from '../../platform/vscode-path/resources';
 import { inject, injectable } from 'inversify';
-import { IFileSystemNode } from '../../platform/common/platform/types.node';
+import { IFileSystem } from '../../platform/common/platform/types';
 import { IExtensionContext } from '../../platform/common/types';
 import { getOSType, OSType } from '../../platform/common/utils/platform';
 import { sha256 } from 'hash.js';
 import { createDeferred, Deferred } from '../../platform/common/utils/async';
 import { traceInfo, traceError } from '../../platform/logging';
 import { getComparisonKey } from '../../platform/vscode-path/resources';
+import { getFilePath } from '../../platform/common/platform/fs-paths';
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports */
 const sanitize = require('sanitize-filename');
 
@@ -19,11 +20,11 @@ export class ScriptUriConverter implements ILocalResourceUriConverter {
         return this.requestUriEmitter.event;
     }
     public get rootScriptFolder(): Uri {
-        return Uri.file(this._rootScriptFolder);
+        return this._rootScriptFolder;
     }
-    private readonly _rootScriptFolder: string;
-    private readonly createTargetWidgetScriptsFolder: Promise<string>;
-    private readonly targetWidgetScriptsFolder: string;
+    private readonly _rootScriptFolder: Uri;
+    private readonly createTargetWidgetScriptsFolder: Promise<Uri>;
+    private readonly targetWidgetScriptsFolder: Uri;
     private readonly resourcesMappedToExtensionFolder = new Map<string, Promise<Uri>>();
     private readonly uriConversionPromises = new Map<string, Deferred<Uri>>();
     private requestUriEmitter = new EventEmitter<Uri>();
@@ -38,16 +39,19 @@ export class ScriptUriConverter implements ILocalResourceUriConverter {
      */
     public async asWebviewUri(localResource: Uri): Promise<Uri> {
         // Make a copy of the local file if not already in the correct location
-        if (!this.isInScriptPath(localResource.fsPath)) {
-            if (!this.resourcesMappedToExtensionFolder.has(localResource.fsPath)) {
+        if (!this.isInScriptPath(localResource)) {
+            const key = getComparisonKey(localResource);
+            if (!this.resourcesMappedToExtensionFolder.has(key)) {
                 const deferred = createDeferred<Uri>();
-                this.resourcesMappedToExtensionFolder.set(localResource.fsPath, deferred.promise);
+                this.resourcesMappedToExtensionFolder.set(key, deferred.promise);
                 try {
                     // Create a file name such that it will be unique and consistent across VSC reloads.
                     // Only if original file has been modified should we create a new copy of the sam file.
                     const fileHash: string = await this.fs.getFileHash(localResource.fsPath);
                     const uniqueFileName = sanitize(
-                        sha256().update(`${localResource.fsPath}${fileHash}`).digest('hex')
+                        sha256()
+                            .update(`${getFilePath(localResource)}${fileHash}`)
+                            .digest('hex')
                     );
                     const targetFolder = await this.createTargetWidgetScriptsFolder;
                     const mappedResource = Uri.file(
@@ -82,28 +86,22 @@ export class ScriptUriConverter implements ILocalResourceUriConverter {
     }
 
     constructor(
-        @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExtensionContext) extensionContext: IExtensionContext
     ) {
-        this._rootScriptFolder = path.join(extensionContext.extensionPath, 'tmp', 'scripts');
-        this.targetWidgetScriptsFolder = path.join(this._rootScriptFolder, 'nbextensions');
+        this._rootScriptFolder = uriPath.joinPath(extensionContext.extensionUri, 'tmp', 'scripts');
+        this.targetWidgetScriptsFolder = uriPath.joinPath(this._rootScriptFolder, 'nbextensions');
         this.createTargetWidgetScriptsFolder = this.fs
-            .localDirectoryExists(this.targetWidgetScriptsFolder)
+            .exists(this.targetWidgetScriptsFolder, FileType.Directory)
             .then(async (exists) => {
                 if (!exists) {
-                    await this.fs.createLocalDirectory(this.targetWidgetScriptsFolder);
+                    await this.fs.createDirectory(this.targetWidgetScriptsFolder);
                 }
                 return this.targetWidgetScriptsFolder;
             });
     }
 
-    private isInScriptPath(filePath: string) {
-        const scriptPath = path.normalize(this._rootScriptFolder);
-        filePath = path.normalize(filePath);
-        if (getOSType() === OSType.Windows) {
-            return filePath.toUpperCase().startsWith(scriptPath.toUpperCase());
-        } else {
-            return filePath.startsWith(scriptPath);
-        }
+    private isInScriptPath(uri: Uri) {
+        return uriPath.isEqualOrParent(uri, this._rootScriptFolder, false);
     }
 }
