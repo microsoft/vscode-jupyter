@@ -585,5 +585,7 @@
     "Installer.dataScienceInstallPrompt": "Data Science library {0} is not installed. Install?",
     "Products.installingModule": "Installing {0}",
     "DataScience.webNotSupported": "Operation not supported in web version of Jupyter extension.",
-    "DataScience.outputSizeExceedLimit": "Output exceeds the <a href={0}>size limit</a>. Open the full output data <a href={1}>in a text editor</a>"
+    "DataScience.outputSizeExceedLimit": "Output exceeds the <a href={0}>size limit</a>. Open the full output data <a href={1}>in a text editor</a>",
+    "DataScience.launchDataWrangler": "Launch Data Wrangler",
+    "DataScience.dataWranglerVariableWasLost": "Could not find variable '{0}'. Please re-execute the cell to retry."
 }

@@ -39,6 +39,10 @@ function getEntry(bundle) {
             return {
                 errorRenderer: [`./src/webviews/webview-side/error-renderer/index.ts`]
             };
+        case 'dataWranglerHtmlRenderer':
+            return {
+                dataWranglerHtmlRenderer: [`./src/webviews/webview-side/data-wrangler-html-renderer/index.ts`]
+            };
         case 'widgetTester':
             return {
                 widgetTester: [`./src/test/datascience/widgets/rendererUtils.ts`]
@@ -106,6 +110,7 @@ function getPlugins(bundle) {
         }
         case 'ipywidgetsKernel':
         case 'ipywidgetsRenderer':
+        case 'dataWranglerHtmlRenderer':
         case 'errorRenderer': {
             plugins.push(definePlugin);
             break;
@@ -300,4 +305,5 @@ exports.viewers = buildConfiguration('viewers');
 exports.ipywidgetsKernel = buildConfiguration('ipywidgetsKernel');
 exports.ipywidgetsRenderer = buildConfiguration('ipywidgetsRenderer');
 exports.errorRenderer = buildConfiguration('errorRenderer');
+exports.dataWranglerHtmlRenderer = buildConfiguration('dataWranglerHtmlRenderer');
 exports.widgetTester = buildConfiguration('widgetTester');

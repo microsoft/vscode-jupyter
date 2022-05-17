@@ -64,6 +64,22 @@ export class JupyterKernelServiceFactory implements IExportedKernelServiceFactor
         this.extensionApi.set(accessInfo.extensionId, service);
         return service;
     }
+
+    /**
+     * This allows us to bypass the extension ID check and to call the service from the Jupyter extension.
+     */
+    public async getServiceInternal() {
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        const service = new JupyterKernelService(
+            'ms-toolsai.jupyter',
+            this.kernelProvider,
+            this.disposables,
+            this.notebookControllerManager,
+            this.serviceContainer
+        );
+        this.extensionApi.set('ms-toolsai.jupyter', service);
+        return service;
+    }
 }
 
 class JupyterKernelService implements IExportedKernelService {

@@ -527,7 +527,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         reason: 'normally' | 'onKernelDisposed' | 'onAnInterrupt' | 'onARestart' | 'withKeybinding';
 
 ## Locations Used
@@ -578,7 +578,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         status: 'installed' | 'notInstalled';
 
 ## Locations Used
@@ -1429,9 +1429,9 @@ No description provided
 
 ## Properties
 
-- 
+-
         ename: string;
-- 
+-
         evalue: string;
 
 ## Locations Used
@@ -1534,9 +1534,9 @@ No description provided
 
 ## Properties
 
-- 
+-
         where: 'activeInterpreter' | 'otherInterpreter' | 'path' | 'nowhere';
-- 
+-
         command: JupyterCommands;
 
 ## Locations Used
@@ -1554,9 +1554,9 @@ No description provided
 
 ## Properties
 
-- 
+-
         extensionId: string;
-- 
+-
         allowed: 'yes' | 'no';
 
 ## Locations Used
@@ -1595,9 +1595,9 @@ No description provided
 
 ## Properties
 
-- 
+-
         extensionId: string;
-- 
+-
         pemUsed: keyof IExportedKernelService;
 
 ## Locations Used
@@ -1808,17 +1808,17 @@ No description provided
 
 ## Properties
 
-- 
+-
         /**
          * Language of the kernelSpec.
          */
         language: string;
-- 
+-
         /**
          * Whether this is a local or remote kernel.
          */
         kind: 'local' | 'remote';
-- 
+-
         /**
          * Whether shell is used to start the kernel. E.g. `"/bin/sh"` is used in the argv of the kernelSpec.
          * OCaml is one such kernel.
@@ -1849,9 +1849,9 @@ No description provided
 
 ## Properties
 
-- 
+-
         ename: string;
-- 
+-
         evalue: string;
 
 ## Locations Used
@@ -2593,7 +2593,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         /**
          * The id of the extension registering with us to be displayed the dropdown list for notebook creation.
          */
@@ -2922,9 +2922,9 @@ No description provided
 
 ## Properties
 
-- 
+-
         ename: string;
-- 
+-
         evalue: string;
 
 ## Locations Used
@@ -3000,12 +3000,12 @@ No description provided
 
 ## Properties
 
-- 
+-
         /**
          * Extension we recommended the user to install.
          */
         extensionId: string;
-- 
+-
         /**
          * `displayed` - If prompt was displayed
          * `dismissed` - If prompt was displayed & dismissed by the user
@@ -4275,7 +4275,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         azure: boolean;
 
 ## Locations Used
@@ -4567,9 +4567,9 @@ No description provided
 
 ## Properties
 
-- 
+-
         ename: string;
-- 
+-
         evalue: string;
 
 ## Locations Used
@@ -4710,7 +4710,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         /**
          * Whether this is the first time in the session.
          * (fetching kernels first time in the session is slower, later its cached).
@@ -5164,7 +5164,7 @@ No properties for event
 
 ## Properties
 
-- 
+-
         /**
          * Indicates whether the python extension is installed.
          * If we send telemetry fro this & this is `true`, then we have a bug.
@@ -5596,38 +5596,38 @@ No description provided
 
 ## Properties
 
-- 
+-
         /**
          * Hash of the cell output mimetype
          *
          * @type {string}
          */
         hashedName: string;
-- 
+-
         hasText: boolean;
-- 
+-
         hasLatex: boolean;
-- 
+-
         hasHtml: boolean;
-- 
+-
         hasSvg: boolean;
-- 
+-
         hasXml: boolean;
-- 
+-
         hasJson: boolean;
-- 
+-
         hasImage: boolean;
-- 
+-
         hasGeo: boolean;
-- 
+-
         hasPlotly: boolean;
-- 
+-
         hasVega: boolean;
-- 
+-
         hasWidget: boolean;
-- 
+-
         hasJupyter: boolean;
-- 
+-
         hasVnd: boolean;
 
 ## Locations Used
@@ -5702,7 +5702,7 @@ Event can be removed. Not referenced anywhere
 
 ## Properties
 
-- 
+-
         // Result is null if user signalled cancellation or if we timed out
         isResultNull: boolean;
 
@@ -6400,7 +6400,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         /**
          * Total time spent in attempting to start and connect to jupyter before giving up.
          *
@@ -6534,14 +6534,14 @@ No description provided
 
 ## Properties
 
-- 
+-
         /**
          * Whether this is the first time in the session.
          * (fetching kernels first time in the session is slower, later its cached).
          * This is a generic property supported for all telemetry (sent by decorators).
          */
         firstTime?: boolean;
-- 
+-
         /**
          * Whether this telemetry is for listing of all kernels or just python or just non-python.
          * (fetching kernels first time in the session is slower, later its cached).
@@ -6608,7 +6608,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         action: 'displayed';
 -  // Message displayed.
         /**
@@ -6709,7 +6709,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         /**
          * Number of kernel specs.
          */
@@ -7003,7 +7003,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         matchedReason: PreferredKernelExactMatchReason;
 
 ## Locations Used
@@ -7030,7 +7030,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         action:
             | 'displayed' // Message displayed.
             | 'dismissed' // user dismissed the message.
@@ -7164,15 +7164,15 @@ No description provided
 
 ## Properties
 
-- 
+-
         moduleName: string;
-- 
+-
         /**
          * Whether the module was already (once before) installed into the python environment or
          * whether this already exists (detected via `pip list`)
          */
         isModulePresent?: 'true' | undefined;
-- 
+-
         action:
             | 'cancelled' // User cancelled the installation or closed the notebook or the like.
             | 'displayed' // Install prompt may have been displayed.
@@ -7190,13 +7190,13 @@ No description provided
             | 'dismissed';
 -  // User chose to dismiss the prompt.
         resourceType?: 'notebook' | 'interactive';
-- 
+-
         /**
          * Hash of the resource (notebook.uri or pythonfile.uri associated with this).
          * If we run the same notebook tomorrow, the hash will be the same.
          */
         resourceHash?: string;
-- 
+-
         pythonEnvType?: EnvironmentType;
 
 ## Locations Used
@@ -7355,7 +7355,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         action:
             | 'displayed' // Message displayed.
             | 'dismissed' // user dismissed the message.
@@ -7935,7 +7935,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         /**
          * Number of kernel specs.
          */
@@ -8012,9 +8012,9 @@ No description provided
 
 ## Properties
 
-- 
+-
         testName: string;
-- 
+-
         testResult: string;
 
 ## Locations Used
@@ -8041,7 +8041,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         /**
          * The result of the selection.
          * notSelected - No interpreter was selected.
@@ -8627,7 +8627,7 @@ No description provided
 
 ## Properties
 
-- 
+-
         isErrorOutput: boolean;
 
 ## Locations Used
@@ -9187,6 +9187,18 @@ No properties for event
 
 </details>
 <details>
+  <summary>OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST_EX</summary>
+TODO
+</details>
+<details>
+  <summary>OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR_EX</summary>
+TODO
+</details>
+<details>
+  <summary>OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS_EX</summary>
+TODO
+</details>
+<details>
   <summary>PLATFORM.INFO</summary>
 
 ## Description
@@ -9250,28 +9262,28 @@ No description provided
 
 ## Properties
 
-- 
+-
         /**
          * Carries `true` if environment variables are present, `false` otherwise
          *
          * @type {boolean}
          */
         hasEnvVars?: boolean;
-- 
+-
         /**
          * Carries `true` if fetching environment variables failed, `false` otherwise
          *
          * @type {boolean}
          */
         failed?: boolean;
-- 
+-
         /**
          * Whether the environment was activated within a terminal or not.
          *
          * @type {boolean}
          */
         activatedInTerminal?: boolean;
-- 
+-
         /**
          * Whether the environment was activated by the wrapper class.
          * If `true`, this telemetry is sent by the class that wraps the two activation providers   .

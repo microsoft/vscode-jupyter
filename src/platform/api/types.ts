@@ -182,4 +182,5 @@ export interface ILanguageServerProvider {
 export const IExportedKernelServiceFactory = Symbol('IExportedKernelServiceFactory');
 export interface IExportedKernelServiceFactory {
     getService(): Promise<IExportedKernelService | undefined>;
+    getServiceInternal(): Promise<IExportedKernelService | undefined>;
 }

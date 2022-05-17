@@ -9,5 +9,6 @@ module.exports = [
     builder.ipywidgetsKernel,
     builder.ipywidgetsRenderer,
     builder.errorRenderer,
+    builder.dataWranglerHtmlRenderer,
     builder.widgetTester
 ];

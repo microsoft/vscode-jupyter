@@ -22,15 +22,28 @@ export interface IExtensionSideRenderer {}
 export class ExtensionSideRenderer implements IDisposable {
     private disposables: IDisposable[];
     private errorRendererMessage: vscode.NotebookRendererMessaging;
+    private dataWranglerHtmlRendererMessage: vscode.NotebookRendererMessaging;
     constructor() {
         this.disposables = [];
         this.errorRendererMessage = vscode.notebooks.createRendererMessaging('jupyter-error-renderer');
+        this.dataWranglerHtmlRendererMessage = vscode.notebooks.createRendererMessaging(
+            'jupyter-data-wrangler-html-renderer'
+        );
         this.disposables.push(
             this.errorRendererMessage.onDidReceiveMessage(
                 (e: { editor: vscode.NotebookEditor; message: IRequestMessage }) => {
                     switch (e.message.type) {
                         case MessageType.LoadLoc:
-                            this.loadLoc(e.editor);
+                            this.loadLoc(e.editor, this.errorRendererMessage);
+                            break;
+                    }
+                }
+            ),
+            this.dataWranglerHtmlRendererMessage.onDidReceiveMessage(
+                (e: { editor: vscode.NotebookEditor; message: IRequestMessage }) => {
+                    switch (e.message.type) {
+                        case MessageType.LoadLoc:
+                            this.loadLoc(e.editor, this.dataWranglerHtmlRendererMessage);
                             break;
                     }
                 }
@@ -41,12 +54,15 @@ export class ExtensionSideRenderer implements IDisposable {
         void this.errorRendererMessage.postMessage({
             type: MessageType.ExtensionInit
         });
+        void this.dataWranglerHtmlRendererMessage.postMessage({
+            type: MessageType.ExtensionInit
+        });
     }
 
-    loadLoc(editor: vscode.NotebookEditor) {
+    loadLoc(editor: vscode.NotebookEditor, messaging: vscode.NotebookRendererMessaging) {
         const locStrings = isTestExecution() ? '{}' : getCollectionJSON();
 
-        void this.errorRendererMessage.postMessage(
+        void messaging.postMessage(
             {
                 type: MessageType.LoadLoc,
                 data: locStrings

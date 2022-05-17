@@ -15,6 +15,7 @@ import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { NotebookCommandListener } from './notebookCommandListener';
 import { NotebookEditorProvider } from './notebookEditorProvider';
 import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms.node';
+import { DataWranglerHtmlRendererCommunicationHandler } from './outputs/dataWranglerHtmlRendererComms.node';
 import { PlotSaveHandler } from './outputs/plotSaveHandler.node';
 import { PlotViewHandler } from './outputs/plotViewHandler.node';
 import { RendererCommunication } from './outputs/rendererCommunication.node';
@@ -54,6 +55,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         ErrorRendererCommunicationHandler
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        DataWranglerHtmlRendererCommunicationHandler
     );
     serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NotebookEditorProvider);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
