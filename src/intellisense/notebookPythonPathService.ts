@@ -93,12 +93,15 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
                 traceInfo(`LSP Notebooks experiment is disabled -- not in treatment group`);
             } else if (!pythonVersion) {
                 traceInfo(`LSP Notebooks experiment is disabled -- Python disabled or not installed`);
-            } else if (semver.lt(pythonVersion, '2022.7.0') && !semver.prerelease(pythonVersion)?.includes('dev')) {
+            } else if (
+                semver.lte(pythonVersion, '2022.7.11361006') &&
+                !semver.prerelease(pythonVersion)?.includes('dev')
+            ) {
                 traceInfo(`LSP Notebooks experiment is disabled -- Python does not support experiment`);
             } else if (!pylanceVersion) {
                 traceInfo(`LSP Notebooks experiment is disabled -- Pylance disabled or not installed`);
             } else if (
-                semver.lt(pylanceVersion, '2022.5.1-pre.1') &&
+                semver.lt(pylanceVersion, '2022.5.3-pre.1') &&
                 !semver.prerelease(pylanceVersion)?.includes('dev')
             ) {
                 traceInfo(`LSP Notebooks experiment is disabled -- Pylance does not support experiment`);
