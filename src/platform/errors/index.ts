@@ -88,7 +88,6 @@ function getCallSite(frame: stackTrace.StackFrame) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Constructor<T> = { new (...args: any[]): T };
 
-// Checks if a given error is of certain type.
 function isErrorType<T>(error: Error, expectedType: Constructor<T>) {
     if (error instanceof expectedType) {
         return true;
