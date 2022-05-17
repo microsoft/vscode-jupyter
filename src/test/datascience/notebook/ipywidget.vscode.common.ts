@@ -29,7 +29,10 @@ import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfo } from '../../../platform/logging';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-export function sharedIPyWidgetStandardTests(suite: Mocha.Suite) {
+export function sharedIPyWidgetStandardTests(
+    suite: Mocha.Suite,
+    startJupyterServer: (notebook?: NotebookDocument) => Promise<void>
+) {
     suite.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
@@ -38,6 +41,7 @@ export function sharedIPyWidgetStandardTests(suite: Mocha.Suite) {
     let testWidgetNb: Uri;
     suiteSetup(async function () {
         api = await initialize();
+        await startJupyterServer();
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         widgetCoordinator = api.serviceContainer.get<NotebookIPyWidgetCoordinator>(NotebookIPyWidgetCoordinator);
