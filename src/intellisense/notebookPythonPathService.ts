@@ -94,7 +94,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
             } else if (!pythonVersion) {
                 traceInfo(`LSP Notebooks experiment is disabled -- Python disabled or not installed`);
             } else if (
-                semver.lte(pythonVersion, '2022.7.11361006') &&
+                semver.lte(pythonVersion, '2022.7.11371008') &&
                 !semver.prerelease(pythonVersion)?.includes('dev')
             ) {
                 traceInfo(`LSP Notebooks experiment is disabled -- Python does not support experiment`);
