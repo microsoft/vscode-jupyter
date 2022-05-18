@@ -34,9 +34,7 @@ export class ScriptSourceProviderFactory implements IWidgetScriptSourceProviderF
         switch (kernel.kernelConnectionMetadata.kind) {
             case 'connectToLiveRemoteKernel':
             case 'startUsingRemoteKernelSpec':
-                scriptProviders.push(
-                    new RemoteWidgetScriptSourceProvider(kernel.kernelConnectionMetadata.baseUrl, httpClient)
-                );
+                scriptProviders.push(new RemoteWidgetScriptSourceProvider(kernel.kernelConnectionMetadata.baseUrl));
                 break;
         }
 

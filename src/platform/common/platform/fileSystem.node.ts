@@ -5,7 +5,6 @@ import * as tmp from 'tmp';
 import { promisify } from 'util';
 import * as vscode from 'vscode';
 import { createDirNotEmptyError } from './errors';
-import { convertFileType, convertStat } from './fileSystemUtils.node';
 import { TemporaryFile } from './types';
 import { FileType, IFileSystemNode } from './types.node';
 import { FileSystem as FileSystemBase } from './fileSystem';
@@ -90,16 +89,5 @@ export class FileSystem extends FileSystemBase implements IFileSystemNode {
 
         const found = await this.globFiles(globPattern, options);
         return Array.isArray(found) ? found : [];
-    }
-
-    private async lstat(filename: string): Promise<vscode.FileStat> {
-        // eslint-disable-next-line
-        // TODO https://github.com/microsoft/vscode/issues/71204 (84514)):
-        //   This functionality has been requested for the VS Code API.
-        const stat = await fs.lstat(filename);
-        // Note that, unlike stat(), lstat() does not include the type
-        // of the symlink's target.
-        const fileType = convertFileType(stat);
-        return convertStat(stat, fileType);
     }
 }

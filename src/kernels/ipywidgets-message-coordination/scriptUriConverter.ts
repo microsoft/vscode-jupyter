@@ -4,7 +4,6 @@ import * as uriPath from '../../platform/vscode-path/resources';
 import { inject, injectable } from 'inversify';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IExtensionContext } from '../../platform/common/types';
-import { getOSType, OSType } from '../../platform/common/utils/platform';
 import { sha256 } from 'hash.js';
 import { createDeferred, Deferred } from '../../platform/common/utils/async';
 import { traceInfo, traceError } from '../../platform/logging';
@@ -47,27 +46,30 @@ export class ScriptUriConverter implements ILocalResourceUriConverter {
                 try {
                     // Create a file name such that it will be unique and consistent across VSC reloads.
                     // Only if original file has been modified should we create a new copy of the sam file.
-                    const fileHash: string = await this.fs.getFileHash(localResource.fsPath);
+                    const fileHash: string = await this.fs.getFileHash(localResource);
                     const uniqueFileName = sanitize(
                         sha256()
                             .update(`${getFilePath(localResource)}${fileHash}`)
                             .digest('hex')
                     );
                     const targetFolder = await this.createTargetWidgetScriptsFolder;
-                    const mappedResource = Uri.file(
-                        path.join(targetFolder, `${uniqueFileName}${path.basename(localResource.fsPath)}`)
+                    const mappedResource = uriPath.joinPath(
+                        targetFolder,
+                        `${uniqueFileName}${uriPath.basename(localResource)}`
                     );
-                    if (!(await this.fs.localFileExists(mappedResource.fsPath))) {
-                        await this.fs.copyLocal(localResource.fsPath, mappedResource.fsPath);
+                    if (!(await this.fs.exists(mappedResource))) {
+                        await this.fs.copy(localResource, mappedResource);
                     }
-                    traceInfo(`Widget Script file ${localResource.fsPath} mapped to ${mappedResource.fsPath}`);
+                    traceInfo(
+                        `Widget Script file ${getFilePath(localResource)} mapped to ${getFilePath(mappedResource)}`
+                    );
                     deferred.resolve(mappedResource);
                 } catch (ex) {
-                    traceError(`Failed to map widget Script file ${localResource.fsPath}`);
+                    traceError(`Failed to map widget Script file ${getFilePath(localResource)}`);
                     deferred.reject(ex);
                 }
             }
-            localResource = await this.resourcesMappedToExtensionFolder.get(localResource.fsPath)!;
+            localResource = await this.resourcesMappedToExtensionFolder.get(key)!;
         }
         const key = getComparisonKey(localResource);
         if (!this.uriConversionPromises.has(key)) {

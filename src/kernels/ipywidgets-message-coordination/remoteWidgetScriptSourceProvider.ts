@@ -3,8 +3,6 @@
 
 'use strict';
 
-import { traceWarning } from '../../platform/logging';
-import { IHttpClient } from '../../platform/common/types';
 import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
 
 /**
@@ -13,26 +11,15 @@ import { IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
  */
 export class RemoteWidgetScriptSourceProvider implements IWidgetScriptSourceProvider {
     public static validUrls = new Map<string, boolean>();
-    constructor(private readonly baseUrl: string, private readonly httpClient: IHttpClient) {}
+    constructor(private readonly baseUrl: string) {}
     public dispose() {
         // Noop.
     }
-    public async getWidgetScriptSource(moduleName: string, moduleVersion: string): Promise<WidgetScriptSource> {
+    public async getWidgetScriptSource(moduleName: string, _moduleVersion: string): Promise<WidgetScriptSource> {
         const scriptUri = `${this.baseUrl}nbextensions/${moduleName}/index.js`;
-        const exists = await this.getUrlForWidget(scriptUri);
-        if (exists) {
-            return { moduleName, scriptUri, source: 'cdn' };
-        }
-        traceWarning(`Widget Script not found for ${moduleName}@${moduleVersion}`);
-        return { moduleName };
-    }
-    private async getUrlForWidget(url: string): Promise<boolean> {
-        if (RemoteWidgetScriptSourceProvider.validUrls.has(url)) {
-            return RemoteWidgetScriptSourceProvider.validUrls.get(url)!;
-        }
 
-        const exists = await this.httpClient.exists(url);
-        RemoteWidgetScriptSourceProvider.validUrls.set(url, exists);
-        return exists;
+        // We might check if we can query jupyter for the script URI, but we need the
+        // authorization headers. Just always assume it's going to work for now
+        return { moduleName, scriptUri, source: 'remote' };
     }
 }

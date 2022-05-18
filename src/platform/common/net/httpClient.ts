@@ -8,7 +8,7 @@ import { parse, ParseError } from 'jsonc-parser';
 import { IHttpClient } from '../types';
 import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
-import { traceError } from '../../logging';
+import { traceError, traceVerbose } from '../../logging';
 import * as fetch from 'cross-fetch';
 
 @injectable()
@@ -48,7 +48,8 @@ export class HttpClient implements IHttpClient {
         try {
             const response = await this.downloadFile(uri);
             return response.status === 200;
-        } catch {
+        } catch (ex) {
+            traceVerbose(`HttpClient - Failure checking for file ${uri}: ${ex}`);
             return false;
         }
     }

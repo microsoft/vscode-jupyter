@@ -166,9 +166,7 @@ export class CondaService {
         if (!this._file || !this._version) {
             return;
         }
-        const fileHash = this._file.fsPath.toLowerCase().endsWith('conda')
-            ? ''
-            : await this.fs.getFileHash(this._file.fsPath);
+        const fileHash = this._file.fsPath.toLowerCase().endsWith('conda') ? '' : await this.fs.getFileHash(this._file);
         await this.globalState.update(CACHEKEY_FOR_CONDA_INFO, {
             version: this._version.raw,
             file: this._file.fsPath,
@@ -190,7 +188,7 @@ export class CondaService {
         }
         const fileHash = cachedInfo.file.toLowerCase().endsWith('conda')
             ? ''
-            : await this.fs.getFileHash(cachedInfo.file);
+            : await this.fs.getFileHash(Uri.file(cachedInfo.file));
         if (cachedInfo.fileHash === fileHash) {
             return {
                 version: new SemVer(cachedInfo.version),
