@@ -265,7 +265,7 @@ export class KernelProcess implements IKernelProcess {
         }
     }
 
-    public async dispose(): Promise<void> {
+    public dispose(): void {
         if (this.disposed) {
             return;
         }
@@ -277,8 +277,10 @@ export class KernelProcess implements IKernelProcess {
             this.exitEvent.fire({});
         });
         swallowExceptions(async () => {
-            if (this.connectionFile && (await this.fileSystem.localFileExists(this.connectionFile))) {
-                await this.fileSystem.deleteLocalFile(this.connectionFile);
+            if (this.connectionFile) {
+                await this.fileSystem
+                    .deleteLocalFile(this.connectionFile)
+                    .catch((ex) => traceWarning(`Failed to delete connection file ${this.connectionFile}`, ex));
             }
         });
     }
@@ -367,7 +369,10 @@ export class KernelProcess implements IKernelProcess {
     }
     private async createConnectionFile() {
         const runtimeDir = await this.jupyterPaths.getRuntimeDir();
-        const tempFile = await this.fileSystem.createTemporaryLocalFile({ fileExtension: '.json', prefix: 'kernel-' });
+        const tempFile = await this.fileSystem.createTemporaryLocalFile({
+            fileExtension: '.json',
+            prefix: 'kernel-v2-'
+        });
         // Note: We have to dispose the temp file and recreate it else the file
         // system will hold onto the file with an open handle. THis doesn't work so well when
         // a different process tries to open it.

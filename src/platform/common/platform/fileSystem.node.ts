@@ -5,7 +5,7 @@ import * as tmp from 'tmp';
 import { promisify } from 'util';
 import * as vscode from 'vscode';
 import { traceError } from '../../logging';
-import { createDirNotEmptyError, isFileNotFoundError } from './errors.node';
+import { isFileNotFoundError } from './errors.node';
 import { convertFileType, convertStat, getHashString } from './fileSystemUtils.node';
 import { TemporaryFile } from './types';
 import { FileType, IFileSystemNode } from './types.node';
@@ -53,17 +53,7 @@ export class FileSystem extends FileSystemBase implements IFileSystemNode {
     }
 
     public async deleteLocalDirectory(dirname: string) {
-        const uri = vscode.Uri.file(dirname);
-        // The "recursive" option disallows directories, even if they
-        // are empty.  So we have to deal with this ourselves.
-        const files = await this.vscfs.readDirectory(uri);
-        if (files && files.length > 0) {
-            throw createDirNotEmptyError(dirname);
-        }
-        return this.vscfs.delete(uri, {
-            recursive: true,
-            useTrash: false
-        });
+        await new Promise((resolve) => fs.rm(dirname, { force: true, recursive: true }, resolve));
     }
 
     public async ensureLocalDir(path: string): Promise<void> {
@@ -79,6 +69,9 @@ export class FileSystem extends FileSystemBase implements IFileSystemNode {
 
     public async localDirectoryExists(dirname: string): Promise<boolean> {
         return this.localPathExists(dirname, FileType.Directory);
+    }
+    public override async deleteLocalFile(path: string): Promise<void> {
+        await fs.unlink(path);
     }
 
     public async localFileExists(filename: string): Promise<boolean> {
