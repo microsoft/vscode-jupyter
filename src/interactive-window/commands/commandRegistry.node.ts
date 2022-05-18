@@ -39,6 +39,8 @@ import { IExportCommands, IInteractiveWindowProvider } from '../types';
 import * as urlPath from '../../platform/vscode-path/resources';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { untildify } from '../../platform/common/utils/platform';
+import { IPlatformService } from '../../platform/common/platform/types';
 
 @injectable()
 export class CommandRegistry implements IDisposable, IExtensionSingleActivationService {
@@ -71,7 +73,8 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         @optional()
         private readonly dataViewerDependencyService: IDataViewerDependencyService | undefined,
         @inject(IInterpreterService) @optional() private readonly interpreterService: IInterpreterService | undefined,
-        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
+        @inject(IPlatformService) private readonly platformService: IPlatformService
     ) {
         this.dataViewerChecker = new DataViewerChecker(configService, appShell);
         if (!this.workspace.isTrusted) {
@@ -534,9 +537,24 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
                     this.dataViewerDependencyService &&
                     this.interpreterService
                 ) {
-                    const pythonEnv = await this.interpreterService.getInterpreterDetails(
-                        Uri.file(this.debugService.activeDebugSession.configuration.python)
-                    );
+                    // Check to see that we are actually getting a string here as it looks like one customer was not
+                    if (typeof this.debugService.activeDebugSession.configuration.python !== 'string') {
+                        // https://github.com/microsoft/vscode-jupyter/issues/10007
+                        // Error thrown here will be caught and logged by the catch below to send
+                        throw new Error(
+                            `active.DebugSession.configuration.python is not a string: ${JSON.stringify(
+                                this.debugService.activeDebugSession.configuration.python
+                            )}`
+                        );
+                    }
+
+                    // Uri won't work with ~ so untildify first
+                    let untildePath = this.debugService.activeDebugSession.configuration.python;
+                    if (untildePath.startsWith('~') && this.platformService.homeDir) {
+                        untildePath = untildify(untildePath, this.platformService.homeDir.path);
+                    }
+
+                    const pythonEnv = await this.interpreterService.getInterpreterDetails(Uri.file(untildePath));
                     // Check that we have dependencies installed for data viewer
                     pythonEnv && (await this.dataViewerDependencyService.checkAndInstallMissingDependencies(pythonEnv));
                 }
