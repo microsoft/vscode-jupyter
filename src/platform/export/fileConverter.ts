@@ -35,7 +35,7 @@ export class FileConverter implements IFileConverter {
             // Open the source as a NotebookDocument, note that this doesn't actually show an editor, and we don't need
             // a specific close action as VS Code owns the lifetime
             nbDoc = await workspace.openNotebookDocument(source);
-            await this.exportImpl(ExportFormat.python, nbDoc, reporter.token);
+            await this.exportImpl(ExportFormat.python, nbDoc, undefined, reporter.token);
         } finally {
             reporter.dispose();
         }
@@ -53,7 +53,7 @@ export class FileConverter implements IFileConverter {
         );
 
         try {
-            await this.exportImpl(format, sourceDocument, reporter.token, defaultFileName, candidateInterpreter);
+            await this.exportImpl(format, sourceDocument, defaultFileName, reporter.token, candidateInterpreter);
         } finally {
             reporter.dispose();
         }
@@ -67,17 +67,12 @@ export class FileConverter implements IFileConverter {
     public async exportImpl(
         format: ExportFormat,
         sourceDocument: NotebookDocument,
+        defaultFileName: string | undefined,
         token: CancellationToken,
-        defaultFileName?: string,
         candidateInterpreter?: PythonEnvironment
-    ): Promise<undefined> {
-        let target;
+    ): Promise<void> {
         try {
-            target = await this.getTargetFile(format, sourceDocument.uri, defaultFileName);
-            if (!target) {
-                return;
-            }
-            await this.performExport(format, sourceDocument, target, token, candidateInterpreter);
+            await this.performExport(format, sourceDocument, defaultFileName, token, candidateInterpreter);
         } catch (e) {
             traceError('Export failed', e);
             sendTelemetryEvent(Telemetry.ExportNotebookAsFailed, undefined, { format: format });
@@ -93,30 +88,39 @@ export class FileConverter implements IFileConverter {
     protected async performExport(
         format: ExportFormat,
         sourceDocument: NotebookDocument,
-        target: Uri,
+        defaultFileName: string | undefined,
         token: CancellationToken,
         candidateInterpreter?: PythonEnvironment
     ) {
+        let target: Uri | undefined;
         // For web, we perform plain export for Python
         if (format === ExportFormat.python) {
             // Unless selected by the setting use plain conversion for python script convert
-            await this.performPlainExport(format, sourceDocument, target, token);
+            target = await this.performPlainExport(format, sourceDocument, defaultFileName, token);
         } else {
-            await this.performNbConvertExport(sourceDocument, format, target, candidateInterpreter, token);
+            target = await this.performNbConvertExport(
+                sourceDocument,
+                format,
+                defaultFileName,
+                candidateInterpreter,
+                token
+            );
         }
 
-        await this.exportFileOpener.openFile(format, target, true);
+        if (target) {
+            await this.exportFileOpener.openFile(format, target, true);
+        }
     }
 
     protected async performPlainExport(
         format: ExportFormat,
         sourceDocument: NotebookDocument,
-        target: Uri,
+        defaultFileName: string | undefined,
         cancelToken: CancellationToken
-    ) {
+    ): Promise<Uri | undefined> {
         switch (format) {
             case ExportFormat.python:
-                await this.exportToPythonPlain.export(sourceDocument, target, cancelToken);
+                return await this.exportToPythonPlain.export(sourceDocument, defaultFileName, cancelToken);
                 break;
         }
     }
@@ -124,45 +128,32 @@ export class FileConverter implements IFileConverter {
     protected async performNbConvertExport(
         sourceDocument: NotebookDocument,
         format: ExportFormat,
-        target: Uri,
+        defaultFileName: string | undefined,
         interpreter: PythonEnvironment | undefined,
         cancelToken: CancellationToken
     ) {
         try {
-            await this.exportToFormat(sourceDocument, target, format, interpreter, cancelToken);
+            return await this.exportToFormat(sourceDocument, defaultFileName, format, interpreter, cancelToken);
         } finally {
         }
     }
 
-    protected async getTargetFile(
-        format: ExportFormat,
-        source: Uri,
-        defaultFileName?: string
-    ): Promise<Uri | undefined> {
-        let target = await this.filePicker.showDialog(format, source, defaultFileName);
-
-        return target;
-    }
-
     protected async exportToFormat(
         sourceDocument: NotebookDocument,
-        target: Uri,
+        defaultFileName: string | undefined,
         format: ExportFormat,
         interpreter: PythonEnvironment | undefined,
         cancelToken: CancellationToken
     ) {
         switch (format) {
             case ExportFormat.python:
-                await this.exportToPython.export(sourceDocument, target, interpreter, cancelToken);
-                break;
+                return await this.exportToPython.export(sourceDocument, interpreter, defaultFileName, cancelToken);
 
             case ExportFormat.pdf:
-                await this.exportToPDF.export(sourceDocument, target, interpreter, cancelToken);
-                break;
+                return await this.exportToPDF.export(sourceDocument, interpreter, defaultFileName, cancelToken);
 
             case ExportFormat.html:
-                await this.exportToHTML.export(sourceDocument, target, interpreter, cancelToken);
-                break;
+                return await this.exportToHTML.export(sourceDocument, interpreter, defaultFileName, cancelToken);
 
             default:
                 break;

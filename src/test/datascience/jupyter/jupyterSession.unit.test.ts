@@ -35,6 +35,7 @@ import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { BackingFileCreator } from '../../../kernels/jupyter/session/backingFileCreator.node';
 import * as path from '../../../platform/vscode-path/path';
 import { JupyterRequestCreator } from '../../../kernels/jupyter/session/jupyterRequestCreator.node';
+import { IJupyterPasswordConnect } from '../../../kernels/jupyter/types';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - JupyterSession', () => {
@@ -134,6 +135,7 @@ suite('DataScience - JupyterSession', () => {
         jupyterSession = new JupyterSession(
             resource,
             instance(connection),
+            mock(IJupyterPasswordConnect),
             mockKernelSpec,
             instance(specManager),
             instance(sessionManager),

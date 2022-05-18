@@ -25,7 +25,13 @@ import {
     IJupyterServerSession
 } from '../../types';
 import { DisplayOptions } from '../../displayOptions';
-import { IBackupFile, IJupyterBackingFileCreator, IJupyterKernelService, IJupyterRequestCreator } from '../types';
+import {
+    IBackupFile,
+    IJupyterBackingFileCreator,
+    IJupyterKernelService,
+    IJupyterPasswordConnect,
+    IJupyterRequestCreator
+} from '../types';
 import { Uri } from 'vscode';
 import { generateBackingIPyNbFileName } from './backingFileCreator.base';
 
@@ -37,6 +43,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
     constructor(
         resource: Resource,
         private connInfo: IJupyterConnection,
+        private jupyterPasswordConnect: IJupyterPasswordConnect,
         kernelConnectionMetadata: KernelConnectionMetadata,
         private specsManager: KernelSpecManager,
         private sessionManager: SessionManager,
@@ -253,16 +260,44 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
         await this.disposeBackingFile();
     }
 
-    async createTempfile(): Promise<string> {
-        const tempFile = await this.contentsManager.newUntitled({ type: 'file' });
+    async createTempfile(ext: string): Promise<string> {
+        const tempFile = await this.contentsManager.newUntitled({ type: 'file', ext });
         return tempFile.path;
     }
 
     async getDownloadPath(file: string): Promise<string> {
-        const baseUrl = this.connInfo.baseUrl;
-        const token = this.connInfo.token;
-        const url = `${baseUrl}/files/${file}?token=${token}`;
-        return url;
+        let baseUrl = this.connInfo.baseUrl;
+        let token = this.connInfo.token;
+        let xsrfToken: string | undefined = undefined;
+
+        if (token === '' || token === null) {
+            const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo(baseUrl);
+
+            if (pwSettings && pwSettings.requestHeaders) {
+                if (pwSettings.remappedBaseUrl) {
+                    baseUrl = pwSettings.remappedBaseUrl;
+                }
+
+                if (pwSettings.remappedToken) {
+                    token = pwSettings.remappedToken;
+                }
+
+                // eslint-disable-next-line
+                xsrfToken = (pwSettings.requestHeaders as any)['X-XSRFToken'];
+            }
+        }
+
+        if (token !== '' && token !== null) {
+            return `${baseUrl}files/${file}?token=${token}`;
+        } else if (xsrfToken) {
+            // If we don't have a token, fall back to xsrfToken
+            const fullUrl = new URL(`${baseUrl}files/${file}`);
+            fullUrl.searchParams.append('_xsrf', xsrfToken);
+            const url = fullUrl.toString();
+            return url;
+        } else {
+            throw new Error(DataScience.passwordFailure());
+        }
     }
 
     private async createSession(options: {

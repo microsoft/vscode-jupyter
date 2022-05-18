@@ -297,7 +297,7 @@ export interface IJupyterSession extends IAsyncDisposable {
 export interface IJupyterServerSession extends IJupyterSession {
     readonly kind: 'remoteJupyter' | 'localJupyter';
     invokeWithFileSynced(contents: string, handler: (file: IBackupFile) => Promise<void>): Promise<void>;
-    createTempfile(): Promise<string>;
+    createTempfile(ext: string): Promise<string>;
     getDownloadPath(file: string): Promise<string>;
 }
 

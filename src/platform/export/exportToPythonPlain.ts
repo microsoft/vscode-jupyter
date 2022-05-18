@@ -8,7 +8,7 @@ import { CancellationToken, NotebookCell, NotebookCellKind, NotebookDocument, Ur
 import { appendLineFeed } from '../../webviews/webview-side/common';
 import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { IConfigurationService } from '../common/types';
-import { IExport } from './types';
+import { ExportFormat, IExport, IExportDialog } from './types';
 
 // Handles exporting a NotebookDocument to python
 @injectable()
@@ -16,6 +16,7 @@ export class ExportToPythonPlain implements IExport {
     public constructor(
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
+        @inject(IExportDialog) private readonly filePicker: IExportDialog,
         @inject(IPlatformService) private platform: IPlatformService
     ) {}
 
@@ -31,8 +32,18 @@ export class ExportToPythonPlain implements IExport {
     }
 
     // Export the given document to the target source file
-    public async export(sourceDocument: NotebookDocument, target: Uri, token: CancellationToken): Promise<void> {
+    public async export(
+        sourceDocument: NotebookDocument,
+        defaultFileName: string | undefined,
+        token: CancellationToken
+    ): Promise<Uri | undefined> {
         if (token.isCancellationRequested) {
+            return;
+        }
+
+        let target = await this.filePicker.showDialog(ExportFormat.python, sourceDocument.uri, defaultFileName);
+
+        if (!target) {
             return;
         }
 

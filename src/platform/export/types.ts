@@ -23,26 +23,30 @@ export const INbConvertExport = Symbol('INbConvertExport');
 export interface INbConvertExport {
     export(
         sourceDocument: NotebookDocument,
-        target: Uri,
         interpreter: PythonEnvironment | undefined,
+        defaultFileName: string | undefined,
         token: CancellationToken
-    ): Promise<void>;
+    ): Promise<Uri | undefined>;
 }
 
 export const IExportBase = Symbol('IExportBase');
 export interface IExportBase {
     executeCommand(
         sourceDocument: NotebookDocument,
-        target: Uri,
+        defaultFileName: string | undefined,
         format: ExportFormat,
         interpreter: PythonEnvironment,
         token: CancellationToken
-    ): Promise<void>;
+    ): Promise<Uri | undefined>;
 }
 
 export const IExport = Symbol('IExport');
 export interface IExport {
-    export(sourceDocument: NotebookDocument, target: Uri, token: CancellationToken): Promise<void>;
+    export(
+        sourceDocument: NotebookDocument,
+        defaultFileName: string | undefined,
+        token: CancellationToken
+    ): Promise<Uri | undefined>;
 }
 
 export const IExportDialog = Symbol('IExportDialog');

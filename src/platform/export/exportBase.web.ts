@@ -5,6 +5,7 @@
 import * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import { Uri, CancellationToken, NotebookDocument } from 'vscode';
+import * as path from '../../platform/vscode-path/path';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import { executeSilently } from '../../kernels/helpers';
 import { IKernel, IKernelProvider } from '../../kernels/types';
@@ -12,32 +13,35 @@ import { concatMultilineString } from '../../webviews/webview-side/common';
 import { IFileSystem } from '../common/platform/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { ExportUtilBase } from './exportUtil';
-import { ExportFormat, IExportBase, INbConvertExport } from './types';
+import { ExportFormat, IExportBase, IExportDialog, INbConvertExport } from './types';
+import { traceError } from '../logging';
 
 @injectable()
 export class ExportBase implements INbConvertExport, IExportBase {
     constructor(
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IExportDialog) protected readonly filePicker: IExportDialog,
         @inject(ExportUtilBase) protected readonly exportUtil: ExportUtilBase
     ) {}
 
     public async export(
         _sourceDocument: NotebookDocument,
-        _target: Uri,
         _interpreter: PythonEnvironment,
+        _defaultFileName: string | undefined,
         _token: CancellationToken
-        // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
-    ): Promise<void> {}
+    ): Promise<Uri | undefined> {
+        return undefined;
+    }
 
     // @reportAction(ReportableAction.PerformingExport)
     async executeCommand(
         sourceDocument: NotebookDocument,
-        target: Uri,
+        defaultFileName: string | undefined,
         format: ExportFormat,
         _interpreter: PythonEnvironment,
         _token: CancellationToken
-    ): Promise<void> {
+    ): Promise<Uri | undefined> {
         const kernel = this.kernelProvider.get(sourceDocument.uri);
         if (!kernel) {
             // trace error
@@ -53,45 +57,88 @@ export class ExportBase implements INbConvertExport, IExportBase {
         }
 
         if (kernel.session!.isServerSession()) {
+            const session = kernel.session!;
             let contents = await this.exportUtil.getContent(sourceDocument);
-            // const tempTarget = await kernel.session!.createTempfile();
-            // const outputFolder = path.dirname(tempTarget);
+
+            let target: Uri | undefined;
 
             await kernel.session!.invokeWithFileSynced(contents, async (file) => {
                 const pwd = await this.getCWD(kernel);
-                console.log(pwd);
-
                 const filePath = `${pwd}/${file.filePath}`;
 
-                const outputs = await executeSilently(
-                    kernel.session!,
-                    `!jupyter nbconvert ${filePath} --to ${format} --stdout`
-                );
+                if (format === ExportFormat.pdf) {
+                    const tempTarget = await session.createTempfile('.pdf');
+                    const outputs = await executeSilently(
+                        session,
+                        `!jupyter nbconvert ${filePath} --to pdf --output ${path.basename(tempTarget)}`
+                    );
 
-                if (outputs.length === 0) {
-                    return;
+                    const text = this.parseStreamOutput(outputs);
+
+                    if (this.exportSucceed(text)) {
+                        const downloadUrl = await session.getDownloadPath(tempTarget);
+                        target = Uri.parse(downloadUrl);
+                    } else {
+                        traceError(text || 'Failed to export to PDF');
+                        throw new Error(text || 'Failed to export to PDF');
+                    }
+                } else {
+                    target = await this.getTargetFile(format, sourceDocument.uri, defaultFileName);
+                    if (target === undefined) {
+                        return;
+                    }
+
+                    const outputs = await executeSilently(
+                        session,
+                        `!jupyter nbconvert ${filePath} --to ${format} --stdout`
+                    );
+
+                    const text = this.parseStreamOutput(outputs);
+                    if (!text) {
+                        return;
+                    }
+
+                    const headerRemoved = text
+                        .split(/\r\n|\r|\n/g)
+                        .slice(1)
+                        .join('\n');
+
+                    await this.fs.writeFile(target!, headerRemoved);
                 }
-
-                // const downloadUrl = await session.getDownloadPath(file.filePath);
-                // console.log(downloadUrl);
-
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const output: nbformat.IStream = outputs[0] as any;
-                if (output.name !== 'stdout' && output.output_type !== 'stream') {
-                    return;
-                }
-
-                const text = concatMultilineString(output.text).trim().toLowerCase();
-                const headerRemoved = text
-                    .split(/\r\n|\r|\n/g)
-                    .slice(1)
-                    .join('\n');
-
-                await this.fs.writeFile(target, headerRemoved);
             });
+
+            return target;
         } else {
             // no op
         }
+    }
+
+    private exportSucceed(message: string | undefined) {
+        if (!message) {
+            return false;
+        }
+
+        return /\[NbConvertApp\].* successfully created/g.exec(message);
+    }
+
+    private parseStreamOutput(outputs: nbformat.IOutput[]): string | undefined {
+        if (outputs.length === 0) {
+            return;
+        }
+
+        const output: nbformat.IStream = outputs[0] as unknown as nbformat.IStream;
+        if (output.name !== 'stdout' && output.output_type !== 'stream') {
+            return;
+        }
+
+        const text = concatMultilineString(output.text).trim();
+        return text;
+    }
+
+    private async getTargetFile(format: ExportFormat, source: Uri, defaultFileName?: string): Promise<Uri | undefined> {
+        let target = await this.filePicker.showDialog(format, source, defaultFileName);
+
+        return target;
     }
 
     private async getCWD(kernel: IKernel) {
@@ -100,8 +147,7 @@ export class ExportBase implements INbConvertExport, IExportBase {
             return;
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const output: nbformat.IExecuteResult = outputs[0] as any;
+        const output: nbformat.IExecuteResult = outputs[0] as unknown as nbformat.IExecuteResult;
         if (output.output_type !== 'execute_result') {
             return undefined;
         }

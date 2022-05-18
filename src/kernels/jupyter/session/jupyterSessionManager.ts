@@ -192,6 +192,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         const session = new JupyterSession(
             resource,
             this.connInfo,
+            this.jupyterPasswordConnect,
             kernelConnection,
             this.specsManager,
             this.sessionManager,

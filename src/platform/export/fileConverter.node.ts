@@ -39,35 +39,28 @@ export class FileConverter extends FileConverterBase implements IFileConverter {
     override async performExport(
         format: ExportFormat,
         sourceDocument: NotebookDocument,
-        target: Uri,
+        defaultFileName: string | undefined,
         token: CancellationToken,
         candidateInterpreter?: PythonEnvironment
     ) {
+        let target: Uri | undefined;
         const pythonNbconvert = this.configuration.getSettings(sourceDocument.uri).pythonExportMethod === 'nbconvert';
 
         if (format === ExportFormat.python && !pythonNbconvert) {
             // Unless selected by the setting use plain conversion for python script convert
-            await this.performPlainExport(format, sourceDocument, target, token);
+            target = await this.performPlainExport(format, sourceDocument, defaultFileName, token);
         } else {
-            await this.performNbConvertExport(sourceDocument, format, target, candidateInterpreter, token);
+            target = await this.performNbConvertExport(
+                sourceDocument,
+                format,
+                defaultFileName,
+                candidateInterpreter,
+                token
+            );
         }
 
-        await this.exportFileOpener.openFile(format, target);
-    }
-
-    override async getTargetFile(
-        format: ExportFormat,
-        source: Uri,
-        defaultFileName?: string
-    ): Promise<Uri | undefined> {
-        let target;
-
-        if (format !== ExportFormat.python) {
-            target = await this.filePicker.showDialog(format, source, defaultFileName);
-        } else {
-            target = Uri.file((await this.fs.createTemporaryLocalFile('.py')).filePath);
+        if (target) {
+            await this.exportFileOpener.openFile(format, target);
         }
-
-        return target;
     }
 }

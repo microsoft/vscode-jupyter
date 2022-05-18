@@ -9,7 +9,7 @@ import { IPythonExecutionFactory, IPythonExecutionService } from '../common/proc
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
-import { ExportFormat, IExportBase, INbConvertExport } from './types';
+import { ExportFormat, IExportBase, IExportDialog, INbConvertExport } from './types';
 import { ExportUtil } from './exportUtil.node';
 import { TemporaryDirectory } from '../common/platform/types';
 import { ExportInterpreterFinder } from './exportInterpreterFinder.node';
@@ -21,6 +21,7 @@ export class ExportBase implements INbConvertExport, IExportBase {
         @inject(IJupyterSubCommandExecutionService)
         protected jupyterService: IJupyterSubCommandExecutionService,
         @inject(IFileSystemNode) protected readonly fs: IFileSystemNode,
+        @inject(IExportDialog) protected readonly filePicker: IExportDialog,
         @inject(ExportUtil) protected readonly exportUtil: ExportUtil,
         @inject(INotebookImporter) protected readonly importer: INotebookImporter,
         @inject(ExportInterpreterFinder) private exportInterpreterFinder: ExportInterpreterFinder
@@ -28,21 +29,28 @@ export class ExportBase implements INbConvertExport, IExportBase {
 
     public async export(
         _sourceDocument: NotebookDocument,
-        _target: Uri,
         _interpreter: PythonEnvironment,
+        _defaultFileName: string | undefined,
         _token: CancellationToken
-        // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
-    ): Promise<void> {}
+    ): Promise<Uri | undefined> {
+        return undefined;
+    }
 
     @reportAction(ReportableAction.PerformingExport)
     public async executeCommand(
         sourceDocument: NotebookDocument,
-        target: Uri,
+        defaultFileName: string | undefined,
         format: ExportFormat,
         interpreter: PythonEnvironment | undefined,
         token: CancellationToken
-    ): Promise<void> {
+    ): Promise<Uri | undefined> {
         if (token.isCancellationRequested) {
+            return;
+        }
+
+        let target = await this.getTargetFile(format, sourceDocument.uri, defaultFileName);
+
+        if (!target) {
             return;
         }
 
@@ -111,6 +119,20 @@ export class ExportBase implements INbConvertExport, IExportBase {
         } finally {
             tempTarget.dispose();
         }
+
+        return target;
+    }
+
+    async getTargetFile(format: ExportFormat, source: Uri, defaultFileName?: string): Promise<Uri | undefined> {
+        let target;
+
+        if (format !== ExportFormat.python) {
+            target = await this.filePicker.showDialog(format, source, defaultFileName);
+        } else {
+            target = Uri.file((await this.fs.createTemporaryLocalFile('.py')).filePath);
+        }
+
+        return target;
     }
 
     private async makeSourceFile(target: Uri, contents: string, tempDir: TemporaryDirectory): Promise<Uri> {
