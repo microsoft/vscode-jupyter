@@ -91,7 +91,10 @@ export class ScriptUriConverter implements ILocalResourceUriConverter {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExtensionContext) extensionContext: IExtensionContext
     ) {
-        this._rootScriptFolder = uriPath.joinPath(extensionContext.extensionUri, 'tmp', 'scripts');
+        // Scripts have to be written somewhere we can:
+        // - Write to disk
+        // - Convert into a URI that can be loaded
+        this._rootScriptFolder = uriPath.joinPath(extensionContext.globalStorageUri, 'tmp', 'scripts');
         this.targetWidgetScriptsFolder = uriPath.joinPath(this._rootScriptFolder, 'nbextensions');
         this.createTargetWidgetScriptsFolder = this.fs
             .exists(this.targetWidgetScriptsFolder, FileType.Directory)

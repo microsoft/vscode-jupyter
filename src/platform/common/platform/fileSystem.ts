@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
-import { IExtensionContext } from '../types';
+import { IExtensionContext, IHttpClient } from '../types';
 import { arePathsSame, getHashString } from './fileUtils';
 import { IFileSystem, TemporaryFileUri } from './types';
 import * as uriPath from '../../vscode-path/resources';
@@ -21,7 +21,10 @@ const ENCODING = 'utf8';
 @injectable()
 export class FileSystem implements IFileSystem {
     protected vscfs: vscode.FileSystem;
-    constructor(@inject(IExtensionContext) private readonly extensionContext: IExtensionContext) {
+    constructor(
+        @inject(IExtensionContext) private readonly extensionContext: IExtensionContext,
+        @inject(IHttpClient) private readonly httpClient: IHttpClient
+    ) {
         this.vscfs = vscode.workspace.fs;
     }
 
@@ -130,6 +133,13 @@ export class FileSystem implements IFileSystem {
         // matches; otherwise a mismatch results in a "false" value
         fileType?: vscode.FileType
     ): Promise<boolean> {
+        // Special case. http/https always returns stat true even if the file doesn't
+        // exist. In those two cases use the http client instead
+        if (filename.scheme.toLowerCase() === 'http' || filename.scheme.toLowerCase() === 'https') {
+            return this.httpClient.exists(filename.toString());
+        }
+
+        // Otherwise use stat
         let stat: vscode.FileStat;
         try {
             // Note that we are using stat() rather than lstat().  This

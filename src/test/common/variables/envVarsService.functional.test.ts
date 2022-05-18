@@ -9,7 +9,7 @@ import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { instance, mock } from 'ts-mockito';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
-import { IExtensionContext } from '../../../platform/common/types';
+import { IExtensionContext, IHttpClient } from '../../../platform/common/types';
 import { EnvironmentVariablesService } from '../../../platform/common/variables/environment.node';
 import { IEnvironmentVariablesService } from '../../../platform/common/variables/types';
 
@@ -22,7 +22,8 @@ suite('Environment Variables Service', () => {
     let variablesService: IEnvironmentVariablesService;
     setup(() => {
         const context: IExtensionContext = mock(IExtensionContext);
-        const fs = new FileSystem(instance(context));
+        const client: IHttpClient = mock(IHttpClient);
+        const fs = new FileSystem(instance(context), instance(client));
         variablesService = new EnvironmentVariablesService(fs);
     });
 

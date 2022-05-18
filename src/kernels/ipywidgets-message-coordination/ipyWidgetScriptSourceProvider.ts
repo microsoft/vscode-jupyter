@@ -6,7 +6,7 @@
 import { ConfigurationChangeEvent, ConfigurationTarget } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
 import '../../platform/common/extensions';
-import { traceError } from '../../platform/logging';
+import { traceError, traceInfo } from '../../platform/logging';
 import {
     WidgetCDNs,
     IPersistentState,
@@ -123,6 +123,8 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
 
         if (!found.scriptUri) {
             traceError(`Script source for Widget ${moduleName}@${moduleVersion} not found`);
+        } else {
+            traceInfo(`Script source for Widget ${moduleName}@${moduleVersion} was found from source ${found.source}`);
         }
         this.handleWidgetSourceNotFoundOnCDN(found, moduleVersion).ignoreErrors();
         return found;

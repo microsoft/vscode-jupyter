@@ -6,10 +6,8 @@
 import * as fsextra from 'fs-extra';
 import * as path from '../../platform/vscode-path/path';
 import { FileStat, FileType, Uri } from 'vscode';
-import { FileSystem } from '../../platform/common/platform/fileSystem.node';
 import { convertStat } from '../../platform/common/platform/fileSystemUtils.node';
 import { createDeferred } from '../../platform/common/utils/async';
-import { IExtensionContext } from '../../platform/common/types';
 
 // This is necessary for unit tests and functional tests, since they
 // do not run under VS Code so they do not have access to the actual
@@ -104,43 +102,5 @@ export class FakeVSCodeFileSystemAPI {
     }
     public async rename(src: Uri, dest: Uri): Promise<void> {
         return fsextra.rename(src.fsPath, dest.fsPath);
-    }
-}
-export class MockFileSystem extends FileSystem {
-    private contentOverloads = new Map<string, string>();
-
-    constructor(extensionContext: IExtensionContext) {
-        super(extensionContext);
-        this.vscfs = new FakeVSCodeFileSystemAPI();
-    }
-    public override async readLocalFile(filePath: string): Promise<string> {
-        const contents = this.contentOverloads.get(this.getFileKey(filePath));
-        if (contents) {
-            return contents;
-        }
-        return super.readLocalFile(filePath);
-    }
-    public override async writeLocalFile(filePath: string, contents: string): Promise<void> {
-        this.contentOverloads.set(this.getFileKey(filePath), contents);
-    }
-    public override async readFile(filePath: Uri): Promise<string> {
-        const contents = this.contentOverloads.get(this.getFileKey(filePath.fsPath));
-        if (contents) {
-            return contents;
-        }
-        return super.readFile(filePath);
-    }
-    public addFileContents(filePath: string, contents: string): void {
-        this.contentOverloads.set(filePath, contents);
-    }
-    private getFileKey(filePath: string): string {
-        return filePath.toLowerCase();
-    }
-    public override async localFileExists(filePath: string) {
-        const exists = this.contentOverloads.has(this.getFileKey(filePath));
-        if (exists) {
-            return exists;
-        }
-        return super.localFileExists(filePath);
     }
 }

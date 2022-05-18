@@ -8,7 +8,7 @@ import { createDirNotEmptyError } from './errors';
 import { TemporaryFile } from './types';
 import { FileType, IFileSystemNode } from './types.node';
 import { FileSystem as FileSystemBase } from './fileSystem';
-import { IExtensionContext } from '../types';
+import { IExtensionContext, IHttpClient } from '../types';
 
 /**
  * File system abstraction which wraps the VS Code API.
@@ -16,8 +16,8 @@ import { IExtensionContext } from '../types';
 @injectable()
 export class FileSystem extends FileSystemBase implements IFileSystemNode {
     private globFiles: (pat: string, options?: { cwd: string; dot?: boolean }) => Promise<string[]>;
-    constructor(@inject(IExtensionContext) context: IExtensionContext) {
-        super(context);
+    constructor(@inject(IExtensionContext) context: IExtensionContext, @inject(IHttpClient) httpClient: IHttpClient) {
+        super(context, httpClient);
         this.globFiles = promisify(glob);
     }
 
