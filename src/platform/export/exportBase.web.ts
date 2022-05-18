@@ -5,24 +5,26 @@
 
 import * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
-import { Uri, CancellationToken, workspace } from 'vscode';
+import { Uri, CancellationToken, NotebookDocument } from 'vscode';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import { executeSilently } from '../../kernels/helpers';
 import { IKernel, IKernelProvider } from '../../kernels/types';
 import { concatMultilineString } from '../../webviews/webview-side/common';
 import { IFileSystem } from '../common/platform/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
-import { ExportFormat, INbConvertExport } from './types';
+import { ExportUtilBase } from './exportUtil';
+import { ExportFormat, IExportBase, INbConvertExport } from './types';
 
 @injectable()
-export class ExportBase implements INbConvertExport {
+export class ExportBase implements INbConvertExport, IExportBase {
     constructor(
-        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider, // @inject(IExtensions) private readonly extensions: IExtensions
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(ExportUtilBase) protected readonly exportUtil: ExportUtilBase
     ) {}
 
     public async export(
-        _source: Uri,
+        _sourceDocument: NotebookDocument,
         _target: Uri,
         _interpreter: PythonEnvironment,
         _token: CancellationToken
@@ -30,14 +32,14 @@ export class ExportBase implements INbConvertExport {
     ): Promise<void> {}
 
     // @reportAction(ReportableAction.PerformingExport)
-    async execute(
-        source: Uri,
+    async executeCommand(
+        sourceDocument: NotebookDocument,
         target: Uri,
         _format: ExportFormat,
         _interpreter: PythonEnvironment,
         _token: CancellationToken
     ): Promise<void> {
-        const kernel = this.kernelProvider.get(source);
+        const kernel = this.kernelProvider.get(sourceDocument.uri);
         if (!kernel) {
             // trace error
             return;
@@ -51,14 +53,10 @@ export class ExportBase implements INbConvertExport {
             return;
         }
 
-        const document = workspace.notebookDocuments.find((doc) => doc.uri.toString() === source.toString());
-
-        if (!document) {
-            return;
-        }
-
         if (kernel.session!.isServerSession()) {
-            await kernel.session!.invokeWithFileSynced(async (file) => {
+            let contents = await this.exportUtil.getContent(sourceDocument);
+
+            await kernel.session!.invokeWithFileSynced(contents, async (file) => {
                 const pwd = await this.getCWD(kernel);
                 console.log(pwd);
 
@@ -105,17 +103,5 @@ export class ExportBase implements INbConvertExport {
         }
 
         return output.data['text/plain'];
-    }
-}
-
-@injectable()
-export class ExportToHTML extends ExportBase {
-    public override async export(
-        source: Uri,
-        target: Uri,
-        interpreter: PythonEnvironment,
-        token: CancellationToken
-    ): Promise<void> {
-        await this.execute(source, target, ExportFormat.html, interpreter, token);
     }
 }

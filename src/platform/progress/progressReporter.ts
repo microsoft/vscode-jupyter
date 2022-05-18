@@ -9,7 +9,7 @@ import { IApplicationShell } from '../common/application/types';
 import { IDisposable } from '../common/types';
 import { createDeferred } from '../common/utils/async';
 import { noop } from '../common/utils/misc';
-import { registerReporter } from './decorator.node';
+import { registerReporter } from './decorator';
 import { getUserMessageForAction } from './messages';
 import { IProgressReporter, Progress, ReportableAction } from './types';
 

@@ -9,7 +9,7 @@ import { CancellationToken, CancellationTokenSource, Progress as VSCProgress } f
 import { ApplicationShell } from '../../../platform/common/application/applicationShell';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { getUserMessageForAction } from '../../../platform/progress/messages';
-import { ProgressReporter } from '../../../platform/progress/progressReporter.node';
+import { ProgressReporter } from '../../../platform/progress/progressReporter';
 import { ReportableAction } from '../../../platform/progress/types';
 import { noop, sleep } from '../../core';
 type Task<R> = (

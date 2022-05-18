@@ -9,18 +9,13 @@ import * as sinon from 'sinon';
 import { Uri } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import {
-    IConfigurationService,
-    IDisposable,
-    IExtensions,
-    IWatchableJupyterSettings
-} from '../../../platform/common/types';
+import { IConfigurationService, IDisposable, IWatchableJupyterSettings } from '../../../platform/common/types';
 import { ExportFileOpener } from '../../../platform/export/exportFileOpener';
 import { ExportInterpreterFinder } from '../../../platform/export/exportInterpreterFinder.node';
 import { ExportUtil } from '../../../platform/export/exportUtil.node';
 import { FileConverter } from '../../../platform/export/fileConverter.node';
 import { INbConvertExport, IExport, IExportDialog, ExportFormat } from '../../../platform/export/types';
-import { ProgressReporter } from '../../../platform/progress/progressReporter.node';
+import { ProgressReporter } from '../../../platform/progress/progressReporter';
 
 suite('DataScience - File Converter', () => {
     let fileConverter: FileConverter;
@@ -34,7 +29,6 @@ suite('DataScience - File Converter', () => {
     let appShell: IApplicationShell;
     let exportFileOpener: ExportFileOpener;
     let exportInterpreterFinder: ExportInterpreterFinder;
-    let extensions: IExtensions;
     let configuration: IConfigurationService;
     let settings: IWatchableJupyterSettings;
     setup(async () => {
@@ -49,7 +43,6 @@ suite('DataScience - File Converter', () => {
         appShell = mock<IApplicationShell>();
         exportFileOpener = mock<ExportFileOpener>();
         exportInterpreterFinder = mock<ExportInterpreterFinder>();
-        extensions = mock<IExtensions>();
         configuration = mock<IConfigurationService>();
         settings = mock<IWatchableJupyterSettings>();
         when(configuration.getSettings(anything())).thenReturn(instance(settings));
@@ -80,11 +73,9 @@ suite('DataScience - File Converter', () => {
             instance(fileSystem),
             instance(filePicker),
             instance(reporter),
-            instance(exportUtil),
             instance(appShell),
             instance(exportFileOpener),
             instance(exportInterpreterFinder),
-            instance(extensions),
             instance(configuration)
         );
 

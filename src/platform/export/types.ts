@@ -22,9 +22,20 @@ export interface IFileConverter {
 export const INbConvertExport = Symbol('INbConvertExport');
 export interface INbConvertExport {
     export(
-        source: Uri,
+        sourceDocument: NotebookDocument,
         target: Uri,
         interpreter: PythonEnvironment | undefined,
+        token: CancellationToken
+    ): Promise<void>;
+}
+
+export const IExportBase = Symbol('IExportBase');
+export interface IExportBase {
+    executeCommand(
+        sourceDocument: NotebookDocument,
+        target: Uri,
+        format: ExportFormat,
+        interpreter: PythonEnvironment,
         token: CancellationToken
     ): Promise<void>;
 }

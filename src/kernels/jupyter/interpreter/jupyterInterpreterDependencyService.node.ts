@@ -17,7 +17,7 @@ import { JupyterInstallError } from '../../../platform/errors/jupyterInstallErro
 import { ProductNames } from '../../installer/productNames';
 import { Product, IInstaller, InstallerResponse } from '../../installer/types';
 import { HelpLinks } from '../../../platform/common/constants';
-import { reportAction } from '../../../platform/progress/decorator.node';
+import { reportAction } from '../../../platform/progress/decorator';
 import { ReportableAction } from '../../../platform/progress/types';
 import { JupyterInterpreterDependencyResponse } from '../types';
 import { IJupyterCommandFactory } from '../types.node';

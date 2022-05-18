@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import * as nbformat from '@jupyterlab/nbformat';
 import type { ContentsManager, Kernel, KernelSpecManager, Session, SessionManager } from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
@@ -27,15 +26,7 @@ import {
 } from '../../types';
 import { DisplayOptions } from '../../displayOptions';
 import { IBackupFile, IJupyterBackingFileCreator, IJupyterKernelService, IJupyterRequestCreator } from '../types';
-import {
-    NotebookCell,
-    NotebookCellData,
-    NotebookCellKind,
-    NotebookData,
-    NotebookDocument,
-    Uri,
-    workspace
-} from 'vscode';
+import { Uri } from 'vscode';
 import { generateBackingIPyNbFileName } from './backingFileCreator.base';
 
 // function is
@@ -234,16 +225,8 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
         return promise;
     }
 
-    async invokeWithFileSynced(handler: (file: IBackupFile) => Promise<void>): Promise<void> {
+    async invokeWithFileSynced(contents: string, handler: (file: IBackupFile) => Promise<void>): Promise<void> {
         if (!this.resource) {
-            return;
-        }
-
-        const document = workspace.notebookDocuments.find(
-            (document) => document.uri.toString() === this.resource!.toString()
-        );
-
-        if (!document) {
             return;
         }
 
@@ -257,11 +240,9 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
             );
         }
 
-        const content = await this.getContent(document);
-
         await this.contentsManager
             .save(this.backingFile!.filePath, {
-                content: content,
+                content: JSON.parse(contents),
                 type: 'notebook'
             })
             .ignoreErrors();
@@ -270,23 +251,6 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
             dispose: this.backingFile!.dispose.bind(this.backingFile!)
         });
         await this.disposeBackingFile();
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async getContent(document: NotebookDocument): Promise<any> {
-        const notebookContent = getNotebookMetadata(document);
-        const preferredCellLanguage =
-            notebookContent.metadata?.language_info?.name ?? document.cellAt(0).document.languageId;
-        notebookContent.cells = document
-            .getCells()
-            .map((cell) => createJupyterCellFromNotebookCell(cell, preferredCellLanguage));
-        // .map(pruneCell);
-
-        // const indentAmount = document.metadata && 'indentAmount' in document.metadata && typeof document.metadata.indentAmount === 'string' ?
-        // document.metadata.indentAmount :
-        (' ');
-        // ipynb always ends with a trailing new line (we add this so that SCMs do not show unnecesary changes, resulting from a missing trailing new line).
-        return sortObjectPropertiesRecursively(notebookContent);
     }
 
     private async createSession(options: {
@@ -401,131 +365,4 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
             this.outputChannel.appendLine(output);
         }
     }
-}
-
-export function createJupyterCellFromNotebookCell(
-    vscCell: NotebookCell,
-    preferredLanguage: string | undefined
-): nbformat.IRawCell | nbformat.IMarkdownCell | nbformat.ICodeCell {
-    let cell: nbformat.IRawCell | nbformat.IMarkdownCell | nbformat.ICodeCell;
-    if (vscCell.kind === NotebookCellKind.Markup) {
-        cell = createMarkdownCellFromNotebookCell(vscCell);
-    } else if (vscCell.document.languageId === 'raw') {
-        cell = createRawCellFromNotebookCell(vscCell);
-    } else {
-        cell = createCodeCellFromNotebookCell(vscCell, preferredLanguage);
-    }
-    return cell;
-}
-
-function createMarkdownCellFromNotebookCell(cell: NotebookCell): nbformat.IMarkdownCell {
-    const cellMetadata = getCellMetadata(cell);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const markdownCell: any = {
-        cell_type: 'markdown',
-        source: splitMultilineString(cell.document.getText().replace(/\r\n/g, '\n')),
-        metadata: cellMetadata?.metadata || {} // This cannot be empty.
-    };
-    if (cellMetadata?.attachments) {
-        markdownCell.attachments = cellMetadata.attachments;
-    }
-    if (cellMetadata?.id) {
-        markdownCell.id = cellMetadata.id;
-    }
-    return markdownCell;
-}
-
-function createRawCellFromNotebookCell(cell: NotebookCell): nbformat.IRawCell {
-    const cellMetadata = getCellMetadata(cell);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const rawCell: any = {
-        cell_type: 'raw',
-        source: splitMultilineString(cell.document.getText().replace(/\r\n/g, '\n')),
-        metadata: cellMetadata?.metadata || {} // This cannot be empty.
-    };
-    if (cellMetadata?.attachments) {
-        rawCell.attachments = cellMetadata.attachments;
-    }
-    if (cellMetadata?.id) {
-        rawCell.id = cellMetadata.id;
-    }
-    return rawCell;
-}
-
-function createCodeCellFromNotebookCell(cell: NotebookCell, preferredLanguage: string | undefined): nbformat.ICodeCell {
-    const cellMetadata = getCellMetadata(cell);
-    let metadata = cellMetadata?.metadata || {}; // This cannot be empty.
-    if (cell.document.languageId !== preferredLanguage) {
-        metadata = {
-            ...metadata,
-            vscode: {
-                languageId: cell.document.languageId
-            }
-        };
-    } else {
-        // cell current language is the same as the preferred cell language in the document, flush the vscode custom language id metadata
-        metadata.vscode = undefined;
-    }
-    metadata.trusted = true;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const codeCell: any = {
-        cell_type: 'code',
-        execution_count: cell.executionSummary?.executionOrder ?? null,
-        source: splitMultilineString(cell.document.getText().replace(/\r\n/g, '\n')),
-        outputs: [], //.map(translateCellDisplayOutput),
-        metadata: metadata
-    };
-    if (cellMetadata?.id) {
-        codeCell.id = cellMetadata.id;
-    }
-    return codeCell;
-}
-
-export function getCellMetadata(cell: NotebookCell | NotebookCellData) {
-    return cell.metadata?.custom;
-}
-
-function splitMultilineString(source: nbformat.MultilineString): string[] {
-    if (Array.isArray(source)) {
-        return source as string[];
-    }
-    const str = source.toString();
-    if (str.length > 0) {
-        // Each line should be a separate entry, but end with a \n if not last entry
-        const arr = str.split('\n');
-        return arr
-            .map((s, i) => {
-                if (i < arr.length - 1) {
-                    return `${s}\n`;
-                }
-                return s;
-            })
-            .filter((s) => s.length > 0); // Skip last one if empty (it's the only one that could be length 0)
-    }
-    return [];
-}
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-export function sortObjectPropertiesRecursively(obj: any): any {
-    if (Array.isArray(obj)) {
-        return obj.map(sortObjectPropertiesRecursively);
-    }
-    if (obj !== undefined && obj !== null && typeof obj === 'object' && Object.keys(obj).length > 0) {
-        return Object.keys(obj)
-            .sort()
-            .reduce<Record<string, any>>((sortedObj, prop) => {
-                sortedObj[prop] = sortObjectPropertiesRecursively(obj[prop]);
-                return sortedObj;
-            }, {}) as any;
-    }
-    return obj;
-}
-
-export function getNotebookMetadata(document: NotebookDocument | NotebookData) {
-    const notebookContent: Partial<nbformat.INotebookContent> = document.metadata?.custom || {};
-    notebookContent.cells = notebookContent.cells || [];
-    notebookContent.nbformat = notebookContent.nbformat || 4;
-    notebookContent.nbformat_minor = notebookContent.nbformat_minor ?? 2;
-    notebookContent.metadata = notebookContent.metadata || { orig_nbformat: 4 };
-    return notebookContent;
 }

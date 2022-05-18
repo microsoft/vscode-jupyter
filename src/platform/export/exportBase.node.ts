@@ -1,28 +1,33 @@
 import { inject, injectable } from 'inversify';
 import * as path from '../../platform/vscode-path/path';
-import { CancellationToken, Uri } from 'vscode';
+import { CancellationToken, NotebookDocument, Uri } from 'vscode';
 import { INotebookImporter } from '../../kernels/jupyter/types';
 import { IJupyterSubCommandExecutionService } from '../../kernels/jupyter/types.node';
 import { IFileSystemNode } from '../common/platform/types.node';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../common/process/types.node';
 
-import { reportAction } from '../progress/decorator.node';
+import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
-import { ExportFormat, INbConvertExport } from './types';
+import { ExportFormat, IExportBase, INbConvertExport } from './types';
+import { ExportUtil } from './exportUtil.node';
+import { TemporaryDirectory } from '../common/platform/types';
+import { ExportInterpreterFinder } from './exportInterpreterFinder.node';
 
 @injectable()
-export class ExportBase implements INbConvertExport {
+export class ExportBase implements INbConvertExport, IExportBase {
     constructor(
         @inject(IPythonExecutionFactory) protected readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IJupyterSubCommandExecutionService)
         protected jupyterService: IJupyterSubCommandExecutionService,
         @inject(IFileSystemNode) protected readonly fs: IFileSystemNode,
-        @inject(INotebookImporter) protected readonly importer: INotebookImporter
+        @inject(ExportUtil) protected readonly exportUtil: ExportUtil,
+        @inject(INotebookImporter) protected readonly importer: INotebookImporter,
+        @inject(ExportInterpreterFinder) private exportInterpreterFinder: ExportInterpreterFinder
     ) {}
 
     public async export(
-        _source: Uri,
+        _sourceDocument: NotebookDocument,
         _target: Uri,
         _interpreter: PythonEnvironment,
         _token: CancellationToken
@@ -31,15 +36,39 @@ export class ExportBase implements INbConvertExport {
 
     @reportAction(ReportableAction.PerformingExport)
     public async executeCommand(
-        source: Uri,
+        sourceDocument: NotebookDocument,
         target: Uri,
         format: ExportFormat,
-        interpreter: PythonEnvironment,
+        interpreter: PythonEnvironment | undefined,
         token: CancellationToken
     ): Promise<void> {
         if (token.isCancellationRequested) {
             return;
         }
+
+        interpreter = await this.exportInterpreterFinder.getExportInterpreter(interpreter);
+
+        if (format === ExportFormat.python) {
+            const contents = await this.importer.importFromFile(sourceDocument.uri, interpreter);
+            await this.fs.writeFile(target, contents);
+            return;
+        }
+
+        let contents = await this.exportUtil.getContent(sourceDocument);
+
+        if (format === ExportFormat.pdf) {
+            // When exporting to PDF we need to remove any SVG output. This is due to an error
+            // with nbconvert and a dependency of its called InkScape.
+            contents = await this.exportUtil.removeSvgs(contents);
+        }
+
+        /* Need to make a temp directory here, instead of just a temp file. This is because
+            we need to store the contents of the notebook in a file that is named the same
+            as what we want the title of the exported file to be. To ensure this file path will be unique
+            we store it in a temp directory. The name of the file matters because when
+            exporting to certain formats the filename is used within the exported document as the title. */
+        const tempDir = await this.exportUtil.generateTempDir();
+        const source = await this.makeSourceFile(target, contents, tempDir);
 
         const service = await this.getExecutionService(source, interpreter);
         if (!service) {
@@ -82,6 +111,13 @@ export class ExportBase implements INbConvertExport {
         } finally {
             tempTarget.dispose();
         }
+    }
+
+    private async makeSourceFile(target: Uri, contents: string, tempDir: TemporaryDirectory): Promise<Uri> {
+        // Creates a temporary file with the same base name as the target file
+        const fileName = path.basename(target.fsPath, path.extname(target.fsPath));
+        const sourceFilePath = await this.exportUtil.makeFileInDirectory(contents, `${fileName}.ipynb`, tempDir.path);
+        return Uri.file(sourceFilePath);
     }
 
     protected async getExecutionService(

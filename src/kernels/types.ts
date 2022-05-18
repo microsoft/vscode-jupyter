@@ -296,7 +296,7 @@ export interface IJupyterSession extends IAsyncDisposable {
 
 export interface IJupyterServerSession extends IJupyterSession {
     readonly kind: 'remoteJupyter' | 'localJupyter';
-    invokeWithFileSynced(handler: (file: IBackupFile) => Promise<void>): Promise<void>;
+    invokeWithFileSynced(contents: string, handler: (file: IBackupFile) => Promise<void>): Promise<void>;
 }
 
 export type ISessionWithSocket = Session.ISessionConnection & {
