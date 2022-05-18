@@ -35,7 +35,7 @@ export class ExportBase implements INbConvertExport, IExportBase {
     async executeCommand(
         sourceDocument: NotebookDocument,
         target: Uri,
-        _format: ExportFormat,
+        format: ExportFormat,
         _interpreter: PythonEnvironment,
         _token: CancellationToken
     ): Promise<void> {
@@ -64,7 +64,7 @@ export class ExportBase implements INbConvertExport, IExportBase {
 
                 const outputs = await executeSilently(
                     kernel.session!,
-                    `!jupyter nbconvert ${filePath} --to html --stdout`
+                    `!jupyter nbconvert ${filePath} --to ${format} --stdout`
                 );
 
                 if (outputs.length === 0) {
