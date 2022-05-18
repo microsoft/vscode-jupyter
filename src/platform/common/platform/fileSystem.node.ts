@@ -8,7 +8,7 @@ import { traceError } from '../../logging';
 import { isFileNotFoundError } from './errors.node';
 import { convertFileType, convertStat, getHashString } from './fileSystemUtils.node';
 import { TemporaryFile } from './types';
-import { FileType, IFileSystemNode } from './types.node';
+import { IFileSystemNode } from './types.node';
 import { FileSystem as FileSystemBase } from './fileSystem';
 
 /**
@@ -68,14 +68,14 @@ export class FileSystem extends FileSystemBase implements IFileSystemNode {
     }
 
     public async localDirectoryExists(dirname: string): Promise<boolean> {
-        return this.localPathExists(dirname, FileType.Directory);
+        return this.localPathExists(dirname, vscode.FileType.Directory);
     }
     public override async deleteLocalFile(path: string): Promise<void> {
         await fs.unlink(path);
     }
 
     public async localFileExists(filename: string): Promise<boolean> {
-        return this.localPathExists(filename, FileType.File);
+        return this.localPathExists(filename, vscode.FileType.File);
     }
 
     public async searchLocal(globPattern: string, cwd?: string, dot?: boolean): Promise<string[]> {
@@ -108,7 +108,7 @@ export class FileSystem extends FileSystemBase implements IFileSystemNode {
         filename: string,
         // the file type to expect; if not provided then any file type
         // matches; otherwise a mismatch results in a "false" value
-        fileType?: FileType
+        fileType?: vscode.FileType
     ): Promise<boolean> {
         let stat: vscode.FileStat;
         try {
@@ -127,9 +127,9 @@ export class FileSystem extends FileSystemBase implements IFileSystemNode {
         if (fileType === undefined) {
             return true;
         }
-        if (fileType === FileType.Unknown) {
+        if (fileType === vscode.FileType.Unknown) {
             // FileType.Unknown == 0, hence do not use bitwise operations.
-            return stat.type === FileType.Unknown;
+            return stat.type === vscode.FileType.Unknown;
         }
         return (stat.type & fileType) === fileType;
     }

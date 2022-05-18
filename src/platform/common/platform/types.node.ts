@@ -2,13 +2,11 @@
 // Licensed under the MIT License.
 
 import * as fs from 'fs';
-import * as vscode from 'vscode';
 import { IFileSystem, TemporaryFile } from './types';
 
 //===========================
 // filesystem operations
 
-export import FileType = vscode.FileType;
 export type ReadStream = fs.ReadStream;
 export type WriteStream = fs.WriteStream;
 
