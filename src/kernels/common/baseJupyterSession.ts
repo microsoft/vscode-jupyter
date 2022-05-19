@@ -133,7 +133,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             traceInfo(`Unhandled message found: ${m.header.msg_type}`);
         };
     }
-    isServerSession(): this is IJupyterServerSession {
+    public isServerSession(): this is IJupyterServerSession {
         return false;
     }
     public async dispose(): Promise<void> {

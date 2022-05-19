@@ -14,7 +14,9 @@ import { IFileSystem } from '../common/platform/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { ExportUtilBase } from './exportUtil';
 import { ExportFormat, IExportBase, IExportDialog, INbConvertExport } from './types';
-import { traceError } from '../logging';
+import { traceLog } from '../logging';
+import { reportAction } from '../progress/decorator';
+import { ReportableAction } from '../progress/types';
 
 @injectable()
 export class ExportBase implements INbConvertExport, IExportBase {
@@ -34,32 +36,7 @@ export class ExportBase implements INbConvertExport, IExportBase {
         return undefined;
     }
 
-    b64toBlob(b64Data: string, contentType: string | undefined) {
-        contentType = contentType || '';
-        var sliceSize = 512;
-        b64Data = b64Data.replace(/^[^,]+,/, '');
-        b64Data = b64Data.replace(/\s/g, '');
-        var byteCharacters = atob(b64Data);
-        var byteArrays = [];
-
-        for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-            var slice = byteCharacters.slice(offset, offset + sliceSize);
-
-            var byteNumbers = new Array(slice.length);
-            for (var i = 0; i < slice.length; i++) {
-                byteNumbers[i] = slice.charCodeAt(i);
-            }
-
-            var byteArray = new Uint8Array(byteNumbers);
-
-            byteArrays.push(byteArray);
-        }
-
-        var blob = new Blob(byteArrays, { type: contentType });
-        return blob;
-    }
-
-    // @reportAction(ReportableAction.PerformingExport)
+    @reportAction(ReportableAction.PerformingExport)
     async executeCommand(
         sourceDocument: NotebookDocument,
         defaultFileName: string | undefined,
@@ -85,8 +62,6 @@ export class ExportBase implements INbConvertExport, IExportBase {
             const session = kernel.session!;
             let contents = await this.exportUtil.getContent(sourceDocument);
 
-            let target: Uri | undefined;
-
             let fileExt = '';
 
             switch (format) {
@@ -101,6 +76,11 @@ export class ExportBase implements INbConvertExport, IExportBase {
                     break;
             }
 
+            let target = await this.getTargetFile(format, sourceDocument.uri, defaultFileName);
+            if (target === undefined) {
+                return;
+            }
+
             await kernel.session!.invokeWithFileSynced(contents, async (file) => {
                 const pwd = await this.getCWD(kernel);
                 const filePath = `${pwd}/${file.filePath}`;
@@ -111,24 +91,22 @@ export class ExportBase implements INbConvertExport, IExportBase {
                 );
 
                 const text = this.parseStreamOutput(outputs);
-                if (text) {
-                    traceError(text || `Failed to export to ${format}`);
-                }
-
-                target = await this.getTargetFile(format, sourceDocument.uri, defaultFileName);
-                if (target === undefined) {
-                    return;
+                if (this.isExportFailed(text)) {
+                    throw new Error(text || `Failed to export to ${format}`);
+                } else if (text) {
+                    // trace the output in case we didn't identify all errors
+                    traceLog(text);
                 }
 
                 if (format === ExportFormat.pdf) {
                     const content = await session.getContents(tempTarget, 'base64');
                     const bytes = this.b64toBlob(content.content, 'application/pdf');
                     const buffer = await bytes.arrayBuffer();
-                    await this.fs.writeFile(target, Buffer.from(buffer));
+                    await this.fs.writeFile(target!, Buffer.from(buffer));
                     await session.deleteTempfile(tempTarget);
                 } else {
                     const content = await session.getContents(tempTarget, 'text');
-                    await this.fs.writeFile(target, content.content as string);
+                    await this.fs.writeFile(target!, content.content as string);
                     await session.deleteTempfile(tempTarget);
                 }
             });
@@ -139,13 +117,37 @@ export class ExportBase implements INbConvertExport, IExportBase {
         }
     }
 
-    // private exportSucceed(message: string | undefined) {
-    //     if (!message) {
-    //         return false;
-    //     }
+    private b64toBlob(b64Data: string, contentType: string | undefined) {
+        contentType = contentType || '';
+        const sliceSize = 512;
+        b64Data = b64Data.replace(/^[^,]+,/, '');
+        b64Data = b64Data.replace(/\s/g, '');
+        const byteCharacters = atob(b64Data);
+        let byteArrays = [];
 
-    //     return /\[NbConvertApp\].* successfully created/g.exec(message);
-    // }
+        for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+            const slice = byteCharacters.slice(offset, offset + sliceSize);
+
+            let byteNumbers = new Array(slice.length);
+            for (let i = 0; i < slice.length; i++) {
+                byteNumbers[i] = slice.charCodeAt(i);
+            }
+
+            const byteArray = new Uint8Array(byteNumbers);
+            byteArrays.push(byteArray);
+        }
+
+        const blob = new Blob(byteArrays, { type: contentType });
+        return blob;
+    }
+
+    private isExportFailed(message: string | undefined) {
+        if (!message) {
+            return true;
+        }
+
+        return /Traceback \(most recent call last\)/g.exec(message);
+    }
 
     private parseStreamOutput(outputs: nbformat.IOutput[]): string | undefined {
         if (outputs.length === 0) {

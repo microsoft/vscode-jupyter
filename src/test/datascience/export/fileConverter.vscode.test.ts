@@ -75,7 +75,6 @@ suite('DataScience - File Converter', () => {
             instance(reporter),
             instance(appShell),
             instance(exportFileOpener),
-            instance(exportInterpreterFinder),
             instance(configuration)
         );
 

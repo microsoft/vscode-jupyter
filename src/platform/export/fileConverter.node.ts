@@ -17,12 +17,12 @@ export class FileConverter extends FileConverterBase implements IFileConverter {
         @inject(INbConvertExport) @named(ExportFormat.html) exportToHTML: INbConvertExport,
         @inject(INbConvertExport) @named(ExportFormat.python) exportToPython: INbConvertExport,
         @inject(IExport) @named(ExportFormat.python) exportToPythonPlain: IExport,
+        @inject(IFileSystemNode) readonly fs: IFileSystemNode,
         @inject(IExportDialog) filePicker: IExportDialog,
         @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IApplicationShell) applicationShell: IApplicationShell,
         @inject(ExportFileOpener) exportFileOpener: ExportFileOpener,
-        @inject(IConfigurationService) readonly configuration: IConfigurationService,
-        @inject(IFileSystemNode) readonly fs: IFileSystemNode
+        @inject(IConfigurationService) readonly configuration: IConfigurationService
     ) {
         super(
             exportToPythonPlain,

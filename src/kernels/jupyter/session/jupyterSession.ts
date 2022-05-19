@@ -39,7 +39,6 @@ import { generateBackingIPyNbFileName } from './backingFileCreator.base';
 // function is
 export class JupyterSession extends BaseJupyterSession implements IJupyterServerSession {
     public override readonly kind: 'remoteJupyter' | 'localJupyter';
-    private backingFile: IBackupFile | undefined;
 
     constructor(
         resource: Resource,
@@ -76,11 +75,6 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
     public waitForIdle(timeout: number): Promise<void> {
         // Wait for idle on this session
         return this.waitForIdleOnSession(this.session, timeout);
-    }
-
-    public override async shutdown(): Promise<void> {
-        await this.disposeBackingFile();
-        await super.shutdown();
     }
 
     public override get kernel(): Kernel.IKernelConnection | undefined {
@@ -120,23 +114,6 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
                     ...this.kernelConnectionMetadata.kernelModel,
                     model: this.kernelConnectionMetadata.kernelModel.model
                 }) as ISessionWithSocket;
-
-                const request = newSession.kernel?.requestExecute(
-                    {
-                        code: 'import os; os.getcwd()',
-                        silent: false,
-                        stop_on_error: false,
-                        allow_stdin: true,
-                        store_history: false
-                    },
-                    true
-                );
-                request!.onIOPub = (msg) => {
-                    console.log(msg);
-                };
-
-                await request!.done;
-
                 newSession.kernelConnectionMetadata = this.kernelConnectionMetadata;
                 newSession.kernelSocketInformation = {
                     socket: this.requestCreator.getWebsocket(this.kernelConnectionMetadata.id),
@@ -179,8 +156,6 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
             }
         }
 
-        // try print again
-
         return newSession;
     }
 
@@ -193,7 +168,6 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
         if (!session || !this.contentsManager || !this.sessionManager) {
             throw new SessionDisposedError();
         }
-        await this.disposeBackingFile();
         let result: ISessionWithSocket | undefined;
         let tryCount = 0;
         const ui = new DisplayOptions(disableUI);
@@ -237,27 +211,32 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
             return;
         }
 
-        if (!this.backingFile) {
-            this.backingFile = await this.backingFileCreator.createBackingFile(
-                this.resource,
-                this.workingDirectory,
-                this.kernelConnectionMetadata,
-                this.connInfo,
-                this.contentsManager
-            );
+        const backingFile = await this.backingFileCreator.createBackingFile(
+            this.resource,
+            this.workingDirectory,
+            this.kernelConnectionMetadata,
+            this.connInfo,
+            this.contentsManager
+        );
+
+        if (!backingFile) {
+            return;
         }
 
         await this.contentsManager
-            .save(this.backingFile!.filePath, {
+            .save(backingFile!.filePath, {
                 content: JSON.parse(contents),
                 type: 'notebook'
             })
             .ignoreErrors();
+
         await handler({
-            filePath: this.backingFile!.filePath,
-            dispose: this.backingFile!.dispose.bind(this.backingFile!)
+            filePath: backingFile.filePath,
+            dispose: backingFile.dispose.bind(backingFile)
         });
-        await this.disposeBackingFile();
+
+        await backingFile.dispose();
+        await this.contentsManager.delete(backingFile.filePath).ignoreErrors();
     }
 
     async createTempfile(ext: string): Promise<string> {
@@ -279,7 +258,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
         ui: IDisplayOptions;
     }): Promise<ISessionWithSocket> {
         // Create our backing file for the notebook
-        this.backingFile = await this.backingFileCreator.createBackingFile(
+        const backingFile = await this.backingFileCreator.createBackingFile(
             this.resource,
             this.workingDirectory,
             this.kernelConnectionMetadata,
@@ -304,8 +283,8 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
                 );
             } catch (ex) {
                 // If we failed to create the kernel, we need to clean up the file.
-                if (this.connInfo && this.backingFile) {
-                    this.contentsManager.delete(this.backingFile.filePath).ignoreErrors();
+                if (this.connInfo && backingFile) {
+                    this.contentsManager.delete(backingFile.filePath).ignoreErrors();
                 }
                 throw ex;
             }
@@ -319,7 +298,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
 
         // Create our session options using this temporary notebook and our connection info
         const sessionOptions: Session.ISessionOptions = {
-            path: this.backingFile?.filePath || generateBackingIPyNbFileName(this.resource), // Name has to be unique
+            path: backingFile?.filePath || generateBackingIPyNbFileName(this.resource), // Name has to be unique
             kernel: {
                 name: kernelName
             },
@@ -368,17 +347,12 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
                     })
                     .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
                     .finally(async () => {
-                        await this.disposeBackingFile();
+                        if (this.connInfo && backingFile) {
+                            this.contentsManager.delete(backingFile.filePath).ignoreErrors();
+                        }
                     }),
             options.token
         );
-    }
-
-    private async disposeBackingFile() {
-        if (this.connInfo && this.backingFile) {
-            await this.backingFile.dispose();
-            await this.contentsManager.delete(this.backingFile.filePath).ignoreErrors();
-        }
     }
 
     private logRemoteOutput(output: string) {

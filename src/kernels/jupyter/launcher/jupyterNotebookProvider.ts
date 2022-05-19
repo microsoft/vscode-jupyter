@@ -55,8 +55,6 @@ export class JupyterNotebookProvider implements IJupyterNotebookProvider {
               };
         const server = await this.serverProvider.getOrCreateServer(serverOptions);
         Cancellation.throwIfCanceled(options.token);
-
-        console.log(server.connection.rootDirectory);
         return server.createNotebook(
             options.resource,
             options.kernelConnection,

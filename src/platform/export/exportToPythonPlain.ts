@@ -25,10 +25,7 @@ export class ExportToPythonPlain implements IExport {
     }
 
     getEOL(): string {
-        if (this.platform.isWindows) {
-            return '\r\n';
-        }
-        return '\n';
+        return this.platform.isWindows ? '\r\n' : '\n';
     }
 
     // Export the given document to the target source file
