@@ -15,7 +15,7 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 
 @injectable()
-export class CodeExecutionHelperNode extends CodeExecutionHelperBase {
+export class CodeExecutionHelper extends CodeExecutionHelperBase {
     private readonly interpreterService: IInterpreterService;
     private readonly processServiceFactory: IProcessServiceFactory;
 
