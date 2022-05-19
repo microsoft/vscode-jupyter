@@ -20,7 +20,6 @@ import { IDebugService, IDocumentManager } from '../../platform/common/applicati
 import { traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { IConfigurationService } from '../../platform/common/types';
 import { IKernel } from '../../kernels/types';
-import { InteractiveWindowView } from '../../notebooks/constants';
 import { stripAnsi } from '../../platform/common/utils/regexp';
 import { getCellResource, uncommentMagicCommands } from './cellFactory';
 import { CellMatcher } from './cellMatcher';
@@ -59,7 +58,6 @@ export class CellHashProvider implements ICellHashProvider {
     private updateEventEmitter: EventEmitter<void> = new EventEmitter<void>();
     private traceBackRegexes = new Map<string, RegExp[]>();
     private disposables: Disposable[] = [];
-    private executionCounts: Map<number, string> = new Map<number, string>();
 
     constructor(
         private documentManager: IDocumentManager,
@@ -72,7 +70,6 @@ export class CellHashProvider implements ICellHashProvider {
         // Watch document changes so we can update our hashes
         this.documentManager.onDidChangeTextDocument(this.onChangedDocument.bind(this));
         this.disposables.push(kernel.onRestarted(() => this.onKernelRestarted()));
-        kernel.onPreExecute(this.onPreExecute, this, this.disposables);
     }
 
     public dispose() {
@@ -106,19 +103,7 @@ export class CellHashProvider implements ICellHashProvider {
         this.traceBackRegexes.clear();
         this.executionCount = 0;
         this.updateEventEmitter.fire();
-        this.executionCounts.clear();
     }
-
-    public onPreExecute(cell: NotebookCell) {
-        if (cell.kind === NotebookCellKind.Code && cell.notebook.notebookType !== InteractiveWindowView) {
-            const executableLines = this.extractExecutableLines(cell);
-            if (executableLines.length > 0 && executableLines.find((s) => s.trim().length > 0)) {
-                // Keep track of predicted execution counts for cells. Used to parse exception errors
-                this.executionCounts.set(this.executionCounts.size + 1, cell.document.uri.toString());
-            }
-        }
-    }
-
     public async addCellHash(cell: NotebookCell) {
         // Skip non-code cells as they are never actually executed
         if (cell.kind !== NotebookCellKind.Code) {
