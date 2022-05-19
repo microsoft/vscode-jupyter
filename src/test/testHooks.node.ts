@@ -22,17 +22,13 @@ export const rootHooks: Mocha.RootHookObject = {
         telemetryReporter = new reporter(extensionId, extensionVersion, AppinsightsKey, true);
     },
     afterEach(this: Context) {
-        if (!IS_CI_SERVER) {
+        if (!IS_CI_SERVER || (process.env.GIT_BRANCH && process.env.GIT_BRANCH !== 'main')) {
             return;
         }
 
         let result = this.currentTest?.isFailed() ? 'failed' : this.currentTest?.isPassed() ? 'passed' : 'skipped';
 
-        const measures = this.currentTest?.perfCheckpoints
-            ? this.currentTest?.perfCheckpoints
-            : this.currentTest?.duration
-            ? { duration: this.currentTest.duration }
-            : undefined;
+        const measures = this.currentTest?.duration ? { duration: this.currentTest.duration } : undefined;
 
         let dimensions: Record<string, string> = {
             testName: this.currentTest!.title,
@@ -41,6 +37,14 @@ export const rootHooks: Mocha.RootHookObject = {
 
         if (process.env.VSC_JUPYTER_WARMUP) {
             dimensions = { ...dimensions, perfWarmup: 'true' };
+        }
+
+        if (this.currentTest?.perfCheckpoints) {
+            dimensions = { ...dimensions, timedCheckpoints: JSON.stringify(this.currentTest?.perfCheckpoints) };
+        }
+
+        if (process.env.GIT_SHA) {
+            dimensions = { ...dimensions, commitHash: process.env.GIT_SHA };
         }
 
         telemetryReporter.sendDangerousTelemetryEvent(Telemetry.RunTest, dimensions, measures);
