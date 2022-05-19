@@ -34,7 +34,7 @@ import { Product } from '../../../kernels/installer/types';
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite.only('DataScience - VSCode Notebook - (Export) (slow)', function () {
+suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
