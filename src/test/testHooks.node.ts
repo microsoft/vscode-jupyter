@@ -4,7 +4,6 @@ import TelemetryReporter from '@vscode/extension-telemetry/lib/telemetryReporter
 import { IS_CI_SERVER } from './ciConstants.node';
 import { extensions } from 'vscode';
 import { sleep } from '../platform/common/utils/async';
-import { traceInfo } from '../platform/logging';
 
 let telemetryReporter: TelemetryReporter;
 
@@ -23,13 +22,7 @@ export const rootHooks: Mocha.RootHookObject = {
         telemetryReporter = new reporter(extensionId, extensionVersion, AppinsightsKey, true);
     },
     afterEach(this: Context) {
-        if (!IS_CI_SERVER) {
-            return;
-        }
-
-        // temporary log to make sure we get the branch name check right before implementing
-        if (process.env.GIT_BRANCH && process.env.GIT_BRANCH !== 'main') {
-            traceInfo(`not sending test result telemetry for runs on ${process.env.GIT_BRANCH} branch`);
+        if (!IS_CI_SERVER || (process.env.GIT_BRANCH && process.env.GIT_BRANCH !== 'main')) {
             return;
         }
 
