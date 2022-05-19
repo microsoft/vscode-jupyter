@@ -56,6 +56,7 @@ suite('DataScience - File Converter', () => {
         // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
         when(exportUtil.generateTempDir()).thenResolve({ path: 'test', dispose: () => {} });
         when(exportUtil.makeFileInDirectory(anything(), anything(), anything())).thenResolve('foo');
+        when(exportUtil.getTargetFile(anything(), anything(), anything())).thenResolve(Uri.file('bar'));
         // eslint-disable-next-line no-empty,@typescript-eslint/no-empty-function
         when(fileSystem.createTemporaryLocalFile(anything())).thenResolve({ filePath: 'test', dispose: () => {} });
         when(exportPdf.export(anything(), anything(), anything(), anything())).thenResolve();
@@ -80,15 +81,11 @@ suite('DataScience - File Converter', () => {
         );
 
         // Stub out the getContent inner method of the ExportManager we don't care about the content returned
-        const getContentStub = sinon.stub(FileConverter.prototype, 'getContent' as any);
+        const getContentStub = sinon.stub(ExportUtil.prototype, 'getContent' as any);
         getContentStub.resolves('teststring');
     });
     teardown(() => sinon.restore());
 
-    test('Remove svg is called when exporting to PDF', async () => {
-        await fileConverter.export(ExportFormat.pdf, {} as any);
-        verify(exportUtil.removeSvgs(anything())).once();
-    });
     test('Erorr message is shown if export fails', async () => {
         when(exportHtml.export(anything(), anything(), anything(), anything())).thenThrow(new Error('failed...'));
         await fileConverter.export(ExportFormat.html, {} as any);
