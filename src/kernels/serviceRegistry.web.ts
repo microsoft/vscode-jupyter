@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { IApplicationEnvironment } from '../platform/common/application/types';
-import { JVSC_EXTENSION_ID } from '../platform/common/constants';
+import { Identifiers, JVSC_EXTENSION_ID } from '../platform/common/constants';
 
 import { IServiceManager } from '../platform/ioc/types';
 import { setSharedProperty } from '../telemetry';
@@ -20,6 +20,9 @@ import { KernelFinder } from './kernelFinder.web';
 import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
 import { IDataScienceCommandListener } from '../platform/common/types';
 import { KernelCommandListener } from './kernelCommandListener';
+import { IJupyterVariables, IRootDirectory } from './variables/types';
+import { DebuggerVariables } from './variables/debuggerVariables';
+import { RootDirectory } from './variables/rootDirectory.web';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
@@ -48,6 +51,13 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     );
     const rawService = serviceManager.get<IRawNotebookSupportedService>(IRawNotebookSupportedService);
     setSharedProperty('rawKernelSupported', rawService.isSupported ? 'true' : 'false');
+
+    serviceManager.addSingleton<IRootDirectory>(IRootDirectory, RootDirectory);
+    serviceManager.addSingleton<IJupyterVariables>(
+        IJupyterVariables,
+        DebuggerVariables,
+        Identifiers.DEBUGGER_VARIABLES
+    );
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelCrashMonitor);
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);

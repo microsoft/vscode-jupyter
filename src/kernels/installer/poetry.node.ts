@@ -18,7 +18,7 @@ import {
     isVirtualenvEnvironment,
     pathExists
 } from '../../platform/common/platform/fileUtils.node';
-import { isTestExecution } from '../../platform/common/constants.node';
+import { isTestExecution } from '../../platform/common/namespaces';
 
 /**
  * Global virtual env dir for a project is named as:

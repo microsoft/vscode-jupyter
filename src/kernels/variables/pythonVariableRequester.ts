@@ -3,17 +3,17 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import * as path from '../../platform/vscode-path/path';
 import { CancellationToken, NotebookDocument } from 'vscode';
+import * as vscode from 'vscode';
 import { traceError } from '../../platform/logging';
-import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { DataScience } from '../../platform/common/utils/localize';
 import { stripAnsi } from '../../platform/common/utils/regexp';
 import { JupyterDataRateLimitError } from '../../platform/errors/jupyterDataRateLimitError';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { executeSilently } from '../helpers';
 import { IKernel } from '../types';
-import { IKernelVariableRequester, IJupyterVariable } from './types';
+import { IKernelVariableRequester, IJupyterVariable, IRootDirectory } from './types';
 import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
-import { DataFrameLoading, GetVariableInfo } from '../../platform/common/constants.node';
+import { DataFrameLoading, GetVariableInfo } from '../../platform/common/namespaces';
 
 type DataFrameSplitFormat = {
     index: (number | string)[];
@@ -42,7 +42,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
     private importedDataFrameScripts = new WeakMap<NotebookDocument, boolean>();
     private importedGetVariableInfoScripts = new WeakMap<NotebookDocument, boolean>();
 
-    constructor(@inject(IFileSystemNode) private fs: IFileSystemNode) {}
+    constructor(@inject(IRootDirectory) private readonly rootDirectory: IRootDirectory) {}
 
     public async getDataFrameInfo(
         targetVariable: IJupyterVariable,
@@ -225,7 +225,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             disposables.push(kernel.onRestarted(handler));
 
             // First put the code from our helper files into the notebook
-            await this.runScriptFile(kernel, DataFrameLoading.ScriptPath);
+            await this.runScriptFile(kernel, DataFrameLoading.ScriptPath(this.rootDirectory.path));
 
             this.importedDataFrameScripts.set(key, true);
         }
@@ -233,6 +233,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
 
     private async importGetVariableInfoScripts(kernel: IKernel): Promise<void> {
         const key = getAssociatedNotebookDocument(kernel);
+        console.log('importGetVariableInfoScripts', key);
         if (key && !this.importedGetVariableInfoScripts.get(key)) {
             // Clear our flag if the notebook disposes or restarts
             const disposables: IDisposable[] = [];
@@ -243,7 +244,8 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             disposables.push(kernel.onDisposed(handler));
             disposables.push(kernel.onRestarted(handler));
 
-            await this.runScriptFile(kernel, GetVariableInfo.ScriptPath);
+            console.log('script path', GetVariableInfo.ScriptPath(this.rootDirectory.path));
+            await this.runScriptFile(kernel, GetVariableInfo.ScriptPath(this.rootDirectory.path));
 
             this.importedGetVariableInfoScripts.set(key, true);
         }
@@ -251,11 +253,20 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
 
     // Read in a .py file and execute it silently in the given notebook
     private async runScriptFile(kernel: IKernel, scriptFile: string) {
-        if (await this.fs.localFileExists(scriptFile)) {
-            const fileContents = await this.fs.readLocalFile(scriptFile);
-            return kernel.session ? executeSilently(kernel.session, fileContents) : [];
+        try {
+            const uriPath = vscode.Uri.parse(scriptFile);
+            const statResult = await vscode.workspace.fs.stat(uriPath);
+            console.log({ statResult });
+            if (statResult) {
+                const uint8array = await vscode.workspace.fs.readFile(uriPath);
+                const fileContents = new TextDecoder().decode(uint8array);
+                console.log({ fileContents: fileContents });
+                return kernel.session ? executeSilently(kernel.session, fileContents) : [];
+            }
+        } catch (e) {
+            console.log('Error running script file', e);
+            traceError('Cannot run non-existant script file');
         }
-        traceError('Cannot run non-existant script file');
     }
 
     private extractJupyterResultText(outputs: nbformat.IOutput[]): string {
@@ -306,6 +317,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
 
     // Pull our text result out of the Jupyter cell
     private deserializeJupyterResult<T>(outputs: nbformat.IOutput[]): T {
+        console.log('Deserializing Jupyter Result', outputs);
         const text = this.extractJupyterResultText(outputs);
         return JSON.parse(text) as T;
     }

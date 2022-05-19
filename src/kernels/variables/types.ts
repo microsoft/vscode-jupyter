@@ -27,6 +27,11 @@ export interface IJupyterVariable {
     fileName?: string;
 }
 
+export const IRootDirectory = Symbol('IRootDirectory');
+export interface IRootDirectory {
+    readonly path: string;
+}
+
 export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
     readonly refreshRequired: Event<void>;

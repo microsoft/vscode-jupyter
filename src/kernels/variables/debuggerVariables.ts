@@ -8,21 +8,22 @@ import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 import { IDebugService, IVSCodeNotebook } from '../../platform/common/application/types';
-import { DataFrameLoading, GetVariableInfo } from '../../platform/common/constants.node';
+import { DataFrameLoading, GetVariableInfo } from '../../platform/common/namespaces';
 import { traceError } from '../../platform/logging';
 import { IConfigurationService, Resource } from '../../platform/common/types';
-import { DebugLocationTracker } from '../../platform/debugger/debugLocationTracker.node';
+import { DebugLocationTracker } from '../../platform/debugger/debugLocationTracker';
 import { IDebuggingManager, KernelDebugMode } from '../../platform/debugger/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Telemetry } from '../../webviews/webview-side/common/constants';
 import { IJupyterDebugService } from '../debugging/types';
 import { IKernel } from '../types';
-import { parseDataFrame } from './pythonVariableRequester.node';
+import { parseDataFrame } from './pythonVariableRequester';
 import {
     IConditionalJupyterVariables,
     IJupyterVariable,
     IJupyterVariablesRequest,
-    IJupyterVariablesResponse
+    IJupyterVariablesResponse,
+    IRootDirectory
 } from './types';
 import { convertDebugProtocolVariableToIJupyterVariable, DataViewableTypes } from './helpers';
 
@@ -47,7 +48,8 @@ export class DebuggerVariables
         @inject(IJupyterDebugService) @named(Identifiers.MULTIPLEXING_DEBUGSERVICE) private debugService: IDebugService,
         @inject(IDebuggingManager) private readonly debuggingManager: IDebuggingManager,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook
+        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
+        @inject(IRootDirectory) private readonly rootDirectory: IRootDirectory
     ) {
         super(undefined);
         this.debuggingManager.onDoneDebugging(() => this.refreshEventEmitter.fire(), this);
@@ -317,7 +319,7 @@ export class DebuggerVariables
             // Run our dataframe scripts only once per session because they're slow
             const key = this.debugService.activeDebugSession?.id;
             if (key && !this.importedDataFrameScriptsIntoKernel.has(key)) {
-                await this.evaluate(DataFrameLoading.DataFrameSysImport);
+                await this.evaluate(DataFrameLoading.DataFrameSysImport(this.rootDirectory.path));
                 this.importedDataFrameScriptsIntoKernel.add(key);
             }
         } catch (exc) {
@@ -330,7 +332,7 @@ export class DebuggerVariables
             // Run our variable info scripts only once per session because they're slow
             const key = this.debugService.activeDebugSession?.id;
             if (key && !this.importedGetVariableInfoScriptsIntoKernel.has(key)) {
-                await this.evaluate(GetVariableInfo.GetVariableInfoSysImport);
+                await this.evaluate(GetVariableInfo.GetVariableInfoSysImport(this.rootDirectory.path));
                 this.importedGetVariableInfoScriptsIntoKernel.add(key);
             }
         } catch (exc) {

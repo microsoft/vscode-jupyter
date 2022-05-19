@@ -28,11 +28,11 @@ import { HostRawNotebookProvider } from './raw/session/hostRawNotebookProvider.n
 import { RawNotebookSupportedService } from './raw/session/rawNotebookSupportedService.node';
 import { IKernelLauncher, ILocalKernelFinder, IRawNotebookProvider, IRawNotebookSupportedService } from './raw/types';
 import { DebuggerVariableRegistration } from './variables/debuggerVariableRegistration.node';
-import { DebuggerVariables } from './variables/debuggerVariables.node';
+import { DebuggerVariables } from './variables/debuggerVariables';
 import { JupyterVariables } from './variables/jupyterVariables.node';
 import { KernelVariables } from './variables/kernelVariables.node';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './variables/preWarmVariables.node';
-import { PythonVariablesRequester } from './variables/pythonVariableRequester.node';
+import { PythonVariablesRequester } from './variables/pythonVariableRequester';
 import { ICellHashListener } from '../interactive-window/editor-integration/types';
 import { IInteractiveWindowDebugger } from '../interactive-window/types';
 import { MultiplexingDebugService } from '../platform/debugger/multiplexingDebugService.node';
@@ -44,7 +44,7 @@ import {
 } from '../webviews/extension-side/dataviewer/types';
 import { IJupyterDebugService } from './debugging/types';
 import { IKernelDependencyService, IKernelFinder, IKernelProvider } from './types';
-import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
+import { IJupyterVariables, IKernelVariableRequester, IRootDirectory } from './variables/types';
 import { KernelCrashMonitor } from './kernelCrashMonitor';
 import { KernelAutoRestartMonitor } from './kernelAutoRestartMonitor.node';
 import { registerTypes as registerWidgetTypes } from './ipywidgets-message-coordination/serviceRegistry.node';
@@ -52,6 +52,7 @@ import { registerTypes as registerJupyterTypes } from './jupyter/serviceRegistry
 import { KernelProvider } from './kernelProvider.node';
 import { KernelFinder } from './kernelFinder.node';
 import { ServerConnectionType } from './jupyter/launcher/serverConnectionType';
+import { RootDirectory } from './variables/rootDirectory.node';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IRawNotebookSupportedService>(
@@ -95,6 +96,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     );
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables, Identifiers.ALL_VARIABLES);
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, KernelVariables, Identifiers.KERNEL_VARIABLES);
+    serviceManager.addSingleton<IRootDirectory>(IRootDirectory, RootDirectory);
     serviceManager.addSingleton<IJupyterVariables>(
         IJupyterVariables,
         DebuggerVariables,
