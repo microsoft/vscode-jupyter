@@ -8,16 +8,10 @@ export class ExportToHTML implements INbConvertExport {
     constructor(@inject(IExportBase) protected readonly exportBase: IExportBase) {}
     public async export(
         sourceDocument: NotebookDocument,
+        target: Uri,
         interpreter: PythonEnvironment,
-        defaultFileName: string | undefined,
         token: CancellationToken
-    ): Promise<Uri | undefined> {
-        return await this.exportBase.executeCommand(
-            sourceDocument,
-            defaultFileName,
-            ExportFormat.html,
-            interpreter,
-            token
-        );
+    ): Promise<void> {
+        await this.exportBase.executeCommand(sourceDocument, target, ExportFormat.html, interpreter, token);
     }
 }

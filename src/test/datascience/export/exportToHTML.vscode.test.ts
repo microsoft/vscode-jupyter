@@ -24,12 +24,15 @@ suite('DataScience - Export HTML', function () {
         const fileSystem = api.serviceContainer.get<IFileSystemNode>(IFileSystemNode);
         const exportToHTML = api.serviceContainer.get<INbConvertExport>(INbConvertExport, ExportFormat.html);
         const exportInterpreterFinder = api.serviceContainer.get<ExportInterpreterFinder>(ExportInterpreterFinder);
+        const file = await fileSystem.createTemporaryLocalFile('.html');
+        const target = Uri.file(file.filePath);
+        await file.dispose();
         const token = new CancellationTokenSource();
         const interpreter = await exportInterpreterFinder.getExportInterpreter();
         const document = await workspace.openNotebookDocument(
             Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'export', 'test.ipynb'))
         );
-        const target = await exportToHTML.export(document, interpreter, undefined, token.token);
+        await exportToHTML.export(document, target, interpreter, token.token);
         assert.exists(target);
         assert.equal(await fileSystem.localFileExists(target!.fsPath), true);
         const fileContents = await fileSystem.readLocalFile(target!.fsPath);

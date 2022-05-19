@@ -29,28 +29,22 @@ export class ExportBase implements INbConvertExport, IExportBase {
 
     public async export(
         _sourceDocument: NotebookDocument,
+        _target: Uri,
         _interpreter: PythonEnvironment,
-        _defaultFileName: string | undefined,
         _token: CancellationToken
-    ): Promise<Uri | undefined> {
-        return undefined;
+    ): Promise<void> {
+        return;
     }
 
     @reportAction(ReportableAction.PerformingExport)
     public async executeCommand(
         sourceDocument: NotebookDocument,
-        defaultFileName: string | undefined,
+        target: Uri,
         format: ExportFormat,
         interpreter: PythonEnvironment | undefined,
         token: CancellationToken
-    ): Promise<Uri | undefined> {
+    ): Promise<void> {
         if (token.isCancellationRequested) {
-            return;
-        }
-
-        let target = await this.getTargetFile(format, sourceDocument.uri, defaultFileName);
-
-        if (!target) {
             return;
         }
 
@@ -120,19 +114,7 @@ export class ExportBase implements INbConvertExport, IExportBase {
             tempTarget.dispose();
         }
 
-        return target;
-    }
-
-    async getTargetFile(format: ExportFormat, source: Uri, defaultFileName?: string): Promise<Uri | undefined> {
-        let target;
-
-        if (format !== ExportFormat.python) {
-            target = await this.filePicker.showDialog(format, source, defaultFileName);
-        } else {
-            target = Uri.file((await this.fs.createTemporaryLocalFile('.py')).filePath);
-        }
-
-        return target;
+        return;
     }
 
     private async makeSourceFile(target: Uri, contents: string, tempDir: TemporaryDirectory): Promise<Uri> {

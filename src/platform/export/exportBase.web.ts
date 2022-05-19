@@ -29,21 +29,21 @@ export class ExportBase implements INbConvertExport, IExportBase {
 
     public async export(
         _sourceDocument: NotebookDocument,
+        _target: Uri,
         _interpreter: PythonEnvironment,
-        _defaultFileName: string | undefined,
         _token: CancellationToken
-    ): Promise<Uri | undefined> {
+    ): Promise<void> {
         return undefined;
     }
 
     @reportAction(ReportableAction.PerformingExport)
     async executeCommand(
         sourceDocument: NotebookDocument,
-        defaultFileName: string | undefined,
+        target: Uri,
         format: ExportFormat,
         _interpreter: PythonEnvironment,
         _token: CancellationToken
-    ): Promise<Uri | undefined> {
+    ): Promise<void> {
         const kernel = this.kernelProvider.get(sourceDocument.uri);
         if (!kernel) {
             // trace error
@@ -76,11 +76,6 @@ export class ExportBase implements INbConvertExport, IExportBase {
                     break;
             }
 
-            let target = await this.getTargetFile(format, sourceDocument.uri, defaultFileName);
-            if (target === undefined) {
-                return;
-            }
-
             await kernel.session!.invokeWithFileSynced(contents, async (file) => {
                 const pwd = await this.getCWD(kernel);
                 const filePath = `${pwd}/${file.filePath}`;
@@ -111,7 +106,7 @@ export class ExportBase implements INbConvertExport, IExportBase {
                 }
             });
 
-            return target;
+            return;
         } else {
             // no op
         }
@@ -161,12 +156,6 @@ export class ExportBase implements INbConvertExport, IExportBase {
 
         const text = concatMultilineString(output.text).trim();
         return text;
-    }
-
-    private async getTargetFile(format: ExportFormat, source: Uri, defaultFileName?: string): Promise<Uri | undefined> {
-        let target = await this.filePicker.showDialog(format, source, defaultFileName);
-
-        return target;
     }
 
     private async getCWD(kernel: IKernel) {

@@ -70,6 +70,7 @@ suite('DataScience - File Converter', () => {
             instance(exportHtml),
             instance(exportPython),
             instance(exportPythonPlain),
+            instance(exportUtil),
             instance(fileSystem),
             instance(filePicker),
             instance(reporter),

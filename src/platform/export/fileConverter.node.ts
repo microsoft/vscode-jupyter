@@ -8,6 +8,7 @@ import { ExportFileOpener } from './exportFileOpener';
 import { ExportFormat, INbConvertExport, IExportDialog, IFileConverter, IExport } from './types';
 import { IFileSystemNode } from '../common/platform/types.node';
 import { FileConverter as FileConverterBase } from './fileConverter';
+import { ExportUtil } from './exportUtil.node';
 
 // Class is responsible for file conversions (ipynb, py, pdf, html) and managing nb convert for some of those conversions
 @injectable()
@@ -17,6 +18,7 @@ export class FileConverter extends FileConverterBase implements IFileConverter {
         @inject(INbConvertExport) @named(ExportFormat.html) exportToHTML: INbConvertExport,
         @inject(INbConvertExport) @named(ExportFormat.python) exportToPython: INbConvertExport,
         @inject(IExport) @named(ExportFormat.python) exportToPythonPlain: IExport,
+        @inject(ExportUtil) override readonly exportUtil: ExportUtil,
         @inject(IFileSystemNode) readonly fs: IFileSystemNode,
         @inject(IExportDialog) filePicker: IExportDialog,
         @inject(ProgressReporter) progressReporter: ProgressReporter,
@@ -30,6 +32,7 @@ export class FileConverter extends FileConverterBase implements IFileConverter {
             exportToHTML,
             exportToPython,
             filePicker,
+            exportUtil,
             progressReporter,
             applicationShell,
             exportFileOpener
@@ -39,24 +42,17 @@ export class FileConverter extends FileConverterBase implements IFileConverter {
     override async performExport(
         format: ExportFormat,
         sourceDocument: NotebookDocument,
-        defaultFileName: string | undefined,
+        target: Uri,
         token: CancellationToken,
         candidateInterpreter?: PythonEnvironment
     ) {
-        let target: Uri | undefined;
         const pythonNbconvert = this.configuration.getSettings(sourceDocument.uri).pythonExportMethod === 'nbconvert';
 
         if (format === ExportFormat.python && !pythonNbconvert) {
             // Unless selected by the setting use plain conversion for python script convert
-            target = await this.performPlainExport(format, sourceDocument, defaultFileName, token);
+            await this.performPlainExport(format, sourceDocument, target, token);
         } else {
-            target = await this.performNbConvertExport(
-                sourceDocument,
-                format,
-                defaultFileName,
-                candidateInterpreter,
-                token
-            );
+            await this.performNbConvertExport(sourceDocument, format, target, candidateInterpreter, token);
         }
 
         if (target) {

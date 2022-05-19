@@ -9,16 +9,10 @@ export class ExportToPDF implements INbConvertExport {
 
     public async export(
         sourceDocument: NotebookDocument,
+        target: Uri,
         interpreter: PythonEnvironment,
-        defaultFileName: string | undefined,
         token: CancellationToken
-    ): Promise<Uri | undefined> {
-        return await this.exportBase.executeCommand(
-            sourceDocument,
-            defaultFileName,
-            ExportFormat.pdf,
-            interpreter,
-            token
-        );
+    ): Promise<void> {
+        await this.exportBase.executeCommand(sourceDocument, target, ExportFormat.pdf, interpreter, token);
     }
 }

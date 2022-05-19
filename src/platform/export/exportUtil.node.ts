@@ -8,11 +8,17 @@ import { IFileSystemNode } from '../common/platform/types.node';
 import { sleep } from '../common/utils/async';
 import { ExportUtilBase } from './exportUtil';
 import { IExtensions } from '../common/types';
+import { ExportFormat, IExportDialog } from './types';
+import { Uri } from 'vscode';
 
 @injectable()
 export class ExportUtil extends ExportUtilBase {
-    constructor(@inject(IFileSystemNode) private fs: IFileSystemNode, @inject(IExtensions) extensions: IExtensions) {
-        super(extensions);
+    constructor(
+        @inject(IFileSystemNode) private fs: IFileSystemNode,
+        @inject(IExtensions) extensions: IExtensions,
+        @inject(IExportDialog) filePicker: IExportDialog
+    ) {
+        super(extensions, filePicker);
     }
 
     public async generateTempDir(): Promise<TemporaryDirectory> {
@@ -37,6 +43,22 @@ export class ExportUtil extends ExportUtilBase {
                 }
             }
         };
+    }
+
+    override async getTargetFile(
+        format: ExportFormat,
+        source: Uri,
+        defaultFileName?: string | undefined
+    ): Promise<Uri | undefined> {
+        let target;
+
+        if (format !== ExportFormat.python) {
+            target = await this.filePicker.showDialog(format, source, defaultFileName);
+        } else {
+            target = Uri.file((await this.fs.createTemporaryLocalFile('.py')).filePath);
+        }
+
+        return target;
     }
 
     public async makeFileInDirectory(contents: string, fileName: string, dirPath: string): Promise<string> {
