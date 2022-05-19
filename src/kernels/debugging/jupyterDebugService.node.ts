@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IDisposable } from '@fluentui/react';
 import { inject, injectable } from 'inversify';
 import * as net from 'net';
 import * as path from '../../platform/vscode-path/path';
@@ -24,7 +23,7 @@ import {
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { traceInfo, traceError } from '../../platform/logging';
-import { IDisposableRegistry } from '../../platform/common/types';
+import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { noop } from '../../platform/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';

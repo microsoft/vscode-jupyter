@@ -34,7 +34,7 @@ export class FileSystem implements IFileSystem {
         return arePathsSame(path1, path2);
     }
 
-    async createLocalDirectory(path: string): Promise<void> {
+    public async createLocalDirectory(path: string): Promise<void> {
         await this.createDirectory(vscode.Uri.file(path));
     }
 

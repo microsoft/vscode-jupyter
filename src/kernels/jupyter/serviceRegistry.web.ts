@@ -9,6 +9,7 @@ import { CommandRegistry } from './commands/commandRegistry';
 import { JupyterServerSelectorCommand } from './commands/serverSelector';
 import { JupyterConnection } from './jupyterConnection';
 import { JupyterKernelService } from './jupyterKernelService.web';
+import { JupyterRemoteCachedKernelValidator } from './jupyterRemoteCachedKernelValidator';
 import { JupyterUriProviderRegistration } from './jupyterUriProviderRegistration';
 import { JupyterCommandLineSelector } from './launcher/commandLineSelector';
 import { JupyterNotebookProvider } from './launcher/jupyterNotebookProvider';
@@ -38,7 +39,8 @@ import {
     IJupyterExecution,
     IJupyterRequestCreator,
     INotebookServerFactory,
-    ILiveRemoteKernelConnectionUsageTracker
+    ILiveRemoteKernelConnectionUsageTracker,
+    IJupyterRemoteCachedKernelValidator
 } from './types';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
@@ -83,5 +85,9 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         RemoteKernelConnectionHandler
+    );
+    serviceManager.addSingleton<IJupyterRemoteCachedKernelValidator>(
+        IJupyterRemoteCachedKernelValidator,
+        JupyterRemoteCachedKernelValidator
     );
 }

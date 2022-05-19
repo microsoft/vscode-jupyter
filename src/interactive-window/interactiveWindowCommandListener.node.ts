@@ -24,7 +24,7 @@ import {
 } from '../platform/common/application/types';
 import { Commands, JVSC_EXTENSION_ID, PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
 import { traceError, traceInfo } from '../platform/logging';
-import { IFileSystem } from '../platform/common/platform/types.node';
+import { IFileSystem } from '../platform/common/platform/types';
 import { IConfigurationService, IDataScienceCommandListener, IDisposableRegistry } from '../platform/common/types';
 import * as localize from '../platform/common/utils/localize';
 import { captureTelemetry } from '../telemetry';

@@ -7,6 +7,7 @@ import { IServiceManager } from '../platform/ioc/types';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { NotebookCellBangInstallDiagnosticsProvider } from './diagnosticsProvider';
 import { EmptyNotebookCellLanguageService } from './emptyNotebookCellLanguageService';
+import { NotebookPythonPathService } from './notebookPythonPathService';
 import { PythonKernelCompletionProvider } from './pythonKernelCompletionProvider';
 import { PythonKernelCompletionProviderRegistration } from './pythonKernelCompletionProviderRegistration';
 
@@ -29,4 +30,7 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         IExtensionSingleActivationService,
         EmptyNotebookCellLanguageService
     );
+
+    serviceManager.addSingleton<NotebookPythonPathService>(NotebookPythonPathService, NotebookPythonPathService);
+    serviceManager.addBinding(NotebookPythonPathService, IExtensionSingleActivationService);
 }

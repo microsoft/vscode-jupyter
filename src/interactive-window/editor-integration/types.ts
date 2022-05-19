@@ -81,10 +81,7 @@ export interface ICellHashListener {
 }
 
 export interface ICellHashProvider {
-    updated: Event<void>;
     getHashes(): IFileHashes[];
-    getExecutionCount(): number;
-    incExecutionCount(): void;
     addCellHash(notebookCell: NotebookCell): Promise<ICellHash | undefined>;
     /**
      * This function will modify a traceback from an error message.

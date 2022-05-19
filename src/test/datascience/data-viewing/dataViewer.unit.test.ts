@@ -19,7 +19,7 @@ import { IConfigurationService } from '../../../platform/common/types';
 import { IDataScienceErrorHandler } from '../../../platform/errors/types';
 import { CodeCssGenerator } from '../../../webviews/extension-side/codeCssGenerator.node';
 import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataViewer.node';
-import { JupyterVariableDataProvider } from '../../../webviews/extension-side/dataviewer/jupyterVariableDataProvider.node';
+import { JupyterVariableDataProvider } from '../../../webviews/extension-side/dataviewer/jupyterVariableDataProvider';
 import { IDataViewer, IDataViewerDataProvider } from '../../../webviews/extension-side/dataviewer/types';
 import { ThemeFinder } from '../../../webviews/extension-side/themeFinder.node';
 import { ICodeCssGenerator, IThemeFinder } from '../../../webviews/extension-side/types';

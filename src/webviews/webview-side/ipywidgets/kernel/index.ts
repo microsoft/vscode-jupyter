@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 /* eslint-disable no-console */
 import type * as nbformat from '@jupyterlab/nbformat';
-import { logMessage } from '../../react-common/logger';
 import { KernelMessagingApi, PostOffice } from '../../react-common/postOffice';
 import { WidgetManager } from '../common/manager';
 import { ScriptManager } from '../common/scriptManager';
@@ -127,6 +126,7 @@ function renderIPyWidget(
     container: HTMLElement,
     logger: (message: string) => void
 ) {
+    console.log(`Rendering IPyWidget ${outputId} with model ${model.model_id}`);
     if (renderedWidgets.has(outputId)) {
         return console.error('already rendering');
     }
@@ -244,7 +244,7 @@ function attemptInitialize(context?: KernelMessagingApi) {
     console.log('Attempt Initialize IpyWidgets kernel.js', context);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((window as any).vscIPyWidgets) {
-        logMessage('IPyWidget kernel initializing...');
+        console.log('IPyWidget kernel initializing...');
         initialize(capturedContext);
     } else {
         setTimeout(attemptInitialize, 100);

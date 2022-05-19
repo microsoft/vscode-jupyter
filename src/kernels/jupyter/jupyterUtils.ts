@@ -143,3 +143,14 @@ export function generateUriFromRemoteProvider(id: string, result: JupyterServerU
         Identifiers.REMOTE_URI_HANDLE_PARAM
     }=${encodeURI(result)}`;
 }
+
+export function extractJupyterServerHandleAndId(
+    uri: string
+): { handle: JupyterServerUriHandle; id: string } | undefined {
+    const url: URL = new URL(uri);
+
+    // Id has to be there too.
+    const id = url.searchParams.get(Identifiers.REMOTE_URI_ID_PARAM);
+    const uriHandle = url.searchParams.get(Identifiers.REMOTE_URI_HANDLE_PARAM);
+    return id && uriHandle ? { handle: uriHandle, id } : undefined;
+}

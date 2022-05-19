@@ -207,7 +207,7 @@ export interface IJupyterUriProvider {
      * Should be a unique string (like a guid)
      */
     readonly id: string;
-    onDidChangeHandlers?: Event<void>;
+    onDidChangeHandles?: Event<void>;
     getQuickPickEntryItems?(): QuickPickItem[];
     handleQuickPick?(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
     /**
@@ -223,6 +223,7 @@ export interface IJupyterUriProvider {
 export const IJupyterUriProviderRegistration = Symbol('IJupyterUriProviderRegistration');
 
 export interface IJupyterUriProviderRegistration {
+    onDidChangeProviders: Event<void>;
     getProviders(): Promise<ReadonlyArray<IJupyterUriProvider>>;
     registerProvider(picker: IJupyterUriProvider): void;
     getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
@@ -315,4 +316,9 @@ export interface ILiveRemoteKernelConnectionUsageTracker {
      * Tracks the fact that the provided remote kernel for a given server is no longer used by a notebook defined by the uri.
      */
     trackKernelIdAsNotUsed(resource: Uri, serverId: string, kernelId: string): void;
+}
+
+export const IJupyterRemoteCachedKernelValidator = Symbol('IJupyterRemoteCachedKernelValidator');
+export interface IJupyterRemoteCachedKernelValidator {
+    isValid(kernel: LiveRemoteKernelConnectionMetadata): Promise<boolean>;
 }

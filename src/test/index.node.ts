@@ -23,6 +23,7 @@ import { IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER } from './ciConstants.node';
 import {
     IS_MULTI_ROOT_TEST,
     IS_SMOKE_TEST,
+    IS_PERF_TEST,
     MAX_EXTENSION_ACTIVATION_TIME,
     TEST_RETRYCOUNT,
     TEST_TIMEOUT
@@ -30,7 +31,7 @@ import {
 import { noop } from './core';
 import { stopJupyterServer } from './datascience/notebook/helper.node';
 import { initialize } from './initialize.node';
-import { rootHooks } from './testHooks';
+import { rootHooks } from './testHooks.node';
 
 type SetupOptions = Mocha.MochaOptions & {
     testFilesSuffix: string;
@@ -73,13 +74,14 @@ function configure(): SetupOptions {
     // So the solution is to run them separately and first on CI.
     const grep = IS_CI_SERVER_TEST_DEBUGGER ? 'Debug' : defaultGrep;
     const testFilesSuffix = process.env.TEST_FILES_SUFFIX || '.test*';
+    const testTimeout = process.env.VSC_JUPYTER_TEST_TIMEOUT || TEST_TIMEOUT;
 
     const options: SetupOptions & { retries: number; invert: boolean } = {
         ui: 'tdd',
         color: true,
         rootHooks: rootHooks,
         invert,
-        timeout: TEST_TIMEOUT,
+        timeout: testTimeout,
         retries: IS_CI_SERVER ? TEST_RETRYCOUNT : 0,
         grep,
         testFilesSuffix,
@@ -187,11 +189,14 @@ export async function run(): Promise<void> {
     // Setup test files that need to be run.
     testFiles.forEach((file) => mocha.addFile(path.join(testsRoot, file)));
 
-    /* eslint-disable no-console */
-    console.time('Time taken to activate the extension');
-    console.log('Starting & waiting for Jupyter extension to activate');
-    await activateExtensionScript();
-    console.timeEnd('Time taken to activate the extension');
+    // for performance tests, extension activation is part of the test run
+    if (!IS_PERF_TEST()) {
+        /* eslint-disable no-console */
+        console.time('Time taken to activate the extension');
+        console.log('Starting & waiting for Jupyter extension to activate');
+        await activateExtensionScript();
+        console.timeEnd('Time taken to activate the extension');
+    }
 
     try {
         // Run the tests.

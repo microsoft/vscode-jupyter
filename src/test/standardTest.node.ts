@@ -4,7 +4,7 @@ import { spawnSync } from 'child_process';
 import * as path from '../platform/vscode-path/path';
 import * as fs from 'fs-extra';
 import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from '@vscode/test-electron';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants.node';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_PERF_TEST, IS_SMOKE_TEST } from './constants.node';
 import * as tmp from 'tmp';
 import { PythonExtension, PylanceExtension, setTestExecution } from '../platform/common/constants';
 
@@ -16,7 +16,6 @@ const workspacePath = process.env.CODE_TESTS_WORKSPACE
 const extensionDevelopmentPath = process.env.CODE_EXTENSIONS_PATH
     ? process.env.CODE_EXTENSIONS_PATH
     : EXTENSION_ROOT_DIR_FOR_TESTS;
-const isRunningSmokeTests = process.env.TEST_FILES_SUFFIX === 'smoke.test*';
 const isRunningVSCodeTests = process.env.TEST_FILES_SUFFIX?.includes('vscode.test');
 setTestExecution(true);
 
@@ -24,7 +23,7 @@ function requiresPythonExtensionToBeInstalled() {
     if (process.env.VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT) {
         return;
     }
-    return isRunningVSCodeTests || isRunningSmokeTests;
+    return isRunningVSCodeTests || IS_SMOKE_TEST() || IS_PERF_TEST();
 }
 
 const channel = (process.env.VSC_JUPYTER_CI_TEST_VSC_CHANNEL || '').toLowerCase().includes('insiders')

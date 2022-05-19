@@ -263,7 +263,7 @@ export interface IExportedKernelService {
      * If `uri` is undefined, then the kernel is not associated with any resource. I.e its currently not associated with any notebook in Jupyter extension.
      * If `uri` is undefined, then the kernel is associated with the resource identified by the Uri.
      */
-    getActiveKernels(): Promise<{ metadata: KernelConnectionMetadata; uri: Uri | undefined }[]>;
+    getActiveKernels(): { metadata: KernelConnectionMetadata; uri: Uri | undefined }[];
     /**
      * Gets the Kernel connection & the metadata that's associated with a given resource.
      * (only successfully started/active connections are returned).

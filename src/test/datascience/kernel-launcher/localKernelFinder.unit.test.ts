@@ -56,7 +56,7 @@ import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProv
 import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverConnectionType';
-import { ILiveRemoteKernelConnectionUsageTracker } from '../../../kernels/jupyter/types';
+import { IJupyterRemoteCachedKernelValidator } from '../../../kernels/jupyter/types';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -72,7 +72,7 @@ import { ILiveRemoteKernelConnectionUsageTracker } from '../../../kernels/jupyte
         let tempDirForKernelSpecs: Uri;
         let jupyterPaths: JupyterPaths;
         let preferredRemote: PreferredRemoteKernelIdProvider;
-        let liveKernelUsageTracker: ILiveRemoteKernelConnectionUsageTracker;
+        let cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator;
         type TestData = {
             interpreters?: (
                 | PythonEnvironment
@@ -234,7 +234,7 @@ import { ILiveRemoteKernelConnectionUsageTracker } from '../../../kernels/jupyte
                     instance(memento)
                 )
             );
-            liveKernelUsageTracker = mock<ILiveRemoteKernelConnectionUsageTracker>();
+            cachedRemoteKernelValidator = mock<IJupyterRemoteCachedKernelValidator>();
             preferredRemote = mock(PreferredRemoteKernelIdProvider);
             const notebookProvider = mock(NotebookProvider);
             const serverUriStorage = mock(JupyterServerUriStorage);
@@ -254,7 +254,7 @@ import { ILiveRemoteKernelConnectionUsageTracker } from '../../../kernels/jupyte
                 instance(fs),
                 instance(serverUriStorage),
                 instance(connectionType),
-                instance(liveKernelUsageTracker)
+                instance(cachedRemoteKernelValidator)
             );
         }
         teardown(() => {

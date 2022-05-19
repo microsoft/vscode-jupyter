@@ -28,6 +28,8 @@ import { GlobalActivation } from './common/globalActivation';
 import { IExtensionSingleActivationService } from './activation/types';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from '../webviews/extension-side/renderer';
 import { OutputCommandListener } from './logging/outputCommandListener';
+import { IDebuggingManager } from './debugger/types';
+import { DebuggingManager } from './debugger/jupyter/notebook/debuggingManager';
 import { ExportDialog } from './export/exportDialog';
 import { ExportFormat, IExport, IExportBase, IExportDialog, IFileConverter, INbConvertExport } from './export/types';
 import { FileConverter } from './export/fileConverter';
@@ -40,6 +42,10 @@ import { ExportUtilBase } from './export/exportUtil';
 import { ExportToHTML } from './export/exportToHTML';
 import { ExportToPDF } from './export/exportToPDF';
 import { ExportToPython } from './export/exportToPython';
+import { NotebookWatcher } from '../webviews/extension-side/variablesView/notebookWatcher';
+import { DataViewerFactory } from '../webviews/extension-side/dataviewer/dataViewerFactory';
+import { IDataViewerFactory } from '../webviews/extension-side/dataviewer/types';
+import { INotebookWatcher } from '../webviews/extension-side/variablesView/types';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
@@ -68,4 +74,11 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     registerApiTypes(serviceManager);
     registerActivationTypes(serviceManager);
     registerDevToolTypes(context, serviceManager, isDevMode);
+
+    serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
+    serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
+
+    serviceManager.addSingleton<IDebuggingManager>(IDebuggingManager, DebuggingManager, undefined, [
+        IExtensionSingleActivationService
+    ]);
 }

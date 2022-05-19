@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable, named } from 'inversify';
-import { Memento } from 'vscode';
+import { EventEmitter, Memento } from 'vscode';
 
-import { GLOBAL_MEMENTO, IExtensions, IMemento } from '../../platform/common/types';
+import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensions, IMemento } from '../../platform/common/types';
 import { swallowExceptions } from '../../platform/common/utils/decorators';
 import * as localize from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
@@ -19,14 +19,19 @@ import {
 const REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY = 'REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY';
 @injectable()
 export class JupyterUriProviderRegistration implements IJupyterUriProviderRegistration {
+    private readonly _onProvidersChanged = new EventEmitter<void>();
     private loadedOtherExtensionsPromise: Promise<void> | undefined;
     private providers = new Map<string, Promise<IJupyterUriProvider>>();
     private providerExtensionMapping = new Map<string, string>();
+    public readonly onDidChangeProviders = this._onProvidersChanged.event;
 
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
-    ) {}
+    ) {
+        disposables.push(this._onProvidersChanged);
+    }
 
     public async getProviders(): Promise<ReadonlyArray<IJupyterUriProvider>> {
         await this.checkOtherExtensions();
@@ -41,8 +46,8 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
         } else {
             throw new Error(`IJupyterUriProvider already exists with id ${provider.id}`);
         }
+        this._onProvidersChanged.fire();
     }
-
     public async getJupyterServerUri(id: string, handle: JupyterServerUriHandle): Promise<IJupyterServerUri> {
         await this.checkOtherExtensions();
 

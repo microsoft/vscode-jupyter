@@ -14,7 +14,7 @@ import { Activation } from '../kernels/activation.node';
 import { CodeCssGenerator } from '../webviews/extension-side/codeCssGenerator.node';
 import { DataViewer } from '../webviews/extension-side/dataviewer/dataViewer.node';
 import { DataViewerDependencyService } from '../webviews/extension-side/dataviewer/dataViewerDependencyService.node';
-import { DataViewerFactory } from '../webviews/extension-side/dataviewer/dataViewerFactory.node';
+import { DataViewerFactory } from '../webviews/extension-side/dataviewer/dataViewerFactory';
 import {
     IDataViewer,
     IDataViewerDependencyService,
@@ -25,7 +25,7 @@ import { PlotViewerProvider } from '../webviews/extension-side/plotting/plotView
 import { IPlotViewer, IPlotViewerProvider } from '../webviews/extension-side/plotting/types';
 import { ThemeFinder } from '../webviews/extension-side/themeFinder.node';
 import { ICodeCssGenerator, IThemeFinder } from '../webviews/extension-side/types';
-import { NotebookWatcher } from '../webviews/extension-side/variablesView/notebookWatcher.node';
+import { NotebookWatcher } from '../webviews/extension-side/variablesView/notebookWatcher';
 import { INotebookWatcher } from '../webviews/extension-side/variablesView/types';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from './activation/types';
 import { ExtensionRecommendationService } from './common/extensionRecommendation.node';
@@ -33,7 +33,7 @@ import { GlobalActivation } from './common/globalActivation';
 import { PreReleaseChecker } from './common/prereleaseChecker.node';
 import { IConfigurationService, IDataScienceCommandListener, IExtensionContext } from './common/types';
 import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFactory.node';
-import { DebuggingManager } from './debugger/jupyter/debuggingManager.node';
+import { DebuggingManager } from './debugger/jupyter/notebook/debuggingManager';
 import { IDebugLocationTracker, IDebuggingManager } from './debugger/types';
 import { DataScienceErrorHandler } from './errors/errorHandler';
 import { IDataScienceErrorHandler } from './errors/types';
@@ -57,7 +57,8 @@ import { ApplicationShell } from './common/application/applicationShell';
 import { CommandManager } from './common/application/commandManager';
 import { ICommandManager, IWorkspaceService, IApplicationShell } from './common/application/types';
 import { ConfigurationService } from './common/configuration/service.node';
-import { IFileSystem, IFileSystemNode } from './common/platform/types.node';
+import { IFileSystem } from './common/platform/types';
+import { IFileSystemNode } from './common/platform/types.node';
 import { FileSystem } from './common/platform/fileSystem.node';
 import { WorkspaceService } from './common/application/workspace.node';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from '../webviews/extension-side/renderer';

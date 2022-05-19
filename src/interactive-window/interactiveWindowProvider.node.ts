@@ -12,7 +12,7 @@ import {
     IWorkspaceService
 } from '../platform/common/application/types';
 import { traceInfo } from '../platform/logging';
-import { IFileSystem } from '../platform/common/platform/types.node';
+import { IFileSystem } from '../platform/common/platform/types';
 
 import {
     GLOBAL_MEMENTO,

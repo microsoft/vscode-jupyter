@@ -1574,6 +1574,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RunTest]: {
         testName: string;
         testResult: string;
+        perfWarmup?: boolean;
     };
     [Telemetry.PreferredKernelExactMatch]: {
         matchedReason: PreferredKernelExactMatchReason;

@@ -18,6 +18,7 @@ import { ServerConnectionType } from './serverConnectionType';
  */
 @injectable()
 export class JupyterServerUriStorage implements IJupyterServerUriStorage {
+    private lastSavedList?: Promise<{ uri: string; time: number; displayName?: string | undefined }[]>;
     private currentUriPromise: Promise<string> | undefined;
     private _onDidChangeUri = new EventEmitter<void>();
     public get onDidChangeUri() {
@@ -80,6 +81,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         });
 
         // Then write just the indexes to global memento
+        this.lastSavedList = Promise.resolve(sorted);
         await this.globalMemento.update(Settings.JupyterServerUriList, mementoList);
 
         // Write the uris to the storage in one big blob (max length issues?)
@@ -101,37 +103,45 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         );
     }
     public async getSavedUriList(): Promise<{ uri: string; time: number; displayName?: string | undefined }[]> {
-        // List is in the global memento, URIs are in encrypted storage
-        const indexes = this.globalMemento.get<{ index: number; time: number }[]>(Settings.JupyterServerUriList);
-        if (indexes && indexes.length > 0) {
-            // Pull out the \r separated URI list (\r is an invalid URI character)
-            const blob = await this.encryptedStorage.retrieve(
-                Settings.JupyterServerRemoteLaunchService,
-                Settings.JupyterServerRemoteLaunchUriListKey
-            );
-            if (blob) {
-                // Make sure same length
-                const split = blob.split(Settings.JupyterServerRemoteLaunchUriSeparator);
-                const result = [];
-                for (let i = 0; i < split.length && i < indexes.length; i += 1) {
-                    // Split out the display name and the URI (they were combined because display name may have secret tokens in it too)
-                    const uriAndDisplayName = split[i].split(Settings.JupyterServerRemoteLaunchNameSeparator);
-                    const uri = uriAndDisplayName[0];
-
-                    // 'same' is specified for the display name to keep storage shorter if it is the same value as the URI
-                    const displayName =
-                        uriAndDisplayName[1] === Settings.JupyterServerRemoteLaunchUriEqualsDisplayName ||
-                        !uriAndDisplayName[1]
-                            ? uri
-                            : uriAndDisplayName[1];
-                    result.push({ time: indexes[i].time, displayName, uri });
-                }
-                return result;
-            }
+        if (this.lastSavedList) {
+            return this.lastSavedList;
         }
-        return [];
+        const promise = async () => {
+            // List is in the global memento, URIs are in encrypted storage
+            const indexes = this.globalMemento.get<{ index: number; time: number }[]>(Settings.JupyterServerUriList);
+            if (indexes && indexes.length > 0) {
+                // Pull out the \r separated URI list (\r is an invalid URI character)
+                const blob = await this.encryptedStorage.retrieve(
+                    Settings.JupyterServerRemoteLaunchService,
+                    Settings.JupyterServerRemoteLaunchUriListKey
+                );
+                if (blob) {
+                    // Make sure same length
+                    const split = blob.split(Settings.JupyterServerRemoteLaunchUriSeparator);
+                    const result = [];
+                    for (let i = 0; i < split.length && i < indexes.length; i += 1) {
+                        // Split out the display name and the URI (they were combined because display name may have secret tokens in it too)
+                        const uriAndDisplayName = split[i].split(Settings.JupyterServerRemoteLaunchNameSeparator);
+                        const uri = uriAndDisplayName[0];
+
+                        // 'same' is specified for the display name to keep storage shorter if it is the same value as the URI
+                        const displayName =
+                            uriAndDisplayName[1] === Settings.JupyterServerRemoteLaunchUriEqualsDisplayName ||
+                            !uriAndDisplayName[1]
+                                ? uri
+                                : uriAndDisplayName[1];
+                        result.push({ time: indexes[i].time, displayName, uri });
+                    }
+                    return result;
+                }
+            }
+            return [];
+        };
+        this.lastSavedList = promise();
+        return this.lastSavedList;
     }
     public async clearUriList(): Promise<void> {
+        this.lastSavedList = Promise.resolve([]);
         // Clear out memento and encrypted storage
         await this.globalMemento.update(Settings.JupyterServerUriList, []);
         await this.encryptedStorage.store(

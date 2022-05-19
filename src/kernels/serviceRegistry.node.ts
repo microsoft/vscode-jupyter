@@ -29,14 +29,14 @@ import { RawNotebookSupportedService } from './raw/session/rawNotebookSupportedS
 import { IKernelLauncher, ILocalKernelFinder, IRawNotebookProvider, IRawNotebookSupportedService } from './raw/types';
 import { DebuggerVariableRegistration } from './variables/debuggerVariableRegistration.node';
 import { DebuggerVariables } from './variables/debuggerVariables.node';
-import { JupyterVariables } from './variables/jupyterVariables.node';
-import { KernelVariables } from './variables/kernelVariables.node';
+import { JupyterVariables } from './variables/jupyterVariables';
+import { KernelVariables } from './variables/kernelVariables';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './variables/preWarmVariables.node';
 import { PythonVariablesRequester } from './variables/pythonVariableRequester.node';
 import { ICellHashListener } from '../interactive-window/editor-integration/types';
 import { IInteractiveWindowDebugger } from '../interactive-window/types';
 import { MultiplexingDebugService } from '../platform/debugger/multiplexingDebugService.node';
-import { JupyterVariableDataProvider } from '../webviews/extension-side/dataviewer/jupyterVariableDataProvider.node';
+import { JupyterVariableDataProvider } from '../webviews/extension-side/dataviewer/jupyterVariableDataProvider';
 import { JupyterVariableDataProviderFactory } from '../webviews/extension-side/dataviewer/jupyterVariableDataProviderFactory.node';
 import {
     IJupyterVariableDataProvider,
