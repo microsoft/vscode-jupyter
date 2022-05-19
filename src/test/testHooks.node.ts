@@ -4,6 +4,7 @@ import TelemetryReporter from '@vscode/extension-telemetry/lib/telemetryReporter
 import { IS_CI_SERVER } from './ciConstants.node';
 import { extensions } from 'vscode';
 import { sleep } from '../platform/common/utils/async';
+import { traceInfo } from '../platform/logging';
 
 let telemetryReporter: TelemetryReporter;
 
@@ -26,13 +27,15 @@ export const rootHooks: Mocha.RootHookObject = {
             return;
         }
 
+        // temporary log to make sure we get the branch name check right before implementing
+        if (process.env.GIT_BRANCH && process.env.GIT_BRANCH !== 'main') {
+            traceInfo(`not sending test result telemetry for runs on ${process.env.GIT_BRANCH} branch`);
+            return;
+        }
+
         let result = this.currentTest?.isFailed() ? 'failed' : this.currentTest?.isPassed() ? 'passed' : 'skipped';
 
-        const measures = this.currentTest?.perfCheckpoints
-            ? this.currentTest?.perfCheckpoints
-            : this.currentTest?.duration
-            ? { duration: this.currentTest.duration }
-            : undefined;
+        const measures = this.currentTest?.duration ? { duration: this.currentTest.duration } : undefined;
 
         let dimensions: Record<string, string> = {
             testName: this.currentTest!.title,
@@ -41,6 +44,14 @@ export const rootHooks: Mocha.RootHookObject = {
 
         if (process.env.VSC_JUPYTER_WARMUP) {
             dimensions = { ...dimensions, perfWarmup: 'true' };
+        }
+
+        if (this.currentTest?.perfCheckpoints) {
+            dimensions = { ...dimensions, timedCheckpoints: JSON.stringify(this.currentTest?.perfCheckpoints) };
+        }
+
+        if (process.env.GIT_SHA) {
+            dimensions = { ...dimensions, commitHash: process.env.GIT_SHA };
         }
 
         telemetryReporter.sendDangerousTelemetryEvent(Telemetry.RunTest, dimensions, measures);
