@@ -1,7 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { ContentsManager, Kernel, KernelSpecManager, Session, SessionManager } from '@jupyterlab/services';
+import type {
+    Contents,
+    ContentsManager,
+    Kernel,
+    KernelSpecManager,
+    Session,
+    SessionManager
+} from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { Cancellation } from '../../../platform/common/cancellation';
@@ -25,13 +32,7 @@ import {
     IJupyterServerSession
 } from '../../types';
 import { DisplayOptions } from '../../displayOptions';
-import {
-    IBackupFile,
-    IJupyterBackingFileCreator,
-    IJupyterKernelService,
-    IJupyterPasswordConnect,
-    IJupyterRequestCreator
-} from '../types';
+import { IBackupFile, IJupyterBackingFileCreator, IJupyterKernelService, IJupyterRequestCreator } from '../types';
 import { Uri } from 'vscode';
 import { generateBackingIPyNbFileName } from './backingFileCreator.base';
 
@@ -43,7 +44,6 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
     constructor(
         resource: Resource,
         private connInfo: IJupyterConnection,
-        private jupyterPasswordConnect: IJupyterPasswordConnect,
         kernelConnectionMetadata: KernelConnectionMetadata,
         private specsManager: KernelSpecManager,
         private sessionManager: SessionManager,
@@ -265,39 +265,13 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
         return tempFile.path;
     }
 
-    async getDownloadPath(file: string): Promise<string> {
-        let baseUrl = this.connInfo.baseUrl;
-        let token = this.connInfo.token;
-        let xsrfToken: string | undefined = undefined;
+    async deleteTempfile(file: string): Promise<void> {
+        await this.contentsManager.delete(file);
+    }
 
-        if (token === '' || token === null) {
-            const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo(baseUrl);
-
-            if (pwSettings && pwSettings.requestHeaders) {
-                if (pwSettings.remappedBaseUrl) {
-                    baseUrl = pwSettings.remappedBaseUrl;
-                }
-
-                if (pwSettings.remappedToken) {
-                    token = pwSettings.remappedToken;
-                }
-
-                // eslint-disable-next-line
-                xsrfToken = (pwSettings.requestHeaders as any)['X-XSRFToken'];
-            }
-        }
-
-        if (token !== '' && token !== null) {
-            return `${baseUrl}files/${file}?token=${token}`;
-        } else if (xsrfToken) {
-            // If we don't have a token, fall back to xsrfToken
-            const fullUrl = new URL(`${baseUrl}files/${file}`);
-            fullUrl.searchParams.append('_xsrf', xsrfToken);
-            const url = fullUrl.toString();
-            return url;
-        } else {
-            throw new Error(DataScience.passwordFailure());
-        }
+    async getContents(file: string, format: Contents.FileFormat): Promise<Contents.IModel> {
+        const data = await this.contentsManager.get(file, { type: 'file', format: format, content: true });
+        return data;
     }
 
     private async createSession(options: {

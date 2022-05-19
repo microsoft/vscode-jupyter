@@ -3,7 +3,7 @@
 
 'use strict';
 
-import type { Kernel, KernelMessage, Session } from '@jupyterlab/services';
+import type { Contents, Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import type { Observable } from 'rxjs/Observable';
 import type { JSONObject } from '@lumino/coreutils';
 import type {
@@ -298,7 +298,8 @@ export interface IJupyterServerSession extends IJupyterSession {
     readonly kind: 'remoteJupyter' | 'localJupyter';
     invokeWithFileSynced(contents: string, handler: (file: IBackupFile) => Promise<void>): Promise<void>;
     createTempfile(ext: string): Promise<string>;
-    getDownloadPath(file: string): Promise<string>;
+    deleteTempfile(file: string): Promise<void>;
+    getContents(file: string, format: Contents.FileFormat): Promise<Contents.IModel>;
 }
 
 export type ISessionWithSocket = Session.ISessionConnection & {

@@ -34,6 +34,31 @@ export class ExportBase implements INbConvertExport, IExportBase {
         return undefined;
     }
 
+    b64toBlob(b64Data: string, contentType: string | undefined) {
+        contentType = contentType || '';
+        var sliceSize = 512;
+        b64Data = b64Data.replace(/^[^,]+,/, '');
+        b64Data = b64Data.replace(/\s/g, '');
+        var byteCharacters = atob(b64Data);
+        var byteArrays = [];
+
+        for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+            var slice = byteCharacters.slice(offset, offset + sliceSize);
+
+            var byteNumbers = new Array(slice.length);
+            for (var i = 0; i < slice.length; i++) {
+                byteNumbers[i] = slice.charCodeAt(i);
+            }
+
+            var byteArray = new Uint8Array(byteNumbers);
+
+            byteArrays.push(byteArray);
+        }
+
+        var blob = new Blob(byteArrays, { type: contentType });
+        return blob;
+    }
+
     // @reportAction(ReportableAction.PerformingExport)
     async executeCommand(
         sourceDocument: NotebookDocument,
@@ -62,48 +87,49 @@ export class ExportBase implements INbConvertExport, IExportBase {
 
             let target: Uri | undefined;
 
+            let fileExt = '';
+
+            switch (format) {
+                case ExportFormat.html:
+                    fileExt = '.html';
+                    break;
+                case ExportFormat.pdf:
+                    fileExt = '.pdf';
+                    break;
+                case ExportFormat.python:
+                    fileExt = '.py';
+                    break;
+            }
+
             await kernel.session!.invokeWithFileSynced(contents, async (file) => {
                 const pwd = await this.getCWD(kernel);
                 const filePath = `${pwd}/${file.filePath}`;
+                const tempTarget = await session.createTempfile(fileExt);
+                const outputs = await executeSilently(
+                    session,
+                    `!jupyter nbconvert ${filePath} --to ${format} --output ${path.basename(tempTarget)}`
+                );
+
+                const text = this.parseStreamOutput(outputs);
+                if (text) {
+                    traceError(text || `Failed to export to ${format}`);
+                }
+
+                target = await this.getTargetFile(format, sourceDocument.uri, defaultFileName);
+                if (target === undefined) {
+                    return;
+                }
 
                 if (format === ExportFormat.pdf) {
-                    const tempTarget = await session.createTempfile('.pdf');
-                    const outputs = await executeSilently(
-                        session,
-                        `!jupyter nbconvert ${filePath} --to pdf --output ${path.basename(tempTarget)}`
-                    );
-
-                    const text = this.parseStreamOutput(outputs);
-
-                    if (this.exportSucceed(text)) {
-                        const downloadUrl = await session.getDownloadPath(tempTarget);
-                        target = Uri.parse(downloadUrl);
-                    } else {
-                        traceError(text || 'Failed to export to PDF');
-                        throw new Error(text || 'Failed to export to PDF');
-                    }
+                    const content = await session.getContents(tempTarget, 'base64');
+                    const bytes = this.b64toBlob(content.content, 'application/pdf');
+                    const buffer = await bytes.arrayBuffer();
+                    await this.fs.writeFile(target, Buffer.from(buffer));
+                    await session.deleteTempfile(tempTarget);
                 } else {
-                    target = await this.getTargetFile(format, sourceDocument.uri, defaultFileName);
-                    if (target === undefined) {
-                        return;
-                    }
-
-                    const outputs = await executeSilently(
-                        session,
-                        `!jupyter nbconvert ${filePath} --to ${format} --stdout`
-                    );
-
-                    const text = this.parseStreamOutput(outputs);
-                    if (!text) {
-                        return;
-                    }
-
-                    const headerRemoved = text
-                        .split(/\r\n|\r|\n/g)
-                        .slice(1)
-                        .join('\n');
-
-                    await this.fs.writeFile(target!, headerRemoved);
+                    const content = await session.getContents(tempTarget, 'text');
+                    await this.fs.writeFile(target, content.content as string);
+                    await session.deleteTempfile(tempTarget);
                 }
             });
 
@@ -113,13 +139,13 @@ export class ExportBase implements INbConvertExport, IExportBase {
         }
     }
 
-    private exportSucceed(message: string | undefined) {
-        if (!message) {
-            return false;
-        }
+    // private exportSucceed(message: string | undefined) {
+    //     if (!message) {
+    //         return false;
+    //     }
 
-        return /\[NbConvertApp\].* successfully created/g.exec(message);
-    }
+    //     return /\[NbConvertApp\].* successfully created/g.exec(message);
+    // }
 
     private parseStreamOutput(outputs: nbformat.IOutput[]): string | undefined {
         if (outputs.length === 0) {
