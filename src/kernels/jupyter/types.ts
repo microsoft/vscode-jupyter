@@ -106,6 +106,7 @@ export interface IJupyterPasswordConnectInfo {
 export const IJupyterPasswordConnect = Symbol('IJupyterPasswordConnect');
 export interface IJupyterPasswordConnect {
     getPasswordConnectionInfo(url: string): Promise<IJupyterPasswordConnectInfo | undefined>;
+    clearPasswordConnectionInfo(): void;
 }
 
 export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
