@@ -5,10 +5,9 @@ import { ISignal, Signal } from '@lumino/signaling';
 import * as uuid from 'uuid/v4';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
 import '../../../platform/common/extensions';
-import { traceVerbose, traceInfoIfCI, traceError } from '../../../platform/logging';
+import { traceVerbose, traceInfoIfCI, traceError, traceWarning } from '../../../platform/logging';
 import { IDisposable, Resource } from '../../../platform/common/types';
 import { createDeferred, sleep } from '../../../platform/common/utils/async';
-import { noop } from '../../../platform/common/utils/misc';
 import { KernelConnectionTimeoutError } from '../../../platform/errors/kernelConnectionTimeoutError';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
@@ -105,9 +104,11 @@ export class RawSession implements ISessionWithSocket {
         this.isDisposing = true;
         if (!this.isDisposed) {
             this.exitHandler.dispose();
-            await this._kernel.shutdown();
+            await this._kernel
+                .shutdown()
+                .catch((ex) => traceWarning(`Failed to shutdown kernel, ${this.kernelConnectionMetadata.id}`, ex));
             this._kernel.dispose();
-            await this.kernelProcess.dispose().catch(noop);
+            this.kernelProcess.dispose();
         }
         try {
             this._kernel.statusChanged.disconnect(this.onKernelStatus, this);
