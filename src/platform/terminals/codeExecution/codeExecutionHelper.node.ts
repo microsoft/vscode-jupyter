@@ -9,13 +9,13 @@ import { traceError } from '../../logging';
 import * as internalScripts from '../../common/process/internal/scripts/index.node';
 import { createDeferred } from '../../common/utils/async';
 import { getFilePath } from '../../common/platform/fs-paths';
-import { CodeExecutionHelper } from './codeExecutionHelper';
+import { CodeExecutionHelperBase } from './codeExecutionHelper';
 import { IProcessServiceFactory } from '../../common/process/types.node';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 
 @injectable()
-export class CodeExecutionHelperNode extends CodeExecutionHelper {
+export class CodeExecutionHelperNode extends CodeExecutionHelperBase {
     private readonly interpreterService: IInterpreterService;
     private readonly processServiceFactory: IProcessServiceFactory;
 

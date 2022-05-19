@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 import '../../common/extensions';
 
-import { inject, injectable } from 'inversify';
 import { Position, Range, TextEditor, Uri } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
@@ -10,12 +9,11 @@ import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IServiceContainer } from '../../ioc/types';
 import { ICodeExecutionHelper } from '../types';
 
-@injectable()
-export class CodeExecutionHelper implements ICodeExecutionHelper {
+export class CodeExecutionHelperBase implements ICodeExecutionHelper {
     protected readonly documentManager: IDocumentManager;
     private readonly applicationShell: IApplicationShell;
 
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
+    constructor(serviceContainer: IServiceContainer) {
         this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
     }

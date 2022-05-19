@@ -3,7 +3,7 @@
 
 import { interfaces } from 'inversify';
 import { ClassType } from '../ioc/types';
-import { CodeExecutionHelper } from './codeExecution/codeExecutionHelper';
+import { CodeExecutionHelperBase } from './codeExecution/codeExecutionHelper';
 import { ICodeExecutionHelper } from './types';
 
 interface IServiceRegistry {
@@ -15,5 +15,5 @@ interface IServiceRegistry {
 }
 
 export function registerTypes(serviceManager: IServiceRegistry) {
-    serviceManager.addSingleton<ICodeExecutionHelper>(ICodeExecutionHelper, CodeExecutionHelper);
+    serviceManager.addSingleton<ICodeExecutionHelper>(ICodeExecutionHelper, CodeExecutionHelperBase);
 }

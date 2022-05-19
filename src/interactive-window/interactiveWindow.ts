@@ -819,6 +819,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         let defaultFileName;
         if (this.submitters && this.submitters.length) {
             const lastSubmitter = this.submitters[this.submitters.length - 1];
+            lastSubmitter;
             defaultFileName = path.basename(lastSubmitter.path, path.extname(lastSubmitter.path));
         }
 

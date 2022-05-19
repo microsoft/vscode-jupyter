@@ -198,7 +198,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
     @captureTelemetry(Telemetry.ExportPythonFileInteractive, undefined, false)
     private async exportFile(file: Uri): Promise<void> {
         const filePath = getFilePath(file);
-        if (filePath && filePath.length > 0) {
+        if (filePath && filePath.length > 0 && this.jupyterExporter) {
             // If the current file is the active editor, then generate cells from the document.
             const activeEditor = this.documentManager.activeTextEditor;
             if (activeEditor && this.fileSystem.arePathsSame(activeEditor.document.uri, file)) {
@@ -247,7 +247,12 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
     @captureTelemetry(Telemetry.ExportPythonFileAndOutputInteractive, undefined, false)
     private async exportFileAndOutput(file: Uri): Promise<Uri | undefined> {
         const filePath = getFilePath(file);
-        if (filePath && filePath.length > 0 && (await this.jupyterExecution.isNotebookSupported())) {
+        if (
+            filePath &&
+            filePath.length > 0 &&
+            this.jupyterExporter &&
+            (await this.jupyterExecution.isNotebookSupported())
+        ) {
             // If the current file is the active editor, then generate cells from the document.
             const activeEditor = this.documentManager.activeTextEditor;
             if (
@@ -351,12 +356,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
 
     @captureTelemetry(Telemetry.CreateNewInteractive, undefined, false)
     private async createNewInteractiveWindow(connection?: KernelConnectionMetadata): Promise<void> {
-        try {
-            await this.interactiveWindowProvider.getOrCreate(undefined, connection);
-        } catch (error) {
-            traceError(error);
-            throw error;
-        }
+        await this.interactiveWindowProvider.getOrCreate(undefined, connection);
     }
 
     private waitForStatus<T>(

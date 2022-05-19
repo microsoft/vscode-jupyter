@@ -224,7 +224,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             !this.globalMemento.get(AskedForPerFileSettingKey) &&
             this._windows.length === 1 &&
             // Only prompt if the submitting file is different
-            this._windows[0].owner?.path !== resource.path
+            (!this._windows[0].owner || !this.fs.arePathsSame(this._windows[0].owner, resource))
         ) {
             // See if the first window was tied to a file or not.
             this.globalMemento.update(AskedForPerFileSettingKey, true).then(noop, noop);
