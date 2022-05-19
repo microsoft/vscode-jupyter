@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 'use strict';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, multiInject } from 'inversify';
 import { Uri, workspace } from 'vscode';
 import { IApplicationShell, IWorkspaceService, IVSCodeNotebook } from '../platform/common/application/types';
 import { IFileSystemNode } from '../platform/common/platform/types.node';
@@ -17,7 +17,7 @@ import { CellHashProviderFactory } from '../interactive-window/editor-integratio
 import { InteractiveWindowView } from '../notebooks/constants';
 import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
 import { Kernel } from './kernel.node';
-import { IKernel, INotebookProvider, KernelOptions } from './types';
+import { IKernel, INotebookProvider, ITracebackFormatter, KernelOptions } from './types';
 import { IStatusProvider } from '../platform/progress/types';
 import { BaseKernelProvider } from './kernelProvider.base';
 
@@ -36,7 +36,8 @@ export class KernelProvider extends BaseKernelProvider {
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
-        @inject(IExtensionContext) private readonly context: IExtensionContext
+        @inject(IExtensionContext) private readonly context: IExtensionContext,
+        @multiInject(ITracebackFormatter) private readonly tracebackFormatters: ITracebackFormatter[]
     ) {
         super(asyncDisposables, disposables, notebook);
     }
@@ -70,7 +71,8 @@ export class KernelProvider extends BaseKernelProvider {
             this.pythonExecutionFactory,
             this.statusProvider,
             options.creator,
-            this.context
+            this.context,
+            this.tracebackFormatters
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);

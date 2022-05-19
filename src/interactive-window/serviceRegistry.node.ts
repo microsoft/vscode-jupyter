@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
+import { ITracebackFormatter } from '../kernels/types';
 import { IExtensionSyncActivationService, IExtensionSingleActivationService } from '../platform/activation/types';
 import { IDataScienceCommandListener } from '../platform/common/types';
 import { IServiceManager } from '../platform/ioc/types';
@@ -16,6 +17,7 @@ import { HoverProvider } from './editor-integration/hoverProvider';
 import { ICodeWatcher, ICodeLensFactory, IDataScienceCodeLensProvider } from './editor-integration/types';
 import { InteractiveWindowCommandListener } from './interactiveWindowCommandListener.node';
 import { InteractiveWindowProvider } from './interactiveWindowProvider.node';
+import { InteractiveWindowTracebackFormatter } from './outputs/tracebackFormatter';
 import { IExportCommands, IInteractiveWindowProvider } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
@@ -35,4 +37,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Decorator);
     serviceManager.addSingleton<IExportCommands>(IExportCommands, ExportCommands);
     serviceManager.addSingleton<CellHashProviderFactory>(CellHashProviderFactory, CellHashProviderFactory);
+    serviceManager.addSingleton<ITracebackFormatter>(ITracebackFormatter, InteractiveWindowTracebackFormatter);
 }

@@ -14,7 +14,6 @@ import {
     TextDocumentContentChangeEvent,
     Uri
 } from 'vscode';
-import * as localize from '../../platform/common/utils/localize';
 
 import { splitMultilineString } from '../../webviews/webview-side/common';
 import { IDebugService, IDocumentManager } from '../../platform/common/application/types';
@@ -26,7 +25,6 @@ import { stripAnsi } from '../../platform/common/utils/regexp';
 import { getCellResource, uncommentMagicCommands } from './cellFactory';
 import { CellMatcher } from './cellMatcher';
 import { ICellHash, ICellHashProvider, ICellHashListener, IFileHashes } from './types';
-import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 import { getInteractiveCellMetadata } from '../helpers';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
 import { IPlatformService } from '../../platform/common/platform/types';
@@ -69,7 +67,7 @@ export class CellHashProvider implements ICellHashProvider {
         private debugService: IDebugService | undefined,
         private listeners: ICellHashListener[] | undefined,
         private platformService: IPlatformService,
-        private readonly kernel: IKernel
+        kernel: IKernel
     ) {
         // Watch document changes so we can update our hashes
         this.documentManager.onDidChangeTextDocument(this.onChangedDocument.bind(this));
@@ -490,7 +488,6 @@ export class CellHashProvider implements ICellHashProvider {
                     break;
                 }
             }
-            const notebook = getAssociatedNotebookDocument(this.kernel);
             if (matchHash && matchUri) {
                 // We have a match, replace source lines first
                 const afterLineReplace = traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
@@ -504,28 +501,6 @@ export class CellHashProvider implements ICellHashProvider {
                     /.*?\n/,
                     `\u001b[1;32m${getFilePath(matchUri)}\u001b[0m in \u001b[0;36m${inputMatch[2]}\n`
                 );
-            } else if (this.kernel && notebook && notebook.notebookType !== InteractiveWindowView) {
-                const matchingCellUri = this.executionCounts.get(executionCount);
-                const cellIndex = notebook.getCells().findIndex((c) => c.document.uri.toString() === matchingCellUri);
-                if (matchingCellUri && cellIndex >= 0) {
-                    // Parse string to a real URI so we can use pieces of it.
-                    matchUri = Uri.parse(matchingCellUri);
-
-                    // We have a match, replace source lines first
-                    const afterLineReplace = traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
-                        const n = parseInt(num, 10);
-                        return `${prefix}<a href='${matchingCellUri}?line=${n - 1}'>${n}</a>${suffix}`;
-                    });
-
-                    // Then replace the input line with our uri for this cell
-                    return afterLineReplace.replace(
-                        /.*?\n/,
-                        `\u001b[1;32m${localize.DataScience.cellAtFormat().format(
-                            getFilePath(matchUri),
-                            (cellIndex + 1).toString()
-                        )}\u001b[0m in \u001b[0;36m${inputMatch[2]}\n`
-                    );
-                }
             }
         }
 

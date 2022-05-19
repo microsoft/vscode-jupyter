@@ -547,3 +547,8 @@ export interface IKernelFinder {
 export type KernelAction = 'start' | 'interrupt' | 'restart' | 'execution';
 
 export type KernelActionSource = 'jupyterExtension' | '3rdPartyExtension';
+
+export const ITracebackFormatter = Symbol('ITracebackFormatter');
+export interface ITracebackFormatter {
+    format(cell: NotebookCell, traceback: string[]): string[];
+}

@@ -50,6 +50,7 @@ import {
     INotebookProvider,
     InterruptResult,
     isLocalConnection,
+    ITracebackFormatter,
     KernelActionSource,
     KernelConnectionMetadata,
     KernelSocketInformation,
@@ -148,7 +149,8 @@ export abstract class BaseKernel implements IKernel {
         readonly cellHashProviderFactory: CellHashProviderFactory,
         private readonly statusProvider: IStatusProvider,
         public readonly creator: KernelActionSource,
-        context: IExtensionContext
+        context: IExtensionContext,
+        tracebackFormatters: ITracebackFormatter[]
     ) {
         this.kernelExecution = new KernelExecution(
             this,
@@ -159,7 +161,8 @@ export abstract class BaseKernel implements IKernel {
             controller,
             outputTracker,
             cellHashProviderFactory,
-            context
+            context,
+            tracebackFormatters
         );
         this.kernelExecution.onPreExecute((c) => this._onPreExecute.fire(c), this, disposables);
     }

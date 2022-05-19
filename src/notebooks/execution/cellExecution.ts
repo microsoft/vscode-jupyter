@@ -54,7 +54,12 @@ import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { swallowExceptions } from '../../platform/common/utils/decorators';
 import { noop } from '../../platform/common/utils/misc';
 import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../kernels/helpers';
-import { IJupyterSession, IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
+import {
+    IJupyterSession,
+    ITracebackFormatter,
+    KernelConnectionMetadata,
+    NotebookCellRunState
+} from '../../kernels/types';
 import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
 import { ICellHashProvider, ICellHash } from '../../interactive-window/editor-integration/types';
 import { WIDGET_MIMETYPE } from '../../kernels/ipywidgets-message-coordination/constants';
@@ -75,13 +80,13 @@ type DisplayData = nbformat.IDisplayData & {
 
 export class CellExecutionFactory {
     constructor(
-        private readonly kernel: IKernel,
         private readonly appShell: IApplicationShell,
         private readonly disposables: IDisposableRegistry,
         private readonly controller: NotebookController,
         private readonly outputTracker: CellOutputDisplayIdTracker,
         private readonly cellHashProviderFactory: CellHashProviderFactory,
-        private readonly context: IExtensionContext
+        private readonly context: IExtensionContext,
+        private readonly tracebackFormatters: ITracebackFormatter[]
     ) {}
 
     public create(cell: NotebookCell, metadata: Readonly<KernelConnectionMetadata>) {
@@ -93,8 +98,9 @@ export class CellExecutionFactory {
             this.disposables,
             this.controller,
             this.outputTracker,
-            this.cellHashProviderFactory.getOrCreate(this.kernel),
-            this.context
+            this.cellHashProviderFactory.getOrCreate(cell.notebook),
+            this.context,
+            this.tracebackFormatters
         );
     }
 }
@@ -161,7 +167,8 @@ export class CellExecution implements IDisposable {
         private readonly controller: NotebookController,
         private readonly outputDisplayIdTracker: CellOutputDisplayIdTracker,
         private readonly cellHashProvider: ICellHashProvider,
-        private readonly context: IExtensionContext
+        private readonly context: IExtensionContext,
+        private readonly tracebackFormatters: ITracebackFormatter[]
     ) {
         disposables.push(this);
         workspace.onDidCloseTextDocument(
@@ -227,7 +234,8 @@ export class CellExecution implements IDisposable {
         controller: NotebookController,
         outputTracker: CellOutputDisplayIdTracker,
         cellHashProvider: ICellHashProvider,
-        context: IExtensionContext
+        context: IExtensionContext,
+        tracebackFormatters: ITracebackFormatter[]
     ) {
         return new CellExecution(
             cell,
@@ -237,7 +245,8 @@ export class CellExecution implements IDisposable {
             controller,
             outputTracker,
             cellHashProvider,
-            context
+            context,
+            tracebackFormatters
         );
     }
     public async start(session: IJupyterSession) {
@@ -876,11 +885,15 @@ export class CellExecution implements IDisposable {
     }
 
     private handleError(msg: KernelMessage.IErrorMsg, clearState: RefBool) {
+        let traceback = [...msg.content.traceback];
+        this.tracebackFormatters.forEach((formatter) => {
+            traceback = formatter.format(this.cell, traceback);
+        });
         const output: nbformat.IError = {
             output_type: 'error',
             ename: msg.content.ename,
             evalue: msg.content.evalue,
-            traceback: this.cellHashProvider.modifyTraceback(msg.content.traceback)
+            traceback
         };
 
         this.addToCellData(output, clearState);

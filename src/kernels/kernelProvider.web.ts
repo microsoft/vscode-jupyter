@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 'use strict';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, multiInject } from 'inversify';
 import { Uri, workspace } from 'vscode';
 import { IApplicationShell, IWorkspaceService, IVSCodeNotebook } from '../platform/common/application/types';
 import {
@@ -14,7 +14,7 @@ import {
 import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../notebooks/constants';
 import { Kernel } from './kernel.web';
-import { IKernel, INotebookProvider, KernelOptions } from './types';
+import { IKernel, INotebookProvider, ITracebackFormatter, KernelOptions } from './types';
 import { BaseKernelProvider } from './kernelProvider.base';
 import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
 import { IStatusProvider } from '../platform/progress/types';
@@ -32,7 +32,8 @@ export class KernelProvider extends BaseKernelProvider {
         @inject(CellHashProviderFactory) private cellHashProviderFactory: CellHashProviderFactory,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
-        @inject(IExtensionContext) private readonly context: IExtensionContext
+        @inject(IExtensionContext) private readonly context: IExtensionContext,
+        @multiInject(ITracebackFormatter) private readonly tracebackFormatters: ITracebackFormatter[]
     ) {
         super(asyncDisposables, disposables, notebook);
     }
@@ -64,7 +65,8 @@ export class KernelProvider extends BaseKernelProvider {
             this.workspaceService,
             this.statusProvider,
             options.creator,
-            this.context
+            this.context,
+            this.tracebackFormatters
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);

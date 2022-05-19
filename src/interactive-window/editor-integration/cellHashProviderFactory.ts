@@ -9,6 +9,7 @@ import { IKernel, IKernelProvider } from '../../kernels/types';
 import { CellHashProvider } from './cellhashprovider';
 import { ICellHashListener } from './types';
 import { IPlatformService } from '../../platform/common/platform/types';
+import { NotebookDocument } from 'vscode';
 
 @injectable()
 export class CellHashProviderFactory {
@@ -31,17 +32,21 @@ export class CellHashProviderFactory {
     public get cellHashProviders() {
         const providers = new Set<CellHashProvider>();
         this.kernelProvider.kernels.forEach((item) => {
-            const provider = this.get(item);
+            const provider = this.cellHashProvidersIndexedByKernels.get(item);
             if (provider) {
                 providers.add(provider);
             }
         });
         return Array.from(providers);
     }
-    public getOrCreate(kernel: IKernel): CellHashProvider {
-        const existing = this.get(kernel);
+    public getOrCreate(notebook: NotebookDocument): CellHashProvider {
+        const existing = this.get(notebook);
         if (existing) {
             return existing;
+        }
+        const kernel = this.kernelProvider.get(notebook.uri);
+        if (!kernel) {
+            throw new Error(`No kernel associated with the document ${notebook.uri.toString()}`);
         }
         const cellHashProvider = new CellHashProvider(
             this.documentManager,
@@ -54,7 +59,8 @@ export class CellHashProviderFactory {
         this.cellHashProvidersIndexedByKernels.set(kernel, cellHashProvider);
         return cellHashProvider;
     }
-    public get(kernel: IKernel): CellHashProvider | undefined {
-        return this.cellHashProvidersIndexedByKernels.get(kernel);
+    public get(notebook: NotebookDocument): CellHashProvider | undefined {
+        const kernel = this.kernelProvider.get(notebook.uri);
+        return kernel ? this.cellHashProvidersIndexedByKernels.get(kernel) : undefined;
     }
 }

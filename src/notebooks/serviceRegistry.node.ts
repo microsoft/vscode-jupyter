@@ -24,6 +24,8 @@ import { IDataScienceCommandListener } from '../platform/common/types';
 import { CondaControllerRefresher } from './controllers/condaControllerRefresher.node';
 import { IntellisenseProvider } from '../intellisense/intellisenseProvider.node';
 import { RemoteKernelControllerWatcher } from './controllers/remoteKernelControllerWatcher';
+import { ITracebackFormatter } from '../kernels/types';
+import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
@@ -67,4 +69,5 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSyncActivationService,
         RemoteKernelControllerWatcher
     );
+    serviceManager.addSingleton<ITracebackFormatter>(ITracebackFormatter, NotebookTracebackFormatter);
 }

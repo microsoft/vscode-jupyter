@@ -15,7 +15,7 @@ import { CodeSnippets } from '../webviews/webview-side/common/constants';
 import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
 import { isLocalHostConnection, isPythonKernelConnection } from './helpers';
 import { expandWorkingDir } from './jupyter/jupyterUtils';
-import { INotebookProvider, isLocalConnection, KernelActionSource, KernelConnectionMetadata } from './types';
+import { INotebookProvider, isLocalConnection, ITracebackFormatter, KernelActionSource, KernelConnectionMetadata } from './types';
 import { AddRunCellHook } from '../platform/common/constants.node';
 import { IStatusProvider } from '../platform/progress/types';
 import { getAssociatedNotebookDocument } from '../notebooks/controllers/kernelSelector';
@@ -41,7 +41,8 @@ export class Kernel extends BaseKernel {
         private readonly pythonExecutionFactory: IPythonExecutionFactory,
         statusProvider: IStatusProvider,
         creator: KernelActionSource,
-        context: IExtensionContext
+        context: IExtensionContext,
+        tracebackFormatters: ITracebackFormatter[]
     ) {
         super(
             id,
@@ -59,7 +60,8 @@ export class Kernel extends BaseKernel {
             cellHashProviderFactory,
             statusProvider,
             creator,
-            context
+            context,
+            tracebackFormatters
         );
     }
 

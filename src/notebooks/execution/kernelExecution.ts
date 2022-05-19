@@ -21,6 +21,7 @@ import {
     IJupyterSession,
     IKernel,
     InterruptResult,
+    ITracebackFormatter,
     KernelConnectionMetadata,
     NotebookCellRunState
 } from '../../kernels/types';
@@ -48,16 +49,17 @@ export class KernelExecution implements IDisposable {
         controller: NotebookController,
         outputTracker: CellOutputDisplayIdTracker,
         cellHashProviderFactory: CellHashProviderFactory,
-        context: IExtensionContext
+        context: IExtensionContext,
+        tracebackFormatters: ITracebackFormatter[]
     ) {
         this.executionFactory = new CellExecutionFactory(
-            kernel,
             appShell,
             disposables,
             controller,
             outputTracker,
             cellHashProviderFactory,
-            context
+            context,
+            tracebackFormatters
         );
     }
 
