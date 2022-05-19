@@ -66,7 +66,7 @@ suite('kernel Process', () => {
     let daemon: PythonKernelInterruptDaemon;
     let proc: ChildProcess;
     let jupyterPaths: JupyterPaths;
-    const tempFileCreationOptions = { fileExtension: '.json', prefix: 'kernel-' };
+    const tempFileCreationOptions = { fileExtension: '.json', prefix: 'kernel-v2-' };
     setup(() => {
         tempFileDisposable = mock<IDisposable>();
         token = new CancellationTokenSource();

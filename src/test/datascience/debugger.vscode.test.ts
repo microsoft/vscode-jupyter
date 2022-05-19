@@ -2,6 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 import * as sinon from 'sinon';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from '../../platform/vscode-path/path';
+import { sleep } from '../core';
 import { ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { IDisposable } from '../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common.node';
@@ -81,9 +85,54 @@ suite('VSCode Notebook - Run By Line', function () {
     // Cleanup after suite is finished
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
+    test('Delete temp debugging files', async function () {
+        let tempWatcher;
+        let folderName;
+        try {
+            tempWatcher = fs.watch(os.tmpdir(), (_event, filename) => {
+                // The folder ipykernel creates is always in tmp starting with ipykernel_
+                if (filename.startsWith('ipykernel_')) {
+                    folderName = filename;
+                }
+            });
+
+            const cell = await insertCodeCell('a=1\na', { index: 0 });
+            const doc = vscodeNotebook.activeNotebookEditor?.document!;
+            traceInfo(`Inserted cell`);
+
+            await commandManager.executeCommand(Commands.RunByLine, cell);
+            traceInfo(`Executed run by line`);
+            const { debugAdapter } = await getDebugSessionAndAdapter(debuggingManager, doc);
+
+            // Make sure that we stop to dump the files
+            await waitForStoppedEvent(debugAdapter!);
+
+            // Go head and run to the end now
+            await commandManager.executeCommand(Commands.RunByLineStop);
+
+            // Wait until we have finished and have output
+            await waitForCondition(
+                async () => !!cell.outputs.length,
+                defaultNotebookTestTimeout,
+                'Cell should have output'
+            );
+
+            // Give the files a quick chance to clean up
+            await sleep(1000);
+
+            // Now that we have finished the temp directory should be empty
+            assert.isDefined(folderName, 'Failed to create an ipykernel debug temp folder');
+            if (folderName) {
+                const tempFiles = fs.readdirSync(path.join(os.tmpdir(), folderName));
+                assert.isEmpty(tempFiles, 'Failed to delete temp debugging files');
+            }
+        } finally {
+            // Close off our file watcher
+            tempWatcher && tempWatcher.close();
+        }
+    });
+
     test('Stops at end of cell', async function () {
-        // See issue: https://github.com/microsoft/vscode-jupyter/issues/9130
-        this.skip();
         // Run by line seems to end up on the second line of the function, not the first
         const cell = await insertCodeCell('a=1\na', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.document!;
@@ -146,8 +195,6 @@ suite('VSCode Notebook - Run By Line', function () {
     });
 
     test('Stops in same-cell function called from last line', async function () {
-        // See https://github.com/microsoft/vscode-jupyter/issues/9130
-        this.skip();
         const cell = await insertCodeCell('def foo():\n    print(1)\n\nfoo()', { index: 0 });
         const doc = vscodeNotebook.activeNotebookEditor?.document!;
 

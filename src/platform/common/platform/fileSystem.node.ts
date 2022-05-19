@@ -4,9 +4,8 @@ import { inject, injectable } from 'inversify';
 import * as tmp from 'tmp';
 import { promisify } from 'util';
 import * as vscode from 'vscode';
-import { createDirNotEmptyError } from './errors';
 import { TemporaryFile } from './types';
-import { FileType, IFileSystemNode } from './types.node';
+import { IFileSystemNode } from './types.node';
 import { FileSystem as FileSystemBase } from './fileSystem';
 import { IExtensionContext, IHttpClient } from '../types';
 
@@ -52,17 +51,7 @@ export class FileSystem extends FileSystemBase implements IFileSystemNode {
     }
 
     public async deleteLocalDirectory(dirname: string) {
-        const uri = vscode.Uri.file(dirname);
-        // The "recursive" option disallows directories, even if they
-        // are empty.  So we have to deal with this ourselves.
-        const files = await this.vscfs.readDirectory(uri);
-        if (files && files.length > 0) {
-            throw createDirNotEmptyError(dirname);
-        }
-        return this.vscfs.delete(uri, {
-            recursive: true,
-            useTrash: false
-        });
+        await new Promise((resolve) => fs.rm(dirname, { force: true, recursive: true }, resolve));
     }
 
     public async ensureLocalDir(path: string): Promise<void> {
@@ -70,11 +59,14 @@ export class FileSystem extends FileSystemBase implements IFileSystemNode {
     }
 
     public async localDirectoryExists(dirname: string): Promise<boolean> {
-        return this.exists(vscode.Uri.file(dirname), FileType.Directory);
+        return this.exists(vscode.Uri.file(dirname), vscode.FileType.Directory);
     }
 
     public async localFileExists(filename: string): Promise<boolean> {
-        return this.exists(vscode.Uri.file(filename), FileType.File);
+        return this.exists(vscode.Uri.file(filename), vscode.FileType.File);
+    }
+    public override async deleteLocalFile(path: string): Promise<void> {
+        await fs.unlink(path);
     }
 
     public async searchLocal(globPattern: string, cwd?: string, dot?: boolean): Promise<string[]> {

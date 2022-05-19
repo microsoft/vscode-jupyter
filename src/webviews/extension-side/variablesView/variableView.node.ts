@@ -8,7 +8,7 @@ import { WebviewView as vscodeWebviewView } from 'vscode';
 
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { INotebookWatcher, IVariableViewPanelMapping } from './types';
-import { VariableViewMessageListener } from './variableViewMessageListener.node';
+import { VariableViewMessageListener } from './variableViewMessageListener';
 import { InteractiveWindowMessages, IShowDataViewer } from '../../../platform/messageTypes';
 import {
     IJupyterVariables,

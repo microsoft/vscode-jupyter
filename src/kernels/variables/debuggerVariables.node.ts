@@ -11,7 +11,7 @@ import { IDebugService, IVSCodeNotebook } from '../../platform/common/applicatio
 import { DataFrameLoading, GetVariableInfo } from '../../platform/common/constants.node';
 import { traceError } from '../../platform/logging';
 import { IConfigurationService, Resource } from '../../platform/common/types';
-import { DebugLocationTracker } from '../../platform/debugger/debugLocationTracker.node';
+import { DebugLocationTracker } from '../../platform/debugger/debugLocationTracker';
 import { IDebuggingManager, KernelDebugMode } from '../../platform/debugger/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Telemetry } from '../../webviews/webview-side/common/constants';
