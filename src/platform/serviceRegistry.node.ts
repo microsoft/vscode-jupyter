@@ -63,6 +63,7 @@ import { FileSystem } from './common/platform/fileSystem.node';
 import { WorkspaceService } from './common/application/workspace.node';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from '../webviews/extension-side/renderer';
 import { OutputCommandListener } from './logging/outputCommandListener';
+import { ExportUtilBase } from './export/exportUtil';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<FileSystem>(FileSystem, FileSystem);
@@ -115,6 +116,7 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToPython, ExportFormat.python);
     serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportBase, 'Export Base');
     serviceManager.addSingleton<IExport>(IExport, ExportToPythonPlain, ExportFormat.python);
+    serviceManager.addSingleton<ExportUtilBase>(ExportUtilBase, ExportUtilBase);
     serviceManager.addSingleton<ExportUtil>(ExportUtil, ExportUtil);
     serviceManager.addSingleton<IExportDialog>(IExportDialog, ExportDialog);
     serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
