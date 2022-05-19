@@ -196,12 +196,6 @@ export const IHttpClient = Symbol('IHttpClient');
 export interface IHttpClient {
     downloadFile(uri: string): Promise<Response>;
     /**
-     * Downloads file from uri as string and parses them into JSON objects
-     * @param uri The uri to download the JSON from
-     * @param strict Set `false` to allow trailing comma and comments in the JSON, defaults to `true`
-     */
-    getJSON<T>(uri: string, strict?: boolean): Promise<T>;
-    /**
      * Returns the url is valid (i.e. return status code of 200).
      */
     exists(uri: string): Promise<boolean>;
