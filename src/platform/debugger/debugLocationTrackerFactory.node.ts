@@ -13,7 +13,7 @@ import {
 
 import { IDebugService } from '../common/application/types';
 import { IDisposableRegistry } from '../common/types';
-import { DebugLocationTracker } from './debugLocationTracker.node';
+import { DebugLocationTracker } from './debugLocationTracker';
 import { IDebugLocationTracker } from './types';
 
 // Hook up our IDebugLocationTracker to python debugging sessions

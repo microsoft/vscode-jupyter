@@ -6,7 +6,7 @@ import { IExtensionSingleActivationService } from '../../platform/activation/typ
 import { IWebviewViewProvider, IWebviewPanelProvider } from '../../platform/common/application/types';
 import { IServiceManager } from '../../platform/ioc/types';
 import { IVariableViewProvider } from './variablesView/types';
-import { VariableViewActivationService } from './variablesView/variableViewActivationService.node';
+import { VariableViewActivationService } from './variablesView/variableViewActivationService';
 import { VariableViewProvider } from './variablesView/variableViewProvider.node';
 import { WebviewPanelProvider } from './webviewPanels/webviewPanelProvider.node';
 import { WebviewViewProvider } from './webviewViews/webviewViewProvider.node';
