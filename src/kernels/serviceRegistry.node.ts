@@ -35,7 +35,7 @@ import { PreWarmActivatedJupyterEnvironmentVariables } from './variables/preWarm
 import { PythonVariablesRequester } from './variables/pythonVariableRequester.node';
 import { ICellHashListener } from '../interactive-window/editor-integration/types';
 import { IInteractiveWindowDebugger } from '../interactive-window/types';
-import { MultiplexingDebugService } from '../platform/debugger/multiplexingDebugService.node';
+import { MultiplexingDebugService } from '../platform/debugger/multiplexingDebugService';
 import { JupyterVariableDataProvider } from '../webviews/extension-side/dataviewer/jupyterVariableDataProvider';
 import { JupyterVariableDataProviderFactory } from '../webviews/extension-side/dataviewer/jupyterVariableDataProviderFactory.node';
 import {

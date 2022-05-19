@@ -21,7 +21,7 @@ import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernel
 import { IDataScienceCommandListener } from '../platform/common/types';
 import { KernelCommandListener } from './kernelCommandListener';
 import { IJupyterDebugService } from './debugging/types';
-import { MultiplexingDebugService } from '../platform/debugger/multiplexingDebugService.web';
+import { MultiplexingDebugService } from '../platform/debugger/multiplexingDebugService';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
