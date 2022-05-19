@@ -8,18 +8,19 @@ import { sharedIPyWidgetsTests } from './standard.vscode.common';
 suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST) web', function () {
     const notebookRoot =
         vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0
-            ? urlPath.joinPath(
-                  vscode.workspace.workspaceFolders[0].uri,
-                  'src',
-                  'test',
-                  'datascience',
-                  'widgets',
-                  'notebooks'
-              )
+            ? urlPath.joinPath(vscode.workspace.workspaceFolders[0].uri, 'widgets', 'notebooks')
             : vscode.Uri.file('');
 
     // Use the shared code that runs the tests
-    sharedIPyWidgetsTests(this, notebookRoot, (n) => {
-        return startJupyterServer(n);
-    });
+    sharedIPyWidgetsTests(
+        this,
+        notebookRoot,
+        (n) => {
+            return startJupyterServer(n);
+        },
+        async (_t) => {
+            // Do nothing, not doing anything extra for a test failure.
+            // Need a way to capture a screenshot on web.
+        }
+    );
 });

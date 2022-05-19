@@ -12,7 +12,7 @@ import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { IKernelProvider } from '../../../kernels/types';
-import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
+import { IExtensionTestApi, waitForCondition } from '../../common';
 import { closeActiveWindows, initialize } from '../../initialize';
 import { openNotebook } from '../helpers';
 import {
@@ -33,7 +33,8 @@ import { WidgetRenderingTimeoutForTests } from './constants';
 export function sharedIPyWidgetsTests(
     suite: Mocha.Suite,
     templateRootPath: Uri,
-    startJupyterServer: (notebook?: NotebookDocument) => Promise<void>
+    startJupyterServer: (notebook?: NotebookDocument) => Promise<void>,
+    handleTestFailure: (test: Mocha.Test) => Promise<void>
 ) {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
@@ -77,7 +78,7 @@ export function sharedIPyWidgetsTests(
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
-            await captureScreenShot(this.currentTest?.title);
+            await handleTestFailure(this.currentTest);
         }
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);

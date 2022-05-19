@@ -5,6 +5,7 @@ import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
 import { startJupyterServer } from '../notebook/helper.node';
 import { sharedIPyWidgetsTests } from './standard.vscode.common';
+import { captureScreenShot } from '../../common.node';
 
 suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST) node', function () {
     const notebookPath = vscode.Uri.file(
@@ -12,7 +13,14 @@ suite('Standard IPyWidget (Execution) (slow) (WIDGET_TEST) node', function () {
     );
 
     // Use the shared code that runs the tests
-    sharedIPyWidgetsTests(this, notebookPath, (n) => {
-        return startJupyterServer(n);
-    });
+    sharedIPyWidgetsTests(
+        this,
+        notebookPath,
+        (n) => {
+            return startJupyterServer(n);
+        },
+        async (t) => {
+            return captureScreenShot(t.title);
+        }
+    );
 });
