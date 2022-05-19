@@ -24,7 +24,7 @@ suite('DataScience - Export Util', () => {
     setup(async () => {
         // Create a new file (instead of modifying existing file).
         testPdfIpynb = await createTemporaryNotebookFromFile(
-            path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'export', 'testPDF.ipynb'),
+            Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'export', 'testPDF.ipynb')),
             testDisposables
         );
     });

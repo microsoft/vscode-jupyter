@@ -53,7 +53,7 @@ import { IS_SMOKE_TEST } from '../../constants';
 import * as urlPath from '../../../platform/vscode-path/resources';
 import * as uuid from 'uuid/v4';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
-import { IPlatformService } from '../../../platform/common/platform/types';
+import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { waitForCondition } from '../../common';
 import { VSCodeNotebook } from '../../../platform/common/application/notebook';
 
@@ -137,8 +137,20 @@ export async function deleteAllCellsAndWait() {
     );
 }
 
+export async function createTemporaryNotebookFromFile(
+    file: Uri,
+    disposables: IDisposable[],
+    kernelName: string = 'Python 3'
+) {
+    const services = await getServices();
+    const fileSystem = services.serviceContainer.get<IFileSystem>(IFileSystem);
+    const contents = await fileSystem.readFile(file);
+    const notebook = JSON.parse(contents) as nbformat.INotebookContent;
+    return createTemporaryNotebook(notebook.cells, disposables, kernelName, undefined, urlPath.basename(file));
+}
+
 export async function createTemporaryNotebook(
-    cells: (nbformat.ICodeCell | nbformat.IMarkdownCell)[],
+    cells: (nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | nbformat.IUnrecognizedCell)[],
     disposables: IDisposable[],
     kernelName: string = 'Python 3',
     rootFolder?: Uri,
