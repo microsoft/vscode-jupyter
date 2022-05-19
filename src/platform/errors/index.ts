@@ -18,7 +18,11 @@ export function populateTelemetryWithErrorInfo(props: Partial<TelemetryErrorProp
     const isBrowserFetchError = !FetchError && error?.name === 'TypeError' && error?.message === 'Failed to fetch';
     const errorType = isBrowserFetchError ? TypeError : FetchError;
 
-    if (props.failureCategory === 'unknown' && isErrorType(error, errorType)) {
+    // In the web we might receive other errors besides `TypeError: Failed to fetch`.
+    // In such cases, we should not try to compare the error type with `FetchError`, since it's not defined.
+    const isFetchError = (isBrowserFetchError || FetchError !== undefined) && isErrorType(error, errorType);
+
+    if (props.failureCategory === 'unknown' && isFetchError) {
         props.failureCategory = 'fetcherror';
     }
 
@@ -89,6 +93,12 @@ function getCallSite(frame: stackTrace.StackFrame) {
 type Constructor<T> = { new (...args: any[]): T };
 
 function isErrorType<T>(error: Error, expectedType: Constructor<T>) {
+    // If the expectedType is undefined, which may happen in the web,
+    // we should log the error and return false.
+    if (!expectedType) {
+        console.error('Error type is not defined', error);
+        return false;
+    }
     if (error instanceof expectedType) {
         return true;
     }
