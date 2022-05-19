@@ -7,7 +7,7 @@ import { IPythonExecutionFactory } from '../../platform/common/process/types.nod
 import { IConfigurationService, IHttpClient, WidgetCDNs } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { IKernel } from '../types';
-import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider';
+import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider.node';
 import { LocalWidgetScriptSourceProvider } from './localWidgetScriptSourceProvider.node';
 import { RemoteWidgetScriptSourceProvider } from './remoteWidgetScriptSourceProvider';
 import { ILocalResourceUriConverter, IWidgetScriptSourceProvider, IWidgetScriptSourceProviderFactory } from './types';

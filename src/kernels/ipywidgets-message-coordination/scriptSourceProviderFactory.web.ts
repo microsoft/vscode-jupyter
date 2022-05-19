@@ -2,10 +2,9 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { IFileSystem } from '../../platform/common/platform/types';
 import { IConfigurationService, IHttpClient, WidgetCDNs } from '../../platform/common/types';
 import { IKernel } from '../types';
-import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider';
+import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider.web';
 import { RemoteWidgetScriptSourceProvider } from './remoteWidgetScriptSourceProvider';
 import { ILocalResourceUriConverter, IWidgetScriptSourceProvider, IWidgetScriptSourceProviderFactory } from './types';
 
@@ -15,19 +14,14 @@ export class ScriptSourceProviderFactory implements IWidgetScriptSourceProviderF
         const settings = this.configurationSettings.getSettings(undefined);
         return settings.widgetScriptSources;
     }
-    constructor(
-        @inject(IConfigurationService) private readonly configurationSettings: IConfigurationService,
-        @inject(IFileSystem) private readonly fs: IFileSystem
-    ) {}
+    constructor(@inject(IConfigurationService) private readonly configurationSettings: IConfigurationService) {}
 
-    public getProviders(kernel: IKernel, uriConverter: ILocalResourceUriConverter, httpClient: IHttpClient) {
+    public getProviders(kernel: IKernel, _uriConverter: ILocalResourceUriConverter, httpClient: IHttpClient) {
         const scriptProviders: IWidgetScriptSourceProvider[] = [];
 
         // If we're allowed to use CDN providers, then use them, and use in order of preference.
         if (this.configuredScriptSources.length > 0) {
-            scriptProviders.push(
-                new CDNWidgetScriptSourceProvider(this.configurationSettings, uriConverter, this.fs, httpClient)
-            );
+            scriptProviders.push(new CDNWidgetScriptSourceProvider(this.configurationSettings, httpClient));
         }
 
         // Only remote is supported at the moment

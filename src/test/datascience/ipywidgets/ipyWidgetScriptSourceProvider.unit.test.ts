@@ -16,7 +16,7 @@ import { IConfigurationService, IJupyterSettings } from '../../../platform/commo
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { IKernel, RemoteKernelSpecConnectionMetadata } from '../../../platform/../kernels/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { CDNWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider';
+import { CDNWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider.node';
 import { IPyWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/ipyWidgetScriptSourceProvider';
 import { LocalWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/localWidgetScriptSourceProvider.node';
 import { RemoteWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/remoteWidgetScriptSourceProvider';
