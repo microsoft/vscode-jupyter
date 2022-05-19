@@ -152,9 +152,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private readonly appShell: IApplicationShell,
         private readonly browser: IBrowserService,
         private readonly extensionChecker: IPythonExtensionChecker,
-        // Once https://github.com/microsoft/vscode/issues/149868 is complete
-        // we should be able to use this to pass an additional resource root to VS code for notebooks
-        _scriptConverter: ILocalResourceUriConverter,
+        scriptConverter: ILocalResourceUriConverter,
         private serviceContainer: IServiceContainer
     ) {
         disposableRegistry.push(this);
@@ -169,8 +167,8 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             viewType,
             label,
             this.handleExecution.bind(this),
-            this.getRendererScripts()
-            //[this.scriptConverter.rootScriptFolder]
+            this.getRendererScripts(),
+            [scriptConverter.rootScriptFolder]
         );
 
         // Fill in extended info for our controller

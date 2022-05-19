@@ -105,15 +105,16 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             controller: NotebookController
         ) => void | Thenable<void>,
         rendererScripts?: NotebookRendererScript[],
-        additionalLocalResourceRoots?: Uri[]
+        _additionalLocalResourceRoots?: Uri[]
     ): NotebookController {
         return notebooks.createNotebookController(
             id,
             viewType,
             label,
             handler,
-            rendererScripts,
-            additionalLocalResourceRoots
+            rendererScripts
+            // Not suported yet. See https://github.com/microsoft/vscode/issues/149868
+            // additionalLocalResourceRoots
         );
     }
 
