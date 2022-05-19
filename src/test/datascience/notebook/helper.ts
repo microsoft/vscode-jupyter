@@ -137,25 +137,12 @@ export async function deleteAllCellsAndWait() {
     );
 }
 
-export async function createTemporaryNotebookFromFile(
-    file: Uri,
+async function createTemporaryNotebookFromNotebook(
+    notebook: nbformat.INotebookContent,
     disposables: IDisposable[],
-    kernelName: string = 'Python 3'
-) {
-    const services = await getServices();
-    const fileSystem = services.serviceContainer.get<IFileSystem>(IFileSystem);
-    const contents = await fileSystem.readFile(file);
-    const notebook = JSON.parse(contents) as nbformat.INotebookContent;
-    return createTemporaryNotebook(notebook.cells, disposables, kernelName, undefined, urlPath.basename(file));
-}
-
-export async function createTemporaryNotebook(
-    cells: (nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | nbformat.IUnrecognizedCell)[],
-    disposables: IDisposable[],
-    kernelName: string = 'Python 3',
     rootFolder?: Uri,
     prefix?: string
-): Promise<Uri> {
+) {
     const services = await getServices();
     const platformService = services.serviceContainer.get<IPlatformService>(IPlatformService);
     const workspaceService = services.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
@@ -165,6 +152,36 @@ export async function createTemporaryNotebook(
         workspaceService.rootFolder ||
         Uri.file('./').with({ scheme: 'vscode-test-web' });
     const uri = urlPath.joinPath(rootUrl, `${prefix || ''}${uuid()}.ipynb`);
+    await workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(notebook)));
+
+    disposables.push({
+        dispose: () => swallowExceptions(() => workspace.fs.delete(uri))
+    });
+    return uri;
+}
+
+export async function createTemporaryNotebookFromFile(
+    file: Uri,
+    disposables: IDisposable[],
+    kernelName: string = 'Python 3'
+) {
+    const services = await getServices();
+    const fileSystem = services.serviceContainer.get<IFileSystem>(IFileSystem);
+    const contents = await fileSystem.readFile(file);
+    const notebook = JSON.parse(contents);
+    if (notebook.kernel) {
+        notebook.kernel.display_name = kernelName;
+    }
+    return createTemporaryNotebookFromNotebook(notebook, disposables, undefined, urlPath.basename(file));
+}
+
+export async function createTemporaryNotebook(
+    cells: (nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | nbformat.IUnrecognizedCell)[],
+    disposables: IDisposable[],
+    kernelName: string = 'Python 3',
+    rootFolder?: Uri,
+    prefix?: string
+): Promise<Uri> {
     cells =
         cells.length == 0
             ? [
@@ -188,12 +205,7 @@ export async function createTemporaryNotebook(
             display_name: kernelName
         }
     };
-    await workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(data)));
-
-    disposables.push({
-        dispose: () => swallowExceptions(() => workspace.fs.delete(uri))
-    });
-    return uri;
+    return createTemporaryNotebookFromNotebook(data, disposables, rootFolder, prefix);
 }
 
 /**
