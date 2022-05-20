@@ -5,7 +5,6 @@
 
 import { inject, injectable } from 'inversify';
 import { IHttpClient } from '../types';
-import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
 import { traceVerbose } from '../../logging';
 import * as fetch from 'cross-fetch';
@@ -13,8 +12,7 @@ import * as fetch from 'cross-fetch';
 @injectable()
 export class HttpClient implements IHttpClient {
     public readonly requestOptions: RequestInit;
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+    constructor(@inject(IWorkspaceService) workspaceService: IWorkspaceService) {
         this.requestOptions = { headers: { proxy: workspaceService.getConfiguration('http').get('proxy', '') } };
     }
 

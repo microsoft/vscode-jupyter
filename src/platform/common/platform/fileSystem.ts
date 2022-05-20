@@ -111,7 +111,8 @@ export class FileSystem implements IFileSystem {
     }
 
     async createTemporaryFile(options: { fileExtension?: string; prefix?: string }): Promise<TemporaryFileUri> {
-        // In non node situations, temporary files are created in the globalStorageUri location (extension specific)
+        // Global storage is guaranteed to be a writable location. Maybe the only one that works
+        // for both web and node.
         const tmpFolder = uriPath.joinPath(this.extensionContext.globalStorageUri, 'tmp');
         await this.vscfs.createDirectory(tmpFolder);
         const fileUri = uriPath.joinPath(tmpFolder, `${options.prefix}-${uuid()}.${options.fileExtension}`);

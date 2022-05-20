@@ -487,17 +487,21 @@ let workedAroundVSCodeNotebookStartPage = false;
  * Solution, try to trigger the display of the start page displayed before starting the tests.
  */
 export async function workAroundVSCodeNotebookStartPages() {
-    if (workedAroundVSCodeNotebookStartPage) {
-        return;
-    }
-    workedAroundVSCodeNotebookStartPage = true;
-    const { editorProvider } = await getServices();
-    await closeActiveWindows();
+    try {
+        if (workedAroundVSCodeNotebookStartPage) {
+            return;
+        }
+        workedAroundVSCodeNotebookStartPage = true;
+        const { editorProvider } = await getServices();
+        await closeActiveWindows();
 
-    // Open a notebook, VS Code will open the start page (wait for 5s for VSCode to react & open it)
-    await editorProvider.createNew();
-    await sleep(5_000);
-    await closeActiveWindows();
+        // Open a notebook, VS Code will open the start page (wait for 5s for VSCode to react & open it)
+        await editorProvider.createNew();
+        await sleep(5_000);
+        await closeActiveWindows();
+    } catch (ex) {
+        // Don't fail because closing didn't work.
+    }
 }
 
 export async function prewarmNotebooks() {
