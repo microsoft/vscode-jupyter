@@ -1,7 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type { ContentsManager, Kernel, KernelSpecManager, Session, SessionManager } from '@jupyterlab/services';
+import type {
+    Contents,
+    ContentsManager,
+    Kernel,
+    KernelSpecManager,
+    Session,
+    SessionManager
+} from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { Cancellation } from '../../../platform/common/cancellation';
@@ -21,15 +28,18 @@ import {
     isLocalConnection,
     IJupyterConnection,
     ISessionWithSocket,
-    KernelActionSource
+    KernelActionSource,
+    IJupyterServerSession
 } from '../../types';
 import { DisplayOptions } from '../../displayOptions';
-import { IJupyterBackingFileCreator, IJupyterKernelService, IJupyterRequestCreator } from '../types';
+import { IBackupFile, IJupyterBackingFileCreator, IJupyterKernelService, IJupyterRequestCreator } from '../types';
 import { Uri } from 'vscode';
 import { generateBackingIPyNbFileName } from './backingFileCreator.base';
 
 // function is
-export class JupyterSession extends BaseJupyterSession {
+export class JupyterSession extends BaseJupyterSession implements IJupyterServerSession {
+    public override readonly kind: 'remoteJupyter' | 'localJupyter';
+
     constructor(
         resource: Resource,
         private connInfo: IJupyterConnection,
@@ -53,6 +63,12 @@ export class JupyterSession extends BaseJupyterSession {
             workingDirectory,
             interruptTimeout
         );
+
+        this.kind = connInfo.localLaunch ? 'localJupyter' : 'remoteJupyter';
+    }
+
+    public override isServerSession(): this is IJupyterServerSession {
+        return true;
     }
 
     @captureTelemetry(Telemetry.WaitForIdleJupyter, undefined, true)
@@ -190,6 +206,53 @@ export class JupyterSession extends BaseJupyterSession {
         return promise;
     }
 
+    async invokeWithFileSynced(contents: string, handler: (file: IBackupFile) => Promise<void>): Promise<void> {
+        if (!this.resource) {
+            return;
+        }
+
+        const backingFile = await this.backingFileCreator.createBackingFile(
+            this.resource,
+            this.workingDirectory,
+            this.kernelConnectionMetadata,
+            this.connInfo,
+            this.contentsManager
+        );
+
+        if (!backingFile) {
+            return;
+        }
+
+        await this.contentsManager
+            .save(backingFile!.filePath, {
+                content: JSON.parse(contents),
+                type: 'notebook'
+            })
+            .ignoreErrors();
+
+        await handler({
+            filePath: backingFile.filePath,
+            dispose: backingFile.dispose.bind(backingFile)
+        });
+
+        await backingFile.dispose();
+        await this.contentsManager.delete(backingFile.filePath).ignoreErrors();
+    }
+
+    async createTempfile(ext: string): Promise<string> {
+        const tempFile = await this.contentsManager.newUntitled({ type: 'file', ext });
+        return tempFile.path;
+    }
+
+    async deleteTempfile(file: string): Promise<void> {
+        await this.contentsManager.delete(file);
+    }
+
+    async getContents(file: string, format: Contents.FileFormat): Promise<Contents.IModel> {
+        const data = await this.contentsManager.get(file, { type: 'file', format: format, content: true });
+        return data;
+    }
+
     private async createSession(options: {
         token: CancellationToken;
         ui: IDisplayOptions;
@@ -283,7 +346,7 @@ export class JupyterSession extends BaseJupyterSession {
                         throw new JupyterSessionStartError(new Error(`No kernel created`));
                     })
                     .catch((ex) => Promise.reject(new JupyterSessionStartError(ex)))
-                    .finally(() => {
+                    .finally(async () => {
                         if (this.connInfo && backingFile) {
                             this.contentsManager.delete(backingFile.filePath).ignoreErrors();
                         }

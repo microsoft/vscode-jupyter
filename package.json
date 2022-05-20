@@ -346,25 +346,25 @@
                 "command": "jupyter.export",
                 "title": "%DataScience.notebookExportAs%",
                 "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+                "enablement": "isWorkspaceTrusted && !jupyter.webExtension || isWorkspaceTrusted && jupyter.webExtension && notebookKernel =~ /^ms-toolsai.jupyter\\//"
             },
             {
                 "command": "jupyter.exportAsPythonScript",
                 "title": "%jupyter.command.jupyter.exportAsPythonScript.title%",
                 "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+                "enablement": "isWorkspaceTrusted && !jupyter.webExtension || isWorkspaceTrusted && jupyter.webExtension && notebookKernel =~ /^ms-toolsai.jupyter\\//"
             },
             {
                 "command": "jupyter.exportToHTML",
                 "title": "%jupyter.command.jupyter.exportToHTML.title%",
                 "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+                "enablement": "isWorkspaceTrusted && !jupyter.webExtension || isWorkspaceTrusted && jupyter.webExtension && notebookKernel =~ /^ms-toolsai.jupyter\\//"
             },
             {
                 "command": "jupyter.exportToPDF",
                 "title": "%jupyter.command.jupyter.exportToPDF.title%",
                 "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+                "enablement": "isWorkspaceTrusted && !jupyter.webExtension || isWorkspaceTrusted && jupyter.webExtension && notebookKernel =~ /^ms-toolsai.jupyter\\//"
             },
             {
                 "command": "jupyter.selectJupyterInterpreter",

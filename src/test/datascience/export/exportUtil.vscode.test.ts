@@ -32,8 +32,10 @@ suite('DataScience - Export Util', () => {
     suiteTeardown(() => closeActiveWindows(testDisposables));
     test('Remove svgs from model', async () => {
         const exportUtil = api.serviceContainer.get<ExportUtil>(ExportUtil);
+        const contents = fs.readFileSync(testPdfIpynb.fsPath).toString();
 
-        await exportUtil.removeSvgs(testPdfIpynb);
+        const contentsWithoutSvg = await exportUtil.removeSvgs(contents);
+        await fs.writeFile(testPdfIpynb.fsPath, contentsWithoutSvg);
         const model = JSON.parse(fs.readFileSync(testPdfIpynb.fsPath).toString()) as nbformat.INotebookContent;
 
         // make sure no svg exists in model

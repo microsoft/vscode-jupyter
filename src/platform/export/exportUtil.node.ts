@@ -3,14 +3,23 @@ import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from '../../platform/vscode-path/path';
 import * as uuid from 'uuid/v4';
-import { Uri } from 'vscode';
 import { TemporaryDirectory } from '../common/platform/types';
 import { IFileSystemNode } from '../common/platform/types.node';
 import { sleep } from '../common/utils/async';
+import { ExportUtilBase } from './exportUtil';
+import { IExtensions } from '../common/types';
+import { ExportFormat, IExportDialog } from './types';
+import { Uri } from 'vscode';
 
 @injectable()
-export class ExportUtil {
-    constructor(@inject(IFileSystemNode) private fs: IFileSystemNode) {}
+export class ExportUtil extends ExportUtilBase {
+    constructor(
+        @inject(IFileSystemNode) private fs: IFileSystemNode,
+        @inject(IExtensions) extensions: IExtensions,
+        @inject(IExportDialog) filePicker: IExportDialog
+    ) {
+        super(extensions, filePicker);
+    }
 
     public async generateTempDir(): Promise<TemporaryDirectory> {
         const resultDir = path.join(os.tmpdir(), uuid());
@@ -36,6 +45,22 @@ export class ExportUtil {
         };
     }
 
+    override async getTargetFile(
+        format: ExportFormat,
+        source: Uri,
+        defaultFileName?: string | undefined
+    ): Promise<Uri | undefined> {
+        let target;
+
+        if (format !== ExportFormat.python) {
+            target = await this.filePicker.showDialog(format, source, defaultFileName);
+        } else {
+            target = Uri.file((await this.fs.createTemporaryLocalFile('.py')).filePath);
+        }
+
+        return target;
+    }
+
     public async makeFileInDirectory(contents: string, fileName: string, dirPath: string): Promise<string> {
         const newFilePath = path.join(dirPath, fileName);
 
@@ -44,8 +69,7 @@ export class ExportUtil {
         return newFilePath;
     }
 
-    public async removeSvgs(source: Uri) {
-        const model = await this.fs.readFile(source);
+    public async removeSvgs(model: string) {
         const content = JSON.parse(model) as nbformat.INotebookContent;
         for (const cell of content.cells) {
             const outputs = 'outputs' in cell ? (cell.outputs as nbformat.IOutput[]) : undefined;
@@ -53,7 +77,7 @@ export class ExportUtil {
                 this.removeSvgFromOutputs(outputs);
             }
         }
-        await this.fs.writeFile(source, JSON.stringify(content, undefined, 4));
+        return JSON.stringify(content, undefined, 4);
     }
 
     private removeSvgFromOutputs(outputs: nbformat.IOutput[]) {

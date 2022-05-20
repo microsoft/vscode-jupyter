@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, no-invalid-this, @typescript-eslint/no-explicit-any */
 import { assert } from 'chai';
 import * as path from '../../../platform/vscode-path/path';
-import { CancellationTokenSource, Uri } from 'vscode';
+import { CancellationTokenSource, Uri, workspace } from 'vscode';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { ExportInterpreterFinder } from '../../../platform/export/exportInterpreterFinder.node';
 import { INbConvertExport, ExportFormat } from '../../../platform/export/types';
@@ -29,15 +29,13 @@ suite('DataScience - Export HTML', function () {
         await file.dispose();
         const token = new CancellationTokenSource();
         const interpreter = await exportInterpreterFinder.getExportInterpreter();
-        await exportToHTML.export(
-            Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'export', 'test.ipynb')),
-            target,
-            interpreter,
-            token.token
+        const document = await workspace.openNotebookDocument(
+            Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'export', 'test.ipynb'))
         );
-
-        assert.equal(await fileSystem.localFileExists(target.fsPath), true);
-        const fileContents = await fileSystem.readLocalFile(target.fsPath);
+        await exportToHTML.export(document, target, interpreter, token.token);
+        assert.exists(target);
+        assert.equal(await fileSystem.localFileExists(target!.fsPath), true);
+        const fileContents = await fileSystem.readLocalFile(target!.fsPath);
         assert.include(fileContents, '<!DOCTYPE html>');
         // this is the content of a cell
         assert.include(fileContents, 'f6886df81f3d4023a2122cc3f55fdbec');

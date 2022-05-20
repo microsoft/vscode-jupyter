@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken, Uri } from 'vscode';
 import { traceError } from '../../../platform/logging';
 import { IPythonExecutionFactory, IPythonDaemonExecutionService } from '../../../platform/common/process/types.node';
-import { reportAction } from '../../../platform/progress/decorator.node';
+import { reportAction } from '../../../platform/progress/decorator';
 import { ReportableAction } from '../../../platform/progress/types';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { JupyterDaemonModule } from '../../../webviews/webview-side/common/constants';
