@@ -937,7 +937,7 @@
                     "command": "jupyter.notebookeditor.export",
                     "title": "%DataScience.notebookExportAs%",
                     "group": "navigation@4",
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.globalToolbar != true && jupyter.ispythonnotebook"
+                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.globalToolbar != true"
                 },
                 {
                     "command": "jupyter.selectNativeJupyterUriFromToolBar",
@@ -970,7 +970,7 @@
                 {
                     "command": "jupyter.notebookeditor.export",
                     "group": "Jupyter",
-                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.ispythonnotebook"
+                    "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.replayPylanceLogStep",
