@@ -20,9 +20,10 @@ import { KernelFinder } from './kernelFinder.web';
 import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
 import { IDataScienceCommandListener } from '../platform/common/types';
 import { KernelCommandListener } from './kernelCommandListener';
-import { IJupyterVariables, IRootDirectory } from './variables/types';
+import { IJupyterVariables } from './variables/types';
 import { DebuggerVariables } from './variables/debuggerVariables';
-import { RootDirectory } from './variables/rootDirectory.web';
+import { IFileSystem } from '../platform/common/platform/types';
+import { FileSystem } from '../platform/common/platform/fileSystem.web';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
@@ -52,7 +53,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     const rawService = serviceManager.get<IRawNotebookSupportedService>(IRawNotebookSupportedService);
     setSharedProperty('rawKernelSupported', rawService.isSupported ? 'true' : 'false');
 
-    serviceManager.addSingleton<IRootDirectory>(IRootDirectory, RootDirectory);
+    serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
     serviceManager.addSingleton<IJupyterVariables>(
         IJupyterVariables,
         DebuggerVariables,

@@ -20,6 +20,10 @@ export class FileSystem implements IFileSystem {
         this.vscfs = vscode.workspace.fs;
     }
 
+    public normalize(path: string): vscode.Uri {
+        return vscode.Uri.file(path);
+    }
+
     // API based on VS Code fs API
     arePathsSame(path1: vscode.Uri, path2: vscode.Uri): boolean {
         if (path1.scheme === 'file' && path1.scheme === path2.scheme) {
@@ -70,7 +74,7 @@ export class FileSystem implements IFileSystem {
 
     async getFiles(dir: vscode.Uri): Promise<vscode.Uri[]> {
         const files = await this.vscfs.readDirectory(dir);
-        return files.filter((f) => f[1] === vscode.FileType.File).map((f) => vscode.Uri.file(f[0]));
+        return files.filter((f) => f[1] === vscode.FileType.File).map((f) => this.normalize(f[0]));
     }
 
     // URI-based filesystem functions

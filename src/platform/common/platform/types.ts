@@ -47,6 +47,7 @@ export interface IExecutables {
 
 export const IFileSystem = Symbol('IFileSystem');
 export interface IFileSystem {
+    normalize(path: string): vscode.Uri;
     areLocalPathsSame(path1: string, path2: string): boolean;
     createLocalDirectory(path: string): Promise<void>;
     copyLocal(source: string, destination: string): Promise<void>;

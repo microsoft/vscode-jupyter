@@ -5,11 +5,12 @@ import * as tmp from 'tmp';
 import { promisify } from 'util';
 import * as vscode from 'vscode';
 import { traceError } from '../../logging';
-import { isFileNotFoundError } from './errors.node';
+import { isFileNotFoundError } from './errors';
 import { convertFileType, convertStat, getHashString } from './fileSystemUtils.node';
 import { TemporaryFile } from './types';
 import { IFileSystemNode } from './types.node';
 import { FileSystem as FileSystemBase } from './fileSystem';
+import { EXTENSION_ROOT_DIR } from '../../constants.node';
 
 /**
  * File system abstraction which wraps the VS Code API.
@@ -20,6 +21,10 @@ export class FileSystem extends FileSystemBase implements IFileSystemNode {
     constructor() {
         super();
         this.globFiles = promisify(glob);
+    }
+
+    public async extensionRootDirectory() {
+        return EXTENSION_ROOT_DIR;
     }
 
     public async appendLocalFile(path: string, text: string): Promise<void> {
@@ -114,7 +119,7 @@ export class FileSystem extends FileSystemBase implements IFileSystemNode {
         try {
             // Note that we are using stat() rather than lstat().  This
             // means that any symlinks are getting resolved.
-            const uri = vscode.Uri.file(filename);
+            const uri = this.normalize(filename);
             stat = await this.stat(uri);
         } catch (err) {
             if (isFileNotFoundError(err)) {
