@@ -9,6 +9,7 @@ import { Commands } from '../../../platform/common/constants';
 import { INotebookControllerManager } from '../../../notebooks/types';
 import { JupyterServerSelectorCommand } from '../../../kernels/jupyter/commands/serverSelector';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
+import { IJupyterPasswordConnect } from '../../../kernels/jupyter/types';
 
 /* eslint-disable  */
 suite('DataScience - Server Selector Command', () => {
@@ -22,12 +23,14 @@ suite('DataScience - Server Selector Command', () => {
         serverSelector = mock(JupyterServerSelector);
         controllerManager = mock(controllerManager);
         const uriStorage = mock(JupyterServerUriStorage);
+        const passwordConnect = mock<IJupyterPasswordConnect>();
 
         serverSelectorCommand = new JupyterServerSelectorCommand(
             instance(commandManager),
             instance(serverSelector),
             instance(uriStorage),
-            instance(controllerManager)
+            instance(controllerManager),
+            instance(passwordConnect)
         );
     });
 
