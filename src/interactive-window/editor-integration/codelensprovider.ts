@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, optional } from 'inversify';
 import * as vscode from 'vscode';
 
 import {
@@ -38,7 +38,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     private didChangeCodeLenses: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IDebugLocationTracker) private debugLocationTracker: IDebugLocationTracker,
+        @inject(IDebugLocationTracker) @optional() private debugLocationTracker: IDebugLocationTracker | undefined,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(ICommandManager) private commandManager: ICommandManager,
@@ -56,7 +56,9 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         );
         disposableRegistry.push(this.debugService.onDidChangeActiveDebugSession(this.onChangeDebugSession.bind(this)));
         disposableRegistry.push(this.documentManager.onDidCloseTextDocument(this.onDidCloseTextDocument.bind(this)));
-        disposableRegistry.push(this.debugLocationTracker.updated(this.onDebugLocationUpdated.bind(this)));
+        if (this.debugLocationTracker) {
+            disposableRegistry.push(this.debugLocationTracker.updated(this.onDebugLocationUpdated.bind(this)));
+        }
     }
 
     public dispose() {
@@ -128,7 +130,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     private adjustDebuggingLenses(document: vscode.TextDocument, lenses: vscode.CodeLens[]): vscode.CodeLens[] {
         const debugCellList = CodeLensCommands.DebuggerCommands;
 
-        if (this.debugService.activeDebugSession) {
+        if (this.debugLocationTracker && this.debugService.activeDebugSession) {
             const debugLocation = this.debugLocationTracker.getLocation(this.debugService.activeDebugSession);
 
             // Debug locations only work on local paths, so check against fsPath here.

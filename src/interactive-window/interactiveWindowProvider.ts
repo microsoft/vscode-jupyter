@@ -30,7 +30,7 @@ import { noop } from '../platform/common/utils/misc';
 import { IServiceContainer } from '../platform/ioc/types';
 import { KernelConnectionMetadata } from '../kernels/types';
 import { INotebookControllerManager } from '../notebooks/types';
-import { InteractiveWindow } from './interactiveWindow.node';
+import { InteractiveWindow } from './interactiveWindow';
 import { JVSC_EXTENSION_ID } from '../platform/common/constants';
 import {
     IInteractiveWindow,
@@ -38,7 +38,7 @@ import {
     IInteractiveWindowProvider,
     INativeInteractiveWindow
 } from './types';
-import { getInteractiveWindowTitle } from './identity.node';
+import { getInteractiveWindowTitle } from './identity';
 import { createDeferred } from '../platform/common/utils/async';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { INotebookExporter } from '../kernels/jupyter/types';
@@ -156,7 +156,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
                 this.serviceContainer.get<IFileSystem>(IFileSystem),
                 this.serviceContainer.get<IConfigurationService>(IConfigurationService),
                 commandManager,
-                this.serviceContainer.get<INotebookExporter>(INotebookExporter),
+                this.serviceContainer.tryGet<INotebookExporter>(INotebookExporter),
                 this.serviceContainer.get<IWorkspaceService>(IWorkspaceService),
                 resource,
                 mode,
@@ -224,7 +224,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             !this.globalMemento.get(AskedForPerFileSettingKey) &&
             this._windows.length === 1 &&
             // Only prompt if the submitting file is different
-            this._windows[0].owner?.fsPath !== resource.fsPath
+            (!this._windows[0].owner || !this.fs.arePathsSame(this._windows[0].owner, resource))
         ) {
             // See if the first window was tied to a file or not.
             this.globalMemento.update(AskedForPerFileSettingKey, true).then(noop, noop);
@@ -274,7 +274,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             if (!owner && !w.owner && !connection) {
                 return true;
             }
-            if (owner && w.owner && this.fs.areLocalPathsSame(owner.fsPath, w.owner.fsPath)) {
+            if (owner && w.owner && this.fs.arePathsSame(owner, w.owner)) {
                 return !connection || w.kernelConnectionMetadata?.id === connection.id;
             }
             return false;

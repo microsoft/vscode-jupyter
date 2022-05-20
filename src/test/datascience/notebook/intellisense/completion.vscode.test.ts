@@ -8,7 +8,7 @@ import { commands, CompletionList, Position } from 'vscode';
 import { IVSCodeNotebook } from '../../../../platform/common/application/types';
 import { traceInfo } from '../../../../platform/logging';
 import { IDisposable } from '../../../../platform/common/types';
-import { InteractiveWindowProvider } from '../../../../interactive-window/interactiveWindowProvider.node';
+import { InteractiveWindowProvider } from '../../../../interactive-window/interactiveWindowProvider';
 import { getTextOutputValue } from '../../../../notebooks/helpers';
 import { captureScreenShot, IExtensionTestApi } from '../../../common.node';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants.node';

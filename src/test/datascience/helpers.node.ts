@@ -8,8 +8,8 @@ import * as vscode from 'vscode';
 import { IPythonApiProvider } from '../../platform/api/types';
 import { arePathsSame } from '../../platform/common/platform/fileUtils.node';
 import { IJupyterSettings, Resource } from '../../platform/common/types';
-import { InteractiveWindow } from '../../interactive-window/interactiveWindow.node';
-import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider.node';
+import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
+import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
 import { sleep, waitForCondition } from '../common.node';
 import {
     createTemporaryFile,

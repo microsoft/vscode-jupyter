@@ -105,7 +105,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         private readonly fs: IFileSystem,
         private readonly configuration: IConfigurationService,
         private readonly commandManager: ICommandManager,
-        private readonly jupyterExporter: INotebookExporter,
+        private readonly jupyterExporter: INotebookExporter | undefined,
         private readonly workspaceService: IWorkspaceService,
         private _owner: Resource,
         private mode: InteractiveWindowMode,
@@ -798,7 +798,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             // Bring up the export file dialog box
             const uri = await this.exportDialog.showDialog(ExportFormat.ipynb, this.owningResource);
             if (uri) {
-                await this.jupyterExporter.exportToFile(cells, getFilePath(uri));
+                await this.jupyterExporter?.exportToFile(cells, getFilePath(uri));
             }
         }
     }
@@ -819,7 +819,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         let defaultFileName;
         if (this.submitters && this.submitters.length) {
             const lastSubmitter = this.submitters[this.submitters.length - 1];
-            defaultFileName = path.basename(lastSubmitter.fsPath, path.extname(lastSubmitter.fsPath));
+            lastSubmitter;
+            defaultFileName = path.basename(lastSubmitter.path, path.extname(lastSubmitter.path));
         }
 
         // Then run the export command with these contents

@@ -21,7 +21,7 @@ import {
 } from '../../../../platform/common/types';
 import { createDeferred, sleep } from '../../../../platform/common/utils/async';
 import { Common, DataScience } from '../../../../platform/common/utils/localize';
-import { InteractiveWindowProvider } from '../../../../interactive-window/interactiveWindowProvider.node';
+import { InteractiveWindowProvider } from '../../../../interactive-window/interactiveWindowProvider';
 import { hasErrorOutput, translateCellErrorOutput } from '../../../../notebooks/helpers';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts';
 import { areInterpreterPathsSame, getInterpreterHash } from '../../../../platform/pythonEnvironments/info/interpreter';

@@ -7,7 +7,7 @@ import { IServiceManager } from '../ioc/types';
 import { ExtensionActivationManager } from './activationManager';
 
 import { IExtensionActivationManager, IExtensionSingleActivationService } from './types';
-import { InteractiveShiftEnterBanner } from '../../interactive-window/shiftEnterBanner.node';
+import { InteractiveShiftEnterBanner } from '../../interactive-window/shiftEnterBanner';
 import { WorkspaceActivation } from './workspaceActivation.node';
 
 // eslint-disable-next-line
