@@ -187,23 +187,24 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // Make sure to reload whenever we do something that changes state
         const forceLoad = () => this.loadNotebookControllers(true);
         this.serverUriStorage.onDidChangeUri(forceLoad, this, this.disposables);
-        this.serverUriStorage.onDidRemoveUri(
-            (uri) => {
-                // Remove controllers associated with remote connections that are no longer available.
-                const controllers = Array.from(this.registeredControllers.values());
-                controllers.forEach((item) => {
-                    if (
-                        item.connection.kind !== 'connectToLiveRemoteKernel' &&
-                        item.connection.kind !== 'startUsingRemoteKernelSpec'
-                    ) {
-                        return;
-                    }
-                    if (item.connection.serverId !== computeServerId(uri)) {
-                        return;
-                    }
-                    item.dispose();
-                });
-            },
+        this.serverUriStorage.onDidRemoveUris(
+            (uris) =>
+                uris.forEach((uri) => {
+                    // Remove controllers associated with remote connections that are no longer available.
+                    const controllers = Array.from(this.registeredControllers.values());
+                    controllers.forEach((item) => {
+                        if (
+                            item.connection.kind !== 'connectToLiveRemoteKernel' &&
+                            item.connection.kind !== 'startUsingRemoteKernelSpec'
+                        ) {
+                            return;
+                        }
+                        if (item.connection.serverId !== computeServerId(uri)) {
+                            return;
+                        }
+                        item.dispose();
+                    });
+                }),
             this,
             this.disposables
         );

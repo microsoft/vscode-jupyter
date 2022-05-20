@@ -35,7 +35,7 @@ export class LiveRemoteKernelConnectionUsageTracker
             mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources,
             {}
         );
-        this.uriStorage.onDidRemoveUri(this.onDidRemoveUri, this, this.disposables);
+        this.uriStorage.onDidRemoveUris(this.onDidRemoveUris, this, this.disposables);
     }
 
     public wasKernelUsed(connection: LiveRemoteKernelConnectionMetadata) {
@@ -87,14 +87,16 @@ export class LiveRemoteKernelConnectionUsageTracker
             )
             .then(noop, noop);
     }
-    private onDidRemoveUri(uri: string) {
-        const serverId = computeServerId(uri);
-        delete this.usedRemoteKernelServerIdsAndSessions[serverId];
-        this.memento
-            .update(
-                mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources,
-                this.usedRemoteKernelServerIdsAndSessions
-            )
-            .then(noop, noop);
+    private onDidRemoveUris(uris: string[]) {
+        uris.forEach((uri) => {
+            const serverId = computeServerId(uri);
+            delete this.usedRemoteKernelServerIdsAndSessions[serverId];
+            this.memento
+                .update(
+                    mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources,
+                    this.usedRemoteKernelServerIdsAndSessions
+                )
+                .then(noop, noop);
+        });
     }
 }

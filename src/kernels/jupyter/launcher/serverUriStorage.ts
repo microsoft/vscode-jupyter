@@ -24,9 +24,9 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
     public get onDidChangeUri() {
         return this._onDidChangeUri.event;
     }
-    private _onDidRemoveUri = new EventEmitter<string>();
-    public get onDidRemoveUri() {
-        return this._onDidRemoveUri.event;
+    private _onDidRemoveUris = new EventEmitter<string[]>();
+    public get onDidRemoveUris() {
+        return this._onDidRemoveUris.event;
     }
     constructor(
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
@@ -66,7 +66,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         if (activeUri === uri) {
             await this.setUriToLocal();
         }
-        this._onDidRemoveUri.fire(uri);
+        this._onDidRemoveUris.fire([uri]);
     }
     private async updateMemento(editedList: { uri: string; time: number; displayName?: string | undefined }[]) {
         // Sort based on time. Newest time first
@@ -141,6 +141,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         return this.lastSavedList;
     }
     public async clearUriList(): Promise<void> {
+        const uriList = await this.getSavedUriList();
         this.lastSavedList = Promise.resolve([]);
         // Clear out memento and encrypted storage
         await this.globalMemento.update(Settings.JupyterServerUriList, []);
@@ -148,6 +149,13 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
             Settings.JupyterServerRemoteLaunchService,
             Settings.JupyterServerRemoteLaunchUriListKey,
             undefined
+        );
+
+        // Notify out that we've removed the list to clean up controller entries, passwords, ect
+        this._onDidRemoveUris.fire(
+            uriList.map((uriListItem) => {
+                return uriListItem.uri;
+            })
         );
     }
     public getUri(): Promise<string> {
