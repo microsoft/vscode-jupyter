@@ -16,8 +16,11 @@ const ENCODING = 'utf8';
 @injectable()
 export class FileSystem implements IFileSystem {
     protected vscfs: vscode.FileSystem;
+    public rootDirectory: string;
+
     constructor() {
         this.vscfs = vscode.workspace.fs;
+        this.rootDirectory = vscode.Uri.file('/').path;
     }
 
     public normalize(path: string): vscode.Uri {
@@ -27,8 +30,7 @@ export class FileSystem implements IFileSystem {
     // API based on VS Code fs API
     arePathsSame(path1: vscode.Uri, path2: vscode.Uri): boolean {
         if (path1.scheme === 'file' && path1.scheme === path2.scheme) {
-            // eslint-disable-next-line local-rules/dont-use-fspath
-            return this.areLocalPathsSame(path1.fsPath, path2.fsPath);
+            return this.areLocalPathsSame(path1.path, path2.path);
         } else {
             return path1.toString() === path2.toString();
         }

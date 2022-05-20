@@ -13,10 +13,7 @@ import { IFileSystem } from './types';
 export class FileSystem extends FileSystemBase implements IFileSystem {
     constructor(@inject(IExtensionContext) private readonly context: IExtensionContext) {
         super();
-    }
-
-    public async extensionRootDirectory() {
-        return this.context.extensionUri.path;
+        this.rootDirectory = this.context.extensionUri.path;
     }
 
     public override normalize(path: string) {

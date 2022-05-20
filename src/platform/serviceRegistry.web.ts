@@ -35,7 +35,7 @@ import { FileConverter } from './export/fileConverter.web';
 import { ExportFileOpener } from './export/exportFileOpener';
 import { ExportToPythonPlain } from './export/exportToPythonPlain.web';
 import { IFileSystem } from './common/platform/types';
-import { FileSystem } from './common/platform/fileSystem';
+import { FileSystem } from './common/platform/fileSystem.web';
 import { NotebookWatcher } from '../webviews/extension-side/variablesView/notebookWatcher';
 import { DataViewerFactory } from '../webviews/extension-side/dataviewer/dataViewerFactory';
 import { IDataViewerFactory } from '../webviews/extension-side/dataviewer/types';

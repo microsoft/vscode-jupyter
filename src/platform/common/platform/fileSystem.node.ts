@@ -18,13 +18,21 @@ import { EXTENSION_ROOT_DIR } from '../../constants.node';
 @injectable()
 export class FileSystem extends FileSystemBase implements IFileSystemNode {
     private globFiles: (pat: string, options?: { cwd: string; dot?: boolean }) => Promise<string[]>;
+
     constructor() {
         super();
+        this.rootDirectory = EXTENSION_ROOT_DIR;
         this.globFiles = promisify(glob);
     }
 
-    public async extensionRootDirectory() {
-        return EXTENSION_ROOT_DIR;
+    // API based on VS Code fs API
+    override arePathsSame(path1: vscode.Uri, path2: vscode.Uri): boolean {
+        if (path1.scheme === 'file' && path1.scheme === path2.scheme) {
+            // eslint-disable-next-line local-rules/dont-use-fspath
+            return this.areLocalPathsSame(path1.fsPath, path2.fsPath);
+        } else {
+            return path1.toString() === path2.toString();
+        }
     }
 
     public async appendLocalFile(path: string, text: string): Promise<void> {

@@ -8,6 +8,7 @@ import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 import { IDebugService, IVSCodeNotebook } from '../../platform/common/application/types';
+// TODO: Clean this up. And the SysPath use cases in this file.
 import { DataFrameLoading, GetVariableInfo } from '../../platform/common/namespaces';
 import { traceError } from '../../platform/logging';
 import { IConfigurationService, Resource } from '../../platform/common/types';
@@ -22,10 +23,10 @@ import {
     IConditionalJupyterVariables,
     IJupyterVariable,
     IJupyterVariablesRequest,
-    IJupyterVariablesResponse,
-    IRootDirectory
+    IJupyterVariablesResponse
 } from './types';
 import { convertDebugProtocolVariableToIJupyterVariable, DataViewableTypes } from './helpers';
+import { IFileSystem } from '../../platform/common/platform/types';
 
 const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
 const MaximumRowChunkSizeForDebugger = 100;
@@ -49,7 +50,7 @@ export class DebuggerVariables
         @inject(IDebuggingManager) private readonly debuggingManager: IDebuggingManager,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(IRootDirectory) private readonly rootDirectory: IRootDirectory
+        @inject(IFileSystem) private readonly fs: IFileSystem
     ) {
         super(undefined);
         this.debuggingManager.onDoneDebugging(() => this.refreshEventEmitter.fire(), this);
@@ -119,7 +120,7 @@ export class DebuggerVariables
         if (this.active) {
             // Note, full variable results isn't necessary for this call. It only really needs the variable value.
             const result = this.lastKnownVariables.find((v) => v.name === name);
-            if (result && kernel?.resourceUri?.fsPath.endsWith('.ipynb')) {
+            if (result && kernel?.resourceUri?.path.endsWith('.ipynb')) {
                 sendTelemetryEvent(Telemetry.RunByLineVariableHover);
             }
             return result;
@@ -160,7 +161,7 @@ export class DebuggerVariables
         );
 
         const notebook = getAssociatedNotebookDocument(kernel);
-        let fileName = notebook ? path.basename(notebook.uri.fsPath) : '';
+        let fileName = notebook ? path.basename(notebook.uri.path) : '';
         if (!fileName && this.debugLocation?.fileName) {
             fileName = path.basename(this.debugLocation.fileName);
         }
@@ -319,7 +320,7 @@ export class DebuggerVariables
             // Run our dataframe scripts only once per session because they're slow
             const key = this.debugService.activeDebugSession?.id;
             if (key && !this.importedDataFrameScriptsIntoKernel.has(key)) {
-                await this.evaluate(DataFrameLoading.DataFrameSysImport(this.rootDirectory.path));
+                await this.evaluate(DataFrameLoading.DataFrameSysImport(this.fs.rootDirectory));
                 this.importedDataFrameScriptsIntoKernel.add(key);
             }
         } catch (exc) {
@@ -332,7 +333,7 @@ export class DebuggerVariables
             // Run our variable info scripts only once per session because they're slow
             const key = this.debugService.activeDebugSession?.id;
             if (key && !this.importedGetVariableInfoScriptsIntoKernel.has(key)) {
-                await this.evaluate(GetVariableInfo.GetVariableInfoSysImport(this.rootDirectory.path));
+                await this.evaluate(GetVariableInfo.GetVariableInfoSysImport(this.fs.rootDirectory));
                 this.importedGetVariableInfoScriptsIntoKernel.add(key);
             }
         } catch (exc) {
