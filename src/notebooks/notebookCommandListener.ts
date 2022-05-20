@@ -72,7 +72,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
     }
 
     private removeAllCells() {
-        const document = this.notebooks.activeNotebookEditor?.document;
+        const document = this.notebooks.activeNotebookEditor?.notebook;
         if (!document) {
             return;
         }
@@ -84,7 +84,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         ).then(noop, noop);
     }
     private collapseAll() {
-        const document = this.notebooks.activeNotebookEditor?.document;
+        const document = this.notebooks.activeNotebookEditor?.notebook;
         if (!document) {
             return;
         }
@@ -98,7 +98,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
     }
 
     private expandAll() {
-        const document = this.notebooks.activeNotebookEditor?.document;
+        const document = this.notebooks.activeNotebookEditor?.notebook;
         if (!document) {
             return;
         }

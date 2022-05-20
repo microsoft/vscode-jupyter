@@ -221,7 +221,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
 
         await openNotebook(nbFile);
         await waitForKernelToGetAutoSelected();
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         assert.equal(cell.outputs.length, 0);
 
         // The prompt should be displayed when we run a cell.
@@ -595,7 +595,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         // Now that IPyKernel is missing, if we attempt to restart a kernel, we should get a prompt.
         // Previously things just hang at weird spots, its not a likely scenario, but this test ensures the code works as expected.
         const startController = controllerManager.getSelectedNotebookController(
-            vscodeNotebook.activeNotebookEditor?.document!
+            vscodeNotebook.activeNotebookEditor?.notebook!
         );
         assert.ok(startController);
 
@@ -618,7 +618,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             waitForCondition(
                 async () => {
                     const newController = controllerManager.getSelectedNotebookController(
-                        vscodeNotebook.activeNotebookEditor?.document!
+                        vscodeNotebook.activeNotebookEditor?.notebook!
                     );
                     assert.ok(newController);
                     assert.notEqual(startController?.id, newController!.id);
@@ -653,7 +653,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
 
         await openNotebook(nbFile);
         await waitForKernelToGetAutoSelected();
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         assert.equal(cell.outputs.length, 0);
 
         // Insert another cell so we can test run all
@@ -702,7 +702,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         promptToInstall.dispose();
 
         assert.strictEqual(
-            window.activeNotebookEditor?.document.cellAt(0).outputs.length,
+            window.activeNotebookEditor?.notebook.cellAt(0).outputs.length,
             0,
             'Should not have any outputs with ipykernel missing error'
         );
@@ -805,7 +805,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
                 );
                 selectADifferentKernelStub = result.selectADifferentKernelStub;
             }
-            const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+            const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
 
             console.log('Stepc');
             await Promise.all([

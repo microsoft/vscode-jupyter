@@ -45,7 +45,7 @@ export class RendererCommunication implements IExtensionSingleActivationService,
         };
         api.onDidReceiveMessage(
             ({ editor, message }) => {
-                const document = editor.document || window.activeNotebookEditor?.document;
+                const document = editor.notebook || window.activeNotebookEditor?.notebook;
                 if (!document) {
                     return;
                 }

@@ -76,7 +76,7 @@ export function sharedIPyWidgetStandardTests(
 
         // This flag will be resolved when the widget loads
         const flag = createDeferred<boolean>();
-        flagForWebviewLoad(flag, vscodeNotebook.activeNotebookEditor?.document!);
+        flagForWebviewLoad(flag, vscodeNotebook.activeNotebookEditor?.notebook!);
 
         // Execute cell. It should load and render the widget
         await runCell(cell);
@@ -109,7 +109,7 @@ export function sharedIPyWidgetStandardTests(
 
         // This flag will be resolved when the widget loads
         const flag = createDeferred<boolean>();
-        flagForWebviewLoad(flag, vscodeNotebook.activeNotebookEditor?.document!);
+        flagForWebviewLoad(flag, vscodeNotebook.activeNotebookEditor?.notebook!);
 
         // Execute cell. It should load and render the widget
         await runCell(cell);
@@ -140,7 +140,7 @@ export function sharedIPyWidgetStandardTests(
     function getNotebookCommunications(notebook: NotebookDocument) {
         const items: INotebookCommunication[] = [];
         window.visibleNotebookEditors.forEach((editor) => {
-            if (editor.document !== notebook) {
+            if (editor.notebook !== notebook) {
                 return;
             }
             const comm = widgetCoordinator.notebookCommunications.get(editor);

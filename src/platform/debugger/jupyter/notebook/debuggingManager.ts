@@ -69,8 +69,8 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             this.vscNotebook.onDidChangeActiveNotebookEditor(
                 (e?: NotebookEditor) => {
                     if (e) {
-                        this.updateCellToolbar(this.isDebugging(e.document));
-                        this.updateToolbar(this.isDebugging(e.document));
+                        this.updateCellToolbar(this.isDebugging(e.notebook));
+                        this.updateToolbar(this.isDebugging(e.notebook));
                     }
                 },
                 this,
@@ -110,7 +110,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 if (!cell) {
                     const range = editor?.selections[0];
                     if (range) {
-                        cell = editor?.document.cellAt(range.start);
+                        cell = editor?.notebook.cellAt(range.start);
                     }
                 }
 
@@ -126,7 +126,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                     const editor = this.vscNotebook.activeNotebookEditor;
                     const range = editor?.selections[0];
                     if (range) {
-                        cell = editor?.document.cellAt(range.start);
+                        cell = editor?.notebook.cellAt(range.start);
                     }
                 }
 
@@ -147,7 +147,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             this.commandManager.registerCommand(DSCommands.RunByLineStop, () => {
                 const editor = this.vscNotebook.activeNotebookEditor;
                 if (editor) {
-                    const controller = this.notebookToRunByLineController.get(editor.document);
+                    const controller = this.notebookToRunByLineController.get(editor.notebook);
                     if (controller) {
                         sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, {
                             reason: 'withKeybinding'
@@ -163,7 +163,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 if (!cell) {
                     const range = editor?.selections[0];
                     if (range) {
-                        cell = editor?.document.cellAt(range.start);
+                        cell = editor?.notebook.cellAt(range.start);
                     }
                 }
 
@@ -225,12 +225,12 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
             return;
         }
 
-        if (this.notebookInProgress.has(editor.document)) {
+        if (this.notebookInProgress.has(editor.notebook)) {
             traceInfo(`Cannot start debugging. Already debugging this notebook`);
             return;
         }
 
-        if (this.isDebugging(editor.document)) {
+        if (this.isDebugging(editor.notebook)) {
             traceInfo(`Cannot start debugging. Already debugging this notebook document. Toolbar should update`);
             this.updateToolbar(true);
             if (mode === KernelDebugMode.RunByLine) {
@@ -240,7 +240,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         }
 
         const checkIpykernelAndStart = async (allowSelectKernel = true): Promise<void> => {
-            const ipykernelResult = await this.checkForIpykernel6(editor.document);
+            const ipykernelResult = await this.checkForIpykernel6(editor.notebook);
             switch (ipykernelResult) {
                 case IpykernelCheckResult.NotInstalled:
                     // User would have been notified about this, nothing more to do.
@@ -253,19 +253,19 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                 case IpykernelCheckResult.Ok: {
                     switch (mode) {
                         case KernelDebugMode.Everything: {
-                            await this.startDebugging(editor.document);
+                            await this.startDebugging(editor.notebook);
                             this.updateToolbar(true);
                             return;
                         }
                         case KernelDebugMode.Cell:
                             if (cell) {
-                                await this.startDebuggingCell(editor.document, KernelDebugMode.Cell, cell);
+                                await this.startDebuggingCell(editor.notebook, KernelDebugMode.Cell, cell);
                                 this.updateToolbar(true);
                             }
                             return;
                         case KernelDebugMode.RunByLine:
                             if (cell) {
-                                await this.startDebuggingCell(editor.document, KernelDebugMode.RunByLine, cell);
+                                await this.startDebuggingCell(editor.notebook, KernelDebugMode.RunByLine, cell);
                                 this.updateToolbar(true);
                                 this.updateCellToolbar(true);
                             }
@@ -284,12 +284,12 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         };
 
         try {
-            this.notebookInProgress.add(editor.document);
+            this.notebookInProgress.add(editor.notebook);
             await checkIpykernelAndStart();
         } catch (e) {
             traceInfo(`Error starting debugging: ${e}`);
         } finally {
-            this.notebookInProgress.delete(editor.document);
+            this.notebookInProgress.delete(editor.notebook);
         }
     }
     private async startDebuggingCell(
@@ -367,7 +367,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         assertIsDebugConfig(config);
 
         if (this.vscNotebook.activeNotebookEditor) {
-            const activeDoc = this.vscNotebook.activeNotebookEditor.document;
+            const activeDoc = this.vscNotebook.activeNotebookEditor.notebook;
 
             // TODO we apparently always have a kernel here, clean up typings
             const kernel = await this.ensureKernelIsRunning(activeDoc);

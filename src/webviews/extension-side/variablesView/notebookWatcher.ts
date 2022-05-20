@@ -48,7 +48,7 @@ export class NotebookWatcher implements INotebookWatcher {
         return this._onDidRestartActiveNotebook.event;
     }
     public get activeKernel(): IKernel | undefined {
-        const activeNotebook = this.notebooks.activeNotebookEditor?.document;
+        const activeNotebook = this.notebooks.activeNotebookEditor?.notebook;
         const activeJupyterNotebookKernel =
             activeNotebook?.notebookType == JupyterNotebookView
                 ? this.kernelProvider.get(activeNotebook.uri)
@@ -182,8 +182,8 @@ export class NotebookWatcher implements INotebookWatcher {
     private activeEditorChanged(editor: NotebookEditor | undefined) {
         const changeEvent: IActiveNotebookChangedEvent = {};
 
-        if (editor && isJupyterNotebook(editor.document)) {
-            const executionCount = this._executionCountTracker.get(editor.document);
+        if (editor && isJupyterNotebook(editor.notebook)) {
+            const executionCount = this._executionCountTracker.get(editor.notebook);
             executionCount && (changeEvent.executionCount = executionCount);
         }
 

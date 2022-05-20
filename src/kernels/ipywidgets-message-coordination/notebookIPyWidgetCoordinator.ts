@@ -119,7 +119,7 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         if (previousCoordinators) {
             this.messageCoordinators.delete(e.notebook);
             this.notebook.notebookEditors
-                .filter((editor) => editor.document === e.notebook)
+                .filter((editor) => editor.notebook === e.notebook)
                 .forEach((editor) => {
                     const comms = this.notebookCommunications.get(editor);
                     this.notebookCommunications.delete(editor);
@@ -140,22 +140,22 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         this.notebook.notebookEditors.forEach((editor) => this.initializeNotebookCommunication(editor, e.controller));
     }
     private initializeNotebookCommunication(editor: NotebookEditor, controller: IVSCodeNotebookController | undefined) {
-        const notebook = editor.document;
+        const notebook = editor.notebook;
         if (!controller) {
             traceVerbose(
                 `No controller, hence notebook communications cannot be initialized for editor ${getDisplayPath(
-                    editor.document.uri
+                    editor.notebook.uri
                 )}`
             );
             return;
         }
         if (this.notebookCommunications.has(editor)) {
             traceVerbose(
-                `notebook communications already initialized for editor ${getDisplayPath(editor.document.uri)}`
+                `notebook communications already initialized for editor ${getDisplayPath(editor.notebook.uri)}`
             );
             return;
         }
-        traceVerbose(`Intiailize notebook communications for editor ${getDisplayPath(editor.document.uri)}`);
+        traceVerbose(`Intiailize notebook communications for editor ${getDisplayPath(editor.notebook.uri)}`);
         const comms = new NotebookCommunication(editor, controller);
         this.addNotebookDisposables(notebook, [comms]);
         this.notebookCommunications.set(editor, comms);
@@ -189,7 +189,7 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         // Find any new editors that may be associated with the current notebook.
         // This can happen when users split editors.
         e.forEach((editor) => {
-            const controller = this.controllerManager.getSelectedNotebookController(editor.document);
+            const controller = this.controllerManager.getSelectedNotebookController(editor.notebook);
             this.initializeNotebookCommunication(editor, controller);
         });
     }

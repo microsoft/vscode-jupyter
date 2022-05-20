@@ -62,7 +62,7 @@ export class LogReplayService implements IExtensionSingleActivationService {
         if (vscode.window.activeNotebookEditor) {
             const file = await this.appShell.showOpenDialog({ title: 'Open Pylance Output Log' });
             if (file && file.length === 1) {
-                this.activeNotebook = vscode.window.activeNotebookEditor.document;
+                this.activeNotebook = vscode.window.activeNotebookEditor.notebook;
                 this.steps = await this.parsePylanceLogSteps(file[0].fsPath);
                 this.index = -1;
                 void this.isLogActive?.set(true);
@@ -76,7 +76,7 @@ export class LogReplayService implements IExtensionSingleActivationService {
         if (
             this.steps.length - 1 > this.index &&
             this.steps.length > 0 &&
-            this.activeNotebook === vscode.window.activeNotebookEditor?.document &&
+            this.activeNotebook === vscode.window.activeNotebookEditor?.notebook &&
             this.activeNotebook
         ) {
             void this.appShell.showInformationMessage(`Replaying step ${this.index + 2} of ${this.steps.length}`);
@@ -224,7 +224,7 @@ export class LogReplayService implements IExtensionSingleActivationService {
                 this.index = -1;
             }
         } else if (
-            this.activeNotebook?.toString() !== vscode.window.activeNotebookEditor?.document.uri.toString() &&
+            this.activeNotebook?.toString() !== vscode.window.activeNotebookEditor?.notebook.uri.toString() &&
             this.index < this.steps.length - 1
         ) {
             void this.appShell.showErrorMessage(

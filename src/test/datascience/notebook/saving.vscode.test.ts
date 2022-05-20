@@ -73,10 +73,10 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
         let cell4: NotebookCell;
 
         function initializeCells() {
-            cell1 = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-            cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
-            cell3 = vscodeNotebook.activeNotebookEditor?.document.getCells()![2]!;
-            cell4 = vscodeNotebook.activeNotebookEditor?.document.getCells()![3]!;
+            cell1 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+            cell2 = vscodeNotebook.activeNotebookEditor?.notebook.getCells()![1]!;
+            cell3 = vscodeNotebook.activeNotebookEditor?.notebook.getCells()![2]!;
+            cell4 = vscodeNotebook.activeNotebookEditor?.notebook.getCells()![3]!;
         }
         initializeCells();
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);

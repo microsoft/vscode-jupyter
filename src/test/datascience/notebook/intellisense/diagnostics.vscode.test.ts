@@ -54,7 +54,7 @@ suite('DataScience - VSCode Intellisense Notebook Diagnostics', function () {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Add cells and make sure errors show up', async () => {
         await insertCodeCell('import system', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
 
         traceInfo('Get diagnostics in test');
         // Ask for the list of diagnostics
