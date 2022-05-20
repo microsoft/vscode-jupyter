@@ -97,7 +97,7 @@ export class ScriptUriConverter implements ILocalResourceUriConverter {
         // For now only extensionUri is convertable (notebook code adds this path as a localResourceRoot)
         // but that doesn't work in web because it's readonly.
         // This is pending: https://github.com/microsoft/vscode/issues/149868
-        this._rootScriptFolder = uriPath.joinPath(extensionContext.globalStorageUri, 'tmp', 'scripts');
+        this._rootScriptFolder = uriPath.joinPath(extensionContext.extensionUri, 'tmp', 'scripts');
         this.targetWidgetScriptsFolder = uriPath.joinPath(this._rootScriptFolder, 'nbextensions');
         this.createTargetWidgetScriptsFolder = this.fs
             .exists(this.targetWidgetScriptsFolder, FileType.Directory)
