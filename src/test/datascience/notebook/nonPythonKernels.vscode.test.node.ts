@@ -36,38 +36,18 @@ import { INotebookEditorProvider } from '../../../notebooks/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () => {
-    const juliaNb = path.join(
-        EXTENSION_ROOT_DIR_FOR_TESTS,
-        'src',
-        'test',
-        'datascience',
-        'notebook',
-        'simpleJulia.ipynb'
+    const juliaNb = Uri.file(
+        path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'notebook', 'simpleJulia.ipynb')
     );
-    const csharpNb = path.join(
-        EXTENSION_ROOT_DIR_FOR_TESTS,
-        'src',
-        'test',
-        'datascience',
-        'notebook',
-        'simpleCSharp.ipynb'
+    const csharpNb = Uri.file(
+        path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'notebook', 'simpleCSharp.ipynb')
     );
-    const javaNb = path.join(
-        EXTENSION_ROOT_DIR_FOR_TESTS,
-        'src',
-        'test',
-        'datascience',
-        'notebook',
-        'simpleJavaBeakerX.ipynb'
+    const javaNb = Uri.file(
+        path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'notebook', 'simpleJavaBeakerX.ipynb')
     );
 
-    const emptyPythonNb = path.join(
-        EXTENSION_ROOT_DIR_FOR_TESTS,
-        'src',
-        'test',
-        'datascience',
-        'notebook',
-        'emptyPython.ipynb'
+    const emptyPythonNb = Uri.file(
+        path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'notebook', 'emptyPython.ipynb')
     );
 
     let api: IExtensionTestApi;

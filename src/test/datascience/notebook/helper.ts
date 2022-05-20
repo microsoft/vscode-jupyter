@@ -53,7 +53,7 @@ import { IS_SMOKE_TEST } from '../../constants';
 import * as urlPath from '../../../platform/vscode-path/resources';
 import * as uuid from 'uuid/v4';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
-import { IPlatformService } from '../../../platform/common/platform/types';
+import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { waitForCondition } from '../../common';
 import { VSCodeNotebook } from '../../../platform/common/application/notebook';
 
@@ -137,13 +137,12 @@ export async function deleteAllCellsAndWait() {
     );
 }
 
-export async function createTemporaryNotebook(
-    cells: (nbformat.ICodeCell | nbformat.IMarkdownCell)[],
+async function createTemporaryNotebookFromNotebook(
+    notebook: nbformat.INotebookContent,
     disposables: IDisposable[],
-    kernelName: string = 'Python 3',
     rootFolder?: Uri,
     prefix?: string
-): Promise<Uri> {
+) {
     const services = await getServices();
     const platformService = services.serviceContainer.get<IPlatformService>(IPlatformService);
     const workspaceService = services.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
@@ -153,6 +152,36 @@ export async function createTemporaryNotebook(
         workspaceService.rootFolder ||
         Uri.file('./').with({ scheme: 'vscode-test-web' });
     const uri = urlPath.joinPath(rootUrl, `${prefix || ''}${uuid()}.ipynb`);
+    await workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(notebook)));
+
+    disposables.push({
+        dispose: () => swallowExceptions(() => workspace.fs.delete(uri))
+    });
+    return uri;
+}
+
+export async function createTemporaryNotebookFromFile(
+    file: Uri,
+    disposables: IDisposable[],
+    kernelName: string = 'Python 3'
+) {
+    const services = await getServices();
+    const fileSystem = services.serviceContainer.get<IFileSystem>(IFileSystem);
+    const contents = await fileSystem.readFile(file);
+    const notebook = JSON.parse(contents);
+    if (notebook.kernel) {
+        notebook.kernel.display_name = kernelName;
+    }
+    return createTemporaryNotebookFromNotebook(notebook, disposables, undefined, urlPath.basename(file));
+}
+
+export async function createTemporaryNotebook(
+    cells: (nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | nbformat.IUnrecognizedCell)[],
+    disposables: IDisposable[],
+    kernelName: string = 'Python 3',
+    rootFolder?: Uri,
+    prefix?: string
+): Promise<Uri> {
     cells =
         cells.length == 0
             ? [
@@ -176,12 +205,7 @@ export async function createTemporaryNotebook(
             display_name: kernelName
         }
     };
-    await workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(data)));
-
-    disposables.push({
-        dispose: () => swallowExceptions(() => workspace.fs.delete(uri))
-    });
-    return uri;
+    return createTemporaryNotebookFromNotebook(data, disposables, rootFolder, prefix);
 }
 
 /**
@@ -463,17 +487,21 @@ let workedAroundVSCodeNotebookStartPage = false;
  * Solution, try to trigger the display of the start page displayed before starting the tests.
  */
 export async function workAroundVSCodeNotebookStartPages() {
-    if (workedAroundVSCodeNotebookStartPage) {
-        return;
-    }
-    workedAroundVSCodeNotebookStartPage = true;
-    const { editorProvider } = await getServices();
-    await closeActiveWindows();
+    try {
+        if (workedAroundVSCodeNotebookStartPage) {
+            return;
+        }
+        workedAroundVSCodeNotebookStartPage = true;
+        const { editorProvider } = await getServices();
+        await closeActiveWindows();
 
-    // Open a notebook, VS Code will open the start page (wait for 5s for VSCode to react & open it)
-    await editorProvider.createNew();
-    await sleep(5_000);
-    await closeActiveWindows();
+        // Open a notebook, VS Code will open the start page (wait for 5s for VSCode to react & open it)
+        await editorProvider.createNew();
+        await sleep(5_000);
+        await closeActiveWindows();
+    } catch (ex) {
+        // Don't fail because closing didn't work.
+    }
 }
 
 export async function prewarmNotebooks() {

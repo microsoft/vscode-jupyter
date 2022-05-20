@@ -74,9 +74,8 @@ import { isUri } from '../../../../platform/common/utils/misc';
 suite('DataScience Install IPyKernel (slow) (install)', function () {
     const disposables: IDisposable[] = [];
     let nbFile: Uri;
-    const templateIPynbFile = path.join(
-        EXTENSION_ROOT_DIR_FOR_TESTS,
-        'src/test/datascience/jupyter/kernels/nbWithKernel.ipynb'
+    const templateIPynbFile = Uri.file(
+        path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/jupyter/kernels/nbWithKernel.ipynb')
     );
     const executable = getOSType() === OSType.Windows ? 'Scripts/python.exe' : 'bin/python'; // If running locally on Windows box.
     let venvPythonPath = Uri.file(
@@ -930,7 +929,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
                 } else {
                     return commands.executeCommand.apply(commands, [cmd, ...Array.from(arguments).slice(1)]);
                 }
-            });
+            } as any);
 
         return { kernelSelected: kernelSelected.promise, selectADifferentKernelStub };
     }

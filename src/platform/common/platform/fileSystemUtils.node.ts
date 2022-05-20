@@ -4,7 +4,6 @@
 
 /* eslint-disable  */
 
-import { createHash } from 'crypto';
 import * as fs from 'fs-extra';
 import * as vscode from 'vscode';
 import '../extensions';
@@ -37,12 +36,4 @@ export function convertStat(old: fs.Stats, filetype: vscode.FileType): vscode.Fi
         ctime: Math.round(old.ctimeMs),
         mtime: Math.round(old.mtimeMs)
     };
-}
-
-// We *could* use ICryptoUtils, but it's a bit overkill, issue tracked
-// in https://github.com/microsoft/vscode-python/issues/8438.
-export function getHashString(data: string): string {
-    const hash = createHash('sha512');
-    hash.update(data);
-    return hash.digest('hex');
 }

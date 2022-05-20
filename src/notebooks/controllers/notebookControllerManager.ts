@@ -71,6 +71,7 @@ import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
 import { INotebookMetadata } from '@jupyterlab/nbformat';
 import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConnectionType';
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
+import { ILocalResourceUriConverter } from '../../kernels/ipywidgets-message-coordination/types';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -151,7 +152,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IsWebExtension) private readonly isWeb: boolean,
-        @inject(ServerConnectionType) private readonly serverConnectionType: ServerConnectionType
+        @inject(ServerConnectionType) private readonly serverConnectionType: ServerConnectionType,
+        @inject(ILocalResourceUriConverter) private readonly resourceConverter: ILocalResourceUriConverter
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -866,6 +868,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         this.appShell,
                         this.browser,
                         this.extensionChecker,
+                        this.resourceConverter,
                         this.serviceContainer
                     );
                     // Hook up to if this NotebookController is selected or de-selected

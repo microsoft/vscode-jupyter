@@ -41,9 +41,8 @@ import { getOSType, OSType } from '../../../platform/common/utils/platform';
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience - VSCode Notebook - Kernel Selection', function () {
     const disposables: IDisposable[] = [];
-    const templateIPynbFile = path.join(
-        EXTENSION_ROOT_DIR_FOR_TESTS,
-        'src/test/datascience/notebook/nbWithKernel.ipynb'
+    const templateIPynbFile = Uri.file(
+        path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/notebook/nbWithKernel.ipynb')
     );
     const executable = getOSType() === OSType.Windows ? 'Scripts/python.exe' : 'bin/python'; // If running locally on Windows box.
     const venvNoKernelPython = Uri.file(

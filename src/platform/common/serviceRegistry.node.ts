@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../activation/types';
-import { IExperimentService, IFileDownloader, IHttpClient } from '../common/types';
+import { IExperimentService, IHttpClient } from '../common/types';
 import { AmlComputeContext } from './amlContext.node';
 import { IServiceManager } from '../ioc/types';
 import { ImportTracker } from '../../telemetry/importTracker.node';
@@ -31,8 +31,7 @@ import { CryptoUtils } from './crypto';
 import { ExperimentService } from './experiments/service';
 import { FeatureDeprecationManager } from './featureDeprecationManager';
 import { BrowserService } from './net/browser';
-import { FileDownloader } from './net/fileDownloader.node';
-import { HttpClient } from './net/httpClient.node';
+import { HttpClient } from './net/httpClient';
 import { PersistentStateFactory } from './persistentState';
 import { IS_WINDOWS } from './platform/constants.node';
 import { ProcessLogger } from './process/logger.node';
@@ -72,7 +71,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ILanguageService>(ILanguageService, LanguageService);
     serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
     serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
-    serviceManager.addSingleton<IFileDownloader>(IFileDownloader, FileDownloader);
     serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
     serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
 

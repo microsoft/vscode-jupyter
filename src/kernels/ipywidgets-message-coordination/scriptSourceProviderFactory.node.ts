@@ -26,25 +26,19 @@ export class ScriptSourceProviderFactory implements IWidgetScriptSourceProviderF
         @inject(IPythonExecutionFactory) private readonly factory: IPythonExecutionFactory
     ) {}
 
-    public getProviders(
-        kernel: IKernel,
-        uriConverter: ILocalResourceUriConverter,
-        httpClient: IHttpClient | undefined
-    ) {
+    public getProviders(kernel: IKernel, uriConverter: ILocalResourceUriConverter, httpClient: IHttpClient) {
         const scriptProviders: IWidgetScriptSourceProvider[] = [];
 
         // If we're allowed to use CDN providers, then use them, and use in order of preference.
         if (this.configuredScriptSources.length > 0) {
-            scriptProviders.push(new CDNWidgetScriptSourceProvider(this.configurationSettings, uriConverter, this.fs));
+            scriptProviders.push(
+                new CDNWidgetScriptSourceProvider(this.configurationSettings, uriConverter, this.fs, httpClient)
+            );
         }
         switch (kernel.kernelConnectionMetadata.kind) {
             case 'connectToLiveRemoteKernel':
             case 'startUsingRemoteKernelSpec':
-                if (httpClient) {
-                    scriptProviders.push(
-                        new RemoteWidgetScriptSourceProvider(kernel.kernelConnectionMetadata.baseUrl, httpClient)
-                    );
-                }
+                scriptProviders.push(new RemoteWidgetScriptSourceProvider(kernel.kernelConnectionMetadata.baseUrl));
                 break;
 
             default:
