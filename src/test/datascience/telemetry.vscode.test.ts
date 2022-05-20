@@ -142,7 +142,7 @@ suite('Telemetry validation', function () {
     });
     test('Execute cell using VSCode Kernel', async () => {
         await insertCodeCell('print("123412341234")', { index: 0 });
-        const cell = vscode.window.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscode.window.activeNotebookEditor?.notebook.cellAt(0)!;
         await Promise.all([runCell(cell), waitForTextOutput(cell, '123412341234')]);
 
         // Check for expected events

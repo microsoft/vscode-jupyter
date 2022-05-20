@@ -403,12 +403,12 @@ export class DebuggerVariables
 
     private activeNotebookIsDebugging(): boolean {
         const activeNotebook = this.vscNotebook.activeNotebookEditor;
-        return !!activeNotebook && this.debuggingManager.isDebugging(activeNotebook.document);
+        return !!activeNotebook && this.debuggingManager.isDebugging(activeNotebook.notebook);
     }
 
     // This handles all the debug session calls, variable handling, and refresh calls needed for notebook debugging
     private async handleNotebookVariables(stoppedMessage: DebugProtocol.StoppedEvent): Promise<void> {
-        const doc = this.vscNotebook.activeNotebookEditor?.document;
+        const doc = this.vscNotebook.activeNotebookEditor?.notebook;
         const threadId = stoppedMessage.body.threadId;
 
         if (doc) {

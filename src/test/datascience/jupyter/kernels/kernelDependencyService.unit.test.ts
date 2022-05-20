@@ -94,7 +94,7 @@ suite('DataScience - Kernel Dependency Service', () => {
                         instance(interactiveWindowProvider)
                     );
                 }
-                when(editor.document).thenReturn(instance(document));
+                when(editor.notebook).thenReturn(instance(document));
             });
             teardown(() => token.dispose());
             test('Check if ipykernel is installed', async () => {

@@ -82,7 +82,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
     public async interruptKernel(notebookUri: Uri | undefined): Promise<void> {
         const uri =
             notebookUri ??
-            window.activeNotebookEditor?.document.uri ??
+            window.activeNotebookEditor?.notebook.uri ??
             this.interactiveWindowProvider?.activeWindow?.notebookUri ??
             (window.activeTextEditor?.document.uri &&
                 this.interactiveWindowProvider?.get(window.activeTextEditor.document.uri)?.notebookUri);
@@ -104,7 +104,7 @@ export class KernelCommandListener implements IDataScienceCommandListener {
     private async restartKernel(notebookUri: Uri | undefined) {
         const uri =
             notebookUri ??
-            window.activeNotebookEditor?.document.uri ??
+            window.activeNotebookEditor?.notebook.uri ??
             this.interactiveWindowProvider?.activeWindow?.notebookUri ??
             (window.activeTextEditor?.document.uri &&
                 this.interactiveWindowProvider?.get(window.activeTextEditor.document.uri)?.notebookUri);

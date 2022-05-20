@@ -203,8 +203,8 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         await createEmptyPythonNotebook(disposables);
         await insertCodeCell('a = "123412341234"', { index: 0 });
         await insertCodeCell('print(a)', { index: 1 });
-        const cell1 = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        const cell2 = vscodeNotebook.activeNotebookEditor?.document.cellAt(1)!;
+        const cell1 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(1)!;
         await runCell(cell1);
 
         // Now that we don't have any remote kernels, connect to a remote jupyter server.
@@ -231,7 +231,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         assert.isOk(nbEditor, 'No active notebook');
         // Cell 1 = `a = "Hello World"`
         // Cell 2 = `print(a)`
-        let cell2 = nbEditor.document.getCells()![1]!;
+        let cell2 = nbEditor.notebook.getCells()![1]!;
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell2),
@@ -269,7 +269,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         assert.isOk(nbEditor, 'No active notebook');
         // Cell 1 = `a = "Hello World"`
         // Cell 2 = `print(a)`
-        let cell2 = nbEditor.document.getCells()![1]!;
+        let cell2 = nbEditor.notebook.getCells()![1]!;
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell2),
@@ -284,12 +284,12 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         const controllerManager = svcContainer.get<INotebookControllerManager>(INotebookControllerManager);
 
         // Verify we're connected to a remote kernel.
-        const remoteController = controllerManager.getSelectedNotebookController(nbEditor.document);
+        const remoteController = controllerManager.getSelectedNotebookController(nbEditor.notebook);
         assert.strictEqual(isLocalConnection(remoteController!.connection), false, 'Should be a remote connection');
 
         // Verify we have a preferred remote kernel stored.
         assert.isNotEmpty(
-            remoteKernelIdProvider.getPreferredRemoteKernelId(nbEditor.document.uri),
+            remoteKernelIdProvider.getPreferredRemoteKernelId(nbEditor.notebook.uri),
             'Preferred remote kernel id cannot be empty'
         );
 
@@ -309,19 +309,19 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
 
         // Wait for the controller to get selected.
         await waitForCondition(
-            async () => controllerManager.getSelectedNotebookController(nbEditor.document) === localKernelController,
+            async () => controllerManager.getSelectedNotebookController(nbEditor.notebook) === localKernelController,
             5_000,
             `Controller not swtiched to local kernel, instead it is ${
-                controllerManager.getSelectedNotebookController(nbEditor.document)?.id
+                controllerManager.getSelectedNotebookController(nbEditor.notebook)?.id
             }`
         );
 
         // Wait for the preferred remote kernel id to be cleared for this notebook.
         await waitForCondition(
-            async () => !remoteKernelIdProvider.getPreferredRemoteKernelId(nbEditor.document.uri),
+            async () => !remoteKernelIdProvider.getPreferredRemoteKernelId(nbEditor.notebook.uri),
             5_000,
             `Remote Kernel is not empty, instead the value is ${remoteKernelIdProvider.getPreferredRemoteKernelId(
-                nbEditor.document.uri
+                nbEditor.notebook.uri
             )}`
         );
     });

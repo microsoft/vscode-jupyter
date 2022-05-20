@@ -104,14 +104,14 @@ export class ErrorRendererCommunicationHandler implements IExtensionSyncActivati
         const uri = Uri.parse(cellUri);
 
         // Show the matching notebook if there is one
-        let editor = this.notebooks.notebookEditors.find((n) => arePathsSame(n.document.uri.fsPath, uri.fsPath));
+        let editor = this.notebooks.notebookEditors.find((n) => arePathsSame(n.notebook.uri.fsPath, uri.fsPath));
         if (editor) {
             // If there is one, go to the cell that matches
-            const cell = editor.document.getCells().find((c) => c.document.uri.toString() === cellUri);
+            const cell = editor.notebook.getCells().find((c) => c.document.uri.toString() === cellUri);
             if (cell) {
                 const cellRange = new NotebookRange(cell.index, cell.index);
                 return this.notebooks
-                    .showNotebookDocument(editor.document.uri, { selections: [cellRange] })
+                    .showNotebookDocument(editor.notebook.uri, { selections: [cellRange] })
                     .then((_e) => {
                         return this.commandManager.executeCommand('notebook.cell.edit').then(() => {
                             const cellEditor = this.documentManager.visibleTextEditors.find(

@@ -60,8 +60,8 @@ suite('DataScience - VSCode semantic token tests', function () {
     test('Open a notebook and add a bunch of cells', async function () {
         await insertCodeCell('import sys\nprint(sys.executable)\na = 1');
         await insertCodeCell('\ndef test():\n  print("test")\ntest()');
-        const cell1 = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        const cell2 = vscodeNotebook.activeNotebookEditor?.document.cellAt(1)!;
+        const cell1 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(1)!;
 
         // Wait for tokens on the first cell (it works with just plain pylance)
         await waitForCondition(
@@ -89,8 +89,8 @@ suite('DataScience - VSCode semantic token tests', function () {
     test('Edit cells in a notebook', async function () {
         await insertCodeCell('import sys\nprint(sys.executable)\na = 1');
         await insertCodeCell('\ndef test():\n  print("test")\ntest()');
-        const cell1 = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        const cell2 = vscodeNotebook.activeNotebookEditor?.document.cellAt(1)!;
+        const cell1 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(1)!;
 
         const editor = window.visibleTextEditors.find((e) => e.document.uri === cell1.document.uri);
         await editor?.edit((b) => {
@@ -127,8 +127,8 @@ suite('DataScience - VSCode semantic token tests', function () {
             'import sqllite3 as sql\n\nconn = sql.connect("test.db")\ncur = conn.cursor()\n# BLAH BLAH'
         );
         await insertCodeCell('\n');
-        const cell1 = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        const cell2 = vscodeNotebook.activeNotebookEditor?.document.cellAt(1)!;
+        const cell1 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(1)!;
 
         const editor = window.visibleTextEditors.find((e) => e.document.uri === cell2.document.uri);
         await editor?.edit((b) => {

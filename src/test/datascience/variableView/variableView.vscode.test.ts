@@ -85,13 +85,13 @@ suite('DataScience - VariableView', function () {
 
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await runCell(cell);
         await waitForExecutionCompletedSuccessfully(cell);
 
         // Send a second cell
         await insertCodeCell('test2 = "MYTESTVALUE2"', { index: 1 });
-        const cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.notebook.getCells()![1]!;
         await runCell(cell2);
 
         // Parse the HTML for our expected variables
@@ -113,13 +113,13 @@ suite('DataScience - VariableView', function () {
 
         // Add cell that overrides print
         await insertCodeCell('def print():\n  x = 1', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await runCell(cell);
         await waitForExecutionCompletedSuccessfully(cell);
 
         // Send a second cell
         await insertCodeCell('test2 = "MYTESTVALUE2"', { index: 1 });
-        const cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.notebook.getCells()![1]!;
         await runCell(cell2);
 
         // Parse the HTML for our expected variables
@@ -139,7 +139,7 @@ suite('DataScience - VariableView', function () {
 
         // Add one simple cell and execute it
         await insertCodeCell('test = "MYTESTVALUE"', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.getCells()![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.getCells()![0]!;
         await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell)]);
 
         // Parse the HTML for our expected variables
@@ -154,12 +154,12 @@ suite('DataScience - VariableView', function () {
 
         // Execute a cell on the second document
         await insertCodeCell('test2 = "MYTESTVALUE2"', { index: 0 });
-        const cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![0]!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.notebook.getCells()![0]!;
         await Promise.all([runCell(cell2), waitForExecutionCompletedSuccessfully(cell2)]);
 
         // Execute a second cell on the second document
         await insertCodeCell('test3 = "MYTESTVALUE3"', { index: 1 });
-        const cell3 = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
+        const cell3 = vscodeNotebook.activeNotebookEditor?.notebook.getCells()![1]!;
         await Promise.all([runCell(cell3), waitForExecutionCompletedSuccessfully(cell3)]);
 
         // Parse the HTML for our expected variables
@@ -195,7 +195,7 @@ class MyClass:
 myClass = MyClass()
 `;
         await insertCodeCell(code, { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await runCell(cell);
         await waitForExecutionCompletedSuccessfully(cell);
 
@@ -235,7 +235,7 @@ myDict = {'a': 1}
 mySet = {1, 2, 3}
 `;
         await insertCodeCell(code, { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await runCell(cell);
         await waitForExecutionCompletedSuccessfully(cell);
 
@@ -266,12 +266,12 @@ mySet = {1, 2, 3}
 
         // Add one simple cell and execute it
         await insertCodeCell('test = [1, 2, 3]');
-        const cell = vscodeNotebook.activeNotebookEditor?.document.getCells()![0]!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.getCells()![0]!;
         await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell)]);
 
         // Add another cell so we have two lists
         await insertCodeCell('test2 = [1, 2, 3]');
-        const cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.notebook.getCells()![1]!;
         await Promise.all([runCell(cell2), waitForExecutionCompletedSuccessfully(cell2)]);
 
         // Parse the HTML for our expected variables

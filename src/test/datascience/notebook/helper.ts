@@ -87,14 +87,14 @@ export async function insertMarkdownCell(source: string, options?: { index?: num
     if (!activeEditor) {
         throw new Error('No active editor');
     }
-    const startNumber = options?.index ?? activeEditor.document.cellCount;
-    await chainWithPendingUpdates(activeEditor.document, (edit) => {
+    const startNumber = options?.index ?? activeEditor.notebook.cellCount;
+    await chainWithPendingUpdates(activeEditor.notebook, (edit) => {
         const cellData = new NotebookCellData(NotebookCellKind.Markup, source, MARKDOWN_LANGUAGE);
         cellData.outputs = [];
         cellData.metadata = {};
-        edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, startNumber), [cellData]);
+        edit.replaceNotebookCells(activeEditor.notebook.uri, new NotebookRange(startNumber, startNumber), [cellData]);
     });
-    return activeEditor.document.cellAt(startNumber)!;
+    return activeEditor.notebook.cellAt(startNumber)!;
 }
 export async function insertCodeCell(source: string, options?: { language?: string; index?: number }) {
     const { vscodeNotebook } = await getServices();
@@ -102,38 +102,38 @@ export async function insertCodeCell(source: string, options?: { language?: stri
     if (!activeEditor) {
         throw new Error('No active editor');
     }
-    const startNumber = options?.index ?? activeEditor.document.cellCount;
+    const startNumber = options?.index ?? activeEditor.notebook.cellCount;
     const edit = new WorkspaceEdit();
     const cellData = new NotebookCellData(NotebookCellKind.Code, source, options?.language || PYTHON_LANGUAGE);
     cellData.outputs = [];
     cellData.metadata = {};
-    edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, startNumber), [cellData]);
+    edit.replaceNotebookCells(activeEditor.notebook.uri, new NotebookRange(startNumber, startNumber), [cellData]);
     await workspace.applyEdit(edit);
 
-    return activeEditor.document.cellAt(startNumber)!;
+    return activeEditor.notebook.cellAt(startNumber)!;
 }
 export async function deleteCell(index: number = 0) {
     const { vscodeNotebook } = await getServices();
     const activeEditor = vscodeNotebook.activeNotebookEditor;
-    if (!activeEditor || activeEditor.document.cellCount === 0) {
+    if (!activeEditor || activeEditor.notebook.cellCount === 0) {
         return;
     }
     if (!activeEditor) {
         assert.fail('No active editor');
         return;
     }
-    await chainWithPendingUpdates(activeEditor.document, (edit) =>
-        edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(index, index + 1), [])
+    await chainWithPendingUpdates(activeEditor.notebook, (edit) =>
+        edit.replaceNotebookCells(activeEditor.notebook.uri, new NotebookRange(index, index + 1), [])
     );
 }
 export async function deleteAllCellsAndWait() {
     const { vscodeNotebook } = await getServices();
     const activeEditor = vscodeNotebook.activeNotebookEditor;
-    if (!activeEditor || activeEditor.document.cellCount === 0) {
+    if (!activeEditor || activeEditor.notebook.cellCount === 0) {
         return;
     }
-    await chainWithPendingUpdates(activeEditor.document, (edit) =>
-        edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(0, activeEditor.document.cellCount), [])
+    await chainWithPendingUpdates(activeEditor.notebook, (edit) =>
+        edit.replaceNotebookCells(activeEditor.notebook.uri, new NotebookRange(0, activeEditor.notebook.cellCount), [])
     );
 }
 
@@ -350,7 +350,7 @@ async function waitForKernelToChangeImpl(
     }
     traceInfo(`Switching to kernel id ${id}`);
     const isRightKernel = () => {
-        const doc = vscodeNotebook.activeNotebookEditor?.document;
+        const doc = vscodeNotebook.activeNotebookEditor?.notebook;
         if (!doc) {
             return false;
         }
@@ -415,7 +415,7 @@ export async function waitForKernelToGetAutoSelected(
     const notebookControllers = notebookControllerManager.getRegisteredNotebookControllers();
 
     // Make sure we don't already have a selection (this function gets run even after opening a document)
-    if (notebookControllerManager.getSelectedNotebookController(vscodeNotebook.activeNotebookEditor!.document)) {
+    if (notebookControllerManager.getSelectedNotebookController(vscodeNotebook.activeNotebookEditor!.notebook)) {
         return;
     }
 
@@ -427,7 +427,7 @@ export async function waitForKernelToGetAutoSelected(
         await waitForCondition(
             async () => {
                 preferred = notebookControllerManager.getPreferredNotebookController(
-                    vscodeNotebook.activeNotebookEditor!.document
+                    vscodeNotebook.activeNotebookEditor!.notebook
                 );
                 return preferred != undefined;
             },
@@ -518,7 +518,7 @@ export async function prewarmNotebooks() {
         await editorProvider.createNew();
         await insertCodeCell('print("Hello World1")', { index: 0 });
         await waitForKernelToGetAutoSelected();
-        const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0)!;
         traceInfoIfCI(`Running all cells in prewarm notebooks`);
         await Promise.all([waitForExecutionCompletedSuccessfully(cell, 60_000), runAllCellsInActiveNotebook()]);
         await closeActiveWindows();
@@ -856,14 +856,14 @@ export async function runCell(cell: NotebookCell, waitForExecutionToComplete = f
     const api = await initialize();
     const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     await waitForKernelToGetAutoSelected(undefined, false, 60_000);
-    if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.document) {
+    if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.notebook) {
         throw new Error('No notebook or document');
     }
 
     const promise = commands.executeCommand(
         'notebook.cell.execute',
         { start: cell.index, end: cell.index + 1 },
-        vscodeNotebook.activeNotebookEditor.document.uri
+        vscodeNotebook.activeNotebookEditor.notebook.uri
     );
 
     if (waitForExecutionToComplete) {
@@ -875,12 +875,12 @@ export async function runAllCellsInActiveNotebook(waitForExecutionToComplete = f
     const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     await waitForKernelToGetAutoSelected(undefined, false, 60_000);
 
-    if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.document) {
+    if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.notebook) {
         throw new Error('No editor or document');
     }
 
     const promise = commands
-        .executeCommand('notebook.execute', vscodeNotebook.activeNotebookEditor.document.uri)
+        .executeCommand('notebook.execute', vscodeNotebook.activeNotebookEditor.notebook.uri)
         .then(noop, noop);
 
     if (waitForExecutionToComplete) {

@@ -81,7 +81,7 @@ suite('3rd Party Kernel Service API', function () {
 
         await createEmptyPythonNotebook(disposables);
         await insertCodeCell('print("123412341234")', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await Promise.all([runCell(cell), waitForTextOutput(cell, '123412341234')]);
 
         await onDidChangeKernels.assertFiredExactly(1);
@@ -90,12 +90,12 @@ suite('3rd Party Kernel Service API', function () {
         assert.isAtLeast(kernels!.length, 1);
         assert.strictEqual(
             kernels![0].uri!.toString(),
-            vscodeNotebook.activeNotebookEditor?.document.uri.toString(),
+            vscodeNotebook.activeNotebookEditor?.notebook.uri.toString(),
             'Kernel notebook is not the active notebook'
         );
 
         assert.isObject(kernels![0].metadata, 'Kernel Connection is undefined');
-        const kernel = kernelService?.getKernel(vscodeNotebook.activeNotebookEditor!.document!.uri);
+        const kernel = kernelService?.getKernel(vscodeNotebook.activeNotebookEditor!.notebook!.uri);
         assert.strictEqual(kernels![0].metadata, kernel!.metadata, 'Kernel Connection not same for the document');
 
         await closeNotebooksAndCleanUpAfterTests(disposables);

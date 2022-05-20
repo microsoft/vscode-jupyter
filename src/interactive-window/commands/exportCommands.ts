@@ -73,7 +73,7 @@ export class ExportCommands implements IExportCommands, IDisposable {
         const notebookUri = isUri(context) ? context : context?.notebookEditor?.notebookUri;
         const document = notebookUri
             ? this.notebooks.notebookDocuments.find((item) => this.fs.arePathsSame(item.uri, notebookUri))
-            : this.notebooks.activeNotebookEditor?.document;
+            : this.notebooks.activeNotebookEditor?.notebook;
 
         if (document) {
             const interpreter =
@@ -95,7 +95,7 @@ export class ExportCommands implements IExportCommands, IDisposable {
             // if no source document was passed then this was called from the command palette,
             // so we need to get the active editor
             sourceDocument =
-                this.notebooks.activeNotebookEditor?.document ||
+                this.notebooks.activeNotebookEditor?.notebook ||
                 (this.interactiveProvider
                     ? getActiveInteractiveWindow(this.interactiveProvider)?.notebookDocument
                     : undefined);

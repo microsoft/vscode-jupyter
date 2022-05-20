@@ -81,7 +81,7 @@ suite('DataScience - VSCode Notebook - (Conda Env Detection) (slow)', function (
         const uniqueCondaEnvName = `bogustTestEnv${Date.now()}`;
         await insertCodeCell(`!conda create -n ${uniqueCondaEnvName} python -y`, { index: 0 });
 
-        const cells = window.activeNotebookEditor!.document.getCells();
+        const cells = window.activeNotebookEditor!.notebook.getCells();
         await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cells[0])]);
 
         // Wait for this conda env to get added to the list of kernels.

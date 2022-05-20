@@ -38,7 +38,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                 .getAll<NotebookCellBangInstallDiagnosticsProvider>(IExtensionSyncActivationService)
                 .find((item) => item instanceof NotebookCellBangInstallDiagnosticsProvider)!;
             await createEmptyPythonNotebook(disposables);
-            activeNotebook = vscodeNotebook.activeNotebookEditor!.document;
+            activeNotebook = vscodeNotebook.activeNotebookEditor!.notebook;
             assert.isOk(activeNotebook, 'No active notebook');
             traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
         } catch (e) {
@@ -53,7 +53,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     });
     test('Show error for pip install', async () => {
         await insertCodeCell('!pip install xyz', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
 
         await waitForCondition(
             async () => (diagnosticProvider.problems.get(cell.document.uri) || []).length > 0,
@@ -69,7 +69,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     });
     test('Show error for conda install', async () => {
         await insertCodeCell('!conda install xyz', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
 
         await waitForCondition(
             async () => (diagnosticProvider.problems.get(cell.document.uri) || []).length > 0,

@@ -124,7 +124,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const documents = new Set<NotebookDocument>();
         while (window.activeNotebookEditor) {
-            documents.add(window.activeNotebookEditor.document);
+            documents.add(window.activeNotebookEditor.notebook);
             await commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
         }
 

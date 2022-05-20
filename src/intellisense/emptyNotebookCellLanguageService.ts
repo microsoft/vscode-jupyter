@@ -46,7 +46,7 @@ export class EmptyNotebookCellLanguageService implements IExtensionSingleActivat
         if (!isJupyterNotebook(document)) {
             return;
         }
-        const editor = this.notebook.notebookEditors.find((item) => item.document === document);
+        const editor = this.notebook.notebookEditors.find((item) => item.notebook === document);
         if (!editor) {
             return;
         }
@@ -86,7 +86,7 @@ export class EmptyNotebookCellLanguageService implements IExtensionSingleActivat
         }
 
         const monacoLanguage = translateKernelLanguageToMonaco(language);
-        chainWithPendingUpdates(editor.document, async () => {
+        chainWithPendingUpdates(editor.notebook, async () => {
             await emptyCodeCells.map(async (cell) => {
                 if (monacoLanguage.toLowerCase() === cell.document.languageId) {
                     return;

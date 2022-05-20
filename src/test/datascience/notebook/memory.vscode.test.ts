@@ -109,7 +109,7 @@ suite('DataScience - Memory Test', function () {
     });
     test('Track memory usage of standard test', async () => {
         await insertCodeCell('print("123412341234")', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await Promise.all([runCell(cell), waitForTextOutput(cell, '123412341234')]);
         // Wait for tokens on the first cell (it works with just plain pylance)
         await waitForCondition(
