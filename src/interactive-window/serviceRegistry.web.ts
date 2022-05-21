@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { IExtensionSingleActivationService } from '../platform/activation/types';
 import { IDataScienceCommandListener } from '../platform/common/types';
+import { ITracebackFormatter } from '../kernels/types';
+import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
 import { IServiceManager } from '../platform/ioc/types';
 import { CommandRegistry } from './commands/commandRegistry';
 import { ExportCommands } from './commands/exportCommands';
-import { CellHashProviderFactory } from './editor-integration/cellHashProviderFactory';
 import { CodeLensFactory } from './editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
 import { CodeWatcher } from './editor-integration/codewatcher';
@@ -16,6 +16,11 @@ import { ICodeWatcher, ICodeLensFactory, IDataScienceCodeLensProvider } from './
 import { InteractiveWindowCommandListener } from './interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from './interactiveWindowProvider';
 import { IExportCommands, IInteractiveWindowProvider } from './types';
+import { CodeGeneratorFactory } from './editor-integration/codeGeneratorFactory';
+import { GeneratedCodeStorageFactory } from './editor-integration/generatedCodeStorageFactory';
+import { IGeneratedCodeStorageFactory } from './editor-integration/types';
+import { GeneratedCodeStorageManager } from './generatedCodeStoreManager';
+import { InteractiveWindowTracebackFormatter } from './outputs/tracebackFormatter';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
@@ -32,5 +37,14 @@ export function registerTypes(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Decorator);
     serviceManager.addSingleton<IExportCommands>(IExportCommands, ExportCommands);
-    serviceManager.addSingleton<CellHashProviderFactory>(CellHashProviderFactory, CellHashProviderFactory);
+    serviceManager.addSingleton<CodeGeneratorFactory>(CodeGeneratorFactory, CodeGeneratorFactory);
+    serviceManager.addSingleton<IGeneratedCodeStorageFactory>(
+        IGeneratedCodeStorageFactory,
+        GeneratedCodeStorageFactory
+    );
+    serviceManager.addSingleton<ITracebackFormatter>(ITracebackFormatter, InteractiveWindowTracebackFormatter);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        GeneratedCodeStorageManager
+    );
 }

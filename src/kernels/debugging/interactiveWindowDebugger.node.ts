@@ -15,13 +15,13 @@ import { JupyterDebuggerRemoteNotSupportedError } from '../../platform/errors/ju
 import { getPlainTextOrStreamOutput } from '../kernel.base';
 import { IKernel, isLocalConnection } from '../types';
 import { IInteractiveWindowDebugger } from '../../interactive-window/types';
-import { ICellHashListener, IFileHashes } from '../../interactive-window/editor-integration/types';
+import { IFileHashes } from '../../interactive-window/editor-integration/types';
 import { IJupyterDebugService, ISourceMapRequest } from './types';
 import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 import { executeSilently } from '../helpers';
 
 @injectable()
-export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, ICellHashListener {
+export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
     private configs: WeakMap<NotebookDocument, DebugConfiguration> = new WeakMap<
         NotebookDocument,
         DebugConfiguration
@@ -85,7 +85,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger, IC
         }
     }
 
-    public async hashesUpdated(hashes: IFileHashes[]): Promise<void> {
+    public async updateSourceMaps(hashes: IFileHashes[]): Promise<void> {
         // Make sure that we have an active debugging session at this point
         if (this.debugService.activeDebugSession && this.debuggingActive) {
             traceInfoIfCI(`Sending debug request for source map`);

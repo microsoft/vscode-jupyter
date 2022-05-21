@@ -4,6 +4,7 @@
 import { Disposable, Event, NotebookCell, NotebookDocument, NotebookEditor, Uri } from 'vscode';
 import { IKernel, KernelConnectionMetadata } from '../kernels/types';
 import { Resource, InteractiveWindowMode, ICell } from '../platform/common/types';
+import { IFileHashes } from './editor-integration/types';
 
 export type INativeInteractiveWindow = { notebookUri: Uri; inputUri: Uri; notebookEditor: NotebookEditor };
 
@@ -13,6 +14,7 @@ export interface IInteractiveWindowDebugger {
     detach(kernel: IKernel): Promise<void>;
     enable(kernel: IKernel): void;
     disable(kernel: IKernel): void;
+    updateSourceMaps(hashes: IFileHashes[]): Promise<void>;
 }
 
 export const IInteractiveWindowProvider = Symbol('IInteractiveWindowProvider');

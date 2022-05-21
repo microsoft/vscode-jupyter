@@ -39,8 +39,6 @@ import { IDisposable, IDisposableRegistry, IExtensionContext } from '../../platf
 import { Deferred, createDeferred } from '../../platform/common/utils/async';
 import * as localize from '../../platform/common/utils/localize';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { CellHashProviderFactory } from '../../interactive-window/editor-integration/cellHashProviderFactory';
-import { InteractiveWindowView } from '../constants';
 import {
     NotebookCellStateTracker,
     traceCellMessage,
@@ -54,10 +52,15 @@ import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { swallowExceptions } from '../../platform/common/utils/decorators';
 import { noop } from '../../platform/common/utils/misc';
 import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../kernels/helpers';
-import { IJupyterSession, IKernel, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
+import {
+    IJupyterSession,
+    ITracebackFormatter,
+    KernelConnectionMetadata,
+    NotebookCellRunState
+} from '../../kernels/types';
 import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
-import { ICellHashProvider, ICellHash } from '../../interactive-window/editor-integration/types';
 import { WIDGET_MIMETYPE } from '../../kernels/ipywidgets-message-coordination/constants';
+import { getInteractiveCellMetadata } from '../../interactive-window/helpers';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
@@ -75,13 +78,12 @@ type DisplayData = nbformat.IDisplayData & {
 
 export class CellExecutionFactory {
     constructor(
-        private readonly kernel: IKernel,
         private readonly appShell: IApplicationShell,
         private readonly disposables: IDisposableRegistry,
         private readonly controller: NotebookController,
         private readonly outputTracker: CellOutputDisplayIdTracker,
-        private readonly cellHashProviderFactory: CellHashProviderFactory,
-        private readonly context: IExtensionContext
+        private readonly context: IExtensionContext,
+        private readonly formatters: ITracebackFormatter[]
     ) {}
 
     public create(cell: NotebookCell, metadata: Readonly<KernelConnectionMetadata>) {
@@ -93,8 +95,8 @@ export class CellExecutionFactory {
             this.disposables,
             this.controller,
             this.outputTracker,
-            this.cellHashProviderFactory.getOrCreate(this.kernel),
-            this.context
+            this.context,
+            this.formatters
         );
     }
 }
@@ -160,8 +162,8 @@ export class CellExecution implements IDisposable {
         disposables: IDisposableRegistry,
         private readonly controller: NotebookController,
         private readonly outputDisplayIdTracker: CellOutputDisplayIdTracker,
-        private readonly cellHashProvider: ICellHashProvider,
-        private readonly context: IExtensionContext
+        private readonly context: IExtensionContext,
+        private readonly formatters: ITracebackFormatter[]
     ) {
         disposables.push(this);
         workspace.onDidCloseTextDocument(
@@ -226,8 +228,8 @@ export class CellExecution implements IDisposable {
         disposables: IDisposableRegistry,
         controller: NotebookController,
         outputTracker: CellOutputDisplayIdTracker,
-        cellHashProvider: ICellHashProvider,
-        context: IExtensionContext
+        context: IExtensionContext,
+        formatters: ITracebackFormatter[]
     ) {
         return new CellExecution(
             cell,
@@ -236,8 +238,8 @@ export class CellExecution implements IDisposable {
             disposables,
             controller,
             outputTracker,
-            cellHashProvider,
-            context
+            context,
+            formatters
         );
     }
     public async start(session: IJupyterSession) {
@@ -493,10 +495,7 @@ export class CellExecution implements IDisposable {
 
         try {
             // Compute the hash for the cell we're about to execute if on the interactive window
-            let hash: ICellHash | undefined = undefined;
-            if (this.cell.notebook.notebookType === InteractiveWindowView) {
-                hash = await this.cellHashProvider.addCellHash(this.cell);
-            }
+            const iwCellMetata = getInteractiveCellMetadata(this.cell);
 
             // At this point we're about to ACTUALLY execute some code. Fire an event to indicate that
             this._preExecuteEmitter.fire(this.cell);
@@ -505,7 +504,7 @@ export class CellExecution implements IDisposable {
             // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute
             this.request = session.requestExecute(
                 {
-                    code: hash?.code || code,
+                    code: iwCellMetata?.generatedCode?.code || code,
                     silent: false,
                     stop_on_error: false,
                     allow_stdin: true,
@@ -876,11 +875,15 @@ export class CellExecution implements IDisposable {
     }
 
     private handleError(msg: KernelMessage.IErrorMsg, clearState: RefBool) {
+        let traceback = msg.content.traceback;
+        this.formatters.forEach((formatter) => {
+            traceback = formatter.format(this.cell, traceback);
+        });
         const output: nbformat.IError = {
             output_type: 'error',
             ename: msg.content.ename,
             evalue: msg.content.evalue,
-            traceback: this.cellHashProvider.modifyTraceback(msg.content.traceback)
+            traceback
         };
 
         this.addToCellData(output, clearState);

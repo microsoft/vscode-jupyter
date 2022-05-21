@@ -21,10 +21,11 @@ export abstract class BaseKernelProvider implements IKernelProvider {
      * The life time of kernels not tied to a notebook will be managed by callers of the API.
      * Where as if a kernel is tied to a notebook, then the kernel dies along with notebooks.
      */
-    protected readonly kernelsByUri = new Map<string, { options: KernelOptions; kernel: IKernel }>();
+    private readonly kernelsByUri = new Map<string, { options: KernelOptions; kernel: IKernel }>();
     private readonly pendingDisposables = new Set<IAsyncDisposable>();
     protected readonly _onDidRestartKernel = new EventEmitter<IKernel>();
     protected readonly _onDidStartKernel = new EventEmitter<IKernel>();
+    protected readonly _onDidCreateKernel = new EventEmitter<IKernel>();
     protected readonly _onDidDisposeKernel = new EventEmitter<IKernel>();
     protected readonly _onKernelStatusChanged = new EventEmitter<{ status: KernelMessage.Status; kernel: IKernel }>();
     public readonly onKernelStatusChanged = this._onKernelStatusChanged.event;
@@ -59,6 +60,9 @@ export abstract class BaseKernelProvider implements IKernelProvider {
     public get onDidStartKernel(): Event<IKernel> {
         return this._onDidStartKernel.event;
     }
+    public get onDidCreateKernel(): Event<IKernel> {
+        return this._onDidCreateKernel.event;
+    }
 
     public get(uri: Uri): IKernel | undefined {
         return this.getInternal(uri)?.kernel;
@@ -85,6 +89,10 @@ export abstract class BaseKernelProvider implements IKernelProvider {
             return this.kernelsByUri.get(uri.toString());
         }
         return notebook ? this.kernelsByNotebook.get(notebook) : undefined;
+    }
+    protected storeKernel(uri: Uri, options: KernelOptions, kernel: IKernel) {
+        this.kernelsByUri.set(uri.toString(), { options, kernel });
+        this._onDidCreateKernel.fire(kernel);
     }
     /**
      * If a kernel has been disposed, then remove the mapping of Uri + Kernel.

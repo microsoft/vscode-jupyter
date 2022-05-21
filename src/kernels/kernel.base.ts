@@ -33,7 +33,6 @@ import { Deferred, sleep } from '../platform/common/utils/async';
 import { DataScience } from '../platform/common/utils/localize';
 import { noop } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
-import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory';
 import { JupyterConnectError } from '../platform/errors/jupyterConnectError';
 import {
     sendKernelTelemetryEvent,
@@ -50,6 +49,7 @@ import {
     INotebookProvider,
     InterruptResult,
     isLocalConnection,
+    ITracebackFormatter,
     KernelActionSource,
     KernelConnectionMetadata,
     KernelSocketInformation,
@@ -145,10 +145,10 @@ export abstract class BaseKernel implements IKernel {
         protected readonly configService: IConfigurationService,
         protected readonly workspaceService: IWorkspaceService,
         outputTracker: CellOutputDisplayIdTracker,
-        readonly cellHashProviderFactory: CellHashProviderFactory,
         private readonly statusProvider: IStatusProvider,
         public readonly creator: KernelActionSource,
-        context: IExtensionContext
+        context: IExtensionContext,
+        formatters: ITracebackFormatter[]
     ) {
         this.kernelExecution = new KernelExecution(
             this,
@@ -158,8 +158,8 @@ export abstract class BaseKernel implements IKernel {
             disposables,
             controller,
             outputTracker,
-            cellHashProviderFactory,
-            context
+            context,
+            formatters
         );
         this.kernelExecution.onPreExecute((c) => this._onPreExecute.fire(c), this, disposables);
     }

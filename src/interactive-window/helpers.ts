@@ -7,17 +7,9 @@ import { IJupyterSettings } from '../platform/common/types';
 import { removeLinesFromFrontAndBackNoConcat, appendLineFeed } from '../webviews/webview-side/common';
 import { uncommentMagicCommands } from './editor-integration/cellFactory';
 import { CellMatcher } from './editor-integration/cellMatcher';
+import { InteractiveCellMetadata } from './editor-integration/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from './types';
 
-export type InteractiveCellMetadata = {
-    interactiveWindowCellMarker: string;
-    interactive: {
-        uristring: string;
-        line: number;
-        originalSource: string;
-    };
-    id: string;
-};
 export function getInteractiveCellMetadata(cell: NotebookCell): InteractiveCellMetadata | undefined {
     if (cell.metadata.interactive !== undefined) {
         return cell.metadata as InteractiveCellMetadata;

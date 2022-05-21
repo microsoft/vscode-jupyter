@@ -33,7 +33,6 @@ import { JupyterVariables } from './variables/jupyterVariables';
 import { KernelVariables } from './variables/kernelVariables';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './variables/preWarmVariables.node';
 import { PythonVariablesRequester } from './variables/pythonVariableRequester.node';
-import { ICellHashListener } from '../interactive-window/editor-integration/types';
 import { IInteractiveWindowDebugger } from '../interactive-window/types';
 import { MultiplexingDebugService } from '../platform/debugger/multiplexingDebugService.node';
 import { JupyterVariableDataProvider } from '../webviews/extension-side/dataviewer/jupyterVariableDataProvider';
@@ -83,12 +82,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         PreWarmActivatedJupyterEnvironmentVariables
     );
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, KernelCommandListener);
-    serviceManager.addSingleton<IInteractiveWindowDebugger>(
-        IInteractiveWindowDebugger,
-        InteractiveWindowDebugger,
-        undefined,
-        [ICellHashListener]
-    );
+    serviceManager.addSingleton<IInteractiveWindowDebugger>(IInteractiveWindowDebugger, InteractiveWindowDebugger);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         DebuggerVariableRegistration

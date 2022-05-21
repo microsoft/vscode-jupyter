@@ -206,6 +206,7 @@ export type KernelOptions = {
 export const IKernelProvider = Symbol('IKernelProvider');
 export interface IKernelProvider extends IAsyncDisposable {
     readonly kernels: Readonly<IKernel[]>;
+    onDidCreateKernel: Event<IKernel>;
     onDidStartKernel: Event<IKernel>;
     onDidRestartKernel: Event<IKernel>;
     onDidDisposeKernel: Event<IKernel>;
@@ -556,3 +557,18 @@ export interface IKernelFinder {
 export type KernelAction = 'start' | 'interrupt' | 'restart' | 'execution';
 
 export type KernelActionSource = 'jupyterExtension' | '3rdPartyExtension';
+
+export const ITracebackFormatter = Symbol('ITracebackFormatter');
+export interface ITracebackFormatter {
+    /**
+     * Modifies a traceback from an error message.
+     * Tracebacks take a form like so:
+     * "[1;31m---------------------------------------------------------------------------[0m"
+     * "[1;31mZeroDivisionError[0m                         Traceback (most recent call last)"
+     * "[1;32md:\Training\SnakePython\foo.py[0m in [0;36m<module>[1;34m[0m\n[0;32m      1[0m [0mprint[0m[1;33m([0m[1;34m'some more'[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [1;32m----> 2[1;33m [0mcause_error[0m[1;33m([0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [0m"
+     * "[1;32md:\Training\SnakePython\foo.py[0m in [0;36mcause_error[1;34m()[0m\n[0;32m      3[0m     [0mprint[0m[1;33m([0m[1;34m'error'[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [0;32m      4[0m     [0mprint[0m[1;33m([0m[1;34m'now'[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [1;32m----> 5[1;33m     [0mprint[0m[1;33m([0m [1;36m1[0m [1;33m/[0m [1;36m0[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [0m"
+     * "[1;31mZeroDivisionError[0m: division by zero"
+     * Each item in the array being a stack frame.
+     */
+    format(cell: NotebookCell, traceback: string[]): string[];
+}

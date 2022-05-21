@@ -8,14 +8,19 @@ import { traceInfo, traceError } from '../platform/logging';
 import { IFileSystemNode } from '../platform/common/platform/types.node';
 import { IPythonExecutionFactory } from '../platform/common/process/types.node';
 import { Resource, IDisposableRegistry, IConfigurationService, IExtensionContext } from '../platform/common/types';
-import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../notebooks/constants';
 import { calculateWorkingDirectory } from '../platform/common/utils.node';
 import { CodeSnippets } from '../webviews/webview-side/common/constants';
 import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
 import { isLocalHostConnection, isPythonKernelConnection } from './helpers';
 import { expandWorkingDir } from './jupyter/jupyterUtils';
-import { INotebookProvider, isLocalConnection, KernelActionSource, KernelConnectionMetadata } from './types';
+import {
+    INotebookProvider,
+    isLocalConnection,
+    ITracebackFormatter,
+    KernelActionSource,
+    KernelConnectionMetadata
+} from './types';
 import { AddRunCellHook } from '../platform/common/constants.node';
 import { IStatusProvider } from '../platform/progress/types';
 import { getAssociatedNotebookDocument } from '../notebooks/controllers/kernelSelector';
@@ -36,12 +41,12 @@ export class Kernel extends BaseKernel {
         controller: NotebookController,
         configService: IConfigurationService,
         outputTracker: CellOutputDisplayIdTracker,
-        cellHashProviderFactory: CellHashProviderFactory,
         workspaceService: IWorkspaceService,
         private readonly pythonExecutionFactory: IPythonExecutionFactory,
         statusProvider: IStatusProvider,
         creator: KernelActionSource,
-        context: IExtensionContext
+        context: IExtensionContext,
+        formatters: ITracebackFormatter[]
     ) {
         super(
             id,
@@ -56,10 +61,10 @@ export class Kernel extends BaseKernel {
             configService,
             workspaceService,
             outputTracker,
-            cellHashProviderFactory,
             statusProvider,
             creator,
-            context
+            context,
+            formatters
         );
     }
 

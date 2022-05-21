@@ -12,7 +12,6 @@ import { traceInfo, traceInfoIfCI, traceWarning } from '../../platform/logging';
 import { IDisposable, IDisposableRegistry, IExtensionContext } from '../../platform/common/types';
 import { createDeferred, waitForPromise } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { CellHashProviderFactory } from '../../interactive-window/editor-integration/cellHashProviderFactory';
 import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../telemetry/telemetry';
 import { captureTelemetry } from '../../telemetry';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
@@ -21,6 +20,7 @@ import {
     IJupyterSession,
     IKernel,
     InterruptResult,
+    ITracebackFormatter,
     KernelConnectionMetadata,
     NotebookCellRunState
 } from '../../kernels/types';
@@ -47,17 +47,16 @@ export class KernelExecution implements IDisposable {
         disposables: IDisposableRegistry,
         controller: NotebookController,
         outputTracker: CellOutputDisplayIdTracker,
-        cellHashProviderFactory: CellHashProviderFactory,
-        context: IExtensionContext
+        context: IExtensionContext,
+        formatters: ITracebackFormatter[]
     ) {
         this.executionFactory = new CellExecutionFactory(
-            kernel,
             appShell,
             disposables,
             controller,
             outputTracker,
-            cellHashProviderFactory,
-            context
+            context,
+            formatters
         );
     }
 

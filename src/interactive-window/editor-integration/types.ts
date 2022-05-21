@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { Event, CodeLens, CodeLensProvider, Uri, TextEditor, NotebookCell, Range, TextDocument } from 'vscode';
+import { Event, CodeLens, CodeLensProvider, Uri, TextEditor, Range, TextDocument, NotebookDocument } from 'vscode';
 import { ICellRange, IDisposable } from '../../platform/common/types';
 
 // Wraps the vscode CodeLensProvider base class
@@ -57,41 +57,57 @@ export interface ICodeLensFactory {
     getCellRanges(document: TextDocument): ICellRange[];
 }
 
-export interface ICellHash {
+export interface IGeneratedCode {
     line: number; // 1 based
     endLine: number; // 1 based and inclusive
     runtimeLine: number; // Line in the jupyter source to start at
-    hash: string;
     runtimeFile: string; // Name of the cell's file
     executionCount: number;
     id: string; // Cell id as sent to jupyter
     timestamp: number;
     code: string; // Code that was actually hashed (might include breakpoint and other code)
     debuggerStartLine: number; // 1 based line in source .py that we start our file mapping from
+    startOffset: number;
+    endOffset: number;
+    deleted: boolean;
+    realCode: string;
+    trimmedRightCode: string;
+    firstNonBlankLineIndex: number; // zero based. First non blank line of the real code.
 }
 
 export interface IFileHashes {
     uri: Uri;
-    hashes: ICellHash[];
+    hashes: IGeneratedCode[];
 }
 
-export const ICellHashListener = Symbol('ICellHashListener');
-export interface ICellHashListener {
-    hashesUpdated(hashes: IFileHashes[]): Promise<void>;
+export const IGeneratedCodeStore = Symbol('IGeneratedCodeStore');
+export interface IGeneratedCodeStore {
+    clear(): void;
+    readonly all: IFileHashes[];
+    getFileHashes(fileUri: Uri): IGeneratedCode[];
+    store(fileUri: Uri, info: IGeneratedCode): void;
 }
 
-export interface ICellHashProvider {
-    getHashes(): IFileHashes[];
-    addCellHash(notebookCell: NotebookCell): Promise<ICellHash | undefined>;
-    /**
-     * This function will modify a traceback from an error message.
-     * Tracebacks take a form like so:
-     * "[1;31m---------------------------------------------------------------------------[0m"
-     * "[1;31mZeroDivisionError[0m                         Traceback (most recent call last)"
-     * "[1;32md:\Training\SnakePython\foo.py[0m in [0;36m<module>[1;34m[0m\n[0;32m      1[0m [0mprint[0m[1;33m([0m[1;34m'some more'[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [1;32m----> 2[1;33m [0mcause_error[0m[1;33m([0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [0m"
-     * "[1;32md:\Training\SnakePython\foo.py[0m in [0;36mcause_error[1;34m()[0m\n[0;32m      3[0m     [0mprint[0m[1;33m([0m[1;34m'error'[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [0;32m      4[0m     [0mprint[0m[1;33m([0m[1;34m'now'[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [1;32m----> 5[1;33m     [0mprint[0m[1;33m([0m [1;36m1[0m [1;33m/[0m [1;36m0[0m[1;33m)[0m[1;33m[0m[1;33m[0m[0m\n    [0m"
-     * "[1;31mZeroDivisionError[0m: division by zero"
-     * Each item in the array being a stack frame.
-     */
-    modifyTraceback(traceback: string[]): string[];
+export const IGeneratedCodeStorageFactory = Symbol('IGeneratedCodeStorageFactory');
+export interface IGeneratedCodeStorageFactory {
+    getOrCreate(notebook: NotebookDocument): IGeneratedCodeStore;
+    get(options: { notebook: NotebookDocument } | { fileUri: Uri }): IGeneratedCodeStore | undefined;
+}
+export type InteractiveCellMetadata = {
+    interactiveWindowCellMarker?: string;
+    interactive: {
+        uristring: string;
+        line: number;
+        originalSource: string;
+    };
+    generatedCode?: IGeneratedCode;
+    id: string;
+};
+
+export interface IInteractiveWindowCodeGenerator {
+    reset(): void;
+    generateCode(
+        metadata: Pick<InteractiveCellMetadata, 'interactive' | 'id'>,
+        debug: boolean
+    ): IGeneratedCode | undefined;
 }

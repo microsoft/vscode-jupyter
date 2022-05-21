@@ -58,9 +58,11 @@ import { IInteractiveWindowLoadable, IInteractiveWindowDebugger } from './types'
 import { generateInteractiveCode } from './helpers';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { DisplayOptions } from '../kernels/displayOptions';
-import { getInteractiveCellMetadata, InteractiveCellMetadata } from './helpers';
+import { getInteractiveCellMetadata } from './helpers';
 import { KernelConnector } from '../kernels/kernelConnector';
 import { getFilePath } from '../platform/common/platform/fs-paths';
+import { IGeneratedCodeStorageFactory, InteractiveCellMetadata } from './editor-integration/types';
+import { CodeGeneratorFactory } from './editor-integration/codeGeneratorFactory';
 
 export class InteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
@@ -118,7 +120,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         preferredController: IVSCodeNotebookController | undefined,
         public readonly notebookEditor: NotebookEditor,
         public readonly inputUri: Uri,
-        public readonly appShell: IApplicationShell
+        public readonly appShell: IApplicationShell,
+        private readonly codeGeneratorFactory: CodeGeneratorFactory,
+        private readonly storageFactory: IGeneratedCodeStorageFactory
     ) {
         // Set our owner and first submitter
         if (this._owner) {
@@ -506,7 +510,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         const promises = cells.map((c) => {
             // Add the cell first. We don't need to wait for this part as we want to add them
             // as quickly as possible
-            const notebookCellPromise = this.addNotebookCell(c, fileUri, line);
+            const notebookCellPromise = this.addNotebookCell(c, fileUri, line, isDebug);
 
             // Queue up execution
             const promise = this.createExecutionPromise(notebookCellPromise, isDebug);
@@ -551,7 +555,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         const { cell, wasScrolled } = await notebookCellPromise;
 
         let success = true;
-        let kernelBeginDisposable = undefined;
 
         // Scroll if the initial placement of this cell was scrolled as well
         const settings = this.configuration.getSettings(this.owningResource);
@@ -578,19 +581,10 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             // If debugging attach to the kernel but don't enable tracing just yet
             if (isDebug) {
                 await this.interactiveWindowDebugger.attach(kernel);
-
-                // Enable has to happen after the hidden code so that we don't hit breakpoints from previous cells
-                // Example:
-                // User has breakpoint on previous cell with name <ipython-2-hashystuff>
-                // We turn on tracing
-                // Hidden cell executes to set next cell to name <ipython-3-hashyotherstuff>
-                // Breakpoint fires in <ipython-2-hashystuff> because hidden cell inherits that value.
-                // So we have to enable tracing after we send the hidden cell.
-                kernelBeginDisposable = kernel.onPreExecute((c) => {
-                    if (c === cell) {
-                        this.interactiveWindowDebugger.enable(kernel);
-                    }
-                });
+                await this.interactiveWindowDebugger.updateSourceMaps(
+                    this.storageFactory.get({ notebook: cell.notebook })?.all || []
+                );
+                this.interactiveWindowDebugger.enable(kernel);
             }
             traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell');
             success = (await kernel!.executeCell(cell)) !== NotebookCellRunState.Error;
@@ -602,9 +596,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             }
         } finally {
             await detachKernel();
-            if (kernelBeginDisposable) {
-                kernelBeginDisposable.dispose();
-            }
             traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.end');
         }
 
@@ -725,7 +716,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private async addNotebookCell(
         code: string,
         file: Uri,
-        line: number
+        line: number,
+        isDebug: boolean
     ): Promise<{ cell: NotebookCell; wasScrolled: boolean }> {
         const notebookDocument = this.notebookEditor.notebook;
 
@@ -754,15 +746,23 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             strippedCode,
             isMarkdown ? MARKDOWN_LANGUAGE : language
         );
-        notebookCellData.metadata = <InteractiveCellMetadata>{
+        const interactive = {
+            uristring: file.toString(), // Has to be simple types
+            line: line,
+            originalSource: code
+        };
+        const id = uuid();
+        const generatedCode = this.codeGeneratorFactory
+            .getOrCreate(this.notebookDocument)
+            .generateCode({ interactive, id }, isDebug);
+
+        const metadata: InteractiveCellMetadata = {
             interactiveWindowCellMarker,
-            interactive: {
-                uristring: file.toString(), // Has to be simple types
-                line: line,
-                originalSource: code
-            },
+            interactive,
+            generatedCode,
             id: uuid()
         };
+        notebookCellData.metadata = metadata;
         await chainWithPendingUpdates(notebookDocument, (edit) => {
             edit.replaceNotebookCells(
                 notebookDocument.uri,
