@@ -31,7 +31,12 @@ import { IExtensionSingleActivationService, IExtensionSyncActivationService } fr
 import { ExtensionRecommendationService } from './common/extensionRecommendation.node';
 import { GlobalActivation } from './common/globalActivation';
 import { PreReleaseChecker } from './common/prereleaseChecker.node';
-import { IConfigurationService, IDataScienceCommandListener, IExtensionContext } from './common/types';
+import {
+    IConfigurationService,
+    IDataScienceCommandListener,
+    IExtensionContext,
+    IScriptPathUtils
+} from './common/types';
 import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFactory.node';
 import { DebuggingManager } from './debugger/jupyter/notebook/debuggingManager';
 import { IDebugLocationTracker, IDebuggingManager } from './debugger/types';
@@ -65,6 +70,7 @@ import { FileSystem } from './common/platform/fileSystem.node';
 import { WorkspaceService } from './common/application/workspace.node';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from '../webviews/extension-side/renderer';
 import { OutputCommandListener } from './logging/outputCommandListener';
+import { ScriptPathUtils } from './common/scriptPathUtils';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<FileSystem>(FileSystem, FileSystem);
@@ -91,6 +97,7 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
         IDataViewerDependencyService,
         DataViewerDependencyService
     );
+    serviceManager.addSingleton<IScriptPathUtils>(IScriptPathUtils, ScriptPathUtils);
     serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, GitHubIssueCommandListener);

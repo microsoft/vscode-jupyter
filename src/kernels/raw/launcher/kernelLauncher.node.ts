@@ -32,7 +32,7 @@ import { IKernelLauncher, IKernelProcess, IKernelConnection } from '../types';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService.node';
 import { KernelProcess } from './kernelProcess.node';
 import { JupyterPaths } from '../finder/jupyterPaths.node';
-import { isTestExecution } from '../../../platform/common/constants.node';
+import { isTestExecution } from '../../../platform/common/constants';
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;

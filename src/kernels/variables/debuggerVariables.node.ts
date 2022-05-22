@@ -8,9 +8,8 @@ import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 import { IDebugService, IVSCodeNotebook } from '../../platform/common/application/types';
-import { DataFrameLoading, GetVariableInfo } from '../../platform/common/constants.node';
 import { traceError } from '../../platform/logging';
-import { IConfigurationService, Resource } from '../../platform/common/types';
+import { IConfigurationService, Resource, IScriptPathUtils } from '../../platform/common/types';
 import { DebugLocationTracker } from '../../platform/debugger/debugLocationTracker';
 import { IDebuggingManager, KernelDebugMode } from '../../platform/debugger/types';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -47,7 +46,8 @@ export class DebuggerVariables
         @inject(IJupyterDebugService) @named(Identifiers.MULTIPLEXING_DEBUGSERVICE) private debugService: IDebugService,
         @inject(IDebuggingManager) private readonly debuggingManager: IDebuggingManager,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook
+        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
+        @inject(IScriptPathUtils) private readonly scriptPaths: IScriptPathUtils
     ) {
         super(undefined);
         this.debuggingManager.onDoneDebugging(() => this.refreshEventEmitter.fire(), this);
@@ -152,7 +152,7 @@ export class DebuggerVariables
 
         // Then eval calling the main function with our target variable
         const results = await this.evaluate(
-            `${DataFrameLoading.DataFrameInfoImportFunc}(${expression})`,
+            `${this.scriptPaths.DataFrameLoading.DataFrameInfoImportFunc}(${expression})`,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (targetVariable as any).frameId
         );
@@ -204,7 +204,7 @@ export class DebuggerVariables
         await this.importDataFrameScripts();
 
         const results = await this.evaluate(
-            `${DataFrameLoading.DataFrameRowImportFunc}(${expression}, ${start}, ${end})`,
+            `${this.scriptPaths.DataFrameLoading.DataFrameRowImportFunc}(${expression}, ${start}, ${end})`,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (targetVariable as any).frameId
         );
@@ -317,7 +317,7 @@ export class DebuggerVariables
             // Run our dataframe scripts only once per session because they're slow
             const key = this.debugService.activeDebugSession?.id;
             if (key && !this.importedDataFrameScriptsIntoKernel.has(key)) {
-                await this.evaluate(DataFrameLoading.DataFrameSysImport);
+                await this.evaluate(this.scriptPaths.DataFrameLoading.DataFrameSysImport);
                 this.importedDataFrameScriptsIntoKernel.add(key);
             }
         } catch (exc) {
@@ -330,7 +330,7 @@ export class DebuggerVariables
             // Run our variable info scripts only once per session because they're slow
             const key = this.debugService.activeDebugSession?.id;
             if (key && !this.importedGetVariableInfoScriptsIntoKernel.has(key)) {
-                await this.evaluate(GetVariableInfo.GetVariableInfoSysImport);
+                await this.evaluate(this.scriptPaths.GetVariableInfo.GetVariableInfoSysImport);
                 this.importedGetVariableInfoScriptsIntoKernel.add(key);
             }
         } catch (exc) {
@@ -344,7 +344,7 @@ export class DebuggerVariables
 
         // Then eval calling the variable info function with our target variable
         const results = await this.evaluate(
-            `${GetVariableInfo.VariableInfoImportFunc}(${variable.name})`,
+            `${this.scriptPaths.GetVariableInfo.VariableInfoImportFunc}(${variable.name})`,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (variable as any).frameId
         );

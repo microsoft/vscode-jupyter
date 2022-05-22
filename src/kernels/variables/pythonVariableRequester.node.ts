@@ -13,7 +13,7 @@ import { executeSilently } from '../helpers';
 import { IKernel } from '../types';
 import { IKernelVariableRequester, IJupyterVariable } from './types';
 import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
-import { DataFrameLoading, GetVariableInfo } from '../../platform/common/constants.node';
+import { IScriptPathUtils } from '../../platform/common/types';
 
 type DataFrameSplitFormat = {
     index: (number | string)[];
@@ -42,7 +42,10 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
     private importedDataFrameScripts = new WeakMap<NotebookDocument, boolean>();
     private importedGetVariableInfoScripts = new WeakMap<NotebookDocument, boolean>();
 
-    constructor(@inject(IFileSystemNode) private fs: IFileSystemNode) {}
+    constructor(
+        @inject(IFileSystemNode) private fs: IFileSystemNode,
+        @inject(IScriptPathUtils) private scriptPaths: IScriptPathUtils
+    ) {}
 
     public async getDataFrameInfo(
         targetVariable: IJupyterVariable,
@@ -56,7 +59,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         const results = kernel.session
             ? await executeSilently(
                   kernel.session,
-                  `import builtins\nbuiltins.print(${DataFrameLoading.DataFrameInfoFunc}(${expression}))`,
+                  `import builtins\nbuiltins.print(${this.scriptPaths.DataFrameLoading.DataFrameInfoFunc}(${expression}))`,
                   {
                       traceErrors: true,
                       traceErrorsMessage: 'Failure in execute_request for getDataFrameInfo',
@@ -89,7 +92,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         const results = kernel.session
             ? await executeSilently(
                   kernel.session,
-                  `import builtins\nbuiltins.print(${DataFrameLoading.DataFrameRowFunc}(${expression}, ${start}, ${end}))`,
+                  `import builtins\nbuiltins.print(${this.scriptPaths.DataFrameLoading.DataFrameRowFunc}(${expression}, ${start}, ${end}))`,
                   {
                       traceErrors: true,
                       traceErrorsMessage: 'Failure in execute_request for getDataFrameRows',
@@ -122,7 +125,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
                 const attributes = kernel.session
                     ? await executeSilently(
                           kernel.session,
-                          `import builtins\nbuiltins.print(${GetVariableInfo.VariablePropertiesFunc}(${matchingVariable.name}, ${stringifiedAttributeNameList}))`,
+                          `import builtins\nbuiltins.print(${this.scriptPaths.GetVariableInfo.VariablePropertiesFunc}(${matchingVariable.name}, ${stringifiedAttributeNameList}))`,
                           {
                               traceErrors: true,
                               traceErrorsMessage: 'Failure in execute_request for getVariableProperties',
@@ -150,7 +153,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             const results = kernel.session
                 ? await executeSilently(
                       kernel.session,
-                      `import builtins\n_rwho_ls = %who_ls\nbuiltins.print(${GetVariableInfo.VariableTypesFunc}(_rwho_ls))`,
+                      `import builtins\n_rwho_ls = %who_ls\nbuiltins.print(${this.scriptPaths.GetVariableInfo.VariableTypesFunc}(_rwho_ls))`,
                       {
                           traceErrors: true,
                           traceErrorsMessage: 'Failure in execute_request for getVariableNamesAndTypesFromKernel',
@@ -196,7 +199,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         const results = kernel.session
             ? await executeSilently(
                   kernel.session,
-                  `import builtins\nbuiltins.print(${GetVariableInfo.VariableInfoFunc}(${targetVariable.name}))`,
+                  `import builtins\nbuiltins.print(${this.scriptPaths.GetVariableInfo.VariableInfoFunc}(${targetVariable.name}))`,
                   {
                       traceErrors: true,
                       traceErrorsMessage: 'Failure in execute_request for getFullVariable',
@@ -225,7 +228,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             disposables.push(kernel.onRestarted(handler));
 
             // First put the code from our helper files into the notebook
-            await this.runScriptFile(kernel, DataFrameLoading.ScriptPath);
+            await this.runScriptFile(kernel, this.scriptPaths.DataFrameLoading.ScriptPath);
 
             this.importedDataFrameScripts.set(key, true);
         }
@@ -243,7 +246,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             disposables.push(kernel.onDisposed(handler));
             disposables.push(kernel.onRestarted(handler));
 
-            await this.runScriptFile(kernel, GetVariableInfo.ScriptPath);
+            await this.runScriptFile(kernel, this.scriptPaths.GetVariableInfo.ScriptPath);
 
             this.importedGetVariableInfoScripts.set(key, true);
         }

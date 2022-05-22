@@ -7,7 +7,13 @@ import { IApplicationShell, IWorkspaceService } from '../platform/common/applica
 import { traceInfo, traceError } from '../platform/logging';
 import { IFileSystemNode } from '../platform/common/platform/types.node';
 import { IPythonExecutionFactory } from '../platform/common/process/types.node';
-import { Resource, IDisposableRegistry, IConfigurationService, IExtensionContext } from '../platform/common/types';
+import {
+    Resource,
+    IDisposableRegistry,
+    IConfigurationService,
+    IExtensionContext,
+    IScriptPathUtils
+} from '../platform/common/types';
 import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../notebooks/constants';
 import { calculateWorkingDirectory } from '../platform/common/utils.node';
@@ -16,7 +22,6 @@ import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayId
 import { isLocalHostConnection, isPythonKernelConnection } from './helpers';
 import { expandWorkingDir } from './jupyter/jupyterUtils';
 import { INotebookProvider, isLocalConnection, KernelActionSource, KernelConnectionMetadata } from './types';
-import { AddRunCellHook } from '../platform/common/constants.node';
 import { IStatusProvider } from '../platform/progress/types';
 import { getAssociatedNotebookDocument } from '../notebooks/controllers/kernelSelector';
 import { sendTelemetryForPythonKernelExecutable } from './helpers.node';
@@ -41,7 +46,8 @@ export class Kernel extends BaseKernel {
         private readonly pythonExecutionFactory: IPythonExecutionFactory,
         statusProvider: IStatusProvider,
         creator: KernelActionSource,
-        context: IExtensionContext
+        context: IExtensionContext,
+        private readonly scriptPaths: IScriptPathUtils
     ) {
         super(
             id,
@@ -69,11 +75,11 @@ export class Kernel extends BaseKernel {
         if (getAssociatedNotebookDocument(this)?.notebookType === InteractiveWindowView) {
             // If using ipykernel 6, we need to set the IPYKERNEL_CELL_NAME so that
             // debugging can work. However this code is harmless for IPYKERNEL 5 so just always do it
-            if (await this.fs.localFileExists(AddRunCellHook.ScriptPath)) {
-                const fileContents = await this.fs.readLocalFile(AddRunCellHook.ScriptPath);
+            if (await this.fs.localFileExists(this.scriptPaths.AddRunCellHook.ScriptPath)) {
+                const fileContents = await this.fs.readLocalFile(this.scriptPaths.AddRunCellHook.ScriptPath);
                 return fileContents.splitLines({ trim: false });
             }
-            traceError(`Cannot run non-existent script file: ${AddRunCellHook.ScriptPath}`);
+            traceError(`Cannot run non-existent script file: ${this.scriptPaths.AddRunCellHook.ScriptPath}`);
         }
         return [];
     }

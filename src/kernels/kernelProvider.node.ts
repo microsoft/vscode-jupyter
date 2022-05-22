@@ -11,7 +11,8 @@ import {
     IAsyncDisposableRegistry,
     IDisposableRegistry,
     IConfigurationService,
-    IExtensionContext
+    IExtensionContext,
+    IScriptPathUtils
 } from '../platform/common/types';
 import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../notebooks/constants';
@@ -36,7 +37,8 @@ export class KernelProvider extends BaseKernelProvider {
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
-        @inject(IExtensionContext) private readonly context: IExtensionContext
+        @inject(IExtensionContext) private readonly context: IExtensionContext,
+        @inject(IScriptPathUtils) private readonly scriptPaths: IScriptPathUtils
     ) {
         super(asyncDisposables, disposables, notebook);
     }
@@ -70,7 +72,8 @@ export class KernelProvider extends BaseKernelProvider {
             this.pythonExecutionFactory,
             this.statusProvider,
             options.creator,
-            this.context
+            this.context,
+            this.scriptPaths
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);

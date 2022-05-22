@@ -376,3 +376,33 @@ export interface ICellRange {
     range: Range;
     cell_type: string;
 }
+
+// Used by platform/common/scriptPathUtils
+export const IScriptPathUtils = Symbol('IConfigurationService');
+export interface IScriptPathUtils {
+    rootDirectory: string;
+    DataFrameLoading: {
+        SysPath: string;
+        DataFrameSysImport: string;
+        ScriptPath: string;
+        DataFrameInfoFunc: string;
+        DataFrameRowFunc: string;
+        DataFrameImport: string;
+        DataFrameInfoImportFunc: string;
+        DataFrameRowImportFunc: string;
+    };
+    GetVariableInfo: {
+        SysPath: string;
+        GetVariableInfoSysImport: string;
+        ScriptPath: string;
+        VariableInfoFunc: string;
+        VariablePropertiesFunc: string;
+        VariableTypesFunc: string;
+        VariableInfoImportName: string;
+        VariableInfoImportFunc: string;
+    };
+    AddRunCellHook: {
+        SysPath: string;
+        ScriptPath: string;
+    };
+}
