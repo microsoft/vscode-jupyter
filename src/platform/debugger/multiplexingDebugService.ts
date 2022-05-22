@@ -92,7 +92,7 @@ export class MultiplexingDebugService implements IJupyterDebugService {
     public startRunByLine(config: DebugConfiguration): Thenable<boolean> {
         this.lastStartedService = this.jupyterDebugService;
         if (!this.jupyterDebugService) {
-            throw new Error('No run by line debugger service');
+            throw new Error('No jupyter debugger service');
         }
         return this.jupyterDebugService.startRunByLine(config);
     }
@@ -102,11 +102,7 @@ export class MultiplexingDebugService implements IJupyterDebugService {
             const d2 = this.jupyterDebugService.registerDebugConfigurationProvider(debugType, provider);
             return this.combineDisposables(d1, d2);
         }
-        return {
-            dispose: () => {
-                d1.dispose();
-            }
-        };
+        return d1;
     }
     public registerDebugAdapterTrackerFactory(debugType: string, factory: DebugAdapterTrackerFactory): Disposable {
         const d1 = this.vscodeDebugService.registerDebugAdapterTrackerFactory(debugType, factory);
@@ -114,11 +110,7 @@ export class MultiplexingDebugService implements IJupyterDebugService {
             const d2 = this.jupyterDebugService.registerDebugAdapterTrackerFactory(debugType, factory);
             return this.combineDisposables(d1, d2);
         }
-        return {
-            dispose: () => {
-                d1.dispose();
-            }
-        };
+        return d1;
     }
     public startDebugging(
         folder: WorkspaceFolder | undefined,
