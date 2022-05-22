@@ -3,18 +3,20 @@
 
 'use strict';
 
+import { inject, injectable } from 'inversify';
 import { CancellationToken, NotebookCell, NotebookCellKind, NotebookDocument, Uri } from 'vscode';
 import { appendLineFeed } from '../../webviews/webview-side/common';
-import { IFileSystem } from '../common/platform/types';
+import { IFileSystem, IPlatformService } from '../common/platform/types';
 import { IConfigurationService } from '../common/types';
 import { IExport } from './types';
 
 // Handles exporting a NotebookDocument to python
-export class ExportToPythonPlainBase implements IExport {
+@injectable()
+export class ExportToPythonPlain implements IExport {
     public constructor(
-        private readonly fs: IFileSystem,
-
-        protected readonly configuration: IConfigurationService
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IConfigurationService) private readonly configuration: IConfigurationService,
+        @inject(IPlatformService) private platform: IPlatformService
     ) {}
 
     async writeFile(target: Uri, contents: string): Promise<void> {
@@ -22,7 +24,7 @@ export class ExportToPythonPlainBase implements IExport {
     }
 
     getEOL(): string {
-        return '\n';
+        return this.platform.isWindows ? '\r\n' : '\n';
     }
 
     // Export the given document to the target source file

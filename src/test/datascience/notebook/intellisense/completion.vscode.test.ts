@@ -8,7 +8,7 @@ import { commands, CompletionList, Position } from 'vscode';
 import { IVSCodeNotebook } from '../../../../platform/common/application/types';
 import { traceInfo } from '../../../../platform/logging';
 import { IDisposable } from '../../../../platform/common/types';
-import { InteractiveWindowProvider } from '../../../../interactive-window/interactiveWindowProvider.node';
+import { InteractiveWindowProvider } from '../../../../interactive-window/interactiveWindowProvider';
 import { getTextOutputValue } from '../../../../notebooks/helpers';
 import { captureScreenShot, IExtensionTestApi } from '../../../common.node';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants.node';
@@ -70,7 +70,7 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Code Completio
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Execute cell and get completions for variable', async () => {
         await insertCodeCell('import sys\nprint(sys.executable)\na = 1', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
 
         await runCell(cell);
 
@@ -79,7 +79,7 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Code Completio
         const outputText = getTextOutputValue(cell.outputs[0]).trim();
         traceInfo(`Cell Output ${outputText}`);
         await insertCodeCell('a.', { index: 1 });
-        const cell2 = vscodeNotebook.activeNotebookEditor!.document.cellAt(1);
+        const cell2 = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
 
         const position = new Position(0, 2);
         traceInfo('Get completions in test');

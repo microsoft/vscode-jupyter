@@ -54,7 +54,7 @@ export async function chainWithPendingUpdates(
 
 export function clearPendingChainedUpdatesForTests() {
     const editor: NotebookEditor | undefined = window.activeNotebookEditor;
-    if (editor?.document) {
-        pendingCellUpdates.delete(editor.document);
+    if (editor?.notebook) {
+        pendingCellUpdates.delete(editor.notebook);
     }
 }

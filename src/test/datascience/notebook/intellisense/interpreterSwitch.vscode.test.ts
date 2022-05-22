@@ -120,7 +120,7 @@ suite('DataScience - Intellisense Switch interpreters in a notebook', function (
         await waitForKernelToChange({ interpreterPath: venvNoKernelPythonPath });
 
         // Wait for an error to show up
-        cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await waitForCondition(
             async () => {
                 diagnostics = languages.getDiagnostics(cell.document.uri);
@@ -134,7 +134,7 @@ suite('DataScience - Intellisense Switch interpreters in a notebook', function (
         await waitForKernelToChange({ interpreterPath: venvKernelPythonPath });
 
         // Now there should be 1 error again
-        cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await waitForCondition(
             async () => {
                 diagnostics = languages.getDiagnostics(cell.document.uri);

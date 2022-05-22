@@ -38,7 +38,7 @@ class TestRunner {
                 VSC_JUPYTER_PERF_TEST: '1',
                 CODE_TESTS_WORKSPACE: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience'),
                 VSC_JUPYTER_WARMUP_RUN: warmupRun ? '1' : '0',
-                VSC_JUPYTER_TEST_TIMEOUT: '60000',
+                VSC_JUPYTER_TEST_TIMEOUT: '120000',
                 ...process.env
             };
             const proc = spawn(

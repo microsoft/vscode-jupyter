@@ -5,7 +5,7 @@
 import { IExtensionSyncActivationService, IExtensionSingleActivationService } from '../platform/activation/types';
 import { IDataScienceCommandListener } from '../platform/common/types';
 import { IServiceManager } from '../platform/ioc/types';
-import { CommandRegistry } from './commands/commandRegistry.node';
+import { CommandRegistry } from './commands/commandRegistry';
 import { ExportCommands } from './commands/exportCommands';
 import { CellHashProviderFactory } from './editor-integration/cellHashProviderFactory';
 import { CodeLensFactory } from './editor-integration/codeLensFactory';
@@ -14,8 +14,8 @@ import { CodeWatcher } from './editor-integration/codewatcher';
 import { Decorator } from './editor-integration/decorator';
 import { HoverProvider } from './editor-integration/hoverProvider';
 import { ICodeWatcher, ICodeLensFactory, IDataScienceCodeLensProvider } from './editor-integration/types';
-import { InteractiveWindowCommandListener } from './interactiveWindowCommandListener.node';
-import { InteractiveWindowProvider } from './interactiveWindowProvider.node';
+import { InteractiveWindowCommandListener } from './interactiveWindowCommandListener';
+import { InteractiveWindowProvider } from './interactiveWindowProvider';
 import { IExportCommands, IInteractiveWindowProvider } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {

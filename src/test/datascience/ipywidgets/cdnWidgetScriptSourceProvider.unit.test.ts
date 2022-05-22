@@ -19,6 +19,7 @@ import {
     ILocalResourceUriConverter,
     IWidgetScriptSourceProvider
 } from '../../../kernels/ipywidgets-message-coordination/types';
+import { HttpClient } from '../../../platform/common/net/httpClient';
 
 /* eslint-disable @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports, , @typescript-eslint/no-explicit-any, , no-console */
 const sanitize = require('sanitize-filename');
@@ -55,10 +56,12 @@ suite('DataScience - ipywidget - CDN', () => {
             Uri.file(path.join(EXTENSION_ROOT_DIR, 'tmp', 'scripts'))
         );
         when(webviewUriConverter.asWebviewUri(anything())).thenCall((u) => u);
+        const httpClient = mock(HttpClient);
         scriptSourceProvider = new CDNWidgetScriptSourceProvider(
             instance(configService),
             instance(webviewUriConverter),
-            instance(fileSystem)
+            instance(fileSystem),
+            instance(httpClient)
         );
     });
 

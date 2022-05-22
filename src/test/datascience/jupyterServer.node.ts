@@ -262,7 +262,7 @@ export class JupyterServer {
                     }
                 };
                 const subscription = result.out.subscribe((output) => {
-                    traceInfo(`Test Remote Jupyter Server Output: ${output.out}`);
+                    traceInfoIfCI(`Test Remote Jupyter Server Output: ${output.out}`);
                     if (output.out.indexOf('Use Control-C to stop this server and shut down all kernels')) {
                         resolve();
                     }

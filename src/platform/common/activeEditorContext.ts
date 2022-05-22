@@ -139,7 +139,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
 
     private updateNativeNotebookCellContext() {
         // Separate for debugging.
-        const hasNativeCells = (this.vscNotebook.activeNotebookEditor?.document.cellCount || 0) > 0;
+        const hasNativeCells = (this.vscNotebook.activeNotebookEditor?.notebook.cellCount || 0) > 0;
         this.hasNativeNotebookCells.set(hasNativeCells).ignoreErrors();
     }
     private onDidChangeActiveInteractiveWindow(e?: IInteractiveWindow) {
@@ -149,11 +149,11 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.updateContextOfActiveInteractiveWindowKernel();
     }
     private onDidChangeActiveNotebookEditor(e?: NotebookEditor) {
-        const isJupyterNotebookDoc = e ? e.document.notebookType === JupyterNotebookView : false;
+        const isJupyterNotebookDoc = e ? e.notebook.notebookType === JupyterNotebookView : false;
         this.nativeContext.set(isJupyterNotebookDoc).ignoreErrors();
 
         this.isPythonNotebook
-            .set(e && isJupyterNotebookDoc ? isPythonNotebook(getNotebookMetadata(e.document)) : false)
+            .set(e && isJupyterNotebookDoc ? isPythonNotebook(getNotebookMetadata(e.notebook)) : false)
             .ignoreErrors();
         this.updateContextOfActiveNotebookKernel(e);
         this.updateContextOfActiveInteractiveWindowKernel();
@@ -172,8 +172,8 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     }
     private updateContextOfActiveNotebookKernel(activeEditor?: NotebookEditor) {
         const kernel =
-            activeEditor && activeEditor.document.notebookType === JupyterNotebookView
-                ? this.kernelProvider.get(activeEditor.document.uri)
+            activeEditor && activeEditor.notebook.notebookType === JupyterNotebookView
+                ? this.kernelProvider.get(activeEditor.notebook.uri)
                 : undefined;
         if (kernel) {
             const canStart = kernel.status !== 'unknown';
@@ -188,8 +188,8 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     }
     private updateSelectedKernelContext() {
         const document =
-            this.vscNotebook.activeNotebookEditor?.document ||
-            getActiveInteractiveWindow(this.interactiveProvider)?.notebookEditor?.document;
+            this.vscNotebook.activeNotebookEditor?.notebook ||
+            getActiveInteractiveWindow(this.interactiveProvider)?.notebookEditor?.notebook;
         if (document && isJupyterNotebook(document) && this.controllers.getSelectedNotebookController(document)) {
             this.isJupyterKernelSelected.set(true).catch(noop);
         } else {
@@ -197,7 +197,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         }
     }
     private updateContextOfActiveInteractiveWindowKernel() {
-        const notebook = getActiveInteractiveWindow(this.interactiveProvider)?.notebookEditor?.document;
+        const notebook = getActiveInteractiveWindow(this.interactiveProvider)?.notebookEditor?.notebook;
         const kernel = notebook ? this.kernelProvider.get(notebook.uri) : undefined;
         if (kernel) {
             const canStart = kernel.status !== 'unknown';
@@ -216,7 +216,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             this.updateContextOfActiveInteractiveWindowKernel();
         } else if (
             notebook?.notebookType === JupyterNotebookView &&
-            notebook === this.vscNotebook.activeNotebookEditor?.document
+            notebook === this.vscNotebook.activeNotebookEditor?.notebook
         ) {
             this.updateContextOfActiveNotebookKernel(this.vscNotebook.activeNotebookEditor);
         }

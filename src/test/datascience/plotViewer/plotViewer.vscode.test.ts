@@ -60,7 +60,7 @@ plt.show()`,
             { index: 0 }
         );
 
-        const plotCell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const plotCell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
 
         await runAllCellsInActiveNotebook();
         await waitForExecutionCompletedSuccessfully(plotCell);
@@ -102,7 +102,7 @@ plt.show()`,
             { index: 0 }
         );
 
-        const plotCell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const plotCell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
 
         await runAllCellsInActiveNotebook();
         await waitForExecutionCompletedSuccessfully(plotCell);

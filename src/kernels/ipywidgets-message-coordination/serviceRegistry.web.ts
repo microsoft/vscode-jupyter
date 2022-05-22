@@ -1,6 +1,6 @@
 import { IServiceManager } from '../../platform/ioc/types';
 import { ScriptSourceProviderFactory } from './scriptSourceProviderFactory.web';
-import { ScriptUriConverter } from './scriptUriConverter.web';
+import { ScriptUriConverter } from './scriptUriConverter';
 import { ILocalResourceUriConverter, IWidgetScriptSourceProviderFactory } from './types';
 import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherFactory';
 import { NotebookIPyWidgetCoordinator } from './notebookIPyWidgetCoordinator';

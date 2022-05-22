@@ -36,38 +36,18 @@ import { INotebookEditorProvider } from '../../../notebooks/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () => {
-    const juliaNb = path.join(
-        EXTENSION_ROOT_DIR_FOR_TESTS,
-        'src',
-        'test',
-        'datascience',
-        'notebook',
-        'simpleJulia.ipynb'
+    const juliaNb = Uri.file(
+        path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'notebook', 'simpleJulia.ipynb')
     );
-    const csharpNb = path.join(
-        EXTENSION_ROOT_DIR_FOR_TESTS,
-        'src',
-        'test',
-        'datascience',
-        'notebook',
-        'simpleCSharp.ipynb'
+    const csharpNb = Uri.file(
+        path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'notebook', 'simpleCSharp.ipynb')
     );
-    const javaNb = path.join(
-        EXTENSION_ROOT_DIR_FOR_TESTS,
-        'src',
-        'test',
-        'datascience',
-        'notebook',
-        'simpleJavaBeakerX.ipynb'
+    const javaNb = Uri.file(
+        path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'notebook', 'simpleJavaBeakerX.ipynb')
     );
 
-    const emptyPythonNb = path.join(
-        EXTENSION_ROOT_DIR_FOR_TESTS,
-        'src',
-        'test',
-        'datascience',
-        'notebook',
-        'emptyPython.ipynb'
+    const emptyPythonNb = Uri.file(
+        path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'notebook', 'emptyPython.ipynb')
     );
 
     let api: IExtensionTestApi;
@@ -162,9 +142,9 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
 
         await waitForCondition(
             async () =>
-                vscodeNotebook.activeNotebookEditor?.document.cellAt(0).document.languageId.toLowerCase() === 'julia',
+                vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0).document.languageId.toLowerCase() === 'julia',
             5_000,
-            `First cell is not julia, it is ${vscodeNotebook.activeNotebookEditor?.document
+            `First cell is not julia, it is ${vscodeNotebook.activeNotebookEditor?.notebook
                 .cellAt(0)
                 .document.languageId.toLowerCase()}`
         );
@@ -185,7 +165,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         await openNotebook(testJuliaNb);
         await waitForKernelToGetAutoSelected('julia');
         await insertCodeCell('123456', { language: 'julia', index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         // Wait till execution count changes and status is success.
         await Promise.all([
             runCell(cell),
@@ -205,7 +185,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         await waitForKernelToGetAutoSelected('c#');
         await runAllCellsInActiveNotebook();
 
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         // Wait till execution count changes and status is success.
         await waitForExecutionCompletedSuccessfully(cell);
 

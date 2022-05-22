@@ -52,6 +52,11 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         return result;
     }
 
+    // Clear out password connection info
+    public clearPasswordConnectionInfo(): void {
+        this.savedConnectInfo.clear();
+    }
+
     private getSessionCookieString(xsrfCookie: string, sessionCookieName: string, sessionCookieValue: string): string {
         return `_xsrf=${xsrfCookie}; ${sessionCookieName}=${sessionCookieValue}`;
     }

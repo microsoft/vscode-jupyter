@@ -104,9 +104,18 @@ export class VSCodeNotebook implements IVSCodeNotebook {
             notebook: NotebookDocument,
             controller: NotebookController
         ) => void | Thenable<void>,
-        rendererScripts?: NotebookRendererScript[]
+        rendererScripts?: NotebookRendererScript[],
+        _additionalLocalResourceRoots?: Uri[]
     ): NotebookController {
-        return notebooks.createNotebookController(id, viewType, label, handler, rendererScripts);
+        return notebooks.createNotebookController(
+            id,
+            viewType,
+            label,
+            handler,
+            rendererScripts
+            // Not suported yet. See https://github.com/microsoft/vscode/issues/149868
+            // additionalLocalResourceRoots
+        );
     }
 
     @testOnlyMethod()
@@ -115,7 +124,7 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const documents = new Set<NotebookDocument>();
         while (window.activeNotebookEditor) {
-            documents.add(window.activeNotebookEditor.document);
+            documents.add(window.activeNotebookEditor.notebook);
             await commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
         }
 

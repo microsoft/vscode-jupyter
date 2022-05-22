@@ -111,10 +111,10 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
         test('Ensure kernel is automatically restarted by jupyter & we get a status of restarting & autorestarting when kernel dies while executing a cell', async function () {
             await insertCodeCell('print("123412341234")', { index: 0 });
             await insertCodeCell(codeToKillKernel, { index: 1 });
-            const [cell1, cell2] = vscodeNotebook.activeNotebookEditor!.document.getCells();
+            const [cell1, cell2] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
 
             await Promise.all([runCell(cell1), waitForExecutionCompletedSuccessfully(cell1)]);
-            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document.uri)!;
+            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.notebook.uri)!;
             const restartingEventFired = createDeferred<boolean>();
             const autoRestartingEventFired = createDeferred<boolean>();
 
@@ -160,10 +160,10 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
         async function runAndFailWithKernelCrash() {
             await insertCodeCell('print("123412341234")', { index: 0 });
             await insertCodeCell(codeToKillKernel, { index: 1 });
-            const [cell1, cell2] = vscodeNotebook.activeNotebookEditor!.document.getCells();
+            const [cell1, cell2] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
 
             await Promise.all([runCell(cell1), waitForExecutionCompletedSuccessfully(cell1)]);
-            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document.uri)!;
+            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.notebook.uri)!;
             const terminatingEventFired = createDeferred<boolean>();
             const deadEventFired = createDeferred<boolean>();
             const expectedErrorMessage = DataScience.kernelDiedWithoutError().format(
@@ -216,8 +216,8 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
         test('Ensure we get a modal prompt to restart kernel when running cells against a dead kernel', async function () {
             await runAndFailWithKernelCrash();
             await insertCodeCell('print("123412341234")', { index: 2 });
-            const cell3 = vscodeNotebook.activeNotebookEditor!.document.cellAt(2);
-            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document.uri)!;
+            const cell3 = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(2);
+            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.notebook.uri)!;
 
             const expectedErrorMessage = DataScience.cannotRunCellKernelIsDead().format(
                 getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
@@ -239,8 +239,8 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
         test('Ensure we get a modal prompt to restart kernel when running cells against a dead kernel (dismiss and run again)', async function () {
             await runAndFailWithKernelCrash();
             await insertCodeCell('print("123412341234")', { index: 2 });
-            const cell3 = vscodeNotebook.activeNotebookEditor!.document.cellAt(2);
-            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document.uri)!;
+            const cell3 = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(2);
+            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.notebook.uri)!;
 
             const expectedErrorMessage = DataScience.cannotRunCellKernelIsDead().format(
                 getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
@@ -280,8 +280,8 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
         test('Ensure we get an error displayed in cell output and prompt when user has a file named random.py next to the ipynb file', async function () {
             await runAndFailWithKernelCrash();
             await insertCodeCell('print("123412341234")', { index: 2 });
-            const cell3 = vscodeNotebook.activeNotebookEditor!.document.cellAt(2);
-            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document.uri)!;
+            const cell3 = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(2);
+            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.notebook.uri)!;
 
             const expectedErrorMessage = DataScience.cannotRunCellKernelIsDead().format(
                 getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
@@ -303,8 +303,8 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
         test('Ensure cell output does not have errors when execution fails due to dead kernel', async function () {
             await runAndFailWithKernelCrash();
             await insertCodeCell('print("123412341234")', { index: 2 });
-            const cell3 = vscodeNotebook.activeNotebookEditor!.document.cellAt(2);
-            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document.uri)!;
+            const cell3 = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(2);
+            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.notebook.uri)!;
 
             const expectedErrorMessage = DataScience.cannotRunCellKernelIsDead().format(
                 getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
@@ -325,7 +325,7 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
         test('Ensure we get only one prompt to restart kernel when running all cells against a dead kernel', async function () {
             await runAndFailWithKernelCrash();
             await insertCodeCell('print("123412341234")', { index: 2 });
-            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.document.uri)!;
+            const kernel = kernelProvider.get(vscodeNotebook.activeNotebookEditor!.notebook.uri)!;
 
             const expectedErrorMessage = DataScience.cannotRunCellKernelIsDead().format(
                 getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
@@ -391,7 +391,7 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
             prompt.dispose();
 
             // Verify we have an output in the cell that contains the same information (about overirding built in modules).
-            const cell = window.activeNotebookEditor!.document.cellAt(0);
+            const cell = window.activeNotebookEditor!.notebook.cellAt(0);
             await waitForCondition(async () => cell.outputs.length > 0, defaultNotebookTestTimeout, 'No output');
             const err = translateCellErrorOutput(cell.outputs[0]);
             assert.include(err.traceback.join(''), 'random.py');

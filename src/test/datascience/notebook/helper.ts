@@ -53,7 +53,7 @@ import { IS_SMOKE_TEST } from '../../constants';
 import * as urlPath from '../../../platform/vscode-path/resources';
 import * as uuid from 'uuid/v4';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
-import { IPlatformService } from '../../../platform/common/platform/types';
+import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { waitForCondition } from '../../common';
 import { VSCodeNotebook } from '../../../platform/common/application/notebook';
 
@@ -87,14 +87,14 @@ export async function insertMarkdownCell(source: string, options?: { index?: num
     if (!activeEditor) {
         throw new Error('No active editor');
     }
-    const startNumber = options?.index ?? activeEditor.document.cellCount;
-    await chainWithPendingUpdates(activeEditor.document, (edit) => {
+    const startNumber = options?.index ?? activeEditor.notebook.cellCount;
+    await chainWithPendingUpdates(activeEditor.notebook, (edit) => {
         const cellData = new NotebookCellData(NotebookCellKind.Markup, source, MARKDOWN_LANGUAGE);
         cellData.outputs = [];
         cellData.metadata = {};
-        edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, startNumber), [cellData]);
+        edit.replaceNotebookCells(activeEditor.notebook.uri, new NotebookRange(startNumber, startNumber), [cellData]);
     });
-    return activeEditor.document.cellAt(startNumber)!;
+    return activeEditor.notebook.cellAt(startNumber)!;
 }
 export async function insertCodeCell(source: string, options?: { language?: string; index?: number }) {
     const { vscodeNotebook } = await getServices();
@@ -102,48 +102,47 @@ export async function insertCodeCell(source: string, options?: { language?: stri
     if (!activeEditor) {
         throw new Error('No active editor');
     }
-    const startNumber = options?.index ?? activeEditor.document.cellCount;
+    const startNumber = options?.index ?? activeEditor.notebook.cellCount;
     const edit = new WorkspaceEdit();
     const cellData = new NotebookCellData(NotebookCellKind.Code, source, options?.language || PYTHON_LANGUAGE);
     cellData.outputs = [];
     cellData.metadata = {};
-    edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(startNumber, startNumber), [cellData]);
+    edit.replaceNotebookCells(activeEditor.notebook.uri, new NotebookRange(startNumber, startNumber), [cellData]);
     await workspace.applyEdit(edit);
 
-    return activeEditor.document.cellAt(startNumber)!;
+    return activeEditor.notebook.cellAt(startNumber)!;
 }
 export async function deleteCell(index: number = 0) {
     const { vscodeNotebook } = await getServices();
     const activeEditor = vscodeNotebook.activeNotebookEditor;
-    if (!activeEditor || activeEditor.document.cellCount === 0) {
+    if (!activeEditor || activeEditor.notebook.cellCount === 0) {
         return;
     }
     if (!activeEditor) {
         assert.fail('No active editor');
         return;
     }
-    await chainWithPendingUpdates(activeEditor.document, (edit) =>
-        edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(index, index + 1), [])
+    await chainWithPendingUpdates(activeEditor.notebook, (edit) =>
+        edit.replaceNotebookCells(activeEditor.notebook.uri, new NotebookRange(index, index + 1), [])
     );
 }
 export async function deleteAllCellsAndWait() {
     const { vscodeNotebook } = await getServices();
     const activeEditor = vscodeNotebook.activeNotebookEditor;
-    if (!activeEditor || activeEditor.document.cellCount === 0) {
+    if (!activeEditor || activeEditor.notebook.cellCount === 0) {
         return;
     }
-    await chainWithPendingUpdates(activeEditor.document, (edit) =>
-        edit.replaceNotebookCells(activeEditor.document.uri, new NotebookRange(0, activeEditor.document.cellCount), [])
+    await chainWithPendingUpdates(activeEditor.notebook, (edit) =>
+        edit.replaceNotebookCells(activeEditor.notebook.uri, new NotebookRange(0, activeEditor.notebook.cellCount), [])
     );
 }
 
-export async function createTemporaryNotebook(
-    cells: (nbformat.ICodeCell | nbformat.IMarkdownCell)[],
+async function createTemporaryNotebookFromNotebook(
+    notebook: nbformat.INotebookContent,
     disposables: IDisposable[],
-    kernelName: string = 'Python 3',
     rootFolder?: Uri,
     prefix?: string
-): Promise<Uri> {
+) {
     const services = await getServices();
     const platformService = services.serviceContainer.get<IPlatformService>(IPlatformService);
     const workspaceService = services.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
@@ -153,6 +152,36 @@ export async function createTemporaryNotebook(
         workspaceService.rootFolder ||
         Uri.file('./').with({ scheme: 'vscode-test-web' });
     const uri = urlPath.joinPath(rootUrl, `${prefix || ''}${uuid()}.ipynb`);
+    await workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(notebook)));
+
+    disposables.push({
+        dispose: () => swallowExceptions(() => workspace.fs.delete(uri))
+    });
+    return uri;
+}
+
+export async function createTemporaryNotebookFromFile(
+    file: Uri,
+    disposables: IDisposable[],
+    kernelName: string = 'Python 3'
+) {
+    const services = await getServices();
+    const fileSystem = services.serviceContainer.get<IFileSystem>(IFileSystem);
+    const contents = await fileSystem.readFile(file);
+    const notebook = JSON.parse(contents);
+    if (notebook.kernel) {
+        notebook.kernel.display_name = kernelName;
+    }
+    return createTemporaryNotebookFromNotebook(notebook, disposables, undefined, urlPath.basename(file));
+}
+
+export async function createTemporaryNotebook(
+    cells: (nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | nbformat.IUnrecognizedCell)[],
+    disposables: IDisposable[],
+    kernelName: string = 'Python 3',
+    rootFolder?: Uri,
+    prefix?: string
+): Promise<Uri> {
     cells =
         cells.length == 0
             ? [
@@ -176,12 +205,7 @@ export async function createTemporaryNotebook(
             display_name: kernelName
         }
     };
-    await workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(data)));
-
-    disposables.push({
-        dispose: () => swallowExceptions(() => workspace.fs.delete(uri))
-    });
-    return uri;
+    return createTemporaryNotebookFromNotebook(data, disposables, rootFolder, prefix);
 }
 
 /**
@@ -326,7 +350,7 @@ async function waitForKernelToChangeImpl(
     }
     traceInfo(`Switching to kernel id ${id}`);
     const isRightKernel = () => {
-        const doc = vscodeNotebook.activeNotebookEditor?.document;
+        const doc = vscodeNotebook.activeNotebookEditor?.notebook;
         if (!doc) {
             return false;
         }
@@ -391,7 +415,7 @@ export async function waitForKernelToGetAutoSelected(
     const notebookControllers = notebookControllerManager.getRegisteredNotebookControllers();
 
     // Make sure we don't already have a selection (this function gets run even after opening a document)
-    if (notebookControllerManager.getSelectedNotebookController(vscodeNotebook.activeNotebookEditor!.document)) {
+    if (notebookControllerManager.getSelectedNotebookController(vscodeNotebook.activeNotebookEditor!.notebook)) {
         return;
     }
 
@@ -403,7 +427,7 @@ export async function waitForKernelToGetAutoSelected(
         await waitForCondition(
             async () => {
                 preferred = notebookControllerManager.getPreferredNotebookController(
-                    vscodeNotebook.activeNotebookEditor!.document
+                    vscodeNotebook.activeNotebookEditor!.notebook
                 );
                 return preferred != undefined;
             },
@@ -463,17 +487,21 @@ let workedAroundVSCodeNotebookStartPage = false;
  * Solution, try to trigger the display of the start page displayed before starting the tests.
  */
 export async function workAroundVSCodeNotebookStartPages() {
-    if (workedAroundVSCodeNotebookStartPage) {
-        return;
-    }
-    workedAroundVSCodeNotebookStartPage = true;
-    const { editorProvider } = await getServices();
-    await closeActiveWindows();
+    try {
+        if (workedAroundVSCodeNotebookStartPage) {
+            return;
+        }
+        workedAroundVSCodeNotebookStartPage = true;
+        const { editorProvider } = await getServices();
+        await closeActiveWindows();
 
-    // Open a notebook, VS Code will open the start page (wait for 5s for VSCode to react & open it)
-    await editorProvider.createNew();
-    await sleep(5_000);
-    await closeActiveWindows();
+        // Open a notebook, VS Code will open the start page (wait for 5s for VSCode to react & open it)
+        await editorProvider.createNew();
+        await sleep(5_000);
+        await closeActiveWindows();
+    } catch (ex) {
+        // Don't fail because closing didn't work.
+    }
 }
 
 export async function prewarmNotebooks() {
@@ -490,7 +518,7 @@ export async function prewarmNotebooks() {
         await editorProvider.createNew();
         await insertCodeCell('print("Hello World1")', { index: 0 });
         await waitForKernelToGetAutoSelected();
-        const cell = vscodeNotebook.activeNotebookEditor!.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0)!;
         traceInfoIfCI(`Running all cells in prewarm notebooks`);
         await Promise.all([waitForExecutionCompletedSuccessfully(cell, 60_000), runAllCellsInActiveNotebook()]);
         await closeActiveWindows();
@@ -828,14 +856,14 @@ export async function runCell(cell: NotebookCell, waitForExecutionToComplete = f
     const api = await initialize();
     const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     await waitForKernelToGetAutoSelected(undefined, false, 60_000);
-    if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.document) {
+    if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.notebook) {
         throw new Error('No notebook or document');
     }
 
     const promise = commands.executeCommand(
         'notebook.cell.execute',
         { start: cell.index, end: cell.index + 1 },
-        vscodeNotebook.activeNotebookEditor.document.uri
+        vscodeNotebook.activeNotebookEditor.notebook.uri
     );
 
     if (waitForExecutionToComplete) {
@@ -847,12 +875,12 @@ export async function runAllCellsInActiveNotebook(waitForExecutionToComplete = f
     const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     await waitForKernelToGetAutoSelected(undefined, false, 60_000);
 
-    if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.document) {
+    if (!vscodeNotebook.activeNotebookEditor || !vscodeNotebook.activeNotebookEditor.notebook) {
         throw new Error('No editor or document');
     }
 
     const promise = commands
-        .executeCommand('notebook.execute', vscodeNotebook.activeNotebookEditor.document.uri)
+        .executeCommand('notebook.execute', vscodeNotebook.activeNotebookEditor.notebook.uri)
         .then(noop, noop);
 
     if (waitForExecutionToComplete) {

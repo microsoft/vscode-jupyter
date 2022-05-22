@@ -3,10 +3,15 @@
 
 'use strict';
 
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
-import { arePathsSame } from './fileUtils';
-import { IFileSystem } from './types';
+import { IExtensionContext, IHttpClient } from '../types';
+import { arePathsSame, getHashString } from './fileUtils';
+import { IFileSystem, TemporaryFileUri } from './types';
+import * as uriPath from '../../vscode-path/resources';
+import * as uuid from 'uuid/v4';
+import { isFileNotFoundError } from './errors';
+import { traceError } from '../../logging';
 
 const ENCODING = 'utf8';
 
@@ -16,7 +21,10 @@ const ENCODING = 'utf8';
 @injectable()
 export class FileSystem implements IFileSystem {
     protected vscfs: vscode.FileSystem;
-    constructor() {
+    constructor(
+        @inject(IExtensionContext) private readonly extensionContext: IExtensionContext,
+        @inject(IHttpClient) private readonly httpClient: IHttpClient
+    ) {
         this.vscfs = vscode.workspace.fs;
     }
 
@@ -100,5 +108,66 @@ export class FileSystem implements IFileSystem {
     async writeFile(uri: vscode.Uri, text: string | Buffer): Promise<void> {
         const data = typeof text === 'string' ? Buffer.from(text) : text;
         return this.vscfs.writeFile(uri, data);
+    }
+
+    async createTemporaryFile(options: { fileExtension?: string; prefix?: string }): Promise<TemporaryFileUri> {
+        // Global storage is guaranteed to be a writable location. Maybe the only one that works
+        // for both web and node.
+        const tmpFolder = uriPath.joinPath(this.extensionContext.globalStorageUri, 'tmp');
+        await this.vscfs.createDirectory(tmpFolder);
+        const fileUri = uriPath.joinPath(tmpFolder, `${options.prefix}-${uuid()}.${options.fileExtension}`);
+        await this.writeFile(fileUri, '');
+
+        // When disposing, the temporary file is destroyed
+        return {
+            file: fileUri,
+            dispose: () => {
+                return this.vscfs.delete(fileUri);
+            }
+        };
+    }
+
+    async exists(
+        // the "file" to look for
+        filename: vscode.Uri,
+        // the file type to expect; if not provided then any file type
+        // matches; otherwise a mismatch results in a "false" value
+        fileType?: vscode.FileType
+    ): Promise<boolean> {
+        // Special case. http/https always returns stat true even if the file doesn't
+        // exist. In those two cases use the http client instead
+        if (filename.scheme.toLowerCase() === 'http' || filename.scheme.toLowerCase() === 'https') {
+            return this.httpClient.exists(filename.toString());
+        }
+
+        // Otherwise use stat
+        let stat: vscode.FileStat;
+        try {
+            // Note that we are using stat() rather than lstat().  This
+            // means that any symlinks are getting resolved.
+            stat = await this.stat(filename);
+        } catch (err) {
+            if (isFileNotFoundError(err)) {
+                return false;
+            }
+            traceError(`stat() failed for "${filename}"`, err);
+            return false;
+        }
+
+        if (fileType === undefined) {
+            return true;
+        }
+        if (fileType === vscode.FileType.Unknown) {
+            // FileType.Unknown == 0, hence do not use bitwise operations.
+            return stat.type === vscode.FileType.Unknown;
+        }
+        return (stat.type & fileType) === fileType;
+    }
+
+    async getFileHash(filename: vscode.Uri): Promise<string> {
+        // The reason for lstat rather than stat is not clear...
+        const stat = await this.stat(filename);
+        const data = `${stat.ctime}-${stat.mtime}`;
+        return getHashString(data);
     }
 }

@@ -116,7 +116,7 @@ export function sharedRemoteNotebookEditorTests(
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
         await deleteAllCellsAndWait();
         await insertCodeCell('print("123412341234")', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
 
         // Wait for MRU to get updated & encrypted storage to get updated.
@@ -159,7 +159,7 @@ export function sharedRemoteNotebookEditorTests(
         });
 
         await insertCodeCell('print("123412341234")', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await Promise.all([runCell(cell), waitForTextOutput(cell, '123412341234')]);
     });
 
@@ -171,7 +171,7 @@ export function sharedRemoteNotebookEditorTests(
         assert.isOk(nbEditor, 'No active notebook');
         // Cell 1 = `a = "Hello World"`
         // Cell 2 = `print(a)`
-        let cell2 = nbEditor.document.getCells()![1]!;
+        let cell2 = nbEditor.notebook.getCells()![1]!;
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell2),
@@ -216,7 +216,7 @@ export async function runCellAndVerifyUpdateOfPreferredRemoteKernelId(
     assert.isOk(nbEditor, 'No active notebook');
     // Cell 1 = `a = "Hello World"`
     // Cell 2 = `print(a)`
-    let cell2 = nbEditor.document.getCells()![1]!;
+    let cell2 = nbEditor.notebook.getCells()![1]!;
     await Promise.all([
         runAllCellsInActiveNotebook(),
         waitForExecutionCompletedSuccessfully(cell2),
@@ -228,7 +228,7 @@ export async function runCellAndVerifyUpdateOfPreferredRemoteKernelId(
     // If we nb it as soon as output appears, its possible the kernel id hasn't been saved yet & we mess that up.
     // Optionally we could wait for 100ms.
     await waitForCondition(
-        async () => !!remoteKernelIdProvider.getPreferredRemoteKernelId(nbEditor.document.uri),
+        async () => !!remoteKernelIdProvider.getPreferredRemoteKernelId(nbEditor.notebook.uri),
         5_000,
         'Remote Kernel id not saved'
     );
@@ -254,13 +254,13 @@ export async function reopeningNotebookUsesSameRemoteKernel(ipynbFile: Uri, serv
 
     // Wait till output is empty for both cells
     await waitForCondition(
-        async () => !nbEditor.document.getCells().some((cell) => cell.outputs.length > 0),
+        async () => !nbEditor.notebook.getCells().some((cell) => cell.outputs.length > 0),
         5_000,
         'Cell output not cleared'
     );
 
     // Execute second cell (same kernel so should be able to get results)
-    const cell2 = nbEditor.document.getCells()![1]!;
+    const cell2 = nbEditor.notebook.getCells()![1]!;
     await Promise.all([
         runCell(cell2),
         waitForExecutionCompletedSuccessfully(cell2),

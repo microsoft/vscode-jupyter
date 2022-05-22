@@ -8,7 +8,7 @@ import { ApplicationShell } from '../../../platform/common/application/applicati
 import { IApplicationShell, IWorkspaceService } from '../../../platform/common/application/types';
 import { WorkspaceService } from '../../../platform/common/application/workspace.node';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
-import { HttpClient } from '../../../platform/common/net/httpClient.node';
+import { HttpClient } from '../../../platform/common/net/httpClient';
 import { PersistentState, PersistentStateFactory } from '../../../platform/common/persistentState';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { IPythonExecutionFactory } from '../../../platform/common/process/types.node';

@@ -85,6 +85,7 @@ import { sendNotebookOrKernelLanguageTelemetry } from '../../platform/common/uti
 import { ConsoleForegroundColors, TraceOptions } from '../../platform/logging/types';
 import { KernelConnector } from '../../kernels/kernelConnector';
 import { IVSCodeNotebookController } from './types';
+import { ILocalResourceUriConverter } from '../../kernels/ipywidgets-message-coordination/types';
 
 export class VSCodeNotebookController implements Disposable, IVSCodeNotebookController {
     private readonly _onNotebookControllerSelected: EventEmitter<{
@@ -151,6 +152,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private readonly appShell: IApplicationShell,
         private readonly browser: IBrowserService,
         private readonly extensionChecker: IPythonExtensionChecker,
+        scriptConverter: ILocalResourceUriConverter,
         private serviceContainer: IServiceContainer
     ) {
         disposableRegistry.push(this);
@@ -165,7 +167,8 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             viewType,
             label,
             this.handleExecution.bind(this),
-            this.getRendererScripts()
+            this.getRendererScripts(),
+            [scriptConverter.rootScriptFolder]
         );
 
         // Fill in extended info for our controller
@@ -588,7 +591,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                 : Telemetry.SelectRemoteJupyterKernel;
             sendKernelTelemetryEvent(document.uri, telemetryEvent);
             this.notebookApi.notebookEditors
-                .filter((editor) => editor.document === document)
+                .filter((editor) => editor.notebook === document)
                 .forEach((editor) =>
                     this.postMessage(
                         { message: IPyWidgetMessages.IPyWidgets_onKernelChanged, payload: undefined },

@@ -20,6 +20,7 @@ import {
     hijackPrompt,
     insertCodeCell,
     insertMarkdownCell,
+    saveActiveNotebook,
     startJupyterServer,
     workAroundVSCodeNotebookStartPages
 } from './helper.node';
@@ -91,6 +92,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         await insertCodeCell('print("Hello World")', { index: 0 });
         await insertMarkdownCell('# Markdown Header\nmarkdown string', { index: 1 });
         await insertCodeCell('%whos', { index: 2 });
+        await saveActiveNotebook();
 
         const deferred = createDeferred<any>();
         const onDidChangeDispose = window.onDidChangeActiveTextEditor((te) => {
@@ -121,6 +123,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         await insertCodeCell('print("Hello World")', { index: 0 });
         await insertMarkdownCell('# Markdown Header\nmarkdown string', { index: 1 });
         await insertCodeCell('%whos\n!shellcmd', { index: 2 });
+        await saveActiveNotebook();
 
         const deferred = createDeferred<any>();
         const onDidChangeDispose = window.onDidChangeActiveTextEditor((te) => {
@@ -153,6 +156,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         await insertCodeCell('print("Hello World")', { index: 0 });
         await insertMarkdownCell('# Markdown Header\nmarkdown string', { index: 1 });
         await insertCodeCell('%whos\n!shellcmd', { index: 2 });
+        await saveActiveNotebook();
 
         const deferred = createDeferred<any>();
         const onDidChangeDispose = window.onDidChangeActiveTextEditor((te) => {

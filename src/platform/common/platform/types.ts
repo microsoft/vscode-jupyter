@@ -29,6 +29,7 @@ export interface IPlatformService {
 //===========================
 // temp FS
 
+export type TemporaryFileUri = { file: vscode.Uri } & vscode.Disposable;
 export type TemporaryFile = { filePath: string } & vscode.Disposable;
 export type TemporaryDirectory = { path: string } & vscode.Disposable;
 
@@ -62,4 +63,7 @@ export interface IFileSystem {
     stat(uri: vscode.Uri): Promise<vscode.FileStat>;
     writeFile(uri: vscode.Uri, text: string | Buffer): Promise<void>;
     getFiles(dir: vscode.Uri): Promise<vscode.Uri[]>;
+    createTemporaryFile(options: { fileExtension?: string; prefix?: string }): Promise<TemporaryFileUri>;
+    exists(uri: vscode.Uri, fileType?: vscode.FileType): Promise<boolean>;
+    getFileHash(filename: vscode.Uri): Promise<string>;
 }

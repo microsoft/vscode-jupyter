@@ -41,9 +41,8 @@ import { getOSType, OSType } from '../../../platform/common/utils/platform';
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience - VSCode Notebook - Kernel Selection', function () {
     const disposables: IDisposable[] = [];
-    const templateIPynbFile = path.join(
-        EXTENSION_ROOT_DIR_FOR_TESTS,
-        'src/test/datascience/notebook/nbWithKernel.ipynb'
+    const templateIPynbFile = Uri.file(
+        path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src/test/datascience/notebook/nbWithKernel.ipynb')
     );
     const executable = getOSType() === OSType.Windows ? 'Scripts/python.exe' : 'bin/python'; // If running locally on Windows box.
     const venvNoKernelPython = Uri.file(
@@ -165,7 +164,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
         // Run all cells
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await Promise.all([runAllCellsInActiveNotebook(), waitForExecutionCompletedSuccessfully(cell)]);
 
         await waitForCondition(
@@ -201,7 +200,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await waitForKernelToGetAutoSelected(undefined);
 
         // Run all cells
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell),
@@ -219,8 +218,8 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
         await insertCodeCell('print("Hello World")', { index: 1 });
 
-        const cell1 = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
-        const cell2 = vscodeNotebook.activeNotebookEditor?.document.getCells()![1]!;
+        const cell1 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+        const cell2 = vscodeNotebook.activeNotebookEditor?.notebook.getCells()![1]!;
 
         // If it was successfully selected, then we know a Python kernel was correctly selected & managed to run the code.
         await Promise.all([
@@ -238,7 +237,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await waitForKernelToGetAutoSelected(undefined);
 
         // Run all cells
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell),
@@ -265,7 +264,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
         // Run all cells
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell),
@@ -282,7 +281,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         }
 
         // Very this kernel gets disposed when we switch the notebook kernel.
-        const kernel = kernelProvider.get(window.activeNotebookEditor!.document.uri)!;
+        const kernel = kernelProvider.get(window.activeNotebookEditor!.notebook.uri)!;
         assert.ok(kernel, 'Kernel is not defined');
         const eventListener = createEventHandler(kernel, 'onDisposed');
 
@@ -304,7 +303,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
 
         // Verify the new kernel is not the same as the old.
         assert.isFalse(
-            kernel === kernelProvider.get(window.activeNotebookEditor!.document.uri),
+            kernel === kernelProvider.get(window.activeNotebookEditor!.notebook.uri),
             'Kernels should not be the same'
         );
     });
@@ -316,7 +315,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
         // Run all cells
-        const cell = vscodeNotebook.activeNotebookEditor?.document.cellAt(0)!;
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await Promise.all([
             runAllCellsInActiveNotebook(),
             waitForExecutionCompletedSuccessfully(cell),

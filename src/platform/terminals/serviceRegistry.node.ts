@@ -3,7 +3,7 @@
 
 import { interfaces } from 'inversify';
 import { ClassType } from '../ioc/types';
-import { CodeExecutionHelper } from './codeExecution/helper.node';
+import { CodeExecutionHelper } from './codeExecution/codeExecutionHelper.node';
 import { ICodeExecutionHelper } from './types';
 
 interface IServiceRegistry {

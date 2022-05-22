@@ -3,7 +3,7 @@
 'use strict';
 import '../platform/common/extensions';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, optional } from 'inversify';
 import {
     NotebookCell,
     NotebookRange,
@@ -41,13 +41,14 @@ import { IStatusProvider } from '../platform/progress/types';
 import { generateCellsFromDocument } from './editor-integration/cellFactory';
 import { IInteractiveWindowProvider } from './types';
 import { JupyterNotebookView } from '../notebooks/constants';
+import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
 
 @injectable()
 export class InteractiveWindowCommandListener implements IDataScienceCommandListener {
     constructor(
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
-        @inject(INotebookExporter) private jupyterExporter: INotebookExporter,
+        @inject(INotebookExporter) @optional() private jupyterExporter: INotebookExporter | undefined,
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
@@ -196,7 +197,8 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
 
     @captureTelemetry(Telemetry.ExportPythonFileInteractive, undefined, false)
     private async exportFile(file: Uri): Promise<void> {
-        if (file && file.fsPath && file.fsPath.length > 0) {
+        const filePath = getFilePath(file);
+        if (filePath && filePath.length > 0 && this.jupyterExporter) {
             // If the current file is the active editor, then generate cells from the document.
             const activeEditor = this.documentManager.activeTextEditor;
             if (activeEditor && this.fileSystem.arePathsSame(activeEditor.document.uri, file)) {
@@ -216,21 +218,21 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                                     directoryChange = uri;
                                 }
 
-                                const notebook = await this.jupyterExporter.translateToNotebook(
+                                const notebook = await this.jupyterExporter?.translateToNotebook(
                                     cells,
-                                    directoryChange?.fsPath
+                                    getFilePath(directoryChange)
                                 );
                                 await this.fileSystem.writeFile(uri, JSON.stringify(notebook));
                             }
                         },
                         localize.DataScience.exportingFormat(),
-                        file.fsPath
+                        getDisplayPath(file)
                     );
                     // When all done, show a notice that it completed.
-                    if (uri && uri.fsPath) {
+                    if (uri && filePath) {
                         const openQuestion1 = localize.DataScience.exportOpenQuestion1();
                         const selection = await this.applicationShell.showInformationMessage(
-                            localize.DataScience.exportDialogComplete().format(uri.fsPath),
+                            localize.DataScience.exportDialogComplete().format(getDisplayPath(file)),
                             openQuestion1
                         );
                         if (selection === openQuestion1) {
@@ -244,7 +246,13 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
 
     @captureTelemetry(Telemetry.ExportPythonFileAndOutputInteractive, undefined, false)
     private async exportFileAndOutput(file: Uri): Promise<Uri | undefined> {
-        if (file && file.fsPath && file.fsPath.length > 0 && (await this.jupyterExecution.isNotebookSupported())) {
+        const filePath = getFilePath(file);
+        if (
+            filePath &&
+            filePath.length > 0 &&
+            this.jupyterExporter &&
+            (await this.jupyterExecution.isNotebookSupported())
+        ) {
             // If the current file is the active editor, then generate cells from the document.
             const activeEditor = this.documentManager.activeTextEditor;
             if (
@@ -271,15 +279,15 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                                     directoryChange = uri;
                                 }
 
-                                const notebook = await this.jupyterExporter.translateToNotebook(
+                                const notebook = await this.jupyterExporter?.translateToNotebook(
                                     cells,
-                                    directoryChange?.fsPath
+                                    getFilePath(directoryChange)
                                 );
                                 await this.fileSystem.writeFile(uri, JSON.stringify(notebook));
                             }
                         },
                         localize.DataScience.exportingFormat(),
-                        file.fsPath
+                        getDisplayPath(file)
                     );
                     // Next open this notebook & execute it.
                     await this.notebook.showNotebookDocument(uri, {
@@ -379,20 +387,21 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                     await this.fileConverter.importIpynb(uris[0]);
                 },
                 localize.DataScience.importingFormat(),
-                uris[0].fsPath
+                getDisplayPath(uris[0])
             );
         }
     }
 
     @captureTelemetry(Telemetry.ImportNotebook, { scope: 'file' }, false)
     private async importNotebookOnFile(file: Uri): Promise<void> {
-        if (file.fsPath && file.fsPath.length > 0) {
+        const filepath = getFilePath(file);
+        if (filepath && filepath.length > 0) {
             await this.waitForStatus(
                 async () => {
                     await this.fileConverter.importIpynb(file);
                 },
                 localize.DataScience.importingFormat(),
-                file.fsPath
+                getDisplayPath(file)
             );
         }
     }
@@ -401,7 +410,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         if (id && file) {
             // Find the interactive windows that have this file as a submitter
             const possibles = this.interactiveWindowProvider.windows.filter(
-                (w) => w.submitters.findIndex((s) => this.fileSystem.areLocalPathsSame(s.fsPath, file.fsPath)) >= 0
+                (w) => w.submitters.findIndex((s) => this.fileSystem.arePathsSame(s, file)) >= 0
             );
 
             // Scroll to cell in the one that has the cell. We need this so
@@ -440,7 +449,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             context === undefined
                 ? interactiveWindow?.notebookEditor?.selections
                 : [new NotebookRange(context.index, context.index + 1)];
-        const document = context === undefined ? interactiveWindow?.notebookEditor?.document : context.notebook;
+        const document = context === undefined ? interactiveWindow?.notebookEditor?.notebook : context.notebook;
 
         if (ranges !== undefined && document !== undefined) {
             await chainWithPendingUpdates(document, (edit) => {
