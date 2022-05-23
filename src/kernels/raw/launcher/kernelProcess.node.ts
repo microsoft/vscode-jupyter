@@ -204,9 +204,6 @@ export class KernelProcess implements IKernelProcess {
                 }
                 traceError('Kernel died', error, stderr);
                 deferred.reject(error);
-            },
-            () => {
-                console.error('Completed');
             }
         );
 
@@ -239,7 +236,7 @@ export class KernelProcess implements IKernelProcess {
             traceError('Disposing kernel process due to an error', e);
             traceError(stderrProc || stderr);
             // Make sure to dispose if we never connect.
-            void this.dispose();
+            this.dispose();
 
             if (!cancelToken?.isCancellationRequested && e instanceof BaseError) {
                 throw e;

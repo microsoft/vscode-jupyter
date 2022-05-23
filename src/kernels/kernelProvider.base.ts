@@ -16,15 +16,16 @@ export abstract class BaseKernelProvider implements IKernelProvider {
      * Use a separate dictionary to track kernels by Notebook, so that
      * the ref to kernel is lost when the notebook is closed.
      */
-    protected readonly kernelsByNotebook = new WeakMap<NotebookDocument, { options: KernelOptions; kernel: IKernel }>();
+    private readonly kernelsByNotebook = new WeakMap<NotebookDocument, { options: KernelOptions; kernel: IKernel }>();
     /**
      * The life time of kernels not tied to a notebook will be managed by callers of the API.
      * Where as if a kernel is tied to a notebook, then the kernel dies along with notebooks.
      */
-    protected readonly kernelsByUri = new Map<string, { options: KernelOptions; kernel: IKernel }>();
+    private readonly kernelsByUri = new Map<string, { options: KernelOptions; kernel: IKernel }>();
     private readonly pendingDisposables = new Set<IAsyncDisposable>();
     protected readonly _onDidRestartKernel = new EventEmitter<IKernel>();
     protected readonly _onDidStartKernel = new EventEmitter<IKernel>();
+    protected readonly _onDidCreateKernel = new EventEmitter<IKernel>();
     protected readonly _onDidDisposeKernel = new EventEmitter<IKernel>();
     protected readonly _onKernelStatusChanged = new EventEmitter<{ status: KernelMessage.Status; kernel: IKernel }>();
     public readonly onKernelStatusChanged = this._onKernelStatusChanged.event;
@@ -46,6 +47,11 @@ export abstract class BaseKernelProvider implements IKernelProvider {
     ) {
         this.asyncDisposables.push(this);
         this.notebook.onDidCloseNotebookDocument((e) => this.disposeOldKernel(e.uri), this, disposables);
+        disposables.push(this._onDidDisposeKernel);
+        disposables.push(this._onDidRestartKernel);
+        disposables.push(this._onKernelStatusChanged);
+        disposables.push(this._onDidStartKernel);
+        disposables.push(this._onDidCreateKernel);
     }
 
     public get onDidDisposeKernel(): Event<IKernel> {
@@ -59,6 +65,9 @@ export abstract class BaseKernelProvider implements IKernelProvider {
     public get onDidStartKernel(): Event<IKernel> {
         return this._onDidStartKernel.event;
     }
+    public get onDidCreateKernel(): Event<IKernel> {
+        return this._onDidCreateKernel.event;
+    }
 
     public get(uri: Uri): IKernel | undefined {
         return this.getInternal(uri)?.kernel;
@@ -69,9 +78,6 @@ export abstract class BaseKernelProvider implements IKernelProvider {
         this.pendingDisposables.clear();
         await Promise.all(items);
         await Promise.all(this.kernels.map((k) => k.dispose()));
-        this._onDidDisposeKernel.dispose();
-        this._onDidRestartKernel.dispose();
-        this._onKernelStatusChanged.dispose();
     }
     public abstract getOrCreate(uri: Uri, options: KernelOptions): IKernel;
     public getInternal(uri: Uri):
@@ -85,6 +91,14 @@ export abstract class BaseKernelProvider implements IKernelProvider {
             return this.kernelsByUri.get(uri.toString());
         }
         return notebook ? this.kernelsByNotebook.get(notebook) : undefined;
+    }
+    protected storeKernel(uri: Uri, notebook: NotebookDocument | undefined, options: KernelOptions, kernel: IKernel) {
+        if (notebook) {
+            this.kernelsByNotebook.set(notebook, { options, kernel });
+        } else {
+            this.kernelsByUri.set(uri.toString(), { options, kernel });
+        }
+        this._onDidCreateKernel.fire(kernel);
     }
     /**
      * If a kernel has been disposed, then remove the mapping of Uri + Kernel.

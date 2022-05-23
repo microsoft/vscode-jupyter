@@ -23,7 +23,6 @@ import { traceInfo, traceInfoIfCI, traceError, traceVerbose, traceWarning } from
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
 import {
     Resource,
-    IDisposableRegistry,
     IConfigurationService,
     IDisposable,
     IDisplayOptions,
@@ -33,7 +32,6 @@ import { Deferred, sleep } from '../platform/common/utils/async';
 import { DataScience } from '../platform/common/utils/localize';
 import { noop } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
-import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory';
 import { JupyterConnectError } from '../platform/errors/jupyterConnectError';
 import {
     sendKernelTelemetryEvent,
@@ -50,6 +48,7 @@ import {
     INotebookProvider,
     InterruptResult,
     isLocalConnection,
+    ITracebackFormatter,
     KernelActionSource,
     KernelConnectionMetadata,
     KernelSocketInformation,
@@ -65,6 +64,7 @@ import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayId
 import { IStatusProvider } from '../platform/progress/types';
 
 export abstract class BaseKernel implements IKernel {
+    private readonly disposables: IDisposable[] = [];
     get onStatusChanged(): Event<KernelMessage.Status> {
         return this._onStatusChanged.event;
     }
@@ -137,7 +137,6 @@ export abstract class BaseKernel implements IKernel {
         public readonly resourceUri: Resource,
         public readonly kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
         private readonly notebookProvider: INotebookProvider,
-        private readonly disposables: IDisposableRegistry,
         private readonly launchTimeout: number,
         interruptTimeout: number,
         protected readonly appShell: IApplicationShell,
@@ -145,23 +144,30 @@ export abstract class BaseKernel implements IKernel {
         protected readonly configService: IConfigurationService,
         protected readonly workspaceService: IWorkspaceService,
         outputTracker: CellOutputDisplayIdTracker,
-        readonly cellHashProviderFactory: CellHashProviderFactory,
         private readonly statusProvider: IStatusProvider,
         public readonly creator: KernelActionSource,
-        context: IExtensionContext
+        context: IExtensionContext,
+        formatters: ITracebackFormatter[]
     ) {
         this.kernelExecution = new KernelExecution(
             this,
             appShell,
             kernelConnectionMetadata,
             interruptTimeout,
-            disposables,
             controller,
             outputTracker,
-            cellHashProviderFactory,
-            context
+            context,
+            formatters
         );
-        this.kernelExecution.onPreExecute((c) => this._onPreExecute.fire(c), this, disposables);
+        this.kernelExecution.onPreExecute((c) => this._onPreExecute.fire(c), this, this.disposables);
+        this.disposables.push(this.kernelExecution);
+        this.disposables.push(this._onStatusChanged);
+        this.disposables.push(this._onRestarted);
+        this.disposables.push(this._onStarted);
+        this.disposables.push(this._onDisposed);
+        this.disposables.push(this._onPreExecute);
+        this.disposables.push(this.kernelExecution);
+        this.disposables.push({ dispose: () => this._kernelSocket.unsubscribe() });
     }
     private perceivedJupyterStartupTelemetryCaptured?: boolean;
 
@@ -252,7 +258,11 @@ export abstract class BaseKernel implements IKernel {
             this._onDisposed.fire();
             this._onStatusChanged.fire('dead');
             this.kernelExecution.dispose();
-            await Promise.all(promises);
+            try {
+                await Promise.all(promises);
+            } finally {
+                disposeAllDisposables(this.disposables);
+            }
         };
         this.disposingPromise = disposeImpl();
         await this.disposingPromise;
