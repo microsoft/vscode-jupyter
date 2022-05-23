@@ -11,14 +11,13 @@ import { IConfigurationService } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { Identifiers, Telemetry } from '../../webviews/webview-side/common/constants';
 import { JupyterDebuggerNotInstalledError } from '../../platform/errors/jupyterDebuggerNotInstalledError';
-import { JupyterDebuggerRemoteNotSupportedError } from '../../platform/errors/jupyterDebuggerRemoteNotSupportedError';
-import { getPlainTextOrStreamOutput } from '../kernel.base';
-import { IKernel, isLocalConnection } from '../types';
-import { IInteractiveWindowDebugger } from '../../interactive-window/types';
-import { IFileGeneratedCodes } from '../../interactive-window/editor-integration/types';
-import { IJupyterDebugService, ISourceMapRequest } from './types';
+import { getPlainTextOrStreamOutput } from '../../kernels/kernel.base';
+import { IKernel, isLocalConnection } from '../../kernels/types';
+import { IInteractiveWindowDebugger } from '../types';
+import { IFileGeneratedCodes } from '../editor-integration/types';
+import { IJupyterDebugService, ISourceMapRequest } from '../../kernels/debugger/types';
 import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
-import { executeSilently } from '../helpers';
+import { executeSilently } from '../../kernels/helpers';
 
 @injectable()
 export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
@@ -85,12 +84,12 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
         }
     }
 
-    public async updateSourceMaps(generatedCodes: IFileGeneratedCodes[]): Promise<void> {
+    public async updateSourceMaps(hashes: IFileGeneratedCodes[]): Promise<void> {
         // Make sure that we have an active debugging session at this point
         if (this.debugService.activeDebugSession && this.debuggingActive) {
             traceInfoIfCI(`Sending debug request for source map`);
             await Promise.all(
-                generatedCodes.map(async (fileHash) => {
+                hashes.map(async (fileHash) => {
                     if (this.debuggingActive) {
                         return this.debugService.activeDebugSession!.customRequest(
                             'setPydevdSourceMap',
@@ -192,15 +191,9 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
             request: 'attach',
             ...extraConfig
         };
-        if (isLocalConnection(kernel.kernelConnectionMetadata)) {
-            const { host, port } = await this.connectToLocal(kernel);
-            result.host = host;
-            result.port = port;
-        } else {
-            const { host, port } = await this.connectToRemote(kernel);
-            result.host = host;
-            result.port = port;
-        }
+        const { host, port } = await this.connectToLocal(kernel);
+        result.host = host;
+        result.port = port;
 
         if (result.port) {
             this.configs.set(notebook, result);
@@ -337,62 +330,5 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
             undefined,
             kernel.kernelConnectionMetadata
         );
-    }
-
-    private async connectToRemote(kernel: IKernel): Promise<{ port: number; host: string }> {
-        // We actually need a token. This isn't supported at the moment
-        throw new JupyterDebuggerRemoteNotSupportedError(kernel.kernelConnectionMetadata);
-
-        //         let portNumber = this.configService.getSettings().remoteDebuggerPort;
-        //         if (!portNumber) {
-        //             portNumber = -1;
-        //         }
-
-        //         // Loop through a bunch of ports until we find one we can use. Note how we
-        //         // are connecting to '0.0.0.0' here. That's the location as far as ptvsd is concerned.
-        //         const attachCode = portNumber !== -1 ?
-        //             `import ptvsd
-        // ptvsd.enable_attach(('0.0.0.0', ${portNumber}))
-        // print("('${connectionInfo.hostName}', ${portNumber})")` :
-        // eslint-disable-next-line no-multi-str
-        //             `import ptvsd
-        // port = ${Settings.RemoteDebuggerPortBegin}
-        // attached = False
-        // while not attached and port <= ${Settings.RemoteDebuggerPortEnd}:
-        //     try:
-        //         ptvsd.enable_attach(('0.0.0.0', port))
-        //         print("('${connectionInfo.hostName}', " + str(port) + ")")
-        //         attached = True
-        //     except Exception as e:
-        //         print("Exception: " + str(e))
-        //         port +=1`;
-        //         const enableDebuggerResults = await this.executeSilently(server, attachCode);
-
-        //         // Save our connection info to this server
-        //         const result = this.parseConnectInfo(enableDebuggerResults, false);
-
-        //         // If that didn't work, throw an error so somebody can open the port
-        //         if (!result) {
-        //             throw new JupyterDebuggerPortNotAvailableError(portNumber, Settings.RemoteDebuggerPortBegin, Settings.RemoteDebuggerPortEnd);
-        //         }
-
-        //         // Double check, open a socket? This won't work if we're remote ourselves. Actually the debug adapter runs
-        //         // from the remote machine.
-        //         try {
-        //             const deferred = createDeferred();
-        //             const socket = net.createConnection(result.port, result.host, () => {
-        //                 deferred.resolve();
-        //             });
-        //             socket.on('error', (err) => deferred.reject(err));
-        //             socket.setTimeout(2000, () => deferred.reject(new Error('Timeout trying to ping remote debugger')));
-        //             await deferred.promise;
-        //             socket.end();
-        //         } catch (exc) {
-        //             traceWarning(`Cannot connect to remote debugger at ${result.host}:${result.port} => ${exc}`);
-        //             // We can't connect. Must be a firewall issue
-        //             throw new JupyterDebuggerPortBlockedError(portNumber, Settings.RemoteDebuggerPortBegin, Settings.RemoteDebuggerPortEnd);
-        //         }
-
-        //         return result;
     }
 }

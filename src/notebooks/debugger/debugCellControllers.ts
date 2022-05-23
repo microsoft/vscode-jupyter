@@ -3,12 +3,12 @@
 
 import { DebugProtocolMessage, NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { ICommandManager } from '../../../common/application/types';
-import { IKernel } from '../../../../kernels/types';
-import { sendTelemetryEvent } from '../../../../telemetry';
-import { DebuggingTelemetry } from '../../constants';
-import { IDebuggingDelegate, IKernelDebugAdapter } from '../../types';
-import { cellDebugSetup } from '../helper';
+import { ICommandManager } from '../../platform/common/application/types';
+import { IKernel } from '../../kernels/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { DebuggingTelemetry } from '../../kernels/debugger/constants';
+import { cellDebugSetup } from './helper';
+import { IDebuggingDelegate, IKernelDebugAdapter } from '../../kernels/debugger/types';
 
 export class DebugCellController implements IDebuggingDelegate {
     constructor(

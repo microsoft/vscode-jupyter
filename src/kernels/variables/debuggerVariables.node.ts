@@ -11,11 +11,10 @@ import { IDebugService, IVSCodeNotebook } from '../../platform/common/applicatio
 import { DataFrameLoading, GetVariableInfo } from '../../platform/common/constants.node';
 import { traceError } from '../../platform/logging';
 import { IConfigurationService, Resource } from '../../platform/common/types';
-import { DebugLocationTracker } from '../../platform/debugger/debugLocationTracker';
-import { IDebuggingManager, KernelDebugMode } from '../../platform/debugger/types';
+import { DebugLocationTracker } from '../debugger/debugLocationTracker';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Telemetry } from '../../webviews/webview-side/common/constants';
-import { IJupyterDebugService } from '../debugging/types';
+import { IDebuggingManager, IJupyterDebugService, KernelDebugMode } from '../debugger/types';
 import { IKernel } from '../types';
 import { parseDataFrame } from './pythonVariableRequester.node';
 import {

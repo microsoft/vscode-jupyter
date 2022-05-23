@@ -12,8 +12,8 @@ import { ProtocolParser } from '../platform/debugger/extension/helpers/protocolP
 import { IProtocolParser } from '../platform/debugger/extension/types.node';
 import { IServiceManager } from '../platform/ioc/types';
 import { setSharedProperty } from '../telemetry';
-import { InteractiveWindowDebugger } from './debugging/interactiveWindowDebugger.node';
-import { JupyterDebugService } from './debugging/jupyterDebugService.node';
+import { InteractiveWindowDebugger } from '../interactive-window/debugger/interactiveWindowDebugger.node';
+import { JupyterDebugService } from '../notebooks/debugger/jupyterDebugService.node';
 import { registerInstallerTypes } from './installer/serviceRegistry.node';
 import { KernelCommandListener } from './kernelCommandListener';
 import { KernelDependencyService } from './kernelDependencyService.node';
@@ -34,14 +34,14 @@ import { KernelVariables } from './variables/kernelVariables';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './variables/preWarmVariables.node';
 import { PythonVariablesRequester } from './variables/pythonVariableRequester.node';
 import { IInteractiveWindowDebugger } from '../interactive-window/types';
-import { MultiplexingDebugService } from '../platform/debugger/multiplexingDebugService';
+import { MultiplexingDebugService } from './debugger/multiplexingDebugService';
 import { JupyterVariableDataProvider } from '../webviews/extension-side/dataviewer/jupyterVariableDataProvider';
 import { JupyterVariableDataProviderFactory } from '../webviews/extension-side/dataviewer/jupyterVariableDataProviderFactory.node';
 import {
     IJupyterVariableDataProvider,
     IJupyterVariableDataProviderFactory
 } from '../webviews/extension-side/dataviewer/types';
-import { IJupyterDebugService } from './debugging/types';
+import { IJupyterDebugService } from './debugger/types';
 import { IKernelDependencyService, IKernelFinder, IKernelProvider } from './types';
 import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
 import { KernelCrashMonitor } from './kernelCrashMonitor';

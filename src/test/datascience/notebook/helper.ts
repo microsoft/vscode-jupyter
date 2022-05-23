@@ -40,7 +40,6 @@ import { IKernelProvider } from '../../../platform/../kernels/types';
 import { noop } from '../../core';
 import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IDebuggingManager, IKernelDebugAdapter } from '../../../platform/debugger/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { LastSavedNotebookCellLanguage } from '../../../intellisense/cellLanguageService';
 import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeNotebookController';
@@ -56,6 +55,7 @@ import { swallowExceptions } from '../../../platform/common/utils/misc';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { waitForCondition } from '../../common';
 import { VSCodeNotebook } from '../../../platform/common/application/notebook';
+import { IDebuggingManager, IKernelDebugAdapter } from '../../../kernels/debugger/types';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
