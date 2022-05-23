@@ -18,7 +18,6 @@ export class ScriptPathUtils implements IScriptPathUtils {
             scriptPath: path.join(sysPath, 'vscodeDataFrame.py'),
             dataFrameInfoFunc: '_VSCODE_getDataFrameInfo',
             dataFrameRowFunc: '_VSCODE_getDataFrameRows',
-            // Constants for the debugger which imports the script files
             dataFrameInfoImportFunc: `${dataFrameImport}._VSCODE_getDataFrameInfo`,
             dataFrameRowImportFunc: `${dataFrameImport}._VSCODE_getDataFrameRows`
         };
@@ -38,8 +37,6 @@ export class ScriptPathUtils implements IScriptPathUtils {
             variableInfoFunc: '_VSCODE_getVariableInfo',
             variablePropertiesFunc: '_VSCODE_getVariableProperties',
             variableTypesFunc: '_VSCODE_getVariableTypes',
-
-            // Constants for the debugger which imports the script files
             variableInfoImportFunc: `${variableInfoImportName}._VSCODE_getVariableInfo`
         };
     }
