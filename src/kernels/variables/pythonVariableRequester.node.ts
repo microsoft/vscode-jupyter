@@ -59,7 +59,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         const results = kernel.session
             ? await executeSilently(
                   kernel.session,
-                  `import builtins\nbuiltins.print(${this.scriptPaths.DataFrameLoading.DataFrameInfoFunc}(${expression}))`,
+                  `import builtins\nbuiltins.print(${this.scriptPaths.dataFrameLoading.dataFrameInfoFunc}(${expression}))`,
                   {
                       traceErrors: true,
                       traceErrorsMessage: 'Failure in execute_request for getDataFrameInfo',
@@ -92,7 +92,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         const results = kernel.session
             ? await executeSilently(
                   kernel.session,
-                  `import builtins\nbuiltins.print(${this.scriptPaths.DataFrameLoading.DataFrameRowFunc}(${expression}, ${start}, ${end}))`,
+                  `import builtins\nbuiltins.print(${this.scriptPaths.dataFrameLoading.dataFrameRowFunc}(${expression}, ${start}, ${end}))`,
                   {
                       traceErrors: true,
                       traceErrorsMessage: 'Failure in execute_request for getDataFrameRows',
@@ -125,7 +125,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
                 const attributes = kernel.session
                     ? await executeSilently(
                           kernel.session,
-                          `import builtins\nbuiltins.print(${this.scriptPaths.GetVariableInfo.VariablePropertiesFunc}(${matchingVariable.name}, ${stringifiedAttributeNameList}))`,
+                          `import builtins\nbuiltins.print(${this.scriptPaths.getVariableInfo.variablePropertiesFunc}(${matchingVariable.name}, ${stringifiedAttributeNameList}))`,
                           {
                               traceErrors: true,
                               traceErrorsMessage: 'Failure in execute_request for getVariableProperties',
@@ -153,7 +153,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             const results = kernel.session
                 ? await executeSilently(
                       kernel.session,
-                      `import builtins\n_rwho_ls = %who_ls\nbuiltins.print(${this.scriptPaths.GetVariableInfo.VariableTypesFunc}(_rwho_ls))`,
+                      `import builtins\n_rwho_ls = %who_ls\nbuiltins.print(${this.scriptPaths.getVariableInfo.variableTypesFunc}(_rwho_ls))`,
                       {
                           traceErrors: true,
                           traceErrorsMessage: 'Failure in execute_request for getVariableNamesAndTypesFromKernel',
@@ -199,7 +199,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         const results = kernel.session
             ? await executeSilently(
                   kernel.session,
-                  `import builtins\nbuiltins.print(${this.scriptPaths.GetVariableInfo.VariableInfoFunc}(${targetVariable.name}))`,
+                  `import builtins\nbuiltins.print(${this.scriptPaths.getVariableInfo.variableInfoFunc}(${targetVariable.name}))`,
                   {
                       traceErrors: true,
                       traceErrorsMessage: 'Failure in execute_request for getFullVariable',
@@ -228,7 +228,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             disposables.push(kernel.onRestarted(handler));
 
             // First put the code from our helper files into the notebook
-            await this.runScriptFile(kernel, this.scriptPaths.DataFrameLoading.ScriptPath);
+            await this.runScriptFile(kernel, this.scriptPaths.dataFrameLoading.scriptPath);
 
             this.importedDataFrameScripts.set(key, true);
         }
@@ -246,7 +246,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             disposables.push(kernel.onDisposed(handler));
             disposables.push(kernel.onRestarted(handler));
 
-            await this.runScriptFile(kernel, this.scriptPaths.GetVariableInfo.ScriptPath);
+            await this.runScriptFile(kernel, this.scriptPaths.getVariableInfo.scriptPath);
 
             this.importedGetVariableInfoScripts.set(key, true);
         }

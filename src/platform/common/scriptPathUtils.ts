@@ -5,48 +5,49 @@ import { IExtensionContext, IScriptPathUtils } from './types';
 export class ScriptPathUtils implements IScriptPathUtils {
     constructor(@inject(IExtensionContext) private readonly context: IExtensionContext) {}
 
-    get rootDirectory() {
-        return this.context.extensionPath;
-    }
-
-    get DataFrameLoading() {
-        const SysPath = path.join(this.rootDirectory, 'pythonFiles', 'vscode_datascience_helpers', 'dataframes');
-        const DataFrameImport = `__import__('vscodeDataFrame')`;
+    get dataFrameLoading() {
+        const sysPath = path.join(
+            this.context.extensionPath,
+            'pythonFiles',
+            'vscode_datascience_helpers',
+            'dataframes'
+        );
+        const dataFrameImport = `__import__('vscodeDataFrame')`;
         return {
-            SysPath,
-            DataFrameSysImport: `import sys\nsys.path.append("${SysPath.replace(/\\/g, '\\\\')}")`,
-            ScriptPath: path.join(SysPath, 'vscodeDataFrame.py'),
-            DataFrameInfoFunc: '_VSCODE_getDataFrameInfo',
-            DataFrameRowFunc: '_VSCODE_getDataFrameRows',
+            dataFrameSysImport: `import sys\nsys.path.append("${sysPath.replace(/\\/g, '\\\\')}")`,
+            scriptPath: path.join(sysPath, 'vscodeDataFrame.py'),
+            dataFrameInfoFunc: '_VSCODE_getDataFrameInfo',
+            dataFrameRowFunc: '_VSCODE_getDataFrameRows',
             // Constants for the debugger which imports the script files
-            DataFrameImport,
-            DataFrameInfoImportFunc: `${DataFrameImport}._VSCODE_getDataFrameInfo`,
-            DataFrameRowImportFunc: `${DataFrameImport}._VSCODE_getDataFrameRows`
+            dataFrameInfoImportFunc: `${dataFrameImport}._VSCODE_getDataFrameInfo`,
+            dataFrameRowImportFunc: `${dataFrameImport}._VSCODE_getDataFrameRows`
         };
     }
 
-    get GetVariableInfo() {
-        const SysPath = path.join(this.rootDirectory, 'pythonFiles', 'vscode_datascience_helpers', 'getVariableInfo');
-        const VariableInfoImportName = `__import__('vscodeGetVariableInfo')`;
+    get getVariableInfo() {
+        const sysPath = path.join(
+            this.context.extensionPath,
+            'pythonFiles',
+            'vscode_datascience_helpers',
+            'getVariableInfo'
+        );
+        const variableInfoImportName = `__import__('vscodeGetVariableInfo')`;
         return {
-            SysPath,
-            GetVariableInfoSysImport: `import sys\nsys.path.append("${SysPath.replace(/\\/g, '\\\\')}")`,
-            ScriptPath: path.join(SysPath, 'vscodeGetVariableInfo.py'),
-            VariableInfoFunc: '_VSCODE_getVariableInfo',
-            VariablePropertiesFunc: '_VSCODE_getVariableProperties',
-            VariableTypesFunc: '_VSCODE_getVariableTypes',
+            getVariableInfoSysImport: `import sys\nsys.path.append("${sysPath.replace(/\\/g, '\\\\')}")`,
+            scriptPath: path.join(sysPath, 'vscodeGetVariableInfo.py'),
+            variableInfoFunc: '_VSCODE_getVariableInfo',
+            variablePropertiesFunc: '_VSCODE_getVariableProperties',
+            variableTypesFunc: '_VSCODE_getVariableTypes',
 
             // Constants for the debugger which imports the script files
-            VariableInfoImportName,
-            VariableInfoImportFunc: `${VariableInfoImportName}._VSCODE_getVariableInfo`
+            variableInfoImportFunc: `${variableInfoImportName}._VSCODE_getVariableInfo`
         };
     }
 
-    get AddRunCellHook() {
-        const SysPath = path.join(this.rootDirectory, 'pythonFiles', 'vscode_datascience_helpers', 'kernel');
+    get addRunCellHook() {
+        const sysPath = path.join(this.context.extensionPath, 'pythonFiles', 'vscode_datascience_helpers', 'kernel');
         return {
-            SysPath,
-            ScriptPath: path.join(SysPath, 'addRunCellHook.py')
+            scriptPath: path.join(sysPath, 'addRunCellHook.py')
         };
     }
 }

@@ -354,29 +354,23 @@ export interface ICellRange {
 // Used by platform/common/scriptPathUtils
 export const IScriptPathUtils = Symbol('IConfigurationService');
 export interface IScriptPathUtils {
-    rootDirectory: string;
-    DataFrameLoading: {
-        SysPath: string;
-        DataFrameSysImport: string;
-        ScriptPath: string;
-        DataFrameInfoFunc: string;
-        DataFrameRowFunc: string;
-        DataFrameImport: string;
-        DataFrameInfoImportFunc: string;
-        DataFrameRowImportFunc: string;
+    dataFrameLoading: {
+        dataFrameSysImport: string;
+        scriptPath: string;
+        dataFrameInfoFunc: string;
+        dataFrameRowFunc: string;
+        dataFrameInfoImportFunc: string;
+        dataFrameRowImportFunc: string;
     };
-    GetVariableInfo: {
-        SysPath: string;
-        GetVariableInfoSysImport: string;
-        ScriptPath: string;
-        VariableInfoFunc: string;
-        VariablePropertiesFunc: string;
-        VariableTypesFunc: string;
-        VariableInfoImportName: string;
-        VariableInfoImportFunc: string;
+    getVariableInfo: {
+        getVariableInfoSysImport: string;
+        scriptPath: string;
+        variableInfoFunc: string;
+        variablePropertiesFunc: string;
+        variableTypesFunc: string;
+        variableInfoImportFunc: string;
     };
-    AddRunCellHook: {
-        SysPath: string;
-        ScriptPath: string;
+    addRunCellHook: {
+        scriptPath: string;
     };
 }

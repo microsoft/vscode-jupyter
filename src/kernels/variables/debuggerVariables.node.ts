@@ -152,7 +152,7 @@ export class DebuggerVariables
 
         // Then eval calling the main function with our target variable
         const results = await this.evaluate(
-            `${this.scriptPaths.DataFrameLoading.DataFrameInfoImportFunc}(${expression})`,
+            `${this.scriptPaths.dataFrameLoading.dataFrameInfoImportFunc}(${expression})`,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (targetVariable as any).frameId
         );
@@ -204,7 +204,7 @@ export class DebuggerVariables
         await this.importDataFrameScripts();
 
         const results = await this.evaluate(
-            `${this.scriptPaths.DataFrameLoading.DataFrameRowImportFunc}(${expression}, ${start}, ${end})`,
+            `${this.scriptPaths.dataFrameLoading.dataFrameRowImportFunc}(${expression}, ${start}, ${end})`,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (targetVariable as any).frameId
         );
@@ -317,7 +317,7 @@ export class DebuggerVariables
             // Run our dataframe scripts only once per session because they're slow
             const key = this.debugService.activeDebugSession?.id;
             if (key && !this.importedDataFrameScriptsIntoKernel.has(key)) {
-                await this.evaluate(this.scriptPaths.DataFrameLoading.DataFrameSysImport);
+                await this.evaluate(this.scriptPaths.dataFrameLoading.dataFrameSysImport);
                 this.importedDataFrameScriptsIntoKernel.add(key);
             }
         } catch (exc) {
@@ -330,7 +330,7 @@ export class DebuggerVariables
             // Run our variable info scripts only once per session because they're slow
             const key = this.debugService.activeDebugSession?.id;
             if (key && !this.importedGetVariableInfoScriptsIntoKernel.has(key)) {
-                await this.evaluate(this.scriptPaths.GetVariableInfo.GetVariableInfoSysImport);
+                await this.evaluate(this.scriptPaths.getVariableInfo.getVariableInfoSysImport);
                 this.importedGetVariableInfoScriptsIntoKernel.add(key);
             }
         } catch (exc) {
@@ -344,7 +344,7 @@ export class DebuggerVariables
 
         // Then eval calling the variable info function with our target variable
         const results = await this.evaluate(
-            `${this.scriptPaths.GetVariableInfo.VariableInfoImportFunc}(${variable.name})`,
+            `${this.scriptPaths.getVariableInfo.variableInfoImportFunc}(${variable.name})`,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (variable as any).frameId
         );
