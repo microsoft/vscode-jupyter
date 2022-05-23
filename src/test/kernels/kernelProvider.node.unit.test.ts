@@ -97,8 +97,8 @@ suite('KernelProvider Node', () => {
             instance(pythonExecFactory),
             instance(statusProvider),
             instance(context),
-            [],
-            instance(scriptPaths)
+            instance(scriptPaths),
+            []
         );
     });
     teardown(async () => {

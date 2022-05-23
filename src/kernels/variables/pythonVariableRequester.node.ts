@@ -228,7 +228,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             disposables.push(kernel.onRestarted(handler));
 
             // First put the code from our helper files into the notebook
-            await this.runScriptFile(kernel, this.scriptPaths.dataFrameLoading.scriptPath);
+            await this.runScriptFile(kernel, this.scriptPaths.dataFrameLoading.scriptPath.fsPath);
 
             this.importedDataFrameScripts.set(key, true);
         }
@@ -246,7 +246,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             disposables.push(kernel.onDisposed(handler));
             disposables.push(kernel.onRestarted(handler));
 
-            await this.runScriptFile(kernel, this.scriptPaths.getVariableInfo.scriptPath);
+            await this.runScriptFile(kernel, this.scriptPaths.getVariableInfo.scriptPath.fsPath);
 
             this.importedGetVariableInfoScripts.set(key, true);
         }
