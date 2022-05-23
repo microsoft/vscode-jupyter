@@ -813,10 +813,6 @@ export namespace DataScience {
     export const dirtyNotebookCancel = localize('DataScience.dirtyNotebookCancel', 'Cancel');
     export const dirtyNotebookDialogTitle = localize('DataScience.dirtyNotebookDialogTitle', 'Save');
     export const dirtyNotebookDialogFilter = localize('DataScience.dirtyNotebookDialogFilter', 'Jupyter Notebooks');
-    export const remoteDebuggerNotSupported = localize(
-        'DataScience.remoteDebuggerNotSupported',
-        'Debugging while attached to a remote server is not currently supported.'
-    );
     export const notebookExportAs = localize('DataScience.notebookExportAs', 'Export As');
     export const exportAsPythonFileTitle = localize('DataScience.exportAsPythonFileTitle', 'Save As Python File');
     export const exportButtonTitle = localize('DataScience.exportButtonTitle', 'Export');

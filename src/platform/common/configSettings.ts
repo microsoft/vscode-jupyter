@@ -90,6 +90,8 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     // Hidden settings not surfaced in package.json
     public disableZMQSupport: boolean = false;
     // Hidden settings not surfaced in package.json
+    public useJupyterDebugger: boolean = false;
+    // Hidden settings not surfaced in package.json
     public disablePythonDaemon: boolean = false;
     public verboseLogging: boolean = false;
     public showVariableViewWhenDebugging: boolean = true;

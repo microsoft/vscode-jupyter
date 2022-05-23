@@ -4,7 +4,7 @@
 'use strict';
 
 import { KernelMessage } from '@jupyterlab/services';
-import * as path from '../../vscode-path/path';
+import * as path from '../../platform/vscode-path/path';
 import {
     debug,
     DebugAdapter,
@@ -21,22 +21,22 @@ import {
     workspace
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../logging';
-import { IPlatformService } from '../../common/platform/types';
-import { IDisposable } from '../../common/types';
-import { IJupyterSession, IKernel } from '../../../kernels/types';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { DebuggingTelemetry } from '../constants';
+import { assertIsDebugConfig, getMessageSourceAndHookIt, isShortNamePath, shortNameMatchesLongName } from './helper';
+import { executeSilently } from '../../kernels/helpers';
+import { IJupyterSession, IKernel } from '../../kernels/types';
+import { IPlatformService } from '../../platform/common/platform/types';
+import { DebuggingTelemetry } from '../../kernels/debugger/constants';
 import {
-    IDebuggingDelegate,
-    IDebugInfoResponse,
-    IDumpCellResponse,
     IKernelDebugAdapter,
     IKernelDebugAdapterConfig,
-    KernelDebugMode
-} from '../types';
-import { assertIsDebugConfig, getMessageSourceAndHookIt, isShortNamePath, shortNameMatchesLongName } from './helper';
-import { executeSilently } from '../../../kernels/helpers';
+    IDebuggingDelegate,
+    KernelDebugMode,
+    IDumpCellResponse,
+    IDebugInfoResponse
+} from '../../kernels/debugger/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { IDisposable } from '../../platform/common/types';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../platform/logging';
 
 // For info on the custom requests implemented by jupyter see:
 // https://jupyter-client.readthedocs.io/en/stable/messaging.html#debug-request
