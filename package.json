@@ -520,7 +520,7 @@
                 "command": "jupyter.createnewinteractive",
                 "title": "%jupyter.command.jupyter.createnewinteractive.title%",
                 "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+                "enablement": "isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.runFileInteractive",
