@@ -304,7 +304,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                         event.notebook.uri
                     )} due to selection of another kernel or closing of the notebook`
                 );
-                void kernel.dispose();
+                kernel.dispose().catch(noop);
             }
             this.associatedDocuments.delete(event.notebook);
             this._onNotebookControllerSelectionChanged.fire(event);

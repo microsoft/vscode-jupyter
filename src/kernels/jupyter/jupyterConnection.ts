@@ -4,6 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IDisposableRegistry } from '../../platform/common/types';
+import { noop } from '../../platform/common/utils/misc';
 import { RemoteJupyterServerUriProviderError } from '../../platform/errors/remoteJupyterServerUriProviderError';
 import { BaseError } from '../../platform/errors/types';
 import { IJupyterConnection } from '../types';
@@ -84,7 +85,7 @@ export class JupyterConnection implements IExtensionSyncActivationService {
         } finally {
             connection.dispose();
             if (sessionManager) {
-                void sessionManager.dispose();
+                sessionManager.dispose().catch(noop);
             }
         }
     }

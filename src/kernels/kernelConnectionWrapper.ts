@@ -35,6 +35,7 @@ import { JSONObject } from '@lumino/coreutils';
 import { Signal } from '@lumino/signaling';
 import { Disposable } from 'vscode';
 import { IDisposable } from '../platform/common/types';
+import { noop } from '../platform/common/utils/misc';
 import { IKernel } from './types';
 
 export class KernelConnectionWrapper implements Kernel.IKernelConnection {
@@ -247,7 +248,7 @@ export class KernelConnectionWrapper implements Kernel.IKernelConnection {
         throw new Error('Method not implemented.');
     }
     dispose(): void {
-        void this.kernel.dispose();
+        this.kernel.dispose().catch(noop);
     }
     async interrupt(): Promise<void> {
         // Sometimes we end up starting a new session.

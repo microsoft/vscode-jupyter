@@ -58,6 +58,7 @@ suite('Jupyter Connection', async () => {
     });
     test('Validation will result in fetching kernels and kernelspecs', async () => {
         const uri = 'http://localhost:8888/?token=1234';
+        when(sessionManager.dispose()).thenResolve();
         when(sessionManager.getKernelSpecs()).thenResolve([]);
         when(sessionManager.getRunningKernels()).thenResolve([]);
 
@@ -69,6 +70,7 @@ suite('Jupyter Connection', async () => {
     });
     test('Validation will fail if fetching kernels fail', async () => {
         const uri = 'http://localhost:8888/?token=1234';
+        when(sessionManager.dispose()).thenResolve();
         when(sessionManager.getKernelSpecs()).thenResolve([]);
         when(sessionManager.getRunningKernels()).thenReject(new Error('Kaboom kernels failure'));
 
@@ -80,6 +82,7 @@ suite('Jupyter Connection', async () => {
     });
     test('Validation will fail if fetching kernelspecs fail', async () => {
         const uri = 'http://localhost:8888/?token=1234';
+        when(sessionManager.dispose()).thenResolve();
         when(sessionManager.getKernelSpecs()).thenReject(new Error('Kaboom kernelspec failure'));
         when(sessionManager.getRunningKernels()).thenResolve([]);
 

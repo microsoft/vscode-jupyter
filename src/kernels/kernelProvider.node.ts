@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 'use strict';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, multiInject } from 'inversify';
 import { Uri, workspace } from 'vscode';
 import { IApplicationShell, IWorkspaceService, IVSCodeNotebook } from '../platform/common/application/types';
 import { IFileSystemNode } from '../platform/common/platform/types.node';
@@ -14,11 +14,10 @@ import {
     IExtensionContext,
     IScriptPathUtils
 } from '../platform/common/types';
-import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory';
 import { InteractiveWindowView } from '../notebooks/constants';
 import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
 import { Kernel } from './kernel.node';
-import { IKernel, INotebookProvider, KernelOptions } from './types';
+import { IKernel, INotebookProvider, ITracebackFormatter, KernelOptions } from './types';
 import { IStatusProvider } from '../platform/progress/types';
 import { BaseKernelProvider } from './kernelProvider.base';
 
@@ -33,12 +32,12 @@ export class KernelProvider extends BaseKernelProvider {
         @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
         @inject(CellOutputDisplayIdTracker) private readonly outputTracker: CellOutputDisplayIdTracker,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(CellHashProviderFactory) private cellHashProviderFactory: CellHashProviderFactory,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IScriptPathUtils) private readonly scriptPaths: IScriptPathUtils
+        @inject(IScriptPathUtils) private readonly scriptPaths: IScriptPathUtils,
+        @multiInject(ITracebackFormatter) private readonly formatters: ITracebackFormatter[]
     ) {
         super(asyncDisposables, disposables, notebook);
     }
@@ -59,7 +58,6 @@ export class KernelProvider extends BaseKernelProvider {
             resourceUri,
             options.metadata,
             this.notebookProvider,
-            this.disposables,
             waitForIdleTimeout,
             interruptTimeout,
             this.appShell,
@@ -67,13 +65,13 @@ export class KernelProvider extends BaseKernelProvider {
             options.controller,
             this.configService,
             this.outputTracker,
-            this.cellHashProviderFactory,
             this.workspaceService,
             this.pythonExecutionFactory,
             this.statusProvider,
             options.creator,
             this.context,
-            this.scriptPaths
+            this.scriptPaths,
+            this.formatters
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);
@@ -84,11 +82,7 @@ export class KernelProvider extends BaseKernelProvider {
             this.disposables
         );
         this.asyncDisposables.push(kernel);
-        if (notebook) {
-            this.kernelsByNotebook.set(notebook, { options, kernel });
-        } else {
-            this.kernelsByUri.set(uri.toString(), { options, kernel });
-        }
+        this.storeKernel(uri, notebook, options, kernel);
         this.deleteMappingIfKernelIsDisposed(uri, kernel);
         return kernel;
     }

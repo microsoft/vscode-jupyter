@@ -37,10 +37,9 @@ import { MockJupyterSettings } from '../mockJupyterSettings';
 import { MockEditor } from '../mockTextEditor';
 import { createDocument } from './helpers';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { CellHashProviderFactory } from '../../../interactive-window/editor-integration/cellHashProviderFactory';
 import { IKernel, IKernelProvider } from '../../../platform/../kernels/types';
 import { InteractiveCellResultError } from '../../../platform/errors/interactiveCellResultError';
-import { ICodeWatcher } from '../../../interactive-window/editor-integration/types';
+import { ICodeWatcher, IGeneratedCodeStorageFactory } from '../../../interactive-window/editor-integration/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../../interactive-window/types';
 import { Commands, EditorContexts } from '../../../platform/common/constants';
 import { IDebugLocationTracker } from '../../../platform/debugger/types';
@@ -150,7 +149,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         const notebook = mock<IVSCodeNotebook>();
         const execStateChangeEvent = new EventEmitter<NotebookCellExecutionStateChangeEvent>();
         when(notebook.onDidChangeNotebookCellExecutionState).thenReturn(execStateChangeEvent.event);
-        const hashProviderFactory = mock<CellHashProviderFactory>();
+        const storageFactory = mock<IGeneratedCodeStorageFactory>();
         const kernelProvider = mock<IKernelProvider>();
         const kernelDisposedEvent = new EventEmitter<IKernel>();
         when(kernelProvider.onDidDisposeKernel).thenReturn(kernelDisposedEvent.event);
@@ -163,7 +162,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
             instance(workspace),
             instance(notebook),
             disposables,
-            instance(hashProviderFactory),
+            instance(storageFactory),
             instance(kernelProvider)
         );
         serviceContainer

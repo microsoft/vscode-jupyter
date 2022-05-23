@@ -7,21 +7,20 @@ import { IApplicationShell, IWorkspaceService } from '../platform/common/applica
 import { traceInfo, traceError } from '../platform/logging';
 import { IFileSystemNode } from '../platform/common/platform/types.node';
 import { IPythonExecutionFactory } from '../platform/common/process/types.node';
-import {
-    Resource,
-    IDisposableRegistry,
-    IConfigurationService,
-    IExtensionContext,
-    IScriptPathUtils
-} from '../platform/common/types';
-import { CellHashProviderFactory } from '../interactive-window/editor-integration/cellHashProviderFactory';
+import { Resource, IConfigurationService, IExtensionContext, IScriptPathUtils } from '../platform/common/types';
 import { InteractiveWindowView } from '../notebooks/constants';
 import { calculateWorkingDirectory } from '../platform/common/utils.node';
 import { CodeSnippets } from '../webviews/webview-side/common/constants';
 import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
 import { isLocalHostConnection, isPythonKernelConnection } from './helpers';
 import { expandWorkingDir } from './jupyter/jupyterUtils';
-import { INotebookProvider, isLocalConnection, KernelActionSource, KernelConnectionMetadata } from './types';
+import {
+    INotebookProvider,
+    isLocalConnection,
+    ITracebackFormatter,
+    KernelActionSource,
+    KernelConnectionMetadata
+} from './types';
 import { IStatusProvider } from '../platform/progress/types';
 import { getAssociatedNotebookDocument } from '../notebooks/controllers/kernelSelector';
 import { sendTelemetryForPythonKernelExecutable } from './helpers.node';
@@ -33,7 +32,6 @@ export class Kernel extends BaseKernel {
         resourceUri: Resource,
         kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
         notebookProvider: INotebookProvider,
-        disposables: IDisposableRegistry,
         launchTimeout: number,
         interruptTimeout: number,
         appShell: IApplicationShell,
@@ -41,12 +39,12 @@ export class Kernel extends BaseKernel {
         controller: NotebookController,
         configService: IConfigurationService,
         outputTracker: CellOutputDisplayIdTracker,
-        cellHashProviderFactory: CellHashProviderFactory,
         workspaceService: IWorkspaceService,
         private readonly pythonExecutionFactory: IPythonExecutionFactory,
         statusProvider: IStatusProvider,
         creator: KernelActionSource,
         context: IExtensionContext,
+        formatters: ITracebackFormatter[],
         private readonly scriptPaths: IScriptPathUtils
     ) {
         super(
@@ -54,7 +52,6 @@ export class Kernel extends BaseKernel {
             resourceUri,
             kernelConnectionMetadata,
             notebookProvider,
-            disposables,
             launchTimeout,
             interruptTimeout,
             appShell,
@@ -62,10 +59,10 @@ export class Kernel extends BaseKernel {
             configService,
             workspaceService,
             outputTracker,
-            cellHashProviderFactory,
             statusProvider,
             creator,
-            context
+            context,
+            formatters
         );
     }
 
