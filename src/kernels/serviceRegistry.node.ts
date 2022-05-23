@@ -51,7 +51,6 @@ import { registerTypes as registerJupyterTypes } from './jupyter/serviceRegistry
 import { KernelProvider } from './kernelProvider.node';
 import { KernelFinder } from './kernelFinder.node';
 import { ServerConnectionType } from './jupyter/launcher/serverConnectionType';
-import { MultiplexingDebugService } from './debugger/multiplexingDebugService.node';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IRawNotebookSupportedService>(
