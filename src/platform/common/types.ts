@@ -102,7 +102,6 @@ export interface IJupyterSettings {
     readonly disableJupyterAutoStart: boolean;
     readonly jupyterCommandLineArguments: string[];
     readonly widgetScriptSources: WidgetCDNs[];
-    readonly alwaysScrollOnNewCell: boolean;
     readonly interactiveWindowMode: InteractiveWindowMode;
     readonly disableZMQSupport: boolean;
     readonly disablePythonDaemon: boolean;

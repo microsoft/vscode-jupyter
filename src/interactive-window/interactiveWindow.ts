@@ -521,8 +521,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 // If execution fails due to a failure in another cell, then log that error against the cell.
                 if (ex instanceof InteractiveCellResultError) {
                     void notebookCellPromise.then((cell) => {
-                        if (ex.cell !== cell.cell) {
-                            void this.addErrorMessage(DataScience.cellStopOnErrorMessage(), cell.cell);
+                        if (ex.cell !== cell) {
+                            void this.addErrorMessage(DataScience.cellStopOnErrorMessage(), cell);
                         }
                     });
                 } else {
@@ -530,7 +530,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                         // If our cell result was a failure show an error
                         this.errorHandler
                             .getErrorMessageForDisplayInCell(ex, 'execution')
-                            .then((message) => this.addErrorMessage(message, cell.cell))
+                            .then((message) => this.addErrorMessage(message, cell))
                     );
                 }
             });
@@ -548,23 +548,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     @chainable()
-    private async createExecutionPromise(
-        notebookCellPromise: Promise<{ cell: NotebookCell; wasScrolled: boolean }>,
-        isDebug: boolean
-    ) {
+    private async createExecutionPromise(notebookCellPromise: Promise<NotebookCell>, isDebug: boolean) {
         traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.start');
         // Kick of starting kernels early.
         const kernelPromise = this.startKernel();
-        const { cell, wasScrolled } = await notebookCellPromise;
+        const cell = await notebookCellPromise;
 
         let success = true;
-
-        // Scroll if the initial placement of this cell was scrolled as well
-        const settings = this.configuration.getSettings(this.owningResource);
-        if (settings.alwaysScrollOnNewCell || wasScrolled) {
-            this.revealCell(cell);
-        }
-
         let detachKernel = async () => noop();
         try {
             const kernel = await kernelPromise;
@@ -592,11 +582,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell');
             success = (await kernel!.executeCell(cell)) !== NotebookCellRunState.Error;
             traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell.finished');
-
-            // After execution see if we need to scroll to this cell or not.
-            if (settings.alwaysScrollOnNewCell || wasScrolled) {
-                this.revealCell(cell);
-            }
         } finally {
             await detachKernel();
             traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.end');
@@ -716,21 +701,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     @chainable()
-    private async addNotebookCell(
-        code: string,
-        file: Uri,
-        line: number,
-        isDebug: boolean
-    ): Promise<{ cell: NotebookCell; wasScrolled: boolean }> {
+    private async addNotebookCell(code: string, file: Uri, line: number, isDebug: boolean): Promise<NotebookCell> {
         const notebookDocument = this.notebookEditor.notebook;
-
-        // Compute if we should scroll based on last notebook cell before adding a notebook cell,
-        // since the notebook cell we're going to add is by definition not visible
-        const shouldScroll =
-            this.notebookEditor.visibleRanges.find((r) => {
-                return r.end === this.notebookEditor.notebook.cellCount;
-            }) != undefined ||
-            this.pendingNotebookScrolls.find((r) => r.end == this.notebookEditor.notebook.cellCount - 1) != undefined;
 
         // Strip #%% and store it in the cell metadata so we can reconstruct the cell structure when exporting to Python files
         const settings = this.configuration.getSettings(this.owningResource);
@@ -773,17 +745,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 [notebookCellData]
             );
         });
-        const cell = notebookDocument.cellAt(notebookDocument.cellCount - 1);
-
-        // The default behavior is to scroll to the last cell if the user is already at the bottom
-        // of the history, but not to scroll if the user has scrolled somewhere in the middle
-        // of the history. The jupyter.alwaysScrollOnNewCell setting overrides this to always scroll
-        // to newly-inserted cells.
-        if (settings.alwaysScrollOnNewCell || shouldScroll) {
-            this.revealCell(cell);
-        }
-
-        return { cell, wasScrolled: shouldScroll };
+        return notebookDocument.cellAt(notebookDocument.cellCount - 1);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-empty,@typescript-eslint/no-empty-function
