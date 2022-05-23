@@ -166,7 +166,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
                 this.serviceContainer.get<IExportDialog>(IExportDialog),
                 this.notebookControllerManager,
                 this.serviceContainer,
-                this.serviceContainer.get<IInteractiveWindowDebugger>(IInteractiveWindowDebugger),
+                this.serviceContainer.tryGet<IInteractiveWindowDebugger>(IInteractiveWindowDebugger),
                 this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler),
                 preferredController,
                 editor,

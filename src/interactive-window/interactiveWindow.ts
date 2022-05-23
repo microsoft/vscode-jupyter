@@ -126,7 +126,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         private readonly exportDialog: IExportDialog,
         private readonly notebookControllerManager: INotebookControllerManager,
         private readonly serviceContainer: IServiceContainer,
-        private readonly interactiveWindowDebugger: IInteractiveWindowDebugger,
+        private readonly interactiveWindowDebugger: IInteractiveWindowDebugger | undefined,
         private readonly errorHandler: IDataScienceErrorHandler,
         preferredController: IVSCodeNotebookController | undefined,
         public readonly notebookEditor: NotebookEditor,
@@ -564,10 +564,14 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             if (isDebug && (settings.forceIPyKernelDebugger || !isLocalConnection(kernel.kernelConnectionMetadata))) {
                 // New ipykernel 7 debugger using the Jupyter protocol.
                 await this.debuggingManager.start(this.notebookEditor, cell);
-            } else if (isDebug && isLocalConnection(kernel.kernelConnectionMetadata)) {
+            } else if (
+                isDebug &&
+                isLocalConnection(kernel.kernelConnectionMetadata) &&
+                this.interactiveWindowDebugger
+            ) {
                 // Old ipykernel 6 debugger.
                 // If debugging attach to the kernel but don't enable tracing just yet
-                detachKernel = async () => this.interactiveWindowDebugger.detach(kernel);
+                detachKernel = async () => this.interactiveWindowDebugger?.detach(kernel);
                 await this.interactiveWindowDebugger.attach(kernel);
                 await this.interactiveWindowDebugger.updateSourceMaps(
                     this.storageFactory.get({ notebook: cell.notebook })?.all || []
