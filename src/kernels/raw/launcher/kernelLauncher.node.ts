@@ -209,7 +209,7 @@ export class KernelLauncher implements IKernelLauncher {
                 createPromiseFromCancellation({ token: cancelToken, cancelAction: 'reject' })
             ]);
         } catch (ex) {
-            void kernelProcess.dispose();
+            kernelProcess.dispose();
             Cancellation.throwIfCanceled(cancelToken);
             throw ex;
         }

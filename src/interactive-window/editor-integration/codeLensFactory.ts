@@ -134,6 +134,7 @@ export class CodeLensFactory implements ICodeLensFactory {
             traceInfoIfCI(`Generating new code lenses for version ${document.version} of document ${document.uri}`);
             // Enumerate the possible commands for the document based code lenses
             const commands = this.enumerateCommands(document.uri);
+            traceInfoIfCI(`Enumerating commands for ${document.uri.toString()}, ${commands.join(', ')}`);
 
             // Then iterate over all of the cell ranges and generate code lenses for each possible
             // commands
@@ -147,6 +148,8 @@ export class CodeLensFactory implements ICodeLensFactory {
                 });
                 firstCell = false;
             });
+        } else {
+            traceInfoIfCI(`NOT Generating new code lenses for version ${document.version} of document ${document.uri}`);
         }
 
         // Generate the goto cell lenses if necessary
@@ -269,7 +272,7 @@ export class CodeLensFactory implements ICodeLensFactory {
         if (workspace.notebookDocuments.find((notebook) => notebook.uri.toString() === document.uri.toString())) {
             return;
         }
-
+        traceInfoIfCI(`Generating code lens for command ${commandName} in ${document.uri.toString()}`);
         // We only support specific commands
         // Be careful here. These arguments will be serialized during liveshare sessions
         // and so shouldn't reference local objects.

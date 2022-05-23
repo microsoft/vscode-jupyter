@@ -69,12 +69,12 @@ export function initialize() {
     const commands = new MockCommands();
     (mockedVSCode as any).commands = commands;
     mockedVSCodeNamespaces.commands = commands as any;
-    when(mockedVSCodeNamespaces.workspace?.notebookDocuments).thenReturn([]);
-    when(mockedVSCodeNamespaces.window?.visibleNotebookEditors).thenReturn([]);
+    when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([]);
+    when(mockedVSCodeNamespaces.window.visibleNotebookEditors).thenReturn([]);
     // Use mock clipboard fo testing purposes.
     const clipboard = new MockClipboard();
-    when(mockedVSCodeNamespaces.env?.clipboard).thenReturn(clipboard);
-    when(mockedVSCodeNamespaces.env?.appName).thenReturn('Insider');
+    when(mockedVSCodeNamespaces.env.clipboard).thenReturn(clipboard);
+    when(mockedVSCodeNamespaces.env.appName).thenReturn('Insider');
 
     // When upgrading to npm 9-10, this might have to change, as we could have explicit imports (named imports).
     Module._load = function (request: any, _parent: any) {

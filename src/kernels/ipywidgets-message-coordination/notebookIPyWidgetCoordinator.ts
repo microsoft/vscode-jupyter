@@ -199,7 +199,7 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         editors.forEach((editor) => this.notebookCommunications.get(editor)?.dispose());
 
         const coordinator = this.messageCoordinators.get(notebook);
-        void coordinator?.then((c) => c.dispose());
+        coordinator?.then((c) => c.dispose()).catch(noop);
         this.messageCoordinators.delete(notebook);
     }
 }

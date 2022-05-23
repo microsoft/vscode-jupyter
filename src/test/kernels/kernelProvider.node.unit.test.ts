@@ -98,6 +98,7 @@ suite('KernelProvider Node', () => {
         );
     });
     teardown(async () => {
+        when(mockedVSCodeNamespaces.workspace.notebookDocuments).thenReturn([]);
         disposeAllDisposables(disposables);
         await asyncDisposables.dispose();
     });

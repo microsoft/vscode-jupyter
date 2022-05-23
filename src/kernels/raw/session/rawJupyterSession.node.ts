@@ -23,6 +23,7 @@ import { IKernelLauncher, IKernelProcess } from '../types';
 import { RawSession } from './rawSession.node';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { DisplayOptions } from '../../displayOptions';
+import { noop } from '../../../platform/common/utils/misc';
 
 /*
 RawJupyterSession is the implementation of IJupyterSession that instead of
@@ -289,8 +290,8 @@ export class RawJupyterSession extends BaseJupyterSession {
             traceVerbose('Successfully waited for Raw Session to be ready in postStartRawSession');
         } catch (ex) {
             traceError('Failed waiting for Raw Session to be ready', ex);
-            void process.dispose();
-            void result.dispose();
+            process.dispose();
+            result.dispose().catch(noop);
             if (ex instanceof CancellationError || options.token.isCancellationRequested) {
                 throw new CancellationError();
             }
@@ -324,8 +325,8 @@ export class RawJupyterSession extends BaseJupyterSession {
                 ]);
             } catch (ex) {
                 traceError('Failed to request kernel info', ex);
-                void process.dispose();
-                void result.dispose();
+                process.dispose();
+                result.dispose().catch(noop);
                 throw ex;
             } finally {
                 result.iopubMessage.disconnect(iopubHandler);
