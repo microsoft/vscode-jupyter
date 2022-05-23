@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable, named, optional } from 'inversify';
 import {
     Breakpoint,
     BreakpointsChangeEvent,
@@ -37,20 +37,26 @@ export class MultiplexingDebugService implements IJupyterDebugService {
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDebugService) private vscodeDebugService: IDebugService,
+        @optional()
         @inject(IJupyterDebugService)
         @named(Identifiers.RUN_BY_LINE_DEBUGSERVICE)
-        private jupyterDebugService: IJupyterDebugService
+        private jupyterDebugService: IJupyterDebugService | undefined
     ) {
         disposableRegistry.push(vscodeDebugService.onDidTerminateDebugSession(this.endedDebugSession.bind(this)));
-        disposableRegistry.push(jupyterDebugService.onDidTerminateDebugSession(this.endedDebugSession.bind(this)));
         disposableRegistry.push(vscodeDebugService.onDidStartDebugSession(this.startedDebugSession.bind(this)));
-        disposableRegistry.push(jupyterDebugService.onDidStartDebugSession(this.startedDebugSession.bind(this)));
         disposableRegistry.push(vscodeDebugService.onDidChangeActiveDebugSession(this.changedDebugSession.bind(this)));
-        disposableRegistry.push(jupyterDebugService.onDidChangeActiveDebugSession(this.changedDebugSession.bind(this)));
         disposableRegistry.push(vscodeDebugService.onDidReceiveDebugSessionCustomEvent(this.gotCustomEvent.bind(this)));
-        disposableRegistry.push(
-            jupyterDebugService.onDidReceiveDebugSessionCustomEvent(this.gotCustomEvent.bind(this))
-        );
+
+        if (jupyterDebugService) {
+            disposableRegistry.push(jupyterDebugService.onDidTerminateDebugSession(this.endedDebugSession.bind(this)));
+            disposableRegistry.push(jupyterDebugService.onDidStartDebugSession(this.startedDebugSession.bind(this)));
+            disposableRegistry.push(
+                jupyterDebugService.onDidChangeActiveDebugSession(this.changedDebugSession.bind(this))
+            );
+            disposableRegistry.push(
+                jupyterDebugService.onDidReceiveDebugSessionCustomEvent(this.gotCustomEvent.bind(this))
+            );
+        }
     }
     public get activeDebugSession(): DebugSession | undefined {
         return this.activeService.activeDebugSession;
@@ -78,21 +84,33 @@ export class MultiplexingDebugService implements IJupyterDebugService {
         return this.activeService.onDidChangeBreakpoints;
     }
     public get onBreakpointHit(): Event<void> {
+        if (!this.jupyterDebugService) {
+            throw new Error('No jupyter debugger service');
+        }
         return this.jupyterDebugService.onBreakpointHit;
     }
     public startRunByLine(config: DebugConfiguration): Thenable<boolean> {
         this.lastStartedService = this.jupyterDebugService;
+        if (!this.jupyterDebugService) {
+            throw new Error('No jupyter debugger service');
+        }
         return this.jupyterDebugService.startRunByLine(config);
     }
     public registerDebugConfigurationProvider(debugType: string, provider: DebugConfigurationProvider): Disposable {
         const d1 = this.vscodeDebugService.registerDebugConfigurationProvider(debugType, provider);
-        const d2 = this.jupyterDebugService.registerDebugConfigurationProvider(debugType, provider);
-        return this.combineDisposables(d1, d2);
+        if (this.jupyterDebugService) {
+            const d2 = this.jupyterDebugService.registerDebugConfigurationProvider(debugType, provider);
+            return this.combineDisposables(d1, d2);
+        }
+        return d1;
     }
     public registerDebugAdapterTrackerFactory(debugType: string, factory: DebugAdapterTrackerFactory): Disposable {
         const d1 = this.vscodeDebugService.registerDebugAdapterTrackerFactory(debugType, factory);
-        const d2 = this.jupyterDebugService.registerDebugAdapterTrackerFactory(debugType, factory);
-        return this.combineDisposables(d1, d2);
+        if (this.jupyterDebugService) {
+            const d2 = this.jupyterDebugService.registerDebugAdapterTrackerFactory(debugType, factory);
+            return this.combineDisposables(d1, d2);
+        }
+        return d1;
     }
     public startDebugging(
         folder: WorkspaceFolder | undefined,
@@ -110,24 +128,36 @@ export class MultiplexingDebugService implements IJupyterDebugService {
     }
 
     public getStack(): Promise<DebugProtocol.StackFrame[]> {
+        if (!this.jupyterDebugService) {
+            throw new Error('No jupyter debugger service');
+        }
         if (this.lastStartedService === this.jupyterDebugService) {
             return this.jupyterDebugService.getStack();
         }
         throw new Error('Requesting jupyter specific stack when not debugging.');
     }
     public step(): Promise<void> {
+        if (!this.jupyterDebugService) {
+            throw new Error('No jupyter debugger service');
+        }
         if (this.lastStartedService === this.jupyterDebugService) {
             return this.jupyterDebugService.step();
         }
         throw new Error('Requesting jupyter specific step when not debugging.');
     }
     public continue(): Promise<void> {
+        if (!this.jupyterDebugService) {
+            throw new Error('No jupyter debugger service');
+        }
         if (this.lastStartedService === this.jupyterDebugService) {
             return this.jupyterDebugService.continue();
         }
         throw new Error('Requesting jupyter specific step when not debugging.');
     }
     public requestVariables(): Promise<void> {
+        if (!this.jupyterDebugService) {
+            throw new Error('No jupyter debugger service');
+        }
         if (this.lastStartedService === this.jupyterDebugService) {
             return this.jupyterDebugService.requestVariables();
         }
@@ -135,7 +165,7 @@ export class MultiplexingDebugService implements IJupyterDebugService {
     }
 
     public stop(): void {
-        if (this.lastStartedService === this.jupyterDebugService) {
+        if (this.jupyterDebugService && this.lastStartedService === this.jupyterDebugService) {
             this.jupyterDebugService.stop();
         } else {
             // Stop our debugging UI session, no await as we just want it stopped

@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { IApplicationEnvironment } from '../platform/common/application/types';
-import { JVSC_EXTENSION_ID } from '../platform/common/constants';
+import { Identifiers, JVSC_EXTENSION_ID } from '../platform/common/constants';
 
 import { IServiceManager } from '../platform/ioc/types';
 import { setSharedProperty } from '../telemetry';
@@ -20,6 +20,8 @@ import { KernelFinder } from './kernelFinder.web';
 import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
 import { IDataScienceCommandListener } from '../platform/common/types';
 import { KernelCommandListener } from './kernelCommandListener';
+import { IJupyterDebugService } from './debugging/types';
+import { MultiplexingDebugService } from '../platform/debugger/multiplexingDebugService';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
@@ -48,6 +50,12 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     );
     const rawService = serviceManager.get<IRawNotebookSupportedService>(IRawNotebookSupportedService);
     setSharedProperty('rawKernelSupported', rawService.isSupported ? 'true' : 'false');
+
+    serviceManager.addSingleton<IJupyterDebugService>(
+        IJupyterDebugService,
+        MultiplexingDebugService,
+        Identifiers.MULTIPLEXING_DEBUGSERVICE
+    );
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelCrashMonitor);
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);

@@ -34,7 +34,7 @@ import { KernelVariables } from './variables/kernelVariables';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './variables/preWarmVariables.node';
 import { PythonVariablesRequester } from './variables/pythonVariableRequester.node';
 import { IInteractiveWindowDebugger } from '../interactive-window/types';
-import { MultiplexingDebugService } from '../platform/debugger/multiplexingDebugService.node';
+import { MultiplexingDebugService } from '../platform/debugger/multiplexingDebugService';
 import { JupyterVariableDataProvider } from '../webviews/extension-side/dataviewer/jupyterVariableDataProvider';
 import { JupyterVariableDataProviderFactory } from '../webviews/extension-side/dataviewer/jupyterVariableDataProviderFactory.node';
 import {
