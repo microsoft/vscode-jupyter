@@ -75,16 +75,16 @@ export interface IGeneratedCode {
     firstNonBlankLineIndex: number; // zero based. First non blank line of the real code.
 }
 
-export interface IFileHashes {
+export interface IFileGeneratedCodes {
     uri: Uri;
-    hashes: IGeneratedCode[];
+    generatedCodes: IGeneratedCode[];
 }
 
 export const IGeneratedCodeStore = Symbol('IGeneratedCodeStore');
 export interface IGeneratedCodeStore {
     clear(): void;
-    readonly all: IFileHashes[];
-    getFileHashes(fileUri: Uri): IGeneratedCode[];
+    readonly all: IFileGeneratedCodes[];
+    getFileGeneratedCode(fileUri: Uri): IGeneratedCode[];
     store(fileUri: Uri, info: IGeneratedCode): void;
 }
 
@@ -104,10 +104,16 @@ export type InteractiveCellMetadata = {
     id: string;
 };
 
-export interface IInteractiveWindowCodeGenerator {
+export interface IInteractiveWindowCodeGenerator extends IDisposable {
     reset(): void;
     generateCode(
         metadata: Pick<InteractiveCellMetadata, 'interactive' | 'id'>,
         debug: boolean
     ): IGeneratedCode | undefined;
+}
+
+export const ICodeGeneratorFactory = Symbol('ICodeGeneratorFactory');
+export interface ICodeGeneratorFactory {
+    getOrCreate(notebook: NotebookDocument): IInteractiveWindowCodeGenerator;
+    get(notebook: NotebookDocument): IInteractiveWindowCodeGenerator | undefined;
 }

@@ -22,7 +22,6 @@ import * as localize from '../../platform/common/utils/localize';
 import { getInteractiveCellMetadata } from '../helpers';
 import { IKernelProvider } from '../../kernels/types';
 import { InteractiveWindowView } from '../../notebooks/constants';
-import { CodeGeneratorFactory } from './codeGeneratorFactory';
 import { CodeLensCommands, Commands } from '../../platform/common/constants';
 import { generateCellRangesFromDocument } from './cellFactory';
 import { ICodeLensFactory, IGeneratedCode, IGeneratedCodeStorageFactory } from './types';
@@ -56,7 +55,8 @@ export class CodeLensFactory implements ICodeLensFactory {
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(CodeGeneratorFactory) private readonly generatedCodeStorageFactory: IGeneratedCodeStorageFactory,
+        @inject(IGeneratedCodeStorageFactory)
+        private readonly generatedCodeStorageFactory: IGeneratedCodeStorageFactory,
         @inject(IKernelProvider) kernelProvider: IKernelProvider
     ) {
         this.documentManager.onDidCloseTextDocument(this.onClosedDocument, this, disposables);
@@ -157,12 +157,12 @@ export class CodeLensFactory implements ICodeLensFactory {
             this.configService.getSettings(document.uri).addGotoCodeLenses
         ) {
             const storage = this.generatedCodeStorageFactory.get({ fileUri: document.uri });
-            const hashes = storage
-                ? storage.all.find((item) => item.uri.toString() === document.uri.toString())?.hashes
+            const generatedCodes = storage
+                ? storage.all.find((item) => item.uri.toString() === document.uri.toString())?.generatedCodes
                 : undefined;
-            if (hashes && hashes.length) {
+            if (generatedCodes && generatedCodes.length) {
                 cache.cellRanges.forEach((r) => {
-                    const codeLens = this.createExecutionLens(document, r.range, hashes);
+                    const codeLens = this.createExecutionLens(document, r.range, generatedCodes);
                     if (codeLens) {
                         cache?.gotoCellLens.push(codeLens); // NOSONAR
                     }
@@ -400,10 +400,10 @@ export class CodeLensFactory implements ICodeLensFactory {
         return data?.cellExecutionCounts.get(cellId);
     }
 
-    private createExecutionLens(document: TextDocument, range: Range, hashes: IGeneratedCode[]) {
-        if (hashes) {
+    private createExecutionLens(document: TextDocument, range: Range, generatedCodes: IGeneratedCode[]) {
+        if (generatedCodes) {
             // Match just the start of the range. Should be - 2 (1 for 1 based numbers and 1 for skipping the comment at the top)
-            const rangeMatches = hashes
+            const rangeMatches = generatedCodes
                 .filter((h) => h.line - 2 === range.start.line)
                 .sort((a, b) => a.timestamp - b.timestamp);
             if (rangeMatches && rangeMatches.length) {

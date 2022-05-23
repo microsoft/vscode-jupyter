@@ -56,7 +56,6 @@ export class KernelProvider extends BaseKernelProvider {
             resourceUri,
             options.metadata,
             this.notebookProvider,
-            this.disposables,
             waitForIdleTimeout,
             interruptTimeout,
             this.appShell,
@@ -80,11 +79,7 @@ export class KernelProvider extends BaseKernelProvider {
             this.disposables
         );
         this.asyncDisposables.push(kernel);
-        if (notebook) {
-            this.kernelsByNotebook.set(notebook, { options, kernel });
-        } else {
-            this.storeKernel(uri, options, kernel);
-        }
+        this.storeKernel(uri, notebook, options, kernel);
         this.deleteMappingIfKernelIsDisposed(uri, kernel);
         return kernel;
     }

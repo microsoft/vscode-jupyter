@@ -15,28 +15,35 @@ import {
 import { splitMultilineString } from '../../webviews/webview-side/common';
 import { IDocumentManager } from '../../platform/common/application/types';
 import { traceInfo } from '../../platform/logging';
-import { IConfigurationService } from '../../platform/common/types';
+import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
 import { uncommentMagicCommands } from './cellFactory';
 import { CellMatcher } from './cellMatcher';
 import { IGeneratedCode, IInteractiveWindowCodeGenerator, IGeneratedCodeStore, InteractiveCellMetadata } from './types';
 
-// This class provides hashes for debugging jupyter cells. Call getHashes just before starting debugging to compute all of the
-// hashes for cells.
+// This class provides generated code for debugging jupyter cells. Call getGeneratedCode just before starting debugging to compute all of the
+// generated codes for cells & update the source maps in the python debugger.
 export class CodeGenerator implements IInteractiveWindowCodeGenerator {
     // Map of file to Map of start line to actual hash
     private executionCount: number = 0;
+    private disposed?: boolean;
     private disposables: Disposable[] = [];
     constructor(
         private documentManager: IDocumentManager,
         private configService: IConfigurationService,
         private readonly storage: IGeneratedCodeStore,
-        private readonly notebook: NotebookDocument
+        private readonly notebook: NotebookDocument,
+        disposables: IDisposableRegistry
     ) {
-        // Watch document changes so we can update our hashes
-        this.documentManager.onDidChangeTextDocument(this.onChangedDocument.bind(this));
+        disposables.push(this);
+        // Watch document changes so we can update our generated code
+        this.documentManager.onDidChangeTextDocument(this.onChangedDocument, this, this.disposables);
     }
 
     public dispose() {
+        if (this.disposed) {
+            return;
+        }
+        this.disposed = true;
         this.storage.clear();
         this.disposables.forEach((d) => d.dispose());
     }
@@ -144,7 +151,7 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
 
     private onChangedDocument(e: TextDocumentChangeEvent) {
         // See if the document is in our list of docs to watch
-        const perFile = this.storage.getFileHashes(e.document.uri);
+        const perFile = this.storage.getFileGeneratedCode(e.document.uri);
         if (perFile) {
             // Apply the content changes to the file's cells.
             const docText = e.document.getText();
@@ -207,7 +214,7 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
         return { stripped, trueStartLine };
     }
 
-    private handleContentChange(docText: string, c: TextDocumentContentChangeEvent, hashes: IGeneratedCode[]) {
+    private handleContentChange(docText: string, c: TextDocumentContentChangeEvent, generatedCodes: IGeneratedCode[]) {
         // First compute the number of lines that changed
         const lineDiff = c.range.start.line - c.range.end.line + c.text.split('\n').length - 1;
         const offsetDiff = c.text.length - c.rangeLength;
@@ -215,7 +222,7 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
         // Compute the inclusive offset that is changed by the cell.
         const endChangedOffset = c.rangeLength <= 0 ? c.rangeOffset : c.rangeOffset + c.rangeLength - 1;
 
-        hashes.forEach((h) => {
+        generatedCodes.forEach((h) => {
             // See how this existing cell compares to the change
             if (h.endOffset < c.rangeOffset) {
                 // No change. This cell is entirely before the change

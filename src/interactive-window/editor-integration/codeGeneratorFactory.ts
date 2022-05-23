@@ -2,39 +2,47 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { IDocumentManager } from '../../platform/common/application/types';
-import { IConfigurationService } from '../../platform/common/types';
+import { IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
 import { CodeGenerator } from './codeGenerator';
-import { IGeneratedCodeStorageFactory, IInteractiveWindowCodeGenerator } from './types';
+import { ICodeGeneratorFactory, IGeneratedCodeStorageFactory, IInteractiveWindowCodeGenerator } from './types';
 import { NotebookDocument } from 'vscode';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
 
 @injectable()
-export class CodeGeneratorFactory {
-    private readonly cellHashProvidersIndexedByNotebooks = new WeakMap<
-        NotebookDocument,
-        IInteractiveWindowCodeGenerator
-    >();
+export class CodeGeneratorFactory implements ICodeGeneratorFactory, IExtensionSyncActivationService {
+    private readonly codeGenerators = new WeakMap<NotebookDocument, IInteractiveWindowCodeGenerator>();
 
     constructor(
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
-        @inject(IGeneratedCodeStorageFactory) private readonly storageFactory: IGeneratedCodeStorageFactory
+        @inject(IGeneratedCodeStorageFactory) private readonly storageFactory: IGeneratedCodeStorageFactory,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook
     ) {}
+    public activate(): void {
+        this.notebooks.onDidCloseNotebookDocument(this.onDidCloseNotebook, this, this.disposables);
+    }
     public getOrCreate(notebook: NotebookDocument): IInteractiveWindowCodeGenerator {
         const existing = this.get(notebook);
         if (existing) {
             return existing;
         }
-        const cellHashProvider = new CodeGenerator(
+        const codeGenerator = new CodeGenerator(
             this.documentManager,
             this.configService,
             this.storageFactory.getOrCreate(notebook),
-            notebook
+            notebook,
+            this.disposables
         );
-        this.cellHashProvidersIndexedByNotebooks.set(notebook, cellHashProvider);
-        return cellHashProvider;
+        this.codeGenerators.set(notebook, codeGenerator);
+        return codeGenerator;
     }
     public get(notebook: NotebookDocument): IInteractiveWindowCodeGenerator | undefined {
-        return this.cellHashProvidersIndexedByNotebooks.get(notebook);
+        return this.codeGenerators.get(notebook);
+    }
+    private onDidCloseNotebook(notebook: NotebookDocument): void {
+        this.codeGenerators.get(notebook)?.dispose();
+        this.codeGenerators.delete(notebook);
     }
 }

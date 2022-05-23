@@ -7,7 +7,7 @@ import { IApplicationShell, IWorkspaceService } from '../platform/common/applica
 import { traceInfo, traceError } from '../platform/logging';
 import { IFileSystemNode } from '../platform/common/platform/types.node';
 import { IPythonExecutionFactory } from '../platform/common/process/types.node';
-import { Resource, IDisposableRegistry, IConfigurationService, IExtensionContext } from '../platform/common/types';
+import { Resource, IConfigurationService, IExtensionContext } from '../platform/common/types';
 import { InteractiveWindowView } from '../notebooks/constants';
 import { calculateWorkingDirectory } from '../platform/common/utils.node';
 import { CodeSnippets } from '../webviews/webview-side/common/constants';
@@ -33,7 +33,6 @@ export class Kernel extends BaseKernel {
         resourceUri: Resource,
         kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
         notebookProvider: INotebookProvider,
-        disposables: IDisposableRegistry,
         launchTimeout: number,
         interruptTimeout: number,
         appShell: IApplicationShell,
@@ -53,7 +52,6 @@ export class Kernel extends BaseKernel {
             resourceUri,
             kernelConnectionMetadata,
             notebookProvider,
-            disposables,
             launchTimeout,
             interruptTimeout,
             appShell,

@@ -61,8 +61,11 @@ import { DisplayOptions } from '../kernels/displayOptions';
 import { getInteractiveCellMetadata } from './helpers';
 import { KernelConnector } from '../kernels/kernelConnector';
 import { getFilePath } from '../platform/common/platform/fs-paths';
-import { IGeneratedCodeStorageFactory, InteractiveCellMetadata } from './editor-integration/types';
-import { CodeGeneratorFactory } from './editor-integration/codeGeneratorFactory';
+import {
+    ICodeGeneratorFactory,
+    IGeneratedCodeStorageFactory,
+    InteractiveCellMetadata
+} from './editor-integration/types';
 
 export class InteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
@@ -121,7 +124,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         public readonly notebookEditor: NotebookEditor,
         public readonly inputUri: Uri,
         public readonly appShell: IApplicationShell,
-        private readonly codeGeneratorFactory: CodeGeneratorFactory,
+        private readonly codeGeneratorFactory: ICodeGeneratorFactory,
         private readonly storageFactory: IGeneratedCodeStorageFactory
     ) {
         // Set our owner and first submitter

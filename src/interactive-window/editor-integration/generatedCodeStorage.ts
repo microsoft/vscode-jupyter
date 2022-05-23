@@ -2,29 +2,29 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
-import { IGeneratedCode, IFileHashes, IGeneratedCodeStore } from './types';
+import { ResourceMap } from '../../platform/vscode-path/map';
+import { IGeneratedCode, IFileGeneratedCodes, IGeneratedCodeStore } from './types';
 
-type CodeFileUriAsString = string;
 export class GeneratedCodeStorage implements IGeneratedCodeStore {
-    private cellHashes = new Map<CodeFileUriAsString, IGeneratedCode[]>();
+    private codeGeneratorsByFile = new ResourceMap<IGeneratedCode[]>();
     clear(): void {
-        this.cellHashes.clear();
+        this.codeGeneratorsByFile.clear();
     }
-    public get all(): IFileHashes[] {
-        return [...this.cellHashes.entries()]
+    public get all(): IFileGeneratedCodes[] {
+        return [...this.codeGeneratorsByFile.entries()]
             .map((e) => {
                 return {
-                    uri: Uri.parse(e[0]),
-                    hashes: e[1].filter((h) => !h.deleted)
+                    uri: e[0],
+                    generatedCodes: e[1].filter((h) => !h.deleted)
                 };
             })
-            .filter((e) => e.hashes.length > 0);
+            .filter((e) => e.generatedCodes.length > 0);
     }
-    getFileHashes(fileUri: Uri): IGeneratedCode[] {
-        return this.cellHashes.get(fileUri.toString()) || [];
+    getFileGeneratedCode(fileUri: Uri): IGeneratedCode[] {
+        return this.codeGeneratorsByFile.get(fileUri) || [];
     }
     store(fileUri: Uri, info: IGeneratedCode): void {
-        const list = this.cellHashes.get(fileUri.toString()) || [];
+        const list = this.codeGeneratorsByFile.get(fileUri) || [];
 
         // Figure out where to put the item in the list
         let inserted = false;
@@ -44,6 +44,6 @@ export class GeneratedCodeStorage implements IGeneratedCodeStore {
         if (!inserted) {
             list.push(info);
         }
-        this.cellHashes.set(fileUri.toString(), list);
+        this.codeGeneratorsByFile.set(fileUri, list);
     }
 }

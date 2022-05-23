@@ -12,7 +12,12 @@ import { CodeLensFactory } from './editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
 import { CodeWatcher } from './editor-integration/codewatcher';
 import { Decorator } from './editor-integration/decorator';
-import { ICodeWatcher, ICodeLensFactory, IDataScienceCodeLensProvider } from './editor-integration/types';
+import {
+    ICodeWatcher,
+    ICodeLensFactory,
+    IDataScienceCodeLensProvider,
+    ICodeGeneratorFactory
+} from './editor-integration/types';
 import { InteractiveWindowCommandListener } from './interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from './interactiveWindowProvider';
 import { IExportCommands, IInteractiveWindowProvider } from './types';
@@ -37,14 +42,16 @@ export function registerTypes(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Decorator);
     serviceManager.addSingleton<IExportCommands>(IExportCommands, ExportCommands);
-    serviceManager.addSingleton<CodeGeneratorFactory>(CodeGeneratorFactory, CodeGeneratorFactory);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        GeneratedCodeStorageManager
+    );
+    serviceManager.addSingleton<ICodeGeneratorFactory>(ICodeGeneratorFactory, CodeGeneratorFactory, undefined, [
+        IExtensionSyncActivationService
+    ]);
     serviceManager.addSingleton<IGeneratedCodeStorageFactory>(
         IGeneratedCodeStorageFactory,
         GeneratedCodeStorageFactory
     );
     serviceManager.addSingleton<ITracebackFormatter>(ITracebackFormatter, InteractiveWindowTracebackFormatter);
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        GeneratedCodeStorageManager
-    );
 }

@@ -10,8 +10,7 @@ import { INotebookControllerManager } from '../notebooks/types';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { disposeAllDisposables } from '../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
-import { CodeGeneratorFactory } from './editor-integration/codeGeneratorFactory';
-import { IGeneratedCodeStorageFactory } from './editor-integration/types';
+import { ICodeGeneratorFactory, IGeneratedCodeStorageFactory } from './editor-integration/types';
 
 @injectable()
 export class GeneratedCodeStorageManager implements IExtensionSyncActivationService {
@@ -19,7 +18,7 @@ export class GeneratedCodeStorageManager implements IExtensionSyncActivationServ
     constructor(
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-        @inject(CodeGeneratorFactory) private readonly hashProvider: CodeGeneratorFactory,
+        @inject(ICodeGeneratorFactory) private readonly codeGeneratorFactory: ICodeGeneratorFactory,
         @inject(IGeneratedCodeStorageFactory) private readonly storageFactory: IGeneratedCodeStorageFactory,
         @inject(INotebookControllerManager) private readonly controllers: INotebookControllerManager
     ) {
@@ -34,7 +33,7 @@ export class GeneratedCodeStorageManager implements IExtensionSyncActivationServ
     }
     private onNotebookControllerSelected({ notebook }: { notebook: NotebookDocument }) {
         this.storageFactory.get({ notebook })?.clear();
-        this.hashProvider.get(notebook)?.reset();
+        this.codeGeneratorFactory.get(notebook)?.reset();
     }
     private onDidCreateKernel(kernel: IKernel) {
         const notebook = getAssociatedNotebookDocument(kernel);
@@ -47,7 +46,7 @@ export class GeneratedCodeStorageManager implements IExtensionSyncActivationServ
         kernel.onRestarted(
             () => {
                 this.storageFactory.get({ notebook })?.clear();
-                this.hashProvider.getOrCreate(notebook).reset();
+                this.codeGeneratorFactory.getOrCreate(notebook).reset();
             },
             this,
             this.disposables

@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { NotebookCell, Uri } from 'vscode';
 import { ITracebackFormatter } from '../../kernels/types';
 import { InteractiveWindowView } from '../../notebooks/constants';
-import { IGeneratedCode, IFileHashes, IGeneratedCodeStorageFactory } from '../editor-integration/types';
+import { IGeneratedCode, IFileGeneratedCodes, IGeneratedCodeStorageFactory } from '../editor-integration/types';
 import { untildify } from '../../platform/common/utils/platform';
 import { traceInfoIfCI } from '../../platform/logging';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
@@ -39,7 +39,7 @@ export class InteractiveWindowTracebackFormatter implements ITracebackFormatter 
             }
         });
     }
-    private modifyTracebackFrameIPython8(traceFrame: string, allHashes: IFileHashes[]): string {
+    private modifyTracebackFrameIPython8(traceFrame: string, generatedCodes: IFileGeneratedCodes[]): string {
         // Ansi colors are described here:
         // https://en.wikipedia.org/wiki/ANSI_escape_code under the SGR section
 
@@ -65,20 +65,20 @@ export class InteractiveWindowTracebackFormatter implements ITracebackFormatter 
 
             // Find the cell that matches the execution count in group 1
             let matchUri: Uri | undefined;
-            let matchHash: IGeneratedCode | undefined;
+            let match: IGeneratedCode | undefined;
             // eslint-disable-next-line no-restricted-syntax
-            for (let entry of allHashes) {
-                matchHash = entry.hashes.find((h) => h.executionCount === executionCount);
-                if (matchHash) {
+            for (let entry of generatedCodes) {
+                match = entry.generatedCodes.find((h) => h.executionCount === executionCount);
+                if (match) {
                     matchUri = entry.uri;
                     break;
                 }
             }
-            if (matchHash && matchUri) {
+            if (match && matchUri) {
                 // We have a match, replace source lines first
                 const afterLineReplace = traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
                     const n = parseInt(num, 10);
-                    const newLine = matchHash!.firstNonBlankLineIndex + n - 1;
+                    const newLine = match!.firstNonBlankLineIndex + n - 1;
                     return `${prefix}<a href='${matchUri?.toString()}?line=${newLine}'>${newLine + 1}</a>${suffix}`;
                 });
 
@@ -104,8 +104,8 @@ export class InteractiveWindowTracebackFormatter implements ITracebackFormatter 
 
         return traceFrame;
     }
-    private modifyTracebackFrameIPython7(traceFrame: string, allHashes: IFileHashes[]): string {
-        const allUris = allHashes.map((item) => item.uri);
+    private modifyTracebackFrameIPython7(traceFrame: string, allGeneratedCodes: IFileGeneratedCodes[]): string {
+        const allUris = allGeneratedCodes.map((item) => item.uri);
         allUris.forEach((uri) => {
             const filePath = getFilePath(uri);
             const displayPath = getDisplayPath(uri);
@@ -129,7 +129,7 @@ export class InteractiveWindowTracebackFormatter implements ITracebackFormatter 
                 }
 
                 // Now attempt to find a cell that matches these source lines
-                const offset = this.findCellOffset(storage.getFileHashes(uri), sourceLines);
+                const offset = this.findCellOffset(storage.getFileGeneratedCode(uri), sourceLines);
                 if (offset !== undefined) {
                     traceFrame = traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
                         const n = parseInt(num, 10);
@@ -140,7 +140,7 @@ export class InteractiveWindowTracebackFormatter implements ITracebackFormatter 
             }
 
             if (traceFrame.includes(filePath)) {
-                const offset = this.findCellOffset(storage.getFileHashes(uri), traceFrame);
+                const offset = this.findCellOffset(storage.getFileGeneratedCode(uri), traceFrame);
                 if (offset) {
                     return traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
                         const n = parseInt(num, 10);
@@ -153,11 +153,11 @@ export class InteractiveWindowTracebackFormatter implements ITracebackFormatter 
 
         return traceFrame;
     }
-    private findCellOffset(hashes: IGeneratedCode[] | undefined, codeLines: string): number | undefined {
-        if (hashes) {
+    private findCellOffset(generatedCodes: IGeneratedCode[] | undefined, codeLines: string): number | undefined {
+        if (generatedCodes) {
             // Go through all cell code looking for these code lines exactly
             // (although with right side trimmed as that's what a stack trace does)
-            for (const hash of hashes) {
+            for (const hash of generatedCodes) {
                 const index = hash.trimmedRightCode.indexOf(codeLines);
                 if (index >= 0) {
                     // Jupyter isn't counting blank lines at the top so use our

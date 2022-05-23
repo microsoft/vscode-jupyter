@@ -16,7 +16,7 @@ export abstract class BaseKernelProvider implements IKernelProvider {
      * Use a separate dictionary to track kernels by Notebook, so that
      * the ref to kernel is lost when the notebook is closed.
      */
-    protected readonly kernelsByNotebook = new WeakMap<NotebookDocument, { options: KernelOptions; kernel: IKernel }>();
+    private readonly kernelsByNotebook = new WeakMap<NotebookDocument, { options: KernelOptions; kernel: IKernel }>();
     /**
      * The life time of kernels not tied to a notebook will be managed by callers of the API.
      * Where as if a kernel is tied to a notebook, then the kernel dies along with notebooks.
@@ -47,6 +47,11 @@ export abstract class BaseKernelProvider implements IKernelProvider {
     ) {
         this.asyncDisposables.push(this);
         this.notebook.onDidCloseNotebookDocument((e) => this.disposeOldKernel(e.uri), this, disposables);
+        disposables.push(this._onDidDisposeKernel);
+        disposables.push(this._onDidRestartKernel);
+        disposables.push(this._onKernelStatusChanged);
+        disposables.push(this._onDidStartKernel);
+        disposables.push(this._onDidCreateKernel);
     }
 
     public get onDidDisposeKernel(): Event<IKernel> {
@@ -73,9 +78,6 @@ export abstract class BaseKernelProvider implements IKernelProvider {
         this.pendingDisposables.clear();
         await Promise.all(items);
         await Promise.all(this.kernels.map((k) => k.dispose()));
-        this._onDidDisposeKernel.dispose();
-        this._onDidRestartKernel.dispose();
-        this._onKernelStatusChanged.dispose();
     }
     public abstract getOrCreate(uri: Uri, options: KernelOptions): IKernel;
     public getInternal(uri: Uri):
@@ -90,8 +92,12 @@ export abstract class BaseKernelProvider implements IKernelProvider {
         }
         return notebook ? this.kernelsByNotebook.get(notebook) : undefined;
     }
-    protected storeKernel(uri: Uri, options: KernelOptions, kernel: IKernel) {
-        this.kernelsByUri.set(uri.toString(), { options, kernel });
+    protected storeKernel(uri: Uri, notebook: NotebookDocument | undefined, options: KernelOptions, kernel: IKernel) {
+        if (notebook) {
+            this.kernelsByNotebook.set(notebook, { options, kernel });
+        } else {
+            this.kernelsByUri.set(uri.toString(), { options, kernel });
+        }
         this._onDidCreateKernel.fire(kernel);
     }
     /**

@@ -15,7 +15,7 @@ import { JupyterDebuggerRemoteNotSupportedError } from '../../platform/errors/ju
 import { getPlainTextOrStreamOutput } from '../kernel.base';
 import { IKernel, isLocalConnection } from '../types';
 import { IInteractiveWindowDebugger } from '../../interactive-window/types';
-import { IFileHashes } from '../../interactive-window/editor-integration/types';
+import { IFileGeneratedCodes } from '../../interactive-window/editor-integration/types';
 import { IJupyterDebugService, ISourceMapRequest } from './types';
 import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 import { executeSilently } from '../helpers';
@@ -85,12 +85,12 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
         }
     }
 
-    public async updateSourceMaps(hashes: IFileHashes[]): Promise<void> {
+    public async updateSourceMaps(generatedCodes: IFileGeneratedCodes[]): Promise<void> {
         // Make sure that we have an active debugging session at this point
         if (this.debugService.activeDebugSession && this.debuggingActive) {
             traceInfoIfCI(`Sending debug request for source map`);
             await Promise.all(
-                hashes.map(async (fileHash) => {
+                generatedCodes.map(async (fileHash) => {
                     if (this.debuggingActive) {
                         return this.debugService.activeDebugSession!.customRequest(
                             'setPydevdSourceMap',
@@ -280,16 +280,16 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
         }
     }
 
-    private buildSourceMap(fileHash: IFileHashes): ISourceMapRequest {
+    private buildSourceMap(fileHash: IFileGeneratedCodes): ISourceMapRequest {
         const sourceMapRequest: ISourceMapRequest = { source: { path: fileHash.uri.fsPath }, pydevdSourceMaps: [] };
-        sourceMapRequest.pydevdSourceMaps = fileHash.hashes.map((cellHash) => {
+        sourceMapRequest.pydevdSourceMaps = fileHash.generatedCodes.map((generatedCode) => {
             return {
-                line: cellHash.debuggerStartLine,
-                endLine: cellHash.endLine,
+                line: generatedCode.debuggerStartLine,
+                endLine: generatedCode.endLine,
                 runtimeSource: {
-                    path: cellHash.runtimeFile
+                    path: generatedCode.runtimeFile
                 },
-                runtimeLine: cellHash.runtimeLine
+                runtimeLine: generatedCode.runtimeLine
             };
         });
 

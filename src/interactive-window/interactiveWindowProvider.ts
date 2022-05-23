@@ -46,8 +46,7 @@ import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { IExportDialog } from '../platform/export/types';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { InteractiveWindowView } from '../notebooks/constants';
-import { IGeneratedCodeStorageFactory } from './editor-integration/types';
-import { CodeGeneratorFactory } from './editor-integration/codeGeneratorFactory';
+import { ICodeGeneratorFactory, IGeneratedCodeStorageFactory } from './editor-integration/types';
 
 // Export for testing
 export const AskedForPerFileSettingKey = 'ds_asked_per_file_interactive';
@@ -172,7 +171,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
                 editor,
                 inputUri,
                 this.appShell,
-                this.serviceContainer.get<CodeGeneratorFactory>(CodeGeneratorFactory),
+                this.serviceContainer.get<ICodeGeneratorFactory>(ICodeGeneratorFactory),
                 this.serviceContainer.get<IGeneratedCodeStorageFactory>(IGeneratedCodeStorageFactory)
             );
             this._windows.push(result);

@@ -4,7 +4,7 @@
 'use strict';
 import { NotebookController, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../platform/common/application/types';
-import { Resource, IDisposableRegistry, IConfigurationService, IExtensionContext } from '../platform/common/types';
+import { Resource, IConfigurationService, IExtensionContext } from '../platform/common/types';
 import { INotebookProvider, ITracebackFormatter, KernelActionSource, KernelConnectionMetadata } from './types';
 import { BaseKernel } from './kernel.base';
 import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
@@ -23,7 +23,6 @@ export class Kernel extends BaseKernel {
         resourceUri: Resource,
         kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
         notebookProvider: INotebookProvider,
-        disposables: IDisposableRegistry,
         launchTimeout: number,
         interruptTimeout: number,
         appShell: IApplicationShell,
@@ -41,7 +40,6 @@ export class Kernel extends BaseKernel {
             resourceUri,
             kernelConnectionMetadata,
             notebookProvider,
-            disposables,
             launchTimeout,
             interruptTimeout,
             appShell,

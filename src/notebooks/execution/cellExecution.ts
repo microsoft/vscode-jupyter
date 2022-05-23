@@ -35,7 +35,7 @@ import { BaseError } from '../../platform/errors/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceError, traceInfoIfCI, traceWarning } from '../../platform/logging';
 import { RefBool } from '../../platform/common/refBool.node';
-import { IDisposable, IDisposableRegistry, IExtensionContext } from '../../platform/common/types';
+import { IDisposable, IExtensionContext } from '../../platform/common/types';
 import { Deferred, createDeferred } from '../../platform/common/utils/async';
 import * as localize from '../../platform/common/utils/localize';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
@@ -79,7 +79,6 @@ type DisplayData = nbformat.IDisplayData & {
 export class CellExecutionFactory {
     constructor(
         private readonly appShell: IApplicationShell,
-        private readonly disposables: IDisposableRegistry,
         private readonly controller: NotebookController,
         private readonly outputTracker: CellOutputDisplayIdTracker,
         private readonly context: IExtensionContext,
@@ -92,7 +91,6 @@ export class CellExecutionFactory {
             cell,
             this.appShell,
             metadata,
-            this.disposables,
             this.controller,
             this.outputTracker,
             this.context,
@@ -159,13 +157,11 @@ export class CellExecution implements IDisposable {
         public readonly cell: NotebookCell,
         private readonly applicationService: IApplicationShell,
         private readonly kernelConnection: Readonly<KernelConnectionMetadata>,
-        disposables: IDisposableRegistry,
         private readonly controller: NotebookController,
         private readonly outputDisplayIdTracker: CellOutputDisplayIdTracker,
         private readonly context: IExtensionContext,
         private readonly formatters: ITracebackFormatter[]
     ) {
-        disposables.push(this);
         workspace.onDidCloseTextDocument(
             (e) => {
                 // If the cell is deleted, then dispose the request object.
@@ -225,22 +221,12 @@ export class CellExecution implements IDisposable {
         cell: NotebookCell,
         appService: IApplicationShell,
         metadata: Readonly<KernelConnectionMetadata>,
-        disposables: IDisposableRegistry,
         controller: NotebookController,
         outputTracker: CellOutputDisplayIdTracker,
         context: IExtensionContext,
         formatters: ITracebackFormatter[]
     ) {
-        return new CellExecution(
-            cell,
-            appService,
-            metadata,
-            disposables,
-            controller,
-            outputTracker,
-            context,
-            formatters
-        );
+        return new CellExecution(cell, appService, metadata, controller, outputTracker, context, formatters);
     }
     public async start(session: IJupyterSession) {
         if (this.cancelHandled) {

@@ -21,7 +21,8 @@ import {
     ICodeWatcher,
     ICodeLensFactory,
     IDataScienceCodeLensProvider,
-    IGeneratedCodeStorageFactory
+    IGeneratedCodeStorageFactory,
+    ICodeGeneratorFactory
 } from './editor-integration/types';
 import { GeneratedCodeStorageManager } from './generatedCodeStoreManager';
 import { InteractiveWindowTracebackFormatter } from './outputs/tracebackFormatter';
@@ -42,12 +43,14 @@ export function registerTypes(serviceManager: IServiceManager) {
         DataScienceCodeLensProvider
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Decorator);
+    serviceManager.addSingleton<IExportCommands>(IExportCommands, ExportCommands);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         GeneratedCodeStorageManager
     );
-    serviceManager.addSingleton<IExportCommands>(IExportCommands, ExportCommands);
-    serviceManager.addSingleton<CodeGeneratorFactory>(CodeGeneratorFactory, CodeGeneratorFactory);
+    serviceManager.addSingleton<ICodeGeneratorFactory>(ICodeGeneratorFactory, CodeGeneratorFactory, undefined, [
+        IExtensionSyncActivationService
+    ]);
     serviceManager.addSingleton<IGeneratedCodeStorageFactory>(
         IGeneratedCodeStorageFactory,
         GeneratedCodeStorageFactory
