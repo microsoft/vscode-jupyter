@@ -70,8 +70,8 @@ export class KernelProvider extends BaseKernelProvider {
             this.statusProvider,
             options.creator,
             this.context,
-            this.scriptPaths,
-            this.formatters
+            this.formatters,
+            this.scriptPaths
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);

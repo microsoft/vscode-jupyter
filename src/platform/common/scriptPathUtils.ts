@@ -1,21 +1,21 @@
 import { inject } from 'inversify';
-import * as path from '../vscode-path/path';
+import * as uriPath from '../vscode-path/resources';
 import { IExtensionContext, IScriptPathUtils } from './types';
 
 export class ScriptPathUtils implements IScriptPathUtils {
     constructor(@inject(IExtensionContext) private readonly context: IExtensionContext) {}
 
     get dataFrameLoading() {
-        const sysPath = path.join(
-            this.context.extensionPath,
+        const sysPath = uriPath.joinPath(
+            this.context.extensionUri,
             'pythonFiles',
             'vscode_datascience_helpers',
             'dataframes'
         );
         const dataFrameImport = `__import__('vscodeDataFrame')`;
         return {
-            dataFrameSysImport: `import sys\nsys.path.append("${sysPath.replace(/\\/g, '\\\\')}")`,
-            scriptPath: path.join(sysPath, 'vscodeDataFrame.py'),
+            dataFrameSysImport: `import sys\nsys.path.append("${sysPath.path.replace(/\\/g, '\\\\')}")`,
+            scriptPath: uriPath.joinPath(sysPath, 'vscodeDataFrame.py'),
             dataFrameInfoFunc: '_VSCODE_getDataFrameInfo',
             dataFrameRowFunc: '_VSCODE_getDataFrameRows',
             dataFrameInfoImportFunc: `${dataFrameImport}._VSCODE_getDataFrameInfo`,
@@ -24,16 +24,16 @@ export class ScriptPathUtils implements IScriptPathUtils {
     }
 
     get getVariableInfo() {
-        const sysPath = path.join(
-            this.context.extensionPath,
+        const sysPath = uriPath.joinPath(
+            this.context.extensionUri,
             'pythonFiles',
             'vscode_datascience_helpers',
             'getVariableInfo'
         );
         const variableInfoImportName = `__import__('vscodeGetVariableInfo')`;
         return {
-            getVariableInfoSysImport: `import sys\nsys.path.append("${sysPath.replace(/\\/g, '\\\\')}")`,
-            scriptPath: path.join(sysPath, 'vscodeGetVariableInfo.py'),
+            getVariableInfoSysImport: `import sys\nsys.path.append("${sysPath.path.replace(/\\/g, '\\\\')}")`,
+            scriptPath: uriPath.joinPath(sysPath, 'vscodeGetVariableInfo.py'),
             variableInfoFunc: '_VSCODE_getVariableInfo',
             variablePropertiesFunc: '_VSCODE_getVariableProperties',
             variableTypesFunc: '_VSCODE_getVariableTypes',
@@ -42,9 +42,14 @@ export class ScriptPathUtils implements IScriptPathUtils {
     }
 
     get addRunCellHook() {
-        const sysPath = path.join(this.context.extensionPath, 'pythonFiles', 'vscode_datascience_helpers', 'kernel');
+        const sysPath = uriPath.joinPath(
+            this.context.extensionUri,
+            'pythonFiles',
+            'vscode_datascience_helpers',
+            'kernel'
+        );
         return {
-            scriptPath: path.join(sysPath, 'addRunCellHook.py')
+            scriptPath: uriPath.joinPath(sysPath, 'addRunCellHook.py')
         };
     }
 }

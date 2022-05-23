@@ -356,7 +356,7 @@ export const IScriptPathUtils = Symbol('IConfigurationService');
 export interface IScriptPathUtils {
     dataFrameLoading: {
         dataFrameSysImport: string;
-        scriptPath: string;
+        scriptPath: Uri;
         dataFrameInfoFunc: string;
         dataFrameRowFunc: string;
         dataFrameInfoImportFunc: string;
@@ -364,13 +364,13 @@ export interface IScriptPathUtils {
     };
     getVariableInfo: {
         getVariableInfoSysImport: string;
-        scriptPath: string;
+        scriptPath: Uri;
         variableInfoFunc: string;
         variablePropertiesFunc: string;
         variableTypesFunc: string;
         variableInfoImportFunc: string;
     };
     addRunCellHook: {
-        scriptPath: string;
+        scriptPath: Uri;
     };
 }

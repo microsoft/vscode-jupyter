@@ -72,8 +72,8 @@ export class Kernel extends BaseKernel {
         if (getAssociatedNotebookDocument(this)?.notebookType === InteractiveWindowView) {
             // If using ipykernel 6, we need to set the IPYKERNEL_CELL_NAME so that
             // debugging can work. However this code is harmless for IPYKERNEL 5 so just always do it
-            if (await this.fs.localFileExists(this.scriptPaths.addRunCellHook.scriptPath)) {
-                const fileContents = await this.fs.readLocalFile(this.scriptPaths.addRunCellHook.scriptPath);
+            if (await this.fs.localFileExists(this.scriptPaths.addRunCellHook.scriptPath.fsPath)) {
+                const fileContents = await this.fs.readLocalFile(this.scriptPaths.addRunCellHook.scriptPath.fsPath);
                 return fileContents.splitLines({ trim: false });
             }
             traceError(`Cannot run non-existent script file: ${this.scriptPaths.addRunCellHook.scriptPath}`);

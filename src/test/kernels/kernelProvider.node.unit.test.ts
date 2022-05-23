@@ -17,6 +17,7 @@ import {
     IConfigurationService,
     IDisposable,
     IExtensionContext,
+    IScriptPathUtils,
     IWatchableJupyterSettings
 } from '../../platform/common/types';
 import { IStatusProvider } from '../../platform/progress/types';
@@ -37,6 +38,7 @@ suite('KernelProvider Node', () => {
     let fs: IFileSystemNode;
     let pythonExecFactory: IPythonExecutionFactory;
     let context: IExtensionContext;
+    let scriptPaths: IScriptPathUtils;
     let onDidCloseNotebookDocument: EventEmitter<NotebookDocument>;
     const sampleUri1 = Uri.file('sample1.ipynb');
     const sampleUri2 = Uri.file('sample2.ipynb');
@@ -71,6 +73,7 @@ suite('KernelProvider Node', () => {
         vscNotebook = mock<IVSCodeNotebook>();
         statusProvider = mock<IStatusProvider>();
         context = mock<IExtensionContext>();
+        scriptPaths = mock<IScriptPathUtils>();
         fs = mock<IFileSystemNode>();
         pythonExecFactory = mock<IPythonExecutionFactory>();
         const configSettings = mock<IWatchableJupyterSettings>();
@@ -94,7 +97,8 @@ suite('KernelProvider Node', () => {
             instance(pythonExecFactory),
             instance(statusProvider),
             instance(context),
-            []
+            [],
+            instance(scriptPaths)
         );
     });
     teardown(async () => {
