@@ -365,12 +365,12 @@ jobs:
             python: nonConda
             pythonVersion: '3.9'
             os: ubuntu-latest
-            web: false
+            webOrDesktop: 'desktop'
           - jupyter: remote
             python: nonConda
             pythonVersion: '3.9'
             os: ubuntu-latest
-            web: true
+            webOrDesktop: 'web'
           - jupyter: raw
             python: noPython
             os: ubuntu-latest
@@ -632,11 +632,11 @@ jobs:
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
         id: test_notebook_vscode_ubuntu
-        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && !matrix.web
+        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.webOrDesktop == 'desktop'
 
       - name: Build web bundle for testing
         run: npm run compile-web-test
-        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.web
+        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.webOrDesktop == 'web'
 
       - name: Run Native Notebook with VSCode & Jupyter (web)
         uses: GabrielBB/xvfb-action@v1.4
@@ -652,7 +652,7 @@ jobs:
           VSC_JUPYTER_CI_IS_CONDA: ${{ matrix.python == 'conda' }}
           VSC_JUPYTER_CI_TEST_VSC_CHANNEL: 'insiders'
         id: test_notebook_vscode_web
-        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.web
+        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.webOrDesktop == 'web'
 
       - name: Run Native Notebook with VSCode & Jupyter (windows)
         run: |
@@ -669,7 +669,7 @@ jobs:
           VSC_PYTHON_LOG_FILE: ${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/python.log
           TEST_FILES_SUFFIX: '+(interrupt|execut)*.vscode.test*'
         id: test_notebook_vscode_windows
-        if: matrix.python != 'noPython' && matrix.os == 'windows-latest' && !matrix.web
+        if: matrix.python != 'noPython' && matrix.os == 'windows-latest' && matrix.webOrDesktop == 'desktop'
 
       - name: Publish Notebook Test Report
         uses: scacap/action-surefire-report@v1
