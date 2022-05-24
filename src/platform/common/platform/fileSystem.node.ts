@@ -12,7 +12,7 @@ import { arePathsSame } from './fileUtils.node';
 
 /**
  * File system abstraction which wraps the VS Code API.
- * IMPORTANT: Local functions can only be used in Node.js
+ * IMPORTANT: Local functions can only be used in Node.js. In the browser there is no local file system.
  */
 @injectable()
 export class FileSystem extends FileSystemBase implements IFileSystemNode {
