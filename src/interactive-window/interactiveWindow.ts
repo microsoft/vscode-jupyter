@@ -98,7 +98,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private _onDidChangeViewState = new EventEmitter<void>();
     private closedEvent = new EventEmitter<void>();
     private _submitters: Uri[] = [];
-    private fileInKernel: string | undefined;
+    private fileInKernel: Uri | undefined;
     private cellMatcher;
 
     private internalDisposables: Disposable[] = [];
@@ -452,11 +452,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
     public async debugCode(code: string, fileUri: Uri, line: number): Promise<boolean> {
         let saved = true;
-        const file = getFilePath(fileUri);
         // Make sure the file is saved before debugging
-        const doc = this.documentManager.textDocuments.find((d) =>
-            this.fs.arePathsSame(Uri.parse(d.fileName), Uri.parse(file))
-        );
+        const doc = this.documentManager.textDocuments.find((d) => this.fs.arePathsSame(d.uri, fileUri));
         if (doc && doc.isUntitled) {
             // Before we start, get the list of documents
             const beforeSave = [...this.documentManager.textDocuments];
@@ -615,7 +612,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
 
         // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
-        await this.setFileInKernel(getFilePath(fileUri), kernel!);
+        await this.setFileInKernel(fileUri, kernel!);
         traceInfoIfCI('file in kernel set for IW');
     }
 
@@ -681,23 +678,21 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         return undefined;
     }
 
-    private async setFileInKernel(file: string, kernel: IKernel): Promise<void> {
+    private async setFileInKernel(file: Uri, kernel: IKernel): Promise<void> {
         // If in perFile mode, set only once
+        const path = getFilePath(file);
         if (this.mode === 'perFile' && !this.fileInKernel) {
             traceInfoIfCI(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);
             this.fileInKernel = file;
-            await kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`);
-        } else if (
-            (!this.fileInKernel || !this.fs.arePathsSame(Uri.parse(this.fileInKernel), Uri.parse(file))) &&
-            this.mode !== 'perFile'
-        ) {
+            await kernel.executeHidden(`__file__ = '${path.replace(/\\/g, '\\\\')}'`);
+        } else if ((!this.fileInKernel || !this.fs.arePathsSame(this.fileInKernel, file)) && this.mode !== 'perFile') {
             traceInfoIfCI(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);
             // Otherwise we need to reset it every time
             this.fileInKernel = file;
-            await kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`);
+            await kernel.executeHidden(`__file__ = '${path.replace(/\\/g, '\\\\')}'`);
         } else {
             traceInfoIfCI(
-                `Not Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode} currently ${this.fileInKernel}`
+                `Not Initializing __file__ in setFileInKernel with ${path} for mode ${this.mode} currently ${this.fileInKernel}`
             );
         }
     }
