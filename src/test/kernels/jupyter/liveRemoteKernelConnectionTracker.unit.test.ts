@@ -22,7 +22,7 @@ suite('Live kernel Connection Tracker', async () => {
     let serverUriStorage: IJupyterServerUriStorage;
     let memento: Memento;
     let tracker: LiveRemoteKernelConnectionUsageTracker;
-    let onDidRemoveUri: EventEmitter<string>;
+    let onDidRemoveUris: EventEmitter<string[]>;
     const disposables: IDisposable[] = [];
     const server2Uri = 'http://one:1234/hello?token=1234';
     const remoteLiveKernel1: LiveRemoteKernelConnectionMetadata = {
@@ -94,9 +94,9 @@ suite('Live kernel Connection Tracker', async () => {
     setup(() => {
         serverUriStorage = mock<IJupyterServerUriStorage>();
         memento = mock<Memento>();
-        onDidRemoveUri = new EventEmitter<string>();
-        disposables.push(onDidRemoveUri);
-        when(serverUriStorage.onDidRemoveUri).thenReturn(onDidRemoveUri.event);
+        onDidRemoveUris = new EventEmitter<string[]>();
+        disposables.push(onDidRemoveUris);
+        when(serverUriStorage.onDidRemoveUris).thenReturn(onDidRemoveUris.event);
         tracker = new LiveRemoteKernelConnectionUsageTracker(
             disposables,
             instance(serverUriStorage),
@@ -109,7 +109,7 @@ suite('Live kernel Connection Tracker', async () => {
 
     test('Ensure event handler is added', () => {
         tracker.activate();
-        verify(serverUriStorage.onDidRemoveUri).once();
+        verify(serverUriStorage.onDidRemoveUris).once();
     });
     test('Kernel connection is not used if memento is empty', async () => {
         when(memento.get(anything(), anything())).thenCall((_, defaultValue) => defaultValue);
@@ -214,7 +214,7 @@ suite('Live kernel Connection Tracker', async () => {
         assert.isTrue(tracker.wasKernelUsed(remoteLiveKernel3));
 
         // Forget the Uir connection all together.
-        onDidRemoveUri.fire(server2Uri);
+        onDidRemoveUris.fire([server2Uri]);
 
         assert.isFalse(tracker.wasKernelUsed(remoteLiveKernel1));
         assert.isFalse(tracker.wasKernelUsed(remoteLiveKernel2));

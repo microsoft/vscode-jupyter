@@ -11,7 +11,7 @@ import { Commands } from '../../../platform/common/constants';
 import { IDisposable } from '../../../platform/common/types';
 import { traceInfo } from '../../../platform/logging';
 import { JupyterServerSelector, SelectJupyterUriCommandSource } from '../serverSelector';
-import { IJupyterPasswordConnect, IJupyterServerUriStorage } from '../types';
+import { IJupyterServerUriStorage } from '../types';
 
 @injectable()
 export class JupyterServerSelectorCommand implements IDisposable {
@@ -20,8 +20,7 @@ export class JupyterServerSelectorCommand implements IDisposable {
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(INotebookControllerManager) private readonly controllerManager: INotebookControllerManager,
-        @inject(IJupyterPasswordConnect) private readonly passwordConnect: IJupyterPasswordConnect
+        @inject(INotebookControllerManager) private readonly controllerManager: INotebookControllerManager
     ) {}
     public register() {
         this.disposables.push(
@@ -65,10 +64,6 @@ export class JupyterServerSelectorCommand implements IDisposable {
     }
 
     private async clearJupyterUris(): Promise<void> {
-        // Clear out our saved passwords from this session as well
-        // otherwise we can't handle clearing the list and adding a server with same name and
-        // a different password (customer reported)
-        this.passwordConnect.clearPasswordConnectionInfo();
         return this.serverUriStorage.clearUriList();
     }
 }

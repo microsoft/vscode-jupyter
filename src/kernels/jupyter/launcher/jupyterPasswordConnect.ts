@@ -4,7 +4,7 @@
 import { inject, injectable, optional } from 'inversify';
 import { ConfigurationTarget } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { IAsyncDisposableRegistry, IConfigurationService } from '../../../platform/common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IMultiStepInputFactory, IMultiStepInput } from '../../../platform/common/utils/multiStepInput';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
@@ -13,7 +13,8 @@ import {
     IJupyterPasswordConnect,
     IJupyterPasswordConnectInfo,
     IJupyterRequestAgentCreator,
-    IJupyterRequestCreator
+    IJupyterRequestCreator,
+    IJupyterServerUriStorage
 } from '../types';
 
 @injectable()
@@ -27,8 +28,13 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         @inject(IJupyterRequestAgentCreator)
         @optional()
         private readonly agentCreator: IJupyterRequestAgentCreator | undefined,
-        @inject(IJupyterRequestCreator) private readonly requestCreator: IJupyterRequestCreator
-    ) {}
+        @inject(IJupyterRequestCreator) private readonly requestCreator: IJupyterRequestCreator,
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+    ) {
+        // Sign up to see if servers are removed from our uri storage list
+        this.serverUriStorage.onDidRemoveUris(this.onDidRemoveUris, this, this.disposables);
+    }
 
     @captureTelemetry(Telemetry.GetPasswordAttempt)
     public getPasswordConnectionInfo(url: string): Promise<IJupyterPasswordConnectInfo | undefined> {
@@ -50,11 +56,6 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         }
 
         return result;
-    }
-
-    // Clear out password connection info
-    public clearPasswordConnectionInfo(): void {
-        this.savedConnectInfo.clear();
     }
 
     private getSessionCookieString(xsrfCookie: string, sessionCookieName: string, sessionCookieValue: string): string {
@@ -476,5 +477,12 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         }
 
         return cookieList;
+    }
+
+    // When URIs are removed from the server list also remove them from
+    private onDidRemoveUris(uris: string[]) {
+        uris.forEach((uri) => {
+            this.savedConnectInfo.delete(uri);
+        });
     }
 }

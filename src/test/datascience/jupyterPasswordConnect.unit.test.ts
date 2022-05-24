@@ -15,7 +15,8 @@ import { MockInputBox } from './mockInputBox';
 import { MockQuickPick } from './mockQuickPick';
 import { JupyterPasswordConnect } from '../../kernels/jupyter/launcher/jupyterPasswordConnect';
 import { JupyterRequestCreator } from '../../kernels/jupyter/session/jupyterRequestCreator.node';
-import { IJupyterRequestCreator } from '../../kernels/jupyter/types';
+import { IJupyterRequestCreator, IJupyterServerUriStorage } from '../../kernels/jupyter/types';
+import { IDisposableRegistry } from '../../platform/common/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, ,  */
 suite('JupyterPasswordConnect', () => {
@@ -35,6 +36,8 @@ suite('JupyterPasswordConnect', () => {
         const mockDisposableRegistry = mock(AsyncDisposableRegistry);
         configService = mock(ConfigurationService);
         requestCreator = mock(JupyterRequestCreator);
+        const serverUriStorage = mock<IJupyterServerUriStorage>();
+        const disposables = mock<IDisposableRegistry>();
 
         jupyterPasswordConnect = new JupyterPasswordConnect(
             instance(appShell),
@@ -42,7 +45,9 @@ suite('JupyterPasswordConnect', () => {
             instance(mockDisposableRegistry),
             instance(configService),
             undefined,
-            instance(requestCreator)
+            instance(requestCreator),
+            instance(serverUriStorage),
+            instance(disposables)
         );
     });
 
