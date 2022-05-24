@@ -5,7 +5,7 @@ import '../../platform/common/extensions';
 
 import { WebviewView as vscodeWebviewView } from 'vscode';
 
-import { WebviewHost } from './webviewHost.node';
+import { WebviewHost } from './webviewHost';
 import {
     IWebviewView,
     IWebviewViewMessageListener,
