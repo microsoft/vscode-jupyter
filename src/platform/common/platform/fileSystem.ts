@@ -30,7 +30,7 @@ export class FileSystem implements IFileSystem {
 
     // API based on VS Code fs API
     arePathsSame(path1: vscode.Uri, path2: vscode.Uri): boolean {
-        return path1.toString() === path2.toString();
+        return uriPath.isEqual(path1, path2);
     }
 
     async getFiles(dir: vscode.Uri): Promise<vscode.Uri[]> {
