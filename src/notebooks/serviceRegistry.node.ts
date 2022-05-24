@@ -25,7 +25,6 @@ import { CondaControllerRefresher } from './controllers/condaControllerRefresher
 import { IntellisenseProvider } from '../intellisense/intellisenseProvider.node';
 import { RemoteKernelControllerWatcher } from './controllers/remoteKernelControllerWatcher';
 import { ITracebackFormatter } from '../kernels/types';
-import { InteractiveWindowTracebackFormatter } from '../interactive-window/outputs/tracebackFormatter';
 import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
 
 export function registerTypes(serviceManager: IServiceManager) {

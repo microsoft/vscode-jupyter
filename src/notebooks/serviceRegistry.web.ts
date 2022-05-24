@@ -16,7 +16,6 @@ import { NotebookUsageTracker } from './notebookUsageTracker';
 import { NotebookEditorProvider } from './notebookEditorProvider';
 import { RemoteKernelControllerWatcher } from './controllers/remoteKernelControllerWatcher';
 import { ITracebackFormatter } from '../kernels/types';
-import { InteractiveWindowTracebackFormatter } from '../interactive-window/outputs/tracebackFormatter';
 import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
 
 export function registerTypes(serviceManager: IServiceManager) {
