@@ -3,7 +3,6 @@ import * as glob from 'glob';
 import { inject, injectable } from 'inversify';
 import * as tmp from 'tmp';
 import { promisify } from 'util';
-import * as vscode from 'vscode';
 import { TemporaryFile } from './types';
 import { IFileSystemNode } from './types.node';
 import { FileSystem as FileSystemBase } from './fileSystem';
@@ -58,13 +57,6 @@ export class FileSystem extends FileSystemBase implements IFileSystemNode {
         return fs.ensureDir(path);
     }
 
-    public async localDirectoryExists(dirname: string): Promise<boolean> {
-        return this.exists(vscode.Uri.file(dirname), vscode.FileType.Directory);
-    }
-
-    public async localFileExists(filename: string): Promise<boolean> {
-        return this.exists(vscode.Uri.file(filename), vscode.FileType.File);
-    }
     public override async deleteLocalFile(path: string): Promise<void> {
         await fs.unlink(path);
     }

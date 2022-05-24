@@ -48,22 +48,24 @@ export interface IExecutables {
 
 export const IFileSystem = Symbol('IFileSystem');
 export interface IFileSystem {
-    areLocalPathsSame(path1: string, path2: string): boolean;
-    createLocalDirectory(path: string): Promise<void>;
-    copyLocal(source: string, destination: string): Promise<void>;
-    deleteLocalFile(path: string): Promise<void>;
-    readLocalData(path: string): Promise<Buffer>;
-    readLocalFile(path: string): Promise<string>;
-    writeLocalFile(path: string, text: string | Buffer): Promise<void>;
-    arePathsSame(path1: vscode.Uri, path2: vscode.Uri): boolean;
-    copy(source: vscode.Uri, destination: vscode.Uri): Promise<void>;
-    createDirectory(uri: vscode.Uri): Promise<void>;
-    delete(uri: vscode.Uri): Promise<void>;
-    readFile(uri: vscode.Uri): Promise<string>;
-    stat(uri: vscode.Uri): Promise<vscode.FileStat>;
-    writeFile(uri: vscode.Uri, text: string | Buffer): Promise<void>;
-    getFiles(dir: vscode.Uri): Promise<vscode.Uri[]>;
+    areLocalPathsSame(path1: string | vscode.Uri, path2: string | vscode.Uri): boolean;
+    createLocalDirectory(path: string | vscode.Uri): Promise<void>;
+    copyLocal(source: string | vscode.Uri, destination: string | vscode.Uri): Promise<void>;
+    localDirectoryExists(dirname: string | vscode.Uri): Promise<boolean>;
+    localFileExists(filename: string | vscode.Uri): Promise<boolean>;
+    deleteLocalFile(path: string | vscode.Uri): Promise<void>;
+    readLocalData(path: string | vscode.Uri): Promise<Buffer>;
+    readLocalFile(path: string | vscode.Uri): Promise<string>;
+    writeLocalFile(path: string | vscode.Uri, text: string | Buffer): Promise<void>;
+    arePathsSame(path1: string | vscode.Uri, path2: string | vscode.Uri): boolean;
+    copy(source: string | vscode.Uri, destination: string | vscode.Uri): Promise<void>;
+    createDirectory(path: string | vscode.Uri): Promise<void>;
+    delete(path: string | vscode.Uri): Promise<void>;
+    readFile(path: string | vscode.Uri): Promise<string>;
+    stat(path: string | vscode.Uri): Promise<vscode.FileStat>;
+    writeFile(path: string | vscode.Uri, text: string | Buffer): Promise<void>;
+    getFiles(dir: string | vscode.Uri): Promise<vscode.Uri[]>;
     createTemporaryFile(options: { fileExtension?: string; prefix?: string }): Promise<TemporaryFileUri>;
-    exists(uri: vscode.Uri, fileType?: vscode.FileType): Promise<boolean>;
-    getFileHash(filename: vscode.Uri): Promise<string>;
+    exists(path: string | vscode.Uri, fileType?: vscode.FileType): Promise<boolean>;
+    getFileHash(path: string | vscode.Uri): Promise<string>;
 }

@@ -15,6 +15,20 @@ import { traceError } from '../../logging';
 
 const ENCODING = 'utf8';
 
+function ensureUri(path: string | vscode.Uri): vscode.Uri {
+    if (typeof path === 'string') {
+        return vscode.Uri.parse(path);
+    }
+    return path;
+}
+
+function ensureString(path: string | vscode.Uri): string {
+    if (typeof path !== 'string') {
+        return path.path;
+    }
+    return path;
+}
+
 /**
  * File system abstraction which wraps the VS Code API.
  */
@@ -29,7 +43,9 @@ export class FileSystem implements IFileSystem {
     }
 
     // API based on VS Code fs API
-    arePathsSame(path1: vscode.Uri, path2: vscode.Uri): boolean {
+    arePathsSame(path1: string | vscode.Uri, path2: string | vscode.Uri): boolean {
+        path1 = ensureUri(path1);
+        path2 = ensureUri(path2);
         if (path1.scheme === 'file' && path1.scheme === path2.scheme) {
             // eslint-disable-next-line local-rules/dont-use-fspath
             return this.areLocalPathsSame(path1.fsPath, path2.fsPath);
@@ -38,76 +54,76 @@ export class FileSystem implements IFileSystem {
         }
     }
 
-    areLocalPathsSame(path1: string, path2: string): boolean {
-        return arePathsSame(path1, path2);
+    areLocalPathsSame(path1: string | vscode.Uri, path2: string | vscode.Uri): boolean {
+        return arePathsSame(ensureString(path1), ensureString(path2));
     }
 
-    public async createLocalDirectory(path: string): Promise<void> {
-        await this.createDirectory(vscode.Uri.file(path));
+    public async createLocalDirectory(path: string | vscode.Uri): Promise<void> {
+        await this.createDirectory(path);
     }
 
-    async copyLocal(source: string, destination: string): Promise<void> {
-        const srcUri = vscode.Uri.file(source);
-        const dstUri = vscode.Uri.file(destination);
+    async copyLocal(source: string | vscode.Uri, destination: string | vscode.Uri): Promise<void> {
+        const srcUri = ensureUri(source);
+        const dstUri = ensureUri(destination);
         await this.vscfs.copy(srcUri, dstUri, { overwrite: true });
     }
 
-    async deleteLocalFile(path: string): Promise<void> {
-        const uri = vscode.Uri.file(path);
+    async deleteLocalFile(path: string | vscode.Uri): Promise<void> {
+        const uri = ensureUri(path);
         return this.vscfs.delete(uri, {
             recursive: false,
             useTrash: false
         });
     }
 
-    async readLocalData(filename: string): Promise<Buffer> {
-        const uri = vscode.Uri.file(filename);
+    async readLocalData(filename: string | vscode.Uri): Promise<Buffer> {
+        const uri = ensureUri(filename);
         const data = await this.vscfs.readFile(uri);
         return Buffer.from(data);
     }
 
-    async readLocalFile(filename: string): Promise<string> {
-        const uri = vscode.Uri.file(filename);
+    async readLocalFile(filename: string | vscode.Uri): Promise<string> {
+        const uri = ensureUri(filename);
         return this.readFile(uri);
     }
 
-    async writeLocalFile(filename: string, text: string | Buffer): Promise<void> {
-        const uri = vscode.Uri.file(filename);
+    async writeLocalFile(filename: string | vscode.Uri, text: string | Buffer): Promise<void> {
+        const uri = ensureUri(filename);
         return this.writeFile(uri, text);
     }
 
-    async getFiles(dir: vscode.Uri): Promise<vscode.Uri[]> {
-        const files = await this.vscfs.readDirectory(dir);
-        return files.filter((f) => f[1] === vscode.FileType.File).map((f) => vscode.Uri.file(f[0]));
+    async getFiles(dir: string | vscode.Uri): Promise<vscode.Uri[]> {
+        const files = await this.vscfs.readDirectory(ensureUri(dir));
+        return files.filter((f) => f[1] === vscode.FileType.File).map((f) => ensureUri(f[0]));
     }
 
     // URI-based filesystem functions
 
-    async copy(source: vscode.Uri, destination: vscode.Uri): Promise<void> {
-        await this.vscfs.copy(source, destination);
+    async copy(source: string | vscode.Uri, destination: string | vscode.Uri): Promise<void> {
+        await this.vscfs.copy(ensureUri(source), ensureUri(destination));
     }
 
-    async createDirectory(uri: vscode.Uri): Promise<void> {
-        await this.vscfs.createDirectory(uri);
+    async createDirectory(uri: string | vscode.Uri): Promise<void> {
+        await this.vscfs.createDirectory(ensureUri(uri));
     }
 
-    async delete(uri: vscode.Uri): Promise<void> {
-        await this.vscfs.delete(uri);
+    async delete(uri: string | vscode.Uri): Promise<void> {
+        await this.vscfs.delete(ensureUri(uri));
     }
 
-    async readFile(uri: vscode.Uri): Promise<string> {
-        const result = await this.vscfs.readFile(uri);
+    async readFile(uri: string | vscode.Uri): Promise<string> {
+        const result = await this.vscfs.readFile(ensureUri(uri));
         const data = Buffer.from(result);
         return data.toString(ENCODING);
     }
 
-    async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
-        return this.vscfs.stat(uri);
+    async stat(uri: string | vscode.Uri): Promise<vscode.FileStat> {
+        return this.vscfs.stat(ensureUri(uri));
     }
 
-    async writeFile(uri: vscode.Uri, text: string | Buffer): Promise<void> {
+    async writeFile(uri: string | vscode.Uri, text: string | Buffer): Promise<void> {
         const data = typeof text === 'string' ? Buffer.from(text) : text;
-        return this.vscfs.writeFile(uri, data);
+        return this.vscfs.writeFile(ensureUri(uri), data);
     }
 
     async createTemporaryFile(options: { fileExtension?: string; prefix?: string }): Promise<TemporaryFileUri> {
@@ -129,11 +145,12 @@ export class FileSystem implements IFileSystem {
 
     async exists(
         // the "file" to look for
-        filename: vscode.Uri,
+        filename: string | vscode.Uri,
         // the file type to expect; if not provided then any file type
         // matches; otherwise a mismatch results in a "false" value
         fileType?: vscode.FileType
     ): Promise<boolean> {
+        filename = ensureUri(filename);
         // Special case. http/https always returns stat true even if the file doesn't
         // exist. In those two cases use the http client instead
         if (filename.scheme.toLowerCase() === 'http' || filename.scheme.toLowerCase() === 'https') {
@@ -164,10 +181,18 @@ export class FileSystem implements IFileSystem {
         return (stat.type & fileType) === fileType;
     }
 
-    async getFileHash(filename: vscode.Uri): Promise<string> {
+    async getFileHash(filename: string | vscode.Uri): Promise<string> {
         // The reason for lstat rather than stat is not clear...
         const stat = await this.stat(filename);
         const data = `${stat.ctime}-${stat.mtime}`;
         return getHashString(data);
+    }
+
+    public async localDirectoryExists(dirname: string | vscode.Uri): Promise<boolean> {
+        return this.exists(ensureUri(dirname), vscode.FileType.Directory);
+    }
+
+    public async localFileExists(filename: string | vscode.Uri): Promise<boolean> {
+        return this.exists(ensureUri(filename), vscode.FileType.File);
     }
 }

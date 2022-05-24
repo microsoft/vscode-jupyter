@@ -18,7 +18,5 @@ export interface IFileSystemNode extends IFileSystem {
     createTemporaryLocalFile(fileExtension: string): Promise<TemporaryFile>;
     deleteLocalDirectory(dirname: string): Promise<void>;
     ensureLocalDir(path: string): Promise<void>;
-    localDirectoryExists(dirname: string): Promise<boolean>;
-    localFileExists(filename: string): Promise<boolean>;
     searchLocal(globPattern: string, cwd?: string, dot?: boolean): Promise<string[]>;
 }
