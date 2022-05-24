@@ -1025,6 +1025,10 @@ export namespace DataScience {
     );
     export const connected = localize('DataScience.connected', 'Connected');
     export const disconnected = localize('DataScience.disconnected', 'Disconnected');
+    export const noKernelsSpecifyRemote = localize(
+        'DataScience.noKernelsSpecifyRemote',
+        'No kernel available for cell execution, please [specify a Jupyter server for connections](command:jupyter.selectjupyteruri)'
+    );
     export const ipykernelNotInstalled = localize(
         'DataScience.ipykernelNotInstalled',
         'IPyKernel not installed into interpreter {0}'

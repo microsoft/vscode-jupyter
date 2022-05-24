@@ -34,7 +34,7 @@ import { traceInfoIfCI } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
 import * as uuid from 'uuid/v4';
 
-import { IConfigurationService, InteractiveWindowMode, Resource } from '../platform/common/types';
+import { IConfigurationService, InteractiveWindowMode, IsWebExtension, Resource } from '../platform/common/types';
 import { noop } from '../platform/common/utils/misc';
 import {
     IKernel,
@@ -160,6 +160,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         if (preferredController) {
             // Also start connecting to our kernel but don't wait for it to finish
             this.startKernel(preferredController.controller, preferredController.connection).ignoreErrors();
+        } else if (IsWebExtension) {
+            this.insertInfoMessage(DataScience.noKernelsSpecifyRemote()).ignoreErrors();
         }
     }
 
@@ -277,9 +279,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         kernelMetadata: KernelConnectionMetadata,
         reason: SysInfoReason
     ): Promise<NotebookCell> {
+        const message = this.getSysInfoMessage(kernelMetadata, reason);
+        return this.insertInfoMessage(message);
+    }
+
+    private async insertInfoMessage(message: string): Promise<NotebookCell> {
         if (!this._insertSysInfoPromise) {
             const func = async () => {
-                const message = this.getSysInfoMessage(kernelMetadata, reason);
                 await chainWithPendingUpdates(this.notebookDocument, (edit) => {
                     const markdownCell = new NotebookCellData(NotebookCellKind.Markup, message, MARKDOWN_LANGUAGE);
                     markdownCell.metadata = { isInteractiveWindowMessageCell: true, isPlaceholder: true };
@@ -293,6 +299,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
         return this._insertSysInfoPromise;
     }
+
     private updateSysInfoMessage(newMessage: string, finish: boolean, cellPromise: Promise<NotebookCell>) {
         if (finish) {
             this._insertSysInfoPromise = undefined;
@@ -481,7 +488,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
     private async submitCodeImpl(code: string, fileUri: Uri, line: number, isDebug: boolean) {
         // Do not execute or render empty cells
-        if (this.cellMatcher.isEmptyCell(code)) {
+        if (this.cellMatcher.isEmptyCell(code) || !this.currentKernelInfo.controller) {
             return true;
         }
 
