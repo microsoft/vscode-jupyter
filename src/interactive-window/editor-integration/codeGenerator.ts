@@ -12,13 +12,14 @@ import {
     Uri
 } from 'vscode';
 
-import { splitMultilineString } from '../../webviews/webview-side/common';
+import { parseForComments, splitMultilineString } from '../../webviews/webview-side/common';
 import { IDocumentManager } from '../../platform/common/application/types';
 import { traceInfo } from '../../platform/logging';
 import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
 import { uncommentMagicCommands } from './cellFactory';
 import { CellMatcher } from './cellMatcher';
 import { IGeneratedCode, IInteractiveWindowCodeGenerator, IGeneratedCodeStore, InteractiveCellMetadata } from './types';
+import { noop } from '../../platform/common/utils/misc';
 
 // This class provides generated code for debugging jupyter cells. Call getGeneratedCode just before starting debugging to compute all of the
 // generated codes for cells & update the source maps in the python debugger.
@@ -28,8 +29,8 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
     private disposed?: boolean;
     private disposables: Disposable[] = [];
     constructor(
-        private documentManager: IDocumentManager,
-        private configService: IConfigurationService,
+        private readonly documentManager: IDocumentManager,
+        private readonly configService: IConfigurationService,
         private readonly storage: IGeneratedCodeStore,
         private readonly notebook: NotebookDocument,
         disposables: IDisposableRegistry
@@ -53,13 +54,17 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
         this.executionCount = 0;
     }
 
-    public generateCode(metadata: Pick<InteractiveCellMetadata, 'interactive' | 'id'>, debug: boolean) {
+    public generateCode(
+        metadata: Pick<InteractiveCellMetadata, 'interactive' | 'id'>,
+        debug: boolean,
+        usingJupyterDebugProtocol?: boolean
+    ) {
         // Don't log empty cells
         const executableLines = this.extractExecutableLines(metadata.interactive.originalSource);
         if (executableLines.length > 0 && executableLines.find((s) => s.trim().length > 0)) {
             // When the user adds new code, we know the execution count is increasing
             this.executionCount += 1;
-            return this.generateHash(metadata, this.executionCount, debug);
+            return this.generateCodeImpl(metadata, this.executionCount, debug, usingJupyterDebugProtocol);
         }
     }
 
@@ -79,10 +84,11 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
         return lines;
     }
 
-    private generateHash(
+    private generateCodeImpl(
         metadata: Pick<InteractiveCellMetadata, 'interactive' | 'id'>,
         expectedCount: number,
-        debug: boolean
+        debug: boolean,
+        usingJupyterDebugProtocol?: boolean
     ) {
         // Find the text document that matches. We need more information than
         // the add code gives us
@@ -92,7 +98,7 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
             return;
         }
         // Compute the code that will really be sent to jupyter
-        const { stripped, trueStartLine } = this.extractStrippedLines(metadata);
+        const { stripped, trueStartLine, firstExecutableLineIndex } = this.extractStrippedLines(metadata);
 
         const line = doc.lineAt(trueStartLine);
         const endLine = doc.lineAt(Math.min(trueStartLine + stripped.length - 1, doc.lineCount - 1));
@@ -114,14 +120,15 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
             debug,
             stripped,
             trueStartLine,
-            firstNonBlankLineIndex
+            firstNonBlankLineIndex,
+            usingJupyterDebugProtocol
         );
 
         const hashedCode = stripped.join('');
         const realCode = doc.getText(new Range(new Position(cellLine, 0), endLine.rangeIncludingLineBreak.end));
-        const hashValue = hashjs.sha1().update(hashedCode).digest('hex').substr(0, 12);
+        const hashValue = hashjs.sha1().update(hashedCode).digest('hex').substring(0, 12);
         const runtimeFile = this.getRuntimeFile(hashValue, expectedCount);
-
+        console.log(firstExecutableLineIndex);
         const hash: IGeneratedCode = {
             line: line ? line.lineNumber + 1 : 1,
             endLine: endLine ? endLine.lineNumber + 1 : 1,
@@ -137,7 +144,8 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
             runtimeLine,
             runtimeFile,
             id: metadata.id,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            firstExecutableLineIndex
         };
 
         traceInfo(`Generated code for ${expectedCount} = ${runtimeFile} with ${stripped.length} lines`);
@@ -164,6 +172,7 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
     private extractStrippedLines(metadata: Pick<InteractiveCellMetadata, 'interactive' | 'id'>): {
         stripped: string[];
         trueStartLine: number;
+        firstExecutableLineIndex: number;
     } {
         const lines = splitMultilineString(metadata.interactive.originalSource);
         // Compute the code that will really be sent to jupyter
@@ -210,8 +219,24 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
         for (let i = 0; i < stripped.length; i++) {
             stripped[i] = stripped[i].replace(/\r\n/g, '\n');
         }
-
-        return { stripped, trueStartLine };
+        // This will save the code lines of the cell in lineList (so ignore comments and emtpy lines)
+        // Its done to set the Run by Line breakpoint on the first code line
+        const textLines = metadata.interactive.originalSource.splitLines({ trim: false, removeEmptyEntries: false });
+        const lineList: number[] = [];
+        parseForComments(
+            textLines,
+            () => noop(),
+            (s, i) => {
+                if (s.trim().length !== 0) {
+                    lineList.push(i);
+                }
+            }
+        );
+        lineList.sort();
+        const firstExecutableLineIndex = lineList.length
+            ? metadata.interactive.line + lineList[0]
+            : metadata.interactive.line;
+        return { stripped, trueStartLine, firstExecutableLineIndex };
     }
 
     private handleContentChange(docText: string, c: TextDocumentContentChangeEvent, generatedCodes: IGeneratedCode[]) {
@@ -273,15 +298,22 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
         debug: boolean,
         source: string[],
         trueStartLine: number,
-        firstNonBlankLineIndex: number
+        firstNonBlankLineIndex: number,
+        usingJupyterDebugProtocol?: boolean
     ): { runtimeLine: number; debuggerStartLine: number } {
+        const useNewDebugger =
+            usingJupyterDebugProtocol || this.configService.getSettings(undefined).useJupyterDebugger === true;
         if (debug && this.configService.getSettings(this.notebook.uri).stopOnFirstLineWhileDebugging) {
-            // Inject the breakpoint line
-            source.splice(0, 0, 'breakpoint()\n');
+            if (useNewDebugger) {
+                return { runtimeLine: 1, debuggerStartLine: firstNonBlankLineIndex + 1 };
+            } else {
+                // Inject the breakpoint line
+                source.splice(0, 0, 'breakpoint()\n');
 
-            // Start on the second line
-            // Since a breakpoint was added map to the first line (even if blank)
-            return { runtimeLine: 2, debuggerStartLine: trueStartLine + 1 };
+                // Start on the second line
+                // Since a breakpoint was added map to the first line (even if blank)
+                return { runtimeLine: 2, debuggerStartLine: trueStartLine + 1 };
+            }
         }
         // No breakpoint necessary, start on the first line
         // Since no breakpoint was added map to the first non-blank line

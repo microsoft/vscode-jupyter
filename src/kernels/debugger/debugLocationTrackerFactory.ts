@@ -2,38 +2,33 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import {
-    DebugAdapterTracker,
-    DebugAdapterTrackerFactory,
-    DebugSession,
-    Event,
-    EventEmitter,
-    ProviderResult
-} from 'vscode';
+import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, Event, EventEmitter } from 'vscode';
 
 import { IDebugService } from '../../platform/common/application/types';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { DebugLocationTracker } from './debugLocationTracker';
-import { IDebugLocationTracker } from './types';
+import { IDebugLocationTracker, IDebugLocationTrackerFactory } from './types';
 
 // Hook up our IDebugLocationTracker to python debugging sessions
 @injectable()
-export class DebugLocationTrackerFactory implements IDebugLocationTracker, DebugAdapterTrackerFactory {
-    private activeTrackers: Map<string, DebugLocationTracker> = new Map<string, DebugLocationTracker>();
+export class DebugLocationTrackerFactory
+    implements IDebugLocationTracker, IDebugLocationTrackerFactory, DebugAdapterTrackerFactory
+{
+    private activeTrackers = new WeakMap<DebugSession, DebugLocationTracker>();
     private updatedEmitter: EventEmitter<void> = new EventEmitter<void>();
 
     constructor(
         @inject(IDebugService) debugService: IDebugService,
-        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
+        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry
     ) {
         disposableRegistry.push(debugService.registerDebugAdapterTrackerFactory('python', this));
     }
 
-    public createDebugAdapterTracker(session: DebugSession): ProviderResult<DebugAdapterTracker> {
+    public createDebugAdapterTracker(session: DebugSession): DebugAdapterTracker {
         const result = new DebugLocationTracker(session.id);
-        this.activeTrackers.set(session.id, result);
-        result.sessionEnded(this.onSessionEnd.bind(this));
-        result.debugLocationUpdated(this.onLocationUpdated.bind(this));
+        this.activeTrackers.set(session, result);
+        result.sessionEnded(() => this.activeTrackers.delete(session), this, this.disposableRegistry);
+        result.debugLocationUpdated(this.onLocationUpdated, this, this.disposableRegistry);
         this.onLocationUpdated();
         return result;
     }
@@ -43,15 +38,9 @@ export class DebugLocationTrackerFactory implements IDebugLocationTracker, Debug
     }
 
     public getLocation(session: DebugSession) {
-        const tracker = this.activeTrackers.get(session.id);
+        const tracker = this.activeTrackers.get(session);
         if (tracker) {
             return tracker.debugLocation;
-        }
-    }
-
-    private onSessionEnd(locationTracker: DebugLocationTracker) {
-        if (locationTracker.sessionId) {
-            this.activeTrackers.delete(locationTracker.sessionId);
         }
     }
 

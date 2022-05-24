@@ -6,12 +6,14 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebugService } from '../../platform/common/application/types';
 import {
     DebugAdapter,
+    DebugAdapterTracker,
     DebugConfiguration,
     DebugProtocolMessage,
     DebugSession,
     Event,
     NotebookCell,
-    NotebookDocument
+    NotebookDocument,
+    NotebookEditor
 } from 'vscode';
 
 export interface ISourceMapMapping {
@@ -68,6 +70,12 @@ export interface IKernelDebugAdapter extends DebugAdapter {
     onDidEndSession: Event<DebugSession>;
     dumpAllCells(): Promise<void>;
     getConfiguration(): IKernelDebugAdapterConfig;
+    getSourceMap(filePath: string):
+        | {
+              path: string;
+              lineOffset?: number;
+          }
+        | undefined;
 }
 
 export const IDebuggingManager = Symbol('IDebuggingManager');
@@ -78,6 +86,11 @@ export interface IDebuggingManager {
     getDebugSession(notebook: NotebookDocument): Promise<DebugSession> | undefined;
     getDebugCell(notebook: NotebookDocument): NotebookCell | undefined;
     getDebugAdapter(notebook: NotebookDocument): IKernelDebugAdapter | undefined;
+}
+
+export const IInteractiveWindowDebuggingManager = Symbol('IInteractiveWindowDebuggingManager');
+export interface IInteractiveWindowDebuggingManager extends IDebuggingManager {
+    start(editor: NotebookEditor, cell: NotebookCell): Promise<void>;
 }
 
 export interface IDebuggingDelegate {
@@ -114,18 +127,24 @@ export interface IDebugInfoResponseBreakpoint {
 export enum KernelDebugMode {
     RunByLine,
     Cell,
-    Everything
+    Everything,
+    InteractiveWindow
 }
 
 export interface IKernelDebugAdapterConfig extends DebugConfiguration {
     __mode: KernelDebugMode;
     __cellIndex?: number;
+    __interactiveWindowNotebookUri?: string;
 }
 
 export interface IDebugLocation {
     fileName: string;
     lineNumber: number;
     column: number;
+}
+export const IDebugLocationTrackerFactory = Symbol('IDebugLocationTrackerFactory');
+export interface IDebugLocationTrackerFactory {
+    createDebugAdapterTracker(session: DebugSession): DebugAdapterTracker;
 }
 
 export const IDebugLocationTracker = Symbol('IDebugLocationTracker');

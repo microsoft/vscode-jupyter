@@ -2061,6 +2061,10 @@
             {
                 "type": "Python Kernel Debug Adapter",
                 "label": "Python Kernel Debug Adapter"
+            },
+            {
+                "type": "Python Interactive Window Debug Adapter",
+                "label": "Python Interactive Window"
             }
         ],
         "markdown.previewStyles": [

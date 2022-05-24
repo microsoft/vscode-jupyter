@@ -1526,6 +1526,7 @@ export interface IEventNamePropertyMapping {
     };
     [DebuggingTelemetry.clickedRunByLine]: never | undefined;
     [DebuggingTelemetry.successfullyStartedRunByLine]: never | undefined;
+    [DebuggingTelemetry.successfullyStartedIWJupyterDebugger]: never | undefined;
     [DebuggingTelemetry.clickedRunAndDebugCell]: never | undefined;
     [DebuggingTelemetry.successfullyStartedRunAndDebugCell]: never | undefined;
     [DebuggingTelemetry.endedSession]: {

@@ -72,6 +72,7 @@ import {
     IGeneratedCodeStorageFactory,
     InteractiveCellMetadata
 } from './editor-integration/types';
+import { IInteractiveWindowDebuggingManager } from '../kernels/debugger/types';
 
 export class InteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
@@ -131,7 +132,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         public readonly inputUri: Uri,
         public readonly appShell: IApplicationShell,
         private readonly codeGeneratorFactory: ICodeGeneratorFactory,
-        private readonly storageFactory: IGeneratedCodeStorageFactory
+        private readonly storageFactory: IGeneratedCodeStorageFactory,
+        private readonly debuggingManager: IInteractiveWindowDebuggingManager
     ) {
         // Set our owner and first submitter
         if (this._owner) {
@@ -576,6 +578,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             const kernel = await kernelPromise;
             if (isDebug && (settings.useJupyterDebugger || !isLocalConnection(kernel.kernelConnectionMetadata))) {
                 // New ipykernel 7 debugger.
+                await this.debuggingManager.start(this.notebookEditor, cell);
             } else if (isDebug && isLocalConnection(kernel.kernelConnectionMetadata)) {
                 // Old ipykernel 6 debugger.
                 // If debugging attach to the kernel but don't enable tracing just yet
@@ -754,7 +757,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         const id = uuid();
         const generatedCode = this.codeGeneratorFactory
             .getOrCreate(this.notebookDocument)
-            .generateCode({ interactive, id }, isDebug);
+            .generateCode({ interactive, id }, isDebug, true);
 
         const metadata: InteractiveCellMetadata = {
             interactiveWindowCellMarker,

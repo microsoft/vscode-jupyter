@@ -46,6 +46,7 @@ import { IDataViewerFactory } from '../webviews/extension-side/dataviewer/types'
 import { INotebookWatcher } from '../webviews/extension-side/variablesView/types';
 import { DebuggingManager } from '../notebooks/debugger/debuggingManager';
 import { IDebuggingManager } from '../kernels/debugger/types';
+import { InteractiveWindowDebuggingManager } from '../interactive-window/debugger/jupyter/debuggingManager';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
@@ -79,6 +80,9 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
 
     serviceManager.addSingleton<IDebuggingManager>(IDebuggingManager, DebuggingManager, undefined, [
+        IExtensionSingleActivationService
+    ]);
+    serviceManager.addSingleton<IDebuggingManager>(IDebuggingManager, InteractiveWindowDebuggingManager, undefined, [
         IExtensionSingleActivationService
     ]);
 }

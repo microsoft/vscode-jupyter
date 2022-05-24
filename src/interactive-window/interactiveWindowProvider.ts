@@ -47,6 +47,7 @@ import { IExportDialog } from '../platform/export/types';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { InteractiveWindowView } from '../notebooks/constants';
 import { ICodeGeneratorFactory, IGeneratedCodeStorageFactory } from './editor-integration/types';
+import { IInteractiveWindowDebuggingManager } from '../kernels/debugger/types';
 
 // Export for testing
 export const AskedForPerFileSettingKey = 'ds_asked_per_file_interactive';
@@ -172,7 +173,8 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
                 inputUri,
                 this.appShell,
                 this.serviceContainer.get<ICodeGeneratorFactory>(ICodeGeneratorFactory),
-                this.serviceContainer.get<IGeneratedCodeStorageFactory>(IGeneratedCodeStorageFactory)
+                this.serviceContainer.get<IGeneratedCodeStorageFactory>(IGeneratedCodeStorageFactory),
+                this.serviceContainer.get<IInteractiveWindowDebuggingManager>(IInteractiveWindowDebuggingManager)
             );
             this._windows.push(result);
 
