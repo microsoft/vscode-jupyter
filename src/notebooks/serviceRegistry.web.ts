@@ -40,6 +40,5 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSyncActivationService,
         RemoteKernelControllerWatcher
     );
-    serviceManager.addSingleton<ITracebackFormatter>(ITracebackFormatter, InteractiveWindowTracebackFormatter);
     serviceManager.addSingleton<ITracebackFormatter>(ITracebackFormatter, NotebookTracebackFormatter);
 }
