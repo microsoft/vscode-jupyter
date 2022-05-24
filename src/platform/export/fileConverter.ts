@@ -9,6 +9,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { IApplicationShell } from '../common/application/types';
 import { Telemetry } from '../common/constants';
 import * as localize from '../common/utils/localize';
+import { noop } from '../common/utils/misc';
 import { traceError } from '../logging';
 import { ProgressReporter } from '../progress/progressReporter';
 import { PythonEnvironment } from '../pythonEnvironments/info';
@@ -107,8 +108,15 @@ export class FileConverter implements IFileConverter {
         }
 
         if (target) {
-            await this.exportFileOpener.openFile(format, target, true);
+            // As far as this method is concerned the export was successful, whether the user opens the file or not
+            // should not have any bearing on the completion (resolving) this method.
+            // Hence don't await.
+            this.openExportedFile(format, target).catch(noop);
         }
+    }
+
+    protected async openExportedFile(format: ExportFormat, target: Uri) {
+        await this.exportFileOpener.openFile(format, target, true).catch(noop);
     }
 
     protected async performPlainExport(
