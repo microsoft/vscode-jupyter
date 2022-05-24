@@ -683,7 +683,7 @@
             },
             {
                 "command": "jupyter.notebookeditor.addcellbelow",
-                "title": "%jupyter.command.jupyter.notebookeditor.ƒ∂addcellbelow.title%",
+                "title": "%jupyter.command.jupyter.notebookeditor.addcellbelow.title%",
                 "category": "Notebook",
                 "enablement": "!jupyter.webExtension"
             },
