@@ -171,7 +171,8 @@ export class LogReplayService implements IExtensionSingleActivationService {
                 const cellData = new vscode.NotebookCellData(vscode.NotebookCellKind.Code, '', PYTHON_LANGUAGE);
                 cellData.outputs = [];
                 cellData.metadata = {};
-                edit.replaceNotebookCells(this.activeNotebook.uri, new vscode.NotebookRange(index, index), [cellData]);
+                const nbEdit = vscode.NotebookEdit.insertCells(index, [cellData]);
+                edit.set(this.activeNotebook.uri, [nbEdit]);
                 await vscode.workspace.applyEdit(edit);
                 cell = this.activeNotebook.cellAt(this.activeNotebook.cellCount - 1);
             }

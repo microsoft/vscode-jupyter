@@ -6,6 +6,7 @@ import '../platform/common/extensions';
 import { inject, injectable, optional } from 'inversify';
 import {
     NotebookCell,
+    NotebookEdit,
     NotebookRange,
     Position,
     Range,
@@ -439,7 +440,8 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
 
         // Remove the cells from the matching notebook document
         const edit = new WorkspaceEdit();
-        edit.replaceNotebookCells(document.uri, new NotebookRange(0, document.cellCount), []);
+        const nbEdit = NotebookEdit.deleteCells(new NotebookRange(0, document.cellCount));
+        edit.set(document.uri, [nbEdit]);
         await workspace.applyEdit(edit);
     }
 
@@ -453,7 +455,10 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
 
         if (ranges !== undefined && document !== undefined) {
             await chainWithPendingUpdates(document, (edit) => {
-                ranges.forEach((range) => edit.replaceNotebookCells(document.uri, range, []));
+                ranges.forEach((range) => {
+                    const nbEdit = NotebookEdit.deleteCells(range);
+                    edit.set(document.uri, [nbEdit]);
+                });
             });
         }
     }

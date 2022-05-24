@@ -283,11 +283,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 await chainWithPendingUpdates(this.notebookDocument, (edit) => {
                     const markdownCell = new NotebookCellData(NotebookCellKind.Markup, message, MARKDOWN_LANGUAGE);
                     markdownCell.metadata = { isInteractiveWindowMessageCell: true, isPlaceholder: true };
-                    edit.replaceNotebookCells(
-                        this.notebookDocument.uri,
-                        new NotebookRange(this.notebookDocument.cellCount, this.notebookDocument.cellCount),
-                        [markdownCell]
-                    );
+                    const nbEdit = NotebookEdit.insertCells(this.notebookDocument.cellCount, [markdownCell]);
+                    edit.set(this.notebookDocument.uri, [nbEdit]);
                 });
                 // This should be the cell we just inserted into the document
                 return this.notebookDocument.cellAt(this.notebookDocument.cellCount - 1);
@@ -333,11 +330,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                             cell.metadata.isInteractiveWindowMessageCell &&
                             cell.metadata.isPlaceholder
                         ) {
-                            edit.replaceNotebookCells(
-                                cell.notebook.uri,
-                                new NotebookRange(cell.index, cell.index + 1),
-                                []
-                            );
+                            const nbEdit = NotebookEdit.deleteCells(new NotebookRange(cell.index, cell.index + 1));
+                            edit.set(this.notebookDocument.uri, [nbEdit]);
                             return;
                         }
                     }
@@ -426,11 +420,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         const output = createOutputWithErrorMessageForDisplay(message);
         if (this.notebookEditor.notebook.cellCount === 0 || !controller || !output || !notebookCell) {
             const edit = new WorkspaceEdit();
-            edit.replaceNotebookCells(
-                this.notebookEditor.notebook.uri,
-                new NotebookRange(insertionIndex, insertionIndex),
-                [markdownCell]
-            );
+            const nbEdit = NotebookEdit.insertCells(insertionIndex, [markdownCell]);
+            edit.set(this.notebookDocument.uri, [nbEdit]);
             await workspace.applyEdit(edit);
         } else {
             const execution = CellExecutionCreator.getOrCreate(notebookCell, controller.controller);
@@ -763,11 +754,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         };
         notebookCellData.metadata = metadata;
         await chainWithPendingUpdates(notebookDocument, (edit) => {
-            edit.replaceNotebookCells(
-                notebookDocument.uri,
-                new NotebookRange(notebookDocument.cellCount, notebookDocument.cellCount),
-                [notebookCellData]
-            );
+            const nbEdit = NotebookEdit.insertCells(notebookDocument.cellCount, [notebookCellData]);
+            edit.set(notebookDocument.uri, [nbEdit]);
         });
         const cell = notebookDocument.cellAt(notebookDocument.cellCount - 1);
 
