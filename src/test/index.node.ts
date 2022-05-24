@@ -43,6 +43,11 @@ type SetupOptions = Mocha.MochaOptions & {
 };
 
 process.on('unhandledRejection', (ex: any, _a) => {
+    if (typeof ex === 'object' && ex && ex.name === 'Canceled' && ex instanceof Error) {
+        // We don't care about unhandled `Cancellation` errors.
+        // When we shutdown tests some of these cancellations (cancelling starting of Kernels, etc) bubble upto VS Code.
+        return;
+    }
     const message = [`${ex}`];
     if (typeof ex !== 'string' && ex && ex.message) {
         message.push(ex.name);

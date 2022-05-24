@@ -21,7 +21,11 @@ import {
 import { IKernelConnection, IKernelProcess } from '../types';
 import { KernelEnvironmentVariablesService } from './kernelEnvVarsService.node';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
+import {
+    Cancellation,
+    createPromiseFromCancellation,
+    isCancellationError
+} from '../../../platform/common/cancellation';
 import {
     getTelemetrySafeErrorMessageFromPythonTraceback,
     getErrorMessageFromPythonTraceback
@@ -233,8 +237,10 @@ export class KernelProcess implements IKernelProcess {
                 })
             ]);
         } catch (e) {
-            traceError('Disposing kernel process due to an error', e);
-            traceError(stderrProc || stderr);
+            if (!cancelToken?.isCancellationRequested && !isCancellationError(e)) {
+                traceError('Disposing kernel process due to an error', e);
+                traceError(stderrProc || stderr);
+            }
             // Make sure to dispose if we never connect.
             this.dispose();
 
@@ -243,7 +249,7 @@ export class KernelProcess implements IKernelProcess {
             } else {
                 // Possible this isn't an error we recognize, hence wrap it in a user friendly message.
                 if (cancelToken?.isCancellationRequested) {
-                    traceWarning('User cancelled the kernel launch');
+                    traceVerbose('User cancelled the kernel launch');
                 }
                 // If we have the python error message in std outputs, display that.
                 const errorMessage =
@@ -266,7 +272,7 @@ export class KernelProcess implements IKernelProcess {
         if (this.disposed) {
             return;
         }
-        traceInfo('Dispose Kernel process');
+        traceVerbose('Dispose Kernel process');
         this.disposed = true;
         swallowExceptions(() => {
             void this._interruptDaemon?.kill();

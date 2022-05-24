@@ -2,18 +2,24 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { CancellationToken, CancellationTokenSource } from 'vscode';
-import { BaseError } from '../errors/types';
+import { CancellationError, CancellationToken, CancellationTokenSource } from 'vscode';
 import { createDeferred } from './utils/async';
-import * as localize from './utils/localize';
+import { Common } from './utils/localize';
 
-/**
- * Error type thrown when canceling.
- */
-export class CancellationError extends BaseError {
-    constructor(message?: string) {
-        super('cancelled', message || localize.Common.canceled());
+export function isCancellationError(ex: Error, includeErrorsWithTheMessageCanceled = false) {
+    if (typeof ex !== 'object' || !ex) {
+        return false;
     }
+    if (ex instanceof CancellationError) {
+        return true;
+    }
+    if (
+        includeErrorsWithTheMessageCanceled &&
+        (ex.message.includes('Canceled') || ex.message.includes(Common.canceled()))
+    ) {
+        return true;
+    }
+    return false;
 }
 
 /**

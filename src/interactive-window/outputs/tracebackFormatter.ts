@@ -30,9 +30,10 @@ export class InteractiveWindowTracebackFormatter implements ITracebackFormatter 
         if (!storage) {
             return traceback;
         }
+        const useIPython8Format = traceback.some((traceFrame) => /^[Input|File].*?\n.*/.test(traceFrame));
         return traceback.map((traceFrame) => {
             // Check IPython8. We handle that one special
-            if (/^[Input|File].*?\n.*/.test(traceFrame)) {
+            if (useIPython8Format) {
                 return this.modifyTracebackFrameIPython8(traceFrame, storage.all);
             } else {
                 return this.modifyTracebackFrameIPython7(traceFrame, storage.all);
@@ -78,8 +79,10 @@ export class InteractiveWindowTracebackFormatter implements ITracebackFormatter 
                 // We have a match, replace source lines first
                 const afterLineReplace = traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
                     const n = parseInt(num, 10);
-                    const newLine = match!.firstNonBlankLineIndex + n - 1;
-                    return `${prefix}<a href='${matchUri?.toString()}?line=${newLine}'>${newLine + 1}</a>${suffix}`;
+                    const lineNumberOfFirstLineInCell = match!.hasCellMarker ? match!.line - 1 : match!.line;
+                    const lineIndexOfFirstLineInCell = lineNumberOfFirstLineInCell - 1;
+                    const newLine = lineIndexOfFirstLineInCell + match!.lineOffsetRelativeToIndexOfFirstLineInCell + n;
+                    return `${prefix}<a href='${matchUri?.toString()}?line=${newLine - 1}'>${newLine}</a>${suffix}`;
                 });
 
                 // Then replace the input line with our uri for this cell

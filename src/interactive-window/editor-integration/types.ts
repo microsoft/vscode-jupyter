@@ -58,7 +58,10 @@ export interface ICodeLensFactory {
 }
 
 export interface IGeneratedCode {
-    line: number; // 1 based
+    /**
+     * 1 based, excluding the cell marker.
+     */
+    line: number;
     endLine: number; // 1 based and inclusive
     runtimeLine: number; // Line in the jupyter source to start at
     runtimeFile: string; // Name of the cell's file
@@ -73,10 +76,8 @@ export interface IGeneratedCode {
     realCode: string;
     trimmedRightCode: string;
     firstNonBlankLineIndex: number; // zero based. First non blank line of the real code.
-    /**
-     * First line (index) in the cell of the source file with executable code.
-     */
-    firstExecutableLineIndex: number;
+    lineOffsetRelativeToIndexOfFirstLineInCell: number;
+    hasCellMarker: boolean;
 }
 
 export interface IFileGeneratedCodes {
@@ -101,7 +102,7 @@ export type InteractiveCellMetadata = {
     interactiveWindowCellMarker?: string;
     interactive: {
         uristring: string;
-        line: number;
+        lineIndex: number;
         originalSource: string;
     };
     generatedCode?: IGeneratedCode;
@@ -111,7 +112,7 @@ export type InteractiveCellMetadata = {
 export interface IInteractiveWindowCodeGenerator extends IDisposable {
     reset(): void;
     generateCode(
-        metadata: Pick<InteractiveCellMetadata, 'interactive' | 'id'>,
+        metadata: Pick<InteractiveCellMetadata, 'interactive' | 'id' | 'interactiveWindowCellMarker'>,
         debug: boolean,
         usingJupyterDebugProtocol?: boolean
     ): IGeneratedCode | undefined;

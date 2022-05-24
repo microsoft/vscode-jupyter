@@ -2,8 +2,6 @@
 // Licensed under the MIT License.
 
 import {
-    CancellationError,
-    CancellationError as VscCancellationError,
     Disposable,
     EventEmitter,
     ExtensionMode,
@@ -86,6 +84,7 @@ import { ConsoleForegroundColors, TraceOptions } from '../../platform/logging/ty
 import { KernelConnector } from '../../kernels/kernelConnector';
 import { IVSCodeNotebookController } from './types';
 import { ILocalResourceUriConverter } from '../../kernels/ipywidgets-message-coordination/types';
+import { isCancellationError } from '../../platform/common/cancellation';
 
 export class VSCodeNotebookController implements Disposable, IVSCodeNotebookController {
     private readonly _onNotebookControllerSelected: EventEmitter<{
@@ -480,15 +479,16 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             }
             return await kernel.executeCell(cell);
         } catch (ex) {
-            traceError(`Error in execution`, ex);
+            if (!isCancellationError(ex)) {
+                traceError(`Error in execution`, ex);
+            }
             if (!kernelStarted) {
                 exec.start();
                 void exec.clearOutput(cell);
             }
             const errorHandler = this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
             ex = WrappedError.unwrap(ex);
-            const isCancelled =
-                ex instanceof CancellationError || ex instanceof VscCancellationError || ex instanceof KernelDeadError;
+            const isCancelled = isCancellationError(ex) || ex instanceof KernelDeadError;
             // If there was a failure connecting or executing the kernel, stick it in this cell
             await endCellAndDisplayErrorsInCell(
                 cell,

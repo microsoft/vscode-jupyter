@@ -5,7 +5,7 @@
 
 import { KernelMessage } from '@jupyterlab/services';
 import * as path from '../../../platform/vscode-path/path';
-import { DebugAdapterTracker, DebugSession, NotebookCellKind, NotebookDocument, Uri } from 'vscode';
+import { DebugAdapterTracker, DebugSession, NotebookDocument, Uri } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IJupyterSession, IKernel } from '../../../kernels/types';
 import { IPlatformService } from '../../../platform/common/platform/types';
@@ -64,15 +64,6 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
         return super.handleMessage(message);
     }
 
-    public override async dumpAllCells() {
-        await Promise.all(
-            this.notebookDocument.getCells().map(async (cell) => {
-                if (cell.kind === NotebookCellKind.Code) {
-                    await this.dumpCell(cell.index);
-                }
-            })
-        );
-    }
     // Dump content of given cell into a tmp file and return path to file.
     protected async dumpCell(index: number): Promise<void> {
         const cell = this.notebookDocument.cellAt(index);
@@ -87,11 +78,15 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
             const norm = path.normalize((response as IDumpCellResponse).sourcePath);
             this.fileToCell.set(norm, {
                 uri: Uri.parse(metadata.interactive.uristring),
-                lineOffset: metadata.interactive.line + 1 // Add an extra 1 for the cell marker.
+                lineOffset:
+                    metadata.interactive.lineIndex +
+                    (metadata.generatedCode?.lineOffsetRelativeToIndexOfFirstLineInCell || 0)
             });
-            this.cellToFile.set(metadata.interactive.uristring, {
+            this.cellToFile.set(Uri.parse(metadata.interactive.uristring), {
                 path: norm,
-                lineOffset: metadata.interactive.line + 1 // Add an extra 1 for the cell marker.
+                lineOffset:
+                    metadata.interactive.lineIndex +
+                    (metadata.generatedCode?.lineOffsetRelativeToIndexOfFirstLineInCell || 0)
             });
         } catch (err) {
             traceError(`Failed to dump cell for ${cell.index} with code ${metadata.interactive.originalSource}`, err);

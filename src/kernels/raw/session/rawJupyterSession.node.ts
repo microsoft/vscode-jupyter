@@ -5,7 +5,11 @@ import type { KernelMessage } from '@jupyterlab/services';
 import type { Slot } from '@lumino/signaling';
 import { CancellationError, CancellationTokenSource, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
+import {
+    Cancellation,
+    createPromiseFromCancellation,
+    isCancellationError
+} from '../../../platform/common/cancellation';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
 import { traceInfo, traceError, traceVerbose, traceWarning } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
@@ -93,7 +97,7 @@ export class RawJupyterSession extends BaseJupyterSession {
             this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
         } catch (error) {
             this.connected = false;
-            if (error instanceof CancellationError) {
+            if (isCancellationError(error) || options.token.isCancellationRequested) {
                 sendKernelTelemetryEvent(
                     this.resource,
                     Telemetry.RawKernelSessionStart,
@@ -102,7 +106,7 @@ export class RawJupyterSession extends BaseJupyterSession {
                     error
                 );
                 sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStartUserCancel);
-                traceInfo('Starting of raw session cancelled by user');
+                traceVerbose('Starting of raw session cancelled by user');
                 throw error;
             } else if (error instanceof TimedOutError) {
                 sendKernelTelemetryEvent(
@@ -215,6 +219,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         const token = new CancellationTokenSource();
         const promise = this.createRestartSession(disableUI, token.token);
         this.restartSessionPromise = { token, promise };
+        promise.catch(noop);
         promise.finally(() => {
             token.dispose();
             if (this.restartSessionPromise?.promise === promise) {
@@ -245,9 +250,9 @@ export class RawJupyterSession extends BaseJupyterSession {
         }
 
         traceInfo(
-            `Starting raw kernel ${getDisplayNameOrNameOfKernelConnection(
+            `Starting raw kernel '${getDisplayNameOrNameOfKernelConnection(
                 this.kernelConnectionMetadata
-            )} for interpreter ${getDisplayPath(this.kernelConnectionMetadata.interpreter?.uri)}`
+            )}' for interpreter ${getDisplayPath(this.kernelConnectionMetadata.interpreter?.uri)}`
         );
 
         this.terminatingStatus = undefined;
@@ -292,7 +297,7 @@ export class RawJupyterSession extends BaseJupyterSession {
             traceError('Failed waiting for Raw Session to be ready', ex);
             process.dispose();
             result.dispose().catch(noop);
-            if (ex instanceof CancellationError || options.token.isCancellationRequested) {
+            if (isCancellationError(ex) || options.token.isCancellationRequested) {
                 throw new CancellationError();
             }
             throw ex;

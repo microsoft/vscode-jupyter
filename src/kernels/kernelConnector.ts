@@ -33,6 +33,7 @@ import { IStatusProvider } from '../platform/progress/types';
 import { IRawNotebookProvider } from './raw/types';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { getDisplayNameOrNameOfKernelConnection } from './helpers';
+import { isCancellationError } from '../platform/common/cancellation';
 
 /**
  * Class used for connecting a controller to an instance of an IKernel
@@ -425,10 +426,12 @@ export class KernelConnector {
                     }
                 }
             } catch (error) {
-                traceWarning(
-                    `Error occurred while trying to ${currentContext} the kernel, options.disableUI=${options.disableUI}`,
-                    error
-                );
+                if (!isCancellationError(error)) {
+                    traceWarning(
+                        `Error occurred while trying to ${currentContext} the kernel, options.disableUI=${options.disableUI}`,
+                        error
+                    );
+                }
                 if (options.disableUI) {
                     throw error;
                 }

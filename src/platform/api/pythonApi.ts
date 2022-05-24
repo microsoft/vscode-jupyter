@@ -356,9 +356,11 @@ export class InterpreterService implements IInterpreterService {
                     promise
                         .then((item) =>
                             traceInfo(
-                                `Active Interpreter in Python API for ${resource?.toString()} is ${getDisplayPath(
-                                    item?.uri
-                                )}`
+                                `Active Interpreter in Python API for resource '${getDisplayPath(
+                                    resource
+                                )}' is ${getDisplayPath(item?.uri)}, EnvType: ${item?.envType}, EnvName: '${
+                                    item?.envName
+                                }', Version: ${item?.version?.raw}`
                             )
                         )
                         .catch(noop);

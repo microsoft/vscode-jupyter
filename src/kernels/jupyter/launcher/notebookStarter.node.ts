@@ -10,7 +10,11 @@ import * as os from 'os';
 import * as path from '../../../platform/vscode-path/path';
 import * as uuid from 'uuid/v4';
 import { CancellationError, CancellationToken, Uri } from 'vscode';
-import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
+import {
+    Cancellation,
+    createPromiseFromCancellation,
+    isCancellationError
+} from '../../../platform/common/cancellation';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceInfo, traceError } from '../../../platform/logging';
 import { TemporaryDirectory } from '../../../platform/common/platform/types';
@@ -166,7 +170,7 @@ export class NotebookStarter implements INotebookStarter {
             return connection;
         } catch (err) {
             disposeAllDisposables(disposables);
-            if (err instanceof CancellationError || err instanceof JupyterConnectError) {
+            if (isCancellationError(err) || err instanceof JupyterConnectError) {
                 throw err;
             }
 

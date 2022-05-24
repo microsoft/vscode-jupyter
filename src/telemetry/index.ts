@@ -1526,6 +1526,9 @@ export interface IEventNamePropertyMapping {
     };
     [DebuggingTelemetry.clickedRunByLine]: never | undefined;
     [DebuggingTelemetry.successfullyStartedRunByLine]: never | undefined;
+    /**
+     * Telemetry sent when we have managed to successfully start the Interactive Window debugger using the Jupyter protocol.
+     */
     [DebuggingTelemetry.successfullyStartedIWJupyterDebugger]: never | undefined;
     [DebuggingTelemetry.clickedRunAndDebugCell]: never | undefined;
     [DebuggingTelemetry.successfullyStartedRunAndDebugCell]: never | undefined;

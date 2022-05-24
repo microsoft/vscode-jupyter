@@ -54,7 +54,7 @@ import {
     KernelSocketInformation,
     NotebookCellRunState
 } from './types';
-import { Cancellation } from '../platform/common/cancellation';
+import { Cancellation, isCancellationError } from '../platform/common/cancellation';
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
 import { DisplayOptions } from './displayOptions';
 import { SilentExecutionErrorOptions } from './helpers';
@@ -232,7 +232,7 @@ export abstract class BaseKernel implements IKernel {
         }
     }
     public async dispose(): Promise<void> {
-        traceInfoIfCI(`Dispose Kernel ${getDisplayPath(this.id)}`);
+        traceInfo(`Dispose Kernel '${getDisplayPath(this.id)}' associated with '${getDisplayPath(this.resourceUri)}'`);
         this._disposing = true;
         if (this.disposingPromise) {
             return this.disposingPromise;
@@ -240,7 +240,6 @@ export abstract class BaseKernel implements IKernel {
         this._ignoreJupyterSessionDisposedErrors = true;
         this.startCancellation.cancel();
         const disposeImpl = async () => {
-            traceInfo(`Dispose kernel ${(this.resourceUri || this.id).toString()}`);
             this.restarting = undefined;
             const promises: Promise<void>[] = [];
             promises.push(this.kernelExecution.cancel());
@@ -393,10 +392,19 @@ export abstract class BaseKernel implements IKernel {
         let disposables: Disposable[] = [];
         try {
             // No need to block kernel startup on UI updates.
+            let pythonInfo = '';
+            if (this.kernelConnectionMetadata.interpreter) {
+                const info: string[] = [];
+                info.push(`Python Path: ${getDisplayPath(this.kernelConnectionMetadata.interpreter.envPath)}`);
+                info.push(`EnvType: ${this.kernelConnectionMetadata.interpreter.envType}`);
+                info.push(`EnvName: '${this.kernelConnectionMetadata.interpreter.envName}'`);
+                info.push(`Version: ${this.kernelConnectionMetadata.interpreter.version?.raw}`);
+                pythonInfo = ` (${info.join(', ')})`;
+            }
             traceInfo(
-                `Starting Jupyter Session id = ${this.kernelConnectionMetadata.id} for ${getDisplayPath(
+                `Starting Jupyter Session id = '${this.kernelConnectionMetadata.id}'${pythonInfo} for '${getDisplayPath(
                     this.id
-                )} (disableUI=${this.startupUI.disableUI})`
+                )}' (disableUI=${this.startupUI.disableUI})`
             );
             this.createProgressIndicator(disposables);
             this.isKernelDead = false;
@@ -427,7 +435,7 @@ export abstract class BaseKernel implements IKernel {
                     `failed to create IJupyterSession in kernel, UI Disabled = ${this.startupUI.disableUI}`,
                     ex
                 );
-            } else {
+            } else if (!this.startCancellation.token && !isCancellationError(ex)) {
                 traceError(`failed to create IJupyterSession in kernel, UI Disabled = ${this.startupUI.disableUI}`, ex);
             }
             Cancellation.throwIfCanceled(this.startCancellation.token);
@@ -604,7 +612,7 @@ export abstract class BaseKernel implements IKernel {
             // Have our debug cell script run first for safety
             if (
                 isLocalConnection(this.kernelConnectionMetadata) &&
-                !this.configService.getSettings(undefined).useJupyterDebugger
+                !this.configService.getSettings(undefined).forceIPyKernelDebugger
             ) {
                 result.push(...debugCellScripts);
             }

@@ -15,6 +15,7 @@ import {
     NotebookCell,
     NotebookCellExecutionState,
     NotebookCellExecutionStateChangeEvent,
+    NotebookCellKind,
     NotebookDocument,
     notebooks,
     Uri,
@@ -40,6 +41,7 @@ import {
     shortNameMatchesLongName,
     getMessageSourceAndHookIt
 } from '../../notebooks/debugger/helper';
+import { ResourceMap } from '../../platform/vscode-path/map';
 
 /**
  * For info on the custom requests implemented by jupyter see:
@@ -54,13 +56,10 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
             lineOffset?: number;
         }
     >();
-    protected readonly cellToFile = new Map<
-        string,
-        {
-            path: string;
-            lineOffset?: number;
-        }
-    >();
+    protected readonly cellToFile = new ResourceMap<{
+        path: string;
+        lineOffset?: number;
+    }>();
     private readonly sendMessage = new EventEmitter<DebugProtocolMessage>();
     private readonly endSession = new EventEmitter<DebugSession>();
     private readonly configuration: IKernelDebugAdapterConfig;
@@ -82,7 +81,6 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         const configuration = this.session.configuration;
         assertIsDebugConfig(configuration);
         this.configuration = configuration;
-
         if (
             configuration.__mode === KernelDebugMode.InteractiveWindow ||
             configuration.__mode === KernelDebugMode.Cell ||
@@ -222,9 +220,17 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         return this.session.customRequest('setBreakpoints', args);
     }
 
-    public abstract dumpAllCells(): Promise<void>;
+    public async dumpAllCells() {
+        await Promise.all(
+            this.notebookDocument.getCells().map(async (cell) => {
+                if (cell.kind === NotebookCellKind.Code) {
+                    await this.dumpCell(cell.index);
+                }
+            })
+        );
+    }
     protected abstract dumpCell(index: number): Promise<void>;
-    public getSourcePath(filePath: string) {
+    public getSourcePath(filePath: Uri) {
         return this.cellToFile.get(filePath)?.path;
     }
 
@@ -267,7 +273,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         // map Source paths from VS Code to Ipykernel temp files
         getMessageSourceAndHookIt(message, (source, lines?: { line?: number; endLine?: number; lines?: number[] }) => {
             if (source && source.path) {
-                const mapping = this.cellToFile.get(source.path);
+                const mapping = this.cellToFile.get(Uri.file(source.path));
                 if (mapping) {
                     source.path = mapping.path;
                     if (typeof lines?.endLine === 'number') {

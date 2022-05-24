@@ -4,22 +4,12 @@
 'use strict';
 
 import * as path from '../../platform/vscode-path/path';
-import { NotebookCellKind } from 'vscode';
 import { IDumpCellResponse } from '../../kernels/debugger/types';
 import { traceError } from '../../platform/logging';
 import { KernelDebugAdapterBase } from '../../kernels/debugger/kernelDebugAdapterBase';
 import { executeSilently } from '../../kernels/helpers';
 
 export class KernelDebugAdapter extends KernelDebugAdapterBase {
-    public override async dumpAllCells() {
-        await Promise.all(
-            this.notebookDocument.getCells().map(async (cell) => {
-                if (cell.kind === NotebookCellKind.Code) {
-                    await this.dumpCell(cell.index);
-                }
-            })
-        );
-    }
     public override dispose() {
         super.dispose();
         // On dispose, delete our temp cell files
@@ -39,7 +29,7 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
             this.fileToCell.set(norm, {
                 uri: cell.document.uri
             });
-            this.cellToFile.set(cell.document.uri.toString(), {
+            this.cellToFile.set(cell.document.uri, {
                 path: norm
             });
         } catch (err) {
