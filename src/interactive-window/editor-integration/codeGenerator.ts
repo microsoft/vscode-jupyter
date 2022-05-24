@@ -128,7 +128,6 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
         const realCode = doc.getText(new Range(new Position(cellLine, 0), endLine.rangeIncludingLineBreak.end));
         const hashValue = hashjs.sha1().update(hashedCode).digest('hex').substring(0, 12);
         const runtimeFile = this.getRuntimeFile(hashValue, expectedCount);
-        console.log(firstExecutableLineIndex);
         const hash: IGeneratedCode = {
             line: line ? line.lineNumber + 1 : 1,
             endLine: endLine ? endLine.lineNumber + 1 : 1,
