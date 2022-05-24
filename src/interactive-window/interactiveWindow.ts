@@ -307,10 +307,12 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                             cell.metadata.isPlaceholder
                         ) {
                             edit.replace(cell.document.uri, new Range(0, 0, cell.document.lineCount, 0), newMessage);
-                            edit.replaceNotebookCellMetadata(this.notebookDocument!.uri, cell.index, {
-                                isInteractiveWindowMessageCell: true,
-                                isPlaceholder: !finish
-                            });
+                            edit.set(this.notebookDocument!.uri, [
+                                NotebookEdit.updateCellMetadata(cell.index, {
+                                    isInteractiveWindowMessageCell: true,
+                                    isPlaceholder: !finish
+                                })
+                            ]);
                             return;
                         }
                     }

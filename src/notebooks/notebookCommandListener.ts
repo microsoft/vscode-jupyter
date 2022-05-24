@@ -93,7 +93,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         chainWithPendingUpdates(document, (edit) => {
             document.getCells().forEach((cell, index) => {
                 const metadata = { ...(cell.metadata || {}), inputCollapsed: true, outputCollapsed: true };
-                edit.replaceNotebookCellMetadata(document.uri, index, metadata);
+                edit.set(document.uri, [NotebookEdit.updateCellMetadata(index, metadata)]);
             });
         }).then(noop, noop);
     }
@@ -107,7 +107,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         chainWithPendingUpdates(document, (edit) => {
             document.getCells().forEach((cell, index) => {
                 const metadata = { ...(cell.metadata || {}), inputCollapsed: false, outputCollapsed: true };
-                edit.replaceNotebookCellMetadata(document.uri, index, metadata);
+                edit.set(document.uri, [NotebookEdit.updateCellMetadata(index, metadata)]);
             });
         }).then(noop, noop);
     }
