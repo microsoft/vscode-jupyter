@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as path from '../../platform/vscode-path/path';
-import { IFileSystem } from '../../platform/common/platform/types';
+import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
 import { IJupyterVariable } from './types';
 
@@ -10,7 +10,7 @@ export class VariableScriptLoader {
     private fetchVariableShapeScript?: string;
     private filesLoaded: boolean = false;
 
-    constructor(private fs: IFileSystem) {}
+    constructor(private fs: IFileSystemNode) {}
 
     public readShapeScript(targetVariable: IJupyterVariable): Promise<string | undefined> {
         return this.readScript(targetVariable, () => this.fetchVariableShapeScript);

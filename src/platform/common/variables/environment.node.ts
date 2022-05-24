@@ -7,12 +7,12 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { traceError } from '../../logging';
 import { isFileNotFoundError } from '../platform/errors';
-import { IFileSystem } from '../platform/types';
+import { IFileSystemNode } from '../platform/types.node';
 import { EnvironmentVariables, IEnvironmentVariablesService } from './types';
 
 @injectable()
 export class EnvironmentVariablesService implements IEnvironmentVariablesService {
-    constructor(@inject(IFileSystem) private readonly fs: IFileSystem) {}
+    constructor(@inject(IFileSystemNode) private readonly fs: IFileSystemNode) {}
 
     public async parseFile(
         filePath?: string,

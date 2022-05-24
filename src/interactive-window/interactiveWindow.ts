@@ -454,7 +454,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         let saved = true;
         const file = getFilePath(fileUri);
         // Make sure the file is saved before debugging
-        const doc = this.documentManager.textDocuments.find((d) => this.fs.areLocalPathsSame(d.fileName, file));
+        const doc = this.documentManager.textDocuments.find((d) =>
+            this.fs.arePathsSame(Uri.parse(d.fileName), Uri.parse(file))
+        );
         if (doc && doc.isUntitled) {
             // Before we start, get the list of documents
             const beforeSave = [...this.documentManager.textDocuments];
@@ -686,7 +688,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             this.fileInKernel = file;
             await kernel.executeHidden(`__file__ = '${file.replace(/\\/g, '\\\\')}'`);
         } else if (
-            (!this.fileInKernel || !this.fs.areLocalPathsSame(this.fileInKernel, file)) &&
+            (!this.fileInKernel || !this.fs.arePathsSame(Uri.parse(this.fileInKernel), Uri.parse(file))) &&
             this.mode !== 'perFile'
         ) {
             traceInfoIfCI(`Initializing __file__ in setFileInKernel with ${file} for mode ${this.mode}`);

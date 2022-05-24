@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { IExtensionContext, IHttpClient } from '../types';
-import { arePathsSame, getHashString } from './fileUtils';
+import { getHashString } from './fileUtils';
 import { IFileSystem, TemporaryFileUri } from './types';
 import * as uriPath from '../../vscode-path/resources';
 import * as uuid from 'uuid/v4';
@@ -30,16 +30,7 @@ export class FileSystem implements IFileSystem {
 
     // API based on VS Code fs API
     arePathsSame(path1: vscode.Uri, path2: vscode.Uri): boolean {
-        if (path1.scheme === 'file' && path1.scheme === path2.scheme) {
-            // eslint-disable-next-line local-rules/dont-use-fspath
-            return this.areLocalPathsSame(path1.fsPath, path2.fsPath);
-        } else {
-            return path1.toString() === path2.toString();
-        }
-    }
-
-    areLocalPathsSame(path1: string, path2: string): boolean {
-        return arePathsSame(path1, path2);
+        return path1.toString() === path2.toString();
     }
 
     public async createLocalDirectory(path: string): Promise<void> {

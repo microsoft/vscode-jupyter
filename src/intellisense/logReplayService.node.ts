@@ -12,7 +12,7 @@ import { ICommandManager, IApplicationShell } from '../platform/common/applicati
 import { PYTHON_LANGUAGE, NOTEBOOK_SELECTOR } from '../platform/common/constants';
 import { ContextKey } from '../platform/common/contextKey';
 import { traceInfo } from '../platform/logging';
-import { IFileSystem } from '../platform/common/platform/types';
+import { IFileSystemNode } from '../platform/common/platform/types.node';
 import { IDisposableRegistry, IConfigurationService } from '../platform/common/types';
 import { Commands, EditorContexts } from '../webviews/webview-side/common/constants';
 import { sleep, waitForCondition } from '../platform/common/utils/async';
@@ -44,7 +44,7 @@ export class LogReplayService implements IExtensionSingleActivationService {
         @inject(ICommandManager) private readonly commandService: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}
     public async activate(): Promise<void> {

@@ -8,6 +8,7 @@ import { TemporaryFile } from './types';
 import { IFileSystemNode } from './types.node';
 import { FileSystem as FileSystemBase } from './fileSystem';
 import { IExtensionContext, IHttpClient } from '../types';
+import { arePathsSame } from './fileUtils.node';
 
 /**
  * File system abstraction which wraps the VS Code API.
@@ -81,5 +82,9 @@ export class FileSystem extends FileSystemBase implements IFileSystemNode {
 
         const found = await this.globFiles(globPattern, options);
         return Array.isArray(found) ? found : [];
+    }
+
+    areLocalPathsSame(path1: string, path2: string): boolean {
+        return arePathsSame(path1, path2);
     }
 }

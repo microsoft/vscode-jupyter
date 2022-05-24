@@ -8,7 +8,7 @@
 import { assert, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from '../../../platform/vscode-path/path';
-import { IFileSystem } from '../../../platform/common/platform/types';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { EnvironmentVariablesService } from '../../../platform/common/variables/environment.node';
 import { IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
 import { IEnvironmentActivationService } from '../../../platform/interpreter/activation/types';
@@ -22,7 +22,7 @@ import { Uri } from 'vscode';
 use(chaiAsPromised);
 
 suite('Kernel Environment Variables Service', () => {
-    let fs: IFileSystem;
+    let fs: IFileSystemNode;
     let envActivation: IEnvironmentActivationService;
     let customVariablesService: IEnvironmentVariablesProvider;
     let variablesService: EnvironmentVariablesService;
@@ -43,7 +43,7 @@ suite('Kernel Environment Variables Service', () => {
     };
 
     setup(() => {
-        fs = mock<IFileSystem>();
+        fs = mock<IFileSystemNode>();
         envActivation = mock<IEnvironmentActivationService>();
         when(envActivation.hasActivationCommands(anything(), anything())).thenResolve(false);
         customVariablesService = mock<IEnvironmentVariablesProvider>();

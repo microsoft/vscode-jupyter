@@ -12,7 +12,7 @@ import {
     IVSCodeNotebook,
     IWorkspaceService
 } from '../../../platform/common/application/types';
-import { IFileSystem } from '../../../platform/common/platform/types';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../../platform/common/types';
 import { DataScienceCodeLensProvider } from '../../../interactive-window/editor-integration/codelensprovider';
 import { IServiceContainer } from '../../../platform/ioc/types';
@@ -29,7 +29,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
     let commandManager: TypeMoq.IMock<ICommandManager>;
     let debugService: TypeMoq.IMock<IDebugService>;
     let debugLocationTracker: TypeMoq.IMock<IDebugLocationTracker>;
-    let fileSystem: TypeMoq.IMock<IFileSystem>;
+    let fileSystemNode: TypeMoq.IMock<IFileSystemNode>;
     let tokenSource: CancellationTokenSource;
     let vscodeNotebook: TypeMoq.IMock<IVSCodeNotebook>;
     const disposables: Disposable[] = [];
@@ -43,7 +43,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         debugService = TypeMoq.Mock.ofType<IDebugService>();
         debugLocationTracker = TypeMoq.Mock.ofType<IDebugLocationTracker>();
         pythonSettings = TypeMoq.Mock.ofType<IWatchableJupyterSettings>();
-        fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
+        fileSystemNode = TypeMoq.Mock.ofType<IFileSystemNode>();
         vscodeNotebook = TypeMoq.Mock.ofType<IVSCodeNotebook>();
         const workspace = mock<IWorkspaceService>();
         when(workspace.isTrusted).thenReturn(true);
@@ -54,7 +54,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             .setup((c) => c.executeCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve());
         debugService.setup((d) => d.activeDebugSession).returns(() => undefined);
-        fileSystem
+        fileSystemNode
             .setup((f) => f.areLocalPathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((a, b) => {
                 return a.toLowerCase() === b.toLowerCase();

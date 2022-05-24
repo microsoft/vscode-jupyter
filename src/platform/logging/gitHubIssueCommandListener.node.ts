@@ -18,7 +18,7 @@ import { IApplicationEnvironment, IApplicationShell, ICommandManager } from '../
 import { Commands, MARKDOWN_LANGUAGE } from '../common/constants';
 import { traceError } from '../logging';
 import { IPlatformService } from '../common/platform/types';
-import { IFileSystem } from '../common/platform/types';
+import { IFileSystemNode } from '../common/platform/types.node';
 import { IDataScienceCommandListener, IDisposableRegistry, IExtensionContext } from '../common/types';
 import { GitHubIssue } from '../common/utils/localize';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -31,7 +31,7 @@ export class GitHubIssueCommandListener implements IDataScienceCommandListener {
     private issueTextDocument: TextDocument | undefined;
     private diagnosticCollection: DiagnosticCollection;
     constructor(
-        @inject(IFileSystem) private filesystem: IFileSystem,
+        @inject(IFileSystemNode) private filesystem: IFileSystemNode,
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,

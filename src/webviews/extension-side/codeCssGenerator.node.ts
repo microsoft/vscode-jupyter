@@ -7,7 +7,7 @@ import { parse } from 'jsonc-parser';
 import * as path from '../../platform/vscode-path/path';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { traceInfo, traceError, traceWarning } from '../../platform/logging';
-import { IFileSystem } from '../../platform/common/platform/types';
+import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { IConfigurationService, Resource } from '../../platform/common/types';
 import { DefaultTheme } from '../webview-side/common/constants';
 import { ICodeCssGenerator, IThemeFinder } from './types';
@@ -94,7 +94,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IThemeFinder) private themeFinder: IThemeFinder,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IFileSystem) private fs: IFileSystem
+        @inject(IFileSystemNode) private fs: IFileSystemNode
     ) {}
 
     public generateThemeCss(resource: Resource, isDark: boolean, theme: string): Promise<string> {

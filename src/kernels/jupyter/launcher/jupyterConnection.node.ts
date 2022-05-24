@@ -9,7 +9,7 @@ import { CancellationError, CancellationToken, Disposable, Event, EventEmitter, 
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { traceInfo, traceError, traceWarning } from '../../../platform/logging';
-import { IFileSystem } from '../../../platform/common/platform/types';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { ObservableExecutionResult, Output } from '../../../platform/common/process/types.node';
 import { Deferred, createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -28,7 +28,7 @@ export class JupyterConnectionWaiter implements IDisposable {
     private startPromise: Deferred<IJupyterConnection>;
     private launchTimeout: NodeJS.Timer | number;
     private configService: IConfigurationService;
-    private fs: IFileSystem;
+    private fs: IFileSystemNode;
     private stderr: string[] = [];
     private connectionDisposed = false;
     private subscriptions: Subscription[] = [];
@@ -42,7 +42,7 @@ export class JupyterConnectionWaiter implements IDisposable {
         private cancelToken?: CancellationToken
     ) {
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
-        this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
+        this.fs = serviceContainer.get<IFileSystemNode>(IFileSystemNode);
 
         // Cancel our start promise if a cancellation occurs
         if (cancelToken) {
