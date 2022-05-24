@@ -683,7 +683,7 @@
             },
             {
                 "command": "jupyter.notebookeditor.addcellbelow",
-                "title": "%jupyter.command.jupyter.notebookeditor.addcellbelow.title%",
+                "title": "%jupyter.command.jupyter.notebookeditor.ƒ∂addcellbelow.title%",
                 "category": "Notebook",
                 "enablement": "!jupyter.webExtension"
             },
@@ -2073,6 +2073,7 @@
     },
     "enabledApiProposals": [
         "notebookControllerKind",
+        "notebookWorkspaceEdit",
         "notebookDebugOptions",
         "notebookDeprecated",
         "notebookEditor",
