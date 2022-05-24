@@ -481,7 +481,7 @@ export class CellExecution implements IDisposable {
 
         try {
             // Compute the hash for the cell we're about to execute if on the interactive window
-            const iwCellMetata = getInteractiveCellMetadata(this.cell);
+            const iwCellMetadata = getInteractiveCellMetadata(this.cell);
 
             // At this point we're about to ACTUALLY execute some code. Fire an event to indicate that
             this._preExecuteEmitter.fire(this.cell);
@@ -490,7 +490,7 @@ export class CellExecution implements IDisposable {
             // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute
             this.request = session.requestExecute(
                 {
-                    code: iwCellMetata?.generatedCode?.code || code,
+                    code: iwCellMetadata?.generatedCode?.code || code,
                     silent: false,
                     stop_on_error: false,
                     allow_stdin: true,

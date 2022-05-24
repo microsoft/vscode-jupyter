@@ -73,6 +73,10 @@ export interface IGeneratedCode {
     realCode: string;
     trimmedRightCode: string;
     firstNonBlankLineIndex: number; // zero based. First non blank line of the real code.
+    /**
+     * First line (index) in the cell of the source file with executable code.
+     */
+    firstExecutableLineIndex: number;
 }
 
 export interface IFileGeneratedCodes {
@@ -108,7 +112,8 @@ export interface IInteractiveWindowCodeGenerator extends IDisposable {
     reset(): void;
     generateCode(
         metadata: Pick<InteractiveCellMetadata, 'interactive' | 'id'>,
-        debug: boolean
+        debug: boolean,
+        usingJupyterDebugProtocol?: boolean
     ): IGeneratedCode | undefined;
 }
 

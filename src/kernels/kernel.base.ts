@@ -602,7 +602,12 @@ export abstract class BaseKernel implements IKernel {
             ]);
 
             // Have our debug cell script run first for safety
-            result.push(...debugCellScripts);
+            if (
+                isLocalConnection(this.kernelConnectionMetadata) &&
+                !this.configService.getSettings(undefined).useJupyterDebugger
+            ) {
+                result.push(...debugCellScripts);
+            }
             result.push(...changeDirScripts);
 
             // Set the ipynb file
