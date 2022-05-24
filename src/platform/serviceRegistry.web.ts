@@ -45,8 +45,9 @@ import { DataViewerFactory } from '../webviews/extension-side/dataviewer/dataVie
 import { IDataViewerFactory } from '../webviews/extension-side/dataviewer/types';
 import { INotebookWatcher } from '../webviews/extension-side/variablesView/types';
 import { DebuggingManager } from '../notebooks/debugger/debuggingManager';
-import { IDebuggingManager, IInteractiveWindowDebuggingManager } from '../kernels/debugger/types';
+import { IDebuggingManager, IDebugLocationTracker, IDebugLocationTrackerFactory, IInteractiveWindowDebuggingManager } from '../kernels/debugger/types';
 import { InteractiveWindowDebuggingManager } from '../interactive-window/debugger/jupyter/debuggingManager';
+import { DebugLocationTrackerFactory } from '../kernels/debugger/debugLocationTrackerFactory';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
@@ -70,6 +71,9 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToPDF, ExportFormat.pdf);
     serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToPython, ExportFormat.python);
     serviceManager.addSingleton<ExportUtilBase>(ExportUtilBase, ExportUtilBase);
+    serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory, undefined, [
+        IDebugLocationTrackerFactory
+    ]);
 
     registerCommonTypes(serviceManager);
     registerApiTypes(serviceManager);
