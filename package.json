@@ -376,7 +376,7 @@
                 "command": "jupyter.runcurrentcell",
                 "title": "%jupyter.command.jupyter.runcurrentcell.title%",
                 "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+                "enablement": "isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.debugcell",
@@ -490,19 +490,19 @@
                 "command": "jupyter.runcurrentcelladvance",
                 "title": "%jupyter.command.jupyter.runcurrentcelladvance.title%",
                 "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+                "enablement": "isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.runcurrentcellandallbelow.palette",
                 "title": "%jupyter.command.jupyter.runcurrentcellandallbelow.palette.title%",
                 "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+                "enablement": "isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.runallcellsabove.palette",
                 "title": "%jupyter.command.jupyter.runallcellsabove.palette.title%",
                 "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+                "enablement": "isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.debugcurrentcell.palette",
@@ -514,7 +514,7 @@
                 "command": "jupyter.execSelectionInteractive",
                 "title": "%jupyter.command.jupyter.execSelectionInteractive.title%",
                 "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+                "enablement": "isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.createnewinteractive",
@@ -526,7 +526,7 @@
                 "command": "jupyter.runFileInteractive",
                 "title": "%jupyter.command.jupyter.runFileInteractive.title%",
                 "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+                "enablement": "isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.debugFileInteractive",
@@ -538,25 +538,25 @@
                 "command": "jupyter.runallcells",
                 "title": "%jupyter.command.jupyter.runallcells.title%",
                 "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+                "enablement": "isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.runallcellsabove",
                 "title": "%jupyter.command.jupyter.runallcellsabove.title%",
                 "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+                "enablement": "isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.runcellandallbelow",
                 "title": "%jupyter.command.jupyter.runcellandallbelow.title%",
                 "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+                "enablement": "isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.runcell",
                 "title": "%jupyter.command.jupyter.runcell.title%",
                 "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
+                "enablement": "isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.runtoline",
@@ -1807,7 +1807,7 @@
                 },
                 "jupyter.codeLenses": {
                     "type": "string",
-                    "default": "jupyter.runcell,  jupyter.runallcellsabove, jupyter.debugcell",
+                    "default": "jupyter.runcell, jupyter.runallcellsabove, jupyter.debugcell",
                     "description": "Set of commands to put as code lens above a cell.",
                     "scope": "resource"
                 },

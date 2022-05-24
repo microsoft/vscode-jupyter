@@ -534,6 +534,7 @@
     "DataScience.interactiveWindowModeBannerSwitchYes": "Yes",
     "DataScience.interactiveWindowModeBannerSwitchAlways": "Always",
     "DataScience.interactiveWindowModeBannerSwitchNo": "No",
+    "DataScience.noKernelsSpecifyRemote": "No kernel available for cell execution, please [specify a Jupyter server for connections](command:jupyter.selectjupyteruri)",
     "DataScience.ipykernelNotInstalled": "IPyKernel not installed into interpreter {0}",
     "DataScience.ipykernelNotInstalledBecauseCanceled": "IPyKernel not installed into interpreter. Installation canceled.",
     "DataScience.needIpykernel6": "Ipykernel setup required for this feature",

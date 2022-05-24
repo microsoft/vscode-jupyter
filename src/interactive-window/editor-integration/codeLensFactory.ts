@@ -17,7 +17,13 @@ import {
 import { IDocumentManager, IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
 import { traceWarning, traceInfoIfCI } from '../../platform/logging';
 
-import { ICellRange, IConfigurationService, IDisposableRegistry, Resource } from '../../platform/common/types';
+import {
+    ICellRange,
+    IConfigurationService,
+    IDisposableRegistry,
+    IsWebExtension,
+    Resource
+} from '../../platform/common/types';
 import * as localize from '../../platform/common/utils/localize';
 import { getInteractiveCellMetadata } from '../helpers';
 import { IKernelProvider } from '../../kernels/types';
@@ -234,9 +240,10 @@ export class CodeLensFactory implements ICodeLensFactory {
             fullCommandList = fullCommandList.concat(CodeLensCommands.DefaultDebuggingLenses);
         }
 
+        let commandsToBeDisabled: string[] = [];
         // If workspace is not trusted, then exclude execution related commands.
         if (!this.workspace.isTrusted) {
-            const commandsToBeDisabledIfNotTrusted = [
+            commandsToBeDisabled = [
                 ...CodeLensCommands.DebuggerCommands,
                 ...CodeLensCommands.DebuggerCommands,
                 Commands.RunAllCells,
@@ -256,8 +263,13 @@ export class CodeLensFactory implements ICodeLensFactory {
                 Commands.DebugStop,
                 Commands.RunCellAndAllBelowPalette
             ];
-            fullCommandList = fullCommandList.filter((item) => !commandsToBeDisabledIfNotTrusted.includes(item));
+        } else if (IsWebExtension) {
+            commandsToBeDisabled = [Commands.DebugCell];
         }
+        if (commandsToBeDisabled) {
+            fullCommandList = fullCommandList.filter((item) => !commandsToBeDisabled.includes(item));
+        }
+
         return fullCommandList;
     }
 
