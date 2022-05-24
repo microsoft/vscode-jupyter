@@ -19,9 +19,6 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
             })
         );
     }
-    public override getSourceMap(filePath: string) {
-        return this.cellToFile.get(filePath);
-    }
     // Dump content of given cell into a tmp file and return path to file.
     protected override async dumpCell(index: number): Promise<void> {
         const cell = this.notebookDocument.cellAt(index);

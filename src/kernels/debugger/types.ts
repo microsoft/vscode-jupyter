@@ -70,12 +70,7 @@ export interface IKernelDebugAdapter extends DebugAdapter {
     onDidEndSession: Event<DebugSession>;
     dumpAllCells(): Promise<void>;
     getConfiguration(): IKernelDebugAdapterConfig;
-    getSourceMap(filePath: string):
-        | {
-              path: string;
-              lineOffset?: number;
-          }
-        | undefined;
+    getSourcePath(filePath: string): string | undefined;
 }
 
 export const IDebuggingManager = Symbol('IDebuggingManager');

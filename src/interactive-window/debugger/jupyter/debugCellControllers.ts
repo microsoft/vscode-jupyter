@@ -32,7 +32,7 @@ export class DebugCellController implements IDebuggingDelegate {
         if (request.command === 'configurationDone' && metadata && metadata.generatedCode) {
             await cellDebugSetup(this.kernel, this.debugAdapter);
 
-            const realPath = this.debugAdapter.getSourceMap(metadata.interactive.uristring);
+            const realPath = this.debugAdapter.getSourcePath(metadata.interactive.uristring);
             if (realPath) {
                 const initialBreakpoint: DebugProtocol.SourceBreakpoint = {
                     line: metadata.generatedCode.firstExecutableLineIndex - metadata.interactive.line
@@ -41,7 +41,7 @@ export class DebugCellController implements IDebuggingDelegate {
                 await this.debugAdapter.setBreakpoints({
                     source: {
                         name: path.basename(uri.path),
-                        path: realPath.path
+                        path: realPath
                     },
                     breakpoints: [initialBreakpoint],
                     sourceModified: false

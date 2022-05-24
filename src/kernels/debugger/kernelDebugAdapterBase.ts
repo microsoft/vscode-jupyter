@@ -229,8 +229,8 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
 
     public abstract dumpAllCells(): Promise<void>;
     protected abstract dumpCell(index: number): Promise<void>;
-    public getSourceMap(filePath: string) {
-        return this.cellToFile.get(filePath);
+    public getSourcePath(filePath: string) {
+        return this.cellToFile.get(filePath)?.path;
     }
 
     private async debugInfo(): Promise<void> {
