@@ -32,6 +32,7 @@ import {
     clickOKForRestartPrompt,
     closeNotebooksAndCleanUpAfterTests,
     defaultNotebookTestTimeout,
+    startJupyterServer,
     waitForExecutionCompletedSuccessfully,
     waitForExecutionCompletedWithErrors,
     waitForTextOutput
@@ -89,22 +90,27 @@ debuggerTypes.forEach((debuggerType) => {
                 throw new Error('Unable to update settings file');
             }
         }
-        suiteSetup(() => enableJupyterDebugger(debuggerType === 'JupyterProtocolDebugger'));
+        suiteSetup(function () {
+            if (IS_REMOTE_NATIVE_TEST() && debuggerType === 'VSCodePythonDebugger') {
+                return this.skip();
+            }
+            enableJupyterDebugger(debuggerType === 'JupyterProtocolDebugger');
+        });
         suiteTeardown(() => enableJupyterDebugger(false));
         setup(async function () {
-            console.error('Setup');
-            if (IS_REMOTE_NATIVE_TEST()) {
+            if (IS_REMOTE_NATIVE_TEST() && debuggerType === 'VSCodePythonDebugger') {
                 return this.skip();
             }
             traceInfo(`Start Test ${this.currentTest?.title}`);
             api = await initialize();
+            if (IS_REMOTE_NATIVE_TEST() && debuggerType === 'VSCodePythonDebugger') {
+                await startJupyterServer();
+            }
             interactiveWindowProvider = api.serviceManager.get(IInteractiveWindowProvider);
             pythonApiProvider = api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider);
             traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
-            console.error('Setup End');
         });
         teardown(async function () {
-            console.error('Teardown');
             traceInfo(`Ended Test ${this.currentTest?.title}`);
             if (this.currentTest?.isFailed()) {
                 // For a flaky interrupt test.
@@ -112,7 +118,6 @@ debuggerTypes.forEach((debuggerType) => {
             }
             sinon.restore();
             await closeNotebooksAndCleanUpAfterTests(disposables);
-            console.error('Teardown End');
         });
 
         test('Execute cell from Python file', async () => {
@@ -137,11 +142,13 @@ debuggerTypes.forEach((debuggerType) => {
             const controller = notebookDocument
                 ? notebookControllerManager.getSelectedNotebookController(notebookDocument)
                 : undefined;
-            const activeInterpreter = await interpreterService.getActiveInterpreter();
-            assert.ok(
-                areInterpreterPathsSame(controller?.connection.interpreter?.uri, activeInterpreter?.uri),
-                `Controller does not match active interpreter for ${getDisplayPath(notebookDocument?.uri)}`
-            );
+            if (!IS_REMOTE_NATIVE_TEST()) {
+                const activeInterpreter = await interpreterService.getActiveInterpreter();
+                assert.ok(
+                    areInterpreterPathsSame(controller?.connection.interpreter?.uri, activeInterpreter?.uri),
+                    `Controller does not match active interpreter for ${getDisplayPath(notebookDocument?.uri)}`
+                );
+            }
 
             // Verify sys info cell
             const firstCell = notebookDocument?.cellAt(0);
@@ -179,12 +186,13 @@ debuggerTypes.forEach((debuggerType) => {
             const controller = notebookDocument
                 ? notebookControllerManager.getSelectedNotebookController(notebookDocument)
                 : undefined;
-            const activeInterpreter = await interpreterService.getActiveInterpreter();
-            assert.ok(
-                areInterpreterPathsSame(controller?.connection.interpreter?.uri, activeInterpreter?.uri),
-                `Controller does not match active interpreter for ${getDisplayPath(notebookDocument?.uri)}`
-            );
-
+            if (!IS_REMOTE_NATIVE_TEST()) {
+                const activeInterpreter = await interpreterService.getActiveInterpreter();
+                assert.ok(
+                    areInterpreterPathsSame(controller?.connection.interpreter?.uri, activeInterpreter?.uri),
+                    `Controller does not match active interpreter for ${getDisplayPath(notebookDocument?.uri)}`
+                );
+            }
             async function verifyCells() {
                 // Verify sys info cell
                 const firstCell = notebookDocument.cellAt(0);
@@ -576,7 +584,7 @@ ${actualCode}
         }
         test('Switching active interpreter on a python file changes kernel in use', async function () {
             // Virtual environments are not available in conda
-            if (IS_CONDA_TEST()) {
+            if (IS_CONDA_TEST() || IS_REMOTE_NATIVE_TEST()) {
                 this.skip();
             }
             await preSwitch();
