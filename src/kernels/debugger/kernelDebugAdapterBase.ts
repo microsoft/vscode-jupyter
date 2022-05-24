@@ -41,7 +41,6 @@ import {
     shortNameMatchesLongName,
     getMessageSourceAndHookIt
 } from '../../notebooks/debugger/helper';
-import { InteractiveCellMetadata } from '../../interactive-window/editor-integration/types';
 import { ResourceMap } from '../../platform/vscode-path/map';
 
 /**
@@ -59,7 +58,6 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     >();
     protected readonly cellToFile = new ResourceMap<{
         path: string;
-        metadata?: InteractiveCellMetadata;
         lineOffset?: number;
     }>();
     private readonly sendMessage = new EventEmitter<DebugProtocolMessage>();

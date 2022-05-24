@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// import * as path from '../../../platform/vscode-path/path';
 import { DebugProtocolMessage, NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebuggingDelegate, IKernelDebugAdapter } from '../../../kernels/debugger/types';

@@ -81,7 +81,6 @@ export class InteractiveWindowTracebackFormatter implements ITracebackFormatter 
                     const n = parseInt(num, 10);
                     const lineNumberOfFirstLineInCell = match!.hasCellMarker ? match!.line - 1 : match!.line;
                     const lineIndexOfFirstLineInCell = lineNumberOfFirstLineInCell - 1;
-                    // deduct 1 as the match.line is the line after the cell marker (do this if we have a cell marker).
                     const newLine = lineIndexOfFirstLineInCell + match!.lineOffsetRelativeToIndexOfFirstLineInCell + n;
                     return `${prefix}<a href='${matchUri?.toString()}?line=${newLine - 1}'>${newLine}</a>${suffix}`;
                 });

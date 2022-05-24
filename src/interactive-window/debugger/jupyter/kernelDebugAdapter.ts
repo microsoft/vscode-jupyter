@@ -84,7 +84,6 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
             });
             this.cellToFile.set(Uri.parse(metadata.interactive.uristring), {
                 path: norm,
-                metadata,
                 lineOffset:
                     metadata.interactive.lineIndex +
                     (metadata.generatedCode?.lineOffsetRelativeToIndexOfFirstLineInCell || 0)
