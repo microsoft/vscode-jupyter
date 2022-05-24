@@ -45,7 +45,12 @@ import { DataViewerFactory } from '../webviews/extension-side/dataviewer/dataVie
 import { IDataViewerFactory } from '../webviews/extension-side/dataviewer/types';
 import { INotebookWatcher } from '../webviews/extension-side/variablesView/types';
 import { DebuggingManager } from '../notebooks/debugger/debuggingManager';
-import { IDebuggingManager, IDebugLocationTracker, IDebugLocationTrackerFactory, IInteractiveWindowDebuggingManager } from '../kernels/debugger/types';
+import {
+    IDebuggingManager,
+    IDebugLocationTracker,
+    IDebugLocationTrackerFactory,
+    IInteractiveWindowDebuggingManager
+} from '../kernels/debugger/types';
 import { InteractiveWindowDebuggingManager } from '../interactive-window/debugger/jupyter/debuggingManager';
 import { DebugLocationTrackerFactory } from '../kernels/debugger/debugLocationTrackerFactory';
 
