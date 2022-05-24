@@ -20,8 +20,8 @@ import { KernelFinder } from './kernelFinder.web';
 import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
 import { IDataScienceCommandListener } from '../platform/common/types';
 import { KernelCommandListener } from './kernelCommandListener';
-import { IJupyterDebugService } from './debugging/types';
-import { MultiplexingDebugService } from '../platform/debugger/multiplexingDebugService';
+import { MultiplexingDebugService } from './debugger/multiplexingDebugService';
+import { IJupyterDebugService } from './debugger/types';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {

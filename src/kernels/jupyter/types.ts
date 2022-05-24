@@ -106,7 +106,6 @@ export interface IJupyterPasswordConnectInfo {
 export const IJupyterPasswordConnect = Symbol('IJupyterPasswordConnect');
 export interface IJupyterPasswordConnect {
     getPasswordConnectionInfo(url: string): Promise<IJupyterPasswordConnectInfo | undefined>;
-    clearPasswordConnectionInfo(): void;
 }
 
 export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
@@ -233,7 +232,7 @@ export interface IJupyterUriProviderRegistration {
 export const IJupyterServerUriStorage = Symbol('IJupyterServerUriStorage');
 export interface IJupyterServerUriStorage {
     readonly onDidChangeUri: Event<void>;
-    readonly onDidRemoveUri: Event<string>;
+    readonly onDidRemoveUris: Event<string[]>;
     addToUriList(uri: string, time: number, displayName: string): Promise<void>;
     getSavedUriList(): Promise<{ uri: string; time: number; displayName?: string }[]>;
     removeUri(uri: string): Promise<void>;

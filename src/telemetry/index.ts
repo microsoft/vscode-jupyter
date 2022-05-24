@@ -23,7 +23,7 @@ import { ResourceSpecificTelemetryProperties } from './types';
 import { CheckboxState, EventName, PlatformErrors, SliceOperationSource } from './constants';
 import { noop } from '../platform/common/utils/misc';
 import { isPromise } from 'rxjs/internal-compatibility';
-import { DebuggingTelemetry } from '../platform/debugger/constants';
+import { DebuggingTelemetry } from '../kernels/debugger/constants';
 import { EnvironmentType } from '../platform/pythonEnvironments/info';
 import { TelemetryErrorProperties, ErrorCategory } from '../platform/errors/types';
 import { ExportFormat } from '../platform/export/types';
@@ -1526,6 +1526,7 @@ export interface IEventNamePropertyMapping {
     };
     [DebuggingTelemetry.clickedRunByLine]: never | undefined;
     [DebuggingTelemetry.successfullyStartedRunByLine]: never | undefined;
+    [DebuggingTelemetry.successfullyStartedIWJupyterDebugger]: never | undefined;
     [DebuggingTelemetry.clickedRunAndDebugCell]: never | undefined;
     [DebuggingTelemetry.successfullyStartedRunAndDebugCell]: never | undefined;
     [DebuggingTelemetry.endedSession]: {

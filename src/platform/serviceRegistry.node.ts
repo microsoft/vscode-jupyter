@@ -32,9 +32,7 @@ import { ExtensionRecommendationService } from './common/extensionRecommendation
 import { GlobalActivation } from './common/globalActivation';
 import { PreReleaseChecker } from './common/prereleaseChecker.node';
 import { IConfigurationService, IDataScienceCommandListener, IExtensionContext } from './common/types';
-import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFactory.node';
-import { DebuggingManager } from './debugger/jupyter/notebook/debuggingManager';
-import { IDebugLocationTracker, IDebuggingManager } from './debugger/types';
+import { DebugLocationTrackerFactory } from '../kernels/debugger/debugLocationTrackerFactory';
 import { DataScienceErrorHandler } from './errors/errorHandler';
 import { IDataScienceErrorHandler } from './errors/types';
 import { ExportBase } from './export/exportBase.node';
@@ -64,6 +62,14 @@ import { WorkspaceService } from './common/application/workspace.node';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from '../webviews/extension-side/renderer';
 import { OutputCommandListener } from './logging/outputCommandListener';
 import { ExportUtilBase } from './export/exportUtil';
+import { DebuggingManager } from '../notebooks/debugger/debuggingManager';
+import {
+    IDebuggingManager,
+    IDebugLocationTracker,
+    IDebugLocationTrackerFactory,
+    IInteractiveWindowDebuggingManager
+} from '../kernels/debugger/types';
+import { InteractiveWindowDebuggingManager } from '../interactive-window/debugger/jupyter/debuggingManager';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<FileSystem>(FileSystem, FileSystem);
@@ -94,7 +100,9 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, GitHubIssueCommandListener);
     serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
-    serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory);
+    serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory, undefined, [
+        IDebugLocationTrackerFactory
+    ]);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Activation);
     if (isDevMode) {
         serviceManager.addSingleton<IExtensionSingleActivationService>(
@@ -131,6 +139,12 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IDebuggingManager>(IDebuggingManager, DebuggingManager, undefined, [
         IExtensionSingleActivationService
     ]);
+    serviceManager.addSingleton<IInteractiveWindowDebuggingManager>(
+        IInteractiveWindowDebuggingManager,
+        InteractiveWindowDebuggingManager,
+        undefined,
+        [IExtensionSingleActivationService]
+    );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         PreReleaseChecker

@@ -4,7 +4,7 @@
 'use strict';
 
 import { KernelMessage } from '@jupyterlab/services';
-import * as path from '../../vscode-path/path';
+import * as path from '../../platform/vscode-path/path';
 import {
     debug,
     DebugAdapter,
@@ -15,50 +15,66 @@ import {
     NotebookCell,
     NotebookCellExecutionState,
     NotebookCellExecutionStateChangeEvent,
-    NotebookCellKind,
     NotebookDocument,
     notebooks,
+    Uri,
     workspace
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../logging';
-import { IPlatformService } from '../../common/platform/types';
-import { IDisposable } from '../../common/types';
-import { IJupyterSession, IKernel } from '../../../kernels/types';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { DebuggingTelemetry } from '../constants';
+import { IJupyterSession, IKernel } from '../types';
+import { IPlatformService } from '../../platform/common/platform/types';
+import { DebuggingTelemetry } from './constants';
 import {
-    IDebuggingDelegate,
-    IDebugInfoResponse,
-    IDumpCellResponse,
     IKernelDebugAdapter,
     IKernelDebugAdapterConfig,
-    KernelDebugMode
-} from '../types';
-import { assertIsDebugConfig, getMessageSourceAndHookIt, isShortNamePath, shortNameMatchesLongName } from './helper';
-import { executeSilently } from '../../../kernels/helpers';
+    IDebuggingDelegate,
+    KernelDebugMode,
+    IDebugInfoResponse
+} from './types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { IDisposable } from '../../platform/common/types';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../platform/logging';
+import {
+    assertIsDebugConfig,
+    isShortNamePath,
+    shortNameMatchesLongName,
+    getMessageSourceAndHookIt
+} from '../../notebooks/debugger/helper';
 
-// For info on the custom requests implemented by jupyter see:
-// https://jupyter-client.readthedocs.io/en/stable/messaging.html#debug-request
-// https://jupyter-client.readthedocs.io/en/stable/messaging.html#additions-to-the-dap
-export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, IDisposable {
-    private readonly fileToCell = new Map<string, NotebookCell>();
-    private readonly cellToFile = new Map<string, string>();
+/**
+ * For info on the custom requests implemented by jupyter see:
+ * https://jupyter-client.readthedocs.io/en/stable/messaging.html#debug-request
+ * https://jupyter-client.readthedocs.io/en/stable/messaging.html#additions-to-the-dap
+ */
+export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDebugAdapter, IDisposable {
+    protected readonly fileToCell = new Map<
+        string,
+        {
+            uri: Uri;
+            lineOffset?: number;
+        }
+    >();
+    protected readonly cellToFile = new Map<
+        string,
+        {
+            path: string;
+            lineOffset?: number;
+        }
+    >();
     private readonly sendMessage = new EventEmitter<DebugProtocolMessage>();
     private readonly endSession = new EventEmitter<DebugSession>();
     private readonly configuration: IKernelDebugAdapterConfig;
-    private readonly disposables: IDisposable[] = [];
+    protected readonly disposables: IDisposable[] = [];
     private delegate: IDebuggingDelegate | undefined;
     onDidSendMessage: Event<DebugProtocolMessage> = this.sendMessage.event;
     onDidEndSession: Event<DebugSession> = this.endSession.event;
     public readonly debugCell: NotebookCell | undefined;
     private disconnected: boolean = false;
     private kernelEventHook = (_event: 'willRestart' | 'willInterrupt') => this.disconnect();
-
     constructor(
-        private session: DebugSession,
-        private notebookDocument: NotebookDocument,
-        private readonly jupyterSession: IJupyterSession,
+        protected session: DebugSession,
+        protected notebookDocument: NotebookDocument,
+        protected readonly jupyterSession: IJupyterSession,
         private readonly kernel: IKernel | undefined,
         private readonly platformService: IPlatformService
     ) {
@@ -67,7 +83,11 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         assertIsDebugConfig(configuration);
         this.configuration = configuration;
 
-        if (configuration.__mode === KernelDebugMode.Cell || configuration.__mode === KernelDebugMode.RunByLine) {
+        if (
+            configuration.__mode === KernelDebugMode.InteractiveWindow ||
+            configuration.__mode === KernelDebugMode.Cell ||
+            configuration.__mode === KernelDebugMode.RunByLine
+        ) {
             this.debugCell = notebookDocument.cellAt(configuration.__cellIndex!);
         }
 
@@ -189,10 +209,6 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
     }
 
     dispose() {
-        // On dispose, delete our temp cell files
-        this.deleteDumpCells().catch(() => {
-            traceError('Error deleting temporary debug files.');
-        });
         this.disposables.forEach((d) => d.dispose());
     }
 
@@ -206,31 +222,10 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         return this.session.customRequest('setBreakpoints', args);
     }
 
-    public async dumpAllCells() {
-        await Promise.all(
-            this.notebookDocument.getCells().map(async (cell) => {
-                if (cell.kind === NotebookCellKind.Code) {
-                    await this.dumpCell(cell.index);
-                }
-            })
-        );
-    }
-
-    // Dump content of given cell into a tmp file and return path to file.
-    private async dumpCell(index: number): Promise<void> {
-        const cell = this.notebookDocument.cellAt(index);
-        if (cell) {
-            try {
-                const response = await this.session.customRequest('dumpCell', {
-                    code: cell.document.getText().replace(/\r\n/g, '\n')
-                });
-                const norm = path.normalize((response as IDumpCellResponse).sourcePath);
-                this.fileToCell.set(norm, cell);
-                this.cellToFile.set(cell.document.uri.toString(), norm);
-            } catch (err) {
-                traceError(err);
-            }
-        }
+    public abstract dumpAllCells(): Promise<void>;
+    protected abstract dumpCell(index: number): Promise<void>;
+    public getSourcePath(filePath: string) {
+        return this.cellToFile.get(filePath)?.path;
     }
 
     private async debugInfo(): Promise<void> {
@@ -249,7 +244,7 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         });
     }
 
-    private lookupCellByLongName(sourcePath: string): NotebookCell | undefined {
+    private lookupCellByLongName(sourcePath: string) {
         if (!this.platformService.isWindows) {
             return undefined;
         }
@@ -264,46 +259,26 @@ export class KernelDebugAdapter implements DebugAdapter, IKernelDebugAdapter, ID
         return undefined;
     }
 
-    // Use our jupyter session to delete all the cells
-    private async deleteDumpCells() {
-        const fileValues = [...this.cellToFile.values()];
-        // Need to have our Jupyter Session and some dumpCell files to delete
-        if (this.jupyterSession && fileValues.length) {
-            // Create our python string of file names
-            const fileListString = fileValues
-                .map((filePath) => {
-                    return '"' + filePath + '"';
-                })
-                .join(',');
-
-            // Insert into our delete snippet
-            const deleteFilesCode = `import os
-_VSCODE_fileList = [${fileListString}]
-for file in _VSCODE_fileList:
-    try:
-        os.remove(file)
-    except:
-        pass
-del _VSCODE_fileList`;
-
-            return executeSilently(this.jupyterSession, deleteFilesCode, {
-                traceErrors: true,
-                traceErrorsMessage: 'Error deleting temporary debugging files'
-            });
-        }
-    }
-
     private async sendRequestToJupyterSession(message: DebugProtocol.ProtocolMessage) {
         if (this.jupyterSession.disposed || this.jupyterSession.status === 'dead') {
             traceInfo(`Skipping sending message ${message.type} because session is disposed`);
             return;
         }
         // map Source paths from VS Code to Ipykernel temp files
-        getMessageSourceAndHookIt(message, (source) => {
+        getMessageSourceAndHookIt(message, (source, lines?: { line?: number; endLine?: number; lines?: number[] }) => {
             if (source && source.path) {
-                const path = this.cellToFile.get(source.path);
-                if (path) {
-                    source.path = path;
+                const mapping = this.cellToFile.get(source.path);
+                if (mapping) {
+                    source.path = mapping.path;
+                    if (typeof lines?.endLine === 'number') {
+                        lines.endLine = lines.endLine - (mapping.lineOffset || 0);
+                    }
+                    if (typeof lines?.line === 'number') {
+                        lines.line = lines.line - (mapping.lineOffset || 0);
+                    }
+                    if (lines?.lines && Array.isArray(lines?.lines)) {
+                        lines.lines = lines?.lines.map((line) => line - (mapping.lineOffset || 0));
+                    }
                 }
             }
         });
@@ -323,18 +298,27 @@ del _VSCODE_fileList`;
 
             control.onReply = (msg) => {
                 const message = msg.content as DebugProtocol.ProtocolMessage;
-                getMessageSourceAndHookIt(message, (source) => {
-                    if (source && source.path) {
-                        const cell = this.fileToCell.get(source.path) ?? this.lookupCellByLongName(source.path);
-                        if (cell) {
-                            source.name = path.basename(cell.document.uri.path);
-                            if (cell.index >= 0) {
-                                source.name += `, Cell ${cell.index + 1}`;
+                getMessageSourceAndHookIt(
+                    message,
+                    (source, lines?: { line?: number; endLine?: number; lines?: number[] }) => {
+                        if (source && source.path) {
+                            const mapping = this.fileToCell.get(source.path) ?? this.lookupCellByLongName(source.path);
+                            if (mapping) {
+                                source.name = path.basename(mapping.uri.path);
+                                source.path = mapping.uri.toString();
+                                if (typeof lines?.endLine === 'number') {
+                                    lines.endLine = lines.endLine + (mapping.lineOffset || 0);
+                                }
+                                if (typeof lines?.line === 'number') {
+                                    lines.line = lines.line + (mapping.lineOffset || 0);
+                                }
+                                if (lines?.lines && Array.isArray(lines?.lines)) {
+                                    lines.lines = lines?.lines.map((line) => line + (mapping.lineOffset || 0));
+                                }
                             }
-                            source.path = cell.document.uri.toString();
                         }
                     }
-                });
+                );
 
                 this.trace('response', JSON.stringify(message));
                 this.sendMessage.fire(message);

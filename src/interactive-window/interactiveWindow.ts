@@ -18,7 +18,8 @@ import {
     NotebookEditor,
     Disposable,
     window,
-    NotebookController
+    NotebookController,
+    NotebookEdit
 } from 'vscode';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import {
@@ -35,7 +36,13 @@ import * as uuid from 'uuid/v4';
 
 import { IConfigurationService, InteractiveWindowMode, Resource } from '../platform/common/types';
 import { noop } from '../platform/common/utils/misc';
-import { IKernel, KernelAction, KernelConnectionMetadata, NotebookCellRunState } from '../kernels/types';
+import {
+    IKernel,
+    isLocalConnection,
+    KernelAction,
+    KernelConnectionMetadata,
+    NotebookCellRunState
+} from '../kernels/types';
 import { INotebookControllerManager } from '../notebooks/types';
 import { generateMarkdownFromCodeLines, parseForComments } from '../webviews/webview-side/common';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../telemetry/telemetry';
@@ -66,6 +73,7 @@ import {
     IGeneratedCodeStorageFactory,
     InteractiveCellMetadata
 } from './editor-integration/types';
+import { IInteractiveWindowDebuggingManager } from '../kernels/debugger/types';
 
 export class InteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
@@ -125,7 +133,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         public readonly inputUri: Uri,
         public readonly appShell: IApplicationShell,
         private readonly codeGeneratorFactory: ICodeGeneratorFactory,
-        private readonly storageFactory: IGeneratedCodeStorageFactory
+        private readonly storageFactory: IGeneratedCodeStorageFactory,
+        private readonly debuggingManager: IInteractiveWindowDebuggingManager
     ) {
         // Set our owner and first submitter
         if (this._owner) {
@@ -513,7 +522,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         const promises = cells.map((c) => {
             // Add the cell first. We don't need to wait for this part as we want to add them
             // as quickly as possible
-            const notebookCellPromise = this.addNotebookCell(c, fileUri, line, isDebug);
+            const notebookCellPromise = this.addNotebookCell(c, fileUri, line);
 
             // Queue up execution
             const promise = this.createExecutionPromise(notebookCellPromise, isDebug);
@@ -558,21 +567,15 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         let detachKernel = async () => noop();
         try {
             const kernel = await kernelPromise;
-            if (
-                kernel.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel' ||
-                kernel.kernelConnectionMetadata.kind === 'startUsingRemoteKernelSpec'
-            ) {
-                void this.appShell.showErrorMessage(DataScience.remoteDebuggerNotSupported());
-                isDebug = false;
-            }
-            detachKernel = async () => {
-                if (isDebug) {
-                    await this.interactiveWindowDebugger.detach(kernel!);
-                }
-            };
-
-            // If debugging attach to the kernel but don't enable tracing just yet
-            if (isDebug) {
+            const settings = this.configuration.getSettings(this.owner);
+            await this.generateCodeAndAddMetadata(cell, isDebug, kernel);
+            if (isDebug && (settings.useJupyterDebugger || !isLocalConnection(kernel.kernelConnectionMetadata))) {
+                // New ipykernel 7 debugger using the Jupyter protocol.
+                await this.debuggingManager.start(this.notebookEditor, cell);
+            } else if (isDebug && isLocalConnection(kernel.kernelConnectionMetadata)) {
+                // Old ipykernel 6 debugger.
+                // If debugging attach to the kernel but don't enable tracing just yet
+                detachKernel = async () => this.interactiveWindowDebugger.detach(kernel);
                 await this.interactiveWindowDebugger.attach(kernel);
                 await this.interactiveWindowDebugger.updateSourceMaps(
                     this.storageFactory.get({ notebook: cell.notebook })?.all || []
@@ -701,7 +704,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     @chainable()
-    private async addNotebookCell(code: string, file: Uri, line: number, isDebug: boolean): Promise<NotebookCell> {
+    private async addNotebookCell(code: string, file: Uri, line: number): Promise<NotebookCell> {
         const notebookDocument = this.notebookEditor.notebook;
 
         // Strip #%% and store it in the cell metadata so we can reconstruct the cell structure when exporting to Python files
@@ -726,15 +729,10 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             line: line,
             originalSource: code
         };
-        const id = uuid();
-        const generatedCode = this.codeGeneratorFactory
-            .getOrCreate(this.notebookDocument)
-            .generateCode({ interactive, id }, isDebug);
 
         const metadata: InteractiveCellMetadata = {
             interactiveWindowCellMarker,
             interactive,
-            generatedCode,
             id: uuid()
         };
         notebookCellData.metadata = metadata;
@@ -746,6 +744,29 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             );
         });
         return notebookDocument.cellAt(notebookDocument.cellCount - 1);
+    }
+    private async generateCodeAndAddMetadata(cell: NotebookCell, isDebug: boolean, kernel: IKernel) {
+        const metadata = getInteractiveCellMetadata(cell);
+        if (!metadata) {
+            return;
+        }
+        const useJupyterDebugger =
+            !isLocalConnection(kernel.kernelConnectionMetadata) ||
+            this.configuration.getSettings(undefined).useJupyterDebugger;
+
+        const generatedCode = this.codeGeneratorFactory
+            .getOrCreate(this.notebookDocument)
+            .generateCode(metadata, isDebug, useJupyterDebugger);
+
+        const newMetadata: typeof metadata = {
+            ...metadata,
+            generatedCode
+        };
+
+        const edit = new WorkspaceEdit();
+        const cellEdit = NotebookEdit.updateCellMetadata(cell.index, newMetadata);
+        edit.set(cell.notebook.uri, [cellEdit]);
+        await workspace.applyEdit(edit);
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-empty,@typescript-eslint/no-empty-function

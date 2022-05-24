@@ -28,8 +28,6 @@ import { GlobalActivation } from './common/globalActivation';
 import { IExtensionSingleActivationService } from './activation/types';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from '../webviews/extension-side/renderer';
 import { OutputCommandListener } from './logging/outputCommandListener';
-import { IDebuggingManager } from './debugger/types';
-import { DebuggingManager } from './debugger/jupyter/notebook/debuggingManager';
 import { ExportDialog } from './export/exportDialog';
 import { ExportFormat, IExport, IExportBase, IExportDialog, IFileConverter, INbConvertExport } from './export/types';
 import { FileConverter } from './export/fileConverter';
@@ -46,6 +44,15 @@ import { NotebookWatcher } from '../webviews/extension-side/variablesView/notebo
 import { DataViewerFactory } from '../webviews/extension-side/dataviewer/dataViewerFactory';
 import { IDataViewerFactory } from '../webviews/extension-side/dataviewer/types';
 import { INotebookWatcher } from '../webviews/extension-side/variablesView/types';
+import { DebuggingManager } from '../notebooks/debugger/debuggingManager';
+import {
+    IDebuggingManager,
+    IDebugLocationTracker,
+    IDebugLocationTrackerFactory,
+    IInteractiveWindowDebuggingManager
+} from '../kernels/debugger/types';
+import { InteractiveWindowDebuggingManager } from '../interactive-window/debugger/jupyter/debuggingManager';
+import { DebugLocationTrackerFactory } from '../kernels/debugger/debugLocationTrackerFactory';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
@@ -69,6 +76,9 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToPDF, ExportFormat.pdf);
     serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToPython, ExportFormat.python);
     serviceManager.addSingleton<ExportUtilBase>(ExportUtilBase, ExportUtilBase);
+    serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory, undefined, [
+        IDebugLocationTrackerFactory
+    ]);
 
     registerCommonTypes(serviceManager);
     registerApiTypes(serviceManager);
@@ -81,4 +91,10 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IDebuggingManager>(IDebuggingManager, DebuggingManager, undefined, [
         IExtensionSingleActivationService
     ]);
+    serviceManager.addSingleton<IInteractiveWindowDebuggingManager>(
+        IInteractiveWindowDebuggingManager,
+        InteractiveWindowDebuggingManager,
+        undefined,
+        [IExtensionSingleActivationService]
+    );
 }

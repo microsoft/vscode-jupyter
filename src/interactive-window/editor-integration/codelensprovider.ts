@@ -26,9 +26,9 @@ import {
     PYTHON_UNTITLED,
     Telemetry
 } from '../../platform/common/constants';
-import { IDebugLocationTracker } from '../../platform/debugger/types';
 import { IDataScienceCodeLensProvider, ICodeWatcher } from './types';
 import * as urlPath from '../../platform/vscode-path/resources';
+import { IDebugLocationTracker } from '../../kernels/debugger/types';
 
 @injectable()
 export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider, IDisposable {
@@ -134,7 +134,18 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
             const debugLocation = this.debugLocationTracker.getLocation(this.debugService.activeDebugSession);
 
             // Debug locations only work on local paths, so check against fsPath here.
-            if (debugLocation && urlPath.isEqual(vscode.Uri.file(debugLocation.fileName), document.uri, true)) {
+            let uri: vscode.Uri | undefined;
+            try {
+                // When dealing with Jupyter debugger protocol, the paths are stringified Uris.
+                uri = debugLocation ? vscode.Uri.parse(debugLocation.fileName) : undefined;
+            } catch {
+                //
+            }
+            if (
+                debugLocation &&
+                (urlPath.isEqual(vscode.Uri.file(debugLocation.fileName), document.uri, true) ||
+                    (uri && urlPath.isEqual(uri, document.uri, true)))
+            ) {
                 // We are in the given debug file, so only return the code lens that contains the given line
                 const activeLenses = lenses.filter((lens) => {
                     // -1 for difference between file system one based and debugger zero based

@@ -7,9 +7,9 @@ import { IExtensionSingleActivationService } from '../../platform/activation/typ
 import { IDebugService } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { IDisposableRegistry } from '../../platform/common/types';
-import { pythonKernelDebugAdapter } from '../../platform/debugger/constants';
+import { pythonIWKernelDebugAdapter, pythonKernelDebugAdapter } from '../debugger/constants';
 import { Identifiers } from '../../webviews/webview-side/common/constants';
-import { IJupyterDebugService } from '../debugging/types';
+import { IJupyterDebugService } from '../debugger/types';
 import { IJupyterVariables } from './types';
 
 @injectable()
@@ -22,6 +22,7 @@ export class DebuggerVariableRegistration implements IExtensionSingleActivationS
     public activate(): Promise<void> {
         this.disposables.push(this.debugService.registerDebugAdapterTrackerFactory(PYTHON_LANGUAGE, this));
         this.disposables.push(this.debugService.registerDebugAdapterTrackerFactory(pythonKernelDebugAdapter, this));
+        this.disposables.push(this.debugService.registerDebugAdapterTrackerFactory(pythonIWKernelDebugAdapter, this));
         return Promise.resolve();
     }
 

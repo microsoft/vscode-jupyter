@@ -5,68 +5,64 @@
 
 import { inject, injectable } from 'inversify';
 import {
-    debug,
     NotebookDocument,
-    workspace,
     DebugAdapterInlineImplementation,
     DebugSession,
     NotebookCell,
     DebugSessionOptions,
     DebugAdapterDescriptor,
-    Event,
-    EventEmitter,
-    NotebookEditor
+    NotebookEditor,
+    debug
 } from 'vscode';
-import * as path from '../../../vscode-path/path';
-import { IKernel, IKernelProvider } from '../../../../kernels/types';
-import { IConfigurationService, IDisposable } from '../../../common/types';
-import { KernelDebugAdapter } from '../kernelDebugAdapter';
-import { IExtensionSingleActivationService } from '../../../activation/types';
-import { ContextKey } from '../../../common/contextKey';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../common/application/types';
-import { traceError, traceInfo, traceInfoIfCI } from '../../../logging';
-import { DataScience } from '../../../common/utils/localize';
-import { Commands as DSCommands, EditorContexts } from '../../../../webviews/webview-side/common/constants';
-import { IPlatformService } from '../../../common/platform/types';
-import { IDebuggingManager, IKernelDebugAdapterConfig, KernelDebugMode } from '../../types';
-import { DebuggingTelemetry, pythonKernelDebugAdapter } from '../../constants';
-import { sendTelemetryEvent } from '../../../../telemetry';
-import { DebugCellController } from './debugCellControllers';
-import { assertIsDebugConfig, IpykernelCheckResult, isUsingIpykernel6OrLater } from '../helper';
-import { Debugger } from '../debugger';
-import { INotebookControllerManager } from '../../../../notebooks/types';
+import * as path from '../../platform/vscode-path/path';
+import { IKernelProvider } from '../../kernels/types';
+import { IConfigurationService } from '../../platform/common/types';
+import { Commands as DSCommands, EditorContexts } from '../../webviews/webview-side/common/constants';
+import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { ContextKey } from '../../platform/common/contextKey';
 import { RunByLineController } from './runByLineController';
+import { INotebookControllerManager } from '../types';
+import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import { IPlatformService } from '../../platform/common/platform/types';
+import { DebuggingTelemetry, pythonKernelDebugAdapter } from '../../kernels/debugger/constants';
+import { sendTelemetryEvent } from '../../telemetry';
+import { traceError, traceInfo, traceInfoIfCI } from '../../platform/logging';
+import { DataScience } from '../../platform/common/utils/localize';
+import { DebugCellController } from './debugCellControllers';
+import { KernelDebugAdapter } from './kernelDebugAdapter';
+import { assertIsDebugConfig, IpykernelCheckResult } from './helper';
+import { IDebuggingManager, IKernelDebugAdapterConfig, KernelDebugMode } from '../../kernels/debugger/types';
+import { DebuggingManagerBase } from '../../kernels/debugger/debuggingManagerBase';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
  */
 @injectable()
-export class DebuggingManager implements IExtensionSingleActivationService, IDebuggingManager, IDisposable {
+export class DebuggingManager
+    extends DebuggingManagerBase
+    implements IExtensionSingleActivationService, IDebuggingManager
+{
     private debuggingInProgress: ContextKey;
     private runByLineInProgress: ContextKey;
-    private notebookToDebugger = new Map<NotebookDocument, Debugger>();
-    private notebookToDebugAdapter = new Map<NotebookDocument, KernelDebugAdapter>();
     private notebookToRunByLineController = new Map<NotebookDocument, RunByLineController>();
-    private notebookInProgress = new Set<NotebookDocument>();
-    private readonly disposables: IDisposable[] = [];
-    private _doneDebugging = new EventEmitter<void>();
 
     public constructor(
-        @inject(IKernelProvider) private kernelProvider: IKernelProvider,
-        @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(IConfigurationService) private settings: IConfigurationService,
-        @inject(IPlatformService) private platform: IPlatformService
+        @inject(IKernelProvider) kernelProvider: IKernelProvider,
+        @inject(INotebookControllerManager) notebookControllerManager: INotebookControllerManager,
+        @inject(ICommandManager) commandManager: ICommandManager,
+        @inject(IApplicationShell) appShell: IApplicationShell,
+        @inject(IVSCodeNotebook) vscNotebook: IVSCodeNotebook,
+        @inject(IConfigurationService) private readonly settings: IConfigurationService,
+        @inject(IPlatformService) private readonly platform: IPlatformService
     ) {
-        this.debuggingInProgress = new ContextKey(EditorContexts.DebuggingInProgress, this.commandManager);
-        this.runByLineInProgress = new ContextKey(EditorContexts.RunByLineInProgress, this.commandManager);
+        super(kernelProvider, notebookControllerManager, commandManager, appShell, vscNotebook);
+        this.debuggingInProgress = new ContextKey(EditorContexts.DebuggingInProgress, commandManager);
+        this.runByLineInProgress = new ContextKey(EditorContexts.RunByLineInProgress, commandManager);
         this.updateToolbar(false);
         this.updateCellToolbar(false);
 
         this.disposables.push(
-            this.vscNotebook.onDidChangeActiveNotebookEditor(
+            vscNotebook.onDidChangeActiveNotebookEditor(
                 (e?: NotebookEditor) => {
                     if (e) {
                         this.updateCellToolbar(this.isDebugging(e.notebook));
@@ -79,26 +75,13 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         );
     }
 
-    public async activate() {
+    public override async activate() {
+        await super.activate();
         this.disposables.push(
-            // track termination of debug sessions
-            debug.onDidTerminateDebugSession(this.endSession.bind(this)),
-
-            // track closing of notebooks documents
-            workspace.onDidCloseNotebookDocument(async (document) => {
-                const dbg = this.notebookToDebugger.get(document);
-                if (dbg) {
-                    await dbg.stop();
-                    this.updateToolbar(false);
-                    this.updateCellToolbar(false);
-                }
-            }),
-
             // factory for kernel debug adapters
             debug.registerDebugAdapterDescriptorFactory(pythonKernelDebugAdapter, {
                 createDebugAdapterDescriptor: async (session) => this.createDebugAdapterDescriptor(session)
             }),
-
             this.commandManager.registerCommand(DSCommands.DebugNotebook, async () => {
                 const editor = this.vscNotebook.activeNotebookEditor;
                 await this.tryToStartDebugging(KernelDebugMode.Everything, editor);
@@ -176,37 +159,14 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         );
     }
 
-    public get onDoneDebugging(): Event<void> {
-        return this._doneDebugging.event;
-    }
-
-    public dispose() {
-        this.disposables.forEach((d) => d.dispose());
-    }
-
-    public isDebugging(notebook: NotebookDocument): boolean {
-        return this.notebookToDebugger.has(notebook);
-    }
-
-    public getDebugSession(notebook: NotebookDocument): Promise<DebugSession> | undefined {
-        const dbg = this.notebookToDebugger.get(notebook);
-        if (dbg) {
-            return dbg.session;
-        }
-    }
-
     public getDebugMode(notebook: NotebookDocument): KernelDebugMode | undefined {
         const controller = this.notebookToRunByLineController.get(notebook);
         return controller?.getMode();
     }
 
-    public getDebugCell(notebook: NotebookDocument): NotebookCell | undefined {
-        const controller = this.notebookToRunByLineController.get(notebook);
-        return controller?.debugCell;
-    }
-
-    public getDebugAdapter(notebook: NotebookDocument): KernelDebugAdapter | undefined {
-        return this.notebookToDebugAdapter.get(notebook);
+    protected override onDidStopDebugging(_notebook: NotebookDocument) {
+        this.updateToolbar(false);
+        this.updateCellToolbar(false);
     }
 
     private updateToolbar(debugging: boolean) {
@@ -325,50 +285,17 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         return this.startDebuggingConfig(doc, config);
     }
 
-    private async startDebuggingConfig(
-        doc: NotebookDocument,
-        config: IKernelDebugAdapterConfig,
-        options?: DebugSessionOptions
-    ) {
-        traceInfoIfCI(`Attempting to start debugging with config ${JSON.stringify(config)}`);
-        let dbg = this.notebookToDebugger.get(doc);
-        if (!dbg) {
-            dbg = new Debugger(doc, config, options);
-            this.notebookToDebugger.set(doc, dbg);
-
-            try {
-                const session = await dbg.session;
-                traceInfoIfCI(`Debugger session is ready. Should be debugging ${session.id} now`);
-            } catch (err) {
-                traceError(`Can't start debugging (${err})`);
-                void this.appShell.showErrorMessage(DataScience.cantStartDebugging());
-            }
-        } else {
-            traceInfoIfCI(`Not starting debugging because already debugging in this notebook`);
-        }
-    }
-
-    private async endSession(session: DebugSession) {
-        traceInfoIfCI(`Ending debug session ${session.id}`);
-        this._doneDebugging.fire();
-        for (const [doc, dbg] of this.notebookToDebugger.entries()) {
-            if (dbg && session.id === (await dbg.session).id) {
-                this.notebookToDebugger.delete(doc);
-                this.notebookToDebugAdapter.delete(doc);
-                this.updateToolbar(false);
-                this.updateCellToolbar(false);
-                break;
-            }
-        }
-    }
-
-    private async createDebugAdapterDescriptor(session: DebugSession): Promise<DebugAdapterDescriptor | undefined> {
+    protected override async createDebugAdapterDescriptor(
+        session: DebugSession
+    ): Promise<DebugAdapterDescriptor | undefined> {
         const config = session.configuration;
         assertIsDebugConfig(config);
-
-        if (this.vscNotebook.activeNotebookEditor) {
-            const activeDoc = this.vscNotebook.activeNotebookEditor.notebook;
-
+        const activeDoc = config.__interactiveWindowNotebookUri
+            ? this.vscNotebook.notebookDocuments.find(
+                  (doc) => doc.uri.toString() === config.__interactiveWindowNotebookUri
+              )
+            : this.vscNotebook.activeNotebookEditor?.notebook;
+        if (activeDoc) {
             // TODO we apparently always have a kernel here, clean up typings
             const kernel = await this.ensureKernelIsRunning(activeDoc);
             const debug = this.getDebuggerByUri(activeDoc);
@@ -400,8 +327,7 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
                         adapter.setDebuggingDelegate(controller);
                     }
 
-                    this.notebookToDebugAdapter.set(debug.document, adapter);
-                    this.disposables.push(adapter.onDidEndSession(this.endSession.bind(this)));
+                    this.trackDebugAdapter(debug.document, adapter);
 
                     // Wait till we're attached before resolving the session
                     debug.resolve(session);
@@ -413,77 +339,5 @@ export class DebuggingManager implements IExtensionSingleActivationService, IDeb
         }
         traceError('Debug sessions should start only from the cell toolbar command');
         return;
-    }
-
-    private getDebuggerByUri(document: NotebookDocument): Debugger | undefined {
-        for (const [doc, dbg] of this.notebookToDebugger.entries()) {
-            if (document === doc) {
-                return dbg;
-            }
-        }
-    }
-
-    private async ensureKernelIsRunning(doc: NotebookDocument): Promise<IKernel | undefined> {
-        await this.notebookControllerManager.loadNotebookControllers();
-        const controller = this.notebookControllerManager.getSelectedNotebookController(doc);
-
-        let kernel = this.kernelProvider.get(doc.uri);
-        if (!kernel && controller) {
-            kernel = this.kernelProvider.getOrCreate(doc.uri, {
-                metadata: controller.connection,
-                controller: controller?.controller,
-                resourceUri: doc.uri,
-                creator: 'jupyterExtension'
-            });
-        }
-        if (kernel && kernel.status === 'unknown') {
-            await kernel.start();
-        }
-
-        return kernel;
-    }
-
-    private async checkForIpykernel6(doc: NotebookDocument): Promise<IpykernelCheckResult> {
-        try {
-            let kernel = this.kernelProvider.get(doc.uri);
-            if (!kernel) {
-                const controller = this.notebookControllerManager.getSelectedNotebookController(doc);
-                if (!controller) {
-                    return IpykernelCheckResult.ControllerNotSelected;
-                }
-                kernel = this.kernelProvider.getOrCreate(doc.uri, {
-                    metadata: controller.connection,
-                    controller: controller?.controller,
-                    resourceUri: doc.uri,
-                    creator: 'jupyterExtension'
-                });
-            }
-
-            const result = await isUsingIpykernel6OrLater(kernel);
-            sendTelemetryEvent(DebuggingTelemetry.ipykernel6Status, undefined, {
-                status: result === IpykernelCheckResult.Ok ? 'installed' : 'notInstalled'
-            });
-            return result;
-        } catch (ex) {
-            traceError('Debugging: Could not check for ipykernel 6', ex);
-        }
-        return IpykernelCheckResult.Unknown;
-    }
-
-    private async promptInstallIpykernel6() {
-        const response = await this.appShell.showInformationMessage(
-            DataScience.needIpykernel6(),
-            { modal: true },
-            DataScience.setup()
-        );
-
-        if (response === DataScience.setup()) {
-            sendTelemetryEvent(DebuggingTelemetry.clickedOnSetup);
-            this.appShell.openUrl(
-                'https://github.com/microsoft/vscode-jupyter/wiki/Setting-Up-Run-by-Line-and-Debugging-for-Notebooks'
-            );
-        } else {
-            sendTelemetryEvent(DebuggingTelemetry.closedModal);
-        }
     }
 }
