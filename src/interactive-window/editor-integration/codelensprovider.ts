@@ -26,9 +26,9 @@ import {
     PYTHON_UNTITLED,
     Telemetry
 } from '../../platform/common/constants';
-import { IDebugLocationTracker } from '../../platform/debugger/types';
 import { IDataScienceCodeLensProvider, ICodeWatcher } from './types';
 import * as urlPath from '../../platform/vscode-path/resources';
+import { IDebugLocationTracker } from '../../kernels/debugger/types';
 
 @injectable()
 export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider, IDisposable {

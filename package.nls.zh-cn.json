@@ -360,7 +360,6 @@
     "DataScience.jupyterDebuggerInstallNo": "否",
     "DataScience.instructionComments": "# 要添加一个新单元，输入 '{0}'\n# 要添加一个新的标记单元，输入 '{0} [markdown]'\n",
     "DataScience.scrollToCellTitleFormatMessage": "转到 [{0}]",
-    "DataScience.remoteDebuggerNotSupported": "目前不支持连接到远程服务器时进行调试。",
     "DataScience.save": "保存笔记本",
     "DataScience.nativeEditorTitle": "笔记本编辑器",
     "DataScience.untitledNotebookFileName": "Untitled",

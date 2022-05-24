@@ -1,20 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as path from '../../../vscode-path/path';
+import * as path from '../../platform/vscode-path/path';
 import { DebugProtocolMessage, NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { parseForComments } from '../../../../webviews/webview-side/common';
-import { ICommandManager } from '../../../common/application/types';
-import { traceInfoIfCI, traceVerbose } from '../../../logging';
-import { IConfigurationService } from '../../../common/types';
-import { noop } from '../../../common/utils/misc';
-import { IKernel } from '../../../../kernels/types';
-import { sendTelemetryEvent } from '../../../../telemetry';
-import { DebuggingTelemetry } from '../../constants';
-import { IDebuggingDelegate, IKernelDebugAdapter, KernelDebugMode } from '../../types';
-import { Commands } from '../../../common/constants';
-import { cellDebugSetup } from '../helper';
+import { parseForComments } from '../../webviews/webview-side/common';
+import { ICommandManager } from '../../platform/common/application/types';
+import { IKernel } from '../../kernels/types';
+import { IConfigurationService } from '../../platform/common/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { DebuggingTelemetry } from '../../kernels/debugger/constants';
+import { traceInfoIfCI, traceVerbose } from '../../platform/logging';
+import { noop } from '../../platform/common/utils/misc';
+import { Commands } from '../../platform/common/constants';
+import { cellDebugSetup } from './helper';
+import { IDebuggingDelegate, IKernelDebugAdapter, KernelDebugMode } from '../../kernels/debugger/types';
 
 export class RunByLineController implements IDebuggingDelegate {
     private lastPausedThreadId: number | undefined;

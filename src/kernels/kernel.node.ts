@@ -67,6 +67,13 @@ export class Kernel extends BaseKernel {
     }
 
     protected async getDebugCellHook(): Promise<string[]> {
+        const useNewDebugger = this.configService.getSettings(undefined).useJupyterDebugger === true;
+        if (useNewDebugger) {
+            return [];
+        }
+        if (!isLocalConnection(this.kernelConnectionMetadata)) {
+            return [];
+        }
         // Only do this for interactive windows. IPYKERNEL_CELL_NAME is set other ways in
         // notebooks
         if (getAssociatedNotebookDocument(this)?.notebookType === InteractiveWindowView) {

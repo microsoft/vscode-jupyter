@@ -35,7 +35,13 @@ import * as uuid from 'uuid/v4';
 
 import { IConfigurationService, InteractiveWindowMode, Resource } from '../platform/common/types';
 import { noop } from '../platform/common/utils/misc';
-import { IKernel, KernelAction, KernelConnectionMetadata, NotebookCellRunState } from '../kernels/types';
+import {
+    IKernel,
+    isLocalConnection,
+    KernelAction,
+    KernelConnectionMetadata,
+    NotebookCellRunState
+} from '../kernels/types';
 import { INotebookControllerManager } from '../notebooks/types';
 import { generateMarkdownFromCodeLines, parseForComments } from '../webviews/webview-side/common';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../telemetry/telemetry';
@@ -568,21 +574,12 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         let detachKernel = async () => noop();
         try {
             const kernel = await kernelPromise;
-            if (
-                kernel.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel' ||
-                kernel.kernelConnectionMetadata.kind === 'startUsingRemoteKernelSpec'
-            ) {
-                void this.appShell.showErrorMessage(DataScience.remoteDebuggerNotSupported());
-                isDebug = false;
-            }
-            detachKernel = async () => {
-                if (isDebug) {
-                    await this.interactiveWindowDebugger.detach(kernel!);
-                }
-            };
-
-            // If debugging attach to the kernel but don't enable tracing just yet
-            if (isDebug) {
+            if (isDebug && (settings.useJupyterDebugger || !isLocalConnection(kernel.kernelConnectionMetadata))) {
+                // New ipykernel 7 debugger.
+            } else if (isDebug && isLocalConnection(kernel.kernelConnectionMetadata)) {
+                // Old ipykernel 6 debugger.
+                // If debugging attach to the kernel but don't enable tracing just yet
+                detachKernel = async () => this.interactiveWindowDebugger.detach(kernel);
                 await this.interactiveWindowDebugger.attach(kernel);
                 await this.interactiveWindowDebugger.updateSourceMaps(
                     this.storageFactory.get({ notebook: cell.notebook })?.all || []

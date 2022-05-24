@@ -3,7 +3,6 @@
 'use strict';
 import { DebugAdapterTracker, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-
 import { IDebugLocation } from './types';
 
 // When a python debugging session is active keep track of the current debug location

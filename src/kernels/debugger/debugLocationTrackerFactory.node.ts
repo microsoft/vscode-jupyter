@@ -11,8 +11,8 @@ import {
     ProviderResult
 } from 'vscode';
 
-import { IDebugService } from '../common/application/types';
-import { IDisposableRegistry } from '../common/types';
+import { IDebugService } from '../../platform/common/application/types';
+import { IDisposableRegistry } from '../../platform/common/types';
 import { DebugLocationTracker } from './debugLocationTracker';
 import { IDebugLocationTracker } from './types';
 

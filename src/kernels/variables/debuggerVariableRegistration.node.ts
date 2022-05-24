@@ -7,9 +7,9 @@ import { IExtensionSingleActivationService } from '../../platform/activation/typ
 import { IDebugService } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { IDisposableRegistry } from '../../platform/common/types';
-import { pythonKernelDebugAdapter } from '../../platform/debugger/constants';
+import { pythonKernelDebugAdapter } from '../debugger/constants';
 import { Identifiers } from '../../webviews/webview-side/common/constants';
-import { IJupyterDebugService } from '../debugging/types';
+import { IJupyterDebugService } from '../debugger/types';
 import { IJupyterVariables } from './types';
 
 @injectable()
