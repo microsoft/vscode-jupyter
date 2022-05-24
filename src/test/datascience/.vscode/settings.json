@@ -29,6 +29,7 @@
     "jupyter.magicCommandsAsComments": false,
     // Python experiments have to be on for insiders to work
     "python.experiments.enabled": true,
-    "python.defaultInterpreterPath": "python",
-    "jupyter.generateSVGPlots": false
+    "python.defaultInterpreterPath": "/Users/donjayamanne/crap/.venv/bin/python",
+    "jupyter.generateSVGPlots": false,
+    "jupyter.forceIPyKernelDebugger": false
 }

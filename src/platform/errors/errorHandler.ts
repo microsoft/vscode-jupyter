@@ -3,18 +3,13 @@
 import { inject, injectable, optional } from 'inversify';
 import { JupyterInstallError } from './jupyterInstallError';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
-import {
-    CancellationError as VscCancellationError,
-    CancellationTokenSource,
-    ConfigurationTarget,
-    workspace
-} from 'vscode';
+import { CancellationTokenSource, ConfigurationTarget, workspace } from 'vscode';
 import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError';
 import { KernelDiedError } from './kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError';
 import { KernelProcessExitedError } from './kernelProcessExitedError';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
-import { traceError, traceWarning } from '../logging';
+import { traceError, traceVerbose, traceWarning } from '../logging';
 import { IBrowserService, IConfigurationService, IExtensions, IsWebExtension, Resource } from '../common/types';
 import { DataScience, Common } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -45,7 +40,7 @@ import {
 } from '../../kernels/jupyter/types';
 import { handleExpiredCertsError, handleSelfCertsError } from '../../kernels/jupyter/jupyterUtils';
 import { getFilePath } from '../common/platform/fs-paths';
-import { CancellationError } from '../common/cancellation';
+import { isCancellationError } from '../common/cancellation';
 import { JupyterExpiredCertsError } from './jupyterExpiredCertsError';
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
 import { RemoteJupyterServerConnectionError } from './remoteJupyterServerConnectionError';
@@ -84,9 +79,9 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             await handleSelfCertsError(this.applicationShell, this.configuration, err.message);
         } else if (err instanceof JupyterExpiredCertsError) {
             await handleExpiredCertsError(this.applicationShell, this.configuration, err.message);
-        } else if (err instanceof VscCancellationError || err instanceof CancellationError) {
+        } else if (isCancellationError(err)) {
             // Don't show the message for cancellation errors
-            traceWarning(`Cancelled by user`, err);
+            traceVerbose(`Cancelled by user`);
         } else if (err instanceof KernelConnectionTimeoutError || err instanceof KernelPortNotUsedTimeoutError) {
             this.applicationShell.showErrorMessage(err.message).then(noop, noop);
         } else if (
@@ -108,7 +103,9 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
     }
     public async getErrorMessageForDisplayInCell(error: Error, errorContext: KernelAction) {
         error = WrappedError.unwrap(error);
-        traceError(`Error in execution (get message for cell)`, error);
+        if (!isCancellationError(error)) {
+            traceError(`Error in execution (get message for cell)`, error);
+        }
         if (error instanceof KernelDeadError) {
             // When we get this we've already asked the user to restart the kernel,
             // No need to display errors in each cell.
@@ -121,9 +118,9 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             return error.message;
         } else if (error instanceof RemoteJupyterServerConnectionError && this.isWebExtension) {
             return DataScience.jupyterNotebookRemoteConnectFailedWeb().format(error.baseUrl);
-        } else if (error instanceof VscCancellationError || error instanceof CancellationError) {
+        } else if (isCancellationError(error)) {
             // Don't show the message for cancellation errors
-            traceWarning(`Cancelled by user`, error);
+            traceVerbose(`Cancelled by user`);
             return '';
         } else if (
             (error instanceof KernelDiedError || error instanceof KernelProcessExitedError) &&
@@ -196,11 +193,13 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         resource: Resource,
         actionSource: KernelActionSource
     ): Promise<KernelInterpreterDependencyResponse> {
-        traceWarning(`Kernel Error, context = ${errorContext}`, err);
+        if (!isCancellationError(err)) {
+            traceWarning(`Kernel Error, context = ${errorContext}`, err);
+        }
         err = WrappedError.unwrap(err);
 
         // Jupyter kernels, non zmq actually do the dependency install themselves
-        if (err instanceof CancellationError || err instanceof VscCancellationError) {
+        if (isCancellationError(err)) {
             return KernelInterpreterDependencyResponse.cancel;
         } else if (err instanceof JupyterKernelDependencyError) {
             traceWarning(`Jupyter Kernel Dependency Error, reason=${err.reason}`, err);
@@ -303,9 +302,9 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                     }
                 });
             return KernelInterpreterDependencyResponse.failed;
-        } else if (err instanceof VscCancellationError || err instanceof CancellationError) {
+        } else if (isCancellationError(err)) {
             // Don't show the message for cancellation errors
-            traceWarning(`Cancelled by user`, err);
+            traceVerbose(`Cancelled by user`);
             return KernelInterpreterDependencyResponse.cancel;
         } else if (
             (errorContext === 'start' || errorContext === 'restart') &&

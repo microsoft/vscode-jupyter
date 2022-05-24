@@ -11,7 +11,7 @@ import {
     IDocumentManager,
     IWorkspaceService
 } from '../platform/common/application/types';
-import { traceInfo } from '../platform/logging';
+import { traceInfo, traceVerbose } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
 
 import {
@@ -138,7 +138,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         // Ensure we don't end up calling this method multiple times when creating an IW for the same resource.
         this.pendingCreations.push(creationInProgress.promise);
         try {
-            traceInfo(`Starting interactive window for resoruce ${getDisplayPath(resource)}`);
+            traceInfo(`Starting interactive window for resource '${getDisplayPath(resource)}'`);
 
             // Set it as soon as we create it. The .ctor for the interactive window
             // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
@@ -295,7 +295,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
     }
 
     private onInteractiveWindowClosed(interactiveWindow: IInteractiveWindow) {
-        traceInfo(`Closing interactive window: ${interactiveWindow.notebookUri?.toString()}`);
+        traceVerbose(`Closing interactive window: ${interactiveWindow.notebookUri?.toString()}`);
         interactiveWindow.dispose();
         this._windows = this._windows.filter((w) => w !== interactiveWindow);
         if (this.lastActiveInteractiveWindow === interactiveWindow) {

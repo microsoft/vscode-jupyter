@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import type * as nbformat from '@jupyterlab/nbformat';
 import { CancellationToken, Memento } from 'vscode';
-import { createPromiseFromCancellation } from '../platform/common/cancellation';
+import { createPromiseFromCancellation, isCancellationError } from '../platform/common/cancellation';
 import { Telemetry } from '../platform/common/constants';
 import { Resource } from '../platform/common/types';
 import { createDeferredFromPromise } from '../platform/common/utils/async';
@@ -93,11 +93,17 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         // Get both local and remote kernels.
         const [localKernels, remoteKernels] = await Promise.all([
             this.listLocalKernels(resource, cancelToken, useCache).catch((ex) => {
-                traceError('Failed to get local kernels', ex);
+                // Sometimes we can get errors from the socket level or jupyter, with the message 'Canceled', lets ignore those
+                if (!isCancellationError(ex, true)) {
+                    traceError('Failed to get local kernels', ex);
+                }
                 return [];
             }),
             this.listRemoteKernels(resource, cancelToken, useCache).catch((ex) => {
-                traceError('Failed to get remote kernels', ex);
+                // Sometimes we can get errors from the socket level or jupyter, with the message 'Canceled', lets ignore those
+                if (!isCancellationError(ex, true)) {
+                    traceError('Failed to get remote kernels', ex);
+                }
                 return [];
             })
         ]);

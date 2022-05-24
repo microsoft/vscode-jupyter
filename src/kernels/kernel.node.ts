@@ -67,7 +67,7 @@ export class Kernel extends BaseKernel {
     }
 
     protected async getDebugCellHook(): Promise<string[]> {
-        const useNewDebugger = this.configService.getSettings(undefined).useJupyterDebugger === true;
+        const useNewDebugger = this.configService.getSettings(undefined).forceIPyKernelDebugger === true;
         if (useNewDebugger) {
             return [];
         }

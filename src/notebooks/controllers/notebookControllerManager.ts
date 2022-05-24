@@ -72,6 +72,7 @@ import { INotebookMetadata } from '@jupyterlab/nbformat';
 import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConnectionType';
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
 import { ILocalResourceUriConverter } from '../../kernels/ipywidgets-message-coordination/types';
+import { isCancellationError } from '../../platform/common/cancellation';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -282,7 +283,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             this.controllersPromise = this.loadNotebookControllersImpl(cancelToken.token)
                 .catch((e) => {
                     traceError('Error loading notebook controllers', e);
-                    throw e;
+                    if (!isCancellationError(e)) {
+                        // This can happen in the tests, and these get bubbled upto VSC and are logged as unhandled exceptions.
+                        // Hence swallow cancellation errors.
+                        throw e;
+                    }
                 })
                 .finally(() => {
                     // Send telemetry related to fetching the kernel connections. Do it here
@@ -559,7 +564,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         const { preferredConnection, controller } = await this.computePreferredNotebookController(document);
 
         if (controller) {
-            traceInfo(`TargetController found ID: ${controller.id} for document ${getDisplayPath(document.uri)}`);
+            traceVerbose(`TargetController found ID: ${controller.id} for document ${getDisplayPath(document.uri)}`);
             await controller.controller.updateNotebookAffinity(document, NotebookControllerAffinity.Preferred);
 
             trackKernelResourceInformation(document.uri, {
@@ -804,9 +809,17 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             return { connection: value, label: getDisplayNameOrNameOfKernelConnection(value) };
         });
 
-        connectionsWithLabel.forEach((value) => {
-            this.createNotebookController(value.connection, value.label, doNotHideInteractiveKernel);
-        });
+        try {
+            connectionsWithLabel.forEach((value) => {
+                this.createNotebookController(value.connection, value.label, doNotHideInteractiveKernel);
+            });
+        } catch (ex) {
+            if (!isCancellationError(ex)) {
+                // This can happen in the tests, and these get bubbled upto VSC and are logged as unhandled exceptions.
+                // Hence swallow cancellation errors.
+                throw ex;
+            }
+        }
     }
     private createNotebookController(
         kernelConnection: KernelConnectionMetadata,
@@ -895,6 +908,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     this.registeredControllers.set(controller.id, controller);
                 });
         } catch (ex) {
+            if (isCancellationError(ex)) {
+                // This can happen in the tests, and these get bubbled upto VSC and are logged as unhandled exceptions.
+                // Hence swallow cancellation errors.
+                return;
+            }
             // We know that this fails when we have xeus kernels installed (untill that's resolved thats one instance when we can have duplicates).
             sendTelemetryEvent(
                 Telemetry.FailedToCreateNotebookController,

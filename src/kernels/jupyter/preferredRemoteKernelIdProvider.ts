@@ -4,7 +4,7 @@
 import { inject, injectable, named } from 'inversify';
 import { cloneDeep } from 'lodash';
 import { Memento, Uri } from 'vscode';
-import { traceInfo } from '../../platform/logging';
+import { traceInfo, traceVerbose } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IMemento, GLOBAL_MEMENTO, ICryptoUtils } from '../../platform/common/types';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -71,7 +71,7 @@ export class PreferredRemoteKernelIdProvider {
             requiresUpdate = true;
             list.shift();
         }
-        traceInfo(`Storing Preferred remote kernel for ${getDisplayPath(uri)} is ${id}`);
+        traceVerbose(`Storing Preferred remote kernel for ${getDisplayPath(uri)} is ${id}`);
         if (requiresUpdate) {
             await this.globalMemento.update(ActiveKernelIdList, list);
         }

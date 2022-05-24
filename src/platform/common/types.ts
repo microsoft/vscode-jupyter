@@ -105,7 +105,7 @@ export interface IJupyterSettings {
     readonly alwaysScrollOnNewCell: boolean;
     readonly interactiveWindowMode: InteractiveWindowMode;
     readonly disableZMQSupport: boolean;
-    readonly useJupyterDebugger?: boolean;
+    readonly forceIPyKernelDebugger?: boolean;
     readonly disablePythonDaemon: boolean;
     readonly variableTooltipFields: IVariableTooltipFields;
     readonly showVariableViewWhenDebugging: boolean;

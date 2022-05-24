@@ -37,7 +37,6 @@ import { traceError, traceInfoIfCI, traceWarning } from '../../platform/logging'
 import { RefBool } from '../../platform/common/refBool.node';
 import { IDisposable, IExtensionContext } from '../../platform/common/types';
 import { Deferred, createDeferred } from '../../platform/common/utils/async';
-import * as localize from '../../platform/common/utils/localize';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import {
     NotebookCellStateTracker,
@@ -61,6 +60,7 @@ import {
 import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
 import { WIDGET_MIMETYPE } from '../../kernels/ipywidgets-message-coordination/constants';
 import { getInteractiveCellMetadata } from '../../interactive-window/helpers';
+import { isCancellationError } from '../../platform/common/cancellation';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
@@ -542,11 +542,7 @@ export class CellExecution implements IDisposable {
             // Or even when the kernel dies when running a cell with the code `os.kill(os.getpid(), 9)`
             traceError('Error in waiting for cell to complete', ex);
             traceCellMessage(this.cell, 'Some other execution error');
-            if (
-                ex &&
-                ex instanceof Error &&
-                (ex.message.includes('Canceled') || ex.message.includes(localize.Common.canceled()))
-            ) {
+            if (ex && ex instanceof Error && isCancellationError(ex, true)) {
                 // No point displaying the error stack trace from Jupyter npm package.
                 // Just display the error message and log details in output.
                 // Note: This could be an error from cancellation (interrupt) or due to kernel dying as well.

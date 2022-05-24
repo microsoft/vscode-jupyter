@@ -13,7 +13,8 @@ import {
     Event,
     NotebookCell,
     NotebookDocument,
-    NotebookEditor
+    NotebookEditor,
+    Uri
 } from 'vscode';
 
 export interface ISourceMapMapping {
@@ -70,7 +71,7 @@ export interface IKernelDebugAdapter extends DebugAdapter {
     onDidEndSession: Event<DebugSession>;
     dumpAllCells(): Promise<void>;
     getConfiguration(): IKernelDebugAdapterConfig;
-    getSourcePath(filePath: string): string | undefined;
+    getSourcePath(filePath: Uri): string | undefined;
 }
 
 export const IDebuggingManager = Symbol('IDebuggingManager');

@@ -3,7 +3,7 @@
 'use strict';
 import { Observable } from 'rxjs/Observable';
 
-import { Cancellation, CancellationError } from '../../platform/common/cancellation';
+import { Cancellation, isCancellationError } from '../../platform/common/cancellation';
 import {
     ExecutionResult,
     IProcessService,
@@ -41,7 +41,7 @@ export class MockProcessService implements IProcessService {
                     const localTime = this.timeDelay;
                     await Cancellation.race((_t) => sleep(localTime), options.token);
                 } catch (exc) {
-                    if (exc instanceof CancellationError) {
+                    if (isCancellationError(exc)) {
                         return this.defaultExecutionResult([file, ...args]);
                     }
                 }

@@ -4,7 +4,6 @@
 'use strict';
 
 import { inject, injectable, optional } from 'inversify';
-import { CancellationError } from 'vscode';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
@@ -24,6 +23,7 @@ import {
 } from '../types';
 import { NotSupportedInWebError } from '../../../platform/errors/notSupportedInWebError';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
+import { isCancellationError } from '../../../platform/common/cancellation';
 
 const localCacheKey = 'LocalJupyterSererCacheKey';
 @injectable()
@@ -140,7 +140,7 @@ export class NotebookServerProvider implements IJupyterServerProvider {
         } catch (e) {
             disposeAllDisposables(disposables);
             // If user cancelled, then do nothing.
-            if (options.token?.isCancellationRequested && e instanceof CancellationError) {
+            if (options.token?.isCancellationRequested && isCancellationError(e)) {
                 throw e;
             }
 

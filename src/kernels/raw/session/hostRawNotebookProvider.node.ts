@@ -73,12 +73,12 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         ui: IDisplayOptions,
         cancelToken: vscode.CancellationToken
     ): Promise<IJupyterSession> {
-        traceInfo(`Creating raw notebook for ${getDisplayPath(resource)}`);
+        traceInfo(`Creating raw notebook for resource '${getDisplayPath(resource)}'`);
         const sessionPromise = createDeferred<IJupyterSession>();
         this.trackDisposable(sessionPromise.promise);
         let rawSession: RawJupyterSession | undefined;
 
-        traceVerbose(`Getting preferred kernel for ${getDisplayPath(resource)}`);
+        traceVerbose(`Getting preferred kernel for resource '${getDisplayPath(resource)}'`);
         try {
             const kernelConnectionProvided = !!kernelConnection;
             if (
@@ -92,7 +92,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
                     });
                 }
             }
-            traceInfo(`Computing working directory ${getDisplayPath(resource)}`);
+            traceInfo(`Computing working directory for resource '${getDisplayPath(resource)}'`);
             const workingDirectory = await this.workspaceService.computeWorkingDirectory(resource);
             Cancellation.throwIfCanceled(cancelToken);
             const launchTimeout = this.configService.getSettings(resource).jupyterLaunchTimeout;

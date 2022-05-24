@@ -34,6 +34,7 @@ import { KernelProcess } from './kernelProcess.node';
 import { JupyterPaths } from '../finder/jupyterPaths.node';
 import { isTestExecution } from '../../../platform/common/constants.node';
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
+import { noop } from '../../../platform/common/utils/misc';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.
@@ -108,7 +109,7 @@ export class KernelLauncher implements IKernelLauncher {
         cancelToken: CancellationToken
     ): Promise<IKernelProcess> {
         const promise = (async () => {
-            void this.logIPyKernelPath(resource, kernelConnectionMetadata);
+            this.logIPyKernelPath(resource, kernelConnectionMetadata, cancelToken).catch(noop);
 
             // Should be available now, wait with a timeout
             return await this.launchProcess(kernelConnectionMetadata, resource, workingDirectory, timeout, cancelToken);
@@ -125,7 +126,8 @@ export class KernelLauncher implements IKernelLauncher {
     @swallowExceptions('Failed to capture IPyKernel version and path')
     private async logIPyKernelPath(
         resource: Resource,
-        kernelConnectionMetadata: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
+        kernelConnectionMetadata: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata,
+        token: CancellationToken
     ) {
         const interpreter = kernelConnectionMetadata.interpreter;
         if (!isLocalConnection(kernelConnectionMetadata) || !interpreter) {
@@ -140,8 +142,11 @@ export class KernelLauncher implements IKernelLauncher {
                 '-c',
                 'import ipykernel; print(ipykernel.__version__); print("5dc3a68c-e34e-4080-9c3e-2a532b2ccb4d"); print(ipykernel.__file__)'
             ],
-            {}
+            { token }
         );
+        if (token.isCancellationRequested) {
+            return;
+        }
         const displayInterpreterPath = getDisplayPath(interpreter.uri);
         if (output.stdout) {
             const outputs = output.stdout

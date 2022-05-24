@@ -578,7 +578,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         try {
             const kernel = await kernelPromise;
             await this.generateCodeAndAddMetadata(cell, isDebug, kernel);
-            if (isDebug && (settings.useJupyterDebugger || !isLocalConnection(kernel.kernelConnectionMetadata))) {
+            if (isDebug && (settings.forceIPyKernelDebugger || !isLocalConnection(kernel.kernelConnectionMetadata))) {
                 // New ipykernel 7 debugger using the Jupyter protocol.
                 await this.debuggingManager.start(this.notebookEditor, cell);
             } else if (isDebug && isLocalConnection(kernel.kernelConnectionMetadata)) {
@@ -752,7 +752,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         );
         const interactive = {
             uristring: file.toString(), // Has to be simple types
-            line: line,
+            lineIndex: line,
             originalSource: code
         };
 
@@ -786,13 +786,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         if (!metadata) {
             return;
         }
-        const useJupyterDebugger =
+        const forceIPyKernelDebugger =
             !isLocalConnection(kernel.kernelConnectionMetadata) ||
-            this.configuration.getSettings(undefined).useJupyterDebugger;
+            this.configuration.getSettings(undefined).forceIPyKernelDebugger;
 
         const generatedCode = this.codeGeneratorFactory
             .getOrCreate(this.notebookDocument)
-            .generateCode(metadata, isDebug, useJupyterDebugger);
+            .generateCode(metadata, isDebug, forceIPyKernelDebugger);
 
         const newMetadata: typeof metadata = {
             ...metadata,

@@ -65,7 +65,7 @@ export class KernelDependencyService implements IKernelDependencyService {
         traceInfo(
             `installMissingDependencies ${
                 kernelConnection.interpreter?.uri ? getDisplayPath(kernelConnection.interpreter?.uri) : ''
-            }, ui.disabled=${ui.disableUI} for resource ${getDisplayPath(resource)}`
+            }, ui.disabled=${ui.disableUI} for resource '${getDisplayPath(resource)}'`
         );
         if (
             kernelConnection.kind === 'connectToLiveRemoteKernel' ||
