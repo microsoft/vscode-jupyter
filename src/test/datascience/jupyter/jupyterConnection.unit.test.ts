@@ -8,8 +8,8 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { CancellationToken, Uri } from 'vscode';
 import { JupyterSettings } from '../../../platform/common/configSettings';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
-import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
-import { IFileSystem } from '../../../platform/common/platform/types';
+import { FileSystem as FileSystemNode } from '../../../platform/common/platform/fileSystem.node';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { ObservableExecutionResult, Output } from '../../../platform/common/process/types.node';
 import { IConfigurationService, IJupyterSettings } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -26,7 +26,7 @@ suite('DataScience - JupyterConnection', () => {
     let launchResult: ObservableExecutionResult<string>;
     let getServerInfoStub: sinon.SinonStub<[CancellationToken | undefined], JupyterServerInfo[] | undefined>;
     let configService: IConfigurationService;
-    let fs: IFileSystem;
+    let fs: IFileSystemNode;
     let serviceContainer: IServiceContainer;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const dsSettings: IJupyterSettings = { jupyterLaunchTimeout: 10_000 } as any;
@@ -79,13 +79,13 @@ suite('DataScience - JupyterConnection', () => {
         };
         getServerInfoStub = sinon.stub<[CancellationToken | undefined], JupyterServerInfo[] | undefined>();
         serviceContainer = mock(ServiceContainer);
-        fs = mock(FileSystem);
+        fs = mock(FileSystemNode);
         configService = mock(ConfigurationService);
         const settings = mock(JupyterSettings);
         getServerInfoStub.resolves(dummyServerInfos);
         when(fs.areLocalPathsSame(anything(), anything())).thenCall((path1, path2) => path1 === path2);
         when(configService.getSettings(anything())).thenReturn(instance(settings));
-        when(serviceContainer.get<IFileSystem>(IFileSystem)).thenReturn(instance(fs));
+        when(serviceContainer.get<IFileSystemNode>(IFileSystemNode)).thenReturn(instance(fs));
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
     });
 

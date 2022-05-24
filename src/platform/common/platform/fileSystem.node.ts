@@ -8,9 +8,11 @@ import { TemporaryFile } from './types';
 import { IFileSystemNode } from './types.node';
 import { FileSystem as FileSystemBase } from './fileSystem';
 import { IExtensionContext, IHttpClient } from '../types';
+import { arePathsSame } from './fileUtils.node';
 
 /**
  * File system abstraction which wraps the VS Code API.
+ * IMPORTANT: Local functions can only be used in Node.js. In the browser there is no local file system.
  */
 @injectable()
 export class FileSystem extends FileSystemBase implements IFileSystemNode {
@@ -65,7 +67,7 @@ export class FileSystem extends FileSystemBase implements IFileSystemNode {
     public async localFileExists(filename: string): Promise<boolean> {
         return this.exists(vscode.Uri.file(filename), vscode.FileType.File);
     }
-    public override async deleteLocalFile(path: string): Promise<void> {
+    public async deleteLocalFile(path: string): Promise<void> {
         await fs.unlink(path);
     }
 
@@ -81,5 +83,35 @@ export class FileSystem extends FileSystemBase implements IFileSystemNode {
 
         const found = await this.globFiles(globPattern, options);
         return Array.isArray(found) ? found : [];
+    }
+
+    areLocalPathsSame(path1: string, path2: string): boolean {
+        return arePathsSame(path1, path2);
+    }
+
+    public async createLocalDirectory(path: string): Promise<void> {
+        await this.createDirectory(vscode.Uri.file(path));
+    }
+
+    async copyLocal(source: string, destination: string): Promise<void> {
+        const srcUri = vscode.Uri.file(source);
+        const dstUri = vscode.Uri.file(destination);
+        await this.vscfs.copy(srcUri, dstUri, { overwrite: true });
+    }
+
+    async readLocalData(filename: string): Promise<Buffer> {
+        const uri = vscode.Uri.file(filename);
+        const data = await this.vscfs.readFile(uri);
+        return Buffer.from(data);
+    }
+
+    async readLocalFile(filename: string): Promise<string> {
+        const uri = vscode.Uri.file(filename);
+        return this.readFile(uri);
+    }
+
+    async writeLocalFile(filename: string, text: string | Buffer): Promise<void> {
+        const uri = vscode.Uri.file(filename);
+        return this.writeFile(uri, text);
     }
 }

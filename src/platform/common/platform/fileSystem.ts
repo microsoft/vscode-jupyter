@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { IExtensionContext, IHttpClient } from '../types';
-import { arePathsSame, getHashString } from './fileUtils';
+import { getHashString } from './fileUtils';
 import { IFileSystem, TemporaryFileUri } from './types';
 import * as uriPath from '../../vscode-path/resources';
 import * as uuid from 'uuid/v4';
@@ -30,50 +30,7 @@ export class FileSystem implements IFileSystem {
 
     // API based on VS Code fs API
     arePathsSame(path1: vscode.Uri, path2: vscode.Uri): boolean {
-        if (path1.scheme === 'file' && path1.scheme === path2.scheme) {
-            // eslint-disable-next-line local-rules/dont-use-fspath
-            return this.areLocalPathsSame(path1.fsPath, path2.fsPath);
-        } else {
-            return path1.toString() === path2.toString();
-        }
-    }
-
-    areLocalPathsSame(path1: string, path2: string): boolean {
-        return arePathsSame(path1, path2);
-    }
-
-    public async createLocalDirectory(path: string): Promise<void> {
-        await this.createDirectory(vscode.Uri.file(path));
-    }
-
-    async copyLocal(source: string, destination: string): Promise<void> {
-        const srcUri = vscode.Uri.file(source);
-        const dstUri = vscode.Uri.file(destination);
-        await this.vscfs.copy(srcUri, dstUri, { overwrite: true });
-    }
-
-    async deleteLocalFile(path: string): Promise<void> {
-        const uri = vscode.Uri.file(path);
-        return this.vscfs.delete(uri, {
-            recursive: false,
-            useTrash: false
-        });
-    }
-
-    async readLocalData(filename: string): Promise<Buffer> {
-        const uri = vscode.Uri.file(filename);
-        const data = await this.vscfs.readFile(uri);
-        return Buffer.from(data);
-    }
-
-    async readLocalFile(filename: string): Promise<string> {
-        const uri = vscode.Uri.file(filename);
-        return this.readFile(uri);
-    }
-
-    async writeLocalFile(filename: string, text: string | Buffer): Promise<void> {
-        const uri = vscode.Uri.file(filename);
-        return this.writeFile(uri, text);
+        return uriPath.isEqual(path1, path2);
     }
 
     async getFiles(dir: vscode.Uri): Promise<vscode.Uri[]> {

@@ -12,6 +12,13 @@ export type WriteStream = fs.WriteStream;
 
 export const IFileSystemNode = Symbol('IFileSystemNode');
 export interface IFileSystemNode extends IFileSystem {
+    areLocalPathsSame(path1: string, path2: string): boolean;
+    createLocalDirectory(path: string): Promise<void>;
+    copyLocal(source: string, destination: string): Promise<void>;
+    deleteLocalFile(path: string): Promise<void>;
+    readLocalData(path: string): Promise<Buffer>;
+    readLocalFile(path: string): Promise<string>;
+    writeLocalFile(path: string, text: string | Buffer): Promise<void>;
     appendLocalFile(path: string, text: string): Promise<void>;
     createLocalWriteStream(path: string): WriteStream;
     createTemporaryLocalFile(options: { fileExtension: string; prefix: string }): Promise<TemporaryFile>;
