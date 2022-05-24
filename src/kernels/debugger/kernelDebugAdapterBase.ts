@@ -21,7 +21,6 @@ import {
     workspace
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { executeSilently } from '../helpers';
 import { IJupyterSession, IKernel } from '../types';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { DebuggingTelemetry } from './constants';
@@ -75,7 +74,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     constructor(
         protected session: DebugSession,
         protected notebookDocument: NotebookDocument,
-        private readonly jupyterSession: IJupyterSession,
+        protected readonly jupyterSession: IJupyterSession,
         private readonly kernel: IKernel | undefined,
         private readonly platformService: IPlatformService
     ) {
@@ -210,10 +209,6 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     }
 
     dispose() {
-        // On dispose, delete our temp cell files
-        this.deleteDumpCells().catch(() => {
-            traceError('Error deleting temporary debug files.');
-        });
         this.disposables.forEach((d) => d.dispose());
     }
 
@@ -262,35 +257,6 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         }
 
         return undefined;
-    }
-
-    // Use our jupyter session to delete all the cells
-    private async deleteDumpCells() {
-        const fileValues = [...this.cellToFile.values()];
-        // Need to have our Jupyter Session and some dumpCell files to delete
-        if (this.jupyterSession && fileValues.length) {
-            // Create our python string of file names
-            const fileListString = fileValues
-                .map((filePath) => {
-                    return '"' + filePath.path + '"';
-                })
-                .join(',');
-
-            // Insert into our delete snippet
-            const deleteFilesCode = `import os
-_VSCODE_fileList = [${fileListString}]
-for file in _VSCODE_fileList:
-    try:
-        os.remove(file)
-    except:
-        pass
-del _VSCODE_fileList`;
-
-            return executeSilently(this.jupyterSession, deleteFilesCode, {
-                traceErrors: true,
-                traceErrorsMessage: 'Error deleting temporary debugging files'
-            });
-        }
     }
 
     private async sendRequestToJupyterSession(message: DebugProtocol.ProtocolMessage) {
