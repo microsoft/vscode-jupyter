@@ -33,40 +33,6 @@ export class FileSystem implements IFileSystem {
         return path1.toString() === path2.toString();
     }
 
-    public async createLocalDirectory(path: string): Promise<void> {
-        await this.createDirectory(vscode.Uri.file(path));
-    }
-
-    async copyLocal(source: string, destination: string): Promise<void> {
-        const srcUri = vscode.Uri.file(source);
-        const dstUri = vscode.Uri.file(destination);
-        await this.vscfs.copy(srcUri, dstUri, { overwrite: true });
-    }
-
-    async deleteLocalFile(path: string): Promise<void> {
-        const uri = vscode.Uri.file(path);
-        return this.vscfs.delete(uri, {
-            recursive: false,
-            useTrash: false
-        });
-    }
-
-    async readLocalData(filename: string): Promise<Buffer> {
-        const uri = vscode.Uri.file(filename);
-        const data = await this.vscfs.readFile(uri);
-        return Buffer.from(data);
-    }
-
-    async readLocalFile(filename: string): Promise<string> {
-        const uri = vscode.Uri.file(filename);
-        return this.readFile(uri);
-    }
-
-    async writeLocalFile(filename: string, text: string | Buffer): Promise<void> {
-        const uri = vscode.Uri.file(filename);
-        return this.writeFile(uri, text);
-    }
-
     async getFiles(dir: vscode.Uri): Promise<vscode.Uri[]> {
         const files = await this.vscfs.readDirectory(dir);
         return files.filter((f) => f[1] === vscode.FileType.File).map((f) => vscode.Uri.file(f[0]));
