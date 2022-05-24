@@ -3,7 +3,6 @@
 
 'use strict';
 
-import { injectable } from 'inversify';
 import {
     debug,
     NotebookDocument,
