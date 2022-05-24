@@ -22,10 +22,10 @@ import { Deferred, createDeferred } from '../../platform/common/utils/async';
 import { testOnlyMethod } from '../../platform/common/utils/decorators';
 import * as localize from '../../platform/common/utils/localize';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { InteractiveWindowMessages, SharedMessages, CssMessages, IGetCssRequest } from '../../platform/messageTypes';
-import { sendTelemetryEvent, captureTelemetry } from '../../telemetry';
+import { InteractiveWindowMessages, SharedMessages } from '../../platform/messageTypes';
+import { sendTelemetryEvent } from '../../telemetry';
 import { DefaultTheme, PythonExtension, Telemetry } from '../webview-side/common/constants';
-import { ICodeCssGenerator, IThemeFinder, IJupyterExtraSettings } from './types';
+import { IJupyterExtraSettings } from './types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -59,8 +59,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
 
     constructor(
         protected configService: IConfigurationService,
-        private cssGenerator: ICodeCssGenerator,
-        protected themeFinder: IThemeFinder,
         protected workspaceService: IWorkspaceService,
         protected rootPath: string,
         protected scripts: string[]
@@ -159,10 +157,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         switch (message) {
             case SharedMessages.Started:
                 this.webViewRendered();
-                break;
-
-            case CssMessages.GetCssRequest:
-                this.handleCssRequest(payload as IGetCssRequest).ignoreErrors();
                 break;
 
             case InteractiveWindowMessages.GetHTMLByIdResponse:
@@ -295,23 +289,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     private onWebViewLoadFailed = async () => {
         this.dispose();
     };
-
-    @captureTelemetry(Telemetry.WebviewStyleUpdate)
-    private async handleCssRequest(request: IGetCssRequest): Promise<void> {
-        const settings = await this.generateDataScienceExtraSettings();
-        const requestIsDark = settings.ignoreVscodeTheme ? false : request?.isDark;
-        this.setTheme(requestIsDark);
-        const isDark = settings.ignoreVscodeTheme
-            ? false
-            : await this.themeFinder.isThemeDark(settings.extraSettings.theme);
-        const resource = this.owningResource;
-        const css = await this.cssGenerator.generateThemeCss(resource, requestIsDark, settings.extraSettings.theme);
-        return this.postMessageInternal(CssMessages.GetCssResponse, {
-            css,
-            theme: settings.extraSettings.theme,
-            knownDark: isDark
-        });
-    }
 
     private getValue<T>(workspaceConfig: WorkspaceConfiguration, section: string, defaultValue: T): T {
         if (workspaceConfig) {

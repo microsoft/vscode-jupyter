@@ -30,7 +30,6 @@ import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { Telemetry } from '../../webview-side/common/constants';
 import { DataViewerChecker } from '../dataviewer/dataViewerChecker';
 import { IJupyterVariableDataProviderFactory, IDataViewerFactory, IDataViewer } from '../dataviewer/types';
-import { ICodeCssGenerator, IThemeFinder } from '../types';
 import { WebviewViewHost } from '../webviewViewHost.node';
 
 const variableViewDir = path.join(EXTENSION_ROOT_DIR, 'out', 'webviews', 'webview-side', 'viewers');
@@ -45,8 +44,6 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     }
     constructor(
         configuration: IConfigurationService,
-        cssGenerator: ICodeCssGenerator,
-        themeFinder: IThemeFinder,
         workspaceService: IWorkspaceService,
         provider: IWebviewViewProvider,
         private readonly variables: IJupyterVariables,
@@ -60,8 +57,6 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     ) {
         super(
             configuration,
-            cssGenerator,
-            themeFinder,
             workspaceService,
             (c, d) => new VariableViewMessageListener(c, d),
             provider,

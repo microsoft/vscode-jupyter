@@ -17,7 +17,6 @@ import { IConfigurationService, IDisposableRegistry } from '../../../platform/co
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { Identifiers } from '../../webview-side/common/constants';
 import { IJupyterVariableDataProviderFactory, IDataViewerFactory } from '../dataviewer/types';
-import { ICodeCssGenerator, IThemeFinder } from '../types';
 import { INotebookWatcher, IVariableViewProvider } from './types';
 import { VariableView } from './variableView.node';
 
@@ -47,8 +46,6 @@ export class VariableViewProvider implements IVariableViewProvider {
 
     constructor(
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
-        @inject(ICodeCssGenerator) private readonly cssGenerator: ICodeCssGenerator,
-        @inject(IThemeFinder) private readonly themeFinder: IThemeFinder,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IWebviewViewProvider) private readonly webviewViewProvider: IWebviewViewProvider,
         @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) private variables: IJupyterVariables,
@@ -72,8 +69,6 @@ export class VariableViewProvider implements IVariableViewProvider {
         // Create our actual variable view
         this.variableView = new VariableView(
             this.configuration,
-            this.cssGenerator,
-            this.themeFinder,
             this.workspaceService,
             this.webviewViewProvider,
             this.variables,
