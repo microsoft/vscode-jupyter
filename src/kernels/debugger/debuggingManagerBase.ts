@@ -31,7 +31,6 @@ import { IpykernelCheckResult, isUsingIpykernel6OrLater } from '../../notebooks/
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
  */
-@injectable()
 export abstract class DebuggingManagerBase implements IDisposable {
     private notebookToDebugger = new Map<NotebookDocument, Debugger>();
     protected notebookToDebugAdapter = new Map<NotebookDocument, KernelDebugAdapterBase>();
