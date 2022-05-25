@@ -4,8 +4,7 @@
 import '../../../platform/common/extensions';
 
 import { inject, injectable, named } from 'inversify';
-import * as path from '../../../platform/vscode-path/path';
-import { EventEmitter, Memento, ViewColumn } from 'vscode';
+import { EventEmitter, Memento, Uri, ViewColumn } from 'vscode';
 
 import { sendTelemetryEvent } from '../../../telemetry';
 import { JupyterDataRateLimitError } from '../../../platform/errors/jupyterDataRateLimitError';
@@ -42,9 +41,10 @@ import { Telemetry } from '../../webview-side/common/constants';
 import { WebViewViewChangeEventArgs } from '../types';
 import { WebviewPanelHost } from '../webviewPanelHost.node';
 import { noop } from '../../../platform/common/utils/misc';
+import { joinPath } from '../../../platform/vscode-path/resources';
 
 const PREFERRED_VIEWGROUP = 'JupyterDataViewerPreferredViewColumn';
-const dataExplorerDir = path.join(EXTENSION_ROOT_DIR, 'out', 'webviews', 'webview-side', 'viewers');
+const dataExplorerDir = joinPath(Uri.file(EXTENSION_ROOT_DIR), 'out', 'webviews', 'webview-side', 'viewers');
 @injectable()
 export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements IDataViewer, IDisposable {
     private dataProvider: IDataViewerDataProvider | IJupyterVariableDataProvider | undefined;
@@ -87,7 +87,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             workspaceService,
             (c, v, d) => new DataViewerMessageListener(c, v, d),
             dataExplorerDir,
-            [path.join(dataExplorerDir, 'dataExplorer.js')],
+            [joinPath(dataExplorerDir, 'dataExplorer.js')],
             localize.DataScience.dataExplorerTitle(),
             globalMemento.get(PREFERRED_VIEWGROUP) ?? ViewColumn.One
         );
@@ -103,7 +103,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             this.dataProvider = dataProvider;
 
             // Load the web panel using our current directory as we don't expect to load any other files
-            await super.loadWebview(process.cwd()).catch(traceError);
+            await super.loadWebview(Uri.file(process.cwd())).catch(traceError);
 
             super.setTitle(title);
 

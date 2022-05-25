@@ -21,8 +21,9 @@ import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import * as localize from '../../../platform/common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { WebviewPanelHost } from '../webviewPanelHost.node';
+import { joinPath } from '../../../platform/vscode-path/resources';
 
-const plotDir = path.join(EXTENSION_ROOT_DIR, 'out', 'webviews', 'webview-side', 'viewers');
+const plotDir = joinPath(Uri.file(EXTENSION_ROOT_DIR), 'out', 'webviews', 'webview-side', 'viewers');
 @injectable()
 export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements IPlotViewer, IDisposable {
     private closedEvent: EventEmitter<IPlotViewer> = new EventEmitter<IPlotViewer>();
@@ -41,12 +42,12 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
             workspaceService,
             (c, v, d) => new PlotViewerMessageListener(c, v, d),
             plotDir,
-            [path.join(plotDir, 'plotViewer.js')],
+            [joinPath(plotDir, 'plotViewer.js')],
             localize.DataScience.plotViewerTitle(),
             ViewColumn.One
         );
         // Load the web panel using our current directory as we don't expect to load any other files
-        super.loadWebview(process.cwd()).catch(traceError);
+        super.loadWebview(Uri.file(process.cwd())).catch(traceError);
     }
 
     public get closed(): Event<IPlotViewer> {

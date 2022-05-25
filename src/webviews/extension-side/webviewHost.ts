@@ -60,8 +60,8 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     constructor(
         protected configService: IConfigurationService,
         protected workspaceService: IWorkspaceService,
-        protected rootPath: string,
-        protected scripts: string[]
+        protected rootPath: Uri,
+        protected scripts: Uri[]
     ) {
         // Listen for settings changes from vscode.
         this._disposables.push(this.workspaceService.onDidChangeConfiguration(this.onPossibleSettingsChange, this));
@@ -127,7 +127,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     }
 
     protected abstract provideWebview(
-        cwd: string,
+        cwd: Uri,
         settings: IJupyterExtraSettings,
         workspaceFolder: Resource,
         vscodeWebview?: vscodeWebviewPanel | vscodeWebviewView
@@ -181,7 +181,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         });
     }
 
-    protected async loadWebview(cwd: string, webView?: vscodeWebviewPanel | vscodeWebviewView) {
+    protected async loadWebview(cwd: Uri, webView?: vscodeWebviewPanel | vscodeWebviewView) {
         // Make not disposed anymore
         this.disposed = false;
 
@@ -202,7 +202,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
 
             traceInfo('Loading web view...');
 
-            const workspaceFolder = this.workspaceService.getWorkspaceFolder(Uri.file(cwd))?.uri;
+            const workspaceFolder = this.workspaceService.getWorkspaceFolder(cwd)?.uri;
 
             this.webview = await this.provideWebview(cwd, settings, workspaceFolder, webView);
 

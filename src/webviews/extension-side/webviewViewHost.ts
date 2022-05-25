@@ -3,7 +3,7 @@
 'use strict';
 import '../../platform/common/extensions';
 
-import { WebviewView as vscodeWebviewView } from 'vscode';
+import { Uri, WebviewView as vscodeWebviewView } from 'vscode';
 
 import { WebviewHost } from './webviewHost';
 import {
@@ -36,8 +36,8 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
             disposed: () => void
         ) => IWebviewViewMessageListener,
         protected provider: IWebviewViewProvider,
-        rootPath: string,
-        scripts: string[]
+        rootPath: Uri,
+        scripts: Uri[]
     ) {
         super(configService, workspaceService, rootPath, scripts);
 
@@ -46,7 +46,7 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
     }
 
     protected async provideWebview(
-        cwd: string,
+        cwd: Uri,
         settings: IJupyterExtraSettings,
         workspaceFolder: Resource,
         vscodeWebview?: vscodeWebviewView
@@ -55,7 +55,7 @@ export abstract class WebviewViewHost<IMapping> extends WebviewHost<IMapping> im
             throw new Error('WebviewViews must be passed an initial VS Code Webview');
         }
         return this.provider.create({
-            additionalPaths: workspaceFolder ? [workspaceFolder.fsPath] : [],
+            additionalPaths: workspaceFolder ? [workspaceFolder] : [],
             rootPath: this.rootPath,
             cwd,
             listener: this.messageListener,

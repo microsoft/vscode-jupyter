@@ -3,7 +3,7 @@
 'use strict';
 import '../../platform/common/extensions';
 
-import { ViewColumn, WebviewPanel as vscodeWebviewPanel } from 'vscode';
+import { Uri, ViewColumn, WebviewPanel as vscodeWebviewPanel } from 'vscode';
 
 import { WebviewHost } from './webviewHost';
 import {
@@ -39,8 +39,8 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
             viewChanged: (panel: IWebviewPanel) => void,
             disposed: () => void
         ) => IWebviewPanelMessageListener,
-        rootPath: string,
-        scripts: string[],
+        rootPath: Uri,
+        scripts: Uri[],
         private _title: string,
         private viewColumn: ViewColumn
     ) {
@@ -94,7 +94,7 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
     }
 
     protected async provideWebview(
-        cwd: string,
+        cwd: Uri,
         settings: IJupyterExtraSettings,
         workspaceFolder: Resource,
         vscodeWebview?: vscodeWebviewPanel
@@ -110,7 +110,7 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
             settings,
             cwd,
             webviewHost: vscodeWebview,
-            additionalPaths: workspaceFolder ? [workspaceFolder.fsPath] : []
+            additionalPaths: workspaceFolder ? [workspaceFolder] : []
         });
     }
 

@@ -4,7 +4,7 @@
 import '../../../platform/common/extensions';
 
 import * as path from '../../../platform/vscode-path/path';
-import { WebviewView as vscodeWebviewView } from 'vscode';
+import { Uri, WebviewView as vscodeWebviewView } from 'vscode';
 
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { INotebookWatcher, IVariableViewPanelMapping } from './types';
@@ -30,9 +30,10 @@ import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { Telemetry } from '../../webview-side/common/constants';
 import { DataViewerChecker } from '../dataviewer/dataViewerChecker';
 import { IJupyterVariableDataProviderFactory, IDataViewerFactory, IDataViewer } from '../dataviewer/types';
-import { WebviewViewHost } from '../webviewViewHost.node';
+import { WebviewViewHost } from '../webviewViewHost';
+import { joinPath } from '../../../platform/vscode-path/resources';
 
-const variableViewDir = path.join(EXTENSION_ROOT_DIR, 'out', 'webviews', 'webview-side', 'viewers');
+const variableViewDir = joinPath(Uri.file(EXTENSION_ROOT_DIR), 'out', 'webviews', 'webview-side', 'viewers');
 
 // This is the client side host for the native notebook variable view webview
 // It handles passing messages to and from the react view as well as the connection
@@ -61,7 +62,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
             (c, d) => new VariableViewMessageListener(c, d),
             provider,
             variableViewDir,
-            [path.join(variableViewDir, 'variableView.js')]
+            [joinPath(variableViewDir, 'variableView.js')]
         );
 
         // Sign up if the active variable view notebook is changed, restarted or updated
@@ -78,7 +79,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
 
     @captureTelemetry(Telemetry.NativeVariableViewLoaded)
     public async load(codeWebview: vscodeWebviewView) {
-        await super.loadWebview(process.cwd(), codeWebview).catch(traceError);
+        await super.loadWebview(Uri.file(process.cwd()), codeWebview).catch(traceError);
 
         // After loading, hook up our visibility watch and check the initial visibility
         if (this.webviewView) {
