@@ -623,7 +623,9 @@ export abstract class BaseKernel implements IKernel {
             if (file) {
                 result.push(`__vsc_ipynb_file__ = "${file.replace(/\\/g, '\\\\')}"`);
             }
-            result.push(CodeSnippets.DisableJedi);
+            if (!this.configService.getSettings(undefined).enablePreciseKernelCompletions) {
+                result.push(CodeSnippets.DisableJedi);
+            }
 
             // For Python notebook initialize matplotlib
             // Wrap this startup code in try except as it might fail

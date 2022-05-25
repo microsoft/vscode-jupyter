@@ -1985,7 +1985,7 @@
                 },
                 "jupyter.pythonCompletionTriggerCharacters": {
                     "type": "string",
-                    "default": ".%",
+                    "default": ".%'\"",
                     "description": "Characters which trigger auto completion on a python jupyter kernel.",
                     "scope": "machine"
                 },
@@ -1999,6 +1999,12 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Add PYTHONNOUSERSITE to kernels before starting. This prevents global/user site-packages from being used in the PYTHONPATH of the kernel.",
+                    "scope": "machine"
+                },
+                "jupyter.enablePreciseKernelCompletions": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enables the use of Jedi to generate more precise kernel completions. This can impact peformance, such as preventing executions from running. Use with caution.",
                     "scope": "machine"
                 }
             }
