@@ -34,7 +34,7 @@ import { traceInfoIfCI } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
 import * as uuid from 'uuid/v4';
 
-import { IConfigurationService, InteractiveWindowMode, IsWebExtension, Resource } from '../platform/common/types';
+import { IConfigurationService, InteractiveWindowMode, Resource } from '../platform/common/types';
 import { noop } from '../platform/common/utils/misc';
 import {
     IKernel,
@@ -134,7 +134,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         public readonly appShell: IApplicationShell,
         private readonly codeGeneratorFactory: ICodeGeneratorFactory,
         private readonly storageFactory: IGeneratedCodeStorageFactory,
-        private readonly debuggingManager: IInteractiveWindowDebuggingManager
+        private readonly debuggingManager: IInteractiveWindowDebuggingManager,
+        private readonly isWebExtension: boolean
     ) {
         // Set our owner and first submitter
         if (this._owner) {
@@ -160,7 +161,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         if (preferredController) {
             // Also start connecting to our kernel but don't wait for it to finish
             this.startKernel(preferredController.controller, preferredController.connection).ignoreErrors();
-        } else if (IsWebExtension) {
+        } else if (this.isWebExtension) {
             this.insertInfoMessage(DataScience.noKernelsSpecifyRemote()).ignoreErrors();
         }
     }

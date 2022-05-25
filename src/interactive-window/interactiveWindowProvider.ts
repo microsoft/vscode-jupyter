@@ -22,6 +22,7 @@ import {
     IDisposableRegistry,
     IMemento,
     InteractiveWindowMode,
+    IsWebExtension,
     Resource
 } from '../platform/common/types';
 import { chainable } from '../platform/common/utils/decorators';
@@ -174,7 +175,8 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
                 this.appShell,
                 this.serviceContainer.get<ICodeGeneratorFactory>(ICodeGeneratorFactory),
                 this.serviceContainer.get<IGeneratedCodeStorageFactory>(IGeneratedCodeStorageFactory),
-                this.serviceContainer.get<IInteractiveWindowDebuggingManager>(IInteractiveWindowDebuggingManager)
+                this.serviceContainer.get<IInteractiveWindowDebuggingManager>(IInteractiveWindowDebuggingManager),
+                this.serviceContainer.get<boolean>(IsWebExtension)
             );
             this._windows.push(result);
 
