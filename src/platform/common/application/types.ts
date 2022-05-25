@@ -1101,14 +1101,14 @@ export interface IWebviewView extends IWebview {
 }
 
 export interface IWebviewOptions {
-    rootPath: string;
-    cwd: string;
-    scripts: string[];
+    rootPath: Uri;
+    cwd: Uri;
+    scripts: Uri[];
     /**
      * Additional paths apart from cwd and rootPath, that webview would allow loading resources/files from.
      * E.g. required for webview to serve images from worksapces when nb is in a nested folder.
      */
-    additionalPaths?: string[];
+    additionalPaths?: Uri[];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     settings?: any;
     // Instead of creating a webview we may be passed on already created by VS Code

@@ -23,7 +23,7 @@ export class WebviewPanelProvider implements IWebviewPanelProvider {
         // Used by widgets to place files that are not otherwise accessible.
         const additionalRootPaths = [Uri.file(path.join(this.context.extensionPath, 'tmp'))];
         if (Array.isArray(options.additionalPaths)) {
-            additionalRootPaths.push(...options.additionalPaths.map((item) => Uri.file(item)));
+            additionalRootPaths.push(...options.additionalPaths);
         }
         return new WebviewPanel(this.fs, this.disposableRegistry, options, additionalRootPaths);
     }

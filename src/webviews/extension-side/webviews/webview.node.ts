@@ -37,7 +37,7 @@ export abstract class Webview implements IWebview {
     ) {
         const webViewOptions: WebviewOptions = {
             enableScripts: true,
-            localResourceRoots: [Uri.file(this.options.rootPath), Uri.file(this.options.cwd), ...additionalRootPaths]
+            localResourceRoots: [this.options.rootPath, this.options.cwd, ...additionalRootPaths]
         };
         if (options.webviewHost) {
             this.webviewHost = options.webviewHost;
@@ -75,9 +75,9 @@ export abstract class Webview implements IWebview {
             throw new Error('WebView not initialized, too early to get a Uri');
         }
 
-        const uriBase = this.webviewHost?.webview.asWebviewUri(Uri.file(this.options.cwd)).toString();
-        const uris = this.options.scripts.map((script) => this.webviewHost!.webview!.asWebviewUri(Uri.file(script)));
-        const testFiles = await this.fs.getFiles(Uri.file(this.options.rootPath));
+        const uriBase = this.webviewHost?.webview.asWebviewUri(this.options.cwd).toString();
+        const uris = this.options.scripts.map((script) => this.webviewHost!.webview!.asWebviewUri(script));
+        const testFiles = await this.fs.getFiles(this.options.rootPath);
 
         // This method must be called so VSC is aware of files that can be pulled.
         // Allow js and js.map files to be loaded by webpack in the webview.
@@ -85,7 +85,7 @@ export abstract class Webview implements IWebview {
             .filter((f) => f.fsPath.toLowerCase().endsWith('.js') || f.fsPath.toLowerCase().endsWith('.js.map'))
             .forEach((f) => this.webviewHost?.webview!.asWebviewUri(f));
 
-        const rootPath = this.webviewHost.webview.asWebviewUri(Uri.file(this.options.rootPath)).toString();
+        const rootPath = this.webviewHost.webview.asWebviewUri(this.options.rootPath).toString();
         const fontAwesomePath = this.webviewHost.webview
             .asWebviewUri(
                 Uri.file(
@@ -145,7 +145,9 @@ export abstract class Webview implements IWebview {
     private async load() {
         try {
             if (this.webviewHost?.webview) {
-                const localFilesExist = await Promise.all(this.options.scripts.map((s) => this.fs.localFileExists(s)));
+                const localFilesExist = await Promise.all(
+                    this.options.scripts.map((s) => this.fs.localFileExists(s.fsPath))
+                );
                 if (localFilesExist.every((exists) => exists === true)) {
                     // Call our special function that sticks this script inside of an html page
                     // and translates all of the paths to vscode-resource URIs
