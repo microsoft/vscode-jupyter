@@ -16,7 +16,8 @@ import {
     WorkspaceEdit,
     Uri,
     workspace,
-    TextDocument
+    TextDocument,
+    NotebookEdit
 } from 'vscode';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import { KernelMessage } from '@jupyterlab/services';
@@ -87,7 +88,12 @@ export async function updateNotebookDocumentMetadata(
 
         docMetadata.custom = docMetadata.custom || {};
         docMetadata.custom.metadata = metadata;
-        edit.replaceNotebookMetadata(document.uri, { ...(document.metadata || {}), custom: docMetadata.custom });
+        edit.set(document.uri, [
+            NotebookEdit.updateNotebookMetadata({
+                ...(document.metadata || {}),
+                custom: docMetadata.custom
+            })
+        ]);
         await editManager.applyEdit(edit);
     }
 }

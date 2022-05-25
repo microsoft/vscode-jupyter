@@ -28,7 +28,8 @@ import {
     languages,
     Position,
     Hover,
-    Diagnostic
+    Diagnostic,
+    NotebookEdit
 } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../platform/common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../platform/common/constants';
@@ -92,7 +93,8 @@ export async function insertMarkdownCell(source: string, options?: { index?: num
         const cellData = new NotebookCellData(NotebookCellKind.Markup, source, MARKDOWN_LANGUAGE);
         cellData.outputs = [];
         cellData.metadata = {};
-        edit.replaceNotebookCells(activeEditor.notebook.uri, new NotebookRange(startNumber, startNumber), [cellData]);
+        const nbEdit = NotebookEdit.insertCells(startNumber, [cellData]);
+        edit.set(activeEditor.notebook.uri, [nbEdit]);
     });
     return activeEditor.notebook.cellAt(startNumber)!;
 }
@@ -107,7 +109,8 @@ export async function insertCodeCell(source: string, options?: { language?: stri
     const cellData = new NotebookCellData(NotebookCellKind.Code, source, options?.language || PYTHON_LANGUAGE);
     cellData.outputs = [];
     cellData.metadata = {};
-    edit.replaceNotebookCells(activeEditor.notebook.uri, new NotebookRange(startNumber, startNumber), [cellData]);
+    const nbEdit = NotebookEdit.insertCells(startNumber, [cellData]);
+    edit.set(activeEditor.notebook.uri, [nbEdit]);
     await workspace.applyEdit(edit);
 
     return activeEditor.notebook.cellAt(startNumber)!;
@@ -122,9 +125,10 @@ export async function deleteCell(index: number = 0) {
         assert.fail('No active editor');
         return;
     }
-    await chainWithPendingUpdates(activeEditor.notebook, (edit) =>
-        edit.replaceNotebookCells(activeEditor.notebook.uri, new NotebookRange(index, index + 1), [])
-    );
+    await chainWithPendingUpdates(activeEditor.notebook, (edit) => {
+        const nbEdit = NotebookEdit.deleteCells(new NotebookRange(index, index + 1));
+        edit.set(activeEditor.notebook.uri, [nbEdit]);
+    });
 }
 export async function deleteAllCellsAndWait() {
     const { vscodeNotebook } = await getServices();
@@ -132,9 +136,10 @@ export async function deleteAllCellsAndWait() {
     if (!activeEditor || activeEditor.notebook.cellCount === 0) {
         return;
     }
-    await chainWithPendingUpdates(activeEditor.notebook, (edit) =>
-        edit.replaceNotebookCells(activeEditor.notebook.uri, new NotebookRange(0, activeEditor.notebook.cellCount), [])
-    );
+    await chainWithPendingUpdates(activeEditor.notebook, (edit) => {
+        const nbEdit = NotebookEdit.deleteCells(new NotebookRange(0, activeEditor.notebook.cellCount));
+        edit.set(activeEditor.notebook.uri, [nbEdit]);
+    });
 }
 
 async function createTemporaryNotebookFromNotebook(

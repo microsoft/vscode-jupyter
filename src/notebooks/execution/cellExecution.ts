@@ -16,14 +16,14 @@ import {
     NotebookController,
     WorkspaceEdit,
     NotebookCellData,
-    NotebookRange,
     Range,
     NotebookCellOutput,
     NotebookCellExecutionState,
     CancellationTokenSource,
     Event,
     EventEmitter,
-    ExtensionMode
+    ExtensionMode,
+    NotebookEdit
 } from 'vscode';
 
 import { Kernel } from '@jupyterlab/services';
@@ -736,11 +736,8 @@ export class CellExecution implements IDisposable {
             const cellData = new NotebookCellData(NotebookCellKind.Code, payload.text, this.cell.document.languageId);
             cellData.outputs = [];
             cellData.metadata = {};
-            edit.replaceNotebookCells(
-                this.cell.notebook.uri,
-                new NotebookRange(this.cell.index + 1, this.cell.index + 1),
-                [cellData]
-            );
+            const nbEdit = NotebookEdit.insertCells(this.cell.index + 1, [cellData]);
+            edit.set(this.cell.notebook.uri, [nbEdit]);
         }
         workspace.applyEdit(edit).then(noop, noop);
     }

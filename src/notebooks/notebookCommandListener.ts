@@ -5,7 +5,7 @@ import '../platform/common/extensions';
 
 import { inject, injectable } from 'inversify';
 
-import { NotebookCellData, NotebookCellKind, NotebookRange } from 'vscode';
+import { NotebookCellData, NotebookCellKind, NotebookEdit, NotebookRange } from 'vscode';
 import { IVSCodeNotebook, ICommandManager } from '../platform/common/application/types';
 import { IDataScienceCommandListener, IDisposableRegistry } from '../platform/common/types';
 import { Commands } from '../webviews/webview-side/common/constants';
@@ -77,11 +77,12 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
             return;
         }
         const defaultLanguage = this.languageService.getPreferredLanguage(getNotebookMetadata(document));
-        chainWithPendingUpdates(document, (edit) =>
-            edit.replaceNotebookCells(document.uri, new NotebookRange(0, document.cellCount), [
+        chainWithPendingUpdates(document, (edit) => {
+            const nbEdit = NotebookEdit.replaceCells(new NotebookRange(0, document.cellCount), [
                 new NotebookCellData(NotebookCellKind.Code, '', defaultLanguage)
-            ])
-        ).then(noop, noop);
+            ]);
+            edit.set(document.uri, [nbEdit]);
+        }).then(noop, noop);
     }
     private collapseAll() {
         const document = this.notebooks.activeNotebookEditor?.notebook;
@@ -92,7 +93,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         chainWithPendingUpdates(document, (edit) => {
             document.getCells().forEach((cell, index) => {
                 const metadata = { ...(cell.metadata || {}), inputCollapsed: true, outputCollapsed: true };
-                edit.replaceNotebookCellMetadata(document.uri, index, metadata);
+                edit.set(document.uri, [NotebookEdit.updateCellMetadata(index, metadata)]);
             });
         }).then(noop, noop);
     }
@@ -106,7 +107,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         chainWithPendingUpdates(document, (edit) => {
             document.getCells().forEach((cell, index) => {
                 const metadata = { ...(cell.metadata || {}), inputCollapsed: false, outputCollapsed: true };
-                edit.replaceNotebookCellMetadata(document.uri, index, metadata);
+                edit.set(document.uri, [NotebookEdit.updateCellMetadata(index, metadata)]);
             });
         }).then(noop, noop);
     }
