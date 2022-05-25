@@ -8,6 +8,7 @@ import { CancellationToken, NotebookDocument, Uri, workspace } from 'vscode';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IApplicationShell } from '../common/application/types';
 import { Telemetry } from '../common/constants';
+import { IConfigurationService } from '../common/types';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { traceError } from '../logging';
@@ -28,7 +29,8 @@ export class FileConverter implements IFileConverter {
         @inject(ExportUtilBase) protected readonly exportUtil: ExportUtilBase,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(ExportFileOpener) protected readonly exportFileOpener: ExportFileOpener
+        @inject(ExportFileOpener) protected readonly exportFileOpener: ExportFileOpener,
+        @inject(IConfigurationService) protected readonly configuration: IConfigurationService
     ) {}
 
     async importIpynb(source: Uri): Promise<void> {
@@ -100,7 +102,10 @@ export class FileConverter implements IFileConverter {
         candidateInterpreter?: PythonEnvironment
     ) {
         // For web, we perform plain export for Python
-        if (format === ExportFormat.python) {
+        if (
+            format === ExportFormat.python &&
+            this.configuration.getSettings(sourceDocument.uri).pythonExportMethod !== 'nbconvert'
+        ) {
             // Unless selected by the setting use plain conversion for python script convert
             await this.performPlainExport(format, sourceDocument, target, token);
         } else {

@@ -5,14 +5,15 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert, expect } from 'chai';
+import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
-import { Common } from '../../../platform/common/utils/localize';
+import { Common, DataScience } from '../../../platform/common/utils/localize';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
-import { IDisposable } from '../../../platform/common/types';
-import { captureScreenShot, IExtensionTestApi } from '../../common.node';
+import { IConfigurationService, IDisposable } from '../../../platform/common/types';
+import { captureScreenShot, IExtensionTestApi, PYTHON_PATH } from '../../common.node';
 import { initialize } from '../../initialize.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
@@ -29,6 +30,14 @@ import { createDeferred } from '../../../platform/common/utils/async';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
 import { ProductNames } from '../../../kernels/installer/productNames';
 import { Product } from '../../../kernels/installer/types';
+import { ProcessService } from '../../../platform/common/process/proc.node';
+import { BufferDecoder } from '../../../platform/common/process/decoder.node';
+import { INbConvertInterpreterDependencyChecker, INotebookImporter } from '../../../kernels/jupyter/types';
+import { JupyterImporter } from '../../../kernels/jupyter/import-export/jupyterImporter.node';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { PythonEnvironment } from '../../../platform/api/extension';
+import { CodeSnippets, Identifiers } from '../../../platform/common/constants';
+import { noop } from '../../../platform/common/utils/misc';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
@@ -37,14 +46,25 @@ const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykern
 suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
+    let proc: ProcessService;
     let vscodeNotebook: IVSCodeNotebook;
-
+    let importer: JupyterImporter;
+    let nbConvertDependencyChecker: INbConvertInterpreterDependencyChecker;
+    let interpreterService: IInterpreterService;
+    let activeInterpreter: PythonEnvironment;
+    let defaultCellMarker: string;
+    let template: string;
     this.timeout(120_000);
     suiteSetup(async function () {
         traceInfo('Suite Setup');
         this.timeout(120_000);
         try {
             api = await initialize();
+            importer = api.serviceContainer.get<JupyterImporter>(INotebookImporter);
+            nbConvertDependencyChecker = api.serviceContainer.get<INbConvertInterpreterDependencyChecker>(
+                INbConvertInterpreterDependencyChecker
+            );
+            interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
             await workAroundVSCodeNotebookStartPages();
             await hijackPrompt(
                 'showErrorMessage',
@@ -55,11 +75,16 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
 
             sinon.restore();
             vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+            proc = new ProcessService(new BufferDecoder());
             traceInfo('Suite Setup (completed)');
         } catch (e) {
             await captureScreenShot('export-suite');
             throw e;
         }
+    });
+    suiteTeardown(async () => {
+        proc.dispose();
+        await fs.unlink(template).catch(noop);
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
@@ -70,6 +95,16 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
             await createEmptyPythonNotebook(disposables);
             assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
             traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+            activeInterpreter = (await interpreterService.getActiveInterpreter(
+                vscodeNotebook.activeNotebookEditor?.notebook.uri
+            ))!;
+            defaultCellMarker =
+                api.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings()
+                    .defaultCellMarker || Identifiers.DefaultCodeCellMarker;
+            const version = await nbConvertDependencyChecker.getNbConvertVersion(activeInterpreter);
+            if (!template) {
+                template = (await importer.createTemplateFile(version!.major >= 6))!;
+            }
         } catch (e) {
             await captureScreenShot(this.currentTest?.title || 'unknown');
             throw e;
@@ -106,12 +141,12 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         await commands.executeCommand('jupyter.exportAsPythonScript');
 
         // Wait until our active document changes
-        await deferred;
+        await deferred.promise;
 
         assert(window.activeTextEditor?.document.languageId === 'python', 'Document opened by export was not python');
 
         const text = window.activeTextEditor?.document.getText();
-        const expected = `# %%${os.EOL}print("Hello World")${os.EOL}${os.EOL}# %% [markdown]${os.EOL}# # Markdown Header${os.EOL}# markdown string${os.EOL}${os.EOL}# %%${os.EOL}%whos${os.EOL}${os.EOL}${os.EOL}`;
+        const expected = `# %%${os.EOL}print("Hello World")${os.EOL}${os.EOL}# %% [markdown]${os.EOL}# # Markdown Header${os.EOL}# markdown string${os.EOL}${os.EOL}# %%${os.EOL}%whos${os.EOL}${os.EOL}`;
 
         // Verify text content
         expect(text).to.equal(expected, 'Exported text does not match');
@@ -139,12 +174,12 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         await commands.executeCommand('jupyter.exportAsPythonScript');
 
         // Wait until our active document changes
-        await deferred;
+        await deferred.promise;
 
         assert(window.activeTextEditor?.document.languageId === 'python', 'Document opened by export was not python');
 
         const text = window.activeTextEditor?.document.getText();
-        const expected = `# %%${os.EOL}print("Hello World")${os.EOL}${os.EOL}# %% [markdown]${os.EOL}# # Markdown Header${os.EOL}# markdown string${os.EOL}${os.EOL}# %%${os.EOL}# %whos${os.EOL}# !shellcmd${os.EOL}${os.EOL}${os.EOL}`;
+        const expected = `# %%${os.EOL}print("Hello World")${os.EOL}${os.EOL}# %% [markdown]${os.EOL}# # Markdown Header${os.EOL}# markdown string${os.EOL}${os.EOL}# %%${os.EOL}# %whos${os.EOL}# !shellcmd${os.EOL}${os.EOL}`;
 
         // Verify text content
         expect(text).to.equal(expected, 'Exported text does not match');
@@ -157,7 +192,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         await insertMarkdownCell('# Markdown Header\nmarkdown string', { index: 1 });
         await insertCodeCell('%whos\n!shellcmd', { index: 2 });
         await saveActiveNotebook();
-
+        const nbFile = window.activeNotebookEditor!.notebook.uri.fsPath;
         const deferred = createDeferred<any>();
         const onDidChangeDispose = window.onDidChangeActiveTextEditor((te) => {
             if (te) {
@@ -172,15 +207,32 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         await commands.executeCommand('jupyter.exportAsPythonScript');
 
         // Wait until our active document changes
-        await deferred;
+        await deferred.promise;
 
         assert(window.activeTextEditor?.document.languageId === 'python', 'Document opened by export was not python');
 
         const text = window.activeTextEditor?.document.getText();
-        const expected = `# To add a new cell, type '# %%'\n# To add a new markdown cell, type '# %% [markdown]'\n# %%\nfrom IPython import get_ipython\n\n# %%\nprint("Hello World")\n\n# %% [markdown]\n# # Markdown Header\n# markdown string\n\n# %%\nget_ipython().run_line_magic('whos', '')\nget_ipython().system('shellcmd')\n\n\n`;
+        const output = await proc.exec(PYTHON_PATH, [
+            '-m',
+            'jupyter',
+            'nbconvert',
+            nbFile,
+            '--to',
+            'python',
+            '--stdout',
+            '--template',
+            template!
+        ]);
 
         // Verify text content
-        expect(text).to.equal(expected, 'Exported text does not match');
+        const prefix = DataScience.instructionComments().format(defaultCellMarker);
+        let expectedContents = output.stdout;
+        if (expectedContents.includes('get_ipython')) {
+            expectedContents = CodeSnippets.ImportIPython.format(defaultCellMarker, expectedContents);
+        }
+        expectedContents = prefix.concat(expectedContents);
+
+        expect(text).to.equal(expectedContents, 'Exported text does not match');
 
         // Clean up dispose
         onDidChangeDispose.dispose();
@@ -207,14 +259,14 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         await commands.executeCommand('jupyter.importnotebook', importFile);
 
         // Wait until our active document changes
-        await deferred;
+        await deferred.promise;
 
         assert(window.activeTextEditor?.document.languageId === 'python', 'Document opened by export was not python');
 
         const text = window.activeTextEditor?.document.getText();
 
         // Verify text content
-        expect(text).to.equal(`# %%${os.EOL}a=1${os.EOL}a${os.EOL}${os.EOL}${os.EOL}`, 'Exported text does not match');
+        expect(text).to.equal(`# %%${os.EOL}a=1${os.EOL}a${os.EOL}${os.EOL}`, 'Exported text does not match');
 
         // Clean up dispose
         onDidChangeDispose.dispose();
@@ -245,7 +297,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
         await commands.executeCommand('jupyter.importnotebook', importFile);
 
         // Wait until our active document changes
-        await deferred;
+        await deferred.promise;
 
         assert(window.activeTextEditor?.document.languageId === 'python', 'Document opened by export was not python');
 
@@ -253,7 +305,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
 
         // Verify text content
         expect(text).to.equal(
-            `# To add a new cell, type '# %%'\n# To add a new markdown cell, type '# %% [markdown]'\n# %%\na=1\na\n\n\n`,
+            `# To add a new cell, type '# %%'\n# To add a new markdown cell, type '# %% [markdown]'\n# %%\na=1\na\n\n`,
             'Exported text does not match'
         );
 

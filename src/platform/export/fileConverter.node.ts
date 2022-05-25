@@ -24,7 +24,7 @@ export class FileConverter extends FileConverterBase implements IFileConverter {
         @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IApplicationShell) applicationShell: IApplicationShell,
         @inject(ExportFileOpener) exportFileOpener: ExportFileOpener,
-        @inject(IConfigurationService) readonly configuration: IConfigurationService
+        @inject(IConfigurationService) configuration: IConfigurationService
     ) {
         super(
             exportToPythonPlain,
@@ -35,7 +35,8 @@ export class FileConverter extends FileConverterBase implements IFileConverter {
             exportUtil,
             progressReporter,
             applicationShell,
-            exportFileOpener
+            exportFileOpener,
+            configuration
         );
     }
 

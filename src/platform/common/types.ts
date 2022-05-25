@@ -88,7 +88,7 @@ export interface IJupyterSettings {
     readonly stopOnFirstLineWhileDebugging: boolean;
     readonly textOutputLimit: number;
     readonly magicCommandsAsComments: boolean;
-    readonly pythonExportMethod: string;
+    readonly pythonExportMethod: 'direct' | 'commentMagics' | 'nbconvert';
     readonly stopOnError: boolean;
     readonly remoteDebuggerPort: number;
     readonly colorizeInputBox: boolean;
