@@ -64,8 +64,8 @@ import { Settings } from '../../../../platform/common/constants';
                 previousPythonCompletionTriggerCharactersValue = jupyterConfig.get<string>(
                     'pythonCompletionTriggerCharacters'
                 );
-                previousJediSetting = jupyterConfig.get<boolean>('enablePreciseKernelCompletions');
-                await jupyterConfig.update('enablePreciseKernelCompletions', useJedi, ConfigurationTarget.Global);
+                previousJediSetting = jupyterConfig.get<boolean>('enableExtendedKernelCompletions');
+                await jupyterConfig.update('enableExtendedKernelCompletions', useJedi, ConfigurationTarget.Global);
                 await jupyterConfig.update('pythonCompletionTriggerCharacters', '.%"\'', ConfigurationTarget.Global);
                 api = await initialize();
                 if (IS_REMOTE_NATIVE_TEST()) {
@@ -105,7 +105,7 @@ import { Settings } from '../../../../platform/common/constants';
                         ConfigurationTarget.Global
                     );
                 await jupyterConfig.update(
-                    'enablePreciseKernelCompletions',
+                    'enableExtendedKernelCompletions',
                     previousJediSetting,
                     ConfigurationTarget.Global
                 );

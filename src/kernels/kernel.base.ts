@@ -623,7 +623,7 @@ export abstract class BaseKernel implements IKernel {
             if (file) {
                 result.push(`__vsc_ipynb_file__ = "${file.replace(/\\/g, '\\\\')}"`);
             }
-            if (!this.configService.getSettings(undefined).enablePreciseKernelCompletions) {
+            if (!this.configService.getSettings(undefined).enableExtendedKernelCompletions) {
                 result.push(CodeSnippets.DisableJedi);
             }
 
