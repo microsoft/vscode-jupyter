@@ -111,7 +111,7 @@ export class FileConverter implements IFileConverter {
             // As far as this method is concerned the export was successful, whether the user opens the file or not
             // should not have any bearing on the completion (resolving) this method.
             // Hence don't await.
-            this.openExportedFile(format, target).catch(noop);
+            await this.openExportedFile(format, target).catch(noop);
         }
     }
 
