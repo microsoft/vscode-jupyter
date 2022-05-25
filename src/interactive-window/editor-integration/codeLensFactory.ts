@@ -63,7 +63,8 @@ export class CodeLensFactory implements ICodeLensFactory {
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IGeneratedCodeStorageFactory)
         private readonly generatedCodeStorageFactory: IGeneratedCodeStorageFactory,
-        @inject(IKernelProvider) kernelProvider: IKernelProvider
+        @inject(IKernelProvider) kernelProvider: IKernelProvider,
+        @inject(IsWebExtension) private readonly isWebExtension: boolean
     ) {
         this.documentManager.onDidCloseTextDocument(this.onClosedDocument, this, disposables);
         this.workspace.onDidGrantWorkspaceTrust(() => this.codeLensCache.clear(), this, disposables);
@@ -263,8 +264,9 @@ export class CodeLensFactory implements ICodeLensFactory {
                 Commands.DebugStop,
                 Commands.RunCellAndAllBelowPalette
             ];
-        } else if (IsWebExtension) {
-            commandsToBeDisabled = [Commands.DebugCell];
+        }
+        if (this.isWebExtension) {
+            commandsToBeDisabled.push(Commands.DebugCell);
         }
         if (commandsToBeDisabled) {
             fullCommandList = fullCommandList.filter((item) => !commandsToBeDisabled.includes(item));
