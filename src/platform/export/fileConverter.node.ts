@@ -1,14 +1,14 @@
 import { inject, injectable, named } from 'inversify';
-import { CancellationToken, NotebookDocument, Uri } from 'vscode';
+import { Uri } from 'vscode';
 import { IApplicationShell } from '../common/application/types';
 import { IConfigurationService } from '../common/types';
-import { PythonEnvironment } from '../pythonEnvironments/info';
 import { ProgressReporter } from '../progress/progressReporter';
 import { ExportFileOpener } from './exportFileOpener';
 import { ExportFormat, INbConvertExport, IExportDialog, IFileConverter, IExport } from './types';
 import { IFileSystemNode } from '../common/platform/types.node';
 import { FileConverter as FileConverterBase } from './fileConverter';
 import { ExportUtil } from './exportUtil.node';
+import { noop } from '../common/utils/misc';
 
 // Class is responsible for file conversions (ipynb, py, pdf, html) and managing nb convert for some of those conversions
 @injectable()
@@ -39,24 +39,7 @@ export class FileConverter extends FileConverterBase implements IFileConverter {
         );
     }
 
-    override async performExport(
-        format: ExportFormat,
-        sourceDocument: NotebookDocument,
-        target: Uri,
-        token: CancellationToken,
-        candidateInterpreter?: PythonEnvironment
-    ) {
-        const pythonNbconvert = this.configuration.getSettings(sourceDocument.uri).pythonExportMethod === 'nbconvert';
-
-        if (format === ExportFormat.python && !pythonNbconvert) {
-            // Unless selected by the setting use plain conversion for python script convert
-            await this.performPlainExport(format, sourceDocument, target, token);
-        } else {
-            await this.performNbConvertExport(sourceDocument, format, target, candidateInterpreter, token);
-        }
-
-        if (target) {
-            await this.exportFileOpener.openFile(format, target);
-        }
+    protected override async openExportedFile(format: ExportFormat, target: Uri) {
+        await this.exportFileOpener.openFile(format, target).catch(noop);
     }
 }
