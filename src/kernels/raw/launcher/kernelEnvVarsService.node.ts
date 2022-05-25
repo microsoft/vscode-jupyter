@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
 import { traceInfo, traceError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
-import { Resource } from '../../../platform/common/types';
+import { IConfigurationService, Resource } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { IEnvironmentVariablesService, IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
 import { IEnvironmentActivationService } from '../../../platform/interpreter/activation/types';
@@ -20,7 +20,8 @@ export class KernelEnvironmentVariablesService {
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IEnvironmentActivationService) private readonly envActivation: IEnvironmentActivationService,
         @inject(IEnvironmentVariablesService) private readonly envVarsService: IEnvironmentVariablesService,
-        @inject(IEnvironmentVariablesProvider) private readonly customEnvVars: IEnvironmentVariablesProvider
+        @inject(IEnvironmentVariablesProvider) private readonly customEnvVars: IEnvironmentVariablesProvider,
+        @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}
     /**
      * If the kernel belongs to a conda environment, then use the env variables of the conda environment and merge that with the env variables of the kernel spec.
@@ -51,7 +52,7 @@ export class KernelEnvironmentVariablesService {
                 });
         }
 
-        let [customEditVars, interpreterEnv, hasActivationCommands] = await Promise.all([
+        let [customEditVars, interpreterEnv] = await Promise.all([
             this.customEnvVars.getCustomEnvironmentVariables(resource).catch(noop),
             interpreter
                 ? this.envActivation
@@ -60,8 +61,7 @@ export class KernelEnvironmentVariablesService {
                           traceError('Failed to get env variables for interpreter, hence no variables for Kernel', ex);
                           return undefined;
                       })
-                : undefined,
-            interpreter ? this.envActivation.hasActivationCommands(resource, interpreter) : false
+                : undefined
         ]);
         if (!interpreterEnv && Object.keys(customEditVars || {}).length === 0) {
             traceInfo('No custom variables nor do we have a conda environment');
@@ -76,7 +76,6 @@ export class KernelEnvironmentVariablesService {
             return kernelEnv;
         }
         // Merge the env variables with that of the kernel env.
-        const hasInterpreterEnv = interpreterEnv != undefined;
         interpreterEnv = interpreterEnv || {};
         const mergedVars = { ...process.env };
         kernelEnv = kernelEnv || {};
@@ -118,16 +117,12 @@ export class KernelEnvironmentVariablesService {
             this.envVarsService.prependPath(mergedVars, path.dirname(interpreter.uri.fsPath));
         }
 
-        // Ensure global site_packages are not in the path for non global environments
-        // The global site_packages will be added to the path later.
+        // If user asks us to, set PYTHONNOUSERSITE
         // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
         // https://docs.python.org/3/library/site.html#site.ENABLE_USER_SITE
-        if (interpreter && hasInterpreterEnv && hasActivationCommands) {
-            traceInfo(`Adding env Variable PYTHONNOUSERSITE to ${getDisplayPath(interpreter.uri)}`);
+        if (this.configService.getSettings(undefined).excludeUserSitePackages) {
+            traceInfo(`Adding env Variable PYTHONNOUSERSITE to ${getDisplayPath(interpreter?.uri)}`);
             mergedVars.PYTHONNOUSERSITE = 'True';
-        } else {
-            // Ensure this is not set (nor should this be inherited).
-            delete mergedVars.PYTHONNOUSERSITE;
         }
 
         return mergedVars;
