@@ -50,7 +50,7 @@ import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
 type DebuggerType = 'VSCodePythonDebugger' | 'JupyterProtocolDebugger';
 const debuggerTypes: DebuggerType[] = ['JupyterProtocolDebugger', 'VSCodePythonDebugger'];
 debuggerTypes.forEach((debuggerType) => {
-    suite.only(`Interactive window debugger using ${debuggerType}`, async function () {
+    suite(`Interactive window debugger using ${debuggerType}`, async function () {
         this.timeout(120_000);
         let api: IExtensionTestApi;
         const disposables: IDisposable[] = [];
