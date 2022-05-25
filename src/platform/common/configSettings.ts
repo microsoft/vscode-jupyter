@@ -100,6 +100,7 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public pythonCompletionTriggerCharacters: string = '';
     public logKernelOutputSeparately: boolean = false;
     public poetryPath: string = '';
+    public excludeUserSitePackages: boolean = false;
 
     public variableTooltipFields: IVariableTooltipFields = {
         python: {

@@ -20,11 +20,16 @@ import { JupyterKernelService } from '../../../../kernels/jupyter/jupyterKernelS
 import { JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths.node';
 import { DisplayOptions } from '../../../../kernels/displayOptions';
 import { getOSType, OSType } from '../../../../platform/common/utils/platform';
+import { IConfigurationService, IWatchableJupyterSettings } from '../../../../platform/common/types';
+import { ConfigurationService } from '../../../../platform/common/configuration/service.node';
+import { JupyterSettings } from '../../../../platform/common/configSettings';
 
 // eslint-disable-next-line
 suite('DataScience - JupyterKernelService', () => {
     let kernelService: JupyterKernelService;
     let kernelDependencyService: IKernelDependencyService;
+    let configService: IConfigurationService;
+    let settings: IWatchableJupyterSettings;
     let fs: IFileSystemNode;
     let appEnv: IEnvironmentActivationService;
     let testWorkspaceFolder: Uri;
@@ -380,12 +385,16 @@ suite('DataScience - JupyterKernelService', () => {
         testWorkspaceFolder = Uri.file(path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience'));
         const jupyterPaths = mock<JupyterPaths>();
         when(jupyterPaths.getKernelSpecTempRegistrationFolder()).thenResolve(testWorkspaceFolder);
+        configService = mock(ConfigurationService);
+        settings = mock(JupyterSettings);
+        when(configService.getSettings(anything())).thenReturn(instance(settings));
         kernelService = new JupyterKernelService(
             instance(kernelDependencyService),
             instance(fs),
             instance(appEnv),
             new EnvironmentVariablesService(instance(fs)),
-            instance(jupyterPaths)
+            instance(jupyterPaths),
+            instance(configService)
         );
     });
     test('Dependencies checked on all kernels with interpreters', async () => {
@@ -541,6 +550,7 @@ suite('DataScience - JupyterKernelService', () => {
             filesCreated.add(f);
             return Promise.resolve();
         });
+        when(settings.excludeUserSitePackages).thenReturn(true);
         const token = new CancellationTokenSource();
         await kernelService.ensureKernelIsUsable(undefined, spec, new DisplayOptions(true), token.token);
         token.dispose();

@@ -18,6 +18,8 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { KernelEnvironmentVariablesService } from '../../../kernels/raw/launcher/kernelEnvVarsService.node';
 import { IJupyterKernelSpec } from '../../../kernels/types';
 import { Uri } from 'vscode';
+import { IConfigurationService, IWatchableJupyterSettings } from '../../../platform/common/types';
+import { JupyterSettings } from '../../../platform/common/configSettings';
 
 use(chaiAsPromised);
 
@@ -28,6 +30,8 @@ suite('Kernel Environment Variables Service', () => {
     let variablesService: EnvironmentVariablesService;
     let kernelVariablesService: KernelEnvironmentVariablesService;
     let interpreterService: IInterpreterService;
+    let configService: IConfigurationService;
+    let settings: IWatchableJupyterSettings;
     const pathFile = Uri.file('foobar');
     const interpreter: PythonEnvironment = {
         envType: EnvironmentType.Conda,
@@ -49,11 +53,15 @@ suite('Kernel Environment Variables Service', () => {
         customVariablesService = mock<IEnvironmentVariablesProvider>();
         interpreterService = mock<IInterpreterService>();
         variablesService = new EnvironmentVariablesService(instance(fs));
+        configService = mock<IConfigurationService>();
+        settings = mock(JupyterSettings);
+        when(configService.getSettings(anything())).thenReturn(instance(settings));
         kernelVariablesService = new KernelEnvironmentVariablesService(
             instance(interpreterService),
             instance(envActivation),
             variablesService,
-            instance(customVariablesService)
+            instance(customVariablesService),
+            instance(configService)
         );
     });
 
@@ -110,31 +118,24 @@ suite('Kernel Environment Variables Service', () => {
             );
         });
 
-        async function testPYTHONNOUSERSITE(
-            envType: EnvironmentType,
-            hasActivatedEnvVariables: boolean,
-            hasActivationCommands: boolean
-        ) {
+        async function testPYTHONNOUSERSITE(envType: EnvironmentType, shouldBeSet: boolean) {
             when(interpreterService.getInterpreterDetails(anything())).thenResolve({
                 envType,
                 uri: Uri.file('foopath'),
                 sysPrefix: 'foosysprefix'
             });
-            when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve(
-                hasActivatedEnvVariables
-                    ? {
-                          PATH: 'foobar'
-                      }
-                    : undefined
-            );
-            when(envActivation.hasActivationCommands(anything(), anything())).thenResolve(hasActivationCommands);
+            when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
+                PATH: 'foobar'
+            });
+            when(envActivation.hasActivationCommands(anything(), anything())).thenResolve(true);
             when(customVariablesService.getCustomEnvironmentVariables(anything())).thenResolve({ PATH: 'foobaz' });
+            when(settings.excludeUserSitePackages).thenReturn(shouldBeSet);
 
             // undefined for interpreter here, interpreterPath from the spec should be used
             const vars = await kernelVariablesService.getEnvironmentVariables(undefined, undefined, kernelSpec);
             assert.isOk(vars);
 
-            if (hasActivatedEnvVariables && hasActivationCommands) {
+            if (shouldBeSet) {
                 assert.isOk(vars!['PYTHONNOUSERSITE'], 'PYTHONNOUSERSITE should be set');
             } else {
                 assert.isUndefined(vars!['PYTHONNOUSERSITE'], 'PYTHONNOUSERSITE should not be set');
@@ -142,19 +143,13 @@ suite('Kernel Environment Variables Service', () => {
         }
 
         test('PYTHONNOUSERSITE should not be set for Global Interpreters', async () => {
-            await testPYTHONNOUSERSITE(EnvironmentType.Global, false, false);
+            await testPYTHONNOUSERSITE(EnvironmentType.Global, false);
         });
         test('PYTHONNOUSERSITE should be set for Conda Env', async () => {
-            await testPYTHONNOUSERSITE(EnvironmentType.Conda, true, true);
+            await testPYTHONNOUSERSITE(EnvironmentType.Conda, true);
         });
         test('PYTHONNOUSERSITE should be set for Virtual Env', async () => {
-            await testPYTHONNOUSERSITE(EnvironmentType.VirtualEnv, true, true);
-        });
-        test('PYTHONNOUSERSITE should not be set for Conda Env if we fail to get env variables', async () => {
-            await testPYTHONNOUSERSITE(EnvironmentType.Conda, false, true);
-        });
-        test('PYTHONNOUSERSITE should not be set for Conda Env if we fail to get activation commands', async () => {
-            await testPYTHONNOUSERSITE(EnvironmentType.Conda, true, false);
+            await testPYTHONNOUSERSITE(EnvironmentType.VirtualEnv, true);
         });
     });
 });

@@ -20,7 +20,7 @@ import {
 } from '../../platform/logging';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../platform/common/platform/types.node';
-import { Resource, ReadWrite, IDisplayOptions } from '../../platform/common/types';
+import { Resource, ReadWrite, IDisplayOptions, IConfigurationService } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { IEnvironmentVariablesService } from '../../platform/common/variables/types';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
@@ -54,7 +54,8 @@ export class JupyterKernelService implements IJupyterKernelService {
         @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
         @inject(IEnvironmentVariablesService) private readonly envVarsService: IEnvironmentVariablesService,
-        @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths
+        @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
+        @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}
 
     /**
@@ -281,14 +282,11 @@ export class JupyterKernelService implements IJupyterKernelService {
                 }
                 // Get the activated environment variables (as a work around for `conda run` and similar).
                 // This ensures the code runs within the context of an activated environment.
-                const [interpreterEnv, hasActivationCommands] = await Promise.all([
-                    this.activationHelper
-                        .getActivatedEnvironmentVariables(resource, interpreter, true)
-                        .catch(noop)
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        .then((env) => (env || {}) as any),
-                    this.activationHelper.hasActivationCommands(resource, interpreter)
-                ]);
+                const interpreterEnv = await this.activationHelper
+                    .getActivatedEnvironmentVariables(resource, interpreter, true)
+                    .catch(noop)
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    .then((env) => (env || {}) as any);
 
                 // Ensure we inherit env variables from the original kernelspec file.
                 let envInKernelSpecJson =
@@ -313,16 +311,11 @@ export class JupyterKernelService implements IJupyterKernelService {
                     this.envVarsService.prependPath(specModel.env as {}, path.dirname(interpreter.uri.fsPath));
                 }
 
-                // Ensure global site_packages are not in the path.
-                // The global site_packages will be added to the path later.
+                // If user asks us to, set PYTHONNOUSERSITE
                 // For more details see here https://github.com/microsoft/vscode-jupyter/issues/8553#issuecomment-997144591
                 // https://docs.python.org/3/library/site.html#site.ENABLE_USER_SITE
-                if (specModel.env && Object.keys(specModel.env).length > 0 && hasActivationCommands) {
-                    traceInfo(`Adding env Variable PYTHONNOUSERSITE to ${getDisplayPath(interpreter.uri)}`);
+                if (this.configService.getSettings(undefined).excludeUserSitePackages) {
                     specModel.env.PYTHONNOUSERSITE = 'True';
-                } else {
-                    // We don't want to inherit any such env variables from Jupyter server or the like.
-                    delete specModel.env.PYTHONNOUSERSITE;
                 }
 
                 if (Cancellation.isCanceled(cancelToken)) {

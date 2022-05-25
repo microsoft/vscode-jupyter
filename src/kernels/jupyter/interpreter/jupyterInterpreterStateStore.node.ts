@@ -39,7 +39,7 @@ export class JupyterInterpreterStateStore {
         }
         const memento = this.memento.get<string | undefined>(key, undefined);
         if (memento) {
-            return Uri.file(memento);
+            return Uri.parse(memento);
         }
     }
     public updateSelectedPythonPath(value: Uri | undefined) {
