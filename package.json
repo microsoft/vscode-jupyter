@@ -2004,7 +2004,7 @@
                 "jupyter.enableExtendedKernelCompletions": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Enables Jedi support for extended IntelliSense completions from running Jupyter kernels. This can greatly impact notebook cell execution performance. Use with caution.",
+                    "markdownDescription": "Enables Jedi support for extended IntelliSense completions in running Jupyter kernels (see this [setting](https://ipython.readthedocs.io/en/stable/config/options/terminal.html?highlight=use_jedi#configtrait-Completer.use_jedi)). This can greatly impact notebook cell execution performance. Use with caution.",
                     "scope": "machine"
                 }
             }
