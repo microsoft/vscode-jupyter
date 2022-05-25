@@ -281,11 +281,6 @@ export function filterCompletions(
         allowStringFilter &&
         (triggerCharacter == "'" || triggerCharacter == '"' || positionInsideString(line, position));
 
-    // If inside of a string, filter out everything except file names
-    if (insideString) {
-        result = result.filter((r) => r.itemText.includes('.') || r.itemText.endsWith('/'));
-    }
-
     traceInfoIfCI(`Jupyter completions filtering applied: ${insideString} on ${line}`);
 
     // Update magics to have a much lower sort order than other strings.

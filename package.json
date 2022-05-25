@@ -1985,7 +1985,7 @@
                 },
                 "jupyter.pythonCompletionTriggerCharacters": {
                     "type": "string",
-                    "default": ".%",
+                    "default": ".%'\"",
                     "description": "Characters which trigger auto completion on a python jupyter kernel.",
                     "scope": "machine"
                 },
@@ -1999,6 +1999,12 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Add PYTHONNOUSERSITE to kernels before starting. This prevents global/user site-packages from being used in the PYTHONPATH of the kernel.",
+                    "scope": "machine"
+                },
+                "jupyter.enableExtendedKernelCompletions": {
+                    "type": "boolean",
+                    "default": false,
+                    "markdownDescription": "Enables Jedi support for extended IntelliSense completions in running Jupyter kernels (see this [setting](https://ipython.readthedocs.io/en/stable/config/options/terminal.html?highlight=use_jedi#configtrait-Completer.use_jedi)). This can greatly impact notebook cell execution performance. Use with caution.",
                     "scope": "machine"
                 }
             }
