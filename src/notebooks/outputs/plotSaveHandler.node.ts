@@ -30,7 +30,7 @@ export class PlotSaveHandler {
         }
         const output = getOutputItem(notebook, outputId, mimeType);
         if (!output) {
-            return traceError(`Nolot to save ${getDisplayPath(notebook.uri)}, id: ${outputId} for ${mimeType}`);
+            return traceError(`No plot to save ${getDisplayPath(notebook.uri)}, id: ${outputId} for ${mimeType}`);
         }
         if (!(mimeType.toLowerCase() in imageExtensionForMimeType)) {
             return traceError(`Unsupported MimeType ${getDisplayPath(notebook.uri)}, id: ${outputId} for ${mimeType}`);

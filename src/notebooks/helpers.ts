@@ -13,7 +13,6 @@ import {
     NotebookDocument,
     NotebookCellKind,
     NotebookCellExecutionState,
-    NotebookCellExecutionSummary,
     WorkspaceEdit,
     Uri,
     workspace,
@@ -27,9 +26,8 @@ import fastDeepEqual = require('fast-deep-equal');
 import * as path from '../platform/vscode-path/path';
 import * as uriPath from '../platform/vscode-path/resources';
 import { IVSCodeNotebook, IDocumentManager } from '../platform/common/application/types';
-import { PYTHON_LANGUAGE, MARKDOWN_LANGUAGE } from '../platform/common/constants';
+import { PYTHON_LANGUAGE } from '../platform/common/constants';
 import { traceInfoIfCI, traceError, traceWarning } from '../platform/logging';
-import { Resource } from '../platform/common/types';
 import { getInterpreterHash } from '../platform/pythonEnvironments/info/interpreter';
 import { sendTelemetryEvent } from '../telemetry';
 import { splitMultilineString, concatMultilineString } from '../webviews/webview-side/common';
@@ -61,12 +59,6 @@ export function isJupyterNotebook(option: NotebookDocument | string) {
     }
 }
 
-export function isResourceNativeNotebook(resource: Resource, notebooks: IVSCodeNotebook) {
-    if (!resource) {
-        return false;
-    }
-    return notebooks.notebookDocuments.some((item) => uriPath.isEqual(item.uri, resource));
-}
 export function getNotebookMetadata(document: NotebookDocument | NotebookData): nbformat.INotebookMetadata | undefined {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata?.custom as any;
@@ -113,27 +105,6 @@ export function isPythonNotebook(metadata?: nbformat.INotebookMetadata) {
 
     // Valid notebooks will have a language information in the metadata.
     return kernelSpec?.language === PYTHON_LANGUAGE || metadata?.language_info?.name === PYTHON_LANGUAGE;
-}
-/**
- * Converts a NotebookModel into VSCode friendly format.
- */
-export function notebookModelToVSCNotebookData(
-    notebookContentWithoutCells: Exclude<Partial<nbformat.INotebookContent>, 'cells'>,
-    nbCells: nbformat.IBaseCell[],
-    preferredLanguage: string,
-    originalJson: Partial<nbformat.INotebookContent>
-): NotebookData {
-    const cells = nbCells
-        .map((cell) => createVSCNotebookCellDataFromCell(preferredLanguage, cell))
-        .filter((item) => !!item)
-        .map((item) => item!);
-
-    if (cells.length === 0 && Object.keys(originalJson).length === 0) {
-        cells.push(new NotebookCellData(NotebookCellKind.Code, '', preferredLanguage));
-    }
-    const notebookData = new NotebookData(cells);
-    notebookData.metadata = { custom: notebookContentWithoutCells };
-    return notebookData;
 }
 
 export function createJupyterCellFromVSCNotebookCell(
@@ -200,12 +171,6 @@ function createCodeCellFromNotebookCell(cell: NotebookCell | NotebookCellData): 
     return codeCell;
 }
 
-function createNotebookCellDataFromRawCell(cell: nbformat.IRawCell): NotebookCellData {
-    const cellData = new NotebookCellData(NotebookCellKind.Code, concatMultilineString(cell.source), 'raw');
-    cellData.outputs = [];
-    cellData.metadata = { custom: getNotebookCellMetadata(cell) };
-    return cellData;
-}
 function createMarkdownCellFromNotebookCell(cell: NotebookCell | NotebookCellData): nbformat.IMarkdownCell {
     const cellMetadata = cell.metadata?.custom as CellMetadata | undefined;
     const markdownCell: nbformat.IMarkdownCell = {
@@ -217,35 +182,6 @@ function createMarkdownCellFromNotebookCell(cell: NotebookCell | NotebookCellDat
         markdownCell.attachments = cellMetadata.attachments;
     }
     return markdownCell;
-}
-function createNotebookCellDataFromMarkdownCell(cell: nbformat.IMarkdownCell): NotebookCellData {
-    const cellData = new NotebookCellData(
-        NotebookCellKind.Markup,
-        concatMultilineString(cell.source),
-        MARKDOWN_LANGUAGE
-    );
-    cellData.outputs = [];
-    cellData.metadata = { custom: getNotebookCellMetadata(cell) };
-    return cellData;
-}
-function createNotebookCellDataFromCodeCell(cell: nbformat.ICodeCell, cellLanguage: string): NotebookCellData {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const cellOutputs: nbformat.IOutput[] = Array.isArray(cell.outputs) ? cell.outputs : [];
-    const outputs = createVSCCellOutputsFromOutputs(cellOutputs);
-    const hasExecutionCount = typeof cell.execution_count === 'number' && cell.execution_count > 0;
-
-    const source = concatMultilineString(cell.source);
-
-    const executionSummary: NotebookCellExecutionSummary = hasExecutionCount
-        ? { executionOrder: cell.execution_count as number }
-        : {};
-
-    const cellData = new NotebookCellData(NotebookCellKind.Code, source, cellLanguage);
-
-    cellData.outputs = outputs;
-    cellData.metadata = { custom: getNotebookCellMetadata(cell) };
-    cellData.executionSummary = executionSummary;
-    return cellData;
 }
 const orderOfMimeTypes = [
     'application/vnd.*',
@@ -317,26 +253,6 @@ export function traceCellMessage(cell: NotebookCell, message: string) {
             cell.executionSummary?.executionOrder
         }. ${message}`
     );
-}
-
-export function createVSCNotebookCellDataFromCell(
-    cellLanguage: string,
-    cell: nbformat.IBaseCell
-): NotebookCellData | undefined {
-    switch (cell.cell_type) {
-        case 'raw': {
-            return createNotebookCellDataFromRawCell(cell as nbformat.IRawCell);
-        }
-        case 'markdown': {
-            return createNotebookCellDataFromMarkdownCell(cell as nbformat.IMarkdownCell);
-        }
-        case 'code': {
-            return createNotebookCellDataFromCodeCell(cell as nbformat.ICodeCell, cellLanguage);
-        }
-        default: {
-            traceError(`Conversion of Cell into VS Code NotebookCell not supported ${cell.cell_type}`);
-        }
-    }
 }
 
 export function createVSCCellOutputsFromOutputs(outputs?: nbformat.IOutput[]): NotebookCellOutput[] {
