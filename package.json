@@ -514,7 +514,7 @@
                 "command": "jupyter.execSelectionInteractive",
                 "title": "%jupyter.command.jupyter.execSelectionInteractive.title%",
                 "category": "Jupyter",
-                "enablement": "isWorkspaceTrusted"
+                "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
             },
             {
                 "command": "jupyter.createnewinteractive",
@@ -806,7 +806,6 @@
                 "command": "jupyter.interactive.clearAllCells",
                 "title": "%DataScience.interactiveClearAllCells%",
                 "icon": "$(close)",
-                "enablement": "!jupyter.webExtension",
                 "category": "Jupyter"
             },
             {
@@ -828,7 +827,7 @@
                 "title": "%DataScience.exportDialogTitle%",
                 "shortTitle": "%DataScience.exportAsNotebook.shorttitle%",
                 "icon": "$(save-as)",
-                "enablement": "notebookType == interactive",
+                "enablement": "notebookType == interactive && !jupyter.webExtension",
                 "category": "Jupyter"
             },
             {
@@ -838,7 +837,7 @@
                     "light": "resources/light/export_to_python.svg",
                     "dark": "resources/dark/export_to_python.svg"
                 },
-                "enablement": "notebookType == interactive",
+                "enablement": "notebookType == interactive && !jupyter.webExtension",
                 "category": "Jupyter"
             },
             {
