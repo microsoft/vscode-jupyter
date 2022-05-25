@@ -177,7 +177,7 @@ module.exports = {
         'no-only-tests'
     ],
     rules: {
-        'no-only-tests/no-only-tests': 'error',
+        'no-only-tests/no-only-tests': ['error', { block: ['test', 'suite'], focus: ['only'] }],
         // Overriding ESLint rules with Typescript-specific ones
         '@typescript-eslint/ban-ts-comment': [
             'error',
