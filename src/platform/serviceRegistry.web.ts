@@ -25,7 +25,7 @@ import { WorkspaceService } from './common/application/workspace.web';
 import { DataScienceErrorHandler } from './errors/errorHandler';
 import { IDataScienceErrorHandler } from './errors/types';
 import { GlobalActivation } from './common/globalActivation';
-import { IExtensionSingleActivationService } from './activation/types';
+import { IExtensionSingleActivationService, IExtensionSyncActivationService } from './activation/types';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from '../webviews/extension-side/renderer';
 import { OutputCommandListener } from './logging/outputCommandListener';
 import { ExportDialog } from './export/exportDialog';
@@ -53,6 +53,7 @@ import {
 } from '../kernels/debugger/types';
 import { InteractiveWindowDebuggingManager } from '../interactive-window/debugger/jupyter/debuggingManager';
 import { DebugLocationTrackerFactory } from '../kernels/debugger/debugLocationTrackerFactory';
+import { KernelProgressReporter } from './progress/kernelProgressReporter';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
@@ -96,5 +97,9 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
         InteractiveWindowDebuggingManager,
         undefined,
         [IExtensionSingleActivationService]
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        KernelProgressReporter
     );
 }
