@@ -254,7 +254,8 @@ export interface INotebookModelVersionChange extends INotebookModelChange {
 
 export enum CssMessages {
     GetCssRequest = 'get_css_request',
-    GetCssResponse = 'get_css_response'
+    GetCssResponse = 'get_css_response',
+    GetTheme = 'get_theme'
 }
 
 export enum SharedMessages {
@@ -268,8 +269,7 @@ export interface IGetCssRequest {
 }
 
 export interface IGetCssResponse {
-    css: string;
-    theme: string;
+    isDark: boolean;
 }
 
 export type NotebookModelChange =

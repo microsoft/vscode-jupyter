@@ -79,7 +79,7 @@ export class StyleInjector
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private handleCssResponse(payload?: any) {
         const response = payload as IGetCssResponse;
-        if (response && response.css) {
+        if (response && response.isDark) {
             // Recompute our known dark value from the class name in the body
             // VS code should update this dynamically when the theme changes
             const computedKnownDark = this.computeKnownDark();
@@ -93,8 +93,6 @@ export class StyleInjector
 
             this.setState(
                 {
-                    rootCss: response.css,
-                    theme: response.theme,
                     knownDark: computedKnownDark
                 },
                 this.props.onReady

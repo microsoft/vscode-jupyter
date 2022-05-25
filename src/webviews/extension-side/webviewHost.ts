@@ -22,8 +22,8 @@ import { Deferred, createDeferred } from '../../platform/common/utils/async';
 import { testOnlyMethod } from '../../platform/common/utils/decorators';
 import * as localize from '../../platform/common/utils/localize';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { InteractiveWindowMessages, SharedMessages } from '../../platform/messageTypes';
-import { sendTelemetryEvent } from '../../telemetry';
+import { CssMessages, InteractiveWindowMessages, SharedMessages } from '../../platform/messageTypes';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { DefaultTheme, PythonExtension, Telemetry } from '../webview-side/common/constants';
 import { IJupyterExtraSettings } from './types';
 
@@ -159,6 +159,10 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
                 this.webViewRendered();
                 break;
 
+            case CssMessages.GetTheme:
+                this.handleCssRequest().ignoreErrors();
+                break;
+
             case InteractiveWindowMessages.GetHTMLByIdResponse:
                 // Webview has returned HTML, resolve the request and clear it
                 if (this.activeHTMLRequest) {
@@ -289,6 +293,14 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     private onWebViewLoadFailed = async () => {
         this.dispose();
     };
+
+    @captureTelemetry(Telemetry.WebviewStyleUpdate)
+    private async handleCssRequest(): Promise<void> {
+        const isDark = await this.isDark();
+        return this.postMessageInternal(CssMessages.GetCssResponse, {
+            knownDark: isDark
+        });
+    }
 
     private getValue<T>(workspaceConfig: WorkspaceConfiguration, section: string, defaultValue: T): T {
         if (workspaceConfig) {
