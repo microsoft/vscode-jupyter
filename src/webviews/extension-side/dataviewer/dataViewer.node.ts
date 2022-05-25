@@ -39,7 +39,7 @@ import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { IDataScienceErrorHandler } from '../../../platform/errors/types';
 import { Telemetry } from '../../webview-side/common/constants';
-import { ICodeCssGenerator, IThemeFinder, WebViewViewChangeEventArgs } from '../types';
+import { WebViewViewChangeEventArgs } from '../types';
 import { WebviewPanelHost } from '../webviewPanelHost.node';
 import { noop } from '../../../platform/common/utils/misc';
 
@@ -76,8 +76,6 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
     constructor(
         @inject(IWebviewPanelProvider) provider: IWebviewPanelProvider,
         @inject(IConfigurationService) configuration: IConfigurationService,
-        @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
-        @inject(IThemeFinder) themeFinder: IThemeFinder,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalMemento: Memento,
@@ -86,8 +84,6 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         super(
             configuration,
             provider,
-            cssGenerator,
-            themeFinder,
             workspaceService,
             (c, v, d) => new DataViewerMessageListener(c, v, d),
             dataExplorerDir,

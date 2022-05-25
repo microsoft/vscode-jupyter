@@ -57,9 +57,7 @@ export class SvgViewer extends React.Component<ISvgViewerProps, ISvgViewerState>
     }
 
     public override render() {
-        const plotBackground = this.props.themeMatplotlibPlots
-            ? 'var(--override-widget-background, var(--vscode-notifications-background))'
-            : 'white';
+        const plotBackground = this.props.themeMatplotlibPlots ? 'var(--vscode-notifications-background)' : 'white';
         return (
             <AutoSizer>
                 {({ height, width }) =>

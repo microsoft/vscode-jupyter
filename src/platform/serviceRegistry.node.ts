@@ -11,7 +11,6 @@ import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistr
 import { DataScienceStartupTime } from './common/constants';
 import { LogReplayService } from '../intellisense/logReplayService.node';
 import { Activation } from '../kernels/activation.node';
-import { CodeCssGenerator } from '../webviews/extension-side/codeCssGenerator.node';
 import { DataViewer } from '../webviews/extension-side/dataviewer/dataViewer.node';
 import { DataViewerDependencyService } from '../webviews/extension-side/dataviewer/dataViewerDependencyService.node';
 import { DataViewerFactory } from '../webviews/extension-side/dataviewer/dataViewerFactory';
@@ -23,8 +22,6 @@ import {
 import { PlotViewer } from '../webviews/extension-side/plotting/plotViewer.node';
 import { PlotViewerProvider } from '../webviews/extension-side/plotting/plotViewerProvider.node';
 import { IPlotViewer, IPlotViewerProvider } from '../webviews/extension-side/plotting/types';
-import { ThemeFinder } from '../webviews/extension-side/themeFinder.node';
-import { ICodeCssGenerator, IThemeFinder } from '../webviews/extension-side/types';
 import { NotebookWatcher } from '../webviews/extension-side/variablesView/notebookWatcher';
 import { INotebookWatcher } from '../webviews/extension-side/variablesView/types';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from './activation/types';
@@ -96,7 +93,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
         IDataViewerDependencyService,
         DataViewerDependencyService
     );
-    serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, GitHubIssueCommandListener);
     serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
@@ -112,7 +108,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     }
     serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);
     serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
-    serviceManager.addSingleton<IThemeFinder>(IThemeFinder, ThemeFinder);
     serviceManager.addSingleton<ProgressReporter>(ProgressReporter, ProgressReporter);
     serviceManager.addSingleton<IFileConverter>(IFileConverter, FileConverter);
     serviceManager.addSingleton<ExportInterpreterFinder>(ExportInterpreterFinder, ExportInterpreterFinder);

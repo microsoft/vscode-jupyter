@@ -5,7 +5,7 @@ import '../../platform/common/extensions';
 
 import { ViewColumn, WebviewPanel as vscodeWebviewPanel } from 'vscode';
 
-import { WebviewHost } from './webviewHost.node';
+import { WebviewHost } from './webviewHost';
 import {
     IWebviewPanel,
     IWebviewPanelMessageListener,
@@ -14,7 +14,7 @@ import {
     IWebview
 } from '../../platform/common/application/types';
 import { IConfigurationService, IDisposable, Resource } from '../../platform/common/types';
-import { ICodeCssGenerator, IThemeFinder, WebViewViewChangeEventArgs, IJupyterExtraSettings } from './types';
+import { WebViewViewChangeEventArgs, IJupyterExtraSettings } from './types';
 
 export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> implements IDisposable {
     protected get isDisposed(): boolean {
@@ -33,8 +33,6 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
     constructor(
         protected override configService: IConfigurationService,
         private provider: IWebviewPanelProvider,
-        cssGenerator: ICodeCssGenerator,
-        protected override themeFinder: IThemeFinder,
         protected override workspaceService: IWorkspaceService,
         messageListenerCtor: (
             callback: (message: string, payload: {}) => void,
@@ -46,7 +44,7 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         private _title: string,
         private viewColumn: ViewColumn
     ) {
-        super(configService, cssGenerator, themeFinder, workspaceService, rootPath, scripts);
+        super(configService, workspaceService, rootPath, scripts);
 
         // Create our message listener for our web panel.
         this.messageListener = messageListenerCtor(

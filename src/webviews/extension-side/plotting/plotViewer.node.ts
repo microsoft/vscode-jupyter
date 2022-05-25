@@ -20,7 +20,6 @@ import { IConfigurationService, IDisposable } from '../../../platform/common/typ
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import * as localize from '../../../platform/common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
-import { ICodeCssGenerator, IThemeFinder } from '../types';
 import { WebviewPanelHost } from '../webviewPanelHost.node';
 
 const plotDir = path.join(EXTENSION_ROOT_DIR, 'out', 'webviews', 'webview-side', 'viewers');
@@ -32,8 +31,6 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
     constructor(
         @inject(IWebviewPanelProvider) provider: IWebviewPanelProvider,
         @inject(IConfigurationService) configuration: IConfigurationService,
-        @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
-        @inject(IThemeFinder) themeFinder: IThemeFinder,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IFileSystemNode) private fs: IFileSystemNode
@@ -41,8 +38,6 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
         super(
             configuration,
             provider,
-            cssGenerator,
-            themeFinder,
             workspaceService,
             (c, v, d) => new PlotViewerMessageListener(c, v, d),
             plotDir,

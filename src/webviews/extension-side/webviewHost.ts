@@ -22,10 +22,10 @@ import { Deferred, createDeferred } from '../../platform/common/utils/async';
 import { testOnlyMethod } from '../../platform/common/utils/decorators';
 import * as localize from '../../platform/common/utils/localize';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { InteractiveWindowMessages, SharedMessages, CssMessages, IGetCssRequest } from '../../platform/messageTypes';
-import { sendTelemetryEvent, captureTelemetry } from '../../telemetry';
+import { CssMessages, InteractiveWindowMessages, SharedMessages } from '../../platform/messageTypes';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { DefaultTheme, PythonExtension, Telemetry } from '../webview-side/common/constants';
-import { ICodeCssGenerator, IThemeFinder, IJupyterExtraSettings } from './types';
+import { IJupyterExtraSettings } from './types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -59,8 +59,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
 
     constructor(
         protected configService: IConfigurationService,
-        private cssGenerator: ICodeCssGenerator,
-        protected themeFinder: IThemeFinder,
         protected workspaceService: IWorkspaceService,
         protected rootPath: string,
         protected scripts: string[]
@@ -161,8 +159,8 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
                 this.webViewRendered();
                 break;
 
-            case CssMessages.GetCssRequest:
-                this.handleCssRequest(payload as IGetCssRequest).ignoreErrors();
+            case CssMessages.GetTheme:
+                this.handleCssRequest().ignoreErrors();
                 break;
 
             case InteractiveWindowMessages.GetHTMLByIdResponse:
@@ -297,18 +295,9 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     };
 
     @captureTelemetry(Telemetry.WebviewStyleUpdate)
-    private async handleCssRequest(request: IGetCssRequest): Promise<void> {
-        const settings = await this.generateDataScienceExtraSettings();
-        const requestIsDark = settings.ignoreVscodeTheme ? false : request?.isDark;
-        this.setTheme(requestIsDark);
-        const isDark = settings.ignoreVscodeTheme
-            ? false
-            : await this.themeFinder.isThemeDark(settings.extraSettings.theme);
-        const resource = this.owningResource;
-        const css = await this.cssGenerator.generateThemeCss(resource, requestIsDark, settings.extraSettings.theme);
+    private async handleCssRequest(): Promise<void> {
+        const isDark = await this.isDark();
         return this.postMessageInternal(CssMessages.GetCssResponse, {
-            css,
-            theme: settings.extraSettings.theme,
             knownDark: isDark
         });
     }

@@ -17,20 +17,15 @@ import { JupyterSettings } from '../../../platform/common/configSettings';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { IConfigurationService } from '../../../platform/common/types';
 import { IDataScienceErrorHandler } from '../../../platform/errors/types';
-import { CodeCssGenerator } from '../../../webviews/extension-side/codeCssGenerator.node';
 import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataViewer.node';
 import { JupyterVariableDataProvider } from '../../../webviews/extension-side/dataviewer/jupyterVariableDataProvider';
 import { IDataViewer, IDataViewerDataProvider } from '../../../webviews/extension-side/dataviewer/types';
-import { ThemeFinder } from '../../../webviews/extension-side/themeFinder.node';
-import { ICodeCssGenerator, IThemeFinder } from '../../../webviews/extension-side/types';
 import { MockMemento } from '../../mocks/mementos';
 
 suite('DataScience - DataViewer', () => {
     let dataViewer: IDataViewer;
     let webPanelProvider: IWebviewPanelProvider;
     let configService: IConfigurationService;
-    let codeCssGenerator: ICodeCssGenerator;
-    let themeFinder: IThemeFinder;
     let workspaceService: IWorkspaceService;
     let applicationShell: IApplicationShell;
     let dataProvider: IDataViewerDataProvider;
@@ -39,8 +34,6 @@ suite('DataScience - DataViewer', () => {
     setup(async () => {
         webPanelProvider = mock(WebviewPanelProvider);
         configService = mock(ConfigurationService);
-        codeCssGenerator = mock(CodeCssGenerator);
-        themeFinder = mock(ThemeFinder);
         workspaceService = mock(WorkspaceService);
         applicationShell = mock(ApplicationShell);
         dataProvider = mock(JupyterVariableDataProvider);
@@ -58,8 +51,6 @@ suite('DataScience - DataViewer', () => {
         dataViewer = new DataViewer(
             instance(webPanelProvider),
             instance(configService),
-            instance(codeCssGenerator),
-            instance(themeFinder),
             instance(workspaceService),
             instance(applicationShell),
             new MockMemento(),

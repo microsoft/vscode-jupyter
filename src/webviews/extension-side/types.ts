@@ -2,18 +2,7 @@
 // Licensed under the MIT License.
 
 import { WebviewViewProvider } from 'vscode';
-import { Resource, IJupyterSettings } from '../../platform/common/types';
-
-export const ICodeCssGenerator = Symbol('ICodeCssGenerator');
-export interface ICodeCssGenerator {
-    generateThemeCss(resource: Resource, isDark: boolean, theme: string): Promise<string>;
-}
-
-export const IThemeFinder = Symbol('IThemeFinder');
-export interface IThemeFinder {
-    findThemeRootJson(themeName: string): Promise<string | undefined>;
-    isThemeDark(themeName: string): Promise<boolean | undefined>;
-}
+import { IJupyterSettings } from '../../platform/common/types';
 
 export interface IJupyterExtraSettings extends IJupyterSettings {
     extraSettings: {
