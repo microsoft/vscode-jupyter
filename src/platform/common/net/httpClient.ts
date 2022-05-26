@@ -15,7 +15,7 @@ export class HttpClient implements IHttpClient {
     constructor(@inject(IWorkspaceService) workspaceService: IWorkspaceService) {
         const proxy = workspaceService.getConfiguration('http').get('proxy', '');
         if (proxy) {
-            this.requestOptions = { headers: { proxy: workspaceService.getConfiguration('http').get('proxy', '') } };
+            this.requestOptions = { headers: { proxy } };
         }
     }
 

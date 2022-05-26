@@ -3,7 +3,6 @@
 'use strict';
 import '../../../platform/common/extensions';
 
-import * as uriPath from '../../../platform/vscode-path/resources';
 import {
     Event,
     EventEmitter,
