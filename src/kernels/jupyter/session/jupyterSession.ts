@@ -36,15 +36,11 @@ import { IBackupFile, IJupyterBackingFileCreator, IJupyterKernelService, IJupyte
 import { Uri } from 'vscode';
 import { generateBackingIPyNbFileName } from './backingFileCreator.base';
 import { KernelConnectionWrapper } from './jupyterSessionKernelWrapper';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
 
 // function is
 export class JupyterSession extends BaseJupyterSession implements IJupyterServerSession {
     public override readonly kind: 'remoteJupyter' | 'localJupyter';
-    private readonly kernels = new WeakMap<
-        ISessionWithSocket,
-        { kernel: KernelConnectionWrapper; disposables: IDisposable[] }
-    >();
+    private _wrappedKernel?: KernelConnectionWrapper;
 
     constructor(
         resource: Resource,
@@ -84,15 +80,14 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
     }
 
     public override get kernel(): Kernel.IKernelConnection | undefined {
+        if (this._wrappedKernel) {
+            return;
+        }
         if (!this.session?.kernel) {
             return;
         }
-        if (!this.kernels.has(this.session)) {
-            const disposables: IDisposable[] = [];
-            const kernel = new KernelConnectionWrapper(this.session.kernel, disposables);
-            this.kernels.set(this.session, { kernel, disposables });
-        }
-        return this.kernels.get(this.session)?.kernel;
+        this._wrappedKernel = new KernelConnectionWrapper(this.session.kernel, this.disposables);
+        return this._wrappedKernel;
     }
 
     public get kernelId(): string {
@@ -176,15 +171,9 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
         session: ISessionWithSocket | undefined,
         forceUpdateKernelSocketInfo: boolean = false
     ) {
-        const oldSession = this.session;
         super.setSession(session, forceUpdateKernelSocketInfo);
-        if (oldSession) {
-            const oldInfo = this.kernels.get(oldSession);
-            if (this.session !== oldSession) {
-                if (oldInfo?.kernel && oldInfo.kernel instanceof KernelConnectionWrapper) {
-                    disposeAllDisposables(oldInfo.disposables);
-                }
-            }
+        if (this.session && this.session.kernel && this._wrappedKernel) {
+            this._wrappedKernel.changeKernel(this.session.kernel);
         }
     }
     protected async createRestartSession(

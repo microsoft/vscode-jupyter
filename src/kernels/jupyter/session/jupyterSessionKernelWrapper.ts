@@ -14,11 +14,18 @@ export class KernelConnectionWrapper extends BaseKernelConnectionWrapper {
     protected get possibleKernelConnection(): undefined | Kernel.IKernelConnection {
         return this._kernelConnection;
     }
+    public get kernel() {
+        return this._kernelConnection;
+    }
 
-    constructor(readonly kernel: Kernel.IKernelConnection, disposables: IDisposable[]) {
+    constructor(kernel: Kernel.IKernelConnection, disposables: IDisposable[]) {
         super(kernel, disposables);
+        this._kernelConnection = kernel;
     }
     public changeKernel(kernel: Kernel.IKernelConnection) {
+        if (this.kernel === kernel) {
+            return;
+        }
         this.stopHandlingKernelMessages(this.possibleKernelConnection!);
         this._kernelConnection = kernel;
         this.startHandleKernelMessages(kernel);
