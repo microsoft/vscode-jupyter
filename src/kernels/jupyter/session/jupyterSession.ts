@@ -14,7 +14,7 @@ import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { BaseError } from '../../../platform/errors/types';
 import { traceVerbose, traceError, traceInfo } from '../../../platform/logging';
-import { Resource, IOutputChannel, IDisplayOptions } from '../../../platform/common/types';
+import { Resource, IOutputChannel, IDisplayOptions, IDisposable } from '../../../platform/common/types';
 import { waitForCondition } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterInvalidKernelError } from '../../../platform/errors/jupyterInvalidKernelError';
@@ -35,10 +35,16 @@ import { DisplayOptions } from '../../displayOptions';
 import { IBackupFile, IJupyterBackingFileCreator, IJupyterKernelService, IJupyterRequestCreator } from '../types';
 import { Uri } from 'vscode';
 import { generateBackingIPyNbFileName } from './backingFileCreator.base';
+import { KernelConnectionWrapper } from './jupyterSessionKernelWrapper';
+import { disposeAllDisposables } from '../../../platform/common/helpers';
 
 // function is
 export class JupyterSession extends BaseJupyterSession implements IJupyterServerSession {
     public override readonly kind: 'remoteJupyter' | 'localJupyter';
+    private readonly kernels = new WeakMap<
+        ISessionWithSocket,
+        { kernel: KernelConnectionWrapper; disposables: IDisposable[] }
+    >();
 
     constructor(
         resource: Resource,
@@ -78,7 +84,15 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
     }
 
     public override get kernel(): Kernel.IKernelConnection | undefined {
-        return this.session?.kernel || undefined;
+        if (!this.session?.kernel) {
+            return;
+        }
+        if (!this.kernels.has(this.session)) {
+            const disposables: IDisposable[] = [];
+            const kernel = new KernelConnectionWrapper(this.session.kernel, disposables);
+            this.kernels.set(this.session, { kernel, disposables });
+        }
+        return this.kernels.get(this.session)?.kernel;
     }
 
     public get kernelId(): string {
@@ -158,7 +172,21 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
 
         return newSession;
     }
-
+    protected override setSession(
+        session: ISessionWithSocket | undefined,
+        forceUpdateKernelSocketInfo: boolean = false
+    ) {
+        const oldSession = this.session;
+        super.setSession(session, forceUpdateKernelSocketInfo);
+        if (oldSession) {
+            const oldInfo = this.kernels.get(oldSession);
+            if (this.session !== oldSession) {
+                if (oldInfo?.kernel && oldInfo.kernel instanceof KernelConnectionWrapper) {
+                    disposeAllDisposables(oldInfo.disposables);
+                }
+            }
+        }
+    }
     protected async createRestartSession(
         disableUI: boolean,
         session: ISessionWithSocket,

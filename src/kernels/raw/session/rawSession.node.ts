@@ -75,7 +75,9 @@ export class RawSession implements ISessionWithSocket {
         this._clientID = uuid();
 
         // Connect our kernel and hook up status changes
-        this._kernel = createRawKernel(kernelProcess, this._clientID);
+        this._kernel = createRawKernel(kernelProcess, this._clientID, (msg: Kernel.IAnyMessageArgs) =>
+            this._anyMessage.emit(msg)
+        );
         this._kernel.statusChanged.connect(this.onKernelStatus, this);
         this._kernel.iopubMessage.connect(this.onIOPubMessage, this);
         this._kernel.connectionStatusChanged.connect(this.onKernelConnectionStatus, this);

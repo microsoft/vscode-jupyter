@@ -83,7 +83,9 @@ export class RawKernel implements Kernel.IKernelConnection {
     public clone(
         options?: Pick<Kernel.IKernelConnection.IOptions, 'clientId' | 'username' | 'handleComms'>
     ): Kernel.IKernelConnection {
-        return createRawKernel(this.kernelProcess, options?.clientId || this.clientId);
+        return createRawKernel(this.kernelProcess, options?.clientId || this.clientId, (msg) =>
+            this.anyMessage.emit(msg)
+        );
     }
 
     public async shutdown(): Promise<void> {
@@ -269,7 +271,11 @@ export class RawKernel implements Kernel.IKernelConnection {
 
 let nonSerializingKernel: typeof import('@jupyterlab/services/lib/kernel/default');
 
-export function createRawKernel(kernelProcess: IKernelProcess, clientId: string): RawKernel {
+export function createRawKernel(
+    kernelProcess: IKernelProcess,
+    clientId: string,
+    onAnyMessage: (msg: Kernel.IAnyMessageArgs) => void
+): RawKernel {
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
     const jupyterLabSerialize =
         require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
@@ -278,7 +284,12 @@ export function createRawKernel(kernelProcess: IKernelProcess, clientId: string)
     let socketInstance: any;
     class RawSocketWrapper extends RawSocket {
         constructor() {
-            super(kernelProcess.connection, jupyterLabSerialize.serialize, jupyterLabSerialize.deserialize);
+            super(
+                kernelProcess.connection,
+                jupyterLabSerialize.serialize,
+                jupyterLabSerialize.deserialize,
+                onAnyMessage
+            );
             socketInstance = this;
         }
     }

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { IDisposable } from '@fluentui/react';
-import type { KernelMessage } from '@jupyterlab/services';
+import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import * as wireProtocol from '@nteract/messaging/lib/wire-protocol';
 import * as uuid from 'uuid/v4';
 import * as WebSocketWS from 'ws';
@@ -48,7 +48,8 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     constructor(
         private connection: IKernelConnection,
         private serialize: (msg: KernelMessage.IMessage) => string | ArrayBuffer,
-        private deserialize: (data: ArrayBuffer | string) => KernelMessage.IMessage
+        private deserialize: (data: ArrayBuffer | string) => KernelMessage.IMessage,
+        private readonly onAnyMessage: (msg: Kernel.IAnyMessageArgs) => void
     ) {
         // Setup our ZMQ channels now
         this.channels = this.generateChannels(connection);
@@ -100,7 +101,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         // If from ipywidgets, this will be serialized already, so turn it back into a message so
         // we can add the special hash to it.
         const message = this.deserialize(data);
-
+        this.onAnyMessage(message as any);
         // Send this directly (don't call back into the hooks)
         this.sendMessage(message, true);
     }
