@@ -1,20 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type {
-    Contents,
-    ContentsManager,
-    Kernel,
-    KernelSpecManager,
-    Session,
-    SessionManager
-} from '@jupyterlab/services';
+import type { Contents, ContentsManager, KernelSpecManager, Session, SessionManager } from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { BaseError } from '../../../platform/errors/types';
 import { traceVerbose, traceError, traceInfo } from '../../../platform/logging';
-import { Resource, IOutputChannel, IDisplayOptions, IDisposable } from '../../../platform/common/types';
+import { Resource, IOutputChannel, IDisplayOptions } from '../../../platform/common/types';
 import { waitForCondition } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterInvalidKernelError } from '../../../platform/errors/jupyterInvalidKernelError';
@@ -35,12 +28,10 @@ import { DisplayOptions } from '../../displayOptions';
 import { IBackupFile, IJupyterBackingFileCreator, IJupyterKernelService, IJupyterRequestCreator } from '../types';
 import { Uri } from 'vscode';
 import { generateBackingIPyNbFileName } from './backingFileCreator.base';
-import { KernelConnectionWrapper } from './jupyterSessionKernelWrapper';
 
 // function is
 export class JupyterSession extends BaseJupyterSession implements IJupyterServerSession {
     public override readonly kind: 'remoteJupyter' | 'localJupyter';
-    private _wrappedKernel?: KernelConnectionWrapper;
 
     constructor(
         resource: Resource,
@@ -78,22 +69,6 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
         // Wait for idle on this session
         return this.waitForIdleOnSession(this.session, timeout);
     }
-
-    public override get kernel(): Kernel.IKernelConnection | undefined {
-        if (this._wrappedKernel) {
-            return;
-        }
-        if (!this.session?.kernel) {
-            return;
-        }
-        this._wrappedKernel = new KernelConnectionWrapper(this.session.kernel, this.disposables);
-        return this._wrappedKernel;
-    }
-
-    public get kernelId(): string {
-        return this.session?.kernel?.id || '';
-    }
-
     public async connect(options: { token: CancellationToken; ui: IDisplayOptions }): Promise<void> {
         // Start a new session
         this.setSession(await this.createNewKernelSession(options));
@@ -166,15 +141,6 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
         }
 
         return newSession;
-    }
-    protected override setSession(
-        session: ISessionWithSocket | undefined,
-        forceUpdateKernelSocketInfo: boolean = false
-    ) {
-        super.setSession(session, forceUpdateKernelSocketInfo);
-        if (this.session && this.session.kernel && this._wrappedKernel) {
-            this._wrappedKernel.changeKernel(this.session.kernel);
-        }
     }
     protected async createRestartSession(
         disableUI: boolean,

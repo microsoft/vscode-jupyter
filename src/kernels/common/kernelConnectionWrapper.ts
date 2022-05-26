@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import type { Kernel } from '@jupyterlab/services';
-import { IDisposable } from '../../../platform/common/types';
-import { BaseKernelConnectionWrapper } from '../baseKernelConnectionWrapper';
+import { IDisposable } from '../../platform/common/types';
+import { BaseKernelConnectionWrapper } from '../jupyter/baseKernelConnectionWrapper';
 
 export class KernelConnectionWrapper extends BaseKernelConnectionWrapper {
     /**

@@ -31,6 +31,7 @@ import { ChainingExecuteRequester } from './chainingExecuteRequester';
 import { getResourceType } from '../../platform/common/utils';
 import { KernelProgressReporter } from '../../platform/progress/kernelProgressReporter';
 import { isTestExecution } from '../../platform/common/constants';
+import { KernelConnectionWrapper } from './kernelConnectionWrapper';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function suppressShutdownErrors(realKernel: any) {
@@ -71,6 +72,13 @@ export class JupyterSessionStartError extends WrappedError {
 }
 
 export abstract class BaseJupyterSession implements IJupyterSession {
+    /**
+     * Keep a single instance of KernelConnectionWrapper.
+     * This way when sessions change, we still have a single Kernel.IKernelConnection proxy (wrapper),
+     * which will have all of the event handlers bound to it.
+     * This allows consumers to add event handlers hand not worry about internals & can use the lower level Jupyter API.
+     */
+    private _wrappedKernel?: KernelConnectionWrapper;
     private _isDisposed?: boolean;
     private readonly _disposed = new EventEmitter<void>();
     protected readonly disposables: IDisposable[] = [];
@@ -83,9 +91,20 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     protected get session(): ISessionWithSocket | undefined {
         return this._session;
     }
-    public get kernel(): Kernel.IKernelConnection | undefined {
-        return this._session?.kernel || undefined;
+    public get kernelId(): string {
+        return this.session?.kernel?.id || '';
     }
+    public get kernel(): Kernel.IKernelConnection | undefined {
+        if (this._wrappedKernel) {
+            return;
+        }
+        if (!this._session?.kernel) {
+            return;
+        }
+        this._wrappedKernel = new KernelConnectionWrapper(this._session.kernel, this.disposables);
+        return this._wrappedKernel;
+    }
+
     public get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket;
     }
@@ -95,8 +114,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     public get status(): KernelMessage.Status {
         return this.getServerStatus();
     }
-
-    public abstract get kernelId(): string;
 
     public get isConnected(): boolean {
         return this.connected;
@@ -345,6 +362,10 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         }
         this._session = session;
         if (session) {
+            if (session.kernel && this._wrappedKernel) {
+                this._wrappedKernel.changeKernel(session.kernel);
+            }
+
             // Listen for session status changes
             session.statusChanged.connect(this.statusHandler);
             if (session.unhandledMessage) {
