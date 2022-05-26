@@ -233,7 +233,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     ? this.notebook.notebookDocuments.find((item) => item.notebookType === notebookType)
                     : undefined;
             const controller = await this.createDefaultRemoteController(notebookType, notebook);
-            if (controller) {
+            // If we're running on web, there is no active interpreter to fall back to
+            if (controller || this.isWeb) {
                 return controller;
             }
             traceVerbose('No default remote controller, hence returning the active interpreter');

@@ -126,7 +126,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         private readonly exportDialog: IExportDialog,
         private readonly notebookControllerManager: INotebookControllerManager,
         private readonly serviceContainer: IServiceContainer,
-        private readonly interactiveWindowDebugger: IInteractiveWindowDebugger,
+        private readonly interactiveWindowDebugger: IInteractiveWindowDebugger | undefined,
         private readonly errorHandler: IDataScienceErrorHandler,
         preferredController: IVSCodeNotebookController | undefined,
         public readonly notebookEditor: NotebookEditor,
@@ -134,7 +134,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         public readonly appShell: IApplicationShell,
         private readonly codeGeneratorFactory: ICodeGeneratorFactory,
         private readonly storageFactory: IGeneratedCodeStorageFactory,
-        private readonly debuggingManager: IInteractiveWindowDebuggingManager
+        private readonly debuggingManager: IInteractiveWindowDebuggingManager,
+        private readonly isWebExtension: boolean
     ) {
         // Set our owner and first submitter
         if (this._owner) {
@@ -160,6 +161,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         if (preferredController) {
             // Also start connecting to our kernel but don't wait for it to finish
             this.startKernel(preferredController.controller, preferredController.connection).ignoreErrors();
+        } else if (this.isWebExtension) {
+            this.insertInfoMessage(DataScience.noKernelsSpecifyRemote()).ignoreErrors();
         }
     }
 
@@ -277,9 +280,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         kernelMetadata: KernelConnectionMetadata,
         reason: SysInfoReason
     ): Promise<NotebookCell> {
+        const message = this.getSysInfoMessage(kernelMetadata, reason);
+        return this.insertInfoMessage(message);
+    }
+
+    private async insertInfoMessage(message: string): Promise<NotebookCell> {
         if (!this._insertSysInfoPromise) {
             const func = async () => {
-                const message = this.getSysInfoMessage(kernelMetadata, reason);
                 await chainWithPendingUpdates(this.notebookDocument, (edit) => {
                     const markdownCell = new NotebookCellData(NotebookCellKind.Markup, message, MARKDOWN_LANGUAGE);
                     markdownCell.metadata = { isInteractiveWindowMessageCell: true, isPlaceholder: true };
@@ -293,6 +300,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
         return this._insertSysInfoPromise;
     }
+
     private updateSysInfoMessage(newMessage: string, finish: boolean, cellPromise: Promise<NotebookCell>) {
         if (finish) {
             this._insertSysInfoPromise = undefined;
@@ -481,7 +489,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
     private async submitCodeImpl(code: string, fileUri: Uri, line: number, isDebug: boolean) {
         // Do not execute or render empty cells
-        if (this.cellMatcher.isEmptyCell(code)) {
+        if (this.cellMatcher.isEmptyCell(code) || !this.currentKernelInfo.controller) {
             return true;
         }
 
@@ -564,10 +572,14 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             if (isDebug && (settings.forceIPyKernelDebugger || !isLocalConnection(kernel.kernelConnectionMetadata))) {
                 // New ipykernel 7 debugger using the Jupyter protocol.
                 await this.debuggingManager.start(this.notebookEditor, cell);
-            } else if (isDebug && isLocalConnection(kernel.kernelConnectionMetadata)) {
+            } else if (
+                isDebug &&
+                isLocalConnection(kernel.kernelConnectionMetadata) &&
+                this.interactiveWindowDebugger
+            ) {
                 // Old ipykernel 6 debugger.
                 // If debugging attach to the kernel but don't enable tracing just yet
-                detachKernel = async () => this.interactiveWindowDebugger.detach(kernel);
+                detachKernel = async () => this.interactiveWindowDebugger?.detach(kernel);
                 await this.interactiveWindowDebugger.attach(kernel);
                 await this.interactiveWindowDebugger.updateSourceMaps(
                     this.storageFactory.get({ notebook: cell.notebook })?.all || []
