@@ -34,9 +34,7 @@ export class FileSystem implements IFileSystem {
     }
 
     async getFiles(dir: vscode.Uri): Promise<vscode.Uri[]> {
-        console.log('getFiles', { dir });
         const files = await this.vscfs.readDirectory(dir);
-        console.log({ files });
         return files.filter((f) => f[1] === vscode.FileType.File).map((f) => vscode.Uri.file(f[0]));
     }
 

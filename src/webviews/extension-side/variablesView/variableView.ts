@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 import '../../../platform/common/extensions';
-
 import { Uri, WebviewView as vscodeWebviewView } from 'vscode';
-
+import { joinPath } from '../../../platform/vscode-path/resources';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { INotebookWatcher, IVariableViewPanelMapping } from './types';
 import { VariableViewMessageListener } from './variableViewMessageListener';
@@ -58,14 +57,14 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         private readonly commandManager: ICommandManager,
         private readonly documentManager: IDocumentManager
     ) {
-        const variableViewDir = Uri.joinPath(context.extensionUri, 'out', 'webviews', 'webview-side', 'viewers');
+        const variableViewDir = joinPath(context.extensionUri, 'out', 'webviews', 'webview-side', 'viewers');
         super(
             configuration,
             workspaceService,
             (c, d) => new VariableViewMessageListener(c, d),
             provider,
             variableViewDir,
-            [Uri.joinPath(variableViewDir, 'variableView.js')]
+            [joinPath(variableViewDir, 'variableView.js')]
         );
 
         // Sign up if the active variable view notebook is changed, restarted or updated
