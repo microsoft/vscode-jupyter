@@ -10,7 +10,7 @@ import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kerne
 import { IDebugService, IVSCodeNotebook } from '../../platform/common/application/types';
 import { DataFrameLoading, GetVariableInfo } from '../../platform/common/scriptConstants';
 import { traceError } from '../../platform/logging';
-import { IConfigurationService, Resource } from '../../platform/common/types';
+import { IConfigurationService, IExtensionContext, Resource } from '../../platform/common/types';
 import { DebugLocationTracker } from '../debugger/debugLocationTracker';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Telemetry } from '../../webviews/webview-side/common/constants';
@@ -24,7 +24,6 @@ import {
     IJupyterVariablesResponse
 } from './types';
 import { convertDebugProtocolVariableToIJupyterVariable, DataViewableTypes } from './helpers';
-import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
 import { IFileSystemNode } from '../../platform/common/platform/types.node';
 
 const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
@@ -49,7 +48,8 @@ export class DebuggerVariables
         @inject(IDebuggingManager) private readonly debuggingManager: IDebuggingManager,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(IFileSystemNode) private readonly fs: IFileSystemNode
+        @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
+        @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {
         super(undefined);
         this.debuggingManager.onDoneDebugging(() => this.refreshEventEmitter.fire(), this);
@@ -319,8 +319,8 @@ export class DebuggerVariables
             // Run our dataframe scripts only once per session because they're slow
             const key = this.debugService.activeDebugSession?.id;
             if (key && !this.importedDataFrameScriptsIntoKernel.has(key)) {
-                const scriptPath = path.join(EXTENSION_ROOT_DIR, DataFrameLoading.ScriptPath);
-                const contents = await this.fs.readLocalFile(scriptPath);
+                const scriptPath = DataFrameLoading.getScriptPath(this.context);
+                const contents = await this.fs.readLocalFile(scriptPath.fsPath);
                 await this.evaluate(contents);
                 this.importedDataFrameScriptsIntoKernel.add(key);
             }
@@ -334,8 +334,8 @@ export class DebuggerVariables
             // Run our variable info scripts only once per session because they're slow
             const key = this.debugService.activeDebugSession?.id;
             if (key && !this.importedGetVariableInfoScriptsIntoKernel.has(key)) {
-                const scriptPath = path.join(EXTENSION_ROOT_DIR, DataFrameLoading.ScriptPath);
-                const contents = await this.fs.readLocalFile(scriptPath);
+                const scriptPath = DataFrameLoading.getScriptPath(this.context);
+                const contents = await this.fs.readLocalFile(scriptPath.fsPath);
                 await this.evaluate(contents);
                 this.importedGetVariableInfoScriptsIntoKernel.add(key);
             }

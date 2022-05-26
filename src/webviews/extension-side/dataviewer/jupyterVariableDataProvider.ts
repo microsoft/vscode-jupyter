@@ -16,6 +16,7 @@ import { IKernel } from '../../../kernels/types';
 import { IJupyterVariable, IJupyterVariables } from '../../../kernels/variables/types';
 import { traceError } from '../../../platform/logging';
 import { Identifiers } from '../../webview-side/common/constants';
+import { getFilePath } from '../../../platform/common/platform/fs-paths';
 
 @injectable()
 export class JupyterVariableDataProvider implements IJupyterVariableDataProvider {
@@ -115,7 +116,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
                 type: variable.type,
                 maximumRowChunkSize: variable.maximumRowChunkSize,
                 name: variable.name,
-                fileName: variable.fileName?.path
+                fileName: getFilePath(variable.fileName)
             };
         }
         if (isRefresh) {

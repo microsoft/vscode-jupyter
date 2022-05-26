@@ -13,7 +13,6 @@ import { IKernel } from '../types';
 import { IKernelVariableRequester, IJupyterVariable } from './types';
 import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 import { DataFrameLoading, GetVariableInfo } from '../../platform/common/scriptConstants';
-import { joinPath } from '../../platform/vscode-path/resources';
 import { IExtensionContext } from '../../platform/common/types';
 
 type DataFrameSplitFormat = {
@@ -227,7 +226,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             disposables.push(kernel.onRestarted(handler));
 
             // First put the code from our helper files into the notebook
-            await this.runScriptFile(kernel, joinPath(this.context.extensionUri, DataFrameLoading.ScriptPath));
+            await this.runScriptFile(kernel, DataFrameLoading.getScriptPath(this.context));
 
             this.importedDataFrameScripts.set(key, true);
         }
@@ -245,7 +244,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             disposables.push(kernel.onDisposed(handler));
             disposables.push(kernel.onRestarted(handler));
 
-            await this.runScriptFile(kernel, joinPath(this.context.extensionUri, GetVariableInfo.ScriptPath));
+            await this.runScriptFile(kernel, GetVariableInfo.getScriptPath(this.context));
 
             this.importedGetVariableInfoScripts.set(key, true);
         }
