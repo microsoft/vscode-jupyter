@@ -43,10 +43,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         }
 
         // Add on a trailing slash to our URL if it's not there already
-        let newUrl = url;
-        if (newUrl[newUrl.length - 1] !== '/') {
-            newUrl = `${newUrl}/`;
-        }
+        const newUrl = addTrailingSlash(url);
 
         // See if we already have this data. Don't need to ask for a password more than once. (This can happen in remote when listing kernels)
         let result = this.savedConnectInfo.get(newUrl);
@@ -482,7 +479,17 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     // When URIs are removed from the server list also remove them from
     private onDidRemoveUris(uris: string[]) {
         uris.forEach((uri) => {
-            this.savedConnectInfo.delete(uri);
+            const newUrl = addTrailingSlash(uri);
+            this.savedConnectInfo.delete(newUrl);
         });
     }
+}
+
+// Small helper for tacking on a trailing slash if needed
+function addTrailingSlash(url: string): string {
+    let newUrl = url;
+    if (newUrl[newUrl.length - 1] !== '/') {
+        newUrl = `${newUrl}/`;
+    }
+    return newUrl;
 }
