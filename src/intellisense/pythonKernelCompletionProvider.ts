@@ -13,7 +13,6 @@ import {
     TextDocument,
     workspace
 } from 'vscode';
-import { IVSCodeNotebook } from '../platform/common/application/types';
 import { createPromiseFromCancellation } from '../platform/common/cancellation';
 import { traceError, traceInfoIfCI, traceVerbose } from '../platform/logging';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
@@ -22,10 +21,9 @@ import { waitForPromise } from '../platform/common/utils/async';
 import { isNotebookCell } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { IJupyterSession, IKernelProvider } from '../kernels/types';
-import { findAssociatedNotebookDocument, getAssociatedJupyterNotebook } from '../notebooks/helpers';
-import { INotebookCompletionProvider } from '../notebooks/types';
+import { getAssociatedJupyterNotebook } from '../notebooks/helpers';
+import { INotebookCompletionProvider, INotebookEditorProvider } from '../notebooks/types';
 import { mapJupyterKind } from './conversion';
-import { IInteractiveWindowProvider } from '../interactive-window/types';
 import { isTestExecution, Settings } from '../platform/common/constants';
 import { INotebookCompletion } from './types';
 
@@ -46,11 +44,8 @@ export type JupyterCompletionItem = CompletionItem & {
 export class PythonKernelCompletionProvider implements CompletionItemProvider {
     private allowStringFilter = false;
     constructor(
-        @inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(IInteractiveWindowProvider)
-        @optional()
-        private readonly interactiveWindowProvider: IInteractiveWindowProvider | undefined,
+        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(INotebookCompletionProvider)
         @optional()
         private readonly notebookCompletionProvider: INotebookCompletionProvider | undefined,
@@ -81,11 +76,7 @@ export class PythonKernelCompletionProvider implements CompletionItemProvider {
         if (!isNotebookCell(document)) {
             return [];
         }
-        const notebookDocument = findAssociatedNotebookDocument(
-            document.uri,
-            this.vscodeNotebook,
-            this.interactiveWindowProvider
-        );
+        const notebookDocument = this.notebookEditorProvider.findAssociatedNotebookDocument(document.uri);
         if (!notebookDocument) {
             traceError(`Notebook not found for Cell ${getDisplayPath(document.uri)}`);
             return [];

@@ -18,10 +18,9 @@ import { IDisposableRegistry, IConfigurationService, IsPreRelease } from '../pla
 import { IInterpreterService } from '../platform/interpreter/contracts';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { getInterpreterId } from '../platform/pythonEnvironments/info/interpreter';
-import { isJupyterNotebook, findAssociatedNotebookDocument } from '../notebooks/helpers';
-import { INotebookControllerManager, INotebookCompletionProvider } from '../notebooks/types';
+import { isJupyterNotebook } from '../notebooks/helpers';
+import { INotebookControllerManager, INotebookCompletionProvider, INotebookEditorProvider } from '../notebooks/types';
 import { LanguageServer } from './languageServer.node';
-import { IInteractiveWindowProvider } from '../interactive-window/types';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { getComparisonKey } from '../platform/vscode-path/resources';
 import { CompletionRequest } from 'vscode-languageclient';
@@ -45,11 +44,11 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
+        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IsPreRelease) private readonly isPreRelease: Promise<boolean>,
         @inject(NotebookPythonPathService) private readonly notebookPythonPathService: NotebookPythonPathService
@@ -207,7 +206,7 @@ export class IntellisenseProvider implements INotebookCompletionProvider, IExten
     private shouldAllowIntellisense(uri: Uri, interpreterId: string, _interpreterPath: Uri) {
         // We should allow intellisense for a URI when the interpreter matches
         // the controller for the uri
-        const notebook = findAssociatedNotebookDocument(uri, this.notebooks, this.interactiveWindowProvider);
+        const notebook = this.notebookEditorProvider.findAssociatedNotebookDocument(uri);
         const controller = notebook
             ? this.notebookControllerManager.getSelectedNotebookController(notebook)
             : undefined;

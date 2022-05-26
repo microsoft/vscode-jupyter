@@ -13,7 +13,7 @@ import {
     KernelActionSource
 } from './types';
 import { Memento, NotebookDocument, NotebookController, Uri } from 'vscode';
-import { ICommandManager, IVSCodeNotebook, IApplicationShell } from '../platform/common/application/types';
+import { ICommandManager, IApplicationShell } from '../platform/common/application/types';
 import { traceVerbose, traceWarning } from '../platform/logging';
 import { Resource, IMemento, GLOBAL_MEMENTO, IDisplayOptions, IDisposable } from '../platform/common/types';
 import { createDeferred, createDeferredFromPromise, Deferred } from '../platform/common/utils/async';
@@ -23,11 +23,10 @@ import { IServiceContainer } from '../platform/ioc/types';
 import { Telemetry, Commands } from '../webviews/webview-side/common/constants';
 import { clearInstalledIntoInterpreterMemento } from './installer/productInstaller';
 import { Product } from './installer/types';
-import { INotebookControllerManager } from '../notebooks/types';
-import { findNotebookEditor, selectKernel } from '../notebooks/controllers/kernelSelector';
+import { INotebookControllerManager, INotebookEditorProvider } from '../notebooks/types';
+import { selectKernel } from '../notebooks/controllers/kernelSelector';
 import { KernelDeadError } from '../platform/errors/kernelDeadError';
 import { noop } from '../platform/common/utils/misc';
-import { IInteractiveWindowProvider } from '../interactive-window/types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { IStatusProvider } from '../platform/progress/types';
 import { IRawNotebookProvider } from './raw/types';
@@ -44,8 +43,8 @@ export class KernelConnector {
         serviceContainer: IServiceContainer
     ): Promise<{ controller: NotebookController; metadata: KernelConnectionMetadata } | undefined> {
         const commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
-        const notebooks = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        const editor = findNotebookEditor(resource, notebooks, serviceContainer.get(IInteractiveWindowProvider));
+        const notebookEditorProvider = serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
+        const editor = notebookEditorProvider.findNotebookEditor(resource);
 
         // Listen for selection change events (may not fire if user cancels)
         const controllerManager = serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
@@ -55,12 +54,7 @@ export class KernelConnector {
             waitForSelection.resolve(e.controller)
         );
 
-        const selected = await selectKernel(
-            resource,
-            notebooks,
-            serviceContainer.get(IInteractiveWindowProvider),
-            commandManager
-        );
+        const selected = await selectKernel(resource, serviceContainer.get(INotebookEditorProvider), commandManager);
         if (selected && editor) {
             controller = await waitForSelection.promise;
         }

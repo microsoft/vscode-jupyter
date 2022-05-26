@@ -8,10 +8,14 @@ import { Uri, NotebookData, NotebookCellData, NotebookCellKind } from 'vscode';
 import { IVSCodeNotebook } from '../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../platform/common/constants';
 import '../platform/common/extensions';
+import { Resource } from '../platform/common/types';
+import { getResourceType } from '../platform/common/utils';
+import { getComparisonKey } from '../platform/vscode-path/resources';
 import { captureTelemetry } from '../telemetry';
 import { Telemetry, defaultNotebookFormat } from '../webviews/webview-side/common/constants';
 import { JupyterNotebookView } from './constants';
-import { INotebookEditorProvider } from './types';
+import { IEmbedNotebookEditorProvider, INotebookEditorProvider } from './types';
+import { getOSType, OSType } from '../platform/common/utils/platform';
 
 /**
  * Notebook Editor provider used by other parts of DS code.
@@ -22,6 +26,7 @@ import { INotebookEditorProvider } from './types';
  */
 @injectable()
 export class NotebookEditorProvider implements INotebookEditorProvider {
+    private providers: Set<IEmbedNotebookEditorProvider> = new Set();
     constructor(@inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook) {}
     public async open(file: Uri): Promise<void> {
         const nb = await this.vscodeNotebook.openNotebookDocument(file);
@@ -45,5 +50,53 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
         };
         const doc = await this.vscodeNotebook.openNotebookDocument(JupyterNotebookView, data);
         await this.vscodeNotebook.showNotebookDocument(doc);
+    }
+
+    registerEmbedNotebookProvider(provider: IEmbedNotebookEditorProvider): void {
+        this.providers.add(provider);
+    }
+
+    findNotebookEditor(resource: Resource) {
+        const key = resource ? getComparisonKey(resource, true) : 'false';
+        const notebook =
+            getResourceType(resource) === 'notebook'
+                ? this.vscodeNotebook.notebookDocuments.find((item) => getComparisonKey(item.uri, true) === key)
+                : undefined;
+        const targetNotebookEditor =
+            notebook && this.vscodeNotebook.activeNotebookEditor?.notebook === notebook
+                ? this.vscodeNotebook.activeNotebookEditor
+                : undefined;
+
+        if (targetNotebookEditor) {
+            return targetNotebookEditor;
+        }
+
+        for (let provider of this.providers) {
+            const editor = provider.findNotebookEditor(resource);
+
+            if (editor) {
+                return editor;
+            }
+        }
+    }
+
+    findAssociatedNotebookDocument(uri: Uri) {
+        const ignoreCase = getOSType() === OSType.Windows;
+        let notebook = this.vscodeNotebook.notebookDocuments.find((n) => {
+            // Use the path part of the URI. It should match the path for the notebook
+            return ignoreCase ? n.uri.path.toLowerCase() === uri.path.toLowerCase() : n.uri.path === uri.path;
+        });
+
+        if (notebook) {
+            return notebook;
+        }
+
+        for (let provider of this.providers) {
+            const document = provider.findAssociatedNotebookDocument(uri);
+
+            if (document) {
+                return document;
+            }
+        }
     }
 }

@@ -12,7 +12,6 @@ import {
     NotebookEditor
 } from 'vscode';
 import '../../../platform/common/extensions';
-import { getActiveInteractiveWindow } from '../../../interactive-window/helpers';
 import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { JupyterNotebookView } from '../../../notebooks/constants';
 import { isJupyterNotebook } from '../../../notebooks/helpers';
@@ -112,7 +111,7 @@ export class NotebookWatcher implements INotebookWatcher {
         );
     }
     private getActiveInteractiveWindowDocument() {
-        const interactiveWindow = getActiveInteractiveWindow(this.interactiveWindowProvider);
+        const interactiveWindow = this.interactiveWindowProvider.getActiveInteractiveWindow();
         if (!interactiveWindow) {
             return;
         }

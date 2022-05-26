@@ -2,7 +2,17 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable, named } from 'inversify';
-import { ConfigurationTarget, Event, EventEmitter, Memento, NotebookEditor, Uri, ViewColumn, window } from 'vscode';
+import {
+    ConfigurationTarget,
+    Event,
+    EventEmitter,
+    Memento,
+    NotebookDocument,
+    NotebookEditor,
+    Uri,
+    ViewColumn,
+    window
+} from 'vscode';
 import { IPythonExtensionChecker } from '../platform/api/types';
 
 import {
@@ -29,9 +39,9 @@ import * as localize from '../platform/common/utils/localize';
 import { noop } from '../platform/common/utils/misc';
 import { IServiceContainer } from '../platform/ioc/types';
 import { KernelConnectionMetadata } from '../kernels/types';
-import { INotebookControllerManager } from '../notebooks/types';
+import { IEmbedNotebookEditorProvider, INotebookControllerManager, INotebookEditorProvider } from '../notebooks/types';
 import { InteractiveWindow } from './interactiveWindow';
-import { JVSC_EXTENSION_ID } from '../platform/common/constants';
+import { JVSC_EXTENSION_ID, NotebookCellScheme } from '../platform/common/constants';
 import {
     IInteractiveWindow,
     IInteractiveWindowDebugger,
@@ -48,12 +58,15 @@ import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { InteractiveWindowView } from '../notebooks/constants';
 import { ICodeGeneratorFactory, IGeneratedCodeStorageFactory } from './editor-integration/types';
 import { IInteractiveWindowDebuggingManager } from '../kernels/debugger/types';
+import { getResourceType } from '../platform/common/utils';
 
 // Export for testing
 export const AskedForPerFileSettingKey = 'ds_asked_per_file_interactive';
 
 @injectable()
-export class InteractiveWindowProvider implements IInteractiveWindowProvider, IAsyncDisposable {
+export class InteractiveWindowProvider
+    implements IInteractiveWindowProvider, IEmbedNotebookEditorProvider, IAsyncDisposable
+{
     public get onDidChangeActiveInteractiveWindow(): Event<IInteractiveWindow | undefined> {
         return this._onDidChangeActiveInteractiveWindow.event;
     }
@@ -85,9 +98,12 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager
+        @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
+        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider
     ) {
         asyncRegistry.push(this);
+
+        this.notebookEditorProvider.registerEmbedNotebookProvider(this);
     }
 
     @chainable()
@@ -302,5 +318,33 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
             this.lastActiveInteractiveWindow = this._windows[0];
         }
         this.raiseOnDidChangeActiveInteractiveWindow();
+    }
+
+    public getActiveInteractiveWindow(): IInteractiveWindow | undefined {
+        if (this.activeWindow) {
+            return this.activeWindow;
+        }
+        if (window.activeTextEditor === undefined) {
+            return;
+        }
+        const textDocumentUri = window.activeTextEditor.document.uri;
+        if (textDocumentUri.scheme !== NotebookCellScheme) {
+            return this.get(textDocumentUri);
+        }
+    }
+
+    findNotebookEditor(resource: Resource): NotebookEditor | undefined {
+        const targetInteractiveNotebookEditor =
+            resource && getResourceType(resource) === 'interactive' ? this.get(resource)?.notebookEditor : undefined;
+        const activeInteractiveNotebookEditor =
+            getResourceType(resource) === 'interactive' ? this.getActiveInteractiveWindow()?.notebookEditor : undefined;
+
+        return targetInteractiveNotebookEditor || activeInteractiveNotebookEditor;
+    }
+
+    findAssociatedNotebookDocument(uri: Uri): NotebookDocument | undefined {
+        const interactiveWindow = this.windows.find((w) => w.inputUri?.toString() === uri.toString());
+        let notebook = interactiveWindow?.notebookDocument;
+        return notebook;
     }
 }

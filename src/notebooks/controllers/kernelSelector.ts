@@ -1,26 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IVSCodeNotebook, ICommandManager } from '../../platform/common/application/types';
+import { ICommandManager } from '../../platform/common/application/types';
 import { traceError } from '../../platform/logging';
 import { Resource } from '../../platform/common/types';
-import { getActiveInteractiveWindow } from '../../interactive-window/helpers';
 import { IKernel } from '../../kernels/types';
-import { IInteractiveWindowProvider } from '../../interactive-window/types';
-import { getResourceType } from '../../platform/common/utils';
 import { workspace } from 'vscode';
-import { getComparisonKey } from '../../platform/vscode-path/resources';
+import { INotebookEditorProvider } from '../types';
 
 /**
  * Return `true` if a new kernel has been selected.
  */
 export async function selectKernel(
     resource: Resource,
-    notebooks: IVSCodeNotebook,
-    interactiveWindowProvider: IInteractiveWindowProvider | undefined,
+    notebookEditorProvider: INotebookEditorProvider | undefined,
     commandManager: ICommandManager
 ): Promise<boolean> {
-    const notebookEditor = findNotebookEditor(resource, notebooks, interactiveWindowProvider);
+    const notebookEditor = notebookEditorProvider?.findNotebookEditor(resource);
     if (notebookEditor) {
         return commandManager.executeCommand('notebook.selectKernel', {
             notebookEditor
@@ -28,30 +24,6 @@ export async function selectKernel(
     }
     traceError(`Unable to select kernel as the Notebook document could not be identified`);
     return false;
-}
-
-export function findNotebookEditor(
-    resource: Resource,
-    notebooks: IVSCodeNotebook,
-    interactiveWindowProvider: IInteractiveWindowProvider | undefined
-) {
-    const key = resource ? getComparisonKey(resource, true) : 'false';
-    const notebook =
-        getResourceType(resource) === 'notebook'
-            ? notebooks.notebookDocuments.find((item) => getComparisonKey(item.uri, true) === key)
-            : undefined;
-    const targetNotebookEditor =
-        notebook && notebooks.activeNotebookEditor?.notebook === notebook ? notebooks.activeNotebookEditor : undefined;
-    const targetInteractiveNotebookEditor =
-        resource && getResourceType(resource) === 'interactive'
-            ? interactiveWindowProvider?.get(resource)?.notebookEditor
-            : undefined;
-    const activeInteractiveNotebookEditor =
-        getResourceType(resource) === 'interactive' && interactiveWindowProvider
-            ? getActiveInteractiveWindow(interactiveWindowProvider)?.notebookEditor
-            : undefined;
-
-    return targetNotebookEditor || targetInteractiveNotebookEditor || activeInteractiveNotebookEditor;
 }
 
 export function getAssociatedNotebookDocument(kernel: IKernel | undefined) {

@@ -12,7 +12,6 @@ import { EditorContexts, PYTHON_LANGUAGE } from './constants';
 import { ContextKey } from './contextKey';
 import { IDisposable, IDisposableRegistry } from './types';
 import { isNotebookCell, noop } from './utils/misc';
-import { getActiveInteractiveWindow } from '../../interactive-window/helpers';
 import { InteractiveWindowView, JupyterNotebookView } from '../../notebooks/constants';
 import { INotebookControllerManager } from '../../notebooks/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../interactive-window/types';
@@ -189,7 +188,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private updateSelectedKernelContext() {
         const document =
             this.vscNotebook.activeNotebookEditor?.notebook ||
-            getActiveInteractiveWindow(this.interactiveProvider)?.notebookEditor?.notebook;
+            this.interactiveProvider?.getActiveInteractiveWindow()?.notebookEditor?.notebook;
         if (document && isJupyterNotebook(document) && this.controllers.getSelectedNotebookController(document)) {
             this.isJupyterKernelSelected.set(true).catch(noop);
         } else {
@@ -197,7 +196,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         }
     }
     private updateContextOfActiveInteractiveWindowKernel() {
-        const notebook = getActiveInteractiveWindow(this.interactiveProvider)?.notebookEditor?.notebook;
+        const notebook = this.interactiveProvider?.getActiveInteractiveWindow()?.notebookEditor?.notebook;
         const kernel = notebook ? this.kernelProvider.get(notebook.uri) : undefined;
         if (kernel) {
             const canStart = kernel.status !== 'unknown';
