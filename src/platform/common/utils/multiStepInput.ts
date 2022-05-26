@@ -224,9 +224,15 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                     }),
                     input.onDidHide(() => {
                         (async () => {
-                            reject(
-                                shouldResume && (await shouldResume()) ? InputFlowAction.resume : InputFlowAction.cancel
-                            );
+                            // If we are busy we might be validating, which might pop up new UI like the password UI, which triggers a hide here
+                            // In that case don't reject, promise can wait and continue after validation is done
+                            if (!input.busy) {
+                                reject(
+                                    shouldResume && (await shouldResume())
+                                        ? InputFlowAction.resume
+                                        : InputFlowAction.cancel
+                                );
+                            }
                         })().catch(reject);
                     })
                 );
