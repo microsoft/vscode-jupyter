@@ -120,7 +120,7 @@ export class DebuggerVariables
         if (this.active) {
             // Note, full variable results isn't necessary for this call. It only really needs the variable value.
             const result = this.lastKnownVariables.find((v) => v.name === name);
-            if (result && kernel?.resourceUri && uriPath.extname(kernel?.resourceUri).toLowerCase().endsWith('ipynb')) {
+            if (result && kernel?.resourceUri && uriPath.extname(kernel?.resourceUri).toLowerCase() === '.ipynb') {
                 sendTelemetryEvent(Telemetry.RunByLineVariableHover);
             }
             return result;
