@@ -24,16 +24,19 @@ import {
 } from '../../../platform/common/application/types';
 import { ContextKey } from '../../../platform/common/contextKey';
 import { traceError } from '../../../platform/logging';
-import { Resource, IConfigurationService, IDisposableRegistry, IDisposable } from '../../../platform/common/types';
+import {
+    Resource,
+    IConfigurationService,
+    IDisposableRegistry,
+    IDisposable,
+    IExtensionContext
+} from '../../../platform/common/types';
 import * as localize from '../../../platform/common/utils/localize';
-import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { Telemetry } from '../../webview-side/common/constants';
 import { DataViewerChecker } from '../dataviewer/dataViewerChecker';
 import { IJupyterVariableDataProviderFactory, IDataViewerFactory, IDataViewer } from '../dataviewer/types';
 import { WebviewViewHost } from '../webviewViewHost';
 import { joinPath } from '../../../platform/vscode-path/resources';
-
-const variableViewDir = joinPath(Uri.file(EXTENSION_ROOT_DIR), 'out', 'webviews', 'webview-side', 'viewers');
 
 // This is the client side host for the native notebook variable view webview
 // It handles passing messages to and from the react view as well as the connection
@@ -47,6 +50,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         configuration: IConfigurationService,
         workspaceService: IWorkspaceService,
         provider: IWebviewViewProvider,
+        context: IExtensionContext,
         private readonly variables: IJupyterVariables,
         private readonly disposables: IDisposableRegistry,
         private readonly appShell: IApplicationShell,
@@ -56,6 +60,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         private readonly commandManager: ICommandManager,
         private readonly documentManager: IDocumentManager
     ) {
+        const variableViewDir = joinPath(context.extensionUri, 'out', 'webviews', 'webview-side', 'viewers');
         super(
             configuration,
             workspaceService,
@@ -84,7 +89,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         // After loading, hook up our visibility watch and check the initial visibility
         if (this.webviewView) {
             this.disposables.push(
-                this.webviewView.onDidChangeVisiblity(() => {
+                this.webviewView.onDidChangeVisibility(() => {
                     this.handleVisibilityChanged();
                 })
             );

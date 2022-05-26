@@ -36,7 +36,7 @@ import { PythonVariablesRequester } from './variables/pythonVariableRequester';
 import { IInteractiveWindowDebugger } from '../interactive-window/types';
 import { MultiplexingDebugService } from './debugger/multiplexingDebugService';
 import { JupyterVariableDataProvider } from '../webviews/extension-side/dataviewer/jupyterVariableDataProvider';
-import { JupyterVariableDataProviderFactory } from '../webviews/extension-side/dataviewer/jupyterVariableDataProviderFactory.node';
+import { JupyterVariableDataProviderFactory } from '../webviews/extension-side/dataviewer/jupyterVariableDataProviderFactory';
 import {
     IJupyterVariableDataProvider,
     IJupyterVariableDataProviderFactory

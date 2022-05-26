@@ -13,12 +13,12 @@ import {
     IDocumentManager
 } from '../../../platform/common/application/types';
 import { isTestExecution } from '../../../platform/common/constants';
-import { IConfigurationService, IDisposableRegistry } from '../../../platform/common/types';
+import { IConfigurationService, IDisposableRegistry, IExtensionContext } from '../../../platform/common/types';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { Identifiers } from '../../webview-side/common/constants';
 import { IJupyterVariableDataProviderFactory, IDataViewerFactory } from '../dataviewer/types';
 import { INotebookWatcher, IVariableViewProvider } from './types';
-import { VariableView } from './variableView.node';
+import { VariableView } from './variableView';
 
 // This class creates our UI for our variable view and links it to the vs code webview view
 @injectable()
@@ -48,6 +48,7 @@ export class VariableViewProvider implements IVariableViewProvider {
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IWebviewViewProvider) private readonly webviewViewProvider: IWebviewViewProvider,
+        @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IJupyterVariables) @named(Identifiers.ALL_VARIABLES) private variables: IJupyterVariables,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
@@ -71,6 +72,7 @@ export class VariableViewProvider implements IVariableViewProvider {
             this.configuration,
             this.workspaceService,
             this.webviewViewProvider,
+            this.context,
             this.variables,
             this.disposables,
             this.appShell,

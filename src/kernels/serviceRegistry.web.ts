@@ -22,6 +22,17 @@ import { IDataScienceCommandListener } from '../platform/common/types';
 import { KernelCommandListener } from './kernelCommandListener';
 import { MultiplexingDebugService } from './debugger/multiplexingDebugService';
 import { IJupyterDebugService } from './debugger/types';
+import { JupyterVariableDataProviderFactory } from '../webviews/extension-side/dataviewer/jupyterVariableDataProviderFactory';
+import {
+    IJupyterVariableDataProvider,
+    IJupyterVariableDataProviderFactory
+} from '../webviews/extension-side/dataviewer/types';
+import { JupyterVariableDataProvider } from '../webviews/extension-side/dataviewer/jupyterVariableDataProvider';
+import { DebuggerVariables } from './variables/debuggerVariables';
+import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
+import { KernelVariables } from './variables/kernelVariables';
+import { JupyterVariables } from './variables/jupyterVariables';
+import { PythonVariablesRequester } from './variables/pythonVariableRequester';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
@@ -51,10 +62,27 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     const rawService = serviceManager.get<IRawNotebookSupportedService>(IRawNotebookSupportedService);
     setSharedProperty('rawKernelSupported', rawService.isSupported ? 'true' : 'false');
 
+    serviceManager.addSingleton<IKernelVariableRequester>(
+        IKernelVariableRequester,
+        PythonVariablesRequester,
+        Identifiers.PYTHON_VARIABLES_REQUESTER
+    );
     serviceManager.addSingleton<IJupyterDebugService>(
         IJupyterDebugService,
         MultiplexingDebugService,
         Identifiers.MULTIPLEXING_DEBUGSERVICE
+    );
+    serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables, Identifiers.ALL_VARIABLES);
+    serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, KernelVariables, Identifiers.KERNEL_VARIABLES);
+    serviceManager.addSingleton<IJupyterVariables>(
+        IJupyterVariables,
+        DebuggerVariables,
+        Identifiers.DEBUGGER_VARIABLES
+    );
+    serviceManager.add<IJupyterVariableDataProvider>(IJupyterVariableDataProvider, JupyterVariableDataProvider);
+    serviceManager.addSingleton<IJupyterVariableDataProviderFactory>(
+        IJupyterVariableDataProviderFactory,
+        JupyterVariableDataProviderFactory
     );
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelCrashMonitor);
