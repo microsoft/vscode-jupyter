@@ -41,7 +41,7 @@ export function sharedKernelEventTests(
     let previousDisableJupyterAutoStartValue: boolean;
     this.timeout(120_000);
     suiteSetup(async function () {
-        traceInfo('Suite Setup VS Code Notebook - Execution');
+        traceInfo(`Suite Setup ${this.currentTest?.title}`);
         this.timeout(120_000);
         try {
             api = await initialize();
@@ -53,7 +53,7 @@ export function sharedKernelEventTests(
             configSettings.disableJupyterAutoStart = true;
             traceInfo('Suite Setup (completed)');
         } catch (e) {
-            traceInfo('Suite Setup (failed) - Execution');
+            traceInfo('Suite Setup (failed)');
             await captureScreenShot('execution-suite');
             throw e;
         }
