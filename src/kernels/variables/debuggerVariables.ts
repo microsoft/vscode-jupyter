@@ -3,6 +3,7 @@
 'use strict';
 import { inject, injectable, named } from 'inversify';
 import * as path from '../../platform/vscode-path/path';
+import * as uriPath from '../../platform/vscode-path/resources';
 
 import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -119,7 +120,7 @@ export class DebuggerVariables
         if (this.active) {
             // Note, full variable results isn't necessary for this call. It only really needs the variable value.
             const result = this.lastKnownVariables.find((v) => v.name === name);
-            if (result && kernel?.resourceUri?.path.endsWith('.ipynb')) {
+            if (result && kernel?.resourceUri && uriPath.extname(kernel?.resourceUri).toLowerCase().endsWith('ipynb')) {
                 sendTelemetryEvent(Telemetry.RunByLineVariableHover);
             }
             return result;
