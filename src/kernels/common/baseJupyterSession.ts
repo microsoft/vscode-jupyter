@@ -92,13 +92,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     public get onSessionStatusChanged(): Event<KernelMessage.Status> {
         return this.onStatusChangedEvent.event;
     }
-    public get onIOPubMessage(): Event<KernelMessage.IIOPubMessage> {
-        if (!this.ioPubEventEmitter) {
-            this.ioPubEventEmitter = new EventEmitter<KernelMessage.IIOPubMessage>();
-        }
-        return this.ioPubEventEmitter.event;
-    }
-
     public get status(): KernelMessage.Status {
         return this.getServerStatus();
     }
@@ -115,8 +108,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     protected restartSessionPromise?: { token: CancellationTokenSource; promise: Promise<ISessionWithSocket> };
     private _session: ISessionWithSocket | undefined;
     private _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
-    private ioPubEventEmitter = new EventEmitter<KernelMessage.IIOPubMessage>();
-    private ioPubHandler: Slot<ISessionWithSocket, KernelMessage.IIOPubMessage>;
     private unhandledMessageHandler: Slot<ISessionWithSocket, KernelMessage.IMessage>;
     private chainingExecute = new ChainingExecuteRequester();
 
@@ -128,7 +119,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         private readonly interruptTimeout: number
     ) {
         this.statusHandler = this.onStatusChanged.bind(this);
-        this.ioPubHandler = (_s, m) => this.ioPubEventEmitter.fire(m);
         this.unhandledMessageHandler = (_s, m) => {
             traceInfo(`Unhandled message found: ${m.header.msg_type}`);
         };
@@ -346,9 +336,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     protected setSession(session: ISessionWithSocket | undefined, forceUpdateKernelSocketInfo: boolean = false) {
         const oldSession = this._session;
         if (oldSession) {
-            if (this.ioPubHandler) {
-                oldSession.iopubMessage.disconnect(this.ioPubHandler);
-            }
             if (this.unhandledMessageHandler) {
                 oldSession.unhandledMessage.disconnect(this.unhandledMessageHandler);
             }
@@ -360,10 +347,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         if (session) {
             // Listen for session status changes
             session.statusChanged.connect(this.statusHandler);
-
-            if (session.iopubMessage) {
-                session.iopubMessage.connect(this.ioPubHandler);
-            }
             if (session.unhandledMessage) {
                 session.unhandledMessage.connect(this.unhandledMessageHandler);
             }
