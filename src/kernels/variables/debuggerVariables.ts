@@ -119,7 +119,7 @@ export class DebuggerVariables
         if (this.active) {
             // Note, full variable results isn't necessary for this call. It only really needs the variable value.
             const result = this.lastKnownVariables.find((v) => v.name === name);
-            if (result && kernel?.resourceUri?.fsPath.endsWith('.ipynb')) {
+            if (result && kernel?.resourceUri?.path.endsWith('.ipynb')) {
                 sendTelemetryEvent(Telemetry.RunByLineVariableHover);
             }
             return result;
@@ -160,7 +160,7 @@ export class DebuggerVariables
         );
 
         const notebook = getAssociatedNotebookDocument(kernel);
-        let fileName = notebook ? path.basename(notebook.uri.fsPath) : '';
+        let fileName = notebook ? path.basename(notebook.uri.path) : '';
         if (!fileName && this.debugLocation?.fileName) {
             fileName = path.basename(this.debugLocation.fileName);
         }
