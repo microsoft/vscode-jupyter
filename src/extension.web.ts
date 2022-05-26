@@ -70,6 +70,7 @@ import { registerTypes as registerNotebookTypes } from './notebooks/serviceRegis
 import { registerTypes as registerInteractiveTypes } from './interactive-window/serviceRegistry.web';
 import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry.web';
 import { registerTypes as registerTerminalTypes } from './platform/terminals/serviceRegistry.web';
+import { registerTypes as registerWebviewTypes } from './webviews/extension-side/serviceRegistry.web';
 import { IExtensionActivationManager } from './platform/activation/types';
 import { isCI, isTestExecution, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants';
 import { getJupyterOutputChannel } from './platform/devTools/jupyterOutputChannel';
@@ -289,6 +290,7 @@ async function activateLegacy(
     registerInteractiveTypes(serviceManager);
     registerIntellisenseTypes(serviceManager, isDevMode);
     registerTerminalTypes(serviceManager);
+    registerWebviewTypes(serviceManager, isDevMode);
 
     // Load the two data science experiments that we need to register types
     // Await here to keep the register method sync
