@@ -43,7 +43,7 @@ export type DebuggerType = 'VSCodePythonDebugger' | 'JupyterProtocolDebugger';
 
 export function sharedInterActiveWindowTests(
     suite: Mocha.Suite,
-    debuggerType: DebuggerType,
+    debuggerType: DebuggerType | undefined,
     startJupyterServer: (notebook?: NotebookDocument) => Promise<void>,
     finishTestSetup: (api: IExtensionTestApi) => Promise<void>
 ) {
