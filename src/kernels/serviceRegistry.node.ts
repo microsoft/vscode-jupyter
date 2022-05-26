@@ -28,7 +28,7 @@ import { HostRawNotebookProvider } from './raw/session/hostRawNotebookProvider.n
 import { RawNotebookSupportedService } from './raw/session/rawNotebookSupportedService.node';
 import { IKernelLauncher, ILocalKernelFinder, IRawNotebookProvider, IRawNotebookSupportedService } from './raw/types';
 import { DebuggerVariableRegistration } from './variables/debuggerVariableRegistration.node';
-import { DebuggerVariables } from './variables/debuggerVariables.node';
+import { DebuggerVariables } from './variables/debuggerVariables';
 import { JupyterVariables } from './variables/jupyterVariables';
 import { KernelVariables } from './variables/kernelVariables';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './variables/preWarmVariables.node';

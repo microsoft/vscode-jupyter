@@ -24,7 +24,7 @@ import {
     IJupyterVariablesResponse
 } from './types';
 import { convertDebugProtocolVariableToIJupyterVariable, DataViewableTypes } from './helpers';
-import { IFileSystemNode } from '../../platform/common/platform/types.node';
+import { IFileSystem } from '../../platform/common/platform/types';
 
 const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
 const MaximumRowChunkSizeForDebugger = 100;
@@ -48,7 +48,7 @@ export class DebuggerVariables
         @inject(IDebuggingManager) private readonly debuggingManager: IDebuggingManager,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {
         super(undefined);
@@ -320,7 +320,7 @@ export class DebuggerVariables
             const key = this.debugService.activeDebugSession?.id;
             if (key && !this.importedDataFrameScriptsIntoKernel.has(key)) {
                 const scriptPath = DataFrameLoading.getScriptPath(this.context);
-                const contents = await this.fs.readLocalFile(scriptPath.fsPath);
+                const contents = await this.fs.readFile(scriptPath);
                 await this.evaluate(contents);
                 this.importedDataFrameScriptsIntoKernel.add(key);
             }
@@ -335,7 +335,7 @@ export class DebuggerVariables
             const key = this.debugService.activeDebugSession?.id;
             if (key && !this.importedGetVariableInfoScriptsIntoKernel.has(key)) {
                 const scriptPath = DataFrameLoading.getScriptPath(this.context);
-                const contents = await this.fs.readLocalFile(scriptPath.fsPath);
+                const contents = await this.fs.readFile(scriptPath);
                 await this.evaluate(contents);
                 this.importedGetVariableInfoScriptsIntoKernel.add(key);
             }
