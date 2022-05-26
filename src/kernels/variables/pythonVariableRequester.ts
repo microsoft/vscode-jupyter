@@ -1,10 +1,9 @@
 import { IDisposable } from '@fluentui/react';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
-import * as path from '../../platform/vscode-path/path';
-import { CancellationToken, NotebookDocument } from 'vscode';
+import { CancellationToken, NotebookDocument, Uri } from 'vscode';
 import { traceError } from '../../platform/logging';
-import { IFileSystemNode } from '../../platform/common/platform/types.node';
+import { IFileSystem } from '../../platform/common/platform/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { stripAnsi } from '../../platform/common/utils/regexp';
 import { JupyterDataRateLimitError } from '../../platform/errors/jupyterDataRateLimitError';
@@ -13,7 +12,8 @@ import { executeSilently } from '../helpers';
 import { IKernel } from '../types';
 import { IKernelVariableRequester, IJupyterVariable } from './types';
 import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
-import { DataFrameLoading, GetVariableInfo } from '../../platform/common/constants.node';
+import { DataFrameLoading, GetVariableInfo } from '../../platform/common/scriptConstants';
+import { IExtensionContext } from '../../platform/common/types';
 
 type DataFrameSplitFormat = {
     index: (number | string)[];
@@ -42,7 +42,10 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
     private importedDataFrameScripts = new WeakMap<NotebookDocument, boolean>();
     private importedGetVariableInfoScripts = new WeakMap<NotebookDocument, boolean>();
 
-    constructor(@inject(IFileSystemNode) private fs: IFileSystemNode) {}
+    constructor(
+        @inject(IFileSystem) private fs: IFileSystem,
+        @inject(IExtensionContext) private readonly context: IExtensionContext
+    ) {}
 
     public async getDataFrameInfo(
         targetVariable: IJupyterVariable,
@@ -65,9 +68,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
               )
             : [];
 
-        const fileName = path.basename(
-            getAssociatedNotebookDocument(kernel)?.uri.fsPath || kernel.resourceUri?.fsPath || kernel.id.path
-        );
+        const fileName = getAssociatedNotebookDocument(kernel)?.uri || kernel.resourceUri || kernel.id;
 
         // Combine with the original result (the call only returns the new fields)
         return {
@@ -225,7 +226,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             disposables.push(kernel.onRestarted(handler));
 
             // First put the code from our helper files into the notebook
-            await this.runScriptFile(kernel, DataFrameLoading.ScriptPath);
+            await this.runScriptFile(kernel, DataFrameLoading.getScriptPath(this.context));
 
             this.importedDataFrameScripts.set(key, true);
         }
@@ -243,19 +244,19 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             disposables.push(kernel.onDisposed(handler));
             disposables.push(kernel.onRestarted(handler));
 
-            await this.runScriptFile(kernel, GetVariableInfo.ScriptPath);
+            await this.runScriptFile(kernel, GetVariableInfo.getScriptPath(this.context));
 
             this.importedGetVariableInfoScripts.set(key, true);
         }
     }
 
     // Read in a .py file and execute it silently in the given notebook
-    private async runScriptFile(kernel: IKernel, scriptFile: string) {
-        if (await this.fs.localFileExists(scriptFile)) {
-            const fileContents = await this.fs.readLocalFile(scriptFile);
+    private async runScriptFile(kernel: IKernel, scriptFile: Uri) {
+        if (await this.fs.exists(scriptFile)) {
+            const fileContents = await this.fs.readFile(scriptFile);
             return kernel.session ? executeSilently(kernel.session, fileContents) : [];
         }
-        traceError('Cannot run non-existant script file');
+        traceError('Cannot run non-existent script file');
     }
 
     private extractJupyterResultText(outputs: nbformat.IOutput[]): string {

@@ -3,20 +3,21 @@
 'use strict';
 import { inject, injectable, named } from 'inversify';
 import * as path from '../../platform/vscode-path/path';
+import * as uriPath from '../../platform/vscode-path/resources';
 
 import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 import { IDebugService, IVSCodeNotebook } from '../../platform/common/application/types';
-import { DataFrameLoading, GetVariableInfo } from '../../platform/common/constants.node';
+import { DataFrameLoading, GetVariableInfo } from '../../platform/common/scriptConstants';
 import { traceError } from '../../platform/logging';
-import { IConfigurationService, Resource } from '../../platform/common/types';
+import { IConfigurationService, IExtensionContext, Resource } from '../../platform/common/types';
 import { DebugLocationTracker } from '../debugger/debugLocationTracker';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Telemetry } from '../../webviews/webview-side/common/constants';
 import { IDebuggingManager, IJupyterDebugService, KernelDebugMode } from '../debugger/types';
 import { IKernel } from '../types';
-import { parseDataFrame } from './pythonVariableRequester.node';
+import { parseDataFrame } from './pythonVariableRequester';
 import {
     IConditionalJupyterVariables,
     IJupyterVariable,
@@ -24,6 +25,7 @@ import {
     IJupyterVariablesResponse
 } from './types';
 import { convertDebugProtocolVariableToIJupyterVariable, DataViewableTypes } from './helpers';
+import { IFileSystem } from '../../platform/common/platform/types';
 
 const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
 const MaximumRowChunkSizeForDebugger = 100;
@@ -46,7 +48,9 @@ export class DebuggerVariables
         @inject(IJupyterDebugService) @named(Identifiers.MULTIPLEXING_DEBUGSERVICE) private debugService: IDebugService,
         @inject(IDebuggingManager) private readonly debuggingManager: IDebuggingManager,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook
+        @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {
         super(undefined);
         this.debuggingManager.onDoneDebugging(() => this.refreshEventEmitter.fire(), this);
@@ -116,7 +120,7 @@ export class DebuggerVariables
         if (this.active) {
             // Note, full variable results isn't necessary for this call. It only really needs the variable value.
             const result = this.lastKnownVariables.find((v) => v.name === name);
-            if (result && kernel?.resourceUri?.fsPath.endsWith('.ipynb')) {
+            if (result && kernel?.resourceUri && uriPath.extname(kernel?.resourceUri).toLowerCase() === '.ipynb') {
                 sendTelemetryEvent(Telemetry.RunByLineVariableHover);
             }
             return result;
@@ -157,7 +161,7 @@ export class DebuggerVariables
         );
 
         const notebook = getAssociatedNotebookDocument(kernel);
-        let fileName = notebook ? path.basename(notebook.uri.fsPath) : '';
+        let fileName = notebook ? path.basename(notebook.uri.path) : '';
         if (!fileName && this.debugLocation?.fileName) {
             fileName = path.basename(this.debugLocation.fileName);
         }
@@ -316,7 +320,9 @@ export class DebuggerVariables
             // Run our dataframe scripts only once per session because they're slow
             const key = this.debugService.activeDebugSession?.id;
             if (key && !this.importedDataFrameScriptsIntoKernel.has(key)) {
-                await this.evaluate(DataFrameLoading.DataFrameSysImport);
+                const scriptPath = DataFrameLoading.getScriptPath(this.context);
+                const contents = await this.fs.readFile(scriptPath);
+                await this.evaluate(contents);
                 this.importedDataFrameScriptsIntoKernel.add(key);
             }
         } catch (exc) {
@@ -329,7 +335,9 @@ export class DebuggerVariables
             // Run our variable info scripts only once per session because they're slow
             const key = this.debugService.activeDebugSession?.id;
             if (key && !this.importedGetVariableInfoScriptsIntoKernel.has(key)) {
-                await this.evaluate(GetVariableInfo.GetVariableInfoSysImport);
+                const scriptPath = DataFrameLoading.getScriptPath(this.context);
+                const contents = await this.fs.readFile(scriptPath);
+                await this.evaluate(contents);
                 this.importedGetVariableInfoScriptsIntoKernel.add(key);
             }
         } catch (exc) {

@@ -1,12 +1,16 @@
-import { EXTENSION_ROOT_DIR } from '../constants.node';
-import * as path from '../../platform/vscode-path/path';
-
-export * from './constants';
+import { joinPath } from '../vscode-path/resources';
+import { IExtensionContext } from './types';
 
 export namespace DataFrameLoading {
-    export const SysPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'dataframes');
-    export const DataFrameSysImport = `import sys\nsys.path.append("${SysPath.replace(/\\/g, '\\\\')}")`;
-    export const ScriptPath = path.join(SysPath, 'vscodeDataFrame.py');
+    export function getScriptPath(context: IExtensionContext) {
+        return joinPath(
+            context.extensionUri,
+            'pythonFiles',
+            'vscode_datascience_helpers',
+            'dataframes',
+            'vscodeDataFrame.py'
+        );
+    }
 
     export const DataFrameInfoFunc = '_VSCODE_getDataFrameInfo';
     export const DataFrameRowFunc = '_VSCODE_getDataFrameRows';
@@ -18,14 +22,16 @@ export namespace DataFrameLoading {
 }
 
 export namespace GetVariableInfo {
-    export const SysPath = path.join(
-        EXTENSION_ROOT_DIR,
-        'pythonFiles',
-        'vscode_datascience_helpers',
-        'getVariableInfo'
-    );
-    export const GetVariableInfoSysImport = `import sys\nsys.path.append("${SysPath.replace(/\\/g, '\\\\')}")`;
-    export const ScriptPath = path.join(SysPath, 'vscodeGetVariableInfo.py');
+    export function getScriptPath(context: IExtensionContext) {
+        return joinPath(
+            context.extensionUri,
+            'pythonFiles',
+            'vscode_datascience_helpers',
+            'getVariableInfo',
+            'vscodeGetVariableInfo.py'
+        );
+    }
+
     export const VariableInfoFunc = '_VSCODE_getVariableInfo';
     export const VariablePropertiesFunc = '_VSCODE_getVariableProperties';
     export const VariableTypesFunc = '_VSCODE_getVariableTypes';
@@ -36,6 +42,13 @@ export namespace GetVariableInfo {
 }
 
 export namespace AddRunCellHook {
-    export const SysPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'kernel');
-    export const ScriptPath = path.join(SysPath, 'addRunCellHook.py');
+    export function getScriptPath(context: IExtensionContext) {
+        return joinPath(
+            context.extensionUri,
+            'pythonFiles',
+            'vscode_datascience_helpers',
+            'kernel',
+            'addRunCellHook.py'
+        );
+    }
 }
