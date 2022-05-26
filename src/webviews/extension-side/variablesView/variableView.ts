@@ -35,7 +35,6 @@ import { Telemetry } from '../../webview-side/common/constants';
 import { DataViewerChecker } from '../dataviewer/dataViewerChecker';
 import { IJupyterVariableDataProviderFactory, IDataViewerFactory, IDataViewer } from '../dataviewer/types';
 import { WebviewViewHost } from '../webviewViewHost';
-import { joinPath } from '../../../platform/vscode-path/resources';
 
 // This is the client side host for the native notebook variable view webview
 // It handles passing messages to and from the react view as well as the connection
@@ -59,14 +58,14 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         private readonly commandManager: ICommandManager,
         private readonly documentManager: IDocumentManager
     ) {
-        const variableViewDir = joinPath(context.extensionUri, 'out', 'webviews', 'webview-side', 'viewers');
+        const variableViewDir = Uri.joinPath(context.extensionUri, 'out', 'webviews', 'webview-side', 'viewers');
         super(
             configuration,
             workspaceService,
             (c, d) => new VariableViewMessageListener(c, d),
             provider,
             variableViewDir,
-            [joinPath(variableViewDir, 'variableView.js')]
+            [Uri.joinPath(variableViewDir, 'variableView.js')]
         );
 
         // Sign up if the active variable view notebook is changed, restarted or updated

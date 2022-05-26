@@ -72,13 +72,24 @@ export abstract class Webview implements IWebview {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     protected async generateLocalReactHtml() {
+        console.log('AAAAAA');
         if (!this.webviewHost?.webview) {
             throw new Error('WebView not initialized, too early to get a Uri');
         }
+        console.log('BBBBBB');
 
         const uriBase = this.webviewHost?.webview.asWebviewUri(this.options.cwd).toString();
+        console.log({ uriBase });
         const uris = this.options.scripts.map((script) => this.webviewHost!.webview!.asWebviewUri(script));
-        const testFiles = await this.fs.getFiles(this.options.rootPath);
+        console.log({ uris });
+        let testFiles: Uri[] = [];
+        try {
+            testFiles = await this.fs.getFiles(this.options.rootPath);
+        } catch (e) {
+            console.log(e);
+        }
+
+        console.log({ testFiles });
 
         // This method must be called so VSC is aware of files that can be pulled.
         // Allow js and js.map files to be loaded by webpack in the webview.
@@ -103,6 +114,7 @@ export abstract class Webview implements IWebview {
                 )
             )
             .toString();
+        console.log({ rootPath, fontAwesomePath });
 
         // Change to `true` to force on Test middleware for our react code
         const forceTestMiddleware = 'false';
@@ -148,6 +160,7 @@ export abstract class Webview implements IWebview {
         try {
             if (this.webviewHost?.webview) {
                 const localFilesExist = await Promise.all(this.options.scripts.map((s) => this.fs.exists(s)));
+                console.log({ scripts: this.options.scripts, localFilesExist });
                 if (localFilesExist.every((exists) => exists === true)) {
                     // Call our special function that sticks this script inside of an html page
                     // and translates all of the paths to vscode-resource URIs
