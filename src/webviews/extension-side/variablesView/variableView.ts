@@ -3,7 +3,6 @@
 'use strict';
 import '../../../platform/common/extensions';
 
-import * as path from '../../../platform/vscode-path/path';
 import { Uri, WebviewView as vscodeWebviewView } from 'vscode';
 
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
@@ -78,8 +77,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         this.documentManager.onDidChangeActiveTextEditor(this.activeTextEditorChanged, this, this.disposables);
 
         this.dataViewerChecker = new DataViewerChecker(configuration, appShell);
-        console.log(`Dirname up one is ${path.join(__dirname, '..')}`);
-        console.log(`Done initing variables`);
+        console.log(`Done initializing variables`);
     }
 
     @captureTelemetry(Telemetry.NativeVariableViewLoaded)

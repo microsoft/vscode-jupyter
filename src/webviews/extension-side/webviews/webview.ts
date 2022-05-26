@@ -83,7 +83,10 @@ export abstract class Webview implements IWebview {
         // This method must be called so VSC is aware of files that can be pulled.
         // Allow js and js.map files to be loaded by webpack in the webview.
         testFiles
-            .filter((f) => f.fsPath.toLowerCase().endsWith('.js') || uriPath.extname(f).toLowerCase() === '.js.map')
+            .filter((f) => {
+                const ext = uriPath.extname(f).toLowerCase();
+                return ext === '.js' || ext === '.js.map';
+            })
             .forEach((f) => this.webviewHost?.webview!.asWebviewUri(f));
 
         const rootPath = this.webviewHost.webview.asWebviewUri(this.options.rootPath).toString();
@@ -101,8 +104,8 @@ export abstract class Webview implements IWebview {
             )
             .toString();
 
-        // Check to see if we should force on Test middleware for our react code
-        const forceTestMiddleware = process.env.VSC_JUPYTER_WEBVIEW_TEST_MIDDLEWARE || 'false';
+        // Change to `true` to force on Test middleware for our react code
+        const forceTestMiddleware = 'false';
         return `<!doctype html>
         <html lang="en">
             <head>
