@@ -51,13 +51,13 @@ export class CellExecutionQueue implements Disposable {
     /**
      * Queue the cell for execution & start processing it immediately.
      */
-    public queueCell(cell: NotebookCell): void {
+    public queueCell(cell: NotebookCell, codeOverride?: string): void {
         const existingCellExecution = this.queueOfCellsToExecute.find((item) => item.cell === cell);
         if (existingCellExecution) {
             traceCellMessage(cell, 'Use existing cell execution');
             return;
         }
-        const cellExecution = this.executionFactory.create(cell, this.metadata);
+        const cellExecution = this.executionFactory.create(cell, codeOverride, this.metadata);
         this.disposables.push(cellExecution);
         cellExecution.preExecute((c) => this._onPreExecute.fire(c), this, this.disposables);
         this.queueOfCellsToExecute.push(cellExecution);

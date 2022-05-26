@@ -59,7 +59,6 @@ import {
 } from '../../kernels/types';
 import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
 import { WIDGET_MIMETYPE } from '../../kernels/ipywidgets-message-coordination/constants';
-import { getInteractiveCellMetadata } from '../../interactive-window/helpers';
 import { isCancellationError } from '../../platform/common/cancellation';
 
 // Helper interface for the set_next_input execute reply payload
@@ -85,10 +84,11 @@ export class CellExecutionFactory {
         private readonly formatters: ITracebackFormatter[]
     ) {}
 
-    public create(cell: NotebookCell, metadata: Readonly<KernelConnectionMetadata>) {
+    public create(cell: NotebookCell, code: string | undefined, metadata: Readonly<KernelConnectionMetadata>) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
         return CellExecution.fromCell(
             cell,
+            code,
             this.appShell,
             metadata,
             this.controller,
@@ -155,6 +155,7 @@ export class CellExecution implements IDisposable {
     private _preExecuteEmitter = new EventEmitter<NotebookCell>();
     private constructor(
         public readonly cell: NotebookCell,
+        private readonly codeOverride: string | undefined,
         private readonly applicationService: IApplicationShell,
         private readonly kernelConnection: Readonly<KernelConnectionMetadata>,
         private readonly controller: NotebookController,
@@ -219,6 +220,7 @@ export class CellExecution implements IDisposable {
 
     public static fromCell(
         cell: NotebookCell,
+        code: string | undefined,
         appService: IApplicationShell,
         metadata: Readonly<KernelConnectionMetadata>,
         controller: NotebookController,
@@ -226,7 +228,7 @@ export class CellExecution implements IDisposable {
         context: IExtensionContext,
         formatters: ITracebackFormatter[]
     ) {
-        return new CellExecution(cell, appService, metadata, controller, outputTracker, context, formatters);
+        return new CellExecution(cell, code, appService, metadata, controller, outputTracker, context, formatters);
     }
     public async start(session: IJupyterSession) {
         if (this.cancelHandled) {
@@ -262,7 +264,7 @@ export class CellExecution implements IDisposable {
         this.stopWatch.reset();
 
         // Begin the request that will modify our cell.
-        this.execute(session)
+        this.execute(this.codeOverride || this.cell.document.getText().replace(/\r\n/g, '\n'), session)
             .catch((e) => this.completedWithErrors(e))
             .finally(() => this.dispose())
             .catch(noop);
@@ -460,9 +462,9 @@ export class CellExecution implements IDisposable {
         return !this.cell.document.isClosed;
     }
 
-    private async execute(session: IJupyterSession) {
+    private async execute(code: string, session: IJupyterSession) {
         traceCellMessage(this.cell, 'Send code for execution');
-        await this.executeCodeCell(this.cell.document.getText().replace(/\r\n/g, '\n'), session);
+        await this.executeCodeCell(code, session);
     }
 
     private async executeCodeCell(code: string, session: IJupyterSession) {
@@ -480,9 +482,6 @@ export class CellExecution implements IDisposable {
         };
 
         try {
-            // Compute the hash for the cell we're about to execute if on the interactive window
-            const iwCellMetadata = getInteractiveCellMetadata(this.cell);
-
             // At this point we're about to ACTUALLY execute some code. Fire an event to indicate that
             this._preExecuteEmitter.fire(this.cell);
 
@@ -490,7 +489,7 @@ export class CellExecution implements IDisposable {
             // https://jupyter-client.readthedocs.io/en/stable/api/client.html#jupyter_client.KernelClient.execute
             this.request = session.requestExecute(
                 {
-                    code: iwCellMetadata?.generatedCode?.code || code,
+                    code: code,
                     silent: false,
                     stop_on_error: false,
                     allow_stdin: true,

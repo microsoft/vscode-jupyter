@@ -177,7 +177,7 @@ module.exports = {
         'no-only-tests'
     ],
     rules: {
-        'no-only-tests/no-only-tests': 'error',
+        // 'no-only-tests/no-only-tests': 'error',
         // Overriding ESLint rules with Typescript-specific ones
         '@typescript-eslint/ban-ts-comment': [
             'error',
@@ -293,7 +293,12 @@ module.exports = {
                         target: './src/extension.web.ts',
                         from: './src/**/*.node.ts',
                         message: 'Importing node modules into extension.web.ts is not allowed.'
-                    }
+                    },
+                    {
+                        target: './src/notebooks/**/*.ts',
+                        from: './src/interactive-window/**/*.ts',
+                        message: 'Importing modules from ./src/interactive-window into ./src/notebooks code is not allowed.'
+                    },
                 ]
             }
         ],

@@ -575,7 +575,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 this.interactiveWindowDebugger.enable(kernel);
             }
             traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell');
-            success = (await kernel!.executeCell(cell)) !== NotebookCellRunState.Error;
+            const iwCellMetadata = getInteractiveCellMetadata(cell);
+            success =
+                (await kernel!.executeCell(cell, iwCellMetadata?.generatedCode?.code)) !== NotebookCellRunState.Error;
             traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.kernel.executeCell.finished');
         } finally {
             await detachKernel();
