@@ -32,7 +32,7 @@ import { DebuggerVariables } from './variables/debuggerVariables.node';
 import { JupyterVariables } from './variables/jupyterVariables';
 import { KernelVariables } from './variables/kernelVariables';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './variables/preWarmVariables.node';
-import { PythonVariablesRequester } from './variables/pythonVariableRequester.node';
+import { PythonVariablesRequester } from './variables/pythonVariableRequester';
 import { IInteractiveWindowDebugger } from '../interactive-window/types';
 import { MultiplexingDebugService } from './debugger/multiplexingDebugService';
 import { JupyterVariableDataProvider } from '../webviews/extension-side/dataviewer/jupyterVariableDataProvider';

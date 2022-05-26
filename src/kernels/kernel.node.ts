@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 'use strict';
+import * as path from '../platform/vscode-path/path';
 import { NotebookController, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../platform/common/application/types';
 import { traceInfo, traceError } from '../platform/logging';
@@ -21,11 +22,12 @@ import {
     KernelActionSource,
     KernelConnectionMetadata
 } from './types';
-import { AddRunCellHook } from '../platform/common/constants.node';
+import { AddRunCellHook } from '../platform/common/scriptConstants';
 import { IStatusProvider } from '../platform/progress/types';
 import { getAssociatedNotebookDocument } from '../notebooks/controllers/kernelSelector';
 import { sendTelemetryForPythonKernelExecutable } from './helpers.node';
 import { BaseKernel } from './kernel.base';
+import { EXTENSION_ROOT_DIR } from '../platform/constants.node';
 
 export class Kernel extends BaseKernel {
     constructor(
@@ -79,11 +81,12 @@ export class Kernel extends BaseKernel {
         if (getAssociatedNotebookDocument(this)?.notebookType === InteractiveWindowView) {
             // If using ipykernel 6, we need to set the IPYKERNEL_CELL_NAME so that
             // debugging can work. However this code is harmless for IPYKERNEL 5 so just always do it
-            if (await this.fs.localFileExists(AddRunCellHook.ScriptPath)) {
-                const fileContents = await this.fs.readLocalFile(AddRunCellHook.ScriptPath);
+            const scriptPath = path.join(EXTENSION_ROOT_DIR, AddRunCellHook.ScriptPath);
+            if (await this.fs.localFileExists(scriptPath)) {
+                const fileContents = await this.fs.readLocalFile(scriptPath);
                 return fileContents.splitLines({ trim: false });
             }
-            traceError(`Cannot run non-existent script file: ${AddRunCellHook.ScriptPath}`);
+            traceError(`Cannot run non-existent script file: ${scriptPath}`);
         }
         return [];
     }
