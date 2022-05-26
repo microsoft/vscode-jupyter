@@ -165,7 +165,7 @@ export class JupyterImporter implements INotebookImporter {
         }
     }
 
-    private async createTemplateFile(nbconvert6: boolean): Promise<string | undefined> {
+    public async createTemplateFile(nbconvert6: boolean): Promise<string | undefined> {
         // Create a temp file on disk
         const file = await this.fs.createTemporaryLocalFile('.tpl');
 
