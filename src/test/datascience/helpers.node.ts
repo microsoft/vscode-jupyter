@@ -12,7 +12,6 @@ import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
 import { sleep, waitForCondition } from '../common.node';
 import {
-    createTemporaryFile,
     defaultNotebookTestTimeout,
     waitForCellExecutionToComplete,
     waitForExecutionCompletedSuccessfully
@@ -24,6 +23,7 @@ import { Commands } from '../../platform/common/constants';
 import { BufferDecoder } from '../../platform/common/process/decoder.node';
 import { ProcessService } from '../../platform/common/process/proc.node';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
+import { createTemporaryPythonFile } from './helpers';
 export * from './helpers';
 
 // The default base set of data science settings to use
@@ -112,24 +112,21 @@ export async function setActiveInterpreter(
     }
 }
 
-export async function submitFromPythonFile(
+export async function submitFromPythonFileWithInterpreter(
     interactiveWindowProvider: IInteractiveWindowProvider,
     source: string,
     disposables: vscode.Disposable[],
     apiProvider?: IPythonApiProvider,
     activeInterpreterPath?: vscode.Uri
 ) {
-    const tempFile = await createTemporaryFile({ contents: source, extension: '.py' });
-    disposables.push(tempFile);
-    const untitledPythonFile = await vscode.workspace.openTextDocument(tempFile.file);
+    const tempFile = await createTemporaryPythonFile(source, disposables);
+    const untitledPythonFile = await vscode.workspace.openTextDocument(tempFile);
     await vscode.window.showTextDocument(untitledPythonFile);
     if (apiProvider && activeInterpreterPath) {
         await setActiveInterpreter(apiProvider, untitledPythonFile.uri, activeInterpreterPath);
     }
-    const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(
-        untitledPythonFile.uri
-    )) as InteractiveWindow;
-    await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0).catch(noop);
+    await vscode.commands.executeCommand('jupyter.runFileInteractive');
+    let activeInteractiveWindow = interactiveWindowProvider.getActiveInteractiveWindow() as InteractiveWindow;
     await waitForInteractiveWindow(activeInteractiveWindow);
     return { activeInteractiveWindow, untitledPythonFile };
 }
@@ -142,9 +139,8 @@ export async function submitFromPythonFileUsingCodeWatcher(
     const api = await initialize();
     const interactiveWindowProvider = api.serviceManager.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
     const codeWatcherProvider = api.serviceManager.get<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider);
-    const tempFile = await createTemporaryFile({ contents: source, extension: '.py' });
-    disposables.push(tempFile);
-    const untitledPythonFile = await vscode.workspace.openTextDocument(tempFile.file);
+    const tempFile = await createTemporaryPythonFile(source, disposables);
+    const untitledPythonFile = await vscode.workspace.openTextDocument(tempFile);
     const editor = await vscode.window.showTextDocument(untitledPythonFile);
     if (activeInterpreterPath) {
         const pythonApiProvider = api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider);
@@ -165,9 +161,8 @@ export async function runNewPythonFile(
     source: string,
     disposables: vscode.Disposable[]
 ) {
-    const tempFile = await createTemporaryFile({ contents: source, extension: '.py' });
-    disposables.push(tempFile);
-    const untitledPythonFile = await vscode.workspace.openTextDocument(tempFile.file);
+    const tempFile = await createTemporaryPythonFile(source, disposables);
+    const untitledPythonFile = await vscode.workspace.openTextDocument(tempFile);
     const activeInteractiveWindow = await runCurrentFile(interactiveWindowProvider, untitledPythonFile);
     return { activeInteractiveWindow, untitledPythonFile };
 }
@@ -213,7 +208,7 @@ export async function waitForInteractiveWindow(
 }
 
 export async function waitForLastCellToComplete(
-    interactiveWindow: InteractiveWindow,
+    interactiveWindow: IInteractiveWindow,
     numberOfCells: number = -1,
     errorsOkay?: boolean
 ) {

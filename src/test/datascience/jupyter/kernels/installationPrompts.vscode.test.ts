@@ -35,7 +35,7 @@ import { closeActiveWindows, initialize } from '../../../initialize.node';
 import {
     installIPyKernel,
     openNotebook,
-    submitFromPythonFile,
+    submitFromPythonFileWithInterpreter,
     submitFromPythonFileUsingCodeWatcher,
     uninstallIPyKernel
 } from '../../helpers.node';
@@ -294,7 +294,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         );
         const pythonApiProvider = api.serviceManager.get<IPythonApiProvider>(IPythonApiProvider);
         const source = 'print(__file__)';
-        const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
+        const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFileWithInterpreter(
             interactiveWindowProvider,
             source,
             disposables,

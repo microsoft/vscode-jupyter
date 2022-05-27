@@ -21,11 +21,11 @@ import {
     runCurrentFile,
     runNewPythonFile,
     setActiveInterpreter,
-    submitFromPythonFile,
     submitFromPythonFileUsingCodeWatcher,
     uninstallIPyKernel,
     waitForInteractiveWindow,
-    waitForLastCellToComplete
+    waitForLastCellToComplete,
+    submitFromPythonFile
 } from './helpers.node';
 import {
     assertHasTextOutputInVSCode,
