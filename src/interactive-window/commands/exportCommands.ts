@@ -14,7 +14,6 @@ import { DataScience } from '../../platform/common/utils/localize';
 import { isUri } from '../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
-import { getActiveInteractiveWindow } from '../helpers';
 import { getNotebookMetadata, isPythonNotebook } from '../../notebooks/helpers';
 import { INotebookControllerManager } from '../../notebooks/types';
 import { Commands, Telemetry } from '../../platform/common/constants';
@@ -96,9 +95,7 @@ export class ExportCommands implements IExportCommands, IDisposable {
             // so we need to get the active editor
             sourceDocument =
                 this.notebooks.activeNotebookEditor?.notebook ||
-                (this.interactiveProvider
-                    ? getActiveInteractiveWindow(this.interactiveProvider)?.notebookDocument
-                    : undefined);
+                this.interactiveProvider?.getActiveInteractiveWindow()?.notebookDocument;
             if (!sourceDocument) {
                 traceInfo('Export called without a valid exportable document active');
                 return;

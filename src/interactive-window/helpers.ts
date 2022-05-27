@@ -1,35 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { NotebookCell, window } from 'vscode';
-import { NotebookCellScheme } from '../platform/common/constants';
+import { NotebookCell } from 'vscode';
 import { IJupyterSettings } from '../platform/common/types';
 import { removeLinesFromFrontAndBackNoConcat, appendLineFeed } from '../webviews/webview-side/common';
 import { uncommentMagicCommands } from './editor-integration/cellFactory';
 import { CellMatcher } from './editor-integration/cellMatcher';
 import { InteractiveCellMetadata } from './editor-integration/types';
-import { IInteractiveWindowProvider, IInteractiveWindow } from './types';
 
 export function getInteractiveCellMetadata(cell: NotebookCell): InteractiveCellMetadata | undefined {
     if (cell.metadata.interactive !== undefined) {
         return cell.metadata as InteractiveCellMetadata;
-    }
-}
-export function getActiveInteractiveWindow(
-    interactiveWindowProvider: IInteractiveWindowProvider | undefined
-): IInteractiveWindow | undefined {
-    if (!interactiveWindowProvider) {
-        return;
-    }
-    if (interactiveWindowProvider.activeWindow) {
-        return interactiveWindowProvider.activeWindow;
-    }
-    if (window.activeTextEditor === undefined) {
-        return;
-    }
-    const textDocumentUri = window.activeTextEditor.document.uri;
-    if (textDocumentUri.scheme !== NotebookCellScheme) {
-        return interactiveWindowProvider.get(textDocumentUri);
     }
 }
 

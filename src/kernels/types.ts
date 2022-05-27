@@ -181,7 +181,11 @@ export interface IKernel extends IAsyncDisposable {
     start(options?: IDisplayOptions): Promise<void>;
     interrupt(): Promise<void>;
     restart(): Promise<void>;
-    executeCell(cell: NotebookCell): Promise<NotebookCellRunState>;
+    /**
+     * @param cell Cell to execute
+     * @param codeOverride Override the code to execute
+     */
+    executeCell(cell: NotebookCell, codeOverride?: string): Promise<NotebookCellRunState>;
     /**
      * Executes arbitrary code against the kernel without incrementing the execution count.
      */

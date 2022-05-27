@@ -14,7 +14,6 @@ import {
     NotebookCellKind,
     NotebookCellExecutionState,
     WorkspaceEdit,
-    Uri,
     workspace,
     TextDocument,
     NotebookEdit
@@ -26,7 +25,7 @@ import cloneDeep = require('lodash/cloneDeep');
 import fastDeepEqual = require('fast-deep-equal');
 import * as path from '../platform/vscode-path/path';
 import * as uriPath from '../platform/vscode-path/resources';
-import { IVSCodeNotebook, IDocumentManager } from '../platform/common/application/types';
+import { IDocumentManager } from '../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../platform/common/constants';
 import { traceInfoIfCI, traceError, traceWarning } from '../platform/logging';
 import { getInterpreterHash } from '../platform/pythonEnvironments/info/interpreter';
@@ -42,8 +41,6 @@ import {
 import { IJupyterKernelSpec, KernelConnectionMetadata } from '../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from './constants';
 import { CellOutputMimeTypes } from './types';
-import { IInteractiveWindowProvider } from '../interactive-window/types';
-import { getOSType, OSType } from '../platform/common/utils/platform';
 
 /**
  * Whether this is a Notebook we created/manage/use.
@@ -753,24 +750,6 @@ export function hasErrorOutput(outputs: readonly NotebookCellOutput[]) {
     );
 
     return !!errorOutput;
-}
-
-export function findAssociatedNotebookDocument(
-    uri: Uri,
-    vscodeNotebook: IVSCodeNotebook,
-    iwp: IInteractiveWindowProvider | undefined
-) {
-    const ignoreCase = getOSType() === OSType.Windows;
-    let notebook = vscodeNotebook.notebookDocuments.find((n) => {
-        // Use the path part of the URI. It should match the path for the notebook
-        return ignoreCase ? n.uri.path.toLowerCase() === uri.path.toLowerCase() : n.uri.path === uri.path;
-    });
-    if (!notebook && iwp) {
-        // Might be an interactive window input
-        const interactiveWindow = iwp.windows.find((w) => w.inputUri?.toString() === uri.toString());
-        notebook = interactiveWindow?.notebookDocument;
-    }
-    return notebook;
 }
 
 // eslint-disable-next-line complexity

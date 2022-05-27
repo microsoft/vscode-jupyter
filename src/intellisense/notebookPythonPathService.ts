@@ -4,12 +4,9 @@
 
 import { inject, injectable } from 'inversify';
 import { Disposable, extensions, Uri, workspace } from 'vscode';
-import { IInteractiveWindowProvider } from '../interactive-window/types';
-import { findAssociatedNotebookDocument } from '../notebooks/helpers';
-import { INotebookControllerManager } from '../notebooks/types';
+import { INotebookControllerManager, INotebookEditorProvider } from '../notebooks/types';
 import { IExtensionSingleActivationService } from '../platform/activation/types';
 import { IPythonApiProvider } from '../platform/api/types';
-import { IVSCodeNotebook } from '../platform/common/application/types';
 import { PylanceExtension, PythonExtension } from '../platform/common/constants';
 import { getFilePath } from '../platform/common/platform/fs-paths';
 import { IConfigurationService } from '../platform/common/types';
@@ -30,8 +27,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
 
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
-        @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
-        @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
+        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
@@ -119,7 +115,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
      * path used by Pylance. Return undefined to allow Python to determine the path.
      */
     private async _jupyterPythonPathFunction(uri: Uri): Promise<string | undefined> {
-        const notebook = findAssociatedNotebookDocument(uri, this.notebooks, this.interactiveWindowProvider);
+        const notebook = this.notebookEditorProvider.findAssociatedNotebookDocument(uri);
         if (!notebook) {
             traceVerbose(`_jupyterPythonPathFunction: "${uri}" is not a notebook`);
             return undefined;

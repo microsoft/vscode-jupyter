@@ -61,7 +61,8 @@ export class KernelExecution implements IDisposable {
     }
     public async executeCell(
         sessionPromise: Promise<IJupyterSession>,
-        cell: NotebookCell
+        cell: NotebookCell,
+        codeOverride?: string
     ): Promise<NotebookCellRunState> {
         traceCellMessage(cell, `KernelExecution.executeCell (1), ${getDisplayPath(cell.notebook.uri)}`);
         if (cell.kind == NotebookCellKind.Markup) {
@@ -75,7 +76,7 @@ export class KernelExecution implements IDisposable {
 
         traceCellMessage(cell, `KernelExecution.executeCell (2), ${getDisplayPath(cell.notebook.uri)}`);
         const executionQueue = this.getOrCreateCellExecutionQueue(cell.notebook, sessionPromise);
-        executionQueue.queueCell(cell);
+        executionQueue.queueCell(cell, codeOverride);
         const result = await executionQueue.waitForCompletion([cell]);
         traceCellMessage(cell, `KernelExecution.executeCell completed (3), ${getDisplayPath(cell.notebook.uri)}`);
         return result[0];

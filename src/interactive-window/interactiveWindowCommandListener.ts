@@ -31,7 +31,6 @@ import * as localize from '../platform/common/utils/localize';
 import { captureTelemetry } from '../telemetry';
 import { CommandSource } from '../platform/testing/common/constants';
 import { JupyterInstallError } from '../platform/errors/jupyterInstallError';
-import { getActiveInteractiveWindow } from './helpers';
 import { INotebookControllerManager, INotebookEditorProvider } from '../notebooks/types';
 import { KernelConnectionMetadata } from '../kernels/types';
 import { chainWithPendingUpdates } from '../notebooks/execution/notebookUpdater';
@@ -446,7 +445,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
     }
 
     private async removeCellInInteractiveWindow(context?: NotebookCell) {
-        const interactiveWindow = getActiveInteractiveWindow(this.interactiveWindowProvider);
+        const interactiveWindow = this.interactiveWindowProvider.getActiveInteractiveWindow();
         const ranges =
             context === undefined
                 ? interactiveWindow?.notebookEditor?.selections
@@ -497,7 +496,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                 (w) => w.notebookUri?.toString() === notebookUri.toString()
             );
         } else {
-            targetInteractiveWindow = getActiveInteractiveWindow(this.interactiveWindowProvider);
+            targetInteractiveWindow = this.interactiveWindowProvider.getActiveInteractiveWindow();
         }
         return targetInteractiveWindow;
     }
