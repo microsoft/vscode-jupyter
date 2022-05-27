@@ -27,6 +27,7 @@ import {
 import { traceCellMessage } from '../helpers';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { getAssociatedNotebookDocument } from '../controllers/kernelSelector';
+import { CellExecutionMessageHandlerFactory } from './cellExecutionMessageHandlerFactory';
 
 /**
  * Separate class that deals just with kernel execution.
@@ -49,7 +50,15 @@ export class KernelExecution implements IDisposable {
         context: IExtensionContext,
         formatters: ITracebackFormatter[]
     ) {
-        this.executionFactory = new CellExecutionFactory(appShell, controller, outputTracker, context, formatters);
+        const factory = new CellExecutionMessageHandlerFactory(
+            appShell,
+            controller,
+            outputTracker,
+            context,
+            formatters
+        );
+        this.disposables.push(factory);
+        this.executionFactory = new CellExecutionFactory(controller, factory);
     }
 
     public get onPreExecute() {
