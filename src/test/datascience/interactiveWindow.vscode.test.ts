@@ -494,9 +494,9 @@ ${actualCode}
             // Should be three hrefs for the two lines in the call stack
             const hrefs = html.match(/<a\s+href='.*\?line=(\d+)'/gm);
             assert.equal(hrefs?.length, 4, '4 hrefs not found in traceback');
-            assert.ok(hrefs[0].endsWith("line=4'"), `Wrong second ref line : ${hrefs[1]}`);
-            assert.ok(hrefs[1].endsWith("line=1'"), `Wrong third ref line : ${hrefs[2]}`);
-            assert.ok(hrefs[2].endsWith("line=2'"), `Wrong last ref line : ${hrefs[3]}`);
+            assert.ok(hrefs[0].endsWith("line=4'"), `Wrong second ref line : ${hrefs[0]}`);
+            assert.ok(hrefs[1].endsWith("line=1'"), `Wrong third ref line : ${hrefs[1]}`);
+            assert.ok(hrefs[2].endsWith("line=2'"), `Wrong last ref line : ${hrefs[2]}`);
         });
 
         test('Raising an exception from system code has a stack trace', async function () {
