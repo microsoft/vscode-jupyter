@@ -9,21 +9,15 @@ import { IPythonApiProvider } from '../../platform/api/types';
 import { arePathsSame } from '../../platform/common/platform/fileUtils.node';
 import { IJupyterSettings, Resource } from '../../platform/common/types';
 import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
-import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
-import { sleep, waitForCondition } from '../common.node';
-import {
-    defaultNotebookTestTimeout,
-    waitForCellExecutionToComplete,
-    waitForExecutionCompletedSuccessfully
-} from './notebook/helper.node';
+import { waitForCondition } from '../common';
+import { defaultNotebookTestTimeout } from './notebook/helper.node';
 import { initialize } from '../initialize.node';
 import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
-import { IInteractiveWindowProvider, IInteractiveWindow } from '../../interactive-window/types';
-import { Commands } from '../../platform/common/constants';
+import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { BufferDecoder } from '../../platform/common/process/decoder.node';
 import { ProcessService } from '../../platform/common/process/proc.node';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
-import { createTemporaryPythonFile } from './helpers';
+import { createTemporaryPythonFile, waitForActiveInteractiveWindow } from './helpers';
 export * from './helpers';
 
 // The default base set of data science settings to use
@@ -87,23 +81,9 @@ export function writeDiffSnapshot(_snapshot: any, _prefix: string) {
     // fs.writeFile(file, JSON.stringify(diff), { encoding: 'utf-8' }).ignoreErrors();
 }
 
-export async function createStandaloneInteractiveWindow(interactiveWindowProvider: InteractiveWindowProvider) {
-    const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(undefined)) as InteractiveWindow;
-    await waitForInteractiveWindow(activeInteractiveWindow);
-    return activeInteractiveWindow;
-}
-
-export async function insertIntoInputEditor(source: string) {
-    // Add code to the input box
-    await vscode.window.activeTextEditor?.edit((editBuilder) => {
-        editBuilder.insert(new vscode.Position(0, 0), source);
-    });
-    return vscode.window.activeTextEditor;
-}
-
 export async function setActiveInterpreter(
     apiProvider: IPythonApiProvider,
-    resource: Resource,
+    resource: Resource | undefined,
     interpreter: vscode.Uri | undefined
 ) {
     if (interpreter) {
@@ -127,11 +107,11 @@ export async function submitFromPythonFileWithInterpreter(
     }
     await vscode.commands.executeCommand('jupyter.runFileInteractive');
     let activeInteractiveWindow = interactiveWindowProvider.getActiveInteractiveWindow() as InteractiveWindow;
-    await waitForInteractiveWindow(activeInteractiveWindow);
+    await waitForActiveInteractiveWindow(interactiveWindowProvider, activeInteractiveWindow);
     return { activeInteractiveWindow, untitledPythonFile };
 }
 
-export async function submitFromPythonFileUsingCodeWatcher(
+export async function submitFromPythonFileUsingCodeWatcherWithInterpreter(
     source: string,
     disposables: vscode.Disposable[],
     activeInterpreterPath?: vscode.Uri
@@ -150,85 +130,10 @@ export async function submitFromPythonFileUsingCodeWatcher(
     const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(
         untitledPythonFile.uri
     )) as InteractiveWindow;
-    await waitForInteractiveWindow(activeInteractiveWindow);
+    await waitForActiveInteractiveWindow(interactiveWindowProvider, activeInteractiveWindow);
     const codeWatcher = codeWatcherProvider.getCodeWatcher(editor.document);
     void codeWatcher?.runAllCells(); // Dont wait for execution to complete
     return { activeInteractiveWindow, untitledPythonFile };
-}
-
-export async function runNewPythonFile(
-    interactiveWindowProvider: IInteractiveWindowProvider,
-    source: string,
-    disposables: vscode.Disposable[]
-) {
-    const tempFile = await createTemporaryPythonFile(source, disposables);
-    const untitledPythonFile = await vscode.workspace.openTextDocument(tempFile);
-    const activeInteractiveWindow = await runCurrentFile(interactiveWindowProvider, untitledPythonFile);
-    return { activeInteractiveWindow, untitledPythonFile };
-}
-
-export async function runCurrentFile(interactiveWindowProvider: IInteractiveWindowProvider, file: vscode.TextDocument) {
-    await vscode.window.showTextDocument(file);
-    const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(file.uri)) as InteractiveWindow;
-    await waitForInteractiveWindow(activeInteractiveWindow);
-    await vscode.commands.executeCommand(Commands.RunFileInInteractiveWindows, file.uri);
-    return activeInteractiveWindow;
-}
-
-export async function closeInteractiveWindow(interactiveWindow: IInteractiveWindow) {
-    if (interactiveWindow.notebookDocument) {
-        const editor = vscode.window.visibleNotebookEditors.find(
-            (n) => n.notebook === interactiveWindow.notebookDocument
-        );
-        if (editor) {
-            await vscode.commands.executeCommand('workbench.action.focusSecondEditorGroup');
-            await vscode.commands.executeCommand('interactive.input.focus');
-            await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
-            await sleep(500); // Seems to be some flakiness in VS code closing a window.
-        }
-        interactiveWindow.dispose();
-    }
-}
-
-export async function waitForInteractiveWindow(
-    interactiveWindow: IInteractiveWindow
-): Promise<vscode.NotebookDocument> {
-    let notebookDocument: vscode.NotebookDocument | undefined;
-    await waitForCondition(
-        async () => {
-            notebookDocument = vscode.workspace.notebookDocuments.find(
-                (doc) => doc.uri.toString() === interactiveWindow?.notebookUri?.toString()
-            );
-            return notebookDocument !== undefined;
-        },
-        defaultNotebookTestTimeout,
-        'Interactive window notebook document not found'
-    );
-    return notebookDocument!;
-}
-
-export async function waitForLastCellToComplete(
-    interactiveWindow: IInteractiveWindow,
-    numberOfCells: number = -1,
-    errorsOkay?: boolean
-) {
-    const notebookDocument = await waitForInteractiveWindow(interactiveWindow);
-    let codeCell: vscode.NotebookCell | undefined;
-    await waitForCondition(
-        async () => {
-            const codeCells = notebookDocument?.getCells().filter((c) => c.kind === vscode.NotebookCellKind.Code);
-            codeCell = codeCells && codeCells.length ? codeCells[codeCells.length - 1] : undefined;
-            return codeCell && (numberOfCells === -1 || numberOfCells === codeCells!.length) ? true : false;
-        },
-        defaultNotebookTestTimeout,
-        `No code cell found in interactive window notebook document`
-    );
-    if (errorsOkay) {
-        await waitForCellExecutionToComplete(codeCell!);
-    } else {
-        await waitForExecutionCompletedSuccessfully(codeCell!);
-    }
-    return codeCell!;
 }
 
 export async function waitForCodeLenses(document: vscode.Uri, command: string) {

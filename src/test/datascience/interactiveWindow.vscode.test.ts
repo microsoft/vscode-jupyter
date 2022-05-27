@@ -17,26 +17,21 @@ import {
     closeInteractiveWindow,
     createStandaloneInteractiveWindow,
     insertIntoInputEditor,
-    installIPyKernel,
-    runCurrentFile,
-    runNewPythonFile,
-    setActiveInterpreter,
-    submitFromPythonFileUsingCodeWatcher,
-    uninstallIPyKernel,
-    waitForInteractiveWindow,
+    runFileInInteractiveWindow,
     waitForLastCellToComplete,
-    submitFromPythonFile
-} from './helpers.node';
+    submitFromPythonFile,
+    submitFromPythonFileUsingCodeWatcher
+} from './helpers';
+import { installIPyKernel, setActiveInterpreter, uninstallIPyKernel } from './helpers.node';
 import {
     assertHasTextOutputInVSCode,
     clickOKForRestartPrompt,
     closeNotebooksAndCleanUpAfterTests,
     defaultNotebookTestTimeout,
-    startJupyterServer,
     waitForExecutionCompletedSuccessfully,
     waitForExecutionCompletedWithErrors,
     waitForTextOutput
-} from './notebook/helper.node';
+} from './notebook/helper';
 import { translateCellErrorOutput, getTextOutputValue } from '../../notebooks/helpers';
 import { INotebookControllerManager } from '../../notebooks/types';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
@@ -46,6 +41,8 @@ import { IPythonApiProvider } from '../../platform/api/types';
 import { isEqual } from '../../platform/vscode-path/resources';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
+import { startJupyterServer } from './notebook/helper.node';
+import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
 
 type DebuggerType = 'VSCodePythonDebugger' | 'JupyterProtocolDebugger';
 const debuggerTypes: DebuggerType[] = ['JupyterProtocolDebugger', 'VSCodePythonDebugger'];
@@ -230,8 +227,7 @@ debuggerTypes.forEach((debuggerType) => {
         });
         test('Execute cell from input box', async () => {
             // Create new interactive window
-            const activeInteractiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
-            const notebook = await waitForInteractiveWindow(activeInteractiveWindow);
+            const notebook = (await createStandaloneInteractiveWindow(interactiveWindowProvider)).notebookDocument!;
 
             // Add code to the input box
             await insertIntoInputEditor('print("foo")');
@@ -239,7 +235,6 @@ debuggerTypes.forEach((debuggerType) => {
             // Run the code in the input box
             await vscode.commands.executeCommand('interactive.execute');
 
-            assert.ok(notebook !== undefined, 'No interactive window found');
             await waitForCondition(
                 async () => {
                     return notebook.cellCount > 1;
@@ -249,8 +244,8 @@ debuggerTypes.forEach((debuggerType) => {
             );
 
             // Inspect notebookDocument for output
-            const index = notebook!.cellCount - 1;
-            const cell = notebook!.cellAt(index);
+            const index = notebook.cellCount - 1;
+            const cell = notebook.cellAt(index);
             await waitForTextOutput(cell, 'foo');
         });
 
@@ -269,7 +264,7 @@ for i in range(10):
                 text,
                 disposables
             );
-            const cell = await waitForLastCellToComplete(activeInteractiveWindow);
+            const cell = await waitForLastCellToComplete(interactiveWindowProvider, activeInteractiveWindow);
             await waitForTextOutput(cell!, 'Hello World 9!');
         });
 
@@ -316,7 +311,7 @@ for i in range(10):
             const interactiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
             await insertIntoInputEditor(code);
             await vscode.commands.executeCommand('interactive.execute');
-            const codeCell = await waitForLastCellToComplete(interactiveWindow);
+            const codeCell = await waitForLastCellToComplete(interactiveWindowProvider, interactiveWindow);
             const output = codeCell?.outputs[0];
             assert.ok(output?.items[0].mime === 'image/png', 'No png output found');
             assert.ok(
@@ -335,14 +330,14 @@ for i in range(10):
             // Create cell 2
             await insertIntoInputEditor('dh.display("Hello")');
             await vscode.commands.executeCommand('interactive.execute');
-            const secondCell = await waitForLastCellToComplete(interactiveWindow);
+            const secondCell = await waitForLastCellToComplete(interactiveWindowProvider, interactiveWindow);
             await waitForTextOutput(secondCell!, "'Hello'");
 
             // Create cell 3
             await insertIntoInputEditor('dh.update("Goodbye")');
             await vscode.commands.executeCommand('interactive.execute');
             // Last cell output is empty
-            const thirdCell = await waitForLastCellToComplete(interactiveWindow);
+            const thirdCell = await waitForLastCellToComplete(interactiveWindowProvider, interactiveWindow);
             assert.equal(thirdCell?.outputs.length, 0, 'Third cell should not have any outputs');
             // Second cell output is updated
             await waitForTextOutput(secondCell!, "'Goodbye'");
@@ -351,7 +346,15 @@ for i in range(10):
         test('Cells with errors cancel execution for others', async () => {
             const source =
                 '# %%\nprint(1)\n# %%\nimport time\ntime.sleep(1)\nraise Exception("foo")\n# %%\nprint(2)\n# %%\nprint(3)';
-            const { activeInteractiveWindow } = await submitFromPythonFileUsingCodeWatcher(source, disposables);
+
+            const codeWatcherProvider =
+                api.serviceManager.get<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider);
+            const { activeInteractiveWindow } = await submitFromPythonFileUsingCodeWatcher(
+                interactiveWindowProvider,
+                codeWatcherProvider,
+                source,
+                disposables
+            );
             const notebookDocument = vscode.workspace.notebookDocuments.find(
                 (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
             );
@@ -417,19 +420,19 @@ ${actualCode}
                 disposables
             );
             traceInfoIfCI('After submitting');
-            const lastCell = await waitForLastCellToComplete(interactiveWindow);
+            const lastCell = await waitForLastCellToComplete(interactiveWindowProvider, interactiveWindow);
             const actualCellText = lastCell.document.getText();
             assert.equal(actualCellText, actualCode);
         });
 
         test('Run current file in interactive window (with cells)', async () => {
-            const { activeInteractiveWindow } = await runNewPythonFile(
+            const { activeInteractiveWindow } = await submitFromPythonFile(
                 interactiveWindowProvider,
                 '#%%\na=1\nprint(a)\n#%%\nb=2\nprint(b)\n',
                 disposables
             );
 
-            await waitForLastCellToComplete(activeInteractiveWindow);
+            await waitForLastCellToComplete(interactiveWindowProvider, activeInteractiveWindow);
 
             const notebookDocument = vscode.workspace.notebookDocuments.find(
                 (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
@@ -447,13 +450,13 @@ ${actualCode}
         });
 
         test('Run current file in interactive window (without cells)', async () => {
-            const { activeInteractiveWindow } = await runNewPythonFile(
+            const { activeInteractiveWindow } = await submitFromPythonFile(
                 interactiveWindowProvider,
                 'a=1\nprint(a)\nb=2\nprint(b)\n',
                 disposables
             );
 
-            await waitForLastCellToComplete(activeInteractiveWindow);
+            await waitForLastCellToComplete(interactiveWindowProvider, activeInteractiveWindow);
 
             const notebookDocument = vscode.workspace.notebookDocuments.find(
                 (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
@@ -467,12 +470,17 @@ ${actualCode}
         });
 
         test('Raising an exception from within a function has a stack trace', async function () {
-            const { activeInteractiveWindow } = await runNewPythonFile(
+            const { activeInteractiveWindow } = await submitFromPythonFile(
                 interactiveWindowProvider,
                 '# %%\ndef raiser():\n  raise Exception("error")\n# %%\nraiser()',
                 disposables
             );
-            const lastCell = await waitForLastCellToComplete(activeInteractiveWindow, 2, true);
+            const lastCell = await waitForLastCellToComplete(
+                interactiveWindowProvider,
+                activeInteractiveWindow,
+                2,
+                true
+            );
 
             // Wait for the outputs to be available.
             await waitForCondition(
@@ -501,12 +509,17 @@ ${actualCode}
         });
 
         test('Raising an exception from system code has a stack trace', async function () {
-            const { activeInteractiveWindow } = await runNewPythonFile(
+            const { activeInteractiveWindow } = await submitFromPythonFile(
                 interactiveWindowProvider,
                 `# %%\n${IPYTHON_VERSION_CODE}# %%\nimport pathlib as pathlib\nx = pathlib.Path()\ny = None\nx.joinpath(y, "Foo")`,
                 disposables
             );
-            const lastCell = await waitForLastCellToComplete(activeInteractiveWindow, 2, true);
+            const lastCell = await waitForLastCellToComplete(
+                interactiveWindowProvider,
+                activeInteractiveWindow,
+                2,
+                true
+            );
 
             // Wait for the outputs to be available.
             await waitForCondition(
@@ -537,12 +550,17 @@ ${actualCode}
         });
 
         test('Running a cell with markdown and code runs two cells', async () => {
-            const { activeInteractiveWindow } = await runNewPythonFile(
+            const { activeInteractiveWindow } = await submitFromPythonFile(
                 interactiveWindowProvider,
                 '# %% [markdown]\n# # HEADER\n# **bold**\nprint(1)',
                 disposables
             );
-            const lastCell = await waitForLastCellToComplete(activeInteractiveWindow, 1, true);
+            const lastCell = await waitForLastCellToComplete(
+                interactiveWindowProvider,
+                activeInteractiveWindow,
+                1,
+                true
+            );
 
             // Wait for the outputs to be available.
             await waitForCondition(
@@ -592,12 +610,12 @@ ${actualCode}
             try {
                 const interpreterService = await api.serviceManager.get<IInterpreterService>(IInterpreterService);
                 const activeInterpreter = await interpreterService.getActiveInterpreter();
-                const { activeInteractiveWindow, untitledPythonFile } = await runNewPythonFile(
+                const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
                     interactiveWindowProvider,
                     'import sys\nprint(sys.executable)',
                     disposables
                 );
-                await waitForLastCellToComplete(activeInteractiveWindow, 1, true);
+                await waitForLastCellToComplete(interactiveWindowProvider, activeInteractiveWindow, 1, true);
                 let notebookDocument = vscode.workspace.notebookDocuments.find(
                     (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
                 )!;
@@ -626,8 +644,8 @@ ${actualCode}
                 await closeInteractiveWindow(activeInteractiveWindow);
 
                 // Run again and make sure it uses the new interpreter
-                const newIW = await runCurrentFile(interactiveWindowProvider, untitledPythonFile);
-                await waitForLastCellToComplete(newIW, 1, true);
+                const newIW = await runFileInInteractiveWindow(interactiveWindowProvider, untitledPythonFile);
+                await waitForLastCellToComplete(interactiveWindowProvider, newIW, 1, true);
 
                 // Make sure it's a new window
                 assert.notEqual(newIW, activeInteractiveWindow, `New IW was not created`);

@@ -23,7 +23,7 @@ import {
 } from './notebook/helper';
 import { IDisposable } from '../../platform/common/types';
 import { startJupyterServer } from './notebook/helper.node';
-import { runNewPythonFile, waitForLastCellToComplete } from './helpers.node';
+import { submitFromPythonFile, waitForLastCellToComplete } from './helpers.node';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
@@ -156,13 +156,13 @@ suite('Telemetry validation', function () {
         assertEvent(Telemetry.NotebookStart);
     });
     test('Run interactive window', async () => {
-        const { activeInteractiveWindow } = await runNewPythonFile(
+        const { activeInteractiveWindow } = await submitFromPythonFile(
             interactiveWindowProvider,
             '#%%\na=1\nprint(a)\n#%%\nb=2\nprint(b)\n',
             disposables
         );
 
-        await waitForLastCellToComplete(activeInteractiveWindow);
+        await waitForLastCellToComplete(interactiveWindowProvider, activeInteractiveWindow);
 
         // Check for expected events
         const assertEvent = (event: string) => {

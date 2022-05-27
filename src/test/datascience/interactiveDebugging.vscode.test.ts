@@ -12,10 +12,10 @@ import { InteractiveWindowProvider } from '../../interactive-window/interactiveW
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common.node';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize.node';
 import {
-    submitFromPythonFileUsingCodeWatcher,
     waitForCodeLenses,
     waitForLastCellToComplete,
-    submitFromPythonFile
+    submitFromPythonFile,
+    submitFromPythonFileUsingCodeWatcher
 } from './helpers.node';
 import { closeNotebooksAndCleanUpAfterTests, defaultNotebookTestTimeout, getCellOutputs } from './notebook/helper.node';
 import { ITestWebviewHost } from './testInterfaces';
@@ -24,6 +24,7 @@ import { ITestVariableViewProvider } from './variableView/variableViewTestInterf
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { Commands } from '../../platform/common/constants';
 import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
+import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
 
 suite('Interactive window debugging', async function () {
     this.timeout(120_000);
@@ -82,7 +83,7 @@ suite('Interactive window debugging', async function () {
             source,
             disposables
         );
-        await waitForLastCellToComplete(activeInteractiveWindow);
+        await waitForLastCellToComplete(interactiveWindowProvider, activeInteractiveWindow);
 
         // Add some more text
         const editor = vscode.window.visibleTextEditors.find((e) => e.document.uri === untitledPythonFile.uri);
@@ -138,7 +139,7 @@ suite('Interactive window debugging', async function () {
             source,
             disposables
         );
-        await waitForLastCellToComplete(activeInteractiveWindow);
+        await waitForLastCellToComplete(interactiveWindowProvider, activeInteractiveWindow);
 
         // Add some more text
         const editor = vscode.window.visibleTextEditors.find((e) => e.document.uri === untitledPythonFile.uri);
@@ -204,7 +205,7 @@ suite('Interactive window debugging', async function () {
             source,
             disposables
         );
-        await waitForLastCellToComplete(activeInteractiveWindow);
+        await waitForLastCellToComplete(interactiveWindowProvider, activeInteractiveWindow);
 
         // Add some more text
         const editor = vscode.window.visibleTextEditors.find((e) => e.document.uri === untitledPythonFile.uri);
@@ -304,7 +305,7 @@ suite('Interactive window debugging', async function () {
             source,
             disposables
         );
-        await waitForLastCellToComplete(activeInteractiveWindow);
+        await waitForLastCellToComplete(interactiveWindowProvider, activeInteractiveWindow);
 
         // Add some more text
         const editor = vscode.window.visibleTextEditors.find((e) => e.document.uri === untitledPythonFile.uri);
@@ -343,7 +344,7 @@ suite('Interactive window debugging', async function () {
 
         // Now we should have a stop command (second one)
         codeLenses = await waitForCodeLenses(untitledPythonFile.uri, Commands.DebugStop);
-        const lastCell = await waitForLastCellToComplete(activeInteractiveWindow, -1, true);
+        const lastCell = await waitForLastCellToComplete(interactiveWindowProvider, activeInteractiveWindow, -1, true);
         const outputs = getCellOutputs(lastCell);
         assert.isFalse(outputs.includes('finished'), 'Cell finished during a stop');
     });
@@ -356,7 +357,7 @@ suite('Interactive window debugging', async function () {
             source,
             disposables
         );
-        await waitForLastCellToComplete(activeInteractiveWindow);
+        await waitForLastCellToComplete(interactiveWindowProvider, activeInteractiveWindow);
 
         // Next add some code lines with leading spaces, we are going to debug this cell and we want to end up on the
         // correct starting line
@@ -426,7 +427,7 @@ def foo():
             source,
             disposables
         );
-        await waitForLastCellToComplete(activeInteractiveWindow);
+        await waitForLastCellToComplete(interactiveWindowProvider, activeInteractiveWindow);
 
         // Add some more text
         const editor = vscode.window.visibleTextEditors.find((e) => e.document.uri === untitledPythonFile.uri);
@@ -507,11 +508,14 @@ def foo():
 # %%
 foo()
 `;
+        const codeWatcherProvider = api.serviceManager.get<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider);
         const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFileUsingCodeWatcher(
+            interactiveWindowProvider,
+            codeWatcherProvider,
             source,
             disposables
         );
-        await waitForLastCellToComplete(activeInteractiveWindow, 2);
+        await waitForLastCellToComplete(interactiveWindowProvider, activeInteractiveWindow, 2);
 
         let codeLenses = await waitForCodeLenses(untitledPythonFile.uri, Commands.DebugCell);
         let stopped = false;

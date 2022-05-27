@@ -36,7 +36,7 @@ import {
     installIPyKernel,
     openNotebook,
     submitFromPythonFileWithInterpreter,
-    submitFromPythonFileUsingCodeWatcher,
+    submitFromPythonFileUsingCodeWatcherWithInterpreter,
     uninstallIPyKernel
 } from '../../helpers.node';
 import { JupyterNotebookView } from '../../../../notebooks/constants';
@@ -433,7 +433,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         );
 
         const source = '# %%\nprint(1)\n# %%\nprint(2)\n# %%\nprint(3)';
-        const { activeInteractiveWindow } = await submitFromPythonFileUsingCodeWatcher(
+        const { activeInteractiveWindow } = await submitFromPythonFileUsingCodeWatcherWithInterpreter(
             source,
             disposables,
             venvPythonPath
@@ -475,7 +475,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         );
 
         const source = '# %%\nprint(1)\n# %%\nprint(2)\n# %%\nprint(3)';
-        const { activeInteractiveWindow } = await submitFromPythonFileUsingCodeWatcher(
+        const { activeInteractiveWindow } = await submitFromPythonFileUsingCodeWatcherWithInterpreter(
             source,
             disposables,
             venvPythonPath
