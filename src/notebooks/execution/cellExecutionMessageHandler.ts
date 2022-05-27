@@ -61,13 +61,7 @@ type DisplayData = nbformat.IDisplayData & {
 export const activeNotebookCellExecution = new WeakMap<NotebookDocument, NotebookCellExecution | undefined>();
 
 /**
- * Responsible for execution of an individual cell and manages the state of the cell as it progresses through the execution phases.
- * Execution phases include - enqueue for execution (done in ctor), start execution, completed execution with/without errors, cancel execution or dequeue.
- *
- * WARNING: Do not dispose `request: Kernel.IShellFuture` object.
- * Even after request.done & execute_reply is sent we could have more messages coming from iopub.
- * Further details here https://github.com/microsoft/vscode-jupyter/issues/232 & https://github.com/jupyter/jupyter_client/issues/297
- *
+ * Responsible for handling of jupyter messages as a result of execution of individual cells.
  */
 export class CellExecutionMessageHandler implements IDisposable {
     /**
