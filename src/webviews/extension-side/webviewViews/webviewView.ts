@@ -4,9 +4,9 @@
 
 import { Event, EventEmitter, Uri, WebviewOptions, WebviewView as vscodeWebviewView } from 'vscode';
 import { IWebviewView, IWebviewViewOptions } from '../../../platform/common/application/types';
-import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { IDisposableRegistry } from '../../../platform/common/types';
-import { Webview } from '../webviews/webview.node';
+import { IFileSystem } from '../../../platform/common/platform/types';
+import { IDisposableRegistry, IExtensionContext } from '../../../platform/common/types';
+import { Webview } from '../webviews/webview';
 
 export class WebviewView extends Webview implements IWebviewView {
     public get visible(): boolean {
@@ -16,17 +16,18 @@ export class WebviewView extends Webview implements IWebviewView {
             return this.webviewHost.visible;
         }
     }
-    public get onDidChangeVisiblity(): Event<void> {
+    public get onDidChangeVisibility(): Event<void> {
         return this._onDidChangeVisibility.event;
     }
     private readonly _onDidChangeVisibility = new EventEmitter<void>();
     constructor(
-        fs: IFileSystemNode,
+        fs: IFileSystem,
         disposableRegistry: IDisposableRegistry,
+        context: IExtensionContext,
         private panelOptions: IWebviewViewOptions,
         additionalRootPaths: Uri[] = []
     ) {
-        super(fs, disposableRegistry, panelOptions, additionalRootPaths);
+        super(fs, disposableRegistry, context, panelOptions, additionalRootPaths);
     }
 
     protected createWebview(_webviewOptions: WebviewOptions): vscodeWebviewView {

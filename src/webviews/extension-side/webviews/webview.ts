@@ -3,7 +3,6 @@
 'use strict';
 import '../../../platform/common/extensions';
 
-import * as path from '../../../platform/vscode-path/path';
 import {
     Event,
     EventEmitter,
@@ -14,11 +13,11 @@ import {
 } from 'vscode';
 import { IWebview, IWebviewOptions, WebviewMessage } from '../../../platform/common/application/types';
 import { traceError } from '../../../platform/logging';
-import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { IDisposableRegistry } from '../../../platform/common/types';
+import { IFileSystem } from '../../../platform/common/platform/types';
+import { IDisposableRegistry, IExtensionContext } from '../../../platform/common/types';
 import * as localize from '../../../platform/common/utils/localize';
-import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { Identifiers } from '../../webview-side/common/constants';
+import { joinPath } from '../../../platform/vscode-path/resources';
 
 // Wrapper over a vscode webview. To be used with either WebviewPanel or WebviewView
 export abstract class Webview implements IWebview {
@@ -30,8 +29,9 @@ export abstract class Webview implements IWebview {
     protected loadPromise: Promise<void>;
 
     constructor(
-        protected fs: IFileSystemNode,
+        protected fs: IFileSystem,
         protected disposableRegistry: IDisposableRegistry,
+        private readonly context: IExtensionContext,
         protected options: IWebviewOptions,
         additionalRootPaths: Uri[] = []
     ) {
@@ -77,33 +77,24 @@ export abstract class Webview implements IWebview {
 
         const uriBase = this.webviewHost?.webview.asWebviewUri(this.options.cwd).toString();
         const uris = this.options.scripts.map((script) => this.webviewHost!.webview!.asWebviewUri(script));
-        const testFiles = await this.fs.getFiles(this.options.rootPath);
-
-        // This method must be called so VSC is aware of files that can be pulled.
-        // Allow js and js.map files to be loaded by webpack in the webview.
-        testFiles
-            .filter((f) => f.fsPath.toLowerCase().endsWith('.js') || f.fsPath.toLowerCase().endsWith('.js.map'))
-            .forEach((f) => this.webviewHost?.webview!.asWebviewUri(f));
 
         const rootPath = this.webviewHost.webview.asWebviewUri(this.options.rootPath).toString();
         const fontAwesomePath = this.webviewHost.webview
             .asWebviewUri(
-                Uri.file(
-                    path.join(
-                        EXTENSION_ROOT_DIR,
-                        'out',
-                        'fontAwesome',
-                        'node_modules',
-                        'font-awesome',
-                        'css',
-                        'font-awesome.min.css'
-                    )
+                joinPath(
+                    this.context.extensionUri,
+                    'out',
+                    'fontAwesome',
+                    'node_modules',
+                    'font-awesome',
+                    'css',
+                    'font-awesome.min.css'
                 )
             )
             .toString();
 
-        // Check to see if we should force on Test middleware for our react code
-        const forceTestMiddleware = process.env.VSC_JUPYTER_WEBVIEW_TEST_MIDDLEWARE || 'false';
+        // Change to `true` to force on Test middleware for our react code
+        const forceTestMiddleware = 'false';
         return `<!doctype html>
         <html lang="en">
             <head>
@@ -145,9 +136,7 @@ export abstract class Webview implements IWebview {
     private async load() {
         try {
             if (this.webviewHost?.webview) {
-                const localFilesExist = await Promise.all(
-                    this.options.scripts.map((s) => this.fs.localFileExists(s.fsPath))
-                );
+                const localFilesExist = await Promise.all(this.options.scripts.map((s) => this.fs.exists(s)));
                 if (localFilesExist.every((exists) => exists === true)) {
                     // Call our special function that sticks this script inside of an html page
                     // and translates all of the paths to vscode-resource URIs

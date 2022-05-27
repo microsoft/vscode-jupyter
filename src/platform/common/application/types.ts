@@ -1096,7 +1096,7 @@ export interface IWebview {
 // Wraps the VS Code webview view
 export const IWebviewView = Symbol('IWebviewView');
 export interface IWebviewView extends IWebview {
-    readonly onDidChangeVisiblity: Event<void>;
+    readonly onDidChangeVisibility: Event<void>;
     readonly visible: boolean;
 }
 

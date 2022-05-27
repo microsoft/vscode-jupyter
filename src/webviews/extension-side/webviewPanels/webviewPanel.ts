@@ -4,10 +4,10 @@
 import '../../../platform/common/extensions';
 
 import { Uri, ViewColumn, WebviewOptions, WebviewPanel as vscodeWebviewPanel, window } from 'vscode';
-import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { IDisposableRegistry } from '../../../platform/common/types';
+import { IFileSystem } from '../../../platform/common/platform/types';
+import { IDisposableRegistry, IExtensionContext } from '../../../platform/common/types';
 import { IWebviewPanel, IWebviewPanelOptions } from '../../../platform/common/application/types';
-import { Webview } from '../webviews/webview.node';
+import { Webview } from '../webviews/webview';
 
 export class WebviewPanel extends Webview implements IWebviewPanel {
     private get panel(): vscodeWebviewPanel | undefined {
@@ -19,12 +19,13 @@ export class WebviewPanel extends Webview implements IWebviewPanel {
     }
 
     constructor(
-        fs: IFileSystemNode,
+        fs: IFileSystem,
         disposableRegistry: IDisposableRegistry,
+        context: IExtensionContext,
         panelOptions: IWebviewPanelOptions,
         additionalRootPaths: Uri[] = []
     ) {
-        super(fs, disposableRegistry, panelOptions, additionalRootPaths);
+        super(fs, disposableRegistry, context, panelOptions, additionalRootPaths);
     }
 
     public async show(preserveFocus: boolean) {

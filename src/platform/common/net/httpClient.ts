@@ -11,9 +11,12 @@ import * as fetch from 'cross-fetch';
 
 @injectable()
 export class HttpClient implements IHttpClient {
-    public readonly requestOptions: RequestInit;
+    public readonly requestOptions: RequestInit = {};
     constructor(@inject(IWorkspaceService) workspaceService: IWorkspaceService) {
-        this.requestOptions = { headers: { proxy: workspaceService.getConfiguration('http').get('proxy', '') } };
+        const proxy = workspaceService.getConfiguration('http').get('proxy', '');
+        if (proxy) {
+            this.requestOptions = { headers: { proxy } };
+        }
     }
 
     public async downloadFile(uri: string): Promise<Response> {

@@ -2,14 +2,14 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { IWebviewViewProvider, IWebviewPanelProvider } from '../../platform/common/application/types';
 import { IServiceManager } from '../../platform/ioc/types';
-import { IVariableViewProvider } from './variablesView/types';
-import { VariableViewActivationService } from './variablesView/variableViewActivationService';
-import { VariableViewProvider } from './variablesView/variableViewProvider';
-import { WebviewPanelProvider } from './webviewPanels/webviewPanelProvider';
 import { WebviewViewProvider } from './webviewViews/webviewViewProvider';
+import { WebviewPanelProvider } from './webviewPanels/webviewPanelProvider';
+import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { VariableViewActivationService } from './variablesView/variableViewActivationService';
+import { IVariableViewProvider } from './variablesView/types';
+import { VariableViewProvider } from './variablesView/variableViewProvider';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.add<IWebviewViewProvider>(IWebviewViewProvider, WebviewViewProvider);
