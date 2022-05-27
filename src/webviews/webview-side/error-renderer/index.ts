@@ -13,37 +13,27 @@ let Localizations = {
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-const handleInnerClick = (event: MouseEvent, context: RendererContext<any>) => {
-    if (!event || !event.view || !event.view.document) {
-        return;
-    }
-
-    for (const pathElement of event.composedPath()) {
-        const node: any = pathElement;
-        if (node.tagName && node.tagName.toLowerCase() === 'a' && node.href && context.postMessage) {
-            if (node.href.indexOf('file') === 0) {
-                context.postMessage({
-                    message: 'open_link',
-                    payload: node.href
-                });
-                event.preventDefault();
-                return;
-            }
-            if (node.href.indexOf('vscode-notebook-cell') === 0) {
-                context.postMessage({
-                    message: 'open_link',
-                    payload: node.href
-                });
-                event.preventDefault();
-                return;
-            } else if (node.href.indexOf('command') === 0) {
-                context.postMessage({
-                    message: 'open_link',
-                    payload: node.href
-                });
-                event.preventDefault();
-                return;
-            }
+const handleInnerClick = (target: HTMLAnchorElement, context: RendererContext<any>) => {
+    if (target.href && context.postMessage) {
+        if (target.href.indexOf('file') === 0) {
+            context.postMessage({
+                message: 'open_link',
+                payload: target.href
+            });
+            return;
+        }
+        if (target.href.indexOf('vscode-notebook-cell') === 0) {
+            context.postMessage({
+                message: 'open_link',
+                payload: target.href
+            });
+            return;
+        } else if (target.href.indexOf('command') === 0) {
+            context.postMessage({
+                message: 'open_link',
+                payload: target.href
+            });
+            return;
         }
     }
 };
@@ -69,7 +59,12 @@ function handleANSIOutput(context: RendererContext<any>, converter: ansiToHtml, 
     const tracebackElm = document.createElement('div');
     tracebackElm.innerHTML = converter.toHtml(traceback.join('\n'));
     tracebackElm.addEventListener('click', (e) => {
-        handleInnerClick(e, context);
+        const a = e.target as HTMLAnchorElement;
+        if (a && a.href) {
+            e.stopImmediatePropagation();
+            e.preventDefault();
+            handleInnerClick(a, context);
+        }
     });
     return tracebackElm;
 }

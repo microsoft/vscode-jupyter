@@ -59,7 +59,7 @@ export class ErrorRendererCommunicationHandler implements IExtensionSyncActivati
     }
 
     private async openFile(fileUri: string) {
-        const uri = Uri.parse(fileUri);
+        let uri = Uri.parse(fileUri);
         let selection: Range = new Range(new Position(0, 0), new Position(0, 0));
         if (uri.query) {
             // Might have a line number query on the file name
@@ -68,13 +68,14 @@ export class ErrorRendererCommunicationHandler implements IExtensionSyncActivati
                 const lineNumber = parseInt(lineMatch[1], 10);
                 selection = new Range(new Position(lineNumber, 0), new Position(lineNumber, 0));
             }
+            uri = uri.with({ query: '' });
         }
 
         // Show the matching editor if there is one
         let editor = this.documentManager.visibleTextEditors.find((e) => this.fs.arePathsSame(e.document.uri, uri));
         if (editor) {
             return this.documentManager
-                .showTextDocument(editor.document, { selection, viewColumn: editor.viewColumn })
+                .showTextDocument(editor.document, { selection, viewColumn: editor.viewColumn, preserveFocus: false })
                 .then((e) => {
                     e.revealRange(selection, TextEditorRevealType.InCenter);
                 });
