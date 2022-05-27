@@ -24,7 +24,7 @@ import {
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook
 } from './helper';
-import { captureScreenShot, createEventHandler } from '../../common.node';
+import { createEventHandler } from '../../common';
 import { IKernelProvider } from '../../../kernels/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
@@ -54,7 +54,6 @@ export function sharedKernelEventTests(
             traceInfo('Suite Setup (completed)');
         } catch (e) {
             traceInfo('Suite Setup (failed)');
-            await captureScreenShot('execution-suite');
             throw e;
         }
     });
@@ -69,15 +68,11 @@ export function sharedKernelEventTests(
             await options.startJupyterServer();
             traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
         } catch (e) {
-            await captureScreenShot(this.currentTest?.title || 'unknown');
             throw e;
         }
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
-        if (this.currentTest?.isFailed()) {
-            await captureScreenShot(this.currentTest?.title);
-        }
         await closeNotebooksAndCleanUpAfterTests(disposables);
         configSettings.disableJupyterAutoStart = previousDisableJupyterAutoStartValue;
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
