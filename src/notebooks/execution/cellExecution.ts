@@ -289,6 +289,9 @@ export class CellExecution implements IDisposable {
         }
         NotebookCellStateTracker.setCellState(this.cell, NotebookCellExecutionState.Idle);
         this.execution = undefined;
+        if (this.cellExecutionHandler) {
+            this.cellExecutionHandler.execution = undefined;
+        }
     }
 
     private completedDueToCancellation() {
