@@ -61,11 +61,20 @@ export class CellExecutionMessageHandlerFactory {
             options.request,
             options.cellExecution
         );
+        handler.onDidEndCellExecution(
+            () => {
+                if (handler.canDispose()) {
+                    handler.dispose();
+                    this.messageHandlers.delete(cell);
+                }
+            },
+            this,
+            this.disposables
+        );
+
         // This object must be kept in memory has it monitors the kernel messages.
+        // Use `canDispose` to determine if the object can be disposed.
         this.messageHandlers.set(cell, handler);
         return handler;
-    }
-    public get(cell: NotebookCell): CellExecutionMessageHandler | undefined {
-        return this.messageHandlers.get(cell);
     }
 }
