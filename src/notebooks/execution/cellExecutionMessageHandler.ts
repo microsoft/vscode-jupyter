@@ -115,6 +115,7 @@ export class CellExecutionMessageHandler implements IDisposable {
                 if (thisCellChange.outputs?.length === 0) {
                     // keep track of the fact that user has cleared the output.
                     this.clearLastUsedStreamOutput();
+                    this.cellHasErrorsInOutput = false;
                 }
             },
             this,
@@ -134,6 +135,9 @@ export class CellExecutionMessageHandler implements IDisposable {
         this.prompts.clear();
     }
     public endCellExecution() {
+        this.prompts.forEach((item) => item.dispose());
+        this.prompts.clear();
+        this.clearLastUsedStreamOutput();
         this.execution = undefined;
     }
     private startHandlingExecutionMessages(

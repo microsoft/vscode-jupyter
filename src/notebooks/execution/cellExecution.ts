@@ -11,7 +11,6 @@ import {
     NotebookController,
     NotebookCellOutput,
     NotebookCellExecutionState,
-    CancellationTokenSource,
     Event,
     EventEmitter
 } from 'vscode';
@@ -80,7 +79,6 @@ export class CellExecution implements IDisposable {
     private cancelHandled = false;
     private request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
     private readonly disposables: IDisposable[] = [];
-    private readonly prompts = new Set<CancellationTokenSource>();
     private _preExecuteEmitter = new EventEmitter<NotebookCell>();
     private cellExecutionHandler?: CellExecutionMessageHandler;
     private constructor(
@@ -187,8 +185,6 @@ export class CellExecution implements IDisposable {
         if (this.cancelHandled) {
             return;
         }
-        // Close all of the prompts (if we any any UI prompts asking user for input).
-        this.prompts.forEach((item) => item.cancel());
         if (this.started && !forced) {
             // At this point the cell execution can only be stopped from kernel & we should not
             // stop handling execution results & the like from the kernel.
@@ -213,8 +209,6 @@ export class CellExecution implements IDisposable {
     public dispose() {
         traceCellMessage(this.cell, 'Execution disposed');
         disposeAllDisposables(this.disposables);
-        this.prompts.forEach((item) => item.dispose());
-        this.prompts.clear();
     }
     private completedWithErrors(error: Partial<Error>) {
         traceWarning(`Cell completed with errors`, error);
@@ -361,7 +355,7 @@ export class CellExecution implements IDisposable {
             traceError(`Cell execution failed without request, for cell Index ${this.cell.index}`, ex);
             return this.completedWithErrors(ex);
         }
-        this.cellExecutionHandler = this.factory.getOrCreate(this.cell, {
+        this.cellExecutionHandler = this.factory.create(this.cell, {
             kernel: session.kernel!,
             cellExecution: this.execution!,
             request: this.request
