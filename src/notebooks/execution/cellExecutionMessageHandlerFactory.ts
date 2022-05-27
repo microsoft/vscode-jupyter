@@ -12,7 +12,7 @@ import { CellExecutionMessageHandler } from './cellExecutionMessageHandler';
 
 export class CellExecutionMessageHandlerFactory {
     private readonly disposables: IDisposable[] = [];
-    private readonly messageHandlers = new Map<NotebookCell, CellExecutionMessageHandler>();
+    private readonly messageHandlers = new WeakMap<NotebookCell, CellExecutionMessageHandler>();
     constructor(
         private readonly appShell: IApplicationShell,
         private readonly controller: NotebookController,

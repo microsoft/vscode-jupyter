@@ -33,7 +33,7 @@ import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from
 import { IJupyterSession, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
 import { getInteractiveCellMetadata } from '../../interactive-window/helpers';
 import { isCancellationError } from '../../platform/common/cancellation';
-import { activeNotebookCellExecution } from './cellExecutionMessageHandler';
+import { activeNotebookCellExecution, CellExecutionMessageHandler } from './cellExecutionMessageHandler';
 import { CellExecutionMessageHandlerFactory } from './cellExecutionMessageHandlerFactory';
 
 export class CellExecutionFactory {
@@ -78,11 +78,11 @@ export class CellExecution implements IDisposable {
     private endTime?: number;
     private execution?: NotebookCellExecution;
     private cancelHandled = false;
-    private cellHasErrorsInOutput?: boolean;
     private request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
     private readonly disposables: IDisposable[] = [];
     private readonly prompts = new Set<CancellationTokenSource>();
     private _preExecuteEmitter = new EventEmitter<NotebookCell>();
+    private cellExecutionHandler?: CellExecutionMessageHandler;
     private constructor(
         public readonly cell: NotebookCell,
         private readonly kernelConnection: Readonly<KernelConnectionMetadata>,
@@ -259,7 +259,7 @@ export class CellExecution implements IDisposable {
 
         let success: 'success' | 'failed' = 'success';
         // If there are any errors in the cell, then change status to error.
-        if (this.cellHasErrorsInOutput) {
+        if (this.cellExecutionHandler?.hasErrorOutput) {
             success = 'failed';
             runState = NotebookCellRunState.Error;
         }
@@ -360,12 +360,12 @@ export class CellExecution implements IDisposable {
             traceError(`Cell execution failed without request, for cell Index ${this.cell.index}`, ex);
             return this.completedWithErrors(ex);
         }
-        const cellExecutionHandler = this.factory.getOrCreate(this.cell, {
+        this.cellExecutionHandler = this.factory.getOrCreate(this.cell, {
             kernel: session.kernel!,
             cellExecution: this.execution!,
             request: this.request
         });
-        cellExecutionHandler.onErrorHandlingExecuteRequestIOPubMessage(
+        this.cellExecutionHandler.onErrorHandlingExecuteRequestIOPubMessage(
             ({ error }) => {
                 traceError(`Cell (index = ${this.cell.index}) execution completed with errors (2).`, error);
                 // If not a restart error, then tell the subscriber
