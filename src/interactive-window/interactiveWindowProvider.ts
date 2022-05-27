@@ -339,7 +339,9 @@ export class InteractiveWindowProvider
         const targetInteractiveNotebookEditor =
             resource && getResourceType(resource) === 'interactive' ? this.get(resource)?.notebookEditor : undefined;
         const activeInteractiveNotebookEditor =
-            getResourceType(resource) === 'interactive' ? this.getActiveOrAssociatedInteractiveWindow()?.notebookEditor : undefined;
+            getResourceType(resource) === 'interactive'
+                ? this.getActiveOrAssociatedInteractiveWindow()?.notebookEditor
+                : undefined;
 
         return targetInteractiveNotebookEditor || activeInteractiveNotebookEditor;
     }
