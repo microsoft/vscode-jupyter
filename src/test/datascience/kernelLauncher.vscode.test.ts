@@ -22,7 +22,6 @@ import { CancellationTokenSource, PortAutoForwardAction } from 'vscode';
 import { createRawKernel } from '../../kernels/raw/session/rawKernel.node';
 import { IKernelConnection, IKernelLauncher } from '../../kernels/raw/types';
 import { IJupyterKernelSpec } from '../../kernels/types';
-import { noop } from '../../platform/common/utils/misc';
 use(chaiAsPromised);
 
 const test_Timeout = 30_000;
@@ -116,7 +115,7 @@ suite('DataScience - Kernel Launcher', () => {
         assert.isOk<IKernelConnection | undefined>(kernel.connection, 'Connection not found');
 
         // Send a request to print out the env vars
-        const rawKernel = createRawKernel(kernel, uuid(), noop);
+        const rawKernel = createRawKernel(kernel, uuid());
 
         const result = await requestExecute(rawKernel, 'import os\nprint(os.getenv("TEST_VAR"))');
         assert.ok(result, 'No result returned');

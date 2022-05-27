@@ -83,9 +83,7 @@ export class RawKernel implements Kernel.IKernelConnection {
     public clone(
         options?: Pick<Kernel.IKernelConnection.IOptions, 'clientId' | 'username' | 'handleComms'>
     ): Kernel.IKernelConnection {
-        return createRawKernel(this.kernelProcess, options?.clientId || this.clientId, (msg) =>
-            this.anyMessage.emit(msg)
-        );
+        return createRawKernel(this.kernelProcess, options?.clientId || this.clientId);
     }
 
     public async shutdown(): Promise<void> {
@@ -271,25 +269,21 @@ export class RawKernel implements Kernel.IKernelConnection {
 
 let nonSerializingKernel: typeof import('@jupyterlab/services/lib/kernel/default');
 
-export function createRawKernel(
-    kernelProcess: IKernelProcess,
-    clientId: string,
-    onAnyMessage: (msg: Kernel.IAnyMessageArgs) => void
-): RawKernel {
+export function createRawKernel(kernelProcess: IKernelProcess, clientId: string): RawKernel {
     const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
     const jupyterLabSerialize =
         require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
 
     // Dummy websocket we give to the underlying real kernel
     let socketInstance: any;
+    let rawKernel: RawKernel;
     class RawSocketWrapper extends RawSocket {
         constructor() {
-            super(
-                kernelProcess.connection,
-                jupyterLabSerialize.serialize,
-                jupyterLabSerialize.deserialize,
-                onAnyMessage
-            );
+            super(kernelProcess.connection, jupyterLabSerialize.serialize, jupyterLabSerialize.deserialize, (msg) => {
+                if (rawKernel) {
+                    rawKernel?.anyMessage.emit({ direction: 'send', msg });
+                }
+            });
             socketInstance = this;
         }
     }
@@ -320,5 +314,6 @@ export function createRawKernel(
     });
 
     // Use this real kernel in result.
-    return new RawKernel(realKernel, socketInstance, kernelProcess);
+    rawKernel = new RawKernel(realKernel, socketInstance, kernelProcess);
+    return rawKernel;
 }

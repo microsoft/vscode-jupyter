@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { IDisposable } from '@fluentui/react';
-import type { Kernel, KernelMessage } from '@jupyterlab/services';
+import type { KernelMessage } from '@jupyterlab/services';
 import * as wireProtocol from '@nteract/messaging/lib/wire-protocol';
 import * as uuid from 'uuid/v4';
 import * as WebSocketWS from 'ws';
@@ -49,7 +49,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         private connection: IKernelConnection,
         private serialize: (msg: KernelMessage.IMessage) => string | ArrayBuffer,
         private deserialize: (data: ArrayBuffer | string) => KernelMessage.IMessage,
-        private readonly onAnyMessage: (msg: Kernel.IAnyMessageArgs) => void
+        private readonly onAnyMessage: (msg: KernelMessage.IMessage) => void
     ) {
         // Setup our ZMQ channels now
         this.channels = this.generateChannels(connection);
