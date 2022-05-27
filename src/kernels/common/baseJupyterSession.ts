@@ -96,7 +96,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     }
     public get kernel(): Kernel.IKernelConnection | undefined {
         if (this._wrappedKernel) {
-            return;
+            return this._wrappedKernel;
         }
         if (!this._session?.kernel) {
             return;
