@@ -99,11 +99,11 @@ export async function waitForActiveInteractiveWindow(
 export async function createStandaloneInteractiveWindow(iwProvider: InteractiveWindowProvider) {
     let currentIW = iwProvider.getActiveInteractiveWindow();
     await vscode.commands.executeCommand(Commands.CreateNewInteractive);
-    let activeInteractiveWindow: IInteractiveWindow;
+    let activeInteractiveWindow: IInteractiveWindow | undefined;
     await waitForCondition(
         () => {
-            let activeWindow = iwProvider.getActiveInteractiveWindow();
-            return currentIW !== activeWindow && activeWindow?.notebookUri !== undefined;
+            activeInteractiveWindow = iwProvider.getActiveInteractiveWindow();
+            return currentIW !== activeInteractiveWindow && activeInteractiveWindow?.notebookUri !== undefined;
         },
         defaultNotebookTestTimeout,
         'Interactive window did not become active'
