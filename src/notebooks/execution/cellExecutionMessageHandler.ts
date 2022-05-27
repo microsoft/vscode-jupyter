@@ -70,7 +70,7 @@ export class CellExecutionMessageHandler implements IDisposable {
      */
     private readonly clearState = new RefBool(false);
 
-    public execution?: NotebookCellExecution;
+    private execution?: NotebookCellExecution;
     private readonly _onErrorHandlingIOPubMessage = new EventEmitter<{
         error: Error;
         msg: KernelMessage.IIOPubMessage;
@@ -132,6 +132,9 @@ export class CellExecutionMessageHandler implements IDisposable {
         disposeAllDisposables(this.disposables);
         this.prompts.forEach((item) => item.dispose());
         this.prompts.clear();
+    }
+    public endCellExecution(){
+        this.execution = undefined;
     }
     private startHandlingExecutionMessages(
         request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>
