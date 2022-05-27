@@ -12,10 +12,10 @@ import { InteractiveWindowProvider } from '../../interactive-window/interactiveW
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common.node';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize.node';
 import {
-    submitFromPythonFile,
     submitFromPythonFileUsingCodeWatcher,
     waitForCodeLenses,
-    waitForLastCellToComplete
+    waitForLastCellToComplete,
+    submitFromPythonFile
 } from './helpers.node';
 import { closeNotebooksAndCleanUpAfterTests, defaultNotebookTestTimeout, getCellOutputs } from './notebook/helper.node';
 import { ITestWebviewHost } from './testInterfaces';
