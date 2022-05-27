@@ -93,7 +93,7 @@ export async function waitForCondition(
  * assert.equal(handler.first, 'Args Passed to first onDidSave')
  * assert.equal(handler.count, 1)// Only one should have been fired.
  */
- export class TestEventHandler<T extends void | any = any> implements IDisposable {
+export class TestEventHandler<T extends void | any = any> implements IDisposable {
     public get fired() {
         return this.handledEvents.length > 0;
     }
@@ -154,7 +154,6 @@ export async function waitForCondition(
     }
 }
 
-
 export function createEventHandler<T, K extends keyof T>(
     obj: T,
     eventName: K,
@@ -163,4 +162,3 @@ export function createEventHandler<T, K extends keyof T>(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return new TestEventHandler(obj[eventName] as any, eventName as string, disposables) as any;
 }
-

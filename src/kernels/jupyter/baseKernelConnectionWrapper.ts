@@ -79,7 +79,7 @@ export abstract class BaseKernelConnectionWrapper implements Kernel.IKernelConne
         return (this.possibleKernelConnection || this._previousKernelConnection).name;
     }
     public get isDisposed(): boolean {
-        return this.possibleKernelConnection?.isDisposed === true;
+        return this.possibleKernelConnection ? this.possibleKernelConnection?.isDisposed === true : true;
     }
 
     public get model(): Kernel.IModel {
