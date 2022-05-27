@@ -46,7 +46,10 @@ export interface IInteractiveWindowProvider {
      * @param owner The URI of a text document which may be associated with an interactive window.
      */
     get(owner: Uri): IInteractiveWindow | undefined;
-    getActiveInteractiveWindow(): IInteractiveWindow | undefined;
+    /**
+     * The active interactive window if it has the focus, or the interactive window associated with current active text editor
+     */
+    getActiveOrAssociatedInteractiveWindow(): IInteractiveWindow | undefined;
 }
 
 export interface IInteractiveBase extends Disposable {

@@ -188,7 +188,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private updateSelectedKernelContext() {
         const document =
             this.vscNotebook.activeNotebookEditor?.notebook ||
-            this.interactiveProvider?.getActiveInteractiveWindow()?.notebookEditor?.notebook;
+            this.interactiveProvider?.getActiveOrAssociatedInteractiveWindow()?.notebookEditor?.notebook;
         if (document && isJupyterNotebook(document) && this.controllers.getSelectedNotebookController(document)) {
             this.isJupyterKernelSelected.set(true).catch(noop);
         } else {
@@ -196,7 +196,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         }
     }
     private updateContextOfActiveInteractiveWindowKernel() {
-        const notebook = this.interactiveProvider?.getActiveInteractiveWindow()?.notebookEditor?.notebook;
+        const notebook = this.interactiveProvider?.getActiveOrAssociatedInteractiveWindow()?.notebookEditor?.notebook;
         const kernel = notebook ? this.kernelProvider.get(notebook.uri) : undefined;
         if (kernel) {
             const canStart = kernel.status !== 'unknown';

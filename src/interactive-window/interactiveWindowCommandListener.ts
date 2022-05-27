@@ -445,7 +445,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
     }
 
     private async removeCellInInteractiveWindow(context?: NotebookCell) {
-        const interactiveWindow = this.interactiveWindowProvider.getActiveInteractiveWindow();
+        const interactiveWindow = this.interactiveWindowProvider.getActiveOrAssociatedInteractiveWindow();
         const ranges =
             context === undefined
                 ? interactiveWindow?.notebookEditor?.selections
@@ -496,7 +496,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                 (w) => w.notebookUri?.toString() === notebookUri.toString()
             );
         } else {
-            targetInteractiveWindow = this.interactiveWindowProvider.getActiveInteractiveWindow();
+            targetInteractiveWindow = this.interactiveWindowProvider.getActiveOrAssociatedInteractiveWindow();
         }
         return targetInteractiveWindow;
     }
