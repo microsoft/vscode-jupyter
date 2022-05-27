@@ -29,7 +29,7 @@ import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { CellExecutionCreator } from './cellExecutionCreator';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import { traceError, traceWarning } from '../../platform/logging';
+import { traceWarning } from '../../platform/logging';
 import { RefBool } from '../../platform/common/refBool';
 import { IDisposable, IExtensionContext } from '../../platform/common/types';
 import { traceCellMessage, cellOutputToVSCCellOutput, translateCellDisplayOutput, isJupyterNotebook } from '../helpers';
@@ -81,7 +81,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         error: Error;
         msg: KernelMessage.IIOPubMessage;
     }>();
-    public readonly onErrorHandlingIOPubMessage = this._onErrorHandlingIOPubMessage.event;
+    public readonly onErrorHandlingExecuteRequestIOPubMessage = this._onErrorHandlingIOPubMessage.event;
     private temporaryExecution?: NotebookCellExecution;
     private previousResultsToRestore?: NotebookCellExecutionSummary;
     private cellHasErrorsInOutput?: boolean;
@@ -105,7 +105,9 @@ export class CellExecutionMessageHandler implements IDisposable {
         private readonly outputDisplayIdTracker: CellOutputDisplayIdTracker,
         private readonly context: IExtensionContext,
         private readonly formatters: ITracebackFormatter[],
-        private readonly kernel: Kernel.IKernelConnection
+        private readonly kernel: Kernel.IKernelConnection,
+        request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>,
+        cellExecution: NotebookCellExecution
     ) {
         workspace.onDidChangeNotebookDocument(
             (e) => {
@@ -124,27 +126,8 @@ export class CellExecutionMessageHandler implements IDisposable {
             this,
             this.disposables
         );
-    }
-    public startHandlingExecutionMessages(
-        request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>,
-        cellExecution: NotebookCellExecution
-    ) {
         this.execution = cellExecution;
-        request.onIOPub = (msg) => {
-            // Cell has been deleted or the like.
-            if (this.cell.document.isClosed) {
-                request.dispose();
-            }
-            this.handleIOPub(msg);
-        };
-        request.onReply = (msg) => {
-            // Cell has been deleted or the like.
-            if (this.cell.document.isClosed) {
-                request.dispose();
-            }
-            this.handleReply(msg);
-        };
-        request.onStdin = this.handleInputRequest.bind(this);
+        this.startHandlingExecutionMessages(request);
     }
     /**
      * This method is called when all execution has been completed (successfully or failed).
@@ -156,6 +139,30 @@ export class CellExecutionMessageHandler implements IDisposable {
         this.prompts.forEach((item) => item.dispose());
         this.prompts.clear();
     }
+    private startHandlingExecutionMessages(
+        request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>
+    ) {
+        request.onIOPub = (msg) => {
+            // Cell has been deleted or the like.
+            if (this.cell.document.isClosed) {
+                request.dispose();
+            }
+            try {
+            this.handleIOPub(msg);
+            } catch (ex) {
+                this._onErrorHandlingIOPubMessage.fire(ex);
+            }
+        };
+        request.onReply = (msg) => {
+            // Cell has been deleted or the like.
+            if (this.cell.document.isClosed) {
+                request.dispose();
+            }
+            this.handleReply(msg);
+        };
+        request.onStdin = this.handleInputRequest.bind(this);
+    }
+
     private clearLastUsedStreamOutput() {
         this.lastUsedStreamOutput = undefined;
     }
@@ -205,49 +212,42 @@ export class CellExecutionMessageHandler implements IDisposable {
         this.previousResultsToRestore = undefined;
         this.temporaryExecution = undefined;
     }
-    @swallowExceptions()
     private handleIOPub(msg: KernelMessage.IIOPubMessage) {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
-        try {
-            if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
-                this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg);
-            } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
-                this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg);
-            } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
-                // Status is handled by the result promise. While it is running we are active. Otherwise we're stopped.
-                // So ignore status messages.
-                const statusMsg = msg as KernelMessage.IStatusMsg;
-                this.handleStatusMessage(statusMsg);
-            } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
-                this.handleStreamMessage(msg as KernelMessage.IStreamMsg);
-            } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
-                this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg);
-            } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
-                this.handleUpdateDisplayDataMessage(msg);
-            } else if (jupyterLab.KernelMessage.isClearOutputMsg(msg)) {
-                this.handleClearOutput(msg as KernelMessage.IClearOutputMsg);
-            } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
-                this.handleError(msg as KernelMessage.IErrorMsg);
-            } else if (jupyterLab.KernelMessage.isCommOpenMsg(msg)) {
-                // Noop.
-            } else if (jupyterLab.KernelMessage.isCommMsgMsg(msg)) {
-                // Noop.
-            } else if (jupyterLab.KernelMessage.isCommCloseMsg(msg)) {
-                // Noop.
-            } else {
-                traceWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
-            }
+        if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
+            this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg);
+        } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
+            this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg);
+        } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
+            // Status is handled by the result promise. While it is running we are active. Otherwise we're stopped.
+            // So ignore status messages.
+            const statusMsg = msg as KernelMessage.IStatusMsg;
+            this.handleStatusMessage(statusMsg);
+        } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
+            this.handleStreamMessage(msg as KernelMessage.IStreamMsg);
+        } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
+            this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg);
+        } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
+            this.handleUpdateDisplayDataMessage(msg);
+        } else if (jupyterLab.KernelMessage.isClearOutputMsg(msg)) {
+            this.handleClearOutput(msg as KernelMessage.IClearOutputMsg);
+        } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
+            this.handleError(msg as KernelMessage.IErrorMsg);
+        } else if (jupyterLab.KernelMessage.isCommOpenMsg(msg)) {
+            // Noop.
+        } else if (jupyterLab.KernelMessage.isCommMsgMsg(msg)) {
+            // Noop.
+        } else if (jupyterLab.KernelMessage.isCommCloseMsg(msg)) {
+            // Noop.
+        } else {
+            traceWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
+        }
 
-            // Set execution count, all messages should have it
-            if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number' && this.execution) {
-                this.execution.executionOrder = msg.content.execution_count;
-            }
-        } catch (error) {
-            traceError(`Cell (index = ${this.cell.index}) execution completed with errors (2).`, error);
-            // If not a restart error, then tell the subscriber
-            this._onErrorHandlingIOPubMessage.fire({ error, msg });
+        // Set execution count, all messages should have it
+        if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number' && this.execution) {
+            this.execution.executionOrder = msg.content.execution_count;
         }
     }
 

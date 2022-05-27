@@ -360,8 +360,12 @@ export class CellExecution implements IDisposable {
             traceError(`Cell execution failed without request, for cell Index ${this.cell.index}`, ex);
             return this.completedWithErrors(ex);
         }
-        const cellExecutionHandler = this.factory.getOrCreate(this.cell, session.kernel!);
-        cellExecutionHandler.onErrorHandlingIOPubMessage(
+        const cellExecutionHandler = this.factory.getOrCreate(this.cell, {
+            kernel: session.kernel!,
+            cellExecution: this.execution!,
+            request: this.request
+        });
+        cellExecutionHandler.onErrorHandlingExecuteRequestIOPubMessage(
             ({ error }) => {
                 traceError(`Cell (index = ${this.cell.index}) execution completed with errors (2).`, error);
                 // If not a restart error, then tell the subscriber
@@ -371,7 +375,6 @@ export class CellExecution implements IDisposable {
             this,
             this.disposables
         );
-        cellExecutionHandler.startHandlingExecutionMessages(this.request, this.execution!);
 
         // WARNING: Do not dispose `request`.
         // Even after request.done & execute_reply is sent we could have more messages coming from iopub.

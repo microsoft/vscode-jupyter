@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Kernel } from '@jupyterlab/services';
-import { NotebookCell, NotebookController } from 'vscode';
+import { Kernel, KernelMessage } from '@jupyterlab/services';
+import { NotebookCell, NotebookCellExecution, NotebookController } from 'vscode';
 import { ITracebackFormatter } from '../../kernels/types';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
@@ -23,7 +23,14 @@ export class CellExecutionMessageHandlerFactory {
     dispose() {
         disposeAllDisposables(this.disposables);
     }
-    public getOrCreate(cell: NotebookCell, kernel: Kernel.IKernelConnection): CellExecutionMessageHandler {
+    public getOrCreate(
+        cell: NotebookCell,
+        options: {
+            kernel: Kernel.IKernelConnection;
+            request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>;
+            cellExecution: NotebookCellExecution;
+        }
+    ): CellExecutionMessageHandler {
         if (!this.messageHandlers.has(cell)) {
             const handler = new CellExecutionMessageHandler(
                 cell,
@@ -32,7 +39,9 @@ export class CellExecutionMessageHandlerFactory {
                 this.outputDisplayIdTracker,
                 this.context,
                 this.formatters,
-                kernel
+                options.kernel,
+                options.request,
+                options.cellExecution
             );
             this.messageHandlers.set(cell, handler);
         }
