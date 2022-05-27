@@ -133,7 +133,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         this.prompts.forEach((item) => item.dispose());
         this.prompts.clear();
     }
-    public endCellExecution(){
+    public endCellExecution() {
         this.execution = undefined;
     }
     private startHandlingExecutionMessages(
@@ -145,7 +145,7 @@ export class CellExecutionMessageHandler implements IDisposable {
                 request.dispose();
             }
             try {
-            this.handleIOPub(msg);
+                this.handleIOPub(msg);
             } catch (ex) {
                 this._onErrorHandlingIOPubMessage.fire(ex);
             }
