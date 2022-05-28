@@ -59,6 +59,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
     }
     @captureTelemetry(Telemetry.KernelListingPerf, { kind: 'localPython' })
     public async listKernelSpecs(resource: Resource, ignoreCache?: boolean, cancelToken?: CancellationToken) {
+        traceError('who called me', new Error());
         // Get an id for the workspace folder, if we don't have one, use the fsPath of the resource
         const workspaceFolderId =
             this.workspaceService.getWorkspaceFolderIdentifier(

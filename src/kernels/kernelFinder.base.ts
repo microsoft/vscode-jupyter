@@ -89,6 +89,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         useCache?: 'ignoreCache' | 'useCache'
     ): Promise<KernelConnectionMetadata[]> {
         this.startTimeForFetching = this.startTimeForFetching ?? new StopWatch();
+        traceError('who called listKernels', new Error());
 
         // Get both local and remote kernels.
         const [localKernels, remoteKernels] = await Promise.all([

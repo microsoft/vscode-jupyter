@@ -518,7 +518,10 @@ export enum Telemetry {
     KernelCrash = 'DATASCIENCE.KERNEL_CRASH',
     RunTest = 'DS_INTERNAL.RUNTEST',
     PreferredKernelExactMatch = 'DS_INTERNAL.PREFERRED_KERNEL_EXACT_MATCH',
-    FetchError = 'DS_INTERNAL.WEB_FETCH_ERROR'
+    FetchError = 'DS_INTERNAL.WEB_FETCH_ERROR',
+    TerminalShellIdentification = 'TERMINAL_SHELL_IDENTIFICATION',
+    TerminalEnvVariableExtraction = 'TERMINAL_ENV_VAR_EXTRACTION',
+    JupyterInstalled = 'JUPYTER_IS_INSTALLED'
 }
 
 export enum NativeKeyboardCommandTelemetry {
