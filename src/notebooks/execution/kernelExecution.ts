@@ -27,7 +27,7 @@ import {
 import { traceCellMessage } from '../helpers';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { getAssociatedNotebookDocument } from '../controllers/kernelSelector';
-import { CellExecutionMessageHandlerFactory } from './cellExecutionMessageHandlerFactory';
+import { CellExecutionMessageHandlerService } from './cellExecutionMessageHandlerService';
 
 /**
  * Separate class that deals just with kernel execution.
@@ -50,14 +50,15 @@ export class KernelExecution implements IDisposable {
         context: IExtensionContext,
         formatters: ITracebackFormatter[]
     ) {
-        const factory = new CellExecutionMessageHandlerFactory(
+        const requestListener = new CellExecutionMessageHandlerService(
             appShell,
             controller,
             outputTracker,
             context,
             formatters
         );
-        this.executionFactory = new CellExecutionFactory(controller, factory);
+        this.disposables.push(requestListener);
+        this.executionFactory = new CellExecutionFactory(controller, requestListener);
     }
 
     public get onPreExecute() {

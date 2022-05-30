@@ -29,7 +29,7 @@ import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import { CellExecutionCreator } from './cellExecutionCreator';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import { traceWarning } from '../../platform/logging';
+import { traceError, traceWarning } from '../../platform/logging';
 import { RefBool } from '../../platform/common/refBool';
 import { IDisposable, IExtensionContext } from '../../platform/common/types';
 import { traceCellMessage, cellOutputToVSCCellOutput, translateCellDisplayOutput, isJupyterNotebook } from '../helpers';
@@ -65,6 +65,14 @@ export const activeNotebookCellExecution = new WeakMap<NotebookDocument, Noteboo
  */
 export class CellExecutionMessageHandler implements IDisposable {
     /**
+     * The msg_id of the original request execute (when executing the cell).
+     */
+    public readonly executeRequestMessageId: string;
+    /**
+     * Whether we're done with handling of the original request execute for a cell.
+     */
+    private completedExecution?: boolean;
+    /**
      * Listen to messages and update our cell execution state appropriately
      * Keep track of our clear state
      */
@@ -92,6 +100,16 @@ export class CellExecutionMessageHandler implements IDisposable {
     private lastUsedStreamOutput?: { stream: 'stdout' | 'stderr'; text: string; output: NotebookCellOutput };
     private readonly disposables: IDisposable[] = [];
     private readonly prompts = new Set<CancellationTokenSource>();
+    /**
+     * List of comm_ids Jupyter sent back when this cell was first executed
+     * or for any subsequent requests as a result of outputs sending custom messages.
+     */
+    private readonly ownedCommIds = new Set<string>();
+    /**
+     * List of msg_ids of requests sent either as part of request_execute
+     * or for any subsequent requests as a result of outputs sending custom messages.
+     */
+    private readonly ownedRequestIds = new Set<string>();
     constructor(
         public readonly cell: NotebookCell,
         private readonly applicationService: IApplicationShell,
@@ -103,6 +121,8 @@ export class CellExecutionMessageHandler implements IDisposable {
         request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>,
         cellExecution: NotebookCellExecution
     ) {
+        this.executeRequestMessageId = request.msg.header.msg_id;
+        this.ownedRequestIds.add(request.msg.header.msg_id);
         workspace.onDidChangeNotebookDocument(
             (e) => {
                 if (!isJupyterNotebook(e.notebook)) {
@@ -122,30 +142,11 @@ export class CellExecutionMessageHandler implements IDisposable {
             this.disposables
         );
         this.execution = cellExecution;
-        this.startHandlingExecutionMessages(request);
-    }
-    /**
-     * This method is called when all execution has been completed (successfully or failed).
-     * Or when execution has been cancelled.
-     */
-    public dispose() {
-        traceCellMessage(this.cell, 'Execution disposed');
-        disposeAllDisposables(this.disposables);
-        this.endCellExecution();
-    }
-    private endCellExecution() {
-        this.prompts.forEach((item) => item.dispose());
-        this.prompts.clear();
-        this.clearLastUsedStreamOutput();
-        this.execution = undefined;
-    }
-    private startHandlingExecutionMessages(
-        request: Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>
-    ) {
         request.onIOPub = (msg) => {
             // Cell has been deleted or the like.
             if (this.cell.document.isClosed) {
                 request.dispose();
+                return;
             }
             try {
                 this.handleIOPub(msg);
@@ -157,13 +158,93 @@ export class CellExecutionMessageHandler implements IDisposable {
             // Cell has been deleted or the like.
             if (this.cell.document.isClosed) {
                 request.dispose();
+                return;
             }
             this.handleReply(msg);
         };
         request.onStdin = this.handleInputRequest.bind(this);
-        request.done.finally(() => this.endCellExecution());
-    }
+        request.done
+            .finally(() => {
+                this.completedExecution = true;
+                // We're only interested in messages after execution has completed.
+                // See https://github.com/microsoft/vscode-jupyter/issues/9503 for more information.
+                this.kernel.anyMessage.connect(this.onKernelAnyMessage, this);
+                this.kernel.iopubMessage.connect(this.onKernelIOPubMessage, this);
 
+                this.endCellExecution();
+            })
+            .catch(noop);
+    }
+    /**
+     * This method is called when all execution has been completed (successfully or failed).
+     * Or when execution has been cancelled.
+     */
+    public dispose() {
+        traceCellMessage(this.cell, 'Execution disposed');
+        disposeAllDisposables(this.disposables);
+        this.prompts.forEach((item) => item.dispose());
+        this.prompts.clear();
+        this.clearLastUsedStreamOutput();
+        this.execution = undefined;
+        this.kernel.anyMessage.disconnect(this.onKernelAnyMessage, this);
+        this.kernel.iopubMessage.disconnect(this.onKernelIOPubMessage, this);
+    }
+    /**
+     * This merely marks the end of the cell execution.
+     * However this class will still monitor iopub messages from the kernel.
+     * As its possible a widget from the output of this cell sends message to the kernel and
+     * as a result of the response we get some new output.
+     */
+    private endCellExecution() {
+        this.prompts.forEach((item) => item.dispose());
+        this.prompts.clear();
+        this.clearLastUsedStreamOutput();
+        this.execution = undefined;
+
+        if (this.ownedCommIds.size === 0 && this.completedExecution) {
+            // If no comms channels were opened as a result of any outputs of this cell,
+            // this means we don't have any widgets that can send comm message back to the kernel.
+            // Hence no point listening to any of the iopub messages & the like, i.e. we can stop listening to everything in this class.
+            this.dispose();
+        }
+    }
+    private onKernelAnyMessage(_: unknown, { direction, msg }: Kernel.IAnyMessageArgs) {
+        // We're only interested in messages after execution has completed.
+        // See https://github.com/microsoft/vscode-jupyter/issues/9503 for more information.
+        if (direction !== 'send' || !this.completedExecution) {
+            return;
+        }
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+        if (jupyterLab.KernelMessage.isCommMsgMsg(msg) && this.ownedCommIds.has(msg.content.comm_id)) {
+            // Looks like we have a comm msg request sent by some output or the like.
+            // See https://github.com/microsoft/vscode-jupyter/issues/9503 for more information.
+            this.ownedRequestIds.add(msg.header.msg_id);
+        }
+    }
+    private onKernelIOPubMessage(_: unknown, msg: KernelMessage.IIOPubMessage<KernelMessage.IOPubMessageType>) {
+        // We're only interested in messages after execution has completed.
+        // See https://github.com/microsoft/vscode-jupyter/issues/9503 for more information.
+
+        // Handle iopub messages that are sent from Jupyter in response to some
+        // comm message (requests) sent by an output widget.
+        // See https://github.com/microsoft/vscode-jupyter/issues/9503 for more information.
+        if (
+            !this.completedExecution ||
+            !msg.parent_header ||
+            !('msg_id' in msg.parent_header) ||
+            msg.parent_header.msg_id === this.executeRequestMessageId ||
+            !this.ownedRequestIds.has(msg.parent_header.msg_id) ||
+            msg.channel !== 'iopub'
+        ) {
+            return;
+        }
+        try {
+            this.handleIOPub(msg);
+        } catch (ex) {
+            traceError(`Failed to handle iopub message as a result of some comm message`, msg, ex);
+        }
+    }
     private clearLastUsedStreamOutput() {
         this.lastUsedStreamOutput = undefined;
     }
@@ -216,8 +297,9 @@ export class CellExecutionMessageHandler implements IDisposable {
     private handleIOPub(msg: KernelMessage.IIOPubMessage) {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
-
-        if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
+        if (jupyterLab.KernelMessage.isCommOpenMsg(msg)) {
+            this.ownedCommIds.add(msg.content.comm_id);
+        } else if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
             this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg);
         } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
             this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg);

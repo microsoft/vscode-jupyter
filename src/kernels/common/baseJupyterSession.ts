@@ -127,7 +127,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     private _kernelSocket = new ReplaySubject<KernelSocketInformation | undefined>();
     private unhandledMessageHandler: Slot<ISessionWithSocket, KernelMessage.IMessage>;
     private chainingExecute = new ChainingExecuteRequester();
-
+    private previousAnyMessageHandler?: IDisposable;
     constructor(
         public readonly kind: 'localRaw' | 'remoteJupyter' | 'localJupyter',
         protected resource: Resource,
@@ -352,6 +352,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     // Changes the current session.
     protected setSession(session: ISessionWithSocket | undefined, forceUpdateKernelSocketInfo: boolean = false) {
         const oldSession = this._session;
+        this.previousAnyMessageHandler?.dispose();
         if (oldSession) {
             if (this.unhandledMessageHandler) {
                 oldSession.unhandledMessage.disconnect(this.unhandledMessageHandler);
@@ -368,6 +369,24 @@ export abstract class BaseJupyterSession implements IJupyterSession {
 
             // Listen for session status changes
             session.statusChanged.connect(this.statusHandler);
+            if (session.kernelSocketInformation.socket?.onAnyMessage) {
+                // These messages are sent directly to the kernel bypassing the Jupyter lab npm libraries.
+                // As a result, we don't get any notification that messages were sent (on the anymessage signal).
+                // To ensure those signals can still be used to monitor such messages, send them via a callback so that we can emit these messages on the anymessage signal.
+                this.previousAnyMessageHandler = session.kernelSocketInformation.socket?.onAnyMessage((msg) => {
+                    try {
+                        if (this._wrappedKernel) {
+                            const jupyterLabSerialize =
+                                require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
+                            const message =
+                                typeof msg.msg === 'string' ? jupyterLabSerialize.deserialize(msg.msg) : msg.msg;
+                            this._wrappedKernel.anyMessage.emit({ direction: msg.direction, msg: message });
+                        }
+                    } catch (ex) {
+                        traceWarning(`failed to deserialize message to broadcast anymessage signal`);
+                    }
+                });
+            }
             if (session.unhandledMessage) {
                 session.unhandledMessage.connect(this.unhandledMessageHandler);
             }
@@ -447,6 +466,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             this._disposed.fire();
             this._disposed.dispose();
             this.onStatusChangedEvent.dispose();
+            this.previousAnyMessageHandler?.dispose();
         }
         disposeAllDisposables(this.disposables);
         traceVerbose('Shutdown session -- complete');

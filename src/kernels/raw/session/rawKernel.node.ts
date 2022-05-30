@@ -276,17 +276,9 @@ export function createRawKernel(kernelProcess: IKernelProcess, clientId: string)
 
     // Dummy websocket we give to the underlying real kernel
     let socketInstance: any;
-    let rawKernel: RawKernel;
     class RawSocketWrapper extends RawSocket {
         constructor() {
-            super(kernelProcess.connection, jupyterLabSerialize.serialize, jupyterLabSerialize.deserialize, (msg) => {
-                if (rawKernel) {
-                    // These messages are sent directly to the kernel bypassing the Jupyter lab npm libraries.
-                    // As a result, we don't get any notification that messages were sent (on the anymessage signal).
-                    // To ensure those signals can still be used to monitor such messages, send them via a callback so that we can emit these messages on the anymessage signal.
-                    rawKernel?.anyMessage.emit({ direction: 'send', msg });
-                }
-            });
+            super(kernelProcess.connection, jupyterLabSerialize.serialize, jupyterLabSerialize.deserialize);
             socketInstance = this;
         }
     }
@@ -317,6 +309,5 @@ export function createRawKernel(kernelProcess: IKernelProcess, clientId: string)
     });
 
     // Use this real kernel in result.
-    rawKernel = new RawKernel(realKernel, socketInstance, kernelProcess);
-    return rawKernel;
+    return new RawKernel(realKernel, socketInstance, kernelProcess);
 }

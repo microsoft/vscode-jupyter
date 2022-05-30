@@ -24,6 +24,7 @@ import {
     runCell,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected,
+    waitForTextOutput,
     workAroundVSCodeNotebookStartPages
 } from '../notebook/helper';
 import { initializeWidgetComms, Utils } from './commUtils';
@@ -213,6 +214,30 @@ export function sharedIPyWidgetsTests(
         await assertOutputContainsHtml(cell0, comms, ['Button clicked']);
         await assertOutputContainsHtml(cell1, comms, ['Button clicked']);
         await assertOutputContainsHtml(cell2, comms, ['Button clicked']);
+    });
+    test('Button Widget with custom comm message', async () => {
+        const comms = await initializeNotebook({ templateFile: 'button_widget_comm_msg.ipynb' });
+        const [cell0, cell1] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+
+        await executeCellAndWaitForOutput(cell0, comms);
+        await executeCellAndWaitForOutput(cell1, comms);
+        await assertOutputContainsHtml(cell0, comms, ['Click Me!', '<button']);
+
+        // Click the button and verify we have output in the same cell.
+        await click(comms, cell0, 'button');
+        await waitForTextOutput(cell0, 'Button clicked.', 1, false);
+    });
+    test('Button Widget with custom comm message rendering a matplotlib widget', async () => {
+        const comms = await initializeNotebook({ templateFile: 'button_widget_comm_msg_matplotlib.ipynb' });
+        const [cell0, cell1] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+
+        await executeCellAndWaitForOutput(cell0, comms);
+        await executeCellAndWaitForOutput(cell1, comms);
+        await assertOutputContainsHtml(cell0, comms, ['Click Me!', '<button']);
+
+        // Click the button and verify we have output in the same cell.
+        await click(comms, cell0, 'button');
+        await assertOutputContainsHtml(cell0, comms, ['>Figure 1<', '<canvas', 'Download plot']);
     });
     test('Render IPySheets', async () => {
         const comms = await initializeNotebook({ templateFile: 'ipySheet_widgets.ipynb' });
