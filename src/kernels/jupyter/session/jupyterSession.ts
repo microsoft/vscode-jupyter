@@ -1,14 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type {
-    Contents,
-    ContentsManager,
-    Kernel,
-    KernelSpecManager,
-    Session,
-    SessionManager
-} from '@jupyterlab/services';
+import type { Contents, ContentsManager, KernelSpecManager, Session, SessionManager } from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { Cancellation } from '../../../platform/common/cancellation';
@@ -76,15 +69,6 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
         // Wait for idle on this session
         return this.waitForIdleOnSession(this.session, timeout);
     }
-
-    public override get kernel(): Kernel.IKernelConnection | undefined {
-        return this.session?.kernel || undefined;
-    }
-
-    public get kernelId(): string {
-        return this.session?.kernel?.id || '';
-    }
-
     public async connect(options: { token: CancellationToken; ui: IDisplayOptions }): Promise<void> {
         // Start a new session
         this.setSession(await this.createNewKernelSession(options));
@@ -158,7 +142,6 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
 
         return newSession;
     }
-
     protected async createRestartSession(
         disableUI: boolean,
         session: ISessionWithSocket,

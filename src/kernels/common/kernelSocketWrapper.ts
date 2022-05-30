@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import { EventEmitter } from 'vscode';
 import * as WebSocketWS from 'ws';
 import { ClassType } from '../../platform/ioc/types';
 import { traceError } from '../../platform/logging';
@@ -50,7 +51,8 @@ export function KernelSocketWrapper<T extends ClassType<IWebSocketLike>>(SuperCl
         private sendHooks: ((data: any, cb?: (err?: Error) => void) => Promise<void>)[];
         private msgChain: Promise<any>;
         private sendChain: Promise<any>;
-
+        private _onAnyMessage = new EventEmitter<{ msg: string; direction: 'send' }>();
+        public onAnyMessage = this._onAnyMessage.event;
         constructor(...rest: any[]) {
             super(...rest);
             // Make sure the message chain is initialized
@@ -67,6 +69,7 @@ export function KernelSocketWrapper<T extends ClassType<IWebSocketLike>>(SuperCl
         public sendToRealKernel(data: any, a2: any) {
             // This will skip the send hooks. It's coming from
             // the UI side.
+            this._onAnyMessage.fire({ msg: data, direction: 'send' });
             super.send(data, a2);
         }
 

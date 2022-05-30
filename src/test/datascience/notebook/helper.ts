@@ -239,6 +239,7 @@ export async function createEmptyPythonNotebook(
         await waitForKernelToGetAutoSelected();
     }
     await deleteAllCellsAndWait();
+    return vscodeNotebook.activeNotebookEditor!.notebook;
 }
 
 async function shutdownAllNotebooks() {

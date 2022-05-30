@@ -9,14 +9,14 @@ import * as fs from 'fs-extra';
 import * as path from '../platform/vscode-path/path';
 import * as uuid from 'uuid/v4';
 import { coerce, SemVer } from 'semver';
-import type { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
+import type { ConfigurationTarget, TextDocument, Uri } from 'vscode';
 import { IProcessService } from '../platform/common/process/types.node';
-import { IDisposable } from '../platform/common/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants.node';
 import { noop } from './core';
 import { isCI } from '../platform/common/constants';
 import { IWorkspaceService } from '../platform/common/application/types';
-import { waitForCondition } from './common';
+
+export { createEventHandler } from './common';
 
 const StreamZip = require('node-stream-zip');
 
@@ -302,87 +302,6 @@ export async function openFile(file: string): Promise<TextDocument> {
     assert(vscode.window.activeTextEditor, 'No active editor');
     return textDocument;
 }
-
-/**
- * Helper class to test events.
- *
- * Usage: Assume xyz.onDidSave is the event we want to test.
- * const handler = new TestEventHandler(xyz.onDidSave);
- * // Do something that would trigger the event.
- * assert.ok(handler.fired)
- * assert.equal(handler.first, 'Args Passed to first onDidSave')
- * assert.equal(handler.count, 1)// Only one should have been fired.
- */
-export class TestEventHandler<T extends void | any = any> implements IDisposable {
-    public get fired() {
-        return this.handledEvents.length > 0;
-    }
-    public get first(): T {
-        return this.handledEvents[0];
-    }
-    public get second(): T {
-        return this.handledEvents[1];
-    }
-    public get last(): T {
-        return this.handledEvents[this.handledEvents.length - 1];
-    }
-    public get count(): number {
-        return this.handledEvents.length;
-    }
-    public get all(): T[] {
-        return this.handledEvents;
-    }
-    private readonly handler: IDisposable;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private readonly handledEvents: any[] = [];
-    constructor(event: Event<T>, private readonly eventNameForErrorMessages: string, disposables: IDisposable[] = []) {
-        disposables.push(this);
-        this.handler = event(this.listener, this);
-    }
-    public reset() {
-        while (this.handledEvents.length) {
-            this.handledEvents.pop();
-        }
-    }
-    public async assertFired(waitPeriod: number = 100): Promise<void> {
-        await waitForCondition(async () => this.fired, waitPeriod, `${this.eventNameForErrorMessages} event not fired`);
-    }
-    public async assertFiredExactly(numberOfTimesFired: number, waitPeriod: number = 2_000): Promise<void> {
-        await waitForCondition(
-            async () => this.count === numberOfTimesFired,
-            waitPeriod,
-            `${this.eventNameForErrorMessages} event fired ${this.count}, expected ${numberOfTimesFired}`
-        );
-    }
-    public async assertFiredAtLeast(numberOfTimesFired: number, waitPeriod: number = 2_000): Promise<void> {
-        await waitForCondition(
-            async () => this.count >= numberOfTimesFired,
-            waitPeriod,
-            `${this.eventNameForErrorMessages} event fired ${this.count}, expected at least ${numberOfTimesFired}.`
-        );
-    }
-    public atIndex(index: number): T {
-        return this.handledEvents[index];
-    }
-
-    public dispose() {
-        this.handler.dispose();
-    }
-
-    private listener(e: T) {
-        this.handledEvents.push(e);
-    }
-}
-
-export function createEventHandler<T, K extends keyof T>(
-    obj: T,
-    eventName: K,
-    disposables: IDisposable[] = []
-): T[K] extends Event<infer TArgs> ? TestEventHandler<TArgs> : TestEventHandler<void> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return new TestEventHandler(obj[eventName] as any, eventName as string, disposables) as any;
-}
-
 /**
  * Captures screenshots (png format) & dumpts into root directory (only on CI).
  * If there's a failure, it will be logged (errors are swallowed).
