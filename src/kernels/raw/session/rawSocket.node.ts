@@ -48,7 +48,8 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     constructor(
         private connection: IKernelConnection,
         private serialize: (msg: KernelMessage.IMessage) => string | ArrayBuffer,
-        private deserialize: (data: ArrayBuffer | string) => KernelMessage.IMessage
+        private deserialize: (data: ArrayBuffer | string) => KernelMessage.IMessage,
+        private readonly onAnyMessage: (msg: KernelMessage.IMessage) => void
     ) {
         // Setup our ZMQ channels now
         this.channels = this.generateChannels(connection);
@@ -100,7 +101,10 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         // If from ipywidgets, this will be serialized already, so turn it back into a message so
         // we can add the special hash to it.
         const message = this.deserialize(data);
-
+        // These messages are sent directly to the kernel bypassing the Jupyter lab npm libraries.
+        // As a result, we don't get any notification that messages were sent (on the anymessage signal).
+        // To ensure those signals can still be used to monitor such messages, send them via a callback so that we can emit these messages on the anymessage signal.
+        this.onAnyMessage(message as any);
         // Send this directly (don't call back into the hooks)
         this.sendMessage(message, true);
     }

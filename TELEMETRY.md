@@ -147,7 +147,7 @@ No properties for event
 
 ## Locations Used
 
-[src/interactive-window/interactiveWindowCommandListener.ts#L357](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/interactiveWindowCommandListener.ts#L357)
+[src/interactive-window/interactiveWindowCommandListener.ts#L358](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/interactiveWindowCommandListener.ts#L358)
 ```typescript
         }
     }
@@ -178,7 +178,7 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/dataviewer/dataViewer.node.ts#L326](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewer.node.ts#L326)
+[src/webviews/extension-side/dataviewer/dataViewer.node.ts#L322](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewer.node.ts#L322)
 ```typescript
 
     private maybeSendSliceDataDimensionalityTelemetry(numberOfDimensions: number) {
@@ -210,7 +210,7 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/dataviewer/dataViewer.node.ts#L208](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewer.node.ts#L208)
+[src/webviews/extension-side/dataviewer/dataViewer.node.ts#L204](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewer.node.ts#L204)
 ```typescript
                 break;
 
@@ -241,7 +241,7 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/dataviewer/dataViewer.node.ts#L269](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewer.node.ts#L269)
+[src/webviews/extension-side/dataviewer/dataViewer.node.ts#L265](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewer.node.ts#L265)
 ```typescript
                 if (payload.shape?.length) {
                     this.maybeSendSliceDataDimensionalityTelemetry(payload.shape.length);
@@ -421,7 +421,7 @@ No properties for event
 
 ## Locations Used
 
-[src/platform/debugger/jupyter/notebook/debuggingManager.ts#L481](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/debugger/jupyter/notebook/debuggingManager.ts#L481)
+[src/kernels/debugger/debuggingManagerBase.ts#L198](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/debugger/debuggingManagerBase.ts#L198)
 ```typescript
         );
 
@@ -449,7 +449,7 @@ No properties for event
 
 ## Locations Used
 
-[src/platform/debugger/jupyter/notebook/debuggingManager.ts#L161](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/debugger/jupyter/notebook/debuggingManager.ts#L161)
+[src/notebooks/debugger/debuggingManager.ts#L144](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/debugger/debuggingManager.ts#L144)
 ```typescript
             }),
 
@@ -477,7 +477,7 @@ No properties for event
 
 ## Locations Used
 
-[src/platform/debugger/jupyter/notebook/debuggingManager.ts#L108](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/debugger/jupyter/notebook/debuggingManager.ts#L108)
+[src/notebooks/debugger/debuggingManager.ts#L91](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/debugger/debuggingManager.ts#L91)
 ```typescript
             }),
 
@@ -505,7 +505,7 @@ No properties for event
 
 ## Locations Used
 
-[src/platform/debugger/jupyter/notebook/debuggingManager.ts#L486](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/debugger/jupyter/notebook/debuggingManager.ts#L486)
+[src/kernels/debugger/debuggingManagerBase.ts#L203](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/debugger/debuggingManagerBase.ts#L203)
 ```typescript
                 'https://github.com/microsoft/vscode-jupyter/wiki/Setting-Up-Run-by-Line-and-Debugging-for-Notebooks'
             );
@@ -532,7 +532,7 @@ No description provided
 
 ## Locations Used
 
-[src/platform/debugger/jupyter/kernelDebugAdapter.ts#L94](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/debugger/jupyter/kernelDebugAdapter.ts#L94)
+[src/kernels/debugger/kernelDebugAdapterBase.ts#L104](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/debugger/kernelDebugAdapterBase.ts#L104)
 ```typescript
                 this.kernel.onDisposed(() => {
                     void debug.stopDebugging(this.session);
@@ -544,7 +544,7 @@ No description provided
 ```
 
 
-[src/platform/debugger/jupyter/kernelDebugAdapter.ts#L108](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/debugger/jupyter/kernelDebugAdapter.ts#L108)
+[src/kernels/debugger/kernelDebugAdapterBase.ts#L118](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/debugger/kernelDebugAdapterBase.ts#L118)
 ```typescript
                         cellStateChange.state === NotebookCellExecutionState.Idle &&
                         !this.disconnected
@@ -556,7 +556,7 @@ No description provided
 ```
 
 
-[src/platform/debugger/jupyter/notebook/debuggingManager.ts#L152](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/debugger/jupyter/notebook/debuggingManager.ts#L152)
+[src/notebooks/debugger/debuggingManager.ts#L135](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/debugger/debuggingManager.ts#L135)
 ```typescript
                 if (editor) {
                     const controller = this.notebookToRunByLineController.get(editor.notebook);
@@ -583,7 +583,7 @@ No description provided
 
 ## Locations Used
 
-[src/platform/debugger/jupyter/notebook/debuggingManager.ts#L463](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/debugger/jupyter/notebook/debuggingManager.ts#L463)
+[src/kernels/debugger/debuggingManagerBase.ts#L180](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/debugger/debuggingManagerBase.ts#L180)
 ```typescript
             }
 
@@ -593,6 +593,27 @@ No description provided
             });
             return result;
 ```
+
+</details>
+<details>
+  <summary>DATASCIENCE.DEBUGGING.SUCCESSFULLY_STARTED_IW_JUPYTER</summary>
+
+## Description
+
+
+
+
+ Telemetry sent when we have managed to successfully start the Interactive Window debugger using the Jupyter protocol.
+
+## Properties
+
+
+No properties for event
+
+
+## Locations Used
+
+Event can be removed. Not referenced anywhere
 
 </details>
 <details>
@@ -611,10 +632,22 @@ No properties for event
 
 ## Locations Used
 
-[src/platform/debugger/jupyter/notebook/debugCellControllers.ts#L20](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/debugger/jupyter/notebook/debugCellControllers.ts#L20)
+[src/notebooks/debugger/debugCellControllers.ts#L20](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/debugger/debugCellControllers.ts#L20)
 ```typescript
         private readonly kernel: IKernel,
         private readonly commandManager: ICommandManager
+    ) {
+        sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunAndDebugCell);
+    }
+
+    public async willSendEvent(_msg: DebugProtocolMessage): Promise<boolean> {
+```
+
+
+[src/interactive-window/debugger/jupyter/debugCellControllers.ts#L23](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/debugger/jupyter/debugCellControllers.ts#L23)
+```typescript
+        public readonly debugCell: NotebookCell,
+        private readonly kernel: IKernel
     ) {
         sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunAndDebugCell);
     }
@@ -639,7 +672,7 @@ No properties for event
 
 ## Locations Used
 
-[src/platform/debugger/jupyter/notebook/runByLineController.ts#L29](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/debugger/jupyter/notebook/runByLineController.ts#L29)
+[src/notebooks/debugger/runByLineController.ts#L29](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/debugger/runByLineController.ts#L29)
 ```typescript
         private readonly kernel: IKernel,
         private readonly settings: IConfigurationService
@@ -916,7 +949,7 @@ No properties for event
 ```
 
 
-[src/notebooks/controllers/vscodeNotebookController.ts#L257](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/vscodeNotebookController.ts#L257)
+[src/notebooks/controllers/vscodeNotebookController.ts#L256](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/vscodeNotebookController.ts#L256)
 ```typescript
             return;
         }
@@ -928,7 +961,7 @@ No properties for event
 ```
 
 
-[src/kernels/kernel.base.ts#L191](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts#L191)
+[src/kernels/kernel.base.ts#L197](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts#L197)
 ```typescript
     }
     public async executeCell(cell: NotebookCell): Promise<NotebookCellRunState> {
@@ -1050,7 +1083,7 @@ No description provided
 ```
 
 
-[src/platform/export/fileConverter.ts#L64](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/export/fileConverter.ts#L64)
+[src/platform/export/fileConverter.ts#L65](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/export/fileConverter.ts#L65)
 ```typescript
         }
 
@@ -1102,7 +1135,7 @@ No description provided
 
 ## Locations Used
 
-[src/platform/export/fileConverter.ts#L84](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/export/fileConverter.ts#L84)
+[src/platform/export/fileConverter.ts#L85](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/export/fileConverter.ts#L85)
 ```typescript
             await this.performExport(format, sourceDocument, target, token, candidateInterpreter);
         } catch (e) {
@@ -1130,7 +1163,7 @@ No properties for event
 
 ## Locations Used
 
-[src/interactive-window/interactiveWindowCommandListener.ts#L198](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/interactiveWindowCommandListener.ts#L198)
+[src/interactive-window/interactiveWindowCommandListener.ts#L199](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/interactiveWindowCommandListener.ts#L199)
 ```typescript
         return result;
     }
@@ -1158,7 +1191,7 @@ No properties for event
 
 ## Locations Used
 
-[src/interactive-window/interactiveWindowCommandListener.ts#L247](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/interactiveWindowCommandListener.ts#L247)
+[src/interactive-window/interactiveWindowCommandListener.ts#L248](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/interactiveWindowCommandListener.ts#L248)
 ```typescript
         }
     }
@@ -1186,7 +1219,7 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/variablesView/variableView.node.ts#L174](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/variablesView/variableView.node.ts#L174)
+[src/webviews/extension-side/variablesView/variableView.node.ts#L170](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/variablesView/variableView.node.ts#L170)
 ```typescript
             }
         } catch (e) {
@@ -1215,9 +1248,9 @@ No properties for event
 
 ## Locations Used
 
-[src/notebooks/controllers/notebookControllerManager.ts#L899](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/notebookControllerManager.ts#L899)
+[src/notebooks/controllers/notebookControllerManager.ts#L918](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/notebookControllerManager.ts#L918)
 ```typescript
-        } catch (ex) {
+            }
             // We know that this fails when we have xeus kernels installed (untill that's resolved thats one instance when we can have duplicates).
             sendTelemetryEvent(
                 Telemetry.FailedToCreateNotebookController,
@@ -1266,7 +1299,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/kernelFinder.base.ts#L236](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelFinder.base.ts#L236)
+[src/kernels/kernelFinder.base.ts#L242](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelFinder.base.ts#L242)
 ```typescript
         const key = `${kind}:${useCache}`;
         if (this.startTimeForFetching && !this.fetchingTelemetrySent.has(key)) {
@@ -1294,10 +1327,10 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L33](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L33)
+[src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L39](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L39)
 ```typescript
-        @inject(IJupyterRequestCreator) private readonly requestCreator: IJupyterRequestCreator
-    ) {}
+        this.serverUriStorage.onDidRemoveUris(this.onDidRemoveUris, this, this.disposables);
+    }
 
     @captureTelemetry(Telemetry.GetPasswordAttempt)
     public getPasswordConnectionInfo(url: string): Promise<IJupyterPasswordConnectInfo | undefined> {
@@ -1395,7 +1428,7 @@ No description provided
 
 ## Locations Used
 
-[src/interactive-window/interactiveWindowCommandListener.ts#L372](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/interactiveWindowCommandListener.ts#L372)
+[src/interactive-window/interactiveWindowCommandListener.ts#L373](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/interactiveWindowCommandListener.ts#L373)
 ```typescript
         return this.statusProvider.waitWithStatus(promise, message, undefined, canceled);
     }
@@ -1407,7 +1440,7 @@ No description provided
 ```
 
 
-[src/interactive-window/interactiveWindowCommandListener.ts#L395](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/interactiveWindowCommandListener.ts#L395)
+[src/interactive-window/interactiveWindowCommandListener.ts#L396](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/interactiveWindowCommandListener.ts#L396)
 ```typescript
         }
     }
@@ -1436,7 +1469,7 @@ No description provided
 
 ## Locations Used
 
-[src/kernels/debugging/interactiveWindowDebugger.node.ts#L112](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/debugging/interactiveWindowDebugger.node.ts#L112)
+[src/interactive-window/debugger/interactiveWindowDebugger.node.ts#L111](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/debugger/interactiveWindowDebugger.node.ts#L111)
 ```typescript
         executeSilently(kernel.session, this.tracingEnableCode, {
             traceErrors: true,
@@ -1448,7 +1481,7 @@ No description provided
 ```
 
 
-[src/kernels/debugging/interactiveWindowDebugger.node.ts#L123](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/debugging/interactiveWindowDebugger.node.ts#L123)
+[src/interactive-window/debugger/interactiveWindowDebugger.node.ts#L122](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/debugger/interactiveWindowDebugger.node.ts#L122)
 ```typescript
         executeSilently(kernel.session, this.tracingDisableCode, {
             traceErrors: true,
@@ -1460,7 +1493,7 @@ No description provided
 ```
 
 
-[src/kernels/debugging/interactiveWindowDebugger.node.ts#L152](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/debugging/interactiveWindowDebugger.node.ts#L152)
+[src/interactive-window/debugger/interactiveWindowDebugger.node.ts#L151](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/debugger/interactiveWindowDebugger.node.ts#L151)
 ```typescript
                 const importResults = await executeSilently(kernel.session, this.waitForDebugClientCode, {
                     traceErrors: true,
@@ -1472,7 +1505,7 @@ No description provided
 ```
 
 
-[src/kernels/debugging/interactiveWindowDebugger.node.ts#L275](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/debugging/interactiveWindowDebugger.node.ts#L275)
+[src/interactive-window/debugger/interactiveWindowDebugger.node.ts#L268](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/debugger/interactiveWindowDebugger.node.ts#L268)
 ```typescript
                       {
                           traceErrors: true,
@@ -1484,7 +1517,7 @@ No description provided
 ```
 
 
-[src/kernels/debugging/interactiveWindowDebugger.node.ts#L304](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/debugging/interactiveWindowDebugger.node.ts#L304)
+[src/interactive-window/debugger/interactiveWindowDebugger.node.ts#L297](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/debugger/interactiveWindowDebugger.node.ts#L297)
 ```typescript
             ? await executeSilently(kernel.session, this.enableDebuggerCode, {
                   traceErrors: true,
@@ -1512,7 +1545,7 @@ No properties for event
 
 ## Locations Used
 
-[src/notebooks/execution/kernelExecution.ts#L207](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/kernelExecution.ts#L207)
+[src/notebooks/execution/kernelExecution.ts#L199](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/kernelExecution.ts#L199)
 ```typescript
         this.documentExecutions.set(document, newCellExecutionQueue);
         return newCellExecutionQueue;
@@ -1856,7 +1889,7 @@ No description provided
 
 ## Locations Used
 
-[src/kernels/kernel.base.ts#L527](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts#L527)
+[src/kernels/kernel.base.ts#L545](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts#L545)
 ```typescript
             await this.executeSilently(session, startupCode, {
                 traceErrors: true,
@@ -2656,7 +2689,7 @@ function resetData(resource: Resource, eventName: string, properties: any) {
 ```
 
 
-[src/notebooks/execution/kernelExecution.ts#L263](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/kernelExecution.ts#L263)
+[src/notebooks/execution/kernelExecution.ts#L255](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/kernelExecution.ts#L255)
 ```typescript
                 // Otherwise a real error occurred.
                 sendKernelTelemetryEvent(
@@ -2668,7 +2701,7 @@ function resetData(resource: Resource, eventName: string, properties: any) {
 ```
 
 
-[src/notebooks/execution/kernelExecution.ts#L275](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/kernelExecution.ts#L275)
+[src/notebooks/execution/kernelExecution.ts#L267](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/kernelExecution.ts#L267)
 ```typescript
         })();
 
@@ -2765,7 +2798,7 @@ No properties for event
 ```
 
 
-[src/kernels/kernel.base.ts#L282](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts#L282)
+[src/kernels/kernel.base.ts#L291](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts#L291)
 ```typescript
             await (this._jupyterSessionPromise
                 ? this.kernelExecution.restart(this._jupyterSessionPromise)
@@ -2777,7 +2810,7 @@ No properties for event
 ```
 
 
-[src/kernels/kernel.base.ts#L293](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts#L293)
+[src/kernels/kernel.base.ts#L302](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts#L302)
 ```typescript
             this.restarting = undefined;
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server.
@@ -3114,7 +3147,7 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/dataviewer/dataViewer.node.ts#L204](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewer.node.ts#L204)
+[src/webviews/extension-side/dataviewer/dataViewer.node.ts#L200](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewer.node.ts#L200)
 ```typescript
 
             case DataViewerMessages.RefreshDataViewer:
@@ -3307,7 +3340,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/variables/debuggerVariables.node.ts#L121](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/variables/debuggerVariables.node.ts#L121)
+[src/kernels/variables/debuggerVariables.node.ts#L120](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/variables/debuggerVariables.node.ts#L120)
 ```typescript
             // Note, full variable results isn't necessary for this call. It only really needs the variable value.
             const result = this.lastKnownVariables.find((v) => v.name === name);
@@ -4119,7 +4152,7 @@ No properties for event
 ```
 
 
-[src/platform/errors/errorHandler.ts#L302](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/errors/errorHandler.ts#L302)
+[src/platform/errors/errorHandler.ts#L301](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/errors/errorHandler.ts#L301)
 ```typescript
                             ConfigurationTarget.Workspace
                         );
@@ -4131,7 +4164,7 @@ No properties for event
 ```
 
 
-[src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L394](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L394)
+[src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L395](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L395)
 ```typescript
                     );
                     return this.requestCreator.getFetchMethod()(url, this.addAllowUnauthorized(url, true, options));
@@ -4183,7 +4216,7 @@ No properties for event
 ```
 
 
-[src/platform/errors/errorHandler.ts#L294](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/errors/errorHandler.ts#L294)
+[src/platform/errors/errorHandler.ts#L293](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/errors/errorHandler.ts#L293)
 ```typescript
                 .showErrorMessage(DataScience.jupyterSelfCertFail().format(err.message), enableOption, closeOption)
                 .then((value) => {
@@ -4195,7 +4228,7 @@ No properties for event
 ```
 
 
-[src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L385](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L385)
+[src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L386](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L386)
 ```typescript
                     closeOption
                 );
@@ -4307,7 +4340,7 @@ No description provided
 
 ## Locations Used
 
-[src/webviews/extension-side/dataviewer/dataViewer.node.ts#L237](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewer.node.ts#L237)
+[src/webviews/extension-side/dataviewer/dataViewer.node.ts#L233](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewer.node.ts#L233)
 ```typescript
 
         // Log telemetry about number of rows
@@ -4319,7 +4352,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/dataviewer/dataViewer.node.ts#L320](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewer.node.ts#L320)
+[src/webviews/extension-side/dataviewer/dataViewer.node.ts#L316](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewer.node.ts#L316)
 ```typescript
 
     private sendElapsedTimeTelemetry() {
@@ -4574,7 +4607,7 @@ No description provided
 
 ## Locations Used
 
-[src/kernels/kernel.base.ts#L534](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts#L534)
+[src/kernels/kernel.base.ts#L552](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts#L552)
 ```typescript
             await this.executeSilently(session, this.getUserStartupCommands(), {
                 traceErrors: true,
@@ -5205,7 +5238,7 @@ No properties for event
 
 ## Locations Used
 
-[src/notebooks/execution/cellExecution.ts#L463](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/cellExecution.ts#L463)
+[src/notebooks/execution/cellExecution.ts#L449](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/cellExecution.ts#L449)
 ```typescript
         const props = { notebook: true };
         if (!CellExecution.sentExecuteCellTelemetry) {
@@ -5248,7 +5281,7 @@ No properties for event
 
 ## Locations Used
 
-[src/notebooks/execution/cellExecution.ts#L465](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/cellExecution.ts#L465)
+[src/notebooks/execution/cellExecution.ts#L451](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/cellExecution.ts#L451)
 ```typescript
             CellExecution.sentExecuteCellTelemetry = true;
             sendTelemetryEvent(Telemetry.ExecuteCellPerceivedCold, this.stopWatchForTelemetry.elapsedTime, props);
@@ -5300,7 +5333,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/jupyter/jupyterKernelService.node.ts#L216](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/jupyterKernelService.node.ts#L216)
+[src/kernels/jupyter/jupyterKernelService.node.ts#L217](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/jupyterKernelService.node.ts#L217)
 ```typescript
             await this.fs.writeLocalFile(kernelSpecFilePath.fsPath, JSON.stringify(contents, undefined, 4));
         } catch (ex) {
@@ -5312,7 +5345,7 @@ No properties for event
 ```
 
 
-[src/kernels/jupyter/jupyterKernelService.node.ts#L356](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/jupyterKernelService.node.ts#L356)
+[src/kernels/jupyter/jupyterKernelService.node.ts#L349](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/jupyterKernelService.node.ts#L349)
 ```typescript
                     await this.fs.writeLocalFile(kernelSpecFilePath, JSON.stringify(specModel, undefined, 2));
                 } catch (ex) {
@@ -5506,7 +5539,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L258](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L258)
+[src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L259](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L259)
 ```typescript
             const requestHeaders = { Cookie: cookieString, 'X-XSRFToken': xsrfCookie };
             return { requestHeaders };
@@ -5534,7 +5567,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L253](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L253)
+[src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L254](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/jupyterPasswordConnect.ts#L254)
 ```typescript
 
         // If we found everything return it all back if not, undefined as partial is useless
@@ -5766,7 +5799,7 @@ No properties for event
 
 ## Locations Used
 
-[src/notebooks/execution/kernelExecution.ts#L208](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/kernelExecution.ts#L208)
+[src/notebooks/execution/kernelExecution.ts#L200](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/kernelExecution.ts#L200)
 ```typescript
         return newCellExecutionQueue;
     }
@@ -6378,7 +6411,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/jupyter/jupyterKernelService.node.ts#L159](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/jupyterKernelService.node.ts#L159)
+[src/kernels/jupyter/jupyterKernelService.node.ts#L160](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/jupyterKernelService.node.ts#L160)
 ```typescript
      */
     // eslint-disable-next-line
@@ -6512,7 +6545,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/raw/launcher/kernelLauncher.node.ts#L116](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/launcher/kernelLauncher.node.ts#L116)
+[src/kernels/raw/launcher/kernelLauncher.node.ts#L117](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/launcher/kernelLauncher.node.ts#L117)
 ```typescript
             // Should be available now, wait with a timeout
             return await this.launchProcess(kernelConnectionMetadata, resource, workingDirectory, timeout, cancelToken);
@@ -6737,14 +6770,14 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/variablesView/variableView.node.ts#L84](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/variablesView/variableView.node.ts#L84)
+[src/webviews/extension-side/variablesView/variableView.node.ts#L80](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/variablesView/variableView.node.ts#L80)
 ```typescript
         console.log(`Done initing variables`);
     }
 
     @captureTelemetry(Telemetry.NativeVariableViewLoaded)
     public async load(codeWebview: vscodeWebviewView) {
-        await super.loadWebview(process.cwd(), codeWebview).catch(traceError);
+        await super.loadWebview(Uri.file(process.cwd()), codeWebview).catch(traceError);
 
 ```
 
@@ -6765,7 +6798,7 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/variablesView/variableView.node.ts#L143](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/variablesView/variableView.node.ts#L143)
+[src/webviews/extension-side/variablesView/variableView.node.ts#L139](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/variablesView/variableView.node.ts#L139)
 ```typescript
 
         // I've we've been made visible, make sure that we are updated
@@ -6939,7 +6972,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/kernel.base.ts#L323](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts#L323)
+[src/kernels/kernel.base.ts#L332](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts#L332)
 ```typescript
         // Setup telemetry
         if (!this.perceivedJupyterStartupTelemetryCaptured) {
@@ -6951,7 +6984,7 @@ No properties for event
 ```
 
 
-[src/kernels/kernel.base.ts#L406](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts#L406)
+[src/kernels/kernel.base.ts#L424](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts#L424)
 ```typescript
 
             sendKernelTelemetryEvent(
@@ -6981,7 +7014,7 @@ No properties for event
 
 ## Locations Used
 
-[src/notebooks/controllers/notebookControllerManager.ts#L768](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/notebookControllerManager.ts#L768)
+[src/notebooks/controllers/notebookControllerManager.ts#L774](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/notebookControllerManager.ts#L774)
 ```typescript
                 ? PYTHON_LANGUAGE
                 : getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata) || '');
@@ -7008,7 +7041,7 @@ No description provided
 
 ## Locations Used
 
-[src/notebooks/controllers/notebookControllerManager.ts#L748](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/notebookControllerManager.ts#L748)
+[src/notebooks/controllers/notebookControllerManager.ts#L754](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/notebookControllerManager.ts#L754)
 ```typescript
             onlyConnection && (matchReason |= PreferredKernelExactMatchReason.OnlyKernel);
             topMatchIsPreferredInterpreter && (matchReason |= PreferredKernelExactMatchReason.WasPreferredInterpreter);
@@ -7479,7 +7512,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/raw/session/rawJupyterSession.node.ts#L347](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts#L347)
+[src/kernels/raw/session/rawJupyterSession.node.ts#L350](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts#L350)
 ```typescript
         } else {
             traceWarning(`Didn't get response for requestKernelInfo after ${stopWatch.elapsedTime}ms.`);
@@ -7507,7 +7540,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/raw/launcher/kernelProcess.node.ts#L131](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/launcher/kernelProcess.node.ts#L131)
+[src/kernels/raw/launcher/kernelProcess.node.ts#L135](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/launcher/kernelProcess.node.ts#L135)
 ```typescript
         }
     }
@@ -7536,7 +7569,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/raw/session/rawJupyterSession.node.ts#L140](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts#L140)
+[src/kernels/raw/session/rawJupyterSession.node.ts#L142](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts#L142)
 ```typescript
                 throw error;
             }
@@ -7597,7 +7630,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/raw/launcher/kernelLauncher.node.ts#L219](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/launcher/kernelLauncher.node.ts#L219)
+[src/kernels/raw/launcher/kernelLauncher.node.ts#L224](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/launcher/kernelLauncher.node.ts#L224)
 ```typescript
 
         const disposable = kernelProcess.exited(
@@ -7621,7 +7654,7 @@ No properties for event
 ```
 
 
-[src/kernels/raw/session/rawJupyterSession.node.ts#L184](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts#L184)
+[src/kernels/raw/session/rawJupyterSession.node.ts#L186](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts#L186)
 ```typescript
             if (session !== this.session) {
                 return;
@@ -7649,7 +7682,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/kernelConnector.ts#L143](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelConnector.ts#L143)
+[src/kernels/kernelConnector.ts#L144](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelConnector.ts#L144)
 ```typescript
         const rawNotebookProvider = serviceContainer.tryGet<IRawNotebookProvider>(IRawNotebookProvider);
         const rawLocalKernel = rawNotebookProvider?.isSupported && isLocal;
@@ -7680,7 +7713,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/raw/session/rawJupyterSession.node.ts#L158](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts#L158)
+[src/kernels/raw/session/rawJupyterSession.node.ts#L160](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts#L160)
 ```typescript
         // We want to know why we got shut down
         const stacktrace = new Error().stack;
@@ -7709,7 +7742,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/raw/session/rawJupyterSession.node.ts#L83](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts#L83)
+[src/kernels/raw/session/rawJupyterSession.node.ts#L85](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts#L85)
 ```typescript
             Cancellation.throwIfCanceled(options.token);
             // Only connect our session if we didn't cancel or timeout
@@ -7721,9 +7754,9 @@ No properties for event
 ```
 
 
-[src/kernels/raw/session/rawJupyterSession.node.ts#L98](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts#L98)
+[src/kernels/raw/session/rawJupyterSession.node.ts#L100](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts#L100)
 ```typescript
-            if (error instanceof CancellationError) {
+            if (isCancellationError(error) || options.token.isCancellationRequested) {
                 sendKernelTelemetryEvent(
                     this.resource,
                     Telemetry.RawKernelSessionStart,
@@ -7733,7 +7766,7 @@ No properties for event
 ```
 
 
-[src/kernels/raw/session/rawJupyterSession.node.ts#L109](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts#L109)
+[src/kernels/raw/session/rawJupyterSession.node.ts#L111](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts#L111)
 ```typescript
             } else if (error instanceof TimedOutError) {
                 sendKernelTelemetryEvent(
@@ -7745,7 +7778,7 @@ No properties for event
 ```
 
 
-[src/kernels/raw/session/rawJupyterSession.node.ts#L121](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts#L121)
+[src/kernels/raw/session/rawJupyterSession.node.ts#L123](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts#L123)
 ```typescript
                 // Send our telemetry event with the error included
                 sendKernelTelemetryEvent(
@@ -7773,7 +7806,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/raw/session/rawJupyterSession.node.ts#L129](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts#L129)
+[src/kernels/raw/session/rawJupyterSession.node.ts#L131](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts#L131)
 ```typescript
                 );
                 sendKernelTelemetryEvent(
@@ -7801,7 +7834,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/raw/session/rawJupyterSession.node.ts#L82](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts#L82)
+[src/kernels/raw/session/rawJupyterSession.node.ts#L84](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts#L84)
 ```typescript
             newSession = await this.startRawSession(options);
             Cancellation.throwIfCanceled(options.token);
@@ -7829,7 +7862,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/raw/session/rawJupyterSession.node.ts#L114](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts#L114)
+[src/kernels/raw/session/rawJupyterSession.node.ts#L116](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts#L116)
 ```typescript
                     undefined,
                     error
@@ -7857,13 +7890,13 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/raw/session/rawJupyterSession.node.ts#L103](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts#L103)
+[src/kernels/raw/session/rawJupyterSession.node.ts#L105](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts#L105)
 ```typescript
                     undefined,
                     error
                 );
                 sendKernelTelemetryEvent(this.resource, Telemetry.RawKernelSessionStartUserCancel);
-                traceInfo('Starting of raw session cancelled by user');
+                traceVerbose('Starting of raw session cancelled by user');
                 throw error;
             } else if (error instanceof TimedOutError) {
 ```
@@ -7885,7 +7918,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/raw/session/rawJupyterSession.node.ts#L235](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts#L235)
+[src/kernels/raw/session/rawJupyterSession.node.ts#L238](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/raw/session/rawJupyterSession.node.ts#L238)
 ```typescript
         return this.startRawSession({ token: cancelToken, ui: new DisplayOptions(disableUI) });
     }
@@ -7913,7 +7946,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/jupyter/jupyterKernelService.node.ts#L238](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/jupyterKernelService.node.ts#L238)
+[src/kernels/jupyter/jupyterKernelService.node.ts#L239](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/jupyterKernelService.node.ts#L239)
 ```typescript
             );
         }
@@ -7962,7 +7995,7 @@ No properties for event
 
 ## Locations Used
 
-[src/notebooks/execution/kernelExecution.ts#L283](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/kernelExecution.ts#L283)
+[src/notebooks/execution/kernelExecution.ts#L275](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/kernelExecution.ts#L275)
 ```typescript
     }
 
@@ -7990,7 +8023,7 @@ No properties for event
 
 ## Locations Used
 
-[src/notebooks/execution/kernelExecution.ts#L282](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/kernelExecution.ts#L282)
+[src/notebooks/execution/kernelExecution.ts#L274](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/kernelExecution.ts#L274)
 ```typescript
         });
     }
@@ -8278,7 +8311,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/kernel.base.ts#L325](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts#L325)
+[src/kernels/kernel.base.ts#L334](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts#L334)
 ```typescript
             this.perceivedJupyterStartupTelemetryCaptured = true;
             sendTelemetryEvent(Telemetry.PerceivedJupyterStartupNotebook, stopWatch.elapsedTime);
@@ -8306,7 +8339,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/jupyter/launcher/notebookStarter.node.ts#L152](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/notebookStarter.node.ts#L152)
+[src/kernels/jupyter/launcher/notebookStarter.node.ts#L156](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/launcher/notebookStarter.node.ts#L156)
 ```typescript
             }
 
@@ -8359,7 +8392,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/common/baseJupyterSession.ts#L69](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/common/baseJupyterSession.ts#L69)
+[src/kernels/common/baseJupyterSession.ts#L70](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/common/baseJupyterSession.ts#L70)
 ```typescript
 export class JupyterSessionStartError extends WrappedError {
     constructor(originalException: Error) {
@@ -8611,7 +8644,7 @@ No description provided
 
 ## Locations Used
 
-[src/webviews/extension-side/variablesView/variableView.node.ts#L187](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/variablesView/variableView.node.ts#L187)
+[src/webviews/extension-side/variablesView/variableView.node.ts#L183](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/variablesView/variableView.node.ts#L183)
 ```typescript
             const response = await this.variables.getVariables(args, activeNotebook);
 
@@ -8638,7 +8671,7 @@ No description provided
 
 ## Locations Used
 
-[src/notebooks/helpers.ts#L749](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/helpers.ts#L749)
+[src/notebooks/helpers.ts#L671](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/helpers.ts#L671)
 ```typescript
             // Unless we already know its an unknown output type.
             const outputType: nbformat.OutputType =
@@ -8666,7 +8699,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/jupyter/session/jupyterSession.ts#L74](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/session/jupyterSession.ts#L74)
+[src/kernels/jupyter/session/jupyterSession.ts#L67](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/session/jupyterSession.ts#L67)
 ```typescript
         return true;
     }
@@ -8722,7 +8755,7 @@ No description provided
 
 ## Locations Used
 
-[src/webviews/extension-side/webviewHost.node.ts#L281](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/webviewHost.node.ts#L281)
+[src/webviews/extension-side/webviewHost.ts#L279](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/webviewHost.ts#L279)
 ```typescript
     protected webViewRendered() {
         if (this.webviewInit && !this.webviewInit.resolved) {
@@ -8750,15 +8783,15 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/webviewHost.node.ts#L299](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/webviewHost.node.ts#L299)
+[src/webviews/extension-side/webviewHost.ts#L297](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/webviewHost.ts#L297)
 ```typescript
         this.dispose();
     };
 
     @captureTelemetry(Telemetry.WebviewStyleUpdate)
-    private async handleCssRequest(request: IGetCssRequest): Promise<void> {
-        const settings = await this.generateDataScienceExtraSettings();
-        const requestIsDark = settings.ignoreVscodeTheme ? false : request?.isDark;
+    private async handleCssRequest(): Promise<void> {
+        const isDark = await this.isDark();
+        return this.postMessageInternal(CssMessages.GetCssResponse, {
 ```
 
 </details>

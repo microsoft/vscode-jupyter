@@ -51,9 +51,6 @@ export class RawJupyterSession extends BaseJupyterSession {
         }
         return super.status;
     }
-    public get kernelId(): string {
-        return this.session?.kernel?.id || '';
-    }
     constructor(
         private readonly kernelLauncher: IKernelLauncher,
         resource: Resource,

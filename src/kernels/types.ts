@@ -270,7 +270,6 @@ export interface IJupyterSession extends IAsyncDisposable {
     isServerSession(): this is IJupyterServerSession;
     onSessionStatusChanged: Event<KernelMessage.Status>;
     onDidDispose: Event<void>;
-    onIOPubMessage: Event<KernelMessage.IIOPubMessage>;
     interrupt(): Promise<void>;
     restart(): Promise<void>;
     waitForIdle(timeout: number): Promise<void>;
