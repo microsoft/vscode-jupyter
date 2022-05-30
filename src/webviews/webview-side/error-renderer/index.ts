@@ -57,7 +57,30 @@ function generateViewMoreElement(outputId: string) {
 
 function handleANSIOutput(context: RendererContext<any>, converter: ansiToHtml, traceback: string[]) {
     const tracebackElm = document.createElement('div');
-    tracebackElm.innerHTML = converter.toHtml(traceback.join('\n'));
+    try {
+        tracebackElm.innerHTML = traceback
+            .map((tb) => {
+                try {
+                    tb.split(/\r?\n/)
+                        .map((tbLine) => {
+                            try {
+                                return converter.toHtml(tbLine);
+                            } catch (ex) {
+                                console.warn(`Failed to convert a traceback line to HTML`, ex);
+                                return tbLine;
+                            }
+                        })
+                        .join('\n');
+                } catch (ex) {
+                    console.warn(`Failed to convert a traceback line to HTML`, ex);
+                    return tb;
+                }
+            })
+            .join('\n');
+    } catch (ex) {
+        console.warn(`Failed to convert traceback to HTML`, ex);
+        tracebackElm.innerHTML = traceback.join('\n');
+    }
     tracebackElm.addEventListener('click', (e) => {
         const a = e.target as HTMLAnchorElement;
         if (a && a.href) {
