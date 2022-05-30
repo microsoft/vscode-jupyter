@@ -10,6 +10,7 @@ import {
     DebugAdapter,
     DebugProtocolMessage,
     DebugSession,
+    Disposable,
     Event,
     EventEmitter,
     NotebookCell,
@@ -33,7 +34,6 @@ import {
     IDebugInfoResponse
 } from './types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { IDisposable } from '../../platform/common/types';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../platform/logging';
 import {
     assertIsDebugConfig,
@@ -42,6 +42,7 @@ import {
     getMessageSourceAndHookIt
 } from '../../notebooks/debugger/helper';
 import { ResourceMap } from '../../platform/vscode-path/map';
+import { IDisposable } from '../../platform/common/types';
 
 /**
  * For info on the custom requests implemented by jupyter see:
@@ -89,18 +90,9 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
             this.debugCell = notebookDocument.cellAt(configuration.__cellIndex!);
         }
 
+        this.jupyterSession.kernel?.iopubMessage.connect(this.onIOPubMessage, this);
         this.disposables.push(
-            this.jupyterSession.onIOPubMessage(async (msg: KernelMessage.IIOPubMessage) => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const anyMsg = msg as any;
-                traceInfoIfCI(`Debug IO Pub message: ${JSON.stringify(msg)}`);
-                if (anyMsg.header.msg_type === 'debug_event') {
-                    this.trace('event', JSON.stringify(msg));
-                    if (!(await this.delegate?.willSendEvent(anyMsg))) {
-                        this.sendMessage.fire(msg.content);
-                    }
-                }
-            })
+            new Disposable(() => this.jupyterSession.kernel?.iopubMessage.disconnect(this.onIOPubMessage, this))
         );
 
         if (this.kernel) {
@@ -157,6 +149,17 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         traceVerbose(`[Debug] ${tag}: ${msg}`);
     }
 
+    async onIOPubMessage(_: unknown, msg: KernelMessage.IIOPubMessage) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const anyMsg = msg as any;
+        traceInfoIfCI(`Debug IO Pub message: ${JSON.stringify(msg)}`);
+        if (anyMsg.header.msg_type === 'debug_event') {
+            this.trace('event', JSON.stringify(msg));
+            if (!(await this.delegate?.willSendEvent(anyMsg))) {
+                this.sendMessage.fire(msg.content);
+            }
+        }
+    }
     async handleMessage(message: DebugProtocol.ProtocolMessage) {
         try {
             traceInfoIfCI(`KernelDebugAdapter::handleMessage ${JSON.stringify(message, undefined, ' ')}`);

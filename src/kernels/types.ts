@@ -270,7 +270,6 @@ export interface IJupyterSession extends IAsyncDisposable {
     isServerSession(): this is IJupyterServerSession;
     onSessionStatusChanged: Event<KernelMessage.Status>;
     onDidDispose: Event<void>;
-    onIOPubMessage: Event<KernelMessage.IIOPubMessage>;
     interrupt(): Promise<void>;
     restart(): Promise<void>;
     waitForIdle(timeout: number): Promise<void>;
@@ -433,6 +432,12 @@ export interface INotebookProvider {
 }
 
 export interface IKernelSocket {
+    /**
+     * These messages are sent directly to the kernel bypassing the Jupyter lab npm libraries.
+     * As a result, we don't get any notification that messages were sent (on the anymessage signal).
+     * To ensure those signals can still be used to monitor such messages, send them via a callback so that we can emit these messages on the anymessage signal.
+     */
+    onAnyMessage: Event<{ msg: string | KernelMessage.IMessage; direction: 'send' }>;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     sendToRealKernel(data: any, cb?: (err?: Error) => void): void;
     /**
