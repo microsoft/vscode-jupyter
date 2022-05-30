@@ -285,8 +285,8 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     private async onDidChangeSelectedNotebooks(event: { notebook: NotebookDocument; selected: boolean }) {
         traceInfoIfCI(
             `NotebookController selection event called for notebook ${event.notebook.uri.toString()} & controller ${
-                this.id
-            }. Selected ${event.selected} `
+                this.connection.kind
+            }:${this.id}. Selected ${event.selected} `
         );
         if (this.associatedDocuments.has(event.notebook) && event.selected) {
             // Possible it gets called again in our tests (due to hacks for testing purposes).

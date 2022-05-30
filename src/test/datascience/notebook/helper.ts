@@ -330,30 +330,30 @@ async function waitForKernelToChangeImpl(
     const notebookControllers = notebookControllerManager.getRegisteredNotebookControllers();
 
     // Find the kernel id that matches the name we want
-    let id: string | undefined;
+    let controller: IVSCodeNotebookController | undefined;
     let labelOrId = 'labelOrId' in criteria ? criteria.labelOrId : undefined;
     if (labelOrId) {
-        id = notebookControllers
+        controller = notebookControllers
             ?.filter((k) => (criteria.isInteractiveController ? k.id.includes(InteractiveControllerIdSuffix) : true))
-            ?.find((k) => (labelOrId && k.label === labelOrId) || (k.id && k.id == labelOrId))?.id;
-        if (!id) {
+            ?.find((k) => (labelOrId && k.label === labelOrId) || (k.id && k.id == labelOrId));
+        if (!controller) {
             // Try includes instead
-            id = notebookControllers?.find(
+            controller = notebookControllers?.find(
                 (k) => (labelOrId && k.label.includes(labelOrId)) || (k.id && k.id == labelOrId)
-            )?.id;
+            );
         }
     }
     const interpreterPath = 'interpreterPath' in criteria ? criteria.interpreterPath : undefined;
-    if (interpreterPath && !id) {
-        id = notebookControllers
+    if (interpreterPath && !controller) {
+        controller = notebookControllers
             ?.filter((k) => k.connection.interpreter)
             ?.filter((k) => (criteria.isInteractiveController ? k.id.includes(InteractiveControllerIdSuffix) : true))
             .find((k) =>
                 // eslint-disable-next-line local-rules/dont-use-fspath
                 k.connection.interpreter!.uri.fsPath.toLowerCase().includes(interpreterPath.fsPath.toLowerCase())
-            )?.id;
+            );
     }
-    traceInfo(`Switching to kernel id ${id}`);
+    traceInfo(`Switching to kernel id ${controller}`);
     const isRightKernel = () => {
         const doc = vscodeNotebook.activeNotebookEditor?.notebook;
         if (!doc) {
@@ -364,7 +364,7 @@ async function waitForKernelToChangeImpl(
         if (!selectedController) {
             return false;
         }
-        if (selectedController.id === id) {
+        if (selectedController.id === controller?.id) {
             traceInfo(`Found selected kernel id:label ${selectedController.id}:${selectedController.label}`);
             return true;
         }
@@ -377,10 +377,17 @@ async function waitForKernelToChangeImpl(
             async () => {
                 // Double check not the right kernel (don't select again if already found to be correct)
                 if (!isRightKernel() && !skipAutoSelection) {
-                    traceInfoIfCI(`Notebook select.kernel command switching to kernel id ${id}: Try ${tryCount}`);
+                    traceInfoIfCI(
+                        `Notebook select.kernel command switching to kernel id ${controller?.connection.kind}${controller?.id}: Try ${tryCount}`
+                    );
                     // Send a select kernel on the active notebook editor. Keep sending it if it fails.
-                    await commands.executeCommand('notebook.selectKernel', { id, extension: JVSC_EXTENSION_ID });
-                    traceInfoIfCI(`Notebook select.kernel command switched to kernel id ${id}`);
+                    await commands.executeCommand('notebook.selectKernel', {
+                        id: controller?.id,
+                        extension: JVSC_EXTENSION_ID
+                    });
+                    traceInfoIfCI(
+                        `Notebook select.kernel command switched to kernel id ${controller?.connection.kind}:${controller}`
+                    );
                     tryCount += 1;
                 }
 
@@ -443,7 +450,9 @@ export async function waitForKernelToGetAutoSelected(
         // Do nothing for now. Just log it
         traceInfoIfCI(`No preferred controller found during waitForKernelToGetAutoSelected`);
     }
-    traceInfoIfCI(`Wait for kernel - got a preferred notebook controller: ${preferred?.id}`);
+    traceInfoIfCI(
+        `Wait for kernel - got a preferred notebook controller: ${preferred?.connection.kind}:${preferred?.id}`
+    );
 
     // Find one that matches the expected language or the preferred
     const expectedLower = expectedLanguage?.toLowerCase();
@@ -480,7 +489,11 @@ export async function waitForKernelToGetAutoSelected(
     }
 
     const criteria = { labelOrId: match!.id };
-    traceInfo(`Preferred kernel for selection is ${match?.id}, criteria = ${JSON.stringify(criteria)}`);
+    traceInfo(
+        `Preferred kernel for selection is ${match.connection.kind}:${match?.id}, criteria = ${JSON.stringify(
+            criteria
+        )}`
+    );
     assert.ok(match, 'No kernel to auto select');
     return waitForKernelToChange(criteria, timeout, skipAutoSelection);
 }

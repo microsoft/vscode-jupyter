@@ -112,7 +112,7 @@ export class HostJupyterServer implements INotebookServer {
                 actionSource
             );
             this.throwIfDisposedOrCancelled(cancelToken);
-            traceInfo(`Started session for kernel ${kernelConnection.id}`);
+            traceInfo(`Started session for kernel ${kernelConnection.kind}:${kernelConnection.id}`);
             return session;
         };
 
@@ -121,7 +121,7 @@ export class HostJupyterServer implements INotebookServer {
             this.throwIfDisposedOrCancelled(cancelToken);
 
             if (session) {
-                traceInfo(`Finished connecting kernel ${kernelConnection.id}`);
+                traceInfo(`Finished connecting kernel ${kernelConnection.kind}:${kernelConnection.id}`);
                 sessionPromise.resolve(session);
             } else {
                 sessionPromise.reject(this.getDisposedError());

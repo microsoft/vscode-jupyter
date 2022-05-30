@@ -311,7 +311,7 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
         await waitForCondition(
             async () => controllerManager.getSelectedNotebookController(nbEditor.notebook) === localKernelController,
             5_000,
-            `Controller not swtiched to local kernel, instead it is ${
+            `Controller not switched to local kernel, instead it is ${
                 controllerManager.getSelectedNotebookController(nbEditor.notebook)?.id
             }`
         );
