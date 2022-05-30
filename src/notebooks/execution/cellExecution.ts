@@ -31,18 +31,18 @@ import { noop } from '../../platform/common/utils/misc';
 import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../kernels/helpers';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { activeNotebookCellExecution, CellExecutionMessageHandler } from './cellExecutionMessageHandler';
-import { CellExecutionMessageHandlerFactory } from './cellExecutionMessageHandlerFactory';
+import { CellExecutionMessageHandlerService } from './cellExecutionMessageHandlerService';
 import { IJupyterSession, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
 
 export class CellExecutionFactory {
     constructor(
         private readonly controller: NotebookController,
-        private readonly factory: CellExecutionMessageHandlerFactory
+        private readonly requestListener: CellExecutionMessageHandlerService
     ) {}
 
     public create(cell: NotebookCell, code: string | undefined, metadata: Readonly<KernelConnectionMetadata>) {
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        return CellExecution.fromCell(cell, code, metadata, this.controller, this.factory);
+        return CellExecution.fromCell(cell, code, metadata, this.controller, this.requestListener);
     }
 }
 
@@ -85,7 +85,7 @@ export class CellExecution implements IDisposable {
         private readonly codeOverride: string | undefined,
         private readonly kernelConnection: Readonly<KernelConnectionMetadata>,
         private readonly controller: NotebookController,
-        private readonly factory: CellExecutionMessageHandlerFactory
+        private readonly requestListener: CellExecutionMessageHandlerService
     ) {
         workspace.onDidCloseTextDocument(
             (e) => {
@@ -130,9 +130,9 @@ export class CellExecution implements IDisposable {
         code: string | undefined,
         metadata: Readonly<KernelConnectionMetadata>,
         controller: NotebookController,
-        factory: CellExecutionMessageHandlerFactory
+        requestListener: CellExecutionMessageHandlerService
     ) {
-        return new CellExecution(cell, code, metadata, controller, factory);
+        return new CellExecution(cell, code, metadata, controller, requestListener);
     }
     public async start(session: IJupyterSession) {
         if (this.cancelHandled) {
@@ -352,22 +352,16 @@ export class CellExecution implements IDisposable {
             traceError(`Cell execution failed without request, for cell Index ${this.cell.index}`, ex);
             return this.completedWithErrors(ex);
         }
-        this.cellExecutionHandler = this.factory.create(this.cell, {
+        this.cellExecutionHandler = this.requestListener.registerListener(this.cell, {
             kernel: session.kernel!,
             cellExecution: this.execution!,
-            request: this.request
-        });
-        this.disposables.push(this.cellExecutionHandler);
-        this.cellExecutionHandler.onErrorHandlingExecuteRequestIOPubMessage(
-            ({ error }) => {
+            request: this.request,
+            onErrorHandlingExecuteRequestIOPubMessage: (error) => {
                 traceError(`Cell (index = ${this.cell.index}) execution completed with errors (2).`, error);
                 // If not a restart error, then tell the subscriber
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                this.completedWithErrors(error as any);
-            },
-            this,
-            this.disposables
-        );
+                this.completedWithErrors(error);
+            }
+        });
 
         // WARNING: Do not dispose `request`.
         // Even after request.done & execute_reply is sent we could have more messages coming from iopub.

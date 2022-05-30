@@ -128,7 +128,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     private unhandledMessageHandler: Slot<ISessionWithSocket, KernelMessage.IMessage>;
     private chainingExecute = new ChainingExecuteRequester();
     private previousAnyMessageHandler?: IDisposable;
-
     constructor(
         public readonly kind: 'localRaw' | 'remoteJupyter' | 'localJupyter',
         protected resource: Resource,
