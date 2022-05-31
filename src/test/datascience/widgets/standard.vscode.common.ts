@@ -215,7 +215,7 @@ export function sharedIPyWidgetsTests(
         await assertOutputContainsHtml(cell1, comms, ['Button clicked']);
         await assertOutputContainsHtml(cell2, comms, ['Button clicked']);
     });
-    test('Button Widget with custom comm message', async () => {
+    test.skip('Button Widget with custom comm message', async () => {
         const comms = await initializeNotebook({ templateFile: 'button_widget_comm_msg.ipynb' });
         const [cell0, cell1] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
 
@@ -227,7 +227,7 @@ export function sharedIPyWidgetsTests(
         await click(comms, cell0, 'button');
         await waitForTextOutput(cell0, 'Button clicked.', 1, false);
     });
-    test('Button Widget with custom comm message rendering a matplotlib widget', async () => {
+    test.skip('Button Widget with custom comm message rendering a matplotlib widget', async () => {
         const comms = await initializeNotebook({ templateFile: 'button_widget_comm_msg_matplotlib.ipynb' });
         const [cell0, cell1] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
 
