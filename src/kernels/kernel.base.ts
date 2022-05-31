@@ -402,9 +402,9 @@ export abstract class BaseKernel implements IKernel {
                 pythonInfo = ` (${info.join(', ')})`;
             }
             traceInfo(
-                `Starting Jupyter Session id = '${this.kernelConnectionMetadata.id}'${pythonInfo} for '${getDisplayPath(
-                    this.id
-                )}' (disableUI=${this.startupUI.disableUI})`
+                `Starting Jupyter Session id = '${this.kernelConnectionMetadata.kind}:${
+                    this.kernelConnectionMetadata.id
+                }'${pythonInfo} for '${getDisplayPath(this.id)}' (disableUI=${this.startupUI.disableUI})`
             );
             this.createProgressIndicator(disposables);
             this.isKernelDead = false;
