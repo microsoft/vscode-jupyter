@@ -830,7 +830,10 @@ export async function waitForTextOutput(
                 cell.index + 1
             } in output index ${index}, it is ${cell.outputs
                 .map(
-                    (output, index) => `Output for Index "${index}" is "${output.items.map(getOutputText).join('\n')}"`
+                    (output, index) =>
+                        `Output for Index "${index}" with total outputs ${output.items.length} is "${output.items
+                            .map(getOutputText)
+                            .join('\n')}"`
                 )
                 .join('\n')}`
     );
