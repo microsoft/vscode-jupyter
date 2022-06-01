@@ -132,7 +132,7 @@ suite('Interactive window debugging', async function () {
         );
     });
 
-    test('Run a cell and step into breakpoint', async () => {
+    test('Run a cell and step into breakpoint', async function () {
         // Define the function
         const source = 'def foo():\n  print("foo")';
         const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
@@ -163,7 +163,7 @@ suite('Interactive window debugging', async function () {
                 if (message.event == 'stopped') {
                     stopped = true;
                 }
-                if (message.command == 'stackTrace' && !stoppedOnBreakpoint) {
+                if (message.command == 'stackTrace' && !stoppedOnBreakpoint && message.body.stackFrames.length) {
                     stoppedOnBreakpoint = message.body.stackFrames[0].line == 2;
                 }
             }

@@ -48,7 +48,9 @@ import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
 
 type DebuggerType = 'VSCodePythonDebugger' | 'JupyterProtocolDebugger';
-const debuggerTypes: DebuggerType[] = ['JupyterProtocolDebugger', 'VSCodePythonDebugger'];
+
+// See issue: https://github.com/microsoft/vscode-jupyter/issues/10258
+const debuggerTypes: DebuggerType[] = ['VSCodePythonDebugger'];
 debuggerTypes.forEach((debuggerType) => {
     suite(`Interactive window debugger using ${debuggerType}`, async function () {
         this.timeout(120_000);

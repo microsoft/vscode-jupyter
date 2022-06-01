@@ -91,9 +91,9 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
         );
         const notebookMetadata = cloneDeep(notebook.metadata);
         assert.strictEqual(
-            notebookMetadata.custom.metadata.kernelspec.language,
+            notebookMetadata.custom.metadata.language_info.name,
             'python',
-            `Kernel language not set correctly.`
+            `Language not set correctly.`
         );
 
         function verifyCellMetadata() {
