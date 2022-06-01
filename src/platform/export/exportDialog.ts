@@ -59,8 +59,7 @@ export class ExportDialog implements IExportDialog {
         const targetFileName =
             defaultFileName || !source
                 ? defaultFileName || ''
-                : // eslint-disable-next-line local-rules/dont-use-fspath
-                  `${path.basename(source.fsPath, path.extname(source.fsPath))}${extension}`;
+                : `${path.basename(source.path, path.extname(source.path))}${extension}`;
 
         const options: SaveDialogOptions = {
             defaultUri: await this.getDefaultUri(source, targetFileName),
@@ -84,6 +83,6 @@ export class ExportDialog implements IExportDialog {
 
         // Otherwise split off the end of the path and combine it with the target file name
         const newPath = path.join(path.dirname(source.path), targetFileName);
-        return Uri.parse(`${source.scheme}://${newPath}`);
+        return Uri.parse(`${source.scheme}://${newPath}`).with({ authority: source.authority });
     }
 }
