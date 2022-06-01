@@ -61,7 +61,8 @@ function handleANSIOutput(context: RendererContext<any>, converter: ansiToHtml, 
         tracebackElm.innerHTML = traceback
             .map((tb) => {
                 try {
-                    tb.split(/\r?\n/)
+                    return tb
+                        .split(/\r?\n/)
                         .map((tbLine) => {
                             try {
                                 return converter.toHtml(tbLine);
