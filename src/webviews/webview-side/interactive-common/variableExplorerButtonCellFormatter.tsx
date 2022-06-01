@@ -38,7 +38,7 @@ export class VariableExplorerButtonCellFormatter extends React.Component<IVariab
                             baseTheme={this.props.baseTheme}
                             tooltip={getLocString(
                                 'DataScience.showDataExplorerTooltip',
-                                'Show variable in data viewer.'
+                                'Show variable in data viewer'
                             )}
                             onClick={this.onDataExplorerClick}
                         >
