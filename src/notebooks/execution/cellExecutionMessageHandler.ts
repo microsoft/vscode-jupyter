@@ -168,8 +168,8 @@ export class CellExecutionMessageHandler implements IDisposable {
                 this.completedExecution = true;
                 // We're only interested in messages after execution has completed.
                 // See https://github.com/microsoft/vscode-jupyter/issues/9503 for more information.
-                this.kernel.anyMessage.connect(this.onKernelAnyMessage, this);
-                this.kernel.iopubMessage.connect(this.onKernelIOPubMessage, this);
+                // this.kernel.anyMessage.connect(this.onKernelAnyMessage, this);
+                // this.kernel.iopubMessage.connect(this.onKernelIOPubMessage, this);
 
                 this.endCellExecution();
             })
