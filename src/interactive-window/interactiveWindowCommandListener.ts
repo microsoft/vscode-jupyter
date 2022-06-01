@@ -465,7 +465,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
     private async goToCodeInInteractiveWindow(context?: NotebookCell) {
         if (context && context.metadata?.interactive) {
             const uri = Uri.parse(context.metadata.interactive.uristring);
-            const line = context.metadata.interactive.line;
+            const line = context.metadata.interactive.lineIndex;
 
             const editor = await this.documentManager.showTextDocument(uri, { viewColumn: ViewColumn.One });
 
