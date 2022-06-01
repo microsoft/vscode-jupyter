@@ -340,7 +340,7 @@
                     "light": "resources/light/export_to_python.svg",
                     "dark": "resources/dark/export_to_python.svg"
                 },
-                "enablement": "notebookType == jupyter-notebook && isWorkspaceTrusted && !jupyter.webExtension"
+                "enablement": "notebookType == jupyter-notebook && isWorkspaceTrusted && !jupyter.webExtension || notebookType == jupyter-notebook && isWorkspaceTrusted && jupyter.webExtension && notebookKernel =~ /^ms-toolsai.jupyter\\//"
             },
             {
                 "command": "jupyter.export",
