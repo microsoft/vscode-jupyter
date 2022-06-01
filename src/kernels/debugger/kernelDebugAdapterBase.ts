@@ -276,7 +276,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         // map Source paths from VS Code to Ipykernel temp files
         getMessageSourceAndHookIt(message, (source, lines?: { line?: number; endLine?: number; lines?: number[] }) => {
             if (source && source.path) {
-                const mapping = this.cellToFile.get(Uri.file(source.path));
+                const mapping = this.cellToFile.get(Uri.parse(source.path));
                 if (mapping) {
                     source.path = mapping.path;
                     if (typeof lines?.endLine === 'number') {
