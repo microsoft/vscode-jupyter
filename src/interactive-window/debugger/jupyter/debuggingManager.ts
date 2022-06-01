@@ -33,6 +33,8 @@ import * as path from '../../../platform/vscode-path/path';
 import { DebugCellController } from './debugCellControllers';
 import { DebuggingManagerBase } from '../../../kernels/debugger/debuggingManagerBase';
 import { IConfigurationService } from '../../../platform/common/types';
+import { IFileGeneratedCodes } from '../../editor-integration/types';
+import { buildSourceMap } from '../helper';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
@@ -180,5 +182,21 @@ export class InteractiveWindowDebuggingManager
 
         this.trackDebugAdapter(activeDoc, adapter);
         return new DebugAdapterInlineImplementation(adapter);
+    }
+
+    // TODO: This will likely be needed for mapping breakpoints and such
+    public async updateSourceMaps(notebookEditor: NotebookEditor, hashes: IFileGeneratedCodes[]): Promise<void> {
+        // Make sure that we have an active debugging session at this point
+        let debugSession = await this.getDebugSession(notebookEditor.notebook);
+        if (debugSession) {
+            traceInfoIfCI(`Sending debug request for source map`);
+            await Promise.all(
+                hashes.map(async (fileHash) => {
+                    if (debugSession) {
+                        return debugSession.customRequest('setPydevdSourceMap', buildSourceMap(fileHash));
+                    }
+                })
+            );
+        }
     }
 }
