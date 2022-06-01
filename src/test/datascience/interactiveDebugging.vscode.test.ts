@@ -24,6 +24,7 @@ import { ITestVariableViewProvider } from './variableView/variableViewTestInterf
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { Commands } from '../../platform/common/constants';
 import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
+import { pythonIWKernelDebugAdapter } from '../../kernels/debugger/constants';
 
 suite('Interactive window debugging', async function () {
     this.timeout(120_000);
@@ -47,6 +48,7 @@ suite('Interactive window debugging', async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         api = await initialize();
         disposables.push(vscode.debug.registerDebugAdapterTrackerFactory('python', tracker));
+        disposables.push(vscode.debug.registerDebugAdapterTrackerFactory(pythonIWKernelDebugAdapter, tracker));
         interactiveWindowProvider = api.serviceManager.get(IInteractiveWindowProvider);
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
         const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);

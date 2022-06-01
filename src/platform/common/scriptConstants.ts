@@ -14,11 +14,6 @@ export namespace DataFrameLoading {
 
     export const DataFrameInfoFunc = '_VSCODE_getDataFrameInfo';
     export const DataFrameRowFunc = '_VSCODE_getDataFrameRows';
-
-    // Constants for the debugger which imports the script files
-    export const DataFrameImport = `__import__('vscodeDataFrame')`;
-    export const DataFrameInfoImportFunc = `${DataFrameImport}._VSCODE_getDataFrameInfo`;
-    export const DataFrameRowImportFunc = `${DataFrameImport}._VSCODE_getDataFrameRows`;
 }
 
 export namespace GetVariableInfo {
@@ -35,10 +30,6 @@ export namespace GetVariableInfo {
     export const VariableInfoFunc = '_VSCODE_getVariableInfo';
     export const VariablePropertiesFunc = '_VSCODE_getVariableProperties';
     export const VariableTypesFunc = '_VSCODE_getVariableTypes';
-
-    // Constants for the debugger which imports the script files
-    export const VariableInfoImportName = `__import__('vscodeGetVariableInfo')`;
-    export const VariableInfoImportFunc = `${VariableInfoImportName}._VSCODE_getVariableInfo`;
 }
 
 export namespace AddRunCellHook {

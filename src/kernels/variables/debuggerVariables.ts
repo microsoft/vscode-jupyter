@@ -10,7 +10,7 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 import { IDebugService, IVSCodeNotebook } from '../../platform/common/application/types';
 import { DataFrameLoading, GetVariableInfo } from '../../platform/common/scriptConstants';
-import { traceError } from '../../platform/logging';
+import { traceError, traceVerbose } from '../../platform/logging';
 import { IConfigurationService, IExtensionContext, Resource } from '../../platform/common/types';
 import { DebugLocationTracker } from '../debugger/debugLocationTracker';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -155,7 +155,7 @@ export class DebuggerVariables
 
         // Then eval calling the main function with our target variable
         const results = await this.evaluate(
-            `${DataFrameLoading.DataFrameInfoImportFunc}(${expression})`,
+            `${DataFrameLoading.DataFrameInfoFunc}(${expression})`,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (targetVariable as any).frameId
         );
@@ -207,7 +207,7 @@ export class DebuggerVariables
         await this.importDataFrameScripts();
 
         const results = await this.evaluate(
-            `${DataFrameLoading.DataFrameRowImportFunc}(${expression}, ${start}, ${end})`,
+            `${DataFrameLoading.DataFrameRowFunc}(${expression}, ${start}, ${end})`,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (targetVariable as any).frameId
         );
@@ -299,6 +299,7 @@ export class DebuggerVariables
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private async evaluate(code: string, frameId?: number): Promise<any> {
         if (this.debugService.activeDebugSession) {
+            traceVerbose(`Evaluating in debugger : ${this.debugService.activeDebugSession.id}: ${code}`);
             const results = await this.debugService.activeDebugSession.customRequest('evaluate', {
                 expression: code,
                 frameId: this.topMostFrameId || frameId,
@@ -335,7 +336,7 @@ export class DebuggerVariables
             // Run our variable info scripts only once per session because they're slow
             const key = this.debugService.activeDebugSession?.id;
             if (key && !this.importedGetVariableInfoScriptsIntoKernel.has(key)) {
-                const scriptPath = DataFrameLoading.getScriptPath(this.context);
+                const scriptPath = GetVariableInfo.getScriptPath(this.context);
                 const contents = await this.fs.readFile(scriptPath);
                 await this.evaluate(contents);
                 this.importedGetVariableInfoScriptsIntoKernel.add(key);
@@ -351,7 +352,7 @@ export class DebuggerVariables
 
         // Then eval calling the variable info function with our target variable
         const results = await this.evaluate(
-            `${GetVariableInfo.VariableInfoImportFunc}(${variable.name})`,
+            `${GetVariableInfo.VariableInfoFunc}(${variable.name})`,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (variable as any).frameId
         );
