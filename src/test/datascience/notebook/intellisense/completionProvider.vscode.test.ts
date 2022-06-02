@@ -7,10 +7,8 @@ import * as path from '../../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import {
     CancellationToken,
-    CancellationTokenSource,
     commands,
     CompletionContext,
-    CompletionTriggerKind,
     ConfigurationTarget,
     Position,
     TextDocument,
@@ -26,7 +24,7 @@ import {
     PythonKernelCompletionProvider,
     setIntellisenseTimeout
 } from '../../../../intellisense/pythonKernelCompletionProvider';
-import { IExtensionTestApi, sleep } from '../../../common.node';
+import { IExtensionTestApi } from '../../../common.node';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../../initialize.node';
 import {
@@ -37,7 +35,8 @@ import {
     waitForExecutionCompletedSuccessfully,
     prewarmNotebooks,
     createEmptyPythonNotebook,
-    getCellOutputs
+    getCellOutputs,
+    waitForCompletions
 } from '../helper.node';
 import { Settings } from '../../../../platform/common/constants';
 
@@ -156,30 +155,13 @@ import { Settings } from '../../../../platform/common/constants';
                 // Now add the cell to check intellisense.
                 await insertCodeCell(cellCode);
                 const cell4 = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(3);
-
-                const token = new CancellationTokenSource().token;
                 // If we're testing string completions, ensure the cursor position is inside the string quotes.
                 let position = new Position(
                     0,
                     cellCode.includes('"') || cellCode.includes("'") ? cellCode.length - 1 : cellCode.length
                 );
-                let context: CompletionContext = {
-                    triggerKind: triggerCharacter
-                        ? CompletionTriggerKind.TriggerCharacter
-                        : CompletionTriggerKind.Invoke,
-                    triggerCharacter
-                };
                 traceInfo('Get completions in test');
-                let completions = await completionProvider.provideCompletionItems(
-                    cell4.document,
-                    position,
-                    token,
-                    context
-                );
-                await sleep(500);
-                // Ask a second time as Jupyter can sometimes not be ready
-                traceInfo('Get completions second time in test');
-                completions = await completionProvider.provideCompletionItems(cell4.document, position, token, context);
+                let completions = await waitForCompletions(completionProvider, cell4, position, triggerCharacter);
                 let items = completions.map((item) => item.label);
                 assert.isOk(items.length);
                 if (itemToExistInCompletion) {
@@ -216,7 +198,7 @@ import { Settings } from '../../../../platform/common/constants';
                 edit.insert(cell4.document.uri, new Position(cellCode.length, 0), textToFilterCompletions);
                 await workspace.applyEdit(edit);
                 position = new Position(0, cellCode.length + textToFilterCompletions.length);
-                completions = await completionProvider.provideCompletionItems(cell4.document, position, token, context);
+                completions = await waitForCompletions(completionProvider, cell4, position, triggerCharacter);
                 items = completions.map((item) => item.label);
                 assert.isOk(items.length);
                 assert.isUndefined(
@@ -237,7 +219,7 @@ import { Settings } from '../../../../platform/common/constants';
             }
             test('Dataframe completions', async () => {
                 const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.notebook.uri.fsPath);
-                await testCompletions('df.', '.', fileName, 'Age', 'N', 'Name');
+                await testCompletions('df.', '.', fileName, 'Age', 'S', 'Sex');
             });
             test('Dataframe column completions', async () => {
                 const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.notebook.uri.fsPath);
@@ -245,7 +227,7 @@ import { Settings } from '../../../../platform/common/constants';
             });
             test('Dataframe assignment completions', async () => {
                 const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.notebook.uri.fsPath);
-                await testCompletions('var_name = df.', '.', fileName, 'Age', 'N', 'Name');
+                await testCompletions('var_name = df.', '.', fileName, 'Age', 'S', 'Sex');
             });
             test('Dataframe assignment column completions', async () => {
                 const fileName = path.basename(vscodeNotebook.activeNotebookEditor!.notebook.uri.fsPath);
