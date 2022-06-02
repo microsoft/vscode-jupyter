@@ -45,7 +45,8 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
             // Create our python string of file names
             const fileListString = fileValues
                 .map((filePath) => {
-                    return '"' + filePath.path + '"';
+                    // escape Windows path separators again for python
+                    return '"' + filePath.path.replace(/\\/g, '\\\\') + '"';
                 })
                 .join(',');
 
