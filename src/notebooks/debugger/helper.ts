@@ -78,9 +78,7 @@ export function getMessageSourceAndHookIt(
                 case 'setBreakpoints':
                     // Keep track of the original source to be passed for other hooks.
                     const originalSource = { ...(request.arguments as DebugProtocol.SetBreakpointsArguments).source };
-                    sourceHook((request.arguments as DebugProtocol.SetBreakpointsArguments).source);
-                    // We pass a copy of the original source, as only the original object as the unaltered source.
-                    sourceHook({ ...originalSource }, request.arguments);
+                    sourceHook((request.arguments as DebugProtocol.SetBreakpointsArguments).source, request.arguments);
                     const breakpoints = (request.arguments as DebugProtocol.SetBreakpointsArguments).breakpoints;
                     if (breakpoints && Array.isArray(breakpoints)) {
                         breakpoints.forEach((bk) => {
