@@ -15,9 +15,10 @@ import { getPlainTextOrStreamOutput } from '../../kernels/kernel.base';
 import { IKernel, isLocalConnection } from '../../kernels/types';
 import { IInteractiveWindowDebugger } from '../types';
 import { IFileGeneratedCodes } from '../editor-integration/types';
-import { IJupyterDebugService, ISourceMapRequest } from '../../kernels/debugger/types';
+import { IJupyterDebugService } from '../../kernels/debugger/types';
 import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 import { executeSilently } from '../../kernels/helpers';
+import { buildSourceMap } from './helper';
 
 @injectable()
 export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
@@ -93,7 +94,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
                     if (this.debuggingActive) {
                         return this.debugService.activeDebugSession!.customRequest(
                             'setPydevdSourceMap',
-                            this.buildSourceMap(fileHash)
+                            buildSourceMap(fileHash)
                         );
                     }
                 })
@@ -271,22 +272,6 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
                 : [];
             traceInfo(`Appending paths: ${getPlainTextOrStreamOutput(result)}`);
         }
-    }
-
-    private buildSourceMap(fileHash: IFileGeneratedCodes): ISourceMapRequest {
-        const sourceMapRequest: ISourceMapRequest = { source: { path: fileHash.uri.fsPath }, pydevdSourceMaps: [] };
-        sourceMapRequest.pydevdSourceMaps = fileHash.generatedCodes.map((generatedCode) => {
-            return {
-                line: generatedCode.debuggerStartLine,
-                endLine: generatedCode.endLine,
-                runtimeSource: {
-                    path: generatedCode.runtimeFile
-                },
-                runtimeLine: generatedCode.runtimeLine
-            };
-        });
-
-        return sourceMapRequest;
     }
 
     private async connectToLocal(kernel: IKernel): Promise<{ port: number; host: string }> {

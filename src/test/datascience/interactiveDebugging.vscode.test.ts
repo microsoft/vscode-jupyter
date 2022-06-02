@@ -24,6 +24,7 @@ import { ITestVariableViewProvider } from './variableView/variableViewTestInterf
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { Commands } from '../../platform/common/constants';
 import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
+import { pythonIWKernelDebugAdapter } from '../../kernels/debugger/constants';
 
 suite('Interactive window debugging', async function () {
     this.timeout(120_000);
@@ -47,6 +48,7 @@ suite('Interactive window debugging', async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
         api = await initialize();
         disposables.push(vscode.debug.registerDebugAdapterTrackerFactory('python', tracker));
+        disposables.push(vscode.debug.registerDebugAdapterTrackerFactory(pythonIWKernelDebugAdapter, tracker));
         interactiveWindowProvider = api.serviceManager.get(IInteractiveWindowProvider);
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
         const coreVariableViewProvider = api.serviceContainer.get<IVariableViewProvider>(IVariableViewProvider);
@@ -130,7 +132,7 @@ suite('Interactive window debugging', async function () {
         );
     });
 
-    test('Run a cell and step into breakpoint', async () => {
+    test('Run a cell and step into breakpoint', async function () {
         // Define the function
         const source = 'def foo():\n  print("foo")';
         const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
@@ -161,7 +163,7 @@ suite('Interactive window debugging', async function () {
                 if (message.event == 'stopped') {
                     stopped = true;
                 }
-                if (message.command == 'stackTrace' && !stoppedOnBreakpoint) {
+                if (message.command == 'stackTrace' && !stoppedOnBreakpoint && message.body.stackFrames.length) {
                     stoppedOnBreakpoint = message.body.stackFrames[0].line == 2;
                 }
             }

@@ -16,6 +16,7 @@ import {
     NotebookEditor,
     Uri
 } from 'vscode';
+import { IFileGeneratedCodes } from '../../interactive-window/editor-integration/types';
 
 export interface ISourceMapMapping {
     line: number;
@@ -87,6 +88,7 @@ export interface IDebuggingManager {
 export const IInteractiveWindowDebuggingManager = Symbol('IInteractiveWindowDebuggingManager');
 export interface IInteractiveWindowDebuggingManager extends IDebuggingManager {
     start(editor: NotebookEditor, cell: NotebookCell): Promise<void>;
+    updateSourceMaps(editor: NotebookEditor, generatedCodes: IFileGeneratedCodes[]): Promise<void>;
 }
 
 export interface IDebuggingDelegate {
