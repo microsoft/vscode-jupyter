@@ -9,6 +9,7 @@ import { SaveDialogOptions, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../common/application/types';
 import * as localize from '../common/utils/localize';
 import { ExportFormat, IExportDialog } from './types';
+import { IsWebExtension } from '../common/types';
 
 // File extensions for each export method
 export const PDFExtensions = { PDF: ['pdf'] };
@@ -19,7 +20,8 @@ export const PythonExtensions = { Python: ['py'] };
 export class ExportDialog implements IExportDialog {
     constructor(
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(IWorkspaceService) private workspaceService: IWorkspaceService
+        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
+        @inject(IsWebExtension) private readonly isWebExtension: boolean
     ) {}
 
     public async showDialog(
@@ -70,7 +72,12 @@ export class ExportDialog implements IExportDialog {
         return this.applicationShell.showSaveDialog(options);
     }
 
-    private async getDefaultUri(source: Uri | undefined, targetFileName: string): Promise<Uri> {
+    private async getDefaultUri(source: Uri | undefined, targetFileName: string): Promise<Uri | undefined> {
+        if (source && source.scheme === 'untitled' && this.isWebExtension) {
+            // Force using simple file dialog
+            return undefined;
+        }
+
         if (
             !source ||
             source.scheme === 'file' ||
