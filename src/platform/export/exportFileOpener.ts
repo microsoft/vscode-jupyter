@@ -31,7 +31,7 @@ export class ExportFileOpener {
                 opened: true
             });
         } else {
-            const opened = await this.askOpenFile(uri);
+            const opened = await this.askOpenFile(uri, openDirectly);
             sendTelemetryEvent(Telemetry.ExportNotebookAs, undefined, {
                 format: format,
                 successful: true,
@@ -58,7 +58,7 @@ export class ExportFileOpener {
         });
     }
 
-    private async askOpenFile(uri: Uri): Promise<boolean> {
+    private async askOpenFile(uri: Uri, openDirectly: boolean): Promise<boolean> {
         const yes = localize.DataScience.openExportFileYes();
         const no = localize.DataScience.openExportFileNo();
         const items = [yes, no];
@@ -68,7 +68,11 @@ export class ExportFileOpener {
             .then((item) => item);
 
         if (selected === yes) {
-            this.browserService.launch(uri.toString());
+            if (openDirectly) {
+                void this.documentManager.showTextDocument(uri);
+            } else {
+                this.browserService.launch(uri.toString());
+            }
             return true;
         }
         return false;
