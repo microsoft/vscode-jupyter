@@ -29,7 +29,11 @@ import {
     Position,
     Hover,
     Diagnostic,
-    NotebookEdit
+    NotebookEdit,
+    CompletionContext,
+    CompletionTriggerKind,
+    CancellationTokenSource,
+    CompletionItem
 } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../platform/common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../platform/common/constants';
@@ -57,6 +61,7 @@ import { IFileSystem, IPlatformService } from '../../../platform/common/platform
 import { waitForCondition } from '../../common';
 import { VSCodeNotebook } from '../../../platform/common/application/notebook';
 import { IDebuggingManager, IKernelDebugAdapter } from '../../../kernels/debugger/types';
+import { PythonKernelCompletionProvider } from '../../../intellisense/pythonKernelCompletionProvider';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -628,6 +633,30 @@ export async function waitForExecutionCompletedSuccessfully(
         ),
         waitForCellExecutionToComplete(cell)
     ]);
+}
+
+export async function waitForCompletions(
+    completionProvider: PythonKernelCompletionProvider,
+    cell: NotebookCell,
+    pos: Position,
+    triggerCharacter: string | undefined
+) {
+    const token = new CancellationTokenSource().token;
+    let completions: CompletionItem[] = [];
+    await waitForCondition(
+        async () => {
+            await sleep(500); // Give it some time since last ask.
+            let context: CompletionContext = {
+                triggerKind: triggerCharacter ? CompletionTriggerKind.TriggerCharacter : CompletionTriggerKind.Invoke,
+                triggerCharacter
+            };
+            completions = await completionProvider.provideCompletionItems(cell.document, pos, token, context);
+            return completions.length > 0;
+        },
+        defaultNotebookTestTimeout,
+        `Unable to get completions for cell ${cell.document.uri}`
+    );
+    return completions;
 }
 
 export async function waitForCellHavingOutput(cell: NotebookCell) {
