@@ -57,8 +57,6 @@ const darkStyle = `
             --code-string-color: #ce9178;
             --code-variable-color: #9CDCFE;
             --code-type-color: #4EC9B0;
-            --code-font-family: Consolas, 'Courier New', monospace;
-            --code-font-size: 14px;
         }
 `;
 
