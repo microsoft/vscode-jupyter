@@ -95,7 +95,7 @@ export class ExportCommands implements IExportCommands, IDisposable {
             // so we need to get the active editor
             sourceDocument =
                 this.notebooks.activeNotebookEditor?.notebook ||
-                this.interactiveProvider?.getActiveInteractiveWindow()?.notebookDocument;
+                this.interactiveProvider?.getActiveOrAssociatedInteractiveWindow()?.notebookDocument;
             if (!sourceDocument) {
                 traceInfo('Export called without a valid exportable document active');
                 return;

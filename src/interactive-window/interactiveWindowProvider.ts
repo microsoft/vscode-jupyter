@@ -322,7 +322,7 @@ export class InteractiveWindowProvider
         this.raiseOnDidChangeActiveInteractiveWindow();
     }
 
-    public getActiveInteractiveWindow(): IInteractiveWindow | undefined {
+    public getActiveOrAssociatedInteractiveWindow(): IInteractiveWindow | undefined {
         if (this.activeWindow) {
             return this.activeWindow;
         }
@@ -339,7 +339,9 @@ export class InteractiveWindowProvider
         const targetInteractiveNotebookEditor =
             resource && getResourceType(resource) === 'interactive' ? this.get(resource)?.notebookEditor : undefined;
         const activeInteractiveNotebookEditor =
-            getResourceType(resource) === 'interactive' ? this.getActiveInteractiveWindow()?.notebookEditor : undefined;
+            getResourceType(resource) === 'interactive'
+                ? this.getActiveOrAssociatedInteractiveWindow()?.notebookEditor
+                : undefined;
 
         return targetInteractiveNotebookEditor || activeInteractiveNotebookEditor;
     }

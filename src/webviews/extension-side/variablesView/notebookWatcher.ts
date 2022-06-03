@@ -111,7 +111,7 @@ export class NotebookWatcher implements INotebookWatcher {
         );
     }
     private getActiveInteractiveWindowDocument() {
-        const interactiveWindow = this.interactiveWindowProvider.getActiveInteractiveWindow();
+        const interactiveWindow = this.interactiveWindowProvider.getActiveOrAssociatedInteractiveWindow();
         if (!interactiveWindow) {
             return;
         }
