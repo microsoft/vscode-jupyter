@@ -94,6 +94,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
         // TODO: This is not being updated when the settings are updated.
         console.log('VariableViewPanel.getVariableProps', {
+            props: this.props,
             isWebState: this.props.isWebState,
             extraWebState: this.props.settings?.extraSettings?.isWeb,
         });

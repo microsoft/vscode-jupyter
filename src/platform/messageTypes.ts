@@ -259,7 +259,7 @@ export enum CssMessages {
 }
 
 export enum SharedMessages {
-    UpdateSettings = 'update_settings',
+    UpdateSettings = 'settings_updated',
     Started = 'started',
     LocInit = 'loc_init'
 }

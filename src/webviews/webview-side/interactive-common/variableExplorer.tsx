@@ -172,6 +172,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     }
 
     public override shouldComponentUpdate(nextProps: IVariableExplorerProps, prevState: IVariableState): boolean {
+        console.log("shouldComponentUpdate", { nextProps, prevState });
         if (this.props.fontSize !== nextProps.fontSize) {
             // Size has changed, recompute page size
             this.pageSize = -1;

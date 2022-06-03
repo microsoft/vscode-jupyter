@@ -10,8 +10,10 @@ import {
 import {
     InteractiveWindowMessages,
     IFinishCell,
-    IInteractiveWindowMapping
+    IInteractiveWindowMapping,
+    SharedMessages
 } from '../../../../../platform/messageTypes';
+import { IJupyterExtraSettings } from '../../../../extension-side/types';
 import { BaseReduxActionPayload } from '../../../../types';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../../react-common/reduxUtils';
 import { postActionToExtension } from '../helpers';
@@ -37,6 +39,7 @@ export type IVariableState = {
     showVariablesOnDebug: boolean;
     viewHeight: number;
     requestInProgress: boolean;
+    isWeb: boolean;
 };
 
 type VariableReducerFunc<T = never | undefined> = ReducerFunc<
@@ -125,6 +128,18 @@ function handleSort(arg: VariableReducerArg<ISortVariablesRequest>): IVariableSt
     };
 }
 
+function handleIsWebUpdate(arg: VariableReducerArg<string>): IVariableState {
+    const settings = JSON.parse(arg.payload.data) as IJupyterExtraSettings;
+    console.log('handleIsWebUpdate', {
+        prevStateIsWeb: arg.prevState.isWeb,
+        settingsIsWeb: settings.extraSettings.isWeb
+    });
+    return {
+        ...arg.prevState,
+        isWeb: settings.extraSettings.isWeb
+    };
+}
+
 function handleVariableExplorerHeightResponse(arg: VariableReducerArg<IVariableExplorerHeight>): IVariableState {
     if (arg.payload.data) {
         const containerHeight = arg.payload.data.containerHeight;
@@ -179,6 +194,7 @@ function setVariableExplorerHeight(arg: VariableReducerArg<IVariableExplorerHeig
 
 function handleResponse(arg: VariableReducerArg<IJupyterVariablesResponse>): IVariableState {
     const response = arg.payload.data;
+    console.log('handleResponse', response);
 
     // Check to see if we have moved to a new execution count
     if (
@@ -367,7 +383,8 @@ const reducerMap: Partial<VariableActionMapping> = {
     [InteractiveWindowMessages.GetVariablesResponse]: handleResponse,
     [CommonActionType.RUN_BY_LINE]: handleDebugStart,
     [InteractiveWindowMessages.UpdateVariableViewExecutionCount]: updateExecutionCount,
-    [CommonActionType.SORT_VARIABLES]: handleSort
+    [CommonActionType.SORT_VARIABLES]: handleSort,
+    [SharedMessages.UpdateSettings]: handleIsWebUpdate
 };
 
 export function generateVariableReducer(
@@ -387,7 +404,8 @@ export function generateVariableReducer(
         refreshCount: 0,
         showVariablesOnDebug,
         viewHeight: 0,
-        requestInProgress: false
+        requestInProgress: false,
+        isWeb: false
     };
 
     // Then combine that with our map of state change message to reducer
