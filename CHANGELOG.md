@@ -11,6 +11,10 @@
    ([#8399](https://github.com/Microsoft/vscode-jupyter/issues/8399))
 1. Enabled the Interactive Window in web.
    ([#9717](https://github.com/Microsoft/vscode-jupyter/issues/9717))
+1. Enabled the Variables Viewer in web.
+   ([#10154](https://github.com/microsoft/vscode-jupyter/pull/10154))
+   However, neither the DataFrame viewer nor the Plot viewer are enabled in this release.
+   (Tracking: [#9665](https://github.com/microsoft/vscode-jupyter/issues/9665))
 
 ### Fixes
 
