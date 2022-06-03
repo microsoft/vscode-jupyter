@@ -43,7 +43,7 @@ import { GLOBAL_MEMENTO, IDisposable, IMemento, IsWebExtension } from '../../../
 import { createDeferred, sleep } from '../../../platform/common/utils/async';
 import { IKernelProvider } from '../../../platform/../kernels/types';
 import { noop } from '../../core';
-import { closeActiveWindows, initialize, isInsiders } from '../../initialize';
+import { closeActiveWindows, isInsiders } from '../../initialize';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { LastSavedNotebookCellLanguage } from '../../../intellisense/cellLanguageService';
@@ -58,7 +58,7 @@ import * as urlPath from '../../../platform/vscode-path/resources';
 import * as uuid from 'uuid/v4';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
-import { waitForCondition } from '../../common';
+import { initialize, waitForCondition } from '../../common';
 import { VSCodeNotebook } from '../../../platform/common/application/notebook';
 import { IDebuggingManager, IKernelDebugAdapter } from '../../../kernels/debugger/types';
 import { PythonKernelCompletionProvider } from '../../../intellisense/pythonKernelCompletionProvider';

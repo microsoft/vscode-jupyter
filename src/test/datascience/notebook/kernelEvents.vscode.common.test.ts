@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-void */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
@@ -7,7 +8,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { Disposable, NotebookDocument } from 'vscode';
+import { Disposable } from 'vscode';
 import { traceInfo } from '../../../platform/logging';
 import {
     IConfigurationService,
@@ -15,7 +16,7 @@ import {
     IWatchableJupyterSettings,
     ReadWrite
 } from '../../../platform/common/types';
-import { IExtensionTestApi, waitForCondition } from '../../common';
+import { IExtensionTestApi, startJupyterServer, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
 import {
     runCell,
@@ -26,14 +27,9 @@ import {
 } from './helper';
 import { createEventHandler } from '../../common';
 import { IKernelProvider } from '../../../kernels/types';
+import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 
-/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-export function sharedKernelEventTests(
-    this: Mocha.Suite,
-    options: {
-        startJupyterServer: (notebook?: NotebookDocument) => Promise<void>;
-    }
-) {
+suite('Kernel Event', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let configSettings: ReadWrite<IWatchableJupyterSettings>;
@@ -41,6 +37,9 @@ export function sharedKernelEventTests(
     let previousDisableJupyterAutoStartValue: boolean;
     this.timeout(120_000);
     suiteSetup(async function () {
+        if (IS_REMOTE_NATIVE_TEST()) {
+            return this.skip();
+        }
         traceInfo(`Suite Setup ${this.currentTest?.title}`);
         this.timeout(120_000);
         try {
@@ -65,7 +64,7 @@ export function sharedKernelEventTests(
             const configService = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
             configSettings = configService.getSettings(undefined) as any;
             configSettings.disableJupyterAutoStart = true;
-            await options.startJupyterServer();
+            await startJupyterServer();
             traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
         } catch (e) {
             throw e;
@@ -78,7 +77,7 @@ export function sharedKernelEventTests(
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('Kernel Events', async () => {
+    test('Kernel Events', async function () {
         const kernelCreated = createEventHandler(kernelProvider, 'onDidCreateKernel', disposables);
         const kernelStarted = createEventHandler(kernelProvider, 'onDidStartKernel', disposables);
         const kernelDisposed = createEventHandler(kernelProvider, 'onDidDisposeKernel', disposables);
@@ -169,4 +168,4 @@ export function sharedKernelEventTests(
         assert.isTrue(gotIOPubMessage, 'IOPubMessage event fired after restarting the kernel');
         assert.isTrue(statusChanged, 'StatusChange event fired after restarting the kernel');
     });
-}
+});

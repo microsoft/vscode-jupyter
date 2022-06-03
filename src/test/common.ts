@@ -3,7 +3,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { Event } from 'vscode';
+import { NotebookDocument, Uri, Event } from 'vscode';
 import { IExtensionApi } from '../platform/api';
 import { IDisposable } from '../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../platform/ioc/types';
@@ -161,4 +161,46 @@ export function createEventHandler<T, K extends keyof T>(
 ): T[K] extends Event<infer TArgs> ? TestEventHandler<TArgs> : TestEventHandler<void> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return new TestEventHandler(obj[eventName] as any, eventName as string, disposables) as any;
+}
+/**
+ * API common to web & desktop tests, but with different implementations
+ */
+export type CommonApi = {
+    createTemporaryFile(options: { extension: string; contents?: string }): Promise<{ file: Uri } & IDisposable>;
+    startJupyterServer(notebook?: NotebookDocument, useCert?: boolean): Promise<void>;
+    stopJupyterServer?(): Promise<void>;
+    captureScreenShot?(fileNamePrefix: string): Promise<void>;
+    initialize(): Promise<IExtensionTestApi>;
+};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const API: CommonApi = {} as any;
+
+export function initializeCommonApi(api: CommonApi) {
+    Object.assign(API, api);
+}
+
+export async function createTemporaryFile(options: {
+    contents?: string;
+    extension: string;
+}): Promise<{ file: Uri } & IDisposable> {
+    return API.createTemporaryFile(options);
+}
+
+export async function startJupyterServer(notebook?: NotebookDocument, useCert: boolean = false): Promise<void> {
+    return API.startJupyterServer(notebook, useCert);
+}
+
+export async function stopJupyterServer() {
+    if (API.stopJupyterServer) {
+        return API.stopJupyterServer();
+    }
+}
+export async function captureScreenShot(fileNamePrefix: string) {
+    if (API.captureScreenShot) {
+        await API.captureScreenShot(fileNamePrefix);
+    }
+}
+
+export async function initialize() {
+    return API.initialize();
 }

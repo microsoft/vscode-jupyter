@@ -25,8 +25,6 @@ export const SMOKE_TEST_EXTENSIONS_DIR = path.join(
     'smokeTestExtensionsFolder'
 );
 
-export const IPYTHON_VERSION_CODE = 'import IPython\nprint(int(IPython.__version__[0]))\n';
-
 // Have to set these values in a '.node' based file.
 setCI(process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true');
 setTestExecution(process.env.VSC_JUPYTER_CI_TEST === '1');

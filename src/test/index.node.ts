@@ -179,8 +179,12 @@ export async function run(): Promise<void> {
             break;
     }
     const testFiles = await new Promise<string[]>((resolve, reject) => {
+        // If we have mulitple patterns, then turn into regex from `a,b,c` to `(a|b|c)`
+        const pattern = options.testFilesSuffix.includes(',')
+            ? `(${options.testFilesSuffix.split(',').join('|')})`
+            : options.testFilesSuffix;
         glob(
-            `**/*${options.testFilesSuffix}.js`,
+            `**/*${pattern}.js`,
             { ignore: ['**/**.unit.test.js', '**/**.functional.test.js'].concat(ignoreGlob), cwd: testsRoot },
             (error, files) => {
                 if (error) {

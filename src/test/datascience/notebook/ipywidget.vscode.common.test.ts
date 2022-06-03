@@ -9,7 +9,7 @@ import { assert } from 'chai';
 import { NotebookDocument, Uri, window } from 'vscode';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { IDisposable } from '../../../platform/common/types';
-import { IExtensionTestApi, waitForCondition } from '../../common';
+import { IExtensionTestApi, startJupyterServer, waitForCondition } from '../../common';
 import { openNotebook } from '../helpers';
 import {
     closeNotebooks,
@@ -29,11 +29,8 @@ import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfo } from '../../../platform/logging';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-export function sharedIPyWidgetStandardTests(
-    suite: Mocha.Suite,
-    startJupyterServer: (notebook?: NotebookDocument) => Promise<void>
-) {
-    suite.timeout(120_000);
+suite('DataScience - VSCode Notebook - Standard', function () {
+    this.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
@@ -150,4 +147,4 @@ export function sharedIPyWidgetStandardTests(
         });
         return items;
     }
-}
+});

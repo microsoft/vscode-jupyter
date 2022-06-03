@@ -7,12 +7,12 @@ import { assert } from 'chai';
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import * as urlPath from '../../../platform/vscode-path/resources';
 import * as sinon from 'sinon';
-import { commands, ConfigurationTarget, NotebookCell, NotebookDocument, Uri, workspace } from 'vscode';
+import { commands, ConfigurationTarget, NotebookCell, Uri, workspace } from 'vscode';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { IKernelProvider } from '../../../kernels/types';
-import { IExtensionTestApi, waitForCondition } from '../../common';
+import { captureScreenShot, IExtensionTestApi, startJupyterServer, waitForCondition } from '../../common';
 import { closeActiveWindows, initialize } from '../../initialize';
 import { openNotebook } from '../helpers';
 import {
@@ -31,22 +31,21 @@ import { initializeWidgetComms, Utils } from './commUtils';
 import { WidgetRenderingTimeoutForTests } from './constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-export function sharedIPyWidgetsTests(
-    suite: Mocha.Suite,
-    templateRootPath: Uri,
-    startJupyterServer: (notebook?: NotebookDocument) => Promise<void>,
-    handleTestFailure: (test: Mocha.Test) => Promise<void>
-) {
+suite('IPyWisdget Tests', function () {
+    const templateRootPath: Uri =
+        workspace.workspaceFolders && workspace.workspaceFolders.length > 0
+            ? urlPath.joinPath(workspace.workspaceFolders[0].uri, 'widgets', 'notebooks')
+            : Uri.file('');
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
     let kernelProvider: IKernelProvider;
 
-    suite.timeout(120_000);
+    this.timeout(120_000);
     let previousWidgetScriptSourcesSettingValue: string[] | undefined = undefined;
     const widgetScriptSourcesValue = ['jsdelivr.com', 'unpkg.com'];
     // Retry at least once, because ipywidgets can be flaky (network, comms, etc).
-    suite.retries(1);
+    this.retries(1);
     suiteSetup(async function () {
         traceInfo('Suite Setup VS Code Notebook - Execution');
         this.timeout(120_000);
@@ -79,7 +78,7 @@ export function sharedIPyWidgetsTests(
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
-            await handleTestFailure(this.currentTest);
+            await captureScreenShot(this.currentTest.title);
         }
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
@@ -396,4 +395,4 @@ export function sharedIPyWidgetsTests(
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
     });
-}
+});

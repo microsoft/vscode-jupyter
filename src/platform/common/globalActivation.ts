@@ -5,7 +5,7 @@ import type { JSONObject } from '@lumino/coreutils';
 import { inject, injectable, multiInject, optional } from 'inversify';
 import * as vscode from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from './application/types';
-import { PYTHON_FILE, PYTHON_LANGUAGE, PYTHON_UNTITLED } from './constants';
+import { PYTHON_FILE_ANY_SCHEME, PYTHON_LANGUAGE } from './constants';
 import { ContextKey } from './contextKey';
 import './extensions';
 import {
@@ -53,10 +53,7 @@ export class GlobalActivation implements IExtensionSingleActivationService {
     public async activate(): Promise<void> {
         if (this.dataScienceCodeLensProvider) {
             this.extensionContext.subscriptions.push(
-                vscode.languages.registerCodeLensProvider(
-                    [PYTHON_FILE, PYTHON_UNTITLED],
-                    this.dataScienceCodeLensProvider
-                )
+                vscode.languages.registerCodeLensProvider([PYTHON_FILE_ANY_SCHEME], this.dataScienceCodeLensProvider)
             );
         }
 

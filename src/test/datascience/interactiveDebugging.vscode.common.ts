@@ -9,14 +9,14 @@ import * as vscode from 'vscode';
 import { traceInfo } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
-import { IExtensionTestApi, waitForCondition } from '../common';
-import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize.node';
+import { initialize, IExtensionTestApi, waitForCondition, startJupyterServer, captureScreenShot } from '../common';
+import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import {
     submitFromPythonFile,
     submitFromPythonFileUsingCodeWatcher,
     waitForCodeLenses,
     waitForLastCellToComplete
-} from './helpers.node';
+} from './helpers';
 import { closeNotebooksAndCleanUpAfterTests, defaultNotebookTestTimeout, getCellOutputs } from './notebook/helper';
 import { ITestWebviewHost } from './testInterfaces';
 import { waitForVariablesToMatch } from './variableView/variableViewHelpers';
@@ -25,15 +25,14 @@ import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { Commands } from '../../platform/common/constants';
 import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
 import { pythonIWKernelDebugAdapter } from '../../kernels/debugger/constants';
+import { isWeb } from '../../platform/common/utils/misc';
 
 export type DebuggerType = 'VSCodePythonDebugger' | 'JupyterProtocolDebugger';
 
 export function sharedIWDebuggerTests(
     this: Mocha.Suite,
-    options: {
-        startJupyterServer: (notebook?: vscode.NotebookDocument) => Promise<void>;
+    options?: {
         suiteSetup?: (debuggerType: DebuggerType) => Promise<void>;
-        captureScreenShot?: (title: string) => Promise<void>;
     }
 ) {
     const debuggerTypes: DebuggerType[] = ['VSCodePythonDebugger', 'JupyterProtocolDebugger'];
@@ -53,22 +52,19 @@ export function sharedIWDebuggerTests(
                 }
             };
             suiteSetup(async function () {
-                if (IS_REMOTE_NATIVE_TEST() && debuggerType === 'VSCodePythonDebugger') {
+                if ((IS_REMOTE_NATIVE_TEST() || isWeb()) && debuggerType === 'VSCodePythonDebugger') {
                     return this.skip();
                 }
-                if (options.suiteSetup) {
-                    await options.suiteSetup(debuggerType);
+                if (options?.suiteSetup) {
+                    await options?.suiteSetup(debuggerType);
                 }
             });
             suiteTeardown(() => vscode.commands.executeCommand('workbench.debug.viewlet.action.removeAllBreakpoints'));
             setup(async function () {
-                if (IS_REMOTE_NATIVE_TEST() && debuggerType === 'VSCodePythonDebugger') {
-                    return this.skip();
-                }
                 traceInfo(`Start Test ${this.currentTest?.title}`);
                 api = await initialize();
-                if (IS_REMOTE_NATIVE_TEST() && debuggerType === 'VSCodePythonDebugger') {
-                    await options.startJupyterServer();
+                if (isWeb() || (IS_REMOTE_NATIVE_TEST() && debuggerType === 'VSCodePythonDebugger')) {
+                    await startJupyterServer();
                 }
                 await vscode.commands.executeCommand('workbench.debug.viewlet.action.removeAllBreakpoints');
                 disposables.push(vscode.debug.registerDebugAdapterTrackerFactory('python', tracker));
@@ -92,8 +88,8 @@ export function sharedIWDebuggerTests(
                 );
 
                 traceInfo(`Ended Test ${this.currentTest?.title}`);
-                if (this.currentTest?.isFailed() && options.captureScreenShot) {
-                    await options.captureScreenShot(this.currentTest?.title);
+                if (this.currentTest?.isFailed()) {
+                    await captureScreenShot(this.currentTest?.title);
                 }
                 sinon.restore();
                 debugAdapterTracker = undefined;
@@ -229,7 +225,10 @@ export function sharedIWDebuggerTests(
                 );
             });
 
-            test('Update variables during stepping', async () => {
+            test('Update variables during stepping', async function () {
+                if (isWeb()) {
+                    return this.skip();
+                }
                 // Define the function
                 const source = 'print(42)';
                 const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
