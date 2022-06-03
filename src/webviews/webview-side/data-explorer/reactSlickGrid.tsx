@@ -195,7 +195,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         if (this.containerRef.current) {
             // Compute font size. Default to 15 if not found.
             let fontSize = parseInt(
-                getComputedStyle(this.containerRef.current).getPropertyValue('--code-font-size'),
+                getComputedStyle(this.containerRef.current).getPropertyValue('--vscode-font-size'),
                 10
             );
             if (isNaN(fontSize)) {

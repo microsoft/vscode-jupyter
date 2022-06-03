@@ -352,7 +352,6 @@ html {
 .messages-outer-preview {
     font-weight: bold;
     background-color: var(--vscode-peekViewEditor-background);
-    font-family: var(--code-font-family);
 }
 
 .messages-wrapper-preview {
@@ -415,7 +414,6 @@ html {
     font-weight: bold;
     display: flex;
     color: var(--vscode-descriptionForeground);
-    font-family: var(--code-font-family);
 }
 
 .execution-count-busy-outer {
