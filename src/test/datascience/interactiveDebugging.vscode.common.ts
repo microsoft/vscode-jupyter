@@ -225,7 +225,10 @@ export function sharedIWDebuggerTests(
                 );
             });
 
-            test('Update variables during stepping', async () => {
+            test('Update variables during stepping', async function () {
+                if (isWeb()) {
+                    return this.skip();
+                }
                 // Define the function
                 const source = 'print(42)';
                 const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(

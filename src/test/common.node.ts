@@ -10,7 +10,6 @@ import * as path from '../platform/vscode-path/path';
 import * as tmp from 'tmp';
 import * as uuid from 'uuid/v4';
 import { coerce, SemVer } from 'semver';
-import { commands, ConfigurationTarget, NotebookDocument, TextDocument, Uri } from 'vscode';
 import { IProcessService } from '../platform/common/process/types.node';
 import {
     EXTENSION_ROOT_DIR_FOR_TESTS,
@@ -28,6 +27,7 @@ import { swallowExceptions } from '../platform/common/utils/misc';
 import { JupyterServer } from './datascience/jupyterServer.node';
 import { traceInfo } from '../platform/logging';
 import { initialize } from './initialize.node';
+import type { ConfigurationTarget, NotebookDocument, TextDocument, Uri } from 'vscode';
 
 export { createEventHandler } from './common';
 
@@ -335,6 +335,8 @@ export async function captureScreenShot(fileNamePrefix: string) {
 }
 
 export function initializeCommonNodeApi() {
+    const { commands, Uri } = require('vscode');
+
     initializeCommonApi({
         async createTemporaryFile(options: {
             contents?: string;
