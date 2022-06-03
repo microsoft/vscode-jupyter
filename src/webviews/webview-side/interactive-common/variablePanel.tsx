@@ -28,6 +28,7 @@ export interface IVariablePanelProps {
     sort(sortColumn: string, sortAscending: boolean): void;
     viewHeight: number;
     requestInProgress: boolean;
+    isWeb: boolean;
 }
 
 export class VariablePanel extends React.Component<IVariablePanelProps> {
@@ -51,6 +52,7 @@ export class VariablePanel extends React.Component<IVariablePanelProps> {
                 refreshCount={this.props.refreshCount}
                 viewHeight={this.props.viewHeight}
                 requestInProgress={this.props.requestInProgress}
+                isWeb={this.props.isWeb}
             />
         );
     }
