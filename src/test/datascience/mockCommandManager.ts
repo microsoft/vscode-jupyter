@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import noop from 'lodash/noop';
+import noop = require('lodash/noop');
 import { Disposable, TextEditor, TextEditorEdit } from 'vscode';
 
 import { ICommandNameArgumentTypeMapping } from '../../platform/common/application/commands';
