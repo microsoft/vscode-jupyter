@@ -34,15 +34,15 @@ import {
     IDebugInfoResponse
 } from './types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../platform/logging';
+import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
 import {
     assertIsDebugConfig,
     isShortNamePath,
     shortNameMatchesLongName,
     getMessageSourceAndHookIt
 } from '../../notebooks/debugger/helper';
-import { ResourceMap } from '../../platform/vscode-path/map';
 import { IDisposable } from '../../platform/common/types';
+import { executeSilently } from '../helpers';
 
 /**
  * For info on the custom requests implemented by jupyter see:
@@ -50,17 +50,7 @@ import { IDisposable } from '../../platform/common/types';
  * https://jupyter-client.readthedocs.io/en/stable/messaging.html#additions-to-the-dap
  */
 export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDebugAdapter, IDisposable {
-    protected readonly fileToCell = new Map<
-        string,
-        {
-            uri: Uri;
-            lineOffset?: number;
-        }
-    >();
-    protected readonly cellToFile = new ResourceMap<{
-        path: string;
-        lineOffset?: number;
-    }>();
+    protected readonly fileToCell = new Map<string, Uri>();
     private readonly sendMessage = new EventEmitter<DebugProtocolMessage>();
     private readonly endSession = new EventEmitter<DebugSession>();
     private readonly configuration: IKernelDebugAdapterConfig;
@@ -210,6 +200,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     }
 
     dispose() {
+        this.deleteDumpedFiles().catch((ex) => traceWarning('Error deleting temporary debug files.', ex));
         this.disposables.forEach((d) => d.dispose());
     }
 
@@ -233,9 +224,6 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         );
     }
     protected abstract dumpCell(index: number): Promise<void>;
-    public getSourcePath(filePath: Uri) {
-        return this.cellToFile.get(filePath)?.path;
-    }
 
     private async debugInfo(): Promise<void> {
         const response = await this.session.customRequest('debugInfo');
@@ -268,29 +256,13 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         return undefined;
     }
 
-    private async sendRequestToJupyterSession(message: DebugProtocol.ProtocolMessage) {
+    protected async sendRequestToJupyterSession(message: DebugProtocol.ProtocolMessage) {
         if (this.jupyterSession.disposed || this.jupyterSession.status === 'dead') {
             traceInfo(`Skipping sending message ${message.type} because session is disposed`);
             return;
         }
         // map Source paths from VS Code to Ipykernel temp files
-        getMessageSourceAndHookIt(message, (source, lines?: { line?: number; endLine?: number; lines?: number[] }) => {
-            if (source && source.path) {
-                const mapping = this.cellToFile.get(Uri.parse(source.path));
-                if (mapping) {
-                    source.path = mapping.path;
-                    if (typeof lines?.endLine === 'number') {
-                        lines.endLine = lines.endLine - (mapping.lineOffset || 0);
-                    }
-                    if (typeof lines?.line === 'number') {
-                        lines.line = lines.line - (mapping.lineOffset || 0);
-                    }
-                    if (lines?.lines && Array.isArray(lines?.lines)) {
-                        lines.lines = lines?.lines.map((line) => line - (mapping.lineOffset || 0));
-                    }
-                }
-            }
-        });
+        getMessageSourceAndHookIt(message, this.translateRealFileToDebuggerFile.bind(this));
 
         this.trace('to kernel', JSON.stringify(message));
         if (message.type === 'request') {
@@ -307,27 +279,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
 
             control.onReply = (msg) => {
                 const message = msg.content as DebugProtocol.ProtocolMessage;
-                getMessageSourceAndHookIt(
-                    message,
-                    (source, lines?: { line?: number; endLine?: number; lines?: number[] }) => {
-                        if (source && source.path) {
-                            const mapping = this.fileToCell.get(source.path) ?? this.lookupCellByLongName(source.path);
-                            if (mapping) {
-                                source.name = path.basename(mapping.uri.path);
-                                source.path = mapping.uri.toString();
-                                if (typeof lines?.endLine === 'number') {
-                                    lines.endLine = lines.endLine + (mapping.lineOffset || 0);
-                                }
-                                if (typeof lines?.line === 'number') {
-                                    lines.line = lines.line + (mapping.lineOffset || 0);
-                                }
-                                if (lines?.lines && Array.isArray(lines?.lines)) {
-                                    lines.lines = lines?.lines.map((line) => line + (mapping.lineOffset || 0));
-                                }
-                            }
-                        }
-                    }
-                );
+                getMessageSourceAndHookIt(message, this.translateDebuggerFileToRealFile.bind(this));
 
                 this.trace('response', JSON.stringify(message));
                 this.sendMessage.fire(message);
@@ -348,6 +300,52 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         } else {
             // cannot send via iopub, no way to handle events even if they existed
             traceError(`Unknown message type to send ${message.type}`);
+        }
+    }
+    protected translateDebuggerFileToRealFile(
+        source: DebugProtocol.Source | undefined,
+        _lines?: { line?: number; endLine?: number; lines?: number[] }
+    ) {
+        if (source && source.path) {
+            const mapping = this.fileToCell.get(source.path) ?? this.lookupCellByLongName(source.path);
+            if (mapping) {
+                source.name = path.basename(mapping.path);
+                source.path = mapping.toString();
+            }
+        }
+    }
+    protected abstract translateRealFileToDebuggerFile(
+        source: DebugProtocol.Source | undefined,
+        _lines?: { line?: number; endLine?: number; lines?: number[] }
+    ): void;
+
+    protected abstract getDumpFilesForDeletion(): string[];
+    private async deleteDumpedFiles() {
+        const fileValues = this.getDumpFilesForDeletion();
+        // Need to have our Jupyter Session and some dumpCell files to delete
+        if (this.jupyterSession && fileValues.length) {
+            // Create our python string of file names
+            const fileListString = fileValues
+                .map((filePath) => {
+                    // escape Windows path separators again for python
+                    return '"' + filePath.replace(/\\/g, '\\\\') + '"';
+                })
+                .join(',');
+
+            // Insert into our delete snippet
+            const deleteFilesCode = `import os
+_VSCODE_fileList = [${fileListString}]
+for file in _VSCODE_fileList:
+    try:
+        os.remove(file)
+    except:
+        pass
+del _VSCODE_fileList`;
+
+            return executeSilently(this.jupyterSession, deleteFilesCode, {
+                traceErrors: true,
+                traceErrorsMessage: 'Error deleting temporary debugging files'
+            });
         }
     }
 }
