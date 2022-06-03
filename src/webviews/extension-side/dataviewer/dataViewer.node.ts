@@ -32,7 +32,14 @@ import {
 } from '../../../platform/common/application/types';
 import { HelpLinks } from '../../../platform/common/constants';
 import { traceError, traceInfo } from '../../../platform/logging';
-import { IConfigurationService, IMemento, GLOBAL_MEMENTO, Resource, IDisposable } from '../../../platform/common/types';
+import {
+    IConfigurationService,
+    IMemento,
+    GLOBAL_MEMENTO,
+    Resource,
+    IDisposable,
+    IsWebExtension
+} from '../../../platform/common/types';
 import * as localize from '../../../platform/common/utils/localize';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
@@ -79,7 +86,8 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalMemento: Memento,
-        @inject(IDataScienceErrorHandler) readonly errorHandler: IDataScienceErrorHandler
+        @inject(IDataScienceErrorHandler) readonly errorHandler: IDataScienceErrorHandler,
+        @inject(IsWebExtension) isWebExtension: boolean
     ) {
         super(
             configuration,
@@ -89,7 +97,8 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
             dataExplorerDir,
             [joinPath(dataExplorerDir, 'dataExplorer.js')],
             localize.DataScience.dataExplorerTitle(),
-            globalMemento.get(PREFERRED_VIEWGROUP) ?? ViewColumn.One
+            globalMemento.get(PREFERRED_VIEWGROUP) ?? ViewColumn.One,
+            isWebExtension
         );
         this.onDidDispose(this.dataViewerDisposed, this);
     }

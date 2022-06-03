@@ -39,6 +39,7 @@ interface IVariableExplorerProps {
     sort(sortColumn: string, sortAscending: boolean): void;
     viewHeight: number;
     requestInProgress: boolean;
+    isWeb: boolean;
 }
 
 const defaultColumnProperties = {
@@ -119,6 +120,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                     <VariableExplorerButtonCellFormatter
                         showDataExplorer={this.props.showDataExplorer}
                         baseTheme={this.props.baseTheme}
+                        isWeb={this.props.isWeb}
                     />
                 )
             },

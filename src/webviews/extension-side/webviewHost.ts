@@ -61,7 +61,8 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         protected configService: IConfigurationService,
         protected workspaceService: IWorkspaceService,
         protected rootPath: Uri,
-        protected scripts: Uri[]
+        protected scripts: Uri[],
+        private isWebExtension: boolean
     ) {
         // Listen for settings changes from vscode.
         this._disposables.push(this.workspaceService.onDidChangeConfiguration(this.onPossibleSettingsChange, this));
@@ -227,6 +228,8 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         const pythonExt = extensions.getExtension(PythonExtension);
         const sendableSettings = JSON.parse(JSON.stringify(this.configService.getSettings(resource)));
 
+        console.log('generateDataScienceExtraSettings', this.isWebExtension);
+
         return {
             ...sendableSettings,
             extraSettings: {
@@ -246,7 +249,8 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
                     fontFamily: this.getValue(editor, 'fontFamily', "Consolas, 'Courier New', monospace")
                 },
                 theme,
-                hasPythonExtension: pythonExt !== undefined
+                hasPythonExtension: pythonExt !== undefined,
+                isWeb: this.isWebExtension
             }
         };
     }

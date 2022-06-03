@@ -94,6 +94,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     public override render = () => {
+        console.log('mainPanel render', { settings: this.state.settings });
         if (this.state.settings) {
             const baseTheme = this.computeBaseTheme();
             return (

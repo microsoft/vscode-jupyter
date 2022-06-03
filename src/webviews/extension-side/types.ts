@@ -22,6 +22,7 @@ export interface IJupyterExtraSettings extends IJupyterSettings {
         };
         theme: string;
         hasPythonExtension: boolean;
+        isWeb: boolean;
     };
 }
 

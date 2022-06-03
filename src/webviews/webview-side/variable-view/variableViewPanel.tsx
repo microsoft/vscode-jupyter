@@ -14,7 +14,7 @@ import './variableViewPanel.css';
 export type IVariableViewPanelProps = IMainWithVariables & typeof actionCreators;
 
 function mapStateToProps(state: IStore): IMainWithVariables {
-    return { ...state.main, variableState: state.variables };
+    return { ...state.main, variableState: state.variables, settingsState: state.main.settings };
 }
 
 // This is the top level UI element for our variable view panel, hosted in a vscode webviewView
@@ -92,6 +92,8 @@ ${buildSettingsCss(this.props.settings)}`}</style>
     }
 
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
+        // TODO: This is not being updated when the settings are updated.
+        console.log('VariableViewPanel.getVariableProps', this.props.settingsState?.extraSettings);
         return {
             gridHeight: this.props.variableState.gridHeight,
             containerHeight: this.props.variableState.containerHeight,
@@ -111,7 +113,8 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             refreshCount: this.props.variableState.refreshCount,
             offsetHeight: 0, // No toolbar in variable view panel
             viewHeight: this.props.variableState.viewHeight, // Height to use for variable view mode
-            requestInProgress: this.props.variableState.requestInProgress
+            requestInProgress: this.props.variableState.requestInProgress,
+            isWeb: Boolean(this.props.settingsState?.extraSettings?.isWeb)
         };
     };
 

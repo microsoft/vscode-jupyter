@@ -55,8 +55,10 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         private readonly dataViewerFactory: IDataViewerFactory,
         private readonly notebookWatcher: INotebookWatcher,
         private readonly commandManager: ICommandManager,
-        private readonly documentManager: IDocumentManager
+        private readonly documentManager: IDocumentManager,
+        isWebExtension: boolean
     ) {
+        console.log('VariableView.constructor', isWebExtension);
         const variableViewDir = joinPath(context.extensionUri, 'out', 'webviews', 'webview-side', 'viewers');
         super(
             configuration,
@@ -64,7 +66,8 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
             (c, d) => new VariableViewMessageListener(c, d),
             provider,
             variableViewDir,
-            [joinPath(variableViewDir, 'variableView.js')]
+            [joinPath(variableViewDir, 'variableView.js')],
+            isWebExtension
         );
 
         // Sign up if the active variable view notebook is changed, restarted or updated
