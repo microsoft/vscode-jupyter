@@ -26,6 +26,7 @@ import { CssMessages, InteractiveWindowMessages, SharedMessages } from '../../pl
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { DefaultTheme, PythonExtension, Telemetry } from '../webview-side/common/constants';
 import { IJupyterExtraSettings } from './types';
+import { getOSType, OSType } from '../../platform/common/utils/platform';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -246,7 +247,8 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
                     fontFamily: this.getValue(editor, 'fontFamily', "Consolas, 'Courier New', monospace")
                 },
                 theme,
-                hasPythonExtension: pythonExt !== undefined
+                hasPythonExtension: pythonExt !== undefined,
+                isWeb: getOSType() === OSType.Unknown
             }
         };
     }

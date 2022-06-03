@@ -41,6 +41,7 @@ import {
 import { IJupyterKernelSpec, KernelConnectionMetadata } from '../kernels/types';
 import { JupyterNotebookView, InteractiveWindowView } from './constants';
 import { CellOutputMimeTypes } from './types';
+import { getOSType, OSType } from '../platform/common/utils/platform';
 
 /**
  * Whether this is a Notebook we created/manage/use.
@@ -360,7 +361,8 @@ function translateDisplayDataOutput(
     */
     const metadata = getOutputMetadata(output);
     // If we have SVG or PNG, then add special metadata to indicate whether to display `open plot`
-    if ('image/svg+xml' in output.data || 'image/png' in output.data) {
+    const osType = getOSType();
+    if (osType !== OSType.Unknown && ('image/svg+xml' in output.data || 'image/png' in output.data)) {
         metadata.__displayOpenPlotIcon = true;
     }
     const items: NotebookCellOutputItem[] = [];

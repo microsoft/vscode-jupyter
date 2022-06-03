@@ -49,7 +49,8 @@ export function getDefaultSettings(): IJupyterExtraSettings {
                 fontFamily: "Consolas, 'Courier New', monospace"
             },
             theme: 'Default Dark+',
-            hasPythonExtension: true
+            hasPythonExtension: true,
+            isWeb: false
         },
         runStartupCommands: '',
         debugJustMyCode: true,
