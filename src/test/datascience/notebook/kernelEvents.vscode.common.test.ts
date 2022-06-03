@@ -37,6 +37,9 @@ suite('Kernel Event', function () {
     let previousDisableJupyterAutoStartValue: boolean;
     this.timeout(120_000);
     suiteSetup(async function () {
+        if (IS_REMOTE_NATIVE_TEST()) {
+            return this.skip();
+        }
         traceInfo(`Suite Setup ${this.currentTest?.title}`);
         this.timeout(120_000);
         try {
@@ -75,9 +78,6 @@ suite('Kernel Event', function () {
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Kernel Events', async function () {
-        if (IS_REMOTE_NATIVE_TEST()) {
-            return this.skip();
-        }
         const kernelCreated = createEventHandler(kernelProvider, 'onDidCreateKernel', disposables);
         const kernelStarted = createEventHandler(kernelProvider, 'onDidStartKernel', disposables);
         const kernelDisposed = createEventHandler(kernelProvider, 'onDidDisposeKernel', disposables);
@@ -120,6 +120,7 @@ suite('Kernel Event', function () {
         assert.isTrue(kernelDisposed.fired, 'IKernelProvider.onDidDisposeKernel not fired');
     });
     test('Kernel.IKernelConnection Events', async () => {
+        debugger;
         const nb = await createEmptyPythonNotebook(disposables);
         await waitForCondition(async () => !!kernelProvider.get(nb.uri), 5_000, 'Kernel not created');
         const kernel = kernelProvider.get(nb.uri)!;
