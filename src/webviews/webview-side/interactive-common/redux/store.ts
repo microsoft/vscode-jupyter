@@ -4,7 +4,6 @@
 import * as fastDeepEqual from 'fast-deep-equal';
 import * as Redux from 'redux';
 import { InteractiveWindowMessages } from '../../../../platform/messageTypes';
-import { IJupyterExtraSettings } from '../../../extension-side/types';
 import { BaseReduxActionPayload } from '../../../types';
 
 import { IMainState } from '../../interactive-common/mainState';
@@ -206,7 +205,7 @@ export interface IStore {
 
 export interface IMainWithVariables extends IMainState {
     variableState: IVariableState;
-    settingsState?: IJupyterExtraSettings;
+    isWebState: boolean;
 }
 
 /**
@@ -265,6 +264,7 @@ export function createStore<M>(
             // Double check this is one of our messages. React will actually post messages here too during development
             console.log(`interactive-common handleMessage`, { message, payload });
             if (isAllowedMessage(message)) {
+                console.log('IS ALLOWED!');
                 const basePayload: BaseReduxActionPayload = { data: payload };
                 if (message === InteractiveWindowMessages.Sync) {
                     // This is a message that has been sent from extension purely for synchronization purposes.
