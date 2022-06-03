@@ -75,8 +75,6 @@
    ([#9797](https://github.com/Microsoft/vscode-jupyter/issues/9797))
 1. Add test for remote https jupyter servers.
    ([#9844](https://github.com/Microsoft/vscode-jupyter/issues/9844))
-1. Create test for turning on old debugger tests and create a test for deleting tmp test files.
-   ([#10041](https://github.com/Microsoft/vscode-jupyter/issues/10041))
 1. Change document to notebook off of NotebookEditor class due to API change.
    ([#10083](https://github.com/Microsoft/vscode-jupyter/issues/10083))
 1. Dataframe tests were failing when Pylance was updated to return the 'Name' column for a dataframe.
