@@ -39,6 +39,7 @@ interface IVariableExplorerProps {
     sort(sortColumn: string, sortAscending: boolean): void;
     viewHeight: number;
     requestInProgress: boolean;
+    isWeb: boolean;
 }
 
 const defaultColumnProperties = {
@@ -66,6 +67,7 @@ interface IGridRow {
 interface IVariableExplorerState {
     containerHeight: number;
     gridHeight: number;
+    isWeb: boolean;
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -99,7 +101,8 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
         this.state = {
             containerHeight: this.props.containerHeight,
-            gridHeight: this.props.gridHeight
+            gridHeight: this.props.gridHeight,
+            isWeb: this.props.isWeb
         };
 
         this.handleResizeMouseMove = this.handleResizeMouseMove.bind(this);
@@ -119,6 +122,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                     <VariableExplorerButtonCellFormatter
                         showDataExplorer={this.props.showDataExplorer}
                         baseTheme={this.props.baseTheme}
+                        isWeb={() => this.props.isWeb}
                     />
                 )
             },
@@ -187,6 +191,10 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
         // We need to update when height changes
         if (prevState.viewHeight !== nextProps.viewHeight) {
+            return true;
+        }
+
+        if (prevState.isWeb !== nextProps.isWeb) {
             return true;
         }
 
