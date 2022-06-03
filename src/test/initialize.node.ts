@@ -19,6 +19,7 @@ setTestExecution(true);
 
 // Ability to use custom python environments for testing
 export async function initializePython() {
+    initializeCommonNodeApi();
     await setPythonPathInWorkspaceRoot(PYTHON_PATH);
     // Make sure the python extension can load if this test allows it
     if (!process.env.VSC_JUPYTER_CI_TEST_DO_NOT_INSTALL_PYTHON_EXT) {
