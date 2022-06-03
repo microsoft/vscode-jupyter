@@ -9,14 +9,14 @@ import * as vscode from 'vscode';
 import { traceInfo } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
-import { IExtensionTestApi, waitForCondition } from '../common';
-import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize.node';
+import { initialize, IExtensionTestApi, waitForCondition, startJupyterServer, captureScreenShot } from '../common';
+import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import {
     submitFromPythonFile,
     submitFromPythonFileUsingCodeWatcher,
     waitForCodeLenses,
     waitForLastCellToComplete
-} from './helpers.node';
+} from './helpers';
 import { closeNotebooksAndCleanUpAfterTests, defaultNotebookTestTimeout, getCellOutputs } from './notebook/helper';
 import { ITestWebviewHost } from './testInterfaces';
 import { waitForVariablesToMatch } from './variableView/variableViewHelpers';
@@ -25,21 +25,20 @@ import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { Commands } from '../../platform/common/constants';
 import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
 import { pythonIWKernelDebugAdapter } from '../../kernels/debugger/constants';
+import { isWeb } from '../../platform/common/utils/misc';
 
 export type DebuggerType = 'VSCodePythonDebugger' | 'JupyterProtocolDebugger';
 
 export function sharedIWDebuggerTests(
     this: Mocha.Suite,
-    options: {
-        startJupyterServer: (notebook?: vscode.NotebookDocument) => Promise<void>;
+    options?: {
         suiteSetup?: (debuggerType: DebuggerType) => Promise<void>;
-        captureScreenShot?: (title: string) => Promise<void>;
     }
 ) {
     const debuggerTypes: DebuggerType[] = ['VSCodePythonDebugger', 'JupyterProtocolDebugger'];
     debuggerTypes.forEach((debuggerType) => {
         suite(`Debugging with ${debuggerType}`, async function () {
-            this.timeout(120_000);
+            this.timeout(1200_000);
             let api: IExtensionTestApi;
             const disposables: IDisposable[] = [];
             let interactiveWindowProvider: InteractiveWindowProvider;
@@ -53,23 +52,24 @@ export function sharedIWDebuggerTests(
                 }
             };
             suiteSetup(async function () {
-                if (IS_REMOTE_NATIVE_TEST() && debuggerType === 'VSCodePythonDebugger') {
+                if ((IS_REMOTE_NATIVE_TEST() || isWeb()) && debuggerType === 'VSCodePythonDebugger') {
                     return this.skip();
                 }
-                if (options.suiteSetup) {
-                    await options.suiteSetup(debuggerType);
+                if (options?.suiteSetup) {
+                    await options?.suiteSetup(debuggerType);
                 }
             });
             suiteTeardown(() => vscode.commands.executeCommand('workbench.debug.viewlet.action.removeAllBreakpoints'));
             setup(async function () {
-                if (IS_REMOTE_NATIVE_TEST() && debuggerType === 'VSCodePythonDebugger') {
-                    return this.skip();
-                }
                 traceInfo(`Start Test ${this.currentTest?.title}`);
                 api = await initialize();
-                if (IS_REMOTE_NATIVE_TEST() && debuggerType === 'VSCodePythonDebugger') {
-                    await options.startJupyterServer();
+                console.error('Start Jupyter Server1', process.platform.toString());
+                if (isWeb() || (IS_REMOTE_NATIVE_TEST() && debuggerType === 'VSCodePythonDebugger')) {
+                    console.error('Start Jupyter Server2');
+                    await startJupyterServer();
+                    console.error('Start Jupyter Server3');
                 }
+                console.error('Start Jupyter Server4');
                 await vscode.commands.executeCommand('workbench.debug.viewlet.action.removeAllBreakpoints');
                 disposables.push(vscode.debug.registerDebugAdapterTrackerFactory('python', tracker));
                 disposables.push(vscode.debug.registerDebugAdapterTrackerFactory(pythonIWKernelDebugAdapter, tracker));
@@ -92,8 +92,8 @@ export function sharedIWDebuggerTests(
                 );
 
                 traceInfo(`Ended Test ${this.currentTest?.title}`);
-                if (this.currentTest?.isFailed() && options.captureScreenShot) {
-                    await options.captureScreenShot(this.currentTest?.title);
+                if (this.currentTest?.isFailed()) {
+                    await captureScreenShot(this.currentTest?.title);
                 }
                 sinon.restore();
                 debugAdapterTracker = undefined;
@@ -102,20 +102,25 @@ export function sharedIWDebuggerTests(
 
             test('Debug a cell from a python file', async () => {
                 // Run a cell to get IW open
+                console.error(`Start Test: Step (1)`);
                 const source = 'print(42)';
                 const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
                     interactiveWindowProvider,
                     source,
                     disposables
                 );
+                console.error(`Start Test: Step (2)`);
                 await waitForLastCellToComplete(activeInteractiveWindow);
+                console.error(`Start Test: Step (3)`);
 
                 // Add some more text
                 const editor = vscode.window.visibleTextEditors.find((e) => e.document.uri === untitledPythonFile.uri);
                 assert.ok(editor, `Couldn't find python file`);
+                console.error(`Start Test: Step (4)`);
                 await editor?.edit((b) => {
                     b.insert(new vscode.Position(1, 0), '\n# %%\n\n\nprint(43)');
                 });
+                console.error(`Start Test: Step (5)`);
 
                 let codeLenses = await waitForCodeLenses(untitledPythonFile.uri, Commands.DebugCell);
                 let stopped = false;

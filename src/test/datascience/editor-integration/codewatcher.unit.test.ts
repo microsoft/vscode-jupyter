@@ -163,8 +163,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
             instance(notebook),
             disposables,
             instance(storageFactory),
-            instance(kernelProvider),
-            false
+            instance(kernelProvider)
         );
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(ICodeWatcher)))

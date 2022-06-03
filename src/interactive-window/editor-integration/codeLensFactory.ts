@@ -17,13 +17,7 @@ import {
 import { IDocumentManager, IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
 import { traceWarning, traceInfoIfCI } from '../../platform/logging';
 
-import {
-    ICellRange,
-    IConfigurationService,
-    IDisposableRegistry,
-    IsWebExtension,
-    Resource
-} from '../../platform/common/types';
+import { ICellRange, IConfigurationService, IDisposableRegistry, Resource } from '../../platform/common/types';
 import * as localize from '../../platform/common/utils/localize';
 import { getInteractiveCellMetadata } from '../helpers';
 import { IKernelProvider } from '../../kernels/types';
@@ -63,8 +57,7 @@ export class CodeLensFactory implements ICodeLensFactory {
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IGeneratedCodeStorageFactory)
         private readonly generatedCodeStorageFactory: IGeneratedCodeStorageFactory,
-        @inject(IKernelProvider) kernelProvider: IKernelProvider,
-        @inject(IsWebExtension) private readonly isWebExtension: boolean
+        @inject(IKernelProvider) kernelProvider: IKernelProvider
     ) {
         this.documentManager.onDidCloseTextDocument(this.onClosedDocument, this, disposables);
         this.workspace.onDidGrantWorkspaceTrust(() => this.codeLensCache.clear(), this, disposables);
@@ -265,13 +258,9 @@ export class CodeLensFactory implements ICodeLensFactory {
                 Commands.RunCellAndAllBelowPalette
             ];
         }
-        if (this.isWebExtension) {
-            commandsToBeDisabled.push(Commands.DebugCell);
-        }
         if (commandsToBeDisabled) {
             fullCommandList = fullCommandList.filter((item) => !commandsToBeDisabled.includes(item));
         }
-
         return fullCommandList;
     }
 

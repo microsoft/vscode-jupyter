@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-void */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
@@ -7,7 +8,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { Disposable, NotebookDocument } from 'vscode';
+import { Disposable } from 'vscode';
 import { traceInfo } from '../../../platform/logging';
 import {
     IConfigurationService,
@@ -15,7 +16,7 @@ import {
     IWatchableJupyterSettings,
     ReadWrite
 } from '../../../platform/common/types';
-import { IExtensionTestApi, waitForCondition } from '../../common';
+import { IExtensionTestApi, startJupyterServer, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
 import {
     runCell,
@@ -27,13 +28,7 @@ import {
 import { createEventHandler } from '../../common';
 import { IKernelProvider } from '../../../kernels/types';
 
-/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-export function sharedKernelEventTests(
-    this: Mocha.Suite,
-    options: {
-        startJupyterServer: (notebook?: NotebookDocument) => Promise<void>;
-    }
-) {
+suite('Kernel Event', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let configSettings: ReadWrite<IWatchableJupyterSettings>;
@@ -65,7 +60,7 @@ export function sharedKernelEventTests(
             const configService = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
             configSettings = configService.getSettings(undefined) as any;
             configSettings.disableJupyterAutoStart = true;
-            await options.startJupyterServer();
+            await startJupyterServer();
             traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
         } catch (e) {
             throw e;
@@ -169,4 +164,4 @@ export function sharedKernelEventTests(
         assert.isTrue(gotIOPubMessage, 'IOPubMessage event fired after restarting the kernel');
         assert.isTrue(statusChanged, 'StatusChange event fired after restarting the kernel');
     });
-}
+});

@@ -6,6 +6,7 @@ export const JUPYTER_LANGUAGE = 'jupyter';
 export const NotebookCellScheme = 'vscode-notebook-cell';
 export const PYTHON_UNTITLED = { scheme: 'untitled', language: PYTHON_LANGUAGE };
 export const PYTHON_FILE = { scheme: 'file', language: PYTHON_LANGUAGE };
+export const PYTHON_FILE_ANY_SCHEME = { language: PYTHON_LANGUAGE };
 export const PYTHON_CELL = { scheme: NotebookCellScheme, language: PYTHON_LANGUAGE };
 export const PYTHON = [PYTHON_UNTITLED, PYTHON_FILE, PYTHON_CELL];
 export const PYTHON_ALLFILES = [{ language: PYTHON_LANGUAGE }];

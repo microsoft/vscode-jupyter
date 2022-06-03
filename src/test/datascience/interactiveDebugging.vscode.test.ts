@@ -7,8 +7,6 @@ import * as path from '../../platform/vscode-path/path';
 import * as fs from 'fs-extra';
 import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
 import { DebuggerType, sharedIWDebuggerTests } from './interactiveDebugging.vscode.common';
-import { startJupyterServer } from './notebook/helper.node';
-import { captureScreenShot } from '../common.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('Interactive Window Debugging', function () {
@@ -44,5 +42,5 @@ suite('Interactive Window Debugging', function () {
             throw new Error('Unable to update settings file');
         }
     }
-    sharedIWDebuggerTests.bind(this)({ startJupyterServer, suiteSetup: enableJupyterDebugger, captureScreenShot });
+    sharedIWDebuggerTests.bind(this)({ suiteSetup: enableJupyterDebugger });
 });

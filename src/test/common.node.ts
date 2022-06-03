@@ -7,14 +7,27 @@
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from '../platform/vscode-path/path';
+import * as tmp from 'tmp';
 import * as uuid from 'uuid/v4';
 import { coerce, SemVer } from 'semver';
-import type { ConfigurationTarget, TextDocument, Uri } from 'vscode';
+import { commands, ConfigurationTarget, NotebookDocument, TextDocument, Uri } from 'vscode';
 import { IProcessService } from '../platform/common/process/types.node';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants.node';
+import {
+    EXTENSION_ROOT_DIR_FOR_TESTS,
+    IS_MULTI_ROOT_TEST,
+    IS_PERF_TEST,
+    IS_REMOTE_NATIVE_TEST,
+    IS_SMOKE_TEST
+} from './constants.node';
 import { noop } from './core';
 import { isCI } from '../platform/common/constants';
 import { IWorkspaceService } from '../platform/common/application/types';
+import { initializeCommonApi } from './common';
+import { IDisposable } from '../platform/common/types';
+import { swallowExceptions } from '../platform/common/utils/misc';
+import { JupyterServer } from './datascience/jupyterServer.node';
+import { traceInfo } from '../platform/logging';
+import { initialize } from './initialize.node';
 
 export { createEventHandler } from './common';
 
@@ -319,4 +332,40 @@ export async function captureScreenShot(fileNamePrefix: string) {
     } catch (ex) {
         console.error(`Failed to capture screenshot into ${filename}`, ex);
     }
+}
+
+export function initializeCommonNodeApi() {
+    initializeCommonApi({
+        async createTemporaryFile(options: {
+            contents?: string;
+            extension: string;
+        }): Promise<{ file: Uri } & IDisposable> {
+            const extension = options.extension || '.py';
+            const tempFile = tmp.tmpNameSync({ postfix: extension });
+            if (options.contents) {
+                await fs.writeFile(tempFile, options.contents);
+            }
+            return { file: Uri.file(tempFile), dispose: () => swallowExceptions(() => fs.unlinkSync(tempFile)) };
+        },
+        async startJupyterServer(notebook?: NotebookDocument, useCert: boolean = false): Promise<any> {
+            if (IS_REMOTE_NATIVE_TEST()) {
+                const uriString = useCert
+                    ? await JupyterServer.instance.startJupyterWithCert()
+                    : await JupyterServer.instance.startJupyterWithToken();
+                traceInfo(`Jupyter started and listening at ${uriString}`);
+                return commands.executeCommand('jupyter.selectjupyteruri', false, Uri.parse(uriString), notebook);
+            } else {
+                traceInfo(`Jupyter not started and set to local`); // This is the default
+            }
+        },
+        async stopJupyterServer() {
+            if (IS_REMOTE_NATIVE_TEST()) {
+                return;
+            }
+            await JupyterServer.instance.dispose().catch(noop);
+        },
+        async initialize() {
+            return initialize();
+        }
+    });
 }

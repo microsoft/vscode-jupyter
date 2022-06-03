@@ -3,8 +3,8 @@
 'use strict';
 import * as fastDeepEqual from 'fast-deep-equal';
 import { assert } from 'chai';
-import { waitForCondition } from '../../common.node';
-import { defaultNotebookTestTimeout } from '../notebook/helper.node';
+import { waitForCondition } from '../../common';
+import { defaultNotebookTestTimeout } from '../notebook/helper';
 import { ITestWebviewHost } from '../testInterfaces';
 
 // Basic shape of a variable result

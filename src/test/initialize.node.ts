@@ -1,6 +1,6 @@
 import * as path from '../platform/vscode-path/path';
 import * as vscode from 'vscode';
-import { IExtensionTestApi, PYTHON_PATH, setPythonPathInWorkspaceRoot } from './common.node';
+import { IExtensionTestApi, PYTHON_PATH, setPythonPathInWorkspaceRoot, initializeCommonNodeApi } from './common.node';
 import { IS_SMOKE_TEST } from './constants.node';
 import { startJupyterServer } from './datascience/notebook/helper.node';
 import { PythonExtension, setTestExecution } from '../platform/common/constants';
@@ -31,6 +31,7 @@ let jupyterServerStarted = false;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function initialize(): Promise<IExtensionTestApi> {
     await initializePython();
+    initializeCommonNodeApi();
     const api = (await activateExtension()) as IExtensionTestApi;
     // Ensure we start jupyter server before opening any notebooks or the like.
     if (!jupyterServerStarted) {

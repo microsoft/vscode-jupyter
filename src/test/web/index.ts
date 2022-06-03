@@ -34,9 +34,10 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
                 isNonRawNativeTest: true
             });
 
-            // bundles all files in the current directory matching `*.web.test`
+            // bundles all files in the current directory matching `*.web.test` & `*.common.test`
             const importAll = (r: __WebpackModuleApi.RequireContext) => r.keys().forEach(r);
             importAll(require.context('..', true, /\.web\.test$/));
+            importAll(require.context('..', true, /\.common\.test$/));
 
             try {
                 // Run the mocha test
