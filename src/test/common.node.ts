@@ -25,8 +25,6 @@ import { initializeCommonApi } from './common';
 import { IDisposable } from '../platform/common/types';
 import { swallowExceptions } from '../platform/common/utils/misc';
 import { JupyterServer } from './datascience/jupyterServer.node';
-import { traceInfo } from '../platform/logging';
-import { initialize } from './initialize.node';
 import type { ConfigurationTarget, NotebookDocument, TextDocument, Uri } from 'vscode';
 
 export { createEventHandler } from './common';
@@ -336,6 +334,7 @@ export async function captureScreenShot(fileNamePrefix: string) {
 
 export function initializeCommonNodeApi() {
     const { commands, Uri } = require('vscode');
+    const { initialize } = require('./initialize.node');
 
     initializeCommonApi({
         async createTemporaryFile(options: {
@@ -354,10 +353,10 @@ export function initializeCommonNodeApi() {
                 const uriString = useCert
                     ? await JupyterServer.instance.startJupyterWithCert()
                     : await JupyterServer.instance.startJupyterWithToken();
-                traceInfo(`Jupyter started and listening at ${uriString}`);
+                console.info(`Jupyter started and listening at ${uriString}`);
                 return commands.executeCommand('jupyter.selectjupyteruri', false, Uri.parse(uriString), notebook);
             } else {
-                traceInfo(`Jupyter not started and set to local`); // This is the default
+                console.info(`Jupyter not started and set to local`); // This is the default
             }
         },
         async stopJupyterServer() {

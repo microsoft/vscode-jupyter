@@ -221,7 +221,7 @@ export class KernelProcess implements IKernelProcess {
                 tcpPortUsed.waitUntilUsed(this.connection.shell_port, 200, timeout),
                 tcpPortUsed.waitUntilUsed(this.connection.iopub_port, 200, timeout)
             ]).catch((ex) => {
-                if (cancelToken.isCancellationRequested) {
+                if (cancelToken.isCancellationRequested || deferred.rejected) {
                     return;
                 }
                 traceError(`waitUntilUsed timed out`, ex);
