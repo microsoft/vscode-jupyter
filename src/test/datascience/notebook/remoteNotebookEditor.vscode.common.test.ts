@@ -35,7 +35,7 @@ import { IServiceContainer } from '../../../platform/ioc/types';
 import { setIntellisenseTimeout } from '../../../intellisense/pythonKernelCompletionProvider';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function () {
+suite('DataScience - VSCode Notebook - Remote Execution', function () {
     this.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
