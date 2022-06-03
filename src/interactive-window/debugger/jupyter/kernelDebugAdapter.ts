@@ -80,21 +80,29 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
             throw new Error('Not an interactive window cell');
         }
         try {
-            const response = await this.session.customRequest('dumpCell', {
-                code: (metadata.generatedCode?.code || cell.document.getText()).replace(/\r\n/g, '\n')
-            });
+            const code = (metadata.generatedCode?.code || cell.document.getText()).replace(/\r\n/g, '\n');
+            const response = await this.session.customRequest('dumpCell', { code });
+
+            // We know jupyter will strip out leading white spaces, hence take that into account.
+            const lines = metadata.generatedCode!.realCode.splitLines({ trim: false, removeEmptyEntries: false });
+            const indexOfFirstNoneEmptyLine = lines.findIndex((line) => line.trim().length);
+            console.error(indexOfFirstNoneEmptyLine);
             const norm = path.normalize((response as IDumpCellResponse).sourcePath);
-            this.fileToCell.set(norm, {
-                uri: Uri.parse(metadata.interactive.uristring),
-                lineOffset:
-                    metadata.interactive.lineIndex +
-                    (metadata.generatedCode?.lineOffsetRelativeToIndexOfFirstLineInCell || 0)
-            });
+            this.fileToCell.set(norm, Uri.parse(metadata.interactive.uristring));
+
+            // If this cell doesn't have a cell marker, then
+            // Jupyter will strip out any leading whitespace.
+            // Take that into account.
+            let numberOfStrippedLines = 0;
+            if (metadata.generatedCode && !metadata.generatedCode.hasCellMarker) {
+                numberOfStrippedLines = metadata.generatedCode.firstNonBlankLineIndex;
+            }
             this.cellToDebugFileSortedInReverseOrderByLineNumber.push({
                 debugFilePath: norm,
                 interactiveWindow: Uri.parse(metadata.interactive.uristring),
                 metadata,
                 lineOffset:
+                    numberOfStrippedLines +
                     metadata.interactive.lineIndex +
                     (metadata.generatedCode?.lineOffsetRelativeToIndexOfFirstLineInCell || 0)
             });
@@ -113,7 +121,7 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
         if (!source || !source.path || !lines || (typeof lines.line !== 'number' && !Array.isArray(lines.lines))) {
             return;
         }
-        // Find the cell that matches this line in the IW file.
+        // Find the cell that matches this line in the IW file by mapping the debugFilePath to the IW file.
         const cell = this.cellToDebugFileSortedInReverseOrderByLineNumber.find(
             (item) => item.debugFilePath === source.path
         );
@@ -140,7 +148,7 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
             return;
         }
         const startLine = lines.line || lines.lines![0];
-        // Find the cell that matches this line in the IW file.
+        // Find the cell that matches this line in the IW file by mapping the debugFilePath to the IW file.
         const cell = this.cellToDebugFileSortedInReverseOrderByLineNumber.find(
             (item) => startLine >= item.metadata.interactive.lineIndex + 1
         );
@@ -171,7 +179,7 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
                 (request.arguments.breakpoints || []).map((bp) => bp.line)
             );
             const startLine = sortedLines.length ? sortedLines[0] : undefined;
-            // Find the cell that matches this line in the IW file.
+            // Find the cell that matches this line in the IW file by mapping the debugFilePath to the IW file.
             const cell = startLine
                 ? this.cellToDebugFileSortedInReverseOrderByLineNumber.find(
                       (item) => startLine >= item.metadata.interactive.lineIndex + 1
@@ -206,5 +214,9 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
         }
 
         return super.sendRequestToJupyterSession(message);
+    }
+
+    protected getDumpFilesForDeletion() {
+        return this.cellToDebugFileSortedInReverseOrderByLineNumber.map((item) => item.debugFilePath);
     }
 }

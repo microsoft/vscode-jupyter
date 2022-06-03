@@ -66,7 +66,21 @@ export class CodeExecutionHelper extends CodeExecutionHelperBase {
             const result = await normalizeOutput.promise;
             const object = JSON.parse(result);
 
-            return parse(object.normalized);
+            const normalizedLines = parse(object.normalized);
+            // Python will remove leading empty spaces, add them back.
+            const indexOfFirstNonEmptyLineInOriginalCode = code
+                .splitLines({ trim: true, removeEmptyEntries: false })
+                .findIndex((line) => line.length);
+            const indexOfFirstNonEmptyLineInNormalizedCode = normalizedLines
+                .splitLines({ trim: true, removeEmptyEntries: false })
+                .findIndex((line) => line.length);
+            if (indexOfFirstNonEmptyLineInOriginalCode > indexOfFirstNonEmptyLineInNormalizedCode) {
+                // Some white space has been trimmed, add them back.
+                const trimmedLineCount =
+                indexOfFirstNonEmptyLineInOriginalCode - indexOfFirstNonEmptyLineInNormalizedCode;
+                return `${'\n'.repeat(trimmedLineCount)}${normalizedLines}`;
+            }
+            return normalizedLines;
         } catch (ex) {
             traceError(ex, 'Python: Failed to normalize code for execution in terminal');
             return code;
