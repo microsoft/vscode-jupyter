@@ -9,7 +9,6 @@
         "sourceMap": true,
         "rootDir": "src",
         "experimentalDecorators": true,
-        "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
         "useUnknownInCatchVariables": false,
         "noImplicitThis": false

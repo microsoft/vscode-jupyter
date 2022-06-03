@@ -14,7 +14,6 @@
             "*": ["types/*"]
         },
         "experimentalDecorators": true,
-        "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
         "noImplicitThis": false,
         "noUnusedLocals": true,
