@@ -38,7 +38,7 @@ export function sharedIWDebuggerTests(
     const debuggerTypes: DebuggerType[] = ['VSCodePythonDebugger', 'JupyterProtocolDebugger'];
     debuggerTypes.forEach((debuggerType) => {
         suite(`Debugging with ${debuggerType}`, async function () {
-            this.timeout(1200_000);
+            this.timeout(120_000);
             let api: IExtensionTestApi;
             const disposables: IDisposable[] = [];
             let interactiveWindowProvider: InteractiveWindowProvider;
