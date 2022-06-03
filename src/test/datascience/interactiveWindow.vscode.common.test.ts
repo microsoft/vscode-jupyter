@@ -44,7 +44,7 @@ import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { sleep } from '../core';
 import { IPYTHON_VERSION_CODE } from '../constants';
 
-suite.only(`Interactive window`, async function () {
+suite(`Interactive window`, async function () {
     this.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
