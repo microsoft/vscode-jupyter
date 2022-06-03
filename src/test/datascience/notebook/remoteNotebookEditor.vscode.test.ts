@@ -3,6 +3,7 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
+import * as sinon from 'sinon';
 import { commands, Uri, workspace } from 'vscode';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
@@ -12,10 +13,10 @@ import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { JVSC_EXTENSION_ID, PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfoIfCI, traceInfo } from '../../../platform/logging';
-import { captureScreenShot, waitForCondition } from '../../common.node';
-import { openNotebook } from '../helpers.node';
+import { captureScreenShot, IExtensionTestApi, initialize, waitForCondition } from '../../common';
+import { openNotebook } from '../helpers';
 import { JupyterServer } from '../jupyterServer.node';
-import { hijackPrompt } from './helper';
+import { closeNotebooksAndCleanUpAfterTests, hijackPrompt } from './helper';
 import {
     createEmptyPythonNotebook,
     createTemporaryNotebook,
@@ -28,13 +29,12 @@ import {
     waitForKernelToGetAutoSelected,
     waitForTextOutput
 } from './helper.node';
-import {
-    runCellAndVerifyUpdateOfPreferredRemoteKernelId,
-    sharedRemoteNotebookEditorTests
-} from './remoteNotebookEditor.vscode.common';
 import { IServiceContainer } from '../../../platform/ioc/types';
+import { IDisposable } from '../../../platform/common/types';
+import { IS_REMOTE_NATIVE_TEST } from '../../constants';
+import { runCellAndVerifyUpdateOfPreferredRemoteKernelId } from './remoteNotebookEditor.vscode.common.test';
 
-suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function () {
+suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
     let controllerManager: INotebookControllerManager;
     let jupyterServerSelector: JupyterServerSelector;
     let vscodeNotebook: IVSCodeNotebook;
@@ -42,52 +42,72 @@ suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function ()
     let remoteKernelIdProvider: PreferredRemoteKernelIdProvider;
     let svcContainer: IServiceContainer;
 
-    // Use the shared code that runs the tests
-    const disposables = sharedRemoteNotebookEditorTests(
-        this,
-        (n) => {
-            return startJupyterServer(n);
-        },
-        (serviceContainer: IServiceContainer) => {
-            controllerManager = serviceContainer.get<INotebookControllerManager>(
-                INotebookControllerManager,
-                INotebookControllerManager
-            );
-            jupyterServerSelector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
-            vscodeNotebook = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-            remoteKernelIdProvider = serviceContainer.get<PreferredRemoteKernelIdProvider>(
-                PreferredRemoteKernelIdProvider
-            );
-            svcContainer = serviceContainer;
-        },
-        async () => {
-            // Don't use same file for this test (files get modified in tests and we might save stuff)
-            ipynbFile = await createTemporaryNotebook(
-                [
-                    {
-                        cell_type: 'code',
-                        source: ['a = "Hello World"\n'],
-                        outputs: [],
-                        execution_count: 0,
-                        metadata: {}
-                    },
-                    {
-                        cell_type: 'code',
-                        source: ['print(a)\n'],
-                        outputs: [],
-                        execution_count: 0,
-                        metadata: {}
-                    }
-                ],
-                disposables
-            );
-        },
-        async (context: Mocha.Context) => {
-            if (context.currentTest?.isFailed()) {
-                await captureScreenShot(context.currentTest?.title || 'test');
-            }
+    this.timeout(120_000);
+    let api: IExtensionTestApi;
+    const disposables: IDisposable[] = [];
+
+    suiteSetup(async function () {
+        if (!IS_REMOTE_NATIVE_TEST()) {
+            return this.skip();
         }
-    );
+        this.timeout(120_000);
+        api = await initialize();
+        await startJupyterServer();
+        sinon.restore();
+        const serviceContainer = api.serviceContainer;
+        vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+        controllerManager = api.serviceContainer.get<INotebookControllerManager>(
+            INotebookControllerManager,
+            INotebookControllerManager
+        );
+
+        controllerManager = serviceContainer.get<INotebookControllerManager>(
+            INotebookControllerManager,
+            INotebookControllerManager
+        );
+        jupyterServerSelector = serviceContainer.get<JupyterServerSelector>(JupyterServerSelector);
+        vscodeNotebook = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+        remoteKernelIdProvider = serviceContainer.get<PreferredRemoteKernelIdProvider>(PreferredRemoteKernelIdProvider);
+        svcContainer = serviceContainer;
+    });
+    // Use same notebook without starting kernel in every single test (use one for whole suite).
+    setup(async function () {
+        traceInfo(`Start Test ${this.currentTest?.title}`);
+        sinon.restore();
+        if (!this.currentTest?.title.includes('preferred')) {
+            await startJupyterServer();
+        }
+        // Don't use same file for this test (files get modified in tests and we might save stuff)
+        ipynbFile = await createTemporaryNotebook(
+            [
+                {
+                    cell_type: 'code',
+                    source: ['a = "Hello World"\n'],
+                    outputs: [],
+                    execution_count: 0,
+                    metadata: {}
+                },
+                {
+                    cell_type: 'code',
+                    source: ['print(a)\n'],
+                    outputs: [],
+                    execution_count: 0,
+                    metadata: {}
+                }
+            ],
+            disposables
+        );
+        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+    });
+    teardown(async function () {
+        traceInfo(`Ended Test ${this.currentTest?.title}`);
+        if (this.currentTest?.isFailed()) {
+            await captureScreenShot(this.currentTest.title || 'test');
+        }
+        await closeNotebooksAndCleanUpAfterTests(disposables);
+        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
+    });
+    suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
     // This test needs to run in node only as we have to start another jupyter server
     test('Old Remote kernels are removed when switching to new Remote Server', async function () {

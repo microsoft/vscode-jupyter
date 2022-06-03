@@ -6,12 +6,12 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { commands, CompletionList, Memento, NotebookDocument, Position, Uri, window } from 'vscode';
+import { commands, CompletionList, Memento, Position, Uri, window } from 'vscode';
 import { IEncryptedStorage, IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import { GLOBAL_MEMENTO, IDisposable, IMemento } from '../../../platform/common/types';
-import { IExtensionTestApi, waitForCondition } from '../../common';
-import { closeActiveWindows, initialize } from '../../initialize';
+import { captureScreenShot, IExtensionTestApi, initialize, startJupyterServer, waitForCondition } from '../../common';
+import { closeActiveWindows } from '../../initialize';
 import {
     runAllCellsInActiveNotebook,
     waitForExecutionCompletedSuccessfully,
@@ -35,14 +35,8 @@ import { IServiceContainer } from '../../../platform/ioc/types';
 import { setIntellisenseTimeout } from '../../../intellisense/pythonKernelCompletionProvider';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-export function sharedRemoteNotebookEditorTests(
-    suite: Mocha.Suite,
-    startJupyterServer: (notebook?: NotebookDocument) => Promise<void>,
-    finishSuiteSetup: (serviceContainer: IServiceContainer) => void,
-    finishTestSetup: () => Promise<void>,
-    handleTestTeardown: (context: Mocha.Context) => Promise<void>
-) {
-    suite.timeout(120_000);
+suite('DataScience - VSCode Notebook - (Remote) (Execution) (slow)', function () {
+    this.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
@@ -68,7 +62,6 @@ export function sharedRemoteNotebookEditorTests(
             INotebookControllerManager,
             INotebookControllerManager
         );
-        finishSuiteSetup(api.serviceContainer);
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
@@ -97,12 +90,13 @@ export function sharedRemoteNotebookEditorTests(
             ],
             disposables
         );
-        await finishTestSetup();
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
-        await handleTestTeardown(this);
+        if (this.currentTest?.isFailed()) {
+            await captureScreenShot(this.currentTest.title || 'test');
+        }
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
@@ -200,7 +194,7 @@ export function sharedRemoteNotebookEditorTests(
     });
 
     return disposables;
-}
+});
 
 export async function runCellAndVerifyUpdateOfPreferredRemoteKernelId(
     ipynbFile: Uri,
