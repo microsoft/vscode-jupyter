@@ -205,7 +205,6 @@ export interface IStore {
 
 export interface IMainWithVariables extends IMainState {
     variableState: IVariableState;
-    isWebState: boolean;
 }
 
 /**

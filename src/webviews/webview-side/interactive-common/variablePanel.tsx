@@ -33,6 +33,7 @@ export interface IVariablePanelProps {
 
 export class VariablePanel extends React.Component<IVariablePanelProps> {
     public override render() {
+        console.log("VariablePanel.render", this.props);
         return (
             <VariableExplorer
                 gridHeight={this.props.gridHeight}

@@ -5,9 +5,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import torch 
 
-# %% Matplotlib Plot
 x = np.linspace(0, 20, 100)
 plt.plot(x, np.sin(x))
 plt.show()

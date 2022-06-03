@@ -16,7 +16,7 @@ import {
     IWorkspaceService,
     IApplicationShell
 } from '../../../platform/common/application/types';
-import { IConfigurationService, IDisposable } from '../../../platform/common/types';
+import { IConfigurationService, IDisposable, IsWebExtension } from '../../../platform/common/types';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import * as localize from '../../../platform/common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
@@ -34,7 +34,8 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
         @inject(IConfigurationService) configuration: IConfigurationService,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
-        @inject(IFileSystemNode) private fs: IFileSystemNode
+        @inject(IFileSystemNode) private fs: IFileSystemNode,
+        @inject(IsWebExtension) isWebExtension: boolean
     ) {
         super(
             configuration,
@@ -44,7 +45,8 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
             plotDir,
             [joinPath(plotDir, 'plotViewer.js')],
             localize.DataScience.plotViewerTitle(),
-            ViewColumn.One
+            ViewColumn.One,
+            isWebExtension
         );
         // Load the web panel using our current directory as we don't expect to load any other files
         super.loadWebview(Uri.file(process.cwd())).catch(traceError);

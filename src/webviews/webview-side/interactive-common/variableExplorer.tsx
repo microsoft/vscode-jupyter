@@ -67,6 +67,7 @@ interface IGridRow {
 interface IVariableExplorerState {
     containerHeight: number;
     gridHeight: number;
+    isWeb: boolean;
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -100,13 +101,18 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
         this.state = {
             containerHeight: this.props.containerHeight,
-            gridHeight: this.props.gridHeight
+            gridHeight: this.props.gridHeight,
+            isWeb: this.props.isWeb
         };
 
         this.handleResizeMouseMove = this.handleResizeMouseMove.bind(this);
         this.setInitialHeight = this.setInitialHeight.bind(this);
         this.saveCurrentSize = this.saveCurrentSize.bind(this);
         this.sortRows = this.sortRows.bind(this);
+        console.log('VariableExplorer.constructor', {
+            props: this.props,
+            state: this.state
+        });
 
         this.gridColumns = [
             {
@@ -120,7 +126,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                     <VariableExplorerButtonCellFormatter
                         showDataExplorer={this.props.showDataExplorer}
                         baseTheme={this.props.baseTheme}
-                        isWeb={this.props.isWeb}
+                        isWeb={() => this.props.isWeb}
                     />
                 )
             },
@@ -193,6 +199,10 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             return true;
         }
 
+        if (prevState.isWeb !== nextProps.isWeb) {
+            return true;
+        }
+
         return false;
     }
 
@@ -228,6 +238,8 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         const emptyRowsView = this.props.requestInProgress
             ? VariableExplorerLoadingRowsView
             : VariableExplorerEmptyRowsView;
+
+        console.log('renderGrid', this.props);
 
         return (
             <div
