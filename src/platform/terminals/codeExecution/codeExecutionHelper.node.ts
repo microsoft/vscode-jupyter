@@ -77,7 +77,7 @@ export class CodeExecutionHelper extends CodeExecutionHelperBase {
             if (indexOfFirstNonEmptyLineInOriginalCode > indexOfFirstNonEmptyLineInNormalizedCode) {
                 // Some white space has been trimmed, add them back.
                 const trimmedLineCount =
-                indexOfFirstNonEmptyLineInOriginalCode - indexOfFirstNonEmptyLineInNormalizedCode;
+                    indexOfFirstNonEmptyLineInOriginalCode - indexOfFirstNonEmptyLineInNormalizedCode;
                 return `${'\n'.repeat(trimmedLineCount)}${normalizedLines}`;
             }
             return normalizedLines;

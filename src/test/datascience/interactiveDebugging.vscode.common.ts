@@ -3,15 +3,13 @@
 
 'use strict';
 
-import * as path from '../../platform/vscode-path/path';
-import * as fs from 'fs-extra';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';
 import { traceInfo } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
-import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common.node';
+import { IExtensionTestApi, waitForCondition } from '../common';
 import { initialize, IS_REMOTE_NATIVE_TEST } from '../initialize.node';
 import {
     submitFromPythonFile,
@@ -27,15 +25,17 @@ import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { Commands } from '../../platform/common/constants';
 import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
 import { pythonIWKernelDebugAdapter } from '../../kernels/debugger/constants';
-import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
+
+export type DebuggerType = 'VSCodePythonDebugger' | 'JupyterProtocolDebugger';
 
 export function sharedIWDebuggerTests(
     this: Mocha.Suite,
     options: {
         startJupyterServer: (notebook?: vscode.NotebookDocument) => Promise<void>;
+        suiteSetup?: (debuggerType: DebuggerType) => Promise<void>;
+        captureScreenShot?: (title: string) => Promise<void>;
     }
 ) {
-    type DebuggerType = 'VSCodePythonDebugger' | 'JupyterProtocolDebugger';
     const debuggerTypes: DebuggerType[] = ['VSCodePythonDebugger', 'JupyterProtocolDebugger'];
     debuggerTypes.forEach((debuggerType) => {
         suite(`Debugging with ${debuggerType}`, async function () {
@@ -52,49 +52,13 @@ export function sharedIWDebuggerTests(
                     return debugAdapterTracker;
                 }
             };
-            const settingsFile = path.join(
-                EXTENSION_ROOT_DIR,
-                'src',
-                'test',
-                'datascience',
-                '.vscode',
-                'settings.json'
-            );
-            function enableJupyterDebugger(enable: boolean) {
-                const settingFileContents = fs.readFileSync(settingsFile).toString();
-                if (enable && settingFileContents.includes(`"jupyter.forceIPyKernelDebugger": true`)) {
-                    return;
-                } else if (enable && settingFileContents.includes(`"jupyter.forceIPyKernelDebugger": false`)) {
-                    fs.writeFileSync(
-                        settingsFile,
-                        settingFileContents.replace(
-                            `"jupyter.forceIPyKernelDebugger": false`,
-                            `"jupyter.forceIPyKernelDebugger": true`
-                        )
-                    );
-                    return;
-                } else if (enable && !settingFileContents.includes(`"jupyter.forceIPyKernelDebugger": true`)) {
-                    throw new Error('Unable to update settings file');
-                } else if (!enable && settingFileContents.includes(`"jupyter.forceIPyKernelDebugger": true`)) {
-                    fs.writeFileSync(
-                        settingsFile,
-                        settingFileContents.replace(
-                            `"jupyter.forceIPyKernelDebugger": true`,
-                            `"jupyter.forceIPyKernelDebugger": false`
-                        )
-                    );
-                    return;
-                } else if (!enable && settingFileContents.includes(`"jupyter.forceIPyKernelDebugger": false`)) {
-                    return;
-                } else if (!enable && !settingFileContents.includes(`"jupyter.forceIPyKernelDebugger": true`)) {
-                    throw new Error('Unable to update settings file');
-                }
-            }
-            suiteSetup(function () {
+            suiteSetup(async function () {
                 if (IS_REMOTE_NATIVE_TEST() && debuggerType === 'VSCodePythonDebugger') {
                     return this.skip();
                 }
-                enableJupyterDebugger(debuggerType === 'JupyterProtocolDebugger');
+                if (options.suiteSetup) {
+                    await options.suiteSetup(debuggerType);
+                }
             });
             suiteTeardown(() => vscode.commands.executeCommand('workbench.debug.viewlet.action.removeAllBreakpoints'));
             setup(async function () {
@@ -128,8 +92,8 @@ export function sharedIWDebuggerTests(
                 );
 
                 traceInfo(`Ended Test ${this.currentTest?.title}`);
-                if (this.currentTest?.isFailed()) {
-                    await captureScreenShot(this.currentTest?.title);
+                if (this.currentTest?.isFailed() && options.captureScreenShot) {
+                    await options.captureScreenShot(this.currentTest?.title);
                 }
                 sinon.restore();
                 debugAdapterTracker = undefined;
