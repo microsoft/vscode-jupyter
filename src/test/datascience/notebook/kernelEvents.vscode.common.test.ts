@@ -37,9 +37,6 @@ suite('Kernel Event', function () {
     let previousDisableJupyterAutoStartValue: boolean;
     this.timeout(120_000);
     suiteSetup(async function () {
-        if (IS_REMOTE_NATIVE_TEST()) {
-            return this.skip();
-        }
         traceInfo(`Suite Setup ${this.currentTest?.title}`);
         this.timeout(120_000);
         try {
@@ -77,7 +74,10 @@ suite('Kernel Event', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('Kernel Events', async () => {
+    test('Kernel Events', async function () {
+        if (IS_REMOTE_NATIVE_TEST()) {
+            return this.skip();
+        }
         const kernelCreated = createEventHandler(kernelProvider, 'onDidCreateKernel', disposables);
         const kernelStarted = createEventHandler(kernelProvider, 'onDidStartKernel', disposables);
         const kernelDisposed = createEventHandler(kernelProvider, 'onDidDisposeKernel', disposables);
