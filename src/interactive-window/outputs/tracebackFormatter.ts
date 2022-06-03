@@ -79,7 +79,7 @@ export class InteractiveWindowTracebackFormatter implements ITracebackFormatter 
                 // We have a match, replace source lines first
                 const afterLineReplace = traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
                     const n = parseInt(num, 10);
-                    const lineNumberOfFirstLineInCell = match!.line;
+                    const lineNumberOfFirstLineInCell = match!.hasCellMarker ? match!.line - 1 : match!.line;
                     const lineIndexOfFirstLineInCell = lineNumberOfFirstLineInCell - 1;
                     const newLine = lineIndexOfFirstLineInCell + match!.lineOffsetRelativeToIndexOfFirstLineInCell + n;
                     return `${prefix}<a href='${matchUri?.toString()}?line=${newLine - 1}'>${newLine}</a>${suffix}`;
@@ -165,7 +165,7 @@ export class InteractiveWindowTracebackFormatter implements ITracebackFormatter 
                 if (index >= 0) {
                     // Jupyter isn't counting blank lines at the top so use our
                     // first non blank line
-                    return hash.hasCellMarker ? hash.firstNonBlankLineIndex - 1 : hash.firstNonBlankLineIndex;
+                    return hash.firstNonBlankLineIndex;
                 }
             }
         }
