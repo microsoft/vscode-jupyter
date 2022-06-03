@@ -63,13 +63,9 @@ export function sharedIWDebuggerTests(
             setup(async function () {
                 traceInfo(`Start Test ${this.currentTest?.title}`);
                 api = await initialize();
-                console.error('Start Jupyter Server1', process.platform.toString());
                 if (isWeb() || (IS_REMOTE_NATIVE_TEST() && debuggerType === 'VSCodePythonDebugger')) {
-                    console.error('Start Jupyter Server2');
                     await startJupyterServer();
-                    console.error('Start Jupyter Server3');
                 }
-                console.error('Start Jupyter Server4');
                 await vscode.commands.executeCommand('workbench.debug.viewlet.action.removeAllBreakpoints');
                 disposables.push(vscode.debug.registerDebugAdapterTrackerFactory('python', tracker));
                 disposables.push(vscode.debug.registerDebugAdapterTrackerFactory(pythonIWKernelDebugAdapter, tracker));
@@ -102,25 +98,20 @@ export function sharedIWDebuggerTests(
 
             test('Debug a cell from a python file', async () => {
                 // Run a cell to get IW open
-                console.error(`Start Test: Step (1)`);
                 const source = 'print(42)';
                 const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
                     interactiveWindowProvider,
                     source,
                     disposables
                 );
-                console.error(`Start Test: Step (2)`);
                 await waitForLastCellToComplete(activeInteractiveWindow);
-                console.error(`Start Test: Step (3)`);
 
                 // Add some more text
                 const editor = vscode.window.visibleTextEditors.find((e) => e.document.uri === untitledPythonFile.uri);
                 assert.ok(editor, `Couldn't find python file`);
-                console.error(`Start Test: Step (4)`);
                 await editor?.edit((b) => {
                     b.insert(new vscode.Position(1, 0), '\n# %%\n\n\nprint(43)');
                 });
-                console.error(`Start Test: Step (5)`);
 
                 let codeLenses = await waitForCodeLenses(untitledPythonFile.uri, Commands.DebugCell);
                 let stopped = false;
