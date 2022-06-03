@@ -21,6 +21,7 @@ const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS ==
 import * as iconv from 'iconv-lite';
 import { sleep } from '../core';
 import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
+import { noop } from '../../platform/common/utils/misc';
 
 function getPythonPath(): string {
     if (process.env.CI_PYTHON_PATH && fs.existsSync(process.env.CI_PYTHON_PATH)) {
@@ -92,10 +93,10 @@ export class JupyterServer {
         disposeAllDisposables(this._disposables);
         traceInfo('Shutting Jupyter server used for remote tests');
         if (this.availablePort) {
-            await tcpPortUsed.waitUntilFree(this.availablePort, 200, 5_000);
+            await tcpPortUsed.waitUntilFree(this.availablePort, 200, 5_000).catch(noop);
         }
         if (this.availableSecondPort) {
-            await tcpPortUsed.waitUntilFree(this.availableSecondPort, 200, 5_000);
+            await tcpPortUsed.waitUntilFree(this.availableSecondPort, 200, 5_000).catch(noop);
         }
     }
 
