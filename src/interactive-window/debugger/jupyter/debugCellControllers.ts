@@ -26,17 +26,20 @@ export class DebugCellController implements IDebuggingDelegate {
     public async willSendEvent(_msg: DebugProtocolMessage): Promise<boolean> {
         return false;
     }
+    private debugCellDumped?: Promise<void>;
     public async willSendRequest(request: DebugProtocol.Request): Promise<void> {
         const metadata = getInteractiveCellMetadata(this.debugCell);
         if (request.command === 'setBreakpoints' && metadata && metadata.generatedCode && !this.cellDumpInvoked) {
-            this.cellDumpInvoked = true;
-            await cellDebugSetup(this.kernel, this.debugAdapter);
+            if (!this.debugCellDumped) {
+                this.debugCellDumped = cellDebugSetup(this.kernel, this.debugAdapter);
+            }
+            await this.debugCellDumped;
         }
         if (request.command === 'configurationDone' && metadata && metadata.generatedCode) {
-            if (!this.cellDumpInvoked) {
-                this.cellDumpInvoked = true;
-                await cellDebugSetup(this.kernel, this.debugAdapter);
+            if (!this.debugCellDumped) {
+                this.debugCellDumped = cellDebugSetup(this.kernel, this.debugAdapter);
             }
+            await this.debugCellDumped;
             this._ready.resolve();
         }
     }

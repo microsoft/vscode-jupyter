@@ -13,8 +13,7 @@ import {
     Event,
     NotebookCell,
     NotebookDocument,
-    NotebookEditor,
-    Uri
+    NotebookEditor
 } from 'vscode';
 import { IFileGeneratedCodes } from '../../interactive-window/editor-integration/types';
 
@@ -72,7 +71,6 @@ export interface IKernelDebugAdapter extends DebugAdapter {
     onDidEndSession: Event<DebugSession>;
     dumpAllCells(): Promise<void>;
     getConfiguration(): IKernelDebugAdapterConfig;
-    getSourcePath(filePath: Uri): string | undefined;
 }
 
 export const IDebuggingManager = Symbol('IDebuggingManager');

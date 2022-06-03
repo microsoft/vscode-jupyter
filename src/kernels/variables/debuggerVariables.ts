@@ -26,6 +26,7 @@ import {
 } from './types';
 import { convertDebugProtocolVariableToIJupyterVariable, DataViewableTypes } from './helpers';
 import { IFileSystem } from '../../platform/common/platform/types';
+import { noop } from '../../platform/common/utils/misc';
 
 const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
 const MaximumRowChunkSizeForDebugger = 100;
@@ -452,7 +453,9 @@ export class DebuggerVariables
                     // Call variables
                     if (scopesResponse) {
                         scopesResponse.scopes.forEach((scope: DebugProtocol.Scope) => {
-                            void session.customRequest('variables', { variablesReference: scope.variablesReference });
+                            session
+                                .customRequest('variables', { variablesReference: scope.variablesReference })
+                                .then(noop, noop);
                         });
 
                         this.refreshEventEmitter.fire();
