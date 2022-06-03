@@ -38,7 +38,7 @@
    ([#9984](https://github.com/Microsoft/vscode-jupyter/issues/9984))
 1. Add editor context key support into the web extension.
    ([#9990](https://github.com/Microsoft/vscode-jupyter/issues/9990))
-1. Fix problem with PYTHONNOUSERSITE being set even when not desired. There's a setting now that will set this environment variable on kernel launch if it's needed: 'jupyter.excludeUserSitePackages'.
+1. Fix problem with `PYTHONNOUSERSITE` being set even when not desired. There's a setting now that will set this environment variable on kernel launch if it's needed: `jupyter.excludeUserSitePackages`.
    ([#9995](https://github.com/Microsoft/vscode-jupyter/issues/9995))
 1. Don't show the python extension install ui when auto starting kernels.
    ([#10011](https://github.com/Microsoft/vscode-jupyter/issues/10011))
