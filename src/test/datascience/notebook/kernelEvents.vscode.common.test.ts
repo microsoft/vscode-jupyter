@@ -120,7 +120,6 @@ suite('Kernel Event', function () {
         assert.isTrue(kernelDisposed.fired, 'IKernelProvider.onDidDisposeKernel not fired');
     });
     test('Kernel.IKernelConnection Events', async () => {
-        debugger;
         const nb = await createEmptyPythonNotebook(disposables);
         await waitForCondition(async () => !!kernelProvider.get(nb.uri), 5_000, 'Kernel not created');
         const kernel = kernelProvider.get(nb.uri)!;
