@@ -34,8 +34,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
         @inject(IConfigurationService) configuration: IConfigurationService,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
-        @inject(IFileSystemNode) private fs: IFileSystemNode,
-        @inject(IsWebExtension) isWebExtension: boolean
+        @inject(IFileSystemNode) private fs: IFileSystemNode
     ) {
         super(
             configuration,
@@ -45,8 +44,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
             plotDir,
             [joinPath(plotDir, 'plotViewer.js')],
             localize.DataScience.plotViewerTitle(),
-            ViewColumn.One,
-            isWebExtension
+            ViewColumn.One
         );
         // Load the web panel using our current directory as we don't expect to load any other files
         super.loadWebview(Uri.file(process.cwd())).catch(traceError);

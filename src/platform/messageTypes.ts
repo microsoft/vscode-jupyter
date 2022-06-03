@@ -21,7 +21,7 @@ export enum InteractiveWindowMessages {
     FinishCell = 'finish_cell',
     RestartKernel = 'restart_kernel',
     Interrupt = 'interrupt',
-    SettingsUpdated = 'settings_updated',
+    SettingsUpdated = 'update_settings',
     Started = 'started',
     ConvertUriForUseInWebViewRequest = 'ConvertUriForUseInWebViewRequest',
     ConvertUriForUseInWebViewResponse = 'ConvertUriForUseInWebViewResponse',

@@ -42,11 +42,9 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         rootPath: Uri,
         scripts: Uri[],
         private _title: string,
-        private viewColumn: ViewColumn,
-        isWebExtension: boolean
+        private viewColumn: ViewColumn
     ) {
-        console.log('WebviewPanelHost.constructor', isWebExtension);
-        super(configService, workspaceService, rootPath, scripts, isWebExtension);
+        super(configService, workspaceService, rootPath, scripts);
 
         // Create our message listener for our web panel.
         this.messageListener = messageListenerCtor(

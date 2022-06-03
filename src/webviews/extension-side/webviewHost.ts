@@ -26,6 +26,7 @@ import { CssMessages, InteractiveWindowMessages, SharedMessages } from '../../pl
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { DefaultTheme, PythonExtension, Telemetry } from '../webview-side/common/constants';
 import { IJupyterExtraSettings } from './types';
+import { getOSType, OSType } from '../../platform/common/utils/platform';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -61,8 +62,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         protected configService: IConfigurationService,
         protected workspaceService: IWorkspaceService,
         protected rootPath: Uri,
-        protected scripts: Uri[],
-        private isWebExtension: boolean
+        protected scripts: Uri[]
     ) {
         // Listen for settings changes from vscode.
         this._disposables.push(this.workspaceService.onDidChangeConfiguration(this.onPossibleSettingsChange, this));
@@ -228,8 +228,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         const pythonExt = extensions.getExtension(PythonExtension);
         const sendableSettings = JSON.parse(JSON.stringify(this.configService.getSettings(resource)));
 
-        console.log('generateDataScienceExtraSettings', this.isWebExtension);
-
         return {
             ...sendableSettings,
             extraSettings: {
@@ -250,7 +248,7 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
                 },
                 theme,
                 hasPythonExtension: pythonExt !== undefined,
-                isWeb: this.isWebExtension
+                isWeb: getOSType() === OSType.Unknown
             }
         };
     }
