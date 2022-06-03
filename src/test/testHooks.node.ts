@@ -22,7 +22,11 @@ export const rootHooks: Mocha.RootHookObject = {
         telemetryReporter = new reporter(extensionId, extensionVersion, AppinsightsKey, true);
     },
     afterEach(this: Context) {
-        if (!IS_CI_SERVER || (process.env.GIT_BRANCH && process.env.GIT_BRANCH !== 'main')) {
+        if (
+            !IS_CI_SERVER ||
+            (process.env.GIT_BRANCH && process.env.GIT_BRANCH !== 'main') ||
+            (process.env.VSC_JUPYTER_WARMUP && process.env.VSC_JUPYTER_WARMUP == 'true')
+        ) {
             return;
         }
 
@@ -34,10 +38,6 @@ export const rootHooks: Mocha.RootHookObject = {
             testName: this.currentTest!.title,
             testResult: result
         };
-
-        if (process.env.VSC_JUPYTER_WARMUP) {
-            dimensions = { ...dimensions, perfWarmup: 'true' };
-        }
 
         if (this.currentTest?.perfCheckpoints) {
             dimensions = { ...dimensions, timedCheckpoints: JSON.stringify(this.currentTest?.perfCheckpoints) };

@@ -30,7 +30,7 @@ class TestRunner {
     }
 
     private async launchTest(testFile: string, warmupRun?: boolean) {
-        console.log('Launch bootstrapper for test run');
+        console.log(`Launch bootstrapper for ${warmupRun ? 'warmup ' : ''}test run`);
         await new Promise<void>((resolve, reject) => {
             const env: Record<string, string> = {
                 TEST_FILES_SUFFIX: testFile,
