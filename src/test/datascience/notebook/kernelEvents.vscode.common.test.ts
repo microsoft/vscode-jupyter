@@ -27,6 +27,7 @@ import {
 } from './helper';
 import { createEventHandler } from '../../common';
 import { IKernelProvider } from '../../../kernels/types';
+import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 
 suite('Kernel Event', function () {
     let api: IExtensionTestApi;
@@ -36,6 +37,9 @@ suite('Kernel Event', function () {
     let previousDisableJupyterAutoStartValue: boolean;
     this.timeout(120_000);
     suiteSetup(async function () {
+        if (IS_REMOTE_NATIVE_TEST()) {
+            return this.skip();
+        }
         traceInfo(`Suite Setup ${this.currentTest?.title}`);
         this.timeout(120_000);
         try {
