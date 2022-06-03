@@ -10,13 +10,7 @@ import { KernelDebugAdapterBase } from '../../kernels/debugger/kernelDebugAdapte
 import { DebugProtocol } from 'vscode-debugprotocol';
 
 export class KernelDebugAdapter extends KernelDebugAdapterBase {
-    protected readonly cellToFile = new Map<
-        string,
-        {
-            path: string;
-            lineOffset?: number;
-        }
-    >();
+    private readonly cellToFile = new Map<string, string>();
 
     // Dump content of given cell into a tmp file and return path to file.
     protected override async dumpCell(index: number): Promise<void> {
@@ -27,9 +21,7 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
             });
             const norm = path.normalize((response as IDumpCellResponse).sourcePath);
             this.fileToCell.set(norm, cell.document.uri);
-            this.cellToFile.set(cell.document.uri.toString(), {
-                path: norm
-            });
+            this.cellToFile.set(cell.document.uri.toString(), norm);
         } catch (err) {
             traceError(err);
         }
@@ -41,13 +33,12 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
         if (source && source.path) {
             const mapping = this.cellToFile.get(source.path);
             if (mapping) {
-                source.path = mapping.path;
+                source.path = mapping;
             }
         }
     }
 
     protected getDumpFilesForDeletion() {
-        const fileValues = [...this.cellToFile.values()];
-        return fileValues.map((item) => item.path);
+        return Array.from(this.cellToFile.values());
     }
 }
