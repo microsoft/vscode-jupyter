@@ -130,10 +130,6 @@ function handleSort(arg: VariableReducerArg<ISortVariablesRequest>): IVariableSt
 
 function handleIsWebUpdate(arg: VariableReducerArg<string>): IVariableState {
     const settings = JSON.parse(arg.payload.data) as IJupyterExtraSettings;
-    console.log('handleIsWebUpdate', {
-        prevStateIsWeb: arg.prevState.isWeb,
-        settingsIsWeb: settings.extraSettings.isWeb
-    });
     return {
         ...arg.prevState,
         isWeb: settings.extraSettings.isWeb
@@ -194,7 +190,6 @@ function setVariableExplorerHeight(arg: VariableReducerArg<IVariableExplorerHeig
 
 function handleResponse(arg: VariableReducerArg<IJupyterVariablesResponse>): IVariableState {
     const response = arg.payload.data;
-    console.log('handleResponse', response);
 
     // Check to see if we have moved to a new execution count
     if (

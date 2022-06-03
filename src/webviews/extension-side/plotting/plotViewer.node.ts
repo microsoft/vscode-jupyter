@@ -16,7 +16,7 @@ import {
     IWorkspaceService,
     IApplicationShell
 } from '../../../platform/common/application/types';
-import { IConfigurationService, IDisposable, IsWebExtension } from '../../../platform/common/types';
+import { IConfigurationService, IDisposable } from '../../../platform/common/types';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import * as localize from '../../../platform/common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';

@@ -21,7 +21,7 @@ export enum InteractiveWindowMessages {
     FinishCell = 'finish_cell',
     RestartKernel = 'restart_kernel',
     Interrupt = 'interrupt',
-    SettingsUpdated = 'update_settings',
+    SettingsUpdated = 'settings_updated',
     Started = 'started',
     ConvertUriForUseInWebViewRequest = 'ConvertUriForUseInWebViewRequest',
     ConvertUriForUseInWebViewResponse = 'ConvertUriForUseInWebViewResponse',
@@ -259,7 +259,7 @@ export enum CssMessages {
 }
 
 export enum SharedMessages {
-    UpdateSettings = 'settings_updated',
+    UpdateSettings = 'update_settings',
     Started = 'started',
     LocInit = 'loc_init'
 }

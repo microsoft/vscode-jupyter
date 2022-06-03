@@ -54,8 +54,7 @@ suite('DataScience - DataViewer', () => {
             instance(workspaceService),
             instance(applicationShell),
             new MockMemento(),
-            instance(mock<IDataScienceErrorHandler>()),
-            true
+            instance(mock<IDataScienceErrorHandler>())
         );
     });
     test('Data viewer showData calls gets dataFrame info from data provider', async () => {

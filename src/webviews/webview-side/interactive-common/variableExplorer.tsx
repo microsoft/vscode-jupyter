@@ -109,10 +109,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         this.setInitialHeight = this.setInitialHeight.bind(this);
         this.saveCurrentSize = this.saveCurrentSize.bind(this);
         this.sortRows = this.sortRows.bind(this);
-        console.log('VariableExplorer.constructor', {
-            props: this.props,
-            state: this.state
-        });
 
         this.gridColumns = [
             {
@@ -178,7 +174,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     }
 
     public override shouldComponentUpdate(nextProps: IVariableExplorerProps, prevState: IVariableState): boolean {
-        console.log('shouldComponentUpdate', { nextProps, prevState });
         if (this.props.fontSize !== nextProps.fontSize) {
             // Size has changed, recompute page size
             this.pageSize = -1;
@@ -238,8 +233,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         const emptyRowsView = this.props.requestInProgress
             ? VariableExplorerLoadingRowsView
             : VariableExplorerEmptyRowsView;
-
-        console.log('renderGrid', this.props);
 
         return (
             <div

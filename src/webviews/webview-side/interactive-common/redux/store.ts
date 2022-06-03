@@ -261,9 +261,7 @@ export function createStore<M>(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         handleMessage(message: string, payload?: any): boolean {
             // Double check this is one of our messages. React will actually post messages here too during development
-            console.log(`interactive-common handleMessage`, { message, payload });
             if (isAllowedMessage(message)) {
-                console.log('IS ALLOWED!');
                 const basePayload: BaseReduxActionPayload = { data: payload };
                 if (message === InteractiveWindowMessages.Sync) {
                     // This is a message that has been sent from extension purely for synchronization purposes.

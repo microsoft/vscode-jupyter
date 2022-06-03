@@ -85,10 +85,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
     private renderVariablePanel(baseTheme: string) {
         if (this.props.variableState.visible) {
             const variableProps = this.getVariableProps(baseTheme);
-            console.log('Rendering variable panel', {
-                variableProps,
-                props: this.props
-            });
             return <VariablePanel {...variableProps} />;
         }
 
@@ -97,9 +93,6 @@ ${buildSettingsCss(this.props.settings)}`}</style>
 
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
         // TODO: This is not being updated when the settings are updated.
-        console.log('VariableViewPanel.getVariableProps', {
-            isWeb: this.props.variableState.isWeb
-        });
         return {
             gridHeight: this.props.variableState.gridHeight,
             containerHeight: this.props.variableState.containerHeight,

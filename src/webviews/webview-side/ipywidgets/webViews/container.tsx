@@ -44,7 +44,6 @@ export class WidgetManagerComponent extends React.Component<Props> {
         props.postOffice.addHandler({
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             handleMessage: (type: string, payload?: any) => {
-                console.log('container handleMessage', { type, payload });
                 if (type === SharedMessages.UpdateSettings) {
                     const settings = JSON.parse(payload) as IJupyterExtraSettings;
                     this.widgetsCanLoadFromCDN = settings.widgetScriptSources.length > 0;
