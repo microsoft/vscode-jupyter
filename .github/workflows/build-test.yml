@@ -311,8 +311,8 @@ jobs:
         run: npm run prePublishNonBundle
         env:
           CI_JUPYTER_FAST_COMPILATION: 'true'
+        if: steps.out-cache.outputs.cache-hit == false
 
-        # if: steps.out-cache.outputs.cache-hit == false
       - name: Run TypeScript unit tests
         id: test_unittests
         run: npm run test:unittests
