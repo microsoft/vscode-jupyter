@@ -3,6 +3,7 @@
 
 import './styles.css';
 import { ActivationFunction, OutputItem, RendererContext } from 'vscode-notebook-renderer';
+import { logMessageOnlyOnCI } from '../../react-common/logger';
 export const activate: ActivationFunction = (context) => {
     if (context.postMessage) {
         context.postMessage({
@@ -67,7 +68,7 @@ function hookupTestScripts(context: RendererContext<unknown>) {
                 message: 'Hook not registered'
             });
         }
-        console.log(`No Widgetentry point`);
+        logMessageOnlyOnCI(`No Widgetentry point`);
         return;
     }
     if (context.postMessage) {
@@ -76,7 +77,7 @@ function hookupTestScripts(context: RendererContext<unknown>) {
             message: 'Hook registered'
         });
     }
-    console.log(`Widgetentry point found`);
+    logMessageOnlyOnCI(`Widgetentry point found`);
     anyWindow.widgetEntryPoint.initialize(context);
 }
 function sendRenderOutputItem(context: RendererContext<unknown>, outputItem: OutputItem, element: HTMLElement) {
