@@ -5,7 +5,7 @@
 import * as vscode from 'vscode';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { traceInfo } from '../../platform/logging';
-import { noop } from 'lodash';
+import noop = require('lodash/noop');
 import { IPythonApiProvider } from '../../platform/api/types';
 import { IJupyterSettings, Resource } from '../../platform/common/types';
 import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
