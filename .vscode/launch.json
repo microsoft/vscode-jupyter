@@ -239,7 +239,7 @@
             },
             "sourceMaps": true,
             "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
-            // "preLaunchTask": "Compile",
+            "preLaunchTask": "Compile",
             "skipFiles": ["<node_internals>/**"],
             "presentation": {
                 "group": "2_tests",

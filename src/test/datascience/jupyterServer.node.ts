@@ -146,7 +146,9 @@ export class JupyterServer {
                         detached
                     });
                     await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
-                    resolve(`http://localhost:${port}/?token=${token}`);
+                    const url = `http://localhost:${port}/?token=${token}`;
+                    console.log(`Started Jupyter Server on ${url}`);
+                    resolve(url);
                 } catch (ex) {
                     reject(ex);
                 }
