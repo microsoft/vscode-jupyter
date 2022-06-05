@@ -72,6 +72,10 @@ function getParentHeaderMsgId(msg: KernelMessage.IMessage): string | undefined {
     return undefined;
 }
 
+/**
+ * The Output Widget in Jupyter can render multiple outputs. However some of them
+ * like ipywidgets and the like cannot be handled by it.
+ */
 function canMimeTypeBeRenderedByWidgetManager(mime: string) {
     if (mime == CellOutputMimeTypes.stderr || mime == CellOutputMimeTypes.stdout || mime == CellOutputMimeTypes.error) {
         // These are plain text mimetypes that can be rendered by the Jupyter Lab widget manager.
