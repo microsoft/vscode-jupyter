@@ -35,9 +35,11 @@ export function initializeCommonWebApi() {
             };
         },
         async startJupyterServer(notebook?: NotebookDocument): Promise<void> {
+            // DEBUG_JUPYTER_SERVER_URI is not a valid setting, but updated when we launch the tests via vscode debugger.
+            const url = workspace.getConfiguration('jupyter').get('DEBUG_JUPYTER_SERVER_URI', JUPYTER_SERVER_URI);
+            console.log(`ServerURI for remote test: ${url}`);
             // Server URI should have been embedded in the constants file
-            const uri = Uri.parse(JUPYTER_SERVER_URI);
-            console.log(`ServerURI for remote test: ${JUPYTER_SERVER_URI}`);
+            const uri = Uri.parse(url);
             // Use this URI to set our jupyter server URI
             await commands.executeCommand('jupyter.selectjupyteruri', false, uri, notebook);
         },

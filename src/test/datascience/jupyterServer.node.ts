@@ -71,6 +71,10 @@ function traceInfoIfCI(message: string) {
 }
 
 export class JupyterServer {
+    /**
+     * Used in vscode debugger launcher `preDebugWebTest.js` to kill the Jupyter Server by pid.
+     */
+    public pid: number = -1;
     public static get instance(): JupyterServer {
         if (!JupyterServer._instance) {
             JupyterServer._instance = new JupyterServer();
@@ -100,7 +104,7 @@ export class JupyterServer {
         }
     }
 
-    public async startJupyterWithCert(): Promise<string> {
+    public async startJupyterWithCert(detached?: boolean): Promise<string> {
         if (!this._jupyterServerWithCert) {
             this._jupyterServerWithCert = new Promise<string>(async (resolve, reject) => {
                 const token = this.generateToken();
@@ -112,7 +116,8 @@ export class JupyterServer {
                     await this.startJupyterServer({
                         port,
                         token,
-                        useCert: true
+                        useCert: true,
+                        detached
                     });
                     await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
 
@@ -126,7 +131,8 @@ export class JupyterServer {
         return this._jupyterServerWithCert;
     }
 
-    public async startJupyterWithToken(token = this.generateToken()): Promise<string> {
+    public async startJupyterWithToken({ detached }: { detached?: boolean } = {}): Promise<string> {
+        const token = this.generateToken();
         if (!this._jupyterServerWithToken) {
             this._jupyterServerWithToken = new Promise<string>(async (resolve, reject) => {
                 const port = await this.getFreePort();
@@ -136,7 +142,8 @@ export class JupyterServer {
                 try {
                     await this.startJupyterServer({
                         port,
-                        token
+                        token,
+                        detached
                     });
                     await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
                     resolve(`http://localhost:${port}/?token=${token}`);
@@ -160,7 +167,9 @@ export class JupyterServer {
                         token
                     });
                     await sleep(5_000); // Wait for some time for Jupyter to warm up & be ready to accept connections.
-                    resolve(`http://localhost:${port}/?token=${token}`);
+                    const url = `http://localhost:${port}/?token=${token}`;
+                    console.log(`Started Jupyter Server on ${url}`);
+                    resolve(url);
                 } catch (ex) {
                     reject(ex);
                 }
@@ -201,11 +210,13 @@ export class JupyterServer {
     private startJupyterServer({
         token,
         port,
-        useCert
+        useCert,
+        detached
     }: {
         token: string;
         port: number;
         useCert?: boolean;
+        detached?: boolean;
     }): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
             try {
@@ -240,11 +251,13 @@ export class JupyterServer {
                 }
                 traceInfoIfCI(`Starting Jupyter on CI with args ${args.join(' ')}`);
                 const result = this.execObservable(getPythonPath(), args, {
-                    cwd: testFolder
+                    cwd: testFolder,
+                    detached
                 });
                 if (!result.proc) {
                     throw new Error('Starting Jupyter failed, no process');
                 }
+                this.pid = result.proc.pid;
                 result.proc.once('close', () => traceInfo('Shutting Jupyter server used for remote tests (closed)'));
                 result.proc.once('disconnect', () =>
                     traceInfo('Shutting Jupyter server used for remote tests (disconnected)')
@@ -263,6 +276,9 @@ export class JupyterServer {
                     }
                 };
                 const subscription = result.out.subscribe((output) => {
+                    // When debugging Web Tests using VSCode dfebugger, we'd like to see this info.
+                    // This way we can click the link in the output panel easily.
+                    console.info(output.out);
                     traceInfoIfCI(`Test Remote Jupyter Server Output: ${output.out}`);
                     if (output.out.indexOf('Use Control-C to stop this server and shut down all kernels')) {
                         resolve();

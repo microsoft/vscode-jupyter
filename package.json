@@ -2142,7 +2142,9 @@
         "postdownload-api": "vscode-dts main",
         "generateTelemetry": "gulp generateTelemetryMd",
         "openInBrowser": "vscode-test-web --extensionDevelopmentPath=. ./src/test/datascience",
-        "prepare": "husky install"
+        "prepare": "husky install",
+        "startJupyterServer": "node build/preDebugWebTest.js",
+        "stopJupyterServer": "node build/postDebugWebTest.js"
     },
     "dependencies": {
         "@enonic/fnv-plus": "^1.3.0",
