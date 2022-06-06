@@ -957,7 +957,7 @@ export namespace DataScience {
     );
     export const jupyterNativeNotebookUriStatusLabelForLocal = localize(
         'DataScience.jupyterNativeNotebookUriStatusLabelForLocal',
-        'Jupyter Server: local'
+        'Jupyter Server: Local'
     );
     export const jupyterNativeNotebookUriStatusLabelForRemote = localize(
         'DataScience.jupyterNativeNotebookUriStatusLabelForRemote',
