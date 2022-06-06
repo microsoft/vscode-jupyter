@@ -3,20 +3,9 @@
 
 'use strict';
 
-import * as vscode from 'vscode';
+import * as nls from 'vscode-nls';
 
-// Embed all known translations so we can use them on the web too
-const packageBaseNlsJson = require('../../../../package.nls.json');
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const packageNlsJsons: Record<string, any> = {
-    en: require('../../../../package.nls.json'),
-    it: require('../../../../package.nls.it.json'),
-    nl: require('../../../../package.nls.nl.json'),
-    pl: require('../../../../package.nls.pl.json'),
-    ru: require('../../../../package.nls.ru.json'),
-    'zh-cn': require('../../../../package.nls.zh-cn.json'),
-    'zh-tw': require('../../../../package.nls.zh-tw.json')
-};
+const localize = nls.loadMessageBundle();
 
 // External callers of localize use these tables to retrieve localized values.
 
@@ -41,7 +30,10 @@ export namespace Common {
     export const and = localize('Common.and', 'and');
     export const reportThisIssue = localize('Common.reportThisIssue', 'Report this issue');
     export const clickHereForMoreInfoWithHtml = localize(
-        'Common.clickHereForMoreInfoWithHtml',
+        {
+            key: 'Common.clickHereForMoreInfoWithHtml',
+            comment: ["{Locked='href=", "Do not translate 'here='"]
+        },
         "Click <a href='{0}'>here</a> for more info."
     );
 }
@@ -92,10 +84,11 @@ export namespace GitHubIssue {
 }
 
 export namespace Logging {
-    export const currentWorkingDirectory = localize('Logging.CurrentWorkingDirectory', 'cwd:');
+    // TODO: Would this ever change?
+    export const currentWorkingDirectory = 'cwd:';
     export const warnUserAboutDebugLoggingSetting = localize(
         'Logging.WarnUserAboutDebugLoggingSetting',
-        'You have enabled debug logging for the Jupyter extension, which will continue to write logs to disk. Would you like to turn debug logging off?.'
+        'You have enabled debug logging for the Jupyter extension, which will continue to write logs to disk. Would you like to turn debug logging off?'
     );
     export const bannerYesTurnOffDebugLogging = localize(
         'Logging.YesTurnOffDebugLogging',
@@ -136,6 +129,8 @@ export namespace DataScienceRendererExtension {
         'DataScienceRendererExtension.installationCompleteMessage',
         'complete.'
     );
+
+    // TODO: Should `Notebook Renderers` be translated?
     export const startingDownloadOutputMessage = localize(
         'DataScienceRendererExtension.startingDownloadOutputMessage',
         'Starting download of Notebook Renderers extension.'
@@ -260,7 +255,7 @@ export namespace DataScience {
     export const exportDialogComplete = localize('DataScience.exportDialogComplete', 'Notebook written to {0}');
     export const exportDialogFailed = localize('DataScience.exportDialogFailed', 'Failed to export notebook. {0}');
     export const exportOpenQuestion1 = localize('DataScience.exportOpenQuestion1', 'Open in editor');
-    export const runCellLensCommandTitle = localize('jupyter.command.jupyter.runcell.title', 'Run cell');
+    export const runCellLensCommandTitle = localize('jupyter.command.jupyter.runcell.title', 'Run Cell');
     export const importDialogTitle = localize('DataScience.importDialogTitle', 'Import Jupyter Notebook');
     export const importDialogFilter = localize('DataScience.importDialogFilter', 'Jupyter Notebooks');
     export const notebookCheckForImportTitle = localize(
@@ -374,10 +369,10 @@ export namespace DataScience {
     export const connectedToKernel = localize('DataScience.connectedToKernel', 'Connected.');
     export const connectingToJupyter = localize('DataScience.connectingToJupyter', 'Connecting to Jupyter server');
     export const exportingFormat = localize('DataScience.exportingFormat', 'Exporting {0}');
-    export const runAllCellsLensCommandTitle = localize('jupyter.command.jupyter.runallcells.title', 'Run all cells');
+    export const runAllCellsLensCommandTitle = localize('jupyter.command.jupyter.runallcells.title', 'Run All Cells');
     export const runAllCellsAboveLensCommandTitle = localize(
         'jupyter.command.jupyter.runallcellsabove.title',
-        'Run above'
+        'Run Above'
     );
     export const runCellAndAllBelowLensCommandTitle = localize(
         'jupyter.command.jupyter.runcellandallbelow.title',
@@ -953,11 +948,11 @@ export namespace DataScience {
     );
     export const specifyLocalOrRemoteJupyterServerForConnections = localize(
         'jupyter.command.jupyter.selectjupyteruri.title',
-        'Specify Jupyter server for connections'
+        'Specify Jupyter Server for Connections'
     );
     export const jupyterNativeNotebookUriStatusLabelForLocal = localize(
         'DataScience.jupyterNativeNotebookUriStatusLabelForLocal',
-        'Jupyter Server: local'
+        'Jupyter Server: Local'
     );
     export const jupyterNativeNotebookUriStatusLabelForRemote = localize(
         'DataScience.jupyterNativeNotebookUriStatusLabelForRemote',
@@ -1200,97 +1195,3 @@ export namespace Installer {
 export namespace Products {
     export const installingModule = localize('products.installingModule', 'Installing {0}');
 }
-
-// Skip using vscode-nls and instead just compute our strings based on key values. Key values
-// can be loaded out of the nls.<locale>.json files
-let loadedCollection: Record<string, string> | undefined;
-let defaultCollection: Record<string, string> | undefined;
-let askedForCollection: Record<string, string> = {};
-let loadedLocale: string;
-
-// This is exported only for testing purposes.
-export function _resetCollections() {
-    loadedLocale = '';
-    loadedCollection = undefined;
-    askedForCollection = {};
-}
-
-// This is exported only for testing purposes.
-export function _getAskedForCollection() {
-    return askedForCollection;
-}
-
-// Return the effective set of all localization strings, by key.
-//
-// This should not be used for direct lookup.
-export function getCollectionJSON(): string {
-    // Load the current collection
-    if (!loadedCollection || parseLocale() !== loadedLocale) {
-        load();
-    }
-
-    // Combine the default and loaded collections
-    return JSON.stringify({ ...defaultCollection, ...loadedCollection });
-}
-
-// eslint-disable-next-line
-export function localize(key: string, defValue?: string) {
-    // Return a pointer to function so that we refetch it on each call.
-    return () => {
-        return getString(key, defValue);
-    };
-}
-
-function parseLocale(): string {
-    // Attempt to load from the vscode locale. If not there, use english
-    return vscode.env.language || 'en-us';
-}
-
-function getString(key: string, defValue?: string) {
-    // Load the current collection
-    if (!loadedCollection || parseLocale() !== loadedLocale) {
-        load();
-    }
-
-    // The default collection (package.nls.json) is the fallback.
-    // Note that we are guaranteed the following (during shipping)
-    //  1. defaultCollection was initialized by the load() call above
-    //  2. defaultCollection has the key (see the "keys exist" test)
-    let collection = defaultCollection!;
-
-    // Use the current locale if the key is defined there.
-    if (loadedCollection && loadedCollection.hasOwnProperty(key)) {
-        collection = loadedCollection;
-    }
-    let result = collection[key];
-    if (!result && defValue) {
-        // This can happen during development if you haven't fixed up the nls file yet or
-        // if for some reason somebody broke the functional test.
-        result = defValue;
-    }
-    askedForCollection[key] = result;
-
-    return result;
-}
-
-function load() {
-    // Figure out our current locale.
-    loadedLocale = parseLocale();
-
-    // Find the nls file that matches (if there is one)
-    let contents = packageNlsJsons[loadedLocale];
-    if (contents) {
-        loadedCollection = contents;
-    } else {
-        // If there isn't one, at least remember that we looked so we don't try to load a second time
-        loadedCollection = {};
-    }
-
-    // Get the default collection if necessary. Strings may be in the default or the locale json
-    if (!defaultCollection) {
-        defaultCollection = packageBaseNlsJson;
-    }
-}
-
-// Default to loading the current locale
-load();
