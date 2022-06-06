@@ -285,8 +285,6 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
         ]);
     });
     test('When switching from remote to local, then clear the preferred remote kernel', async function () {
-        // https://github.com/microsoft/vscode-jupyter/issues/10046
-        return this.skip();
         await runCellAndVerifyUpdateOfPreferredRemoteKernelId(ipynbFile, svcContainer);
 
         const nbEditor = vscodeNotebook.activeNotebookEditor!;
