@@ -9,14 +9,13 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
-import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
-import { initialize } from '../../initialize.node';
+import { captureScreenShot, initialize, IExtensionTestApi, waitForCondition } from '../../common';
 import {
     closeNotebooksAndCleanUpAfterTests,
     insertCodeCell,
     createEmptyPythonNotebook,
     workAroundVSCodeNotebookStartPages
-} from './helper.node';
+} from './helper';
 import { NotebookDocument, Range } from 'vscode';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { NotebookCellBangInstallDiagnosticsProvider } from '../../../intellisense/diagnosticsProvider';

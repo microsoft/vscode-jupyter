@@ -9,19 +9,17 @@ import { IVSCodeNotebook } from '../../../../platform/common/application/types';
 import { traceInfo } from '../../../../platform/logging';
 import { IDisposable } from '../../../../platform/common/types';
 import { InteractiveWindowProvider } from '../../../../interactive-window/interactiveWindowProvider';
-import { captureScreenShot, IExtensionTestApi } from '../../../common.node';
-import { IS_REMOTE_NATIVE_TEST } from '../../../constants.node';
-import { initialize } from '../../../initialize.node';
-import { createStandaloneInteractiveWindow, insertIntoInputEditor } from '../../helpers.node';
+import { captureScreenShot, initialize, startJupyterServer, IExtensionTestApi } from '../../../common';
+import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
+import { createStandaloneInteractiveWindow, insertIntoInputEditor } from '../../helpers';
 import {
     closeNotebooksAndCleanUpAfterTests,
     runCell,
     insertCodeCell,
-    startJupyterServer,
     waitForExecutionCompletedSuccessfully,
     prewarmNotebooks,
     createEmptyPythonNotebook
-} from '../helper.node';
+} from '../helper';
 import { IInteractiveWindowProvider } from '../../../../interactive-window/types';
 import { setIntellisenseTimeout } from '../../../../intellisense/pythonKernelCompletionProvider';
 import { Settings } from '../../../../platform/common/constants';

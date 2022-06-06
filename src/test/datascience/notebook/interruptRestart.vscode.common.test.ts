@@ -11,16 +11,21 @@ import { traceInfo } from '../../../platform/logging';
 import { IConfigurationService, IDisposable, IJupyterSettings, ReadWrite } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { IKernelProvider } from '../../../platform/../kernels/types';
-import { captureScreenShot, createEventHandler, IExtensionTestApi, sleep, waitForCondition } from '../../common.node';
-import { IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
-import { initialize } from '../../initialize.node';
+import {
+    captureScreenShot,
+    createEventHandler,
+    IExtensionTestApi,
+    startJupyterServer,
+    waitForCondition,
+    initialize
+} from '../../common';
+import { IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import {
     assertVSCCellIsNotRunning,
     closeNotebooksAndCleanUpAfterTests,
     createEmptyPythonNotebook,
     runAllCellsInActiveNotebook,
     insertCodeCell,
-    startJupyterServer,
     waitForExecutionCompletedWithErrors,
     waitForTextOutput,
     waitForExecutionCompletedSuccessfully,
@@ -28,9 +33,10 @@ import {
     runCell,
     waitForOutputs,
     clickOKForRestartPrompt
-} from './helper.node';
-import { Commands } from '../../../platform/common/constants';
+} from './helper';
 import { hasErrorOutput, NotebookCellStateTracker, getTextOutputValue } from '../../../kernels/execution/helpers';
+import { Commands } from '../../../platform/common/constants';
+import { sleep } from '../../core';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this,  */
 /*

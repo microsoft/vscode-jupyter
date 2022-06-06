@@ -24,20 +24,18 @@ import {
     PythonKernelCompletionProvider,
     setIntellisenseTimeout
 } from '../../../../intellisense/pythonKernelCompletionProvider';
-import { IExtensionTestApi } from '../../../common.node';
-import { IS_REMOTE_NATIVE_TEST } from '../../../constants.node';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../../initialize.node';
+import { IExtensionTestApi, initialize, startJupyterServer } from '../../../common';
+import { IS_REMOTE_NATIVE_TEST } from '../../../constants';
 import {
     closeNotebooksAndCleanUpAfterTests,
     runCell,
     insertCodeCell,
-    startJupyterServer,
     waitForExecutionCompletedSuccessfully,
     prewarmNotebooks,
     createEmptyPythonNotebook,
     getCellOutputs,
     waitForCompletions
-} from '../helper.node';
+} from '../helper';
 import { Settings } from '../../../../platform/common/constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
@@ -84,7 +82,8 @@ import { Settings } from '../../../../platform/common/constants';
                 traceInfo(`Start Test ${this.currentTest?.title}`);
                 sinon.restore();
                 await startJupyterServer();
-                await createEmptyPythonNotebook(disposables, Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'tmp'))); // TODO, can't do this on web tests
+                const workspaceFolder = workspace.workspaceFolders![0].uri;
+                await createEmptyPythonNotebook(disposables, Uri.joinPath(workspaceFolder, 'temp'));
                 setIntellisenseTimeout(30000);
                 traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
             });

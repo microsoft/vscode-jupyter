@@ -9,19 +9,25 @@ import * as fs from 'fs';
 import * as path from '../../../platform/vscode-path/path';
 import * as dedent from 'dedent';
 import * as sinon from 'sinon';
-import { commands, NotebookCell, NotebookCellExecutionState, NotebookCellKind, NotebookCellOutput, Uri } from 'vscode';
+import {
+    commands,
+    NotebookCell,
+    NotebookCellExecutionState,
+    NotebookCellKind,
+    NotebookCellOutput,
+    Uri,
+    workspace
+} from 'vscode';
 import { Common } from '../../../platform/common/utils/localize';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo, traceInfoIfCI } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
-import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize.node';
+import { initialize, captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common';
 import {
     closeNotebooksAndCleanUpAfterTests,
     runAllCellsInActiveNotebook,
     runCell,
     insertCodeCell,
-    startJupyterServer,
     waitForExecutionCompletedSuccessfully,
     waitForExecutionCompletedWithErrors,
     waitForKernelToGetAutoSelected,
@@ -43,13 +49,14 @@ import {
     waitForCellHavingOutput,
     waitForCellExecutionToComplete,
     createTemporaryNotebookFromFile
-} from './helper.node';
-import { openNotebook } from '../helpers.node';
+} from './helper';
+import { startJupyterServer } from '../../common';
+import { openNotebook } from '../helpers';
 import { noop } from '../../../platform/common/utils/misc';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { ProductNames } from '../../../kernels/installer/productNames';
 import { Product } from '../../../kernels/installer/types';
-import { IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
+import { IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 import { getOSType, OSType } from '../../../platform/common/utils/platform';
 import { getTextOutputValue, translateCellErrorOutput, hasErrorOutput } from '../../../kernels/execution/helpers';
@@ -62,9 +69,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
-    const templateNbPath = Uri.file(
-        path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'datascience', 'notebook', 'emptyCellWithOutput.ipynb')
-    );
+    const templateNbPath = Uri.joinPath(workspace.workspaceFolders![0].uri, 'notebook', 'emptyCellWithOutput.ipynb');
 
     this.timeout(120_000);
     suiteSetup(async function () {

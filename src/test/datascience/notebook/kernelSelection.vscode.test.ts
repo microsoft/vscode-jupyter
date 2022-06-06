@@ -74,6 +74,9 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
     It also needs to have ipykernel installed in it.
     */
     suiteSetup(async function () {
+        if (IS_REMOTE_NATIVE_TEST()) {
+            return this.skip();
+        }
         this.timeout(120_000);
         // These are slow tests, hence lets run only on linux on CI.
         if (
@@ -157,9 +160,6 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
     });
 
     test('Ensure we select active interpreter as kernel (when Raw Kernels)', async function () {
-        if (IS_REMOTE_NATIVE_TEST()) {
-            return this.skip();
-        }
         await createEmptyPythonNotebook(disposables);
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
@@ -193,9 +193,6 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         );
     });
     test('Ensure kernel is auto selected and interpreter is as expected', async function () {
-        if (IS_REMOTE_NATIVE_TEST()) {
-            return this.skip();
-        }
         await openNotebook(nbFile1);
         await waitForKernelToGetAutoSelected(undefined);
 
@@ -209,9 +206,6 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         ]);
     });
     test('Ensure we select a Python kernel for a nb with python language information', async function () {
-        if (IS_REMOTE_NATIVE_TEST()) {
-            return this.skip();
-        }
         await createEmptyPythonNotebook(disposables);
 
         // Run all cells
@@ -230,9 +224,6 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await waitForTextOutput(cell2, 'Hello World', 0, false);
     });
     test('User kernelspec in notebook metadata', async function () {
-        if (IS_REMOTE_NATIVE_TEST()) {
-            return this.skip();
-        }
         await openNotebook(nbFile1);
         await waitForKernelToGetAutoSelected(undefined);
 
@@ -257,9 +248,6 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await waitForTextOutput(cell, venvKernelSearchString, 0, false);
     });
     test('Switch kernel to an interpreter that is registered as a kernel', async function () {
-        if (IS_REMOTE_NATIVE_TEST()) {
-            return this.skip();
-        }
         await createEmptyPythonNotebook(disposables);
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
@@ -308,9 +296,6 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         );
     });
     test('Switch kernel to an interpreter that is not registered as a kernel', async function () {
-        if (IS_REMOTE_NATIVE_TEST()) {
-            return this.skip();
-        }
         await createEmptyPythonNotebook(disposables);
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
