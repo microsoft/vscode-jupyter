@@ -347,9 +347,9 @@ suite('kernel Process', () => {
             `--Session.signature_scheme="${connection.signature_scheme}"`,
             `--Session.key=b"${connection.key}"`,
             `--shell=${connection.shell_port}`,
-            `--transport="${connection.transport}"`,
+            `--transport=${connection.transport}`,
             `--iopub=${connection.iopub_port}`,
-            `--f=${tempFile}`,
+            `--f="${tempFile}"`,
             `--debug`
         ];
         await kernelProcess.launch(__dirname, 0, token.token);
