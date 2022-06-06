@@ -18,7 +18,7 @@ exports.startJupyter = async function startJupyter(detached) {
         const bundleContents = await fs.readFile(bundleFile, { encoding: 'utf-8' });
         const newContents = bundleContents.replace(
             /^exports\.JUPYTER_SERVER_URI = '(.*)';$/gm,
-            `exports.JUPYTER_SERVER_URI = 'HELLO-DON-${uri.toString()}';`
+            `exports.JUPYTER_SERVER_URI = '${uri.toString()}';`
         );
         if (newContents === bundleContents) {
             throw new Error('JUPYTER_SERVER_URI in bundle not updated');
