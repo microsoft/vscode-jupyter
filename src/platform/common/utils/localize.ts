@@ -260,7 +260,7 @@ export namespace DataScience {
     export const exportDialogComplete = localize('DataScience.exportDialogComplete', 'Notebook written to {0}');
     export const exportDialogFailed = localize('DataScience.exportDialogFailed', 'Failed to export notebook. {0}');
     export const exportOpenQuestion1 = localize('DataScience.exportOpenQuestion1', 'Open in editor');
-    export const runCellLensCommandTitle = localize('jupyter.command.jupyter.runcell.title', 'Run cell');
+    export const runCellLensCommandTitle = localize('jupyter.command.jupyter.runcell.title', 'Run Cell');
     export const importDialogTitle = localize('DataScience.importDialogTitle', 'Import Jupyter Notebook');
     export const importDialogFilter = localize('DataScience.importDialogFilter', 'Jupyter Notebooks');
     export const notebookCheckForImportTitle = localize(
@@ -374,10 +374,10 @@ export namespace DataScience {
     export const connectedToKernel = localize('DataScience.connectedToKernel', 'Connected.');
     export const connectingToJupyter = localize('DataScience.connectingToJupyter', 'Connecting to Jupyter server');
     export const exportingFormat = localize('DataScience.exportingFormat', 'Exporting {0}');
-    export const runAllCellsLensCommandTitle = localize('jupyter.command.jupyter.runallcells.title', 'Run all cells');
+    export const runAllCellsLensCommandTitle = localize('jupyter.command.jupyter.runallcells.title', 'Run All Cells');
     export const runAllCellsAboveLensCommandTitle = localize(
         'jupyter.command.jupyter.runallcellsabove.title',
-        'Run above'
+        'Run Above'
     );
     export const runCellAndAllBelowLensCommandTitle = localize(
         'jupyter.command.jupyter.runcellandallbelow.title',
@@ -953,11 +953,11 @@ export namespace DataScience {
     );
     export const specifyLocalOrRemoteJupyterServerForConnections = localize(
         'jupyter.command.jupyter.selectjupyteruri.title',
-        'Specify Jupyter server for connections'
+        'Specify Jupyter Server for Connections'
     );
     export const jupyterNativeNotebookUriStatusLabelForLocal = localize(
         'DataScience.jupyterNativeNotebookUriStatusLabelForLocal',
-        'Jupyter Server: local'
+        'Jupyter Server: Local'
     );
     export const jupyterNativeNotebookUriStatusLabelForRemote = localize(
         'DataScience.jupyterNativeNotebookUriStatusLabelForRemote',
