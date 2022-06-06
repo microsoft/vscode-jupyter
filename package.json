@@ -2100,6 +2100,7 @@
         "packagePreRelease": "gulp clean && gulp prePublishBundle && vsce package --pre-release -o ms-toolsai-jupyter-insiders.vsix",
         "prePublishNonBundle": "gulp clean && gulp prePublishNonBundle",
         "createNycFolder": "gulp createNycFolder",
+        "checkTestResults": "gulp checkTestResults",
         "validateTranslationFiles": "gulp validateTranslationFiles",
         "compile": "tsc -watch -p ./",
         "compiled": "deemon npm run compile",

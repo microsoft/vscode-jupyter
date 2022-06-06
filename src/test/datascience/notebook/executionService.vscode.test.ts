@@ -114,11 +114,11 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('Execute cell using VSCode Kernel', async () => {
+    test('Execute cell using VSCode Kernel', async function () {
         await insertCodeCell('print("123412341234")', { index: 0 });
         const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
 
-        await Promise.all([runCell(cell), waitForTextOutput(cell, '123412341234')]);
+        await Promise.all([runCell(cell), waitForTextOutput(cell, '1234123412345')]);
     });
     test('Test __vsc_ipynb_file__ defined in cell using VSCode Kernel', async () => {
         const uri = vscodeNotebook.activeNotebookEditor?.notebook.uri;

@@ -57,6 +57,11 @@ gulp.task('validateTranslationFiles', (done) => {
     done();
 });
 
+gulp.task('checkTestResults', () => {
+    let contents = fs.readFileSync('test-results.xml');
+    console.log(contents);
+})
+
 gulp.task('output:clean', () => del(['coverage']));
 
 gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out', '!out/test']));

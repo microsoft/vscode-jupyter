@@ -614,14 +614,6 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: echo "xvfbCommand=--server-args=\"-screen 0 1024x768x24\"" >> $GITHUB_ENV
 
-      - name: Publish VSCode Test Report
-        uses: scacap/action-surefire-report@v1
-        with:
-          github_token: ${{ secrets.TOKEN_TO_CREATE_RELEASE }}
-          report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: VSCode Test Report
-        if: (steps.test_vscode.outcome == 'failure' || steps.test_vscode.outcome == 'failure') && failure()
-
       - name: Run Native Notebook with VSCode & Jupyter (ubuntu)
         uses: GabrielBB/xvfb-action@v1.4
         with:
@@ -681,7 +673,10 @@ jobs:
           github_token: ${{ secrets.TOKEN_TO_CREATE_RELEASE }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Notebook Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}}
-        if: (steps.test_notebook_vscode_windows.outcome == 'failure' || steps.test_notebook_vscode_ubuntu.outcome == 'failure') && failure()
+          skip_publishing: true
+          fail_on_test_failures: true
+          fail_if_no_tests: true
+        if: steps.test_notebook_vscode_windows.outcome == 'failure' || steps.test_notebook_vscode_windows.outcome == 'success' || steps.test_notebook_vscode_ubuntu.outcome == 'failure' || steps.test_notebook_vscode_ubuntu.outcome == 'success' || steps.test_notebook_vscode_web.outcome == 'failure' || steps.test_notebook_vscode_web.outcome == 'success'
 
       - name: Run Native Notebook with VSCode & Jupyter (without Python)
         uses: GabrielBB/xvfb-action@v1.4
@@ -700,10 +695,25 @@ jobs:
           github_token: ${{ secrets.TOKEN_TO_CREATE_RELEASE }}
           report_paths: ${{ env.TEST_RESULTS_GLOB }}
           check_name: Notebook without Python Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}}
-        if: steps.test_notebookWithoutPythonExt_vscode.outcome == 'failure' && failure()
+          skip_publishing: true
+          fail_on_test_failures: true
+          fail_if_no_tests: true
+        if: steps.test_notebookWithoutPythonExt_vscode.outcome == 'failure' || steps.test_notebookWithoutPythonExt_vscode.outcome == 'success'
+
+      - name: Check test run
+        run: npm run checkTestResults
+        if: always()
 
       - name: Create coverage folder (if not created)
         run: npm run createNycFolder
+
+      - name: upload test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: test-results-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.os}}
+          path: './${{env.TEST_RESULTS_GLOB}}'
+          retention-days: 1
+        if: always()
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
