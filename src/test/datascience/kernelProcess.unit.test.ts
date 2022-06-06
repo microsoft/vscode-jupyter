@@ -301,7 +301,7 @@ suite('kernel Process', () => {
             `--shell=${connection.shell_port}`,
             `--transport="${connection.transport}"`,
             `--iopub=${connection.iopub_port}`,
-            `--f=${expectedConnectionFile}`,
+            `--f="${expectedConnectionFile}"`,
             `--debug`
         ];
         await kernelProcess.launch(__dirname, 0, token.token);
