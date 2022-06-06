@@ -6,9 +6,9 @@ const test_web = require('@vscode/test-web');
 const { startJupyter } = require('./preLaunchWebTest');
 async function go() {
     let exitCode = 0;
-    let server;
+    // let server;
     try {
-        server = (await startJupyter()).server;
+        // server = (await startJupyter()).server;
         const extensionDevelopmentPath = path.resolve(__dirname, '../');
         const bundlePath = path.join(extensionDevelopmentPath, 'out', 'extension.web.bundle');
 
@@ -26,9 +26,9 @@ async function go() {
         exitCode = 1;
     } finally {
         console.error(server);
-        if (server) {
-            await server.dispose();
-        }
+        // if (server) {
+        //     await server.dispose();
+        // }
     }
 
     // Not all promises complete. Force exit

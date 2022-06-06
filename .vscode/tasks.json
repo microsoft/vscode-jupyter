@@ -81,13 +81,13 @@
         {
             "label": "Start Jupyter Server",
             "type": "npm",
-            "dependsOn": "compile-web-test",
+            // "dependsOn": "compile-web-test",
             "isBackground": false,
             "script": "startJupyterServer",
             "problemMatcher": [],
             "options": {
                 "env": {
-                    "CI_PYTHON_PATH": "" // Update with path to real python interpereter used for testing.
+                    "CI_PYTHON_PATH": "/Users/donjayamanne/crap/.venv/bin/python" // Update with path to real python interpereter used for testing.
                 }
             }
         },

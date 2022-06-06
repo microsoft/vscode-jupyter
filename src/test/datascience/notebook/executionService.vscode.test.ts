@@ -30,7 +30,6 @@ import {
     createEmptyPythonNotebook,
     waitForQueuedForExecutionOrExecuting,
     workAroundVSCodeNotebookStartPages,
-    waitForTextOutput,
     createTemporaryNotebookFromFile
 } from './helper';
 import { startJupyterServer } from '../../common';
@@ -96,12 +95,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-    test('Execute cell using VSCode Kernel', async () => {
-        await insertCodeCell('print("123412341234")', { index: 0 });
-        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
-
-        await Promise.all([runCell(cell), waitForTextOutput(cell, '123412341234')]);
-    });
     test('Run whole document and test status of cells', async () => {
         const cells = await insertRandomCells({ count: 4, addMarkdownCells: false });
 
