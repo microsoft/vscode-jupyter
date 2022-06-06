@@ -16,7 +16,5 @@
     "jupyter.command.jupyter.interruptkernel.title": "Przerwij Jupyter Kernel",
     "jupyter.command.jupyter.restartkernel.title": "Restartuj Jupyter Kernel",
     "jupyter.command.jupyter.expandallcells.title": "Rozwiń wszystkie komórki IPythona",
-    "jupyter.command.jupyter.collapseallcells.title": "Zwiń wszystkie komórki IPythona",
-    "jupyter.command.jupyter.runallcellsabove.title": "Uruchom komórkę powyżej",
-    "jupyter.command.jupyter.runcellandallbelow.title": "Uruchom komórkę poniżej"
+    "jupyter.command.jupyter.collapseallcells.title": "Zwiń wszystkie komórki IPythona"
 }
