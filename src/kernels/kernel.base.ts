@@ -522,11 +522,12 @@ export abstract class BaseKernel implements IKernel {
             };
             this.disposables.push(session.onSessionStatusChanged(statusChangeHandler));
         }
-        if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
-            // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
-            // Restart sessions and retries might make this hard to do correctly otherwise.
-            session.registerCommTarget(Identifiers.DefaultCommTarget, noop);
 
+        // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
+        // Restart sessions and retries might make this hard to do correctly otherwise.
+        session.registerCommTarget(Identifiers.DefaultCommTarget, noop);
+
+        if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
             // Request completions to warm up the completion engine.
             this.requestEmptyCompletions();
 

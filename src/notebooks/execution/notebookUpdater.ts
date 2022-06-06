@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { noop } from 'lodash';
+import noop = require('lodash/noop');
 import { isPromise } from 'rxjs/internal-compatibility';
 import { NotebookDocument, NotebookEditor, workspace, WorkspaceEdit, window } from 'vscode';
 import { createDeferred } from '../../platform/common/utils/async';

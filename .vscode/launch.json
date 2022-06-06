@@ -99,6 +99,27 @@
         },
         {
             "name": "Web Tests",
+            "type": "extensionHost",
+            "debugWebWorkerHost": true,
+            "request": "launch",
+            "args": [
+                "${workspaceFolder}/src/test/datascience",
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--enable-proposed-api",
+                "--extensionDevelopmentKind=web",
+                "--extensionTestsPath=${workspaceFolder}/out/extension.web.bundle"
+            ],
+            "outFiles": ["${workspaceFolder}/out/**/*.*"],
+            "sourceMaps": true,
+            "preLaunchTask": "Start Jupyter Server",
+            "postDebugTask": "Stop Jupyter Server",
+            "presentation": {
+                "group": "2_tests",
+                "order": 11
+            }
+        },
+        {
+            "name": "Web Tests (without debugging)",
             "type": "node",
             "program": "${workspaceFolder}/build/launchWebTest.js",
             "request": "launch",
@@ -108,6 +129,9 @@
             "presentation": {
                 "group": "2_tests",
                 "order": 11
+            },
+            "env": {
+                "CI_PYTHON_PATH": "" // Update with path to real python interpereter used for testing.
             }
         },
         {

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { noop } from 'lodash';
+import noop = require('lodash/noop');
 import { StatusBarAlignment, StatusBarItem } from 'vscode';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import {
