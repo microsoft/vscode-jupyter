@@ -74,7 +74,7 @@ function getParentHeaderMsgId(msg: KernelMessage.IMessage): string | undefined {
 
 /**
  * The Output Widget in Jupyter can render multiple outputs. However some of them
- * like ipywidgets and the like cannot be handled by it.
+ * like vendored mimetypes cannot be handled by it.
  */
 function canMimeTypeBeRenderedByWidgetManager(mime: string) {
     if (mime == CellOutputMimeTypes.stderr || mime == CellOutputMimeTypes.stdout || mime == CellOutputMimeTypes.error) {

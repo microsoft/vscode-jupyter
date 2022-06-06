@@ -371,6 +371,66 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         await waitForExecutionCompletedSuccessfully(cell);
     });
+    test('Clearing output immediately via code', async function () {
+        // Assume you are executing a cell that prints numbers 1-100.
+        // When printing number 50, you click clear.
+        // Cell output should now start printing output from 51 onwards, & not 1.
+        await insertCodeCell(
+            dedent`
+            from ipywidgets import widgets
+            from IPython.display import display, clear_output
+            import time
+
+            display(widgets.Button(description="First Button"))
+
+            time.sleep(2)
+            clear_output()
+
+            display(widgets.Button(description="Second Button"))`,
+            { index: 0 }
+        );
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+
+        await runAllCellsInActiveNotebook();
+
+        await Promise.all([
+            waitForExecutionCompletedSuccessfully(cell),
+            waitForTextOutput(cell, 'Second Button', 1, false)
+        ]);
+    });
+    test('Clearing output via code only when receiving new output', async function () {
+        // Assume you are executing a cell that prints numbers 1-100.
+        // When printing number 50, you click clear.
+        // Cell output should now start printing output from 51 onwards, & not 1.
+        await insertCodeCell(
+            dedent`
+            from ipywidgets import widgets
+            from IPython.display import display, clear_output
+            import time
+
+            display(widgets.Button(description="First Button"))
+
+            time.sleep(2)
+            clear_output(True)
+
+            display(widgets.Button(description="Second Button"))`,
+            { index: 0 }
+        );
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+
+        await runAllCellsInActiveNotebook();
+
+        // Wait for first button to appear then second.
+        await Promise.all([
+            waitForExecutionCompletedSuccessfully(cell),
+            waitForTextOutput(cell, 'First Button', 0, false),
+            waitForTextOutput(cell, 'Second Button', 1, false)
+        ]);
+
+        // Verify first is no longer visible and second is visible.
+        assert.notInclude(getCellOutputs(cell), 'First Button');
+        assert.include(getCellOutputs(cell), 'Second Button');
+    });
     test('Shell commands should give preference to executables in Python Environment', async function () {
         if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
