@@ -246,8 +246,9 @@ jobs:
           skip-label: 'skip telemetry'
           failure-message: 'TELEMETRY.md should be updated when adding or removing telemetry. Please run "npm run generateTelemetry"'
 
-      - name: Validate TELEMETRY.md file
-        run: npm run validateTelemetryMD
+    # See issue https://github.com/microsoft/vscode-jupyter/issues/10343. We need a better way to validate. Perhaps nightly.
+    # - name: Validate TELEMETRY.md file
+    #    run: npm run validateTelemetryMD
 
     #   - name: 'Check for news entry'
     #     uses: brettcannon/check-for-changed-files@v1.1.0
