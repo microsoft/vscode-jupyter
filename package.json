@@ -2142,6 +2142,8 @@
         "postdownload-api": "vscode-dts main",
         "generateTelemetry": "gulp generateTelemetryMd",
         "openInBrowser": "vscode-test-web --extensionDevelopmentPath=. ./src/test/datascience",
+        "startJupyterServer": "node build/preDebugWebTest.js",
+        "stopJupyterServer": "node build/postDebugWebTest.js",
         "validateTelemetryMD": "gulp validateTelemetryMD",
         "prepare": "husky install"
     },
