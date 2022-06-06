@@ -16,6 +16,8 @@
     "jupyter.command.jupyter.restartkernel.title": "IPython-kernel herstarten",
     "jupyter.command.jupyter.expandallcells.title": "Alle interactieve Python-vensters openen",
     "jupyter.command.jupyter.collapseallcells.title": "Alle interactieve Python-vensters sluiten",
+    "jupyter.command.jupyter.runallcellsabove.title": "Cel hierboven uitvoeren",
+    "jupyter.command.jupyter.runcellandallbelow.title": "Cel hieronder uitvoeren",
     "ExtensionSurveyBanner.bannerLabelYes": "Ja, neem nu deel aan het onderzoek",
     "ExtensionSurveyBanner.bannerLabelNo": "Nee, bedankt",
     "DataScience.unknownMimeTypeFormat": "Mime type {0} wordt momenteel niet ondersteund.",
