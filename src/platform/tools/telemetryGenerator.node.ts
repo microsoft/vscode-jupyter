@@ -277,8 +277,8 @@ function writeTelemetryEntry(entry: TelemetryEntry) {
         writeOutput(`\nEvent can be removed. Not referenced anywhere\n`);
     } else {
         entry.locations.forEach((l) => {
-            const link = `https://github.com/microsoft/vscode-jupyter/tree/main/${l.file}#L${l.line + 1}`;
-            writeOutput(`\n[${l.file}#L${l.line + 1}](${link})`);
+            const link = `https://github.com/microsoft/vscode-jupyter/tree/main/${l.file}`;
+            writeOutput(`\n[${l.file}](${link})`);
             writeOutput('```typescript');
             writeOutput(l.code);
             writeOutput('```\n');

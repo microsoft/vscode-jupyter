@@ -347,7 +347,20 @@ function hasNativeDependencies() {
     return false;
 }
 
-gulp.task('generateTelemetryMd', async () => {
+async function generateTelemetryMD() {
     const generator = require('./out/platform/tools/telemetryGenerator.node');
     return generator.default();
+}
+gulp.task('generateTelemetryMd', async () => {
+    return generateTelemetryMD();
+});
+
+gulp.task('validateTelemetryMD', async () => {
+    const telemetryMD = fs.readFileSync(path.join(__dirname, 'TELEMETRY.md'), 'utf-8');
+    await generateTelemetryMD();
+    const telemetryMD2 = fs.readFileSync(path.join(__dirname, 'TELEMETRY.md'), 'utf-8');
+    if (telemetryMD2.trim() !== telemetryMD.trim()) {
+        console.error('Telemetry MD is not valid, please re-run `npm run generateTelemetry`');
+        throw new Error('Telemetry MD is not valid, please re-run `npm run generateTelemetry`');
+    }
 });

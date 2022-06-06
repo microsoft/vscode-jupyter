@@ -14,4 +14,5 @@ if [ -z "$changed" ]; then
     exit 0
 fi
 
+npm run generateTelemetry
 npx prettier $changed --check
