@@ -9142,6 +9142,70 @@ No properties for event
 
 </details>
 <details>
+  <summary>JUPYTER_IS_INSTALLED</summary>
+
+## Description
+
+
+No description provided
+
+## Properties
+
+
+No properties for event
+
+
+## Locations Used
+
+[src/kernels/jupyter/jupyterDetectionTelemetry.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/jupyterDetectionTelemetry.node.ts)
+```typescript
+                const minor = parseInt(versionMatch[2], 10);
+                const frontEndVersion = parseFloat(`${major}.${minor}`);
+                if (shell) {
+                    sendTelemetryEvent(Telemetry.JupyterInstalled, undefined, {
+                        frontEnd,
+                        frontEndVersion,
+                        detection: 'shell',
+```
+
+
+[src/kernels/jupyter/jupyterDetectionTelemetry.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/jupyterDetectionTelemetry.node.ts)
+```typescript
+                        shellType: shell
+                    });
+                } else {
+                    sendTelemetryEvent(Telemetry.JupyterInstalled, undefined, {
+                        frontEnd,
+                        frontEndVersion,
+                        detection: 'process'
+```
+
+
+[src/kernels/jupyter/jupyterDetectionTelemetry.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/jupyterDetectionTelemetry.node.ts)
+```typescript
+                    });
+                }
+            } else {
+                sendTelemetryEvent(Telemetry.JupyterInstalled, undefined, {
+                    failed: true,
+                    reason: 'notInstalled',
+                    frontEnd
+```
+
+
+[src/kernels/jupyter/jupyterDetectionTelemetry.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/jupyterDetectionTelemetry.node.ts)
+```typescript
+                });
+            }
+        } catch (ex) {
+            sendTelemetryEvent(Telemetry.JupyterInstalled, undefined, {
+                failed: true,
+                reason: 'notInstalled',
+                frontEnd
+```
+
+</details>
+<details>
   <summary>OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR_EX</summary>
 
 ## Description
@@ -9330,6 +9394,103 @@ No description provided
         if (!hasEnvVars) {
             return this.create({
                 resource: options.resource,
+```
+
+</details>
+<details>
+  <summary>TERMINAL_ENV_VAR_EXTRACTION</summary>
+
+## Description
+
+
+
+
+ Telemetry sent only when we fail to extract the env variables for a shell.
+
+## Properties
+
+
+No properties for event
+
+
+## Locations Used
+
+[src/platform/terminals/helper.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/terminals/helper.node.ts)
+```typescript
+        terminal?: Terminal
+    ): Promise<{ env?: NodeJS.ProcessEnv; shell: TerminalShellType }> {
+        if (this.platform.osType === OSType.Unknown) {
+            sendTelemetryEvent(Telemetry.TerminalEnvVariableExtraction, undefined, {
+                failed: true,
+                reason: 'unknownOs',
+                shellType: undefined
+```
+
+
+[src/platform/terminals/helper.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/terminals/helper.node.ts)
+```typescript
+            return { env, shell };
+        } catch (ex) {
+            traceError('Failed to extract environment variables', ex);
+            sendTelemetryEvent(Telemetry.TerminalEnvVariableExtraction, undefined, {
+                failed: true,
+                reason: failureReason,
+                shellType: shell
+```
+
+</details>
+<details>
+  <summary>TERMINAL_SHELL_IDENTIFICATION</summary>
+
+## Description
+
+
+
+ Telemetry event sent to provide information on whether we have successfully identify the type of shell used.
+ This information is useful in determining how well we identify shells on users machines.
+ This impacts extraction of env variables from current shell.
+ So, the better this works, the better it is for the user.
+ failed - If true, indicates we have failed to identify the shell. Note this impacts impacts ability to activate environments in the terminal & code.
+ shellIdentificationSource - How was the shell identified. One of 'terminalName' | 'settings' | 'environment' | 'default'
+                             If terminalName, then this means we identified the type of the shell based on the name of the terminal.
+                             If settings, then this means we identified the type of the shell based on user settings in VS Code.
+                             If environment, then this means we identified the type of the shell based on their environment (env variables, etc).
+                                 I.e. their default OS Shell.
+                             If default, then we reverted to OS defaults (cmd on windows, and bash on the rest).
+                                 This is the worst case scenario.
+                                 I.e. we could not identify the shell at all.
+ hasCustomShell - If undefined (not set), we didn't check.
+                  If true, user has customzied their shell in VSC Settings.
+ hasShellInEnv - If undefined (not set), we didn't check.
+                 If true, user has a shell in their environment.
+                 If false, user does not have a shell in their environment.
+
+## Properties
+
+- 
+        failed: boolean;
+- 
+        reason: 'unknownShell' | undefined;
+- 
+        terminalProvided: boolean;
+- 
+        shellIdentificationSource: 'terminalName' | 'settings' | 'environment' | 'default' | 'vscode';
+- 
+        hasCustomShell: undefined | boolean;
+- 
+        hasShellInEnv: undefined | boolean;
+
+## Locations Used
+
+[src/platform/terminals/shellDetector.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/terminals/shellDetector.node.ts)
+```typescript
+        // This information is useful in determining how well we identify shells on users machines.
+        // This impacts executing code in terminals and activation of environments in terminal.
+        // So, the better this works, the better it is for the user.
+        sendTelemetryEvent(Telemetry.TerminalShellIdentification, undefined, telemetryProperties);
+        traceVerbose(`Shell identified as '${shell}'`);
+
+        // If we could not identify the shell, use the defaults.
 ```
 
 </details>
