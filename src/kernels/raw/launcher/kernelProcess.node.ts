@@ -354,10 +354,10 @@ export class KernelProcess implements IKernelProcess {
             // Remember, non-python kernels can have argv as `--connection-file={connection_file}`,
             // hence we should not replace the entire entry, but just replace the text `{connection_file}`
             // See https://github.com/microsoft/vscode-jupyter/issues/7203
+            const connectionFile = this.connectionFile.includes(' ')
+                ? `"${this.connectionFile}"` // Quoted for spaces in file paths.
+                : this.connectionFile;
             if (this.launchKernelSpec.argv[indexOfConnectionFile].includes('--connection-file')) {
-                const connectionFile = this.connectionFile.includes(' ')
-                    ? `"${this.connectionFile}"` // Quoted for spaces in file paths.
-                    : this.connectionFile;
                 this.launchKernelSpec.argv[indexOfConnectionFile] = this.launchKernelSpec.argv[
                     indexOfConnectionFile
                 ].replace(connectionFilePlaceholder, connectionFile);
@@ -366,7 +366,7 @@ export class KernelProcess implements IKernelProcess {
                 // E.g. in Python the name of the argument is `-f` and in.
                 this.launchKernelSpec.argv[indexOfConnectionFile] = this.launchKernelSpec.argv[
                     indexOfConnectionFile
-                ].replace(connectionFilePlaceholder, this.connectionFile);
+                ].replace(connectionFilePlaceholder, connectionFile);
             }
         }
     }
@@ -409,7 +409,10 @@ export class KernelProcess implements IKernelProcess {
 
         // We still put in the tmp name to make sure the kernel picks a valid connection file name. It won't read it as
         // we passed in the arguments, but it will use it as the file name so it doesn't clash with other kernels.
-        newConnectionArgs.push(`--f=${this.connectionFile}`);
+        const connectionFile = this.connectionFile!.includes(' ')
+            ? `"${this.connectionFile}"` // Quoted for spaces in file paths.
+            : this.connectionFile;
+        newConnectionArgs.push(`--f=${connectionFile}`);
 
         return newConnectionArgs;
     }
