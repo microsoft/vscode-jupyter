@@ -396,7 +396,7 @@ suite('IPyWisdget Tests', function () {
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
     });
-    test.only('Nested Output Widgets', async () => {
+    test('Nested Output Widgets', async () => {
         const comms = await initializeNotebook({ templateFile: 'nested_output_widget.ipynb' });
         const [cell1, cell2, cell3, cell4] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
         await executeCellAndWaitForOutput(cell1, comms);
@@ -422,7 +422,7 @@ suite('IPyWisdget Tests', function () {
         await assertOutputContainsHtml(cell1, comms, ['>Widgets are linked an get updated<'], '.widget-output');
         await assertOutputContainsHtml(cell3, comms, ['>Widgets are linked an get updated<'], '.widget-output');
     });
-    test.only('Interactive Button', async () => {
+    test('Interactive Button', async () => {
         const comms = await initializeNotebook({ templateFile: 'interactive_button.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0);
 
@@ -433,7 +433,7 @@ suite('IPyWisdget Tests', function () {
         await click(comms, cell, 'button');
         await assertOutputContainsHtml(cell, comms, ['Button clicked']);
     });
-    test.only('Interactive Function', async () => {
+    test('Interactive Function', async () => {
         const comms = await initializeNotebook({ templateFile: 'interactive_function.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0);
 
