@@ -480,20 +480,8 @@ export class KernelProcess implements IKernelProcess {
                     promiseCancellation as Promise<NodeJS.ProcessEnv | undefined>
                 ])
             ]);
-            // Add quotations to arguments if they have a blank space in them.
-            // This will mainly quote paths so that they can run, other arguments shouldn't be quoted or it may cause errors.
             // The first argument is sliced because it is the executable command.
-            const args = this.launchKernelSpec.argv.slice(1).map((a) => {
-                // Some kernel specs (non-python) can have argv as `--connection-file={connection_file}`
-                // The `connection-file` will be quoted when we update it with the real path.
-                if (a.includes('--connection-file')) {
-                    return a;
-                }
-                if (a.includes(' ')) {
-                    return `"${a}"`;
-                }
-                return a;
-            });
+            const args = this.launchKernelSpec.argv.slice(1);
             exeObs = executionService.execObservable(executable, args, {
                 env,
                 cwd: workingDirectory
