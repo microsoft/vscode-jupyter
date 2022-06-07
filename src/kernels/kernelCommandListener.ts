@@ -16,10 +16,10 @@ import { Commands, Telemetry } from '../webviews/webview-side/common/constants';
 import { IKernel, IKernelProvider } from './types';
 import { IInteractiveWindowProvider } from '../interactive-window/types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
-import { getAssociatedNotebookDocument } from '../notebooks/controllers/kernelSelector';
 import { DisplayOptions } from './displayOptions';
 import { KernelConnector } from './kernelConnector';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
+import { getAssociatedNotebookDocument } from './helpers';
 
 @injectable()
 export class KernelCommandListener implements IDataScienceCommandListener {
