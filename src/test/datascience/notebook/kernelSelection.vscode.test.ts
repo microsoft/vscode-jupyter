@@ -35,8 +35,8 @@ import {
     defaultNotebookTestTimeout,
     createTemporaryNotebookFromFile
 } from './helper.node';
-import { getTextOutputValue } from '../../../notebooks/helpers';
 import { getOSType, OSType } from '../../../platform/common/utils/platform';
+import { getTextOutputValue } from '../../../kernels/execution/helpers';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience - VSCode Notebook - Kernel Selection', function () {

@@ -8,10 +8,9 @@ import { DataScience } from '../../platform/common/utils/localize';
 import { stripAnsi } from '../../platform/common/utils/regexp';
 import { JupyterDataRateLimitError } from '../../platform/errors/jupyterDataRateLimitError';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
-import { executeSilently } from '../helpers';
+import { executeSilently, getAssociatedNotebookDocument } from '../helpers';
 import { IKernel } from '../types';
 import { IKernelVariableRequester, IJupyterVariable } from './types';
-import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 import { DataFrameLoading, GetVariableInfo } from '../../platform/common/scriptConstants';
 import { IExtensionContext } from '../../platform/common/types';
 

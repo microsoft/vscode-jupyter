@@ -5,7 +5,6 @@
 
 import { inject, injectable } from 'inversify';
 import { NotebookCellExecutionState, NotebookCellExecutionStateChangeEvent, UIKind } from 'vscode';
-import { isJupyterNotebook } from '../../notebooks/helpers';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from './application/types';
 import './extensions';
@@ -21,6 +20,7 @@ import {
 } from './types';
 import * as localize from './utils/localize';
 import { MillisecondsInADay } from '../constants.node';
+import { isJupyterNotebook } from './utils';
 
 export enum InsidersNotebookSurveyStateKeys {
     ShowBanner = 'ShowInsidersNotebookSurveyBanner',

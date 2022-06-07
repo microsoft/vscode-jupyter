@@ -51,6 +51,7 @@ import { registerTypes as registerJupyterTypes } from './jupyter/serviceRegistry
 import { KernelProvider } from './kernelProvider.node';
 import { KernelFinder } from './kernelFinder.node';
 import { ServerConnectionType } from './jupyter/launcher/serverConnectionType';
+import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IRawNotebookSupportedService>(
@@ -147,4 +148,5 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     );
     const rawService = serviceManager.get<IRawNotebookSupportedService>(IRawNotebookSupportedService);
     setSharedProperty('rawKernelSupported', rawService.isSupported ? 'true' : 'false');
+    serviceManager.addSingleton<CellOutputDisplayIdTracker>(CellOutputDisplayIdTracker, CellOutputDisplayIdTracker);
 }

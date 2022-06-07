@@ -33,6 +33,7 @@ import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
 import { KernelVariables } from './variables/kernelVariables';
 import { JupyterVariables } from './variables/jupyterVariables';
 import { PythonVariablesRequester } from './variables/pythonVariableRequester';
+import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
@@ -97,4 +98,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     // Subdirectories
     registerWidgetTypes(serviceManager, isDevMode);
     registerJupyterTypes(serviceManager, isDevMode);
+
+    serviceManager.addSingleton<CellOutputDisplayIdTracker>(CellOutputDisplayIdTracker, CellOutputDisplayIdTracker);
 }

@@ -9,10 +9,10 @@ import { NotebookCellData, NotebookCellKind, NotebookEdit, NotebookRange } from 
 import { IVSCodeNotebook, ICommandManager } from '../platform/common/application/types';
 import { IDataScienceCommandListener, IDisposableRegistry } from '../platform/common/types';
 import { Commands } from '../webviews/webview-side/common/constants';
-import { chainWithPendingUpdates } from './execution/notebookUpdater';
-import { getNotebookMetadata } from './helpers';
 import { noop } from '../platform/common/utils/misc';
 import { NotebookCellLanguageService } from '../intellisense/cellLanguageService';
+import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
+import { getNotebookMetadata } from '../platform/common/utils';
 
 @injectable()
 export class NotebookCommandListener implements IDataScienceCommandListener {

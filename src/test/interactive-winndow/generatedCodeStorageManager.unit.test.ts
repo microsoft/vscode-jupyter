@@ -11,9 +11,9 @@ import {
 } from '../../interactive-window/editor-integration/types';
 import { GeneratedCodeStorageManager } from '../../interactive-window/generatedCodeStoreManager';
 import { IKernel, IKernelProvider } from '../../kernels/types';
-import { InteractiveWindowView } from '../../notebooks/constants';
 import { IVSCodeNotebookController } from '../../notebooks/controllers/types';
 import { INotebookControllerManager } from '../../notebooks/types';
+import { InteractiveWindowView } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable } from '../../platform/common/types';
 import { mockedVSCodeNamespaces } from '../vscode-mock';

@@ -24,10 +24,10 @@ import {
     KernelConnectionMetadata,
     NotebookCellRunState
 } from '../../kernels/types';
-import { traceCellMessage } from '../helpers';
+import { traceCellMessage } from './helpers';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
-import { getAssociatedNotebookDocument } from '../controllers/kernelSelector';
 import { CellExecutionMessageHandlerService } from './cellExecutionMessageHandlerService';
+import { getAssociatedNotebookDocument } from '../helpers';
 
 /**
  * Separate class that deals just with kernel execution.

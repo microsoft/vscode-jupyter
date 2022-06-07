@@ -25,11 +25,10 @@ import {
     KernelConnectionMetadata,
     WebSocketData
 } from './extension';
-import { Telemetry } from '../common/constants';
+import { JupyterNotebookView, Telemetry } from '../common/constants';
 import { KernelConnector } from '../../kernels/kernelConnector';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import { IServiceContainer } from '../ioc/types';
-import { JupyterNotebookView } from '../../notebooks/constants';
 import { IExportedKernelServiceFactory } from './types';
 
 @injectable()

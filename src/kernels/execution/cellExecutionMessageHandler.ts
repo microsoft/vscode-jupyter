@@ -32,13 +32,14 @@ import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceError, traceWarning } from '../../platform/logging';
 import { RefBool } from '../../platform/common/refBool';
 import { IDisposable, IExtensionContext } from '../../platform/common/types';
-import { traceCellMessage, cellOutputToVSCCellOutput, translateCellDisplayOutput, isJupyterNotebook } from '../helpers';
+import { traceCellMessage, cellOutputToVSCCellOutput, translateCellDisplayOutput } from './helpers';
 import { formatStreamText, concatMultilineString } from '../../webviews/webview-side/common';
 import { swallowExceptions } from '../../platform/common/utils/decorators';
 import { noop } from '../../platform/common/utils/misc';
 import { ITracebackFormatter } from '../../kernels/types';
 import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
 import { WIDGET_MIMETYPE } from '../../kernels/ipywidgets-message-coordination/constants';
+import { isJupyterNotebook } from '../../platform/common/utils';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {

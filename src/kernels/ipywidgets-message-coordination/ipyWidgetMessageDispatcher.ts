@@ -18,7 +18,7 @@ import { Identifiers, Telemetry } from '../../webviews/webview-side/common/const
 import { IKernel, IKernelProvider, KernelSocketInformation } from '../types';
 import { WIDGET_MIMETYPE } from './constants';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
-import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
+import { getAssociatedNotebookDocument } from '../helpers';
 
 type PendingMessage = {
     resultPromise: Deferred<void>;
