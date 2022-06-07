@@ -57,10 +57,17 @@ gulp.task('validateTranslationFiles', (done) => {
     done();
 });
 
-gulp.task('checkTestResults', () => {
-    let contents = fs.readFileSync('test-results.xml');
-    console.log(contents);
-})
+gulp.task('checkTestResults', async (done) => {
+    const data = await fs.promises.readFile('test-results.xml');
+    const parser = require('xml-js');
+    const report = JSON.parse(parser.xml2json(data, { compact: true }));
+    if (report){
+        console.log(JSON.stringify(report));
+    } else {
+        console.log("test result file not found");
+    }
+    done();
+});
 
 gulp.task('output:clean', () => del(['coverage']));
 
