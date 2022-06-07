@@ -5,7 +5,14 @@
 
 import * as nls from 'vscode-nls';
 
-const localize = nls.loadMessageBundle();
+const nlsLocalize = nls.loadMessageBundle();
+
+export function localize(key: string | nls.LocalizeInfo, defValue: string) {
+    // Return a pointer to function so that we refetch it on each call.
+    return () => {
+        return nlsLocalize(key as nls.LocalizeInfo, defValue);
+    };
+}
 
 // External callers of localize use these tables to retrieve localized values.
 
@@ -85,7 +92,7 @@ export namespace GitHubIssue {
 
 export namespace Logging {
     // TODO: Would this ever change?
-    export const currentWorkingDirectory = 'cwd:';
+    export const currentWorkingDirectory = () => 'cwd:';
     export const warnUserAboutDebugLoggingSetting = localize(
         'Logging.WarnUserAboutDebugLoggingSetting',
         'You have enabled debug logging for the Jupyter extension, which will continue to write logs to disk. Would you like to turn debug logging off?'
@@ -219,7 +226,6 @@ export namespace DataScience {
             key: 'DataScience.badWebPanelFormatString',
             comment: ['{RegEx=">[^<]*<"}', 'Only translate the text within the HTML tags']
         },
-        'DataScience.badWebPanelFormatString',
         '<html><body><h1>{0} is not a valid file name</h1></body></html>'
     );
     export const checkingIfImportIsSupported = localize(
@@ -482,7 +488,6 @@ export namespace DataScience {
             key: 'DataScience.kernelDiedWithoutError',
             comment: ['{Locked="command:jupyter.viewOutput"}', 'This command is the same across languages.']
         },
-        'DataScience.kernelDiedWithoutError',
         "The kernel '{0}' died. Click [here](https://aka.ms/vscodeJupyterKernelCrash) for more info. View Jupyter [log](command:jupyter.viewOutput) for further details."
     );
     export const kernelDiedWithoutErrorAndAutoRestarting = localize(
