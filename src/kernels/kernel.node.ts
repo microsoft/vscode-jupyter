@@ -12,7 +12,7 @@ import { InteractiveWindowView } from '../notebooks/constants';
 import { calculateWorkingDirectory } from '../platform/common/utils.node';
 import { CodeSnippets } from '../webviews/webview-side/common/constants';
 import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
-import { isLocalHostConnection, isPythonKernelConnection } from './helpers';
+import { getAssociatedNotebookDocument, isLocalHostConnection, isPythonKernelConnection } from './helpers';
 import { expandWorkingDir } from './jupyter/jupyterUtils';
 import {
     INotebookProvider,
@@ -23,13 +23,12 @@ import {
 } from './types';
 import { AddRunCellHook } from '../platform/common/scriptConstants';
 import { IStatusProvider } from '../platform/progress/types';
-import { getAssociatedNotebookDocument } from '../notebooks/controllers/kernelSelector';
 import { sendTelemetryForPythonKernelExecutable } from './helpers.node';
 import { BaseKernel } from './kernel.base';
 
 export class Kernel extends BaseKernel {
     constructor(
-        id: Uri,
+        uri: Uri,
         resourceUri: Resource,
         kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
         notebookProvider: INotebookProvider,
@@ -48,7 +47,7 @@ export class Kernel extends BaseKernel {
         formatters: ITracebackFormatter[]
     ) {
         super(
-            id,
+            uri,
             resourceUri,
             kernelConnectionMetadata,
             notebookProvider,
