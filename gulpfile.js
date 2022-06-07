@@ -61,10 +61,55 @@ gulp.task('checkTestResults', async (done) => {
     const data = await fs.promises.readFile('test-results.xml');
     const parser = require('xml-js');
     const report = JSON.parse(parser.xml2json(data, { compact: true }));
-    if (report){
-        console.log(JSON.stringify(report));
-    } else {
-        console.log("test result file not found");
+    if (!report) {
+        throw 'test result file not found';
+    }
+
+    let testsRun = 0;
+    let failCount = 0;
+    if (report) {
+        if (report.testsuites) {
+            console.log(JSON.stringify(report.testsuites._attributes));
+        }
+
+        const testsuites = report.testsuite
+            ? [report.testsuite]
+            : Array.isArray(report.testsuites.testsuite)
+            ? report.testsuites.testsuite
+            : [report.testsuites.testsuite];
+
+        if (!testsuites) {
+            done('no test suites found in test results');
+        }
+
+        for (const testsuite of testsuites) {
+            testsRun += testsRun + testsuite._attributes.tests - testsuite._attributes.skipped;
+
+            const testcases = Array.isArray(testsuite.testcase)
+                ? testsuite.testcase
+                : testsuite.testcase
+                ? [testsuite.testcase]
+                : [];
+
+            for (const testcase of testcases) {
+                if (testcase.failure) {
+                    console.error(`FAILED TEST NAME: ${testcase._attributes.name}`);
+                    console.log(testcase.failure._attributes.message);
+                    console.log(testcase.failure._cdata); // print stacktrace
+                    console.log();
+
+                    failCount++;
+                }
+            }
+        }
+
+        if (failCount > 0) {
+            done('Test Failures');
+        }
+
+        if (testsRun < 5) {
+            done('Looks like we did not run enough tests');
+        }
     }
     done();
 });
