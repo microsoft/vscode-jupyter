@@ -7,7 +7,6 @@ import * as uriPath from '../../platform/vscode-path/resources';
 
 import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 import { IDebugService, IVSCodeNotebook } from '../../platform/common/application/types';
 import { DataFrameLoading, GetVariableInfo } from '../../platform/common/scriptConstants';
 import { traceError, traceVerbose } from '../../platform/logging';
@@ -27,6 +26,7 @@ import {
 import { convertDebugProtocolVariableToIJupyterVariable, DataViewableTypes } from './helpers';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { noop } from '../../platform/common/utils/misc';
+import { getAssociatedNotebookDocument } from '../helpers';
 
 const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
 const MaximumRowChunkSizeForDebugger = 100;

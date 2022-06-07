@@ -16,9 +16,10 @@ import {
     LiveRemoteKernelConnectionMetadata,
     PythonKernelConnectionMetadata,
     IJupyterKernelSpec,
-    IJupyterSession
+    IJupyterSession,
+    IKernel
 } from './types';
-import { Uri } from 'vscode';
+import { Uri, workspace } from 'vscode';
 import { IWorkspaceService } from '../platform/common/application/types';
 import { isCI, PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
 import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../platform/logging';
@@ -1573,4 +1574,12 @@ export function deserializeKernelConnection(kernelConnection: any): KernelConnec
         };
     }
     return kernelConnection;
+}
+
+export function getAssociatedNotebookDocument(kernel: IKernel | undefined) {
+    if (!kernel) {
+        return;
+    }
+
+    return workspace.notebookDocuments.find((nb) => nb.uri.toString() === kernel.uri.toString());
 }
