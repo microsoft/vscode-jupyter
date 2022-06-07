@@ -190,8 +190,14 @@ export namespace DataScience {
     );
 
     export const interactiveWindowModeBannerTitle = localize(
-        'DataScience.interactiveWindowModeBannerTitle',
-        'Do you want to open a new Interactive window for this file? [More Information](command:workbench.action.openSettings?%5B%22jupyter.interactiveWindowMode%22%5D).'
+        {
+            key: 'DataScience.interactiveWindowModeBannerTitle',
+            comment: [
+                "{Locked='command:workbench.action.openSettings?%5B%22jupyter.interactiveWindowMode%22%5D'}",
+                "Do not translate the 'command:*' part inside of the '(..)'."
+            ]
+        },
+        'Do you want to open a new Interactive Window for this file? [More Information](command:workbench.action.openSettings?%5B%22jupyter.interactiveWindowMode%22%5D).'
     );
 
     export const interactiveWindowModeBannerSwitchYes = localize(
@@ -209,6 +215,10 @@ export namespace DataScience {
 
     export const dataExplorerTitle = localize('DataScience.dataExplorerTitle', 'Data Viewer');
     export const badWebPanelFormatString = localize(
+        {
+            key: 'DataScience.badWebPanelFormatString',
+            comment: ['{RegEx=">[^<]*<"}', 'Only translate the text within the HTML tags']
+        },
         'DataScience.badWebPanelFormatString',
         '<html><body><h1>{0} is not a valid file name</h1></body></html>'
     );
@@ -357,11 +367,11 @@ export namespace DataScience {
     export const jupyterSelfCertClose = localize('DataScience.jupyterSelfCertClose', 'No, close the connection');
     export const pythonInteractiveHelpLink = localize(
         'DataScience.pythonInteractiveHelpLink',
-        'See [https://aka.ms/pyaiinstall] for help on installing jupyter.'
+        'See <https://aka.ms/pyaiinstall> for help on installing jupyter.'
     );
     export const markdownHelpInstallingMissingDependencies = localize(
         'DataScience.markdownHelpInstallingMissingDependencies',
-        'See [https://aka.ms/pyaiinstall](https://aka.ms/pyaiinstall) for help on installing Jupyter and related dependencies.'
+        'See <https://aka.ms/pyaiinstall> for help on installing Jupyter and related dependencies.'
     );
     export const importingFormat = localize('DataScience.importingFormat', 'Importing {0}');
     export const startingJupyter = localize('DataScience.startingJupyter', 'Starting Jupyter server');
@@ -379,17 +389,23 @@ export namespace DataScience {
         'Run Below'
     );
     export const importChangeDirectoryComment = localize(
-        'DataScience.importChangeDirectoryComment',
+        {
+            key: 'DataScience.importChangeDirectoryComment',
+            comment: ['{Locked="DataScience.changeDirOnImportExport"}', 'This setting is the same across languages.']
+        },
         '{0} Change working directory from the workspace root to the ipynb file location. Turn this addition off with the DataScience.changeDirOnImportExport setting'
     );
     export const exportChangeDirectoryComment = localize(
-        'DataScience.exportChangeDirectoryComment',
+        {
+            key: 'DataScience.exportChangeDirectoryComment',
+            comment: ['{Locked="DataScience.changeDirOnImportExport"}', 'This setting is the same across languages.']
+        },
         '# Change directory to VSCode workspace root so that relative path loads work correctly. Turn this addition off with the DataScience.changeDirOnImportExport setting'
     );
 
     export const restartKernelMessage = localize(
         'DataScience.restartKernelMessage',
-        'Do you want to restart the Jupter kernel? All variables will be lost.'
+        'Do you want to restart the Jupyter kernel? All variables will be lost.'
     );
     export const restartKernelMessageYes = localize('DataScience.restartKernelMessageYes', 'Restart');
     export const restartKernelMessageDontAskAgain = localize(
@@ -400,26 +416,38 @@ export namespace DataScience {
     export const restartingKernelStatus = localize('DataScience.restartingKernelStatus', 'Restarting Kernel {0}');
     export const restartingKernelFailed = localize(
         'DataScience.restartingKernelFailed',
-        'Kernel restart failed. Jupyter server is hung. Please reload VS code.'
+        'Kernel restart failed. Jupyter server is hung. Please reload VSCode.'
     );
     export const interruptingKernelFailed = localize(
         'DataScience.interruptingKernelFailed',
-        'Kernel interrupt failed. Jupyter server is hung. Please reload VS code.'
+        'Kernel interrupt failed. Jupyter server is hung. Please reload VSCode.'
     );
     export const sessionStartFailedWithKernel = localize(
-        'DataScience.sessionStartFailedWithKernel',
+        {
+            key: 'DataScience.sessionStartFailedWithKernel',
+            comment: ['{Locked="command:jupyter.viewOutput"}', 'This command is the same across languages.']
+        },
         "Failed to start the Kernel '{0}'. \nView Jupyter [log](command:jupyter.viewOutput) for further details."
     );
     export const failedToStartJupyter = localize(
-        'DataScience.failedToStartJupyter',
+        {
+            key: 'DataScience.failedToStartJupyter',
+            comment: ['{Locked="command:jupyter.viewOutput"}', 'This command is the same across languages.']
+        },
         "Failed to start Jupyter in the environment '{0}'. \nView Jupyter [log](command:jupyter.viewOutput) for further details."
     );
     export const failedToStartJupyterWithErrorInfo = localize(
-        'DataScience.failedToStartJupyterWithErrorInfo',
+        {
+            key: 'DataScience.failedToStartJupyterWithErrorInfo',
+            comment: ['{Locked="command:jupyter.viewOutput"}', 'This command is the same across languages.']
+        },
         "Failed to start Jupyter in the environment '{0}'. \n{1} \nView Jupyter [log](command:jupyter.viewOutput) for further details."
     );
     export const failedToStartJupyterDueToOutdatedTraitlets = localize(
-        'DataScience.failedToStartJupyterDueToOutdatedTraitlets',
+        {
+            key: 'DataScience.failedToStartJupyterDueToOutdatedTraitlets',
+            comment: ['{Locked="command:jupyter.viewOutput"}', 'This command is the same across languages.']
+        },
         "Failed to start Jupyter in the environment '{0}' possibly due to an outdated version of 'traitlets'. \n{1} \nConsider updating the 'traitlets' module to '5.1.1' or later. \nView Jupyter [log](command:jupyter.viewOutput) for further details."
     );
     export const failedToStartKernel = localize('DataScience.failedToStartKernel', 'Failed to start the Kernel.');
@@ -429,27 +457,46 @@ export namespace DataScience {
         'Failed to interrupt the Kernel.'
     );
     export const rawKernelStartFailedDueToTimeout = localize(
-        'DataScience.rawKernelStartFailedDueToTimeout',
+        {
+            key: 'DataScience.rawKernelStartFailedDueToTimeout',
+            comment: ['{Locked="command:jupyter.viewOutput"}', 'This command is the same across languages.']
+        },
         "Unable to start Kernel '{0}' due to connection timeout. \nView Jupyter [log](command:jupyter.viewOutput) for further details."
     );
     export const viewJupyterLogForFurtherInfo = localize(
-        'DataScience.viewJupyterLogForFurtherInfo',
+        {
+            key: 'DataScience.viewJupyterLogForFurtherInfo',
+            comment: ['{Locked="command:jupyter.viewOutput"}', 'This command is the same across languages.']
+        },
         'View Jupyter [log](command:jupyter.viewOutput) for further details.'
     );
     export const kernelDied = localize(
-        'DataScience.kernelDied',
+        {
+            key: 'DataScience.kernelDied',
+            comment: ['{Locked="command:jupyter.viewOutput"}', 'This command is the same across languages.']
+        },
         'The kernel died. Error: {0}... View Jupyter [log](command:jupyter.viewOutput) for further details.'
     );
     export const kernelDiedWithoutError = localize(
+        {
+            key: 'DataScience.kernelDiedWithoutError',
+            comment: ['{Locked="command:jupyter.viewOutput"}', 'This command is the same across languages.']
+        },
         'DataScience.kernelDiedWithoutError',
         "The kernel '{0}' died. Click [here](https://aka.ms/vscodeJupyterKernelCrash) for more info. View Jupyter [log](command:jupyter.viewOutput) for further details."
     );
     export const kernelDiedWithoutErrorAndAutoRestarting = localize(
-        'DataScience.kernelDiedWithoutErrorAndAutoRestarting',
+        {
+            key: 'DataScience.kernelDiedWithoutErrorAndAutoRestarting',
+            comment: ['{Locked="command:jupyter.viewOutput"}', 'This command is the same across languages.']
+        },
         "The kernel '{0}' died and is being automatically restarted by Jupyter. Click [here](https://aka.ms/vscodeJupyterKernelCrash) for more info. View Jupyter [log](command:jupyter.viewOutput) for further details."
     );
     export const kernelCrashedDueToCodeInCurrentOrPreviousCell = localize(
-        'DataScience.kernelCrashedDueToCodeInCurrentOrPreviousCell',
+        {
+            key: 'DataScience.kernelCrashedDueToCodeInCurrentOrPreviousCell',
+            comment: ['{Locked="command:jupyter.viewOutput"}', 'This command is the same across languages.']
+        },
         "The Kernel crashed while executing code in the the current cell or a previous cell. Please review the code in the cell(s) to identify a possible cause of the failure. Click <a href='https://aka.ms/vscodeJupyterKernelCrash'>here</a> for more info. View Jupyter [log](command:jupyter.viewOutput) for further details."
     );
     export const cannotRunCellKernelIsDead = localize(
@@ -663,7 +710,7 @@ export namespace DataScience {
     );
     export const pythonInteractiveCreateFailed = localize(
         'DataScience.pythonInteractiveCreateFailed',
-        "Failure to create a 'Interactive' window. Try reinstalling the Python extension."
+        "Failure to create an 'Interactive' window. Try reinstalling the Python extension."
     );
     export const jupyterGetVariablesExecutionError = localize(
         'DataScience.jupyterGetVariablesExecutionError',
@@ -687,11 +734,17 @@ export namespace DataScience {
     );
     export const localJupyterServer = localize('DataScience.localJupyterServer', 'local');
     export const pandasTooOldForViewingFormat = localize(
-        'DataScience.pandasTooOldForViewingFormat',
+        {
+            key: 'DataScience.pandasTooOldForViewingFormat',
+            comment: ["{Locked='pandas'", 'This is the name of the pandas package']
+        },
         "Python package 'pandas' is version {0}. Version 0.20 or greater is required for viewing data."
     );
     export const pandasRequiredForViewing = localize(
-        'DataScience.pandasRequiredForViewing',
+        {
+            key: 'DataScience.pandasRequiredForViewing',
+            comment: ["{Locked='pandas'", 'This is the name of the pandas package']
+        },
         "Python package 'pandas' is required for viewing data."
     );
     export const valuesColumn = localize('DataScience.valuesColumn', 'values');
@@ -730,7 +783,13 @@ export namespace DataScience {
     export const imageListLabel = localize('DataScience.imageListLabel', 'Image');
     export const exportImageFailed = localize('DataScience.exportImageFailed', 'Error exporting image: {0}');
     export const jupyterDataRateExceeded = localize(
-        'DataScience.jupyterDataRateExceeded',
+        {
+            key: 'DataScience.jupyterDataRateExceeded',
+            comment: [
+                "{Locked='NotebookApp.iopub_data_rate_limit'}",
+                'This command line parameter does not change across languages.'
+            ]
+        },
         'Cannot view variable because data rate exceeded. Please restart your server with a higher data rate limit. For example, --NotebookApp.iopub_data_rate_limit=10000000000.0'
     );
     export const addCellBelowCommandTitle = localize('DataScience.addCellBelowCommandTitle', 'Add cell');
@@ -751,7 +810,10 @@ export namespace DataScience {
         'Unable to parse {0} output, please log an issue with https://github.com/microsoft/vscode-jupyter'
     );
     export const jupyterDebuggerPortNotAvailableError = localize(
-        'DataScience.jupyterDebuggerPortNotAvailableError',
+        {
+            key: 'DataScience.jupyterDebuggerPortNotAvailableError',
+            comment: ["{Locked='remoteDebuggerPort'}"]
+        },
         'Port {0} cannot be opened for debugging. Please specify a different port in the remoteDebuggerPort setting.'
     );
     export const jupyterDebuggerPortBlockedError = localize(
@@ -819,7 +881,10 @@ export namespace DataScience {
     export const openExportFileYes = localize('DataScience.openExportFileYes', 'Yes');
     export const openExportFileNo = localize('DataScience.openExportFileNo', 'No');
     export const exportFailedGeneralMessage = localize(
-        'DataScience.exportFailedGeneralMessage',
+        {
+            key: 'DataScience.exportFailedGeneralMessage',
+            comment: ["{Locked='command:jupyter.viewOutput'}"]
+        },
         `Please check the 'Jupyter' [output](command:jupyter.viewOutput) panel for further details.`
     );
     export const exportToPDFDependencyMessage = localize(
@@ -843,7 +908,10 @@ export namespace DataScience {
     );
     export const noInterpreter = localize('DataScience.noInterpreter', 'No python selected');
     export const notebookNotFound = localize(
-        'DataScience.notebookNotFound',
+        {
+            key: 'DataScience.notebookNotFound',
+            comment: ["{Locked='version'}"]
+        },
         'python -m jupyter notebook --version is not running'
     );
     export const savePngTitle = localize('DataScience.savePngTitle', 'Save Image');
@@ -884,7 +952,10 @@ export namespace DataScience {
     export const startingJupyterNotebook = localize('DataScience.startingJupyterNotebook', 'Starting Jupyter Notebook');
     export const registeringKernel = localize('DataScience.registeringKernel', 'Registering Kernel');
     export const trimmedOutput = localize(
-        'DataScience.trimmedOutput',
+        {
+            key: 'DataScience.trimmedOutput',
+            comment: ["{Locked='command:textOutputLimit'}", 'This setting is the same across languages.']
+        },
         'Output was trimmed for performance reasons.\nTo see the full output set the setting "jupyter.textOutputLimit" to 0.'
     );
     export const jupyterCommandLineDefaultLabel = localize('DataScience.jupyterCommandLineDefaultLabel', 'Default');
@@ -964,7 +1035,10 @@ export namespace DataScience {
         'Error loading {0}:{1}. Internet connection required for loading 3rd party widgets.'
     );
     export const loadThirdPartyWidgetScriptsPostEnabled = localize(
-        'DataScience.loadThirdPartyWidgetScriptsPostEnabled',
+        {
+            key: 'DataScience.loadThirdPartyWidgetScriptsPostEnabled',
+            comment: ["{Locked='widgetScriptSources'}", 'This setting is the same across languages.']
+        },
         "Please restart the Kernel when changing the setting 'jupyter.widgetScriptSources'."
     );
     export const useCDNForWidgets = localize(
@@ -1021,7 +1095,10 @@ export namespace DataScience {
     export const connected = localize('DataScience.connected', 'Connected');
     export const disconnected = localize('DataScience.disconnected', 'Disconnected');
     export const noKernelsSpecifyRemote = localize(
-        'DataScience.noKernelsSpecifyRemote',
+        {
+            key: 'DataScience.noKernelsSpecifyRemote',
+            comment: ['{Locked="command:jupyter.selectjupyteruri"}', 'This setting is the same across languages.']
+        },
         'No kernel available for cell execution, please [specify a Jupyter server for connections](command:jupyter.selectjupyteruri)'
     );
     export const ipykernelNotInstalled = localize(
@@ -1044,7 +1121,7 @@ export namespace DataScience {
     export const defaultNotebookName = localize('DataScience.defaultNotebookName', 'default');
     export const recommendExtensionForNotebookLanguage = localize(
         'DataScience.recommendExtensionForNotebook',
-        "The {0} extension is recommended for notebooks targetting the language '{1}'."
+        "The {0} extension is recommended for notebooks targeting the language '{1}'."
     );
     export const kernelWasNotStarted = localize(
         'DataScience.kernelWasNotStarted',
@@ -1079,11 +1156,23 @@ export namespace DataScience {
         "'!{0} install' could install packages into the wrong environment. [More info]({1})"
     );
     export const percentPipCondaInstallInsteadOfBang = localize(
-        'jupyter.kernel.percentPipCondaInstallInsteadOfBang',
+        {
+            key: 'jupyter.kernel.percentPipCondaInstallInsteadOfBang',
+            comment: [
+                '{Locked="install"}',
+                'Instances of "install" here are parameters to a program, so they should not change.'
+            ]
+        },
         "Use '%{0} install' instead of '!{0} install'"
     );
     export const replacePipCondaInstallCodeAction = localize(
-        'jupyter.kernel.replacePipCondaInstallCodeAction',
+        {
+            key: 'jupyter.kernel.replacePipCondaInstallCodeAction',
+            comment: [
+                '{Locked="install"}',
+                'Instances of "install" here are parameters to a program, so they should not change.'
+            ]
+        },
         "Replace with '%{0} install'"
     );
     export const failedToStartKernelDueToMissingModule = localize(
