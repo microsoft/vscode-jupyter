@@ -25,6 +25,7 @@ import { IntellisenseProvider } from '../intellisense/intellisenseProvider.node'
 import { RemoteKernelControllerWatcher } from './controllers/remoteKernelControllerWatcher';
 import { ITracebackFormatter } from '../kernels/types';
 import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
+import { NotebookIPyWidgetCoordinator } from './controllers/notebookIPyWidgetCoordinator';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
@@ -68,4 +69,9 @@ export function registerTypes(serviceManager: IServiceManager) {
         RemoteKernelControllerWatcher
     );
     serviceManager.addSingleton<ITracebackFormatter>(ITracebackFormatter, NotebookTracebackFormatter);
+    serviceManager.addSingleton<NotebookIPyWidgetCoordinator>(
+        NotebookIPyWidgetCoordinator,
+        NotebookIPyWidgetCoordinator
+    );
+    serviceManager.addBinding(NotebookIPyWidgetCoordinator, IExtensionSyncActivationService);
 }

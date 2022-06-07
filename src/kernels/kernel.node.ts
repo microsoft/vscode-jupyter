@@ -28,7 +28,7 @@ import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 
 export class Kernel extends BaseKernel {
     constructor(
-        id: Uri,
+        uri: Uri,
         resourceUri: Resource,
         kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
         notebookProvider: INotebookProvider,
@@ -47,7 +47,7 @@ export class Kernel extends BaseKernel {
         formatters: ITracebackFormatter[]
     ) {
         super(
-            id,
+            uri,
             resourceUri,
             kernelConnectionMetadata,
             notebookProvider,

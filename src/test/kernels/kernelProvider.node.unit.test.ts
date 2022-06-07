@@ -121,7 +121,7 @@ suite('KernelProvider Node', () => {
         const kernel = kernelProvider.getOrCreate(sampleUri1, options);
         asyncDisposables.push(kernel);
 
-        assert.equal(kernel.id, sampleUri1, 'Kernel id should match the uri');
+        assert.equal(kernel.uri, sampleUri1, 'Kernel id should match the uri');
         assert.isUndefined(kernelProvider.get(sampleUri2), 'Should not return an instance');
         assert.isUndefined(kernelProvider.get(sampleUri3), 'Should not return an instance');
         assert.equal(onKernelCreated.count, 1, 'Should have triggered the event');
@@ -160,7 +160,7 @@ suite('KernelProvider Node', () => {
         const kernel = kernelProvider.getOrCreate(uri, options);
         asyncDisposables.push(kernel);
 
-        assert.equal(kernel.id, uri, 'Kernel id should match the uri');
+        assert.equal(kernel.uri, uri, 'Kernel id should match the uri');
         assert.isUndefined(kernelProvider.get(sampleUri2), 'Should not return an instance');
         assert.isUndefined(kernelProvider.get(sampleUri3), 'Should not return an instance');
         assert.equal(onKernelCreated.count, 1, 'Should have triggered the event');

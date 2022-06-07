@@ -33,8 +33,8 @@ import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherF
 import { IPyWidgetScriptSource } from './ipyWidgetScriptSource';
 import { IIPyWidgetMessageDispatcher, ILocalResourceUriConverter, IWidgetScriptSourceProviderFactory } from './types';
 import { ConsoleForegroundColors } from '../../platform/logging/types';
-import { INotebookCommunication } from '../../notebooks/types';
 import { createDeferred } from '../../platform/common/utils/async';
+import { IWebviewCommunication } from '../../platform/webviews/types';
 
 /**
  * This class wraps all of the ipywidgets communication with a backing notebook
@@ -61,7 +61,7 @@ export class CommonMessageCoordinator {
     private disposables: IDisposableRegistry;
     private jupyterOutput: IOutputChannel;
     private readonly configService: IConfigurationService;
-    private webview: INotebookCommunication | undefined;
+    private webview: IWebviewCommunication | undefined;
 
     public constructor(
         private readonly document: NotebookDocument,
@@ -80,7 +80,7 @@ export class CommonMessageCoordinator {
         this.ipyWidgetScriptSource?.dispose(); // NOSONAR
     }
 
-    public async attach(webview: INotebookCommunication) {
+    public async attach(webview: IWebviewCommunication) {
         if (this.webview !== webview) {
             // New webview, make sure to initialize.
             await this.initialize();

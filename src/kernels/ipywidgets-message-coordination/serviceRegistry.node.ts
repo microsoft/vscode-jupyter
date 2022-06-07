@@ -3,15 +3,8 @@ import { ScriptSourceProviderFactory } from './scriptSourceProviderFactory.node'
 import { ScriptUriConverter } from './scriptUriConverter';
 import { ILocalResourceUriConverter, IWidgetScriptSourceProviderFactory } from './types';
 import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherFactory';
-import { NotebookIPyWidgetCoordinator } from './notebookIPyWidgetCoordinator';
-import { IExtensionSyncActivationService } from '../../platform/activation/types';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
-    serviceManager.addSingleton<NotebookIPyWidgetCoordinator>(
-        NotebookIPyWidgetCoordinator,
-        NotebookIPyWidgetCoordinator
-    );
-    serviceManager.addBinding(NotebookIPyWidgetCoordinator, IExtensionSyncActivationService);
     serviceManager.addSingleton<IPyWidgetMessageDispatcherFactory>(
         IPyWidgetMessageDispatcherFactory,
         IPyWidgetMessageDispatcherFactory

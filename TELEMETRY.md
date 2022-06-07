@@ -2805,7 +2805,7 @@ No properties for event
                 : this.start(new DisplayOptions(false)));
             sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime);
         } catch (ex) {
-            traceError(`Restart failed ${getDisplayPath(this.id)}`, ex);
+            traceError(`Restart failed ${getDisplayPath(this.uri)}`, ex);
             this._ignoreJupyterSessionDisposedErrors = true;
 ```
 

@@ -22,11 +22,11 @@ import {
 } from './helper';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { InteractiveWindowMessages } from '../../../platform/messageTypes';
-import { NotebookIPyWidgetCoordinator } from '../../../kernels/ipywidgets-message-coordination/notebookIPyWidgetCoordinator';
-import { INotebookCommunication } from '../../../notebooks/types';
 import { initialize } from '../../initialize';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfo } from '../../../platform/logging';
+import { NotebookIPyWidgetCoordinator } from '../../../notebooks/controllers/notebookIPyWidgetCoordinator';
+import { IWebviewCommunication } from '../../../platform/webviews/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - Standard', function () {
@@ -135,7 +135,7 @@ suite('DataScience - VSCode Notebook - Standard', function () {
         }
     }
     function getNotebookCommunications(notebook: NotebookDocument) {
-        const items: INotebookCommunication[] = [];
+        const items: IWebviewCommunication[] = [];
         window.visibleNotebookEditors.forEach((editor) => {
             if (editor.notebook !== notebook) {
                 return;

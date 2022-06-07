@@ -1580,5 +1580,5 @@ export function getAssociatedNotebookDocument(kernel: IKernel | undefined) {
         return;
     }
 
-    return workspace.notebookDocuments.find((nb) => nb.uri.toString() === kernel.id.toString());
+    return workspace.notebookDocuments.find((nb) => nb.uri.toString() === kernel.uri.toString());
 }

@@ -79,7 +79,7 @@ export class KernelVariables implements IJupyterVariables {
         token?: CancellationToken
     ): Promise<IJupyterVariable | undefined> {
         // See if in the cache
-        const cache = this.cachedVariables.get(kernel.id.toString());
+        const cache = this.cachedVariables.get(kernel.uri.toString());
         if (cache) {
             let match = cache.variables.find((v) => v.name === name);
             if (match && !match.value) {
@@ -170,7 +170,7 @@ export class KernelVariables implements IJupyterVariables {
         request: IJupyterVariablesRequest
     ): Promise<IJupyterVariablesResponse> {
         // See if we already have the name list
-        let list = this.cachedVariables.get(kernel.id.toString());
+        let list = this.cachedVariables.get(kernel.uri.toString());
         if (!list || list.currentExecutionCount !== request.executionCount) {
             // Refetch the list of names from the notebook. They might have changed.
             list = {
@@ -241,7 +241,7 @@ export class KernelVariables implements IJupyterVariables {
             }
 
             // Save in our cache
-            this.cachedVariables.set(kernel.id.toString(), list);
+            this.cachedVariables.set(kernel.uri.toString(), list);
 
             // Update total count (exclusions will change this as types are computed)
             result.totalCount = list.variables.length;
