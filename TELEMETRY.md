@@ -6772,7 +6772,7 @@ No properties for event
 
 [src/webviews/extension-side/variablesView/variableView.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/variablesView/variableView.ts)
 ```typescript
-        console.log(`Done initializing variables`);
+        this.dataViewerChecker = new DataViewerChecker(configuration, appShell);
     }
 
     @captureTelemetry(Telemetry.NativeVariableViewLoaded)

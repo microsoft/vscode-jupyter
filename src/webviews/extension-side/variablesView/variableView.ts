@@ -75,7 +75,6 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         this.documentManager.onDidChangeActiveTextEditor(this.activeTextEditorChanged, this, this.disposables);
 
         this.dataViewerChecker = new DataViewerChecker(configuration, appShell);
-        console.log(`Done initializing variables`);
     }
 
     @captureTelemetry(Telemetry.NativeVariableViewLoaded)
