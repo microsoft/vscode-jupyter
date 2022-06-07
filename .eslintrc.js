@@ -310,7 +310,18 @@ module.exports = {
         'local-rules/dont-use-filename': ['error'],
         strict: 'off'
     },
-
+    overrides: [
+        {
+            files: ['gulpfile.js', 'build/**/*.js'],
+            rules: {
+                'local-rules/node-imports': ['off'],
+                'local-rules/dont-use-process': ['off'],
+                'local-rules/dont-use-fspath': ['off'],
+                'local-rules/dont-use-filename': ['off'],
+                'import/no-restricted-paths': ['off']
+            }
+        }
+    ],
     settings: {
         'import/extensions': ['.ts', '.tsx', '.d.ts', '.js', '.jsx'],
         'import/external-module-folders': ['node_modules', 'node_modules/@types'],
