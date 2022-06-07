@@ -1545,7 +1545,7 @@ No properties for event
 
 ## Locations Used
 
-[src/notebooks/execution/kernelExecution.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/kernelExecution.ts)
+[src/kernels/execution/kernelExecution.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/execution/kernelExecution.ts)
 ```typescript
         this.documentExecutions.set(document, newCellExecutionQueue);
         return newCellExecutionQueue;
@@ -2689,7 +2689,7 @@ function resetData(resource: Resource, eventName: string, properties: any) {
 ```
 
 
-[src/notebooks/execution/kernelExecution.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/kernelExecution.ts)
+[src/kernels/execution/kernelExecution.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/execution/kernelExecution.ts)
 ```typescript
                 // Otherwise a real error occurred.
                 sendKernelTelemetryEvent(
@@ -2701,7 +2701,7 @@ function resetData(resource: Resource, eventName: string, properties: any) {
 ```
 
 
-[src/notebooks/execution/kernelExecution.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/kernelExecution.ts)
+[src/kernels/execution/kernelExecution.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/execution/kernelExecution.ts)
 ```typescript
         })();
 
@@ -5238,7 +5238,7 @@ No properties for event
 
 ## Locations Used
 
-[src/notebooks/execution/cellExecution.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/cellExecution.ts)
+[src/kernels/execution/cellExecution.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/execution/cellExecution.ts)
 ```typescript
         const props = { notebook: true };
         if (!CellExecution.sentExecuteCellTelemetry) {
@@ -5281,7 +5281,7 @@ No properties for event
 
 ## Locations Used
 
-[src/notebooks/execution/cellExecution.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/cellExecution.ts)
+[src/kernels/execution/cellExecution.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/execution/cellExecution.ts)
 ```typescript
             CellExecution.sentExecuteCellTelemetry = true;
             sendTelemetryEvent(Telemetry.ExecuteCellPerceivedCold, this.stopWatchForTelemetry.elapsedTime, props);
@@ -5799,7 +5799,7 @@ No properties for event
 
 ## Locations Used
 
-[src/notebooks/execution/kernelExecution.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/kernelExecution.ts)
+[src/kernels/execution/kernelExecution.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/execution/kernelExecution.ts)
 ```typescript
         return newCellExecutionQueue;
     }
@@ -7995,7 +7995,7 @@ No properties for event
 
 ## Locations Used
 
-[src/notebooks/execution/kernelExecution.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/kernelExecution.ts)
+[src/kernels/execution/kernelExecution.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/execution/kernelExecution.ts)
 ```typescript
     }
 
@@ -8023,7 +8023,7 @@ No properties for event
 
 ## Locations Used
 
-[src/notebooks/execution/kernelExecution.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/execution/kernelExecution.ts)
+[src/kernels/execution/kernelExecution.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/execution/kernelExecution.ts)
 ```typescript
         });
     }
@@ -8671,7 +8671,7 @@ No description provided
 
 ## Locations Used
 
-[src/notebooks/helpers.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/helpers.ts)
+[src/kernels/execution/helpers.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/execution/helpers.ts)
 ```typescript
             // Unless we already know its an unknown output type.
             const outputType: nbformat.OutputType =
