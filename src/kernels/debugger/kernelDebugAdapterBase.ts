@@ -35,12 +35,7 @@ import {
 } from './types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
-import {
-    assertIsDebugConfig,
-    isShortNamePath,
-    shortNameMatchesLongName,
-    getMessageSourceAndHookIt
-} from '../../notebooks/debugger/helper';
+import { assertIsDebugConfig, isShortNamePath, shortNameMatchesLongName, getMessageSourceAndHookIt } from './helper';
 import { IDisposable } from '../../platform/common/types';
 import { executeSilently } from '../helpers';
 

@@ -30,9 +30,9 @@ import { traceError, traceInfo, traceInfoIfCI } from '../../platform/logging';
 import { DataScience } from '../../platform/common/utils/localize';
 import { DebugCellController } from './debugCellControllers';
 import { KernelDebugAdapter } from './kernelDebugAdapter';
-import { assertIsDebugConfig, IpykernelCheckResult } from './helper';
+import { assertIsDebugConfig, IpykernelCheckResult } from '../../kernels/debugger/helper';
 import { IDebuggingManager, IKernelDebugAdapterConfig, KernelDebugMode } from '../../kernels/debugger/types';
-import { DebuggingManagerBase } from '../../kernels/debugger/debuggingManagerBase';
+import { DebuggingManagerBase } from './debuggingManagerBase';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.

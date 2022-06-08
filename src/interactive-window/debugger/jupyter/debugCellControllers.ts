@@ -6,7 +6,7 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebuggingDelegate, IKernelDebugAdapter } from '../../../kernels/debugger/types';
 import { DebuggingTelemetry } from '../../../kernels/debugger/constants';
 import { IKernel } from '../../../kernels/types';
-import { cellDebugSetup } from '../../../notebooks/debugger/helper';
+import { cellDebugSetup } from '../../../kernels/debugger/helper';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { getInteractiveCellMetadata } from '../../helpers';
