@@ -1,5 +1,5 @@
 {
-    "jupyter.command.jupyter.runAllCells.title": "Uruchom wszystkie komórki",
+    "jupyter.command.jupyter.runallcells.title": "Uruchom wszystkie komórki",
     "jupyter.command.jupyter.runcurrentcell.title": "Uruchom bieżącą komórkę",
     "jupyter.command.jupyter.runcurrentcelladvance.title": "Uruchom bieżące komórki i pokaż",
     "jupyter.command.jupyter.execSelectionInteractive.title": "Uruchom zaznaczony obszar w oknie IPythona",

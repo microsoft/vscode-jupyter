@@ -536,7 +536,7 @@
             },
             {
                 "command": "jupyter.runallcells",
-                "title": "%jupyter.command.jupyter.runAllCells.title%",
+                "title": "%jupyter.command.jupyter.runallcells.title%",
                 "category": "Jupyter",
                 "enablement": "isWorkspaceTrusted"
             },
@@ -1251,7 +1251,7 @@
                 },
                 {
                     "command": "jupyter.runallcells",
-                    "title": "%jupyter.command.jupyter.runAllCells.title%",
+                    "title": "%jupyter.command.jupyter.runallcells.title%",
                     "category": "Jupyter",
                     "when": "jupyter.hascodecells && jupyter.ispythonornativeactive && isWorkspaceTrusted"
                 },

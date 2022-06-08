@@ -424,7 +424,7 @@ export namespace DataScience {
         localize('DataScience.connectingToJupyter', 'Connecting to Jupyter server');
     export const exportingFormat = localize('DataScience.exportingFormat', 'Exporting {0}');
     export const runAllCellsLensCommandTitle = () =>
-        localize('jupyter.command.jupyter.runAllCells.title', 'Run All Cells');
+        localize('jupyter.command.jupyter.runallcells.title', 'Run All Cells');
     export const runAllCellsAboveLensCommandTitle = () =>
         localize('jupyter.command.jupyter.runAllCellsAbove.title', 'Run Above');
     export const runCellAndAllBelowLensCommandTitle = () =>
