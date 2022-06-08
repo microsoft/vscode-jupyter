@@ -4,13 +4,13 @@
 import { inject, injectable } from 'inversify';
 import { NotebookCell, Uri } from 'vscode';
 import { ITracebackFormatter } from '../../kernels/types';
-import { InteractiveWindowView } from '../../notebooks/constants';
 import { IGeneratedCode, IFileGeneratedCodes, IGeneratedCodeStorageFactory } from '../editor-integration/types';
 import { untildify } from '../../platform/common/utils/platform';
 import { traceInfoIfCI } from '../../platform/logging';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { stripAnsi } from '../../platform/common/utils/regexp';
+import { InteractiveWindowView } from '../../platform/common/constants';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp'); // NOSONAR

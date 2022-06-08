@@ -1,4 +1,3 @@
-import { JupyterNotebookView } from '../../notebooks/constants';
 export const PYTHON_LANGUAGE = 'python';
 export const MARKDOWN_LANGUAGE = 'markdown';
 export const JUPYTER_LANGUAGE = 'jupyter';
@@ -14,6 +13,8 @@ export const GITHUB_ISSUE_MARKDOWN_FILE = [{ language: MARKDOWN_LANGUAGE, scheme
 
 export const InteractiveInputScheme = 'vscode-interactive-input';
 export const InteractiveScheme = 'vscode-interactive';
+export const JupyterNotebookView = 'jupyter-notebook';
+export const InteractiveWindowView = 'interactive';
 
 export const NOTEBOOK_SELECTOR = [
     { language: PYTHON_LANGUAGE, notebookType: JupyterNotebookView },

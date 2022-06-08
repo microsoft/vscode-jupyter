@@ -7,9 +7,9 @@ import { IApplicationShell, IWorkspaceService } from '../platform/common/applica
 import { Resource, IConfigurationService, IExtensionContext } from '../platform/common/types';
 import { INotebookProvider, ITracebackFormatter, KernelActionSource, KernelConnectionMetadata } from './types';
 import { BaseKernel } from './kernel.base';
-import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
 import { IStatusProvider } from '../platform/progress/types';
-import { InteractiveWindowView } from '../notebooks/constants';
+import { InteractiveWindowView } from '../platform/common/constants';
+import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { getAssociatedNotebookDocument } from './helpers';
 const addRunCellHook = require('../../pythonFiles/vscode_datascience_helpers/kernel/addRunCellHook.py');
 

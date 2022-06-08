@@ -9,106 +9,38 @@ import {
     NotebookCellOutputItem,
     NotebookCell,
     NotebookCellData,
-    NotebookData,
-    NotebookDocument,
     NotebookCellKind,
     NotebookCellExecutionState,
-    WorkspaceEdit,
-    workspace,
-    TextDocument,
-    NotebookEdit
+    NotebookController
 } from 'vscode';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import { KernelMessage } from '@jupyterlab/services';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import fastDeepEqual = require('fast-deep-equal');
-import * as path from '../platform/vscode-path/path';
-import * as uriPath from '../platform/vscode-path/resources';
-import { IDocumentManager } from '../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../platform/common/constants';
-import { traceInfoIfCI, traceError, traceWarning } from '../platform/logging';
-import { getInterpreterHash } from '../platform/pythonEnvironments/info/interpreter';
-import { sendTelemetryEvent } from '../telemetry';
-import { splitMultilineString, concatMultilineString } from '../webviews/webview-side/common';
-import { Telemetry } from '../webviews/webview-side/common/constants';
+import * as path from '../../platform/vscode-path/path';
+import * as uriPath from '../../platform/vscode-path/resources';
+import { PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { traceInfoIfCI, traceError, traceWarning } from '../../platform/logging';
+import { getInterpreterHash } from '../../platform/pythonEnvironments/info/interpreter';
+import { sendTelemetryEvent } from '../../telemetry';
+import { splitMultilineString, concatMultilineString } from '../../webviews/webview-side/common';
+import { Telemetry } from '../../webviews/webview-side/common/constants';
+import { getOSType, OSType } from '../../platform/common/utils/platform';
+import { createOutputWithErrorMessageForDisplay } from '../../platform/errors/errorUtils';
+import { CellExecutionCreator } from './cellExecutionCreator';
+import { KernelConnectionMetadata } from '../types';
 import {
     isPythonKernelConnection,
     getInterpreterFromKernelConnectionMetadata,
     kernelConnectionMetadataHasKernelModel,
     getKernelRegistrationInfo
-} from '../kernels/helpers';
-import { IJupyterKernelSpec, KernelConnectionMetadata } from '../kernels/types';
-import { JupyterNotebookView, InteractiveWindowView } from './constants';
-import { CellOutputMimeTypes } from './types';
-import { getOSType, OSType } from '../platform/common/utils/platform';
+} from '../helpers';
 
-/**
- * Whether this is a Notebook we created/manage/use.
- * Remember, there could be other notebooks such as GitHub Issues nb by VS Code.
- */
-export function isJupyterNotebook(document: NotebookDocument): boolean;
-// eslint-disable-next-line @typescript-eslint/unified-signatures
-export function isJupyterNotebook(viewType: string): boolean;
-export function isJupyterNotebook(option: NotebookDocument | string) {
-    if (typeof option === 'string') {
-        return option === JupyterNotebookView || option === InteractiveWindowView;
-    } else {
-        return option.notebookType === JupyterNotebookView || option.notebookType === InteractiveWindowView;
-    }
-}
-
-export function getNotebookMetadata(document: NotebookDocument | NotebookData): nbformat.INotebookMetadata | undefined {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata?.custom as any;
-    // Create a clone.
-    return JSON.parse(JSON.stringify(notebookContent?.metadata || {}));
-}
-
-export async function updateNotebookDocumentMetadata(
-    document: NotebookDocument,
-    editManager: IDocumentManager,
-    kernelConnection?: KernelConnectionMetadata,
-    kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']>
-) {
-    let metadata = getNotebookMetadata(document) || { orig_nbformat: 3 };
-    const { changed } = updateNotebookMetadata(metadata, kernelConnection, kernelInfo);
-    if (changed) {
-        const edit = new WorkspaceEdit();
-        // Create a clone.
-        const docMetadata = JSON.parse(
-            JSON.stringify(
-                (document.metadata as {
-                    custom?: Exclude<Partial<nbformat.INotebookContent>, 'cells'>;
-                }) || { custom: {} }
-            )
-        );
-
-        docMetadata.custom = docMetadata.custom || {};
-        docMetadata.custom.metadata = metadata;
-        edit.set(document.uri, [
-            NotebookEdit.updateNotebookMetadata({
-                ...(document.metadata || {}),
-                custom: docMetadata.custom
-            })
-        ]);
-        await editManager.applyEdit(edit);
-    }
-}
-
-export function isPythonNotebook(metadata?: nbformat.INotebookMetadata) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const kernelSpec = metadata?.kernelspec as any as Partial<IJupyterKernelSpec> | undefined;
-    if (metadata?.language_info?.name && metadata.language_info.name !== PYTHON_LANGUAGE) {
-        return false;
-    }
-
-    if (kernelSpec?.name?.includes(PYTHON_LANGUAGE)) {
-        return true;
-    }
-
-    // Valid notebooks will have a language information in the metadata.
-    return kernelSpec?.language === PYTHON_LANGUAGE || metadata?.language_info?.name === PYTHON_LANGUAGE;
+export enum CellOutputMimeTypes {
+    error = 'application/vnd.code.notebook.error',
+    stderr = 'application/vnd.code.notebook.stderr',
+    stdout = 'application/vnd.code.notebook.stdout'
 }
 
 export function createJupyterCellFromVSCNotebookCell(
@@ -941,8 +873,26 @@ export function updateNotebookMetadata(
     return { changed, kernelId };
 }
 
-export function getAssociatedJupyterNotebook(document: TextDocument): NotebookDocument | undefined {
-    return workspace.notebookDocuments.find(
-        (notebook) => isJupyterNotebook(notebook) && notebook.getCells().some((cell) => cell.document === document)
-    );
+export async function endCellAndDisplayErrorsInCell(
+    cell: NotebookCell,
+    controller: NotebookController,
+    errorMessage: string,
+    isCancelled: boolean
+) {
+    const execution = CellExecutionCreator.getOrCreate(cell, controller);
+    const output = createOutputWithErrorMessageForDisplay(errorMessage);
+    if (!output) {
+        if (execution.started) {
+            execution.end(isCancelled ? undefined : false, cell.executionSummary?.timing?.endTime);
+        }
+        return;
+    }
+    // Start execution if not already (Cell execution wrapper will ensure it won't start twice)
+    const started = execution.started;
+    if (!started) {
+        execution.start(cell.executionSummary?.timing?.endTime);
+        execution.executionOrder = cell.executionSummary?.executionOrder;
+    }
+    await execution.appendOutput(output);
+    execution.end(isCancelled ? undefined : false, cell.executionSummary?.timing?.endTime);
 }

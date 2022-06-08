@@ -39,8 +39,8 @@ import { sleep } from '../../core';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
 import { Uri, window, workspace } from 'vscode';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
-import { translateCellErrorOutput } from '../../../notebooks/helpers';
 import { INotebookEditorProvider } from '../../../notebooks/types';
+import { translateCellErrorOutput } from '../../../kernels/execution/helpers';
 
 const codeToKillKernel = dedent`
 import IPython

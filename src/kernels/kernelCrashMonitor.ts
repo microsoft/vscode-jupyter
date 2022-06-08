@@ -9,8 +9,8 @@ import { IApplicationShell } from '../platform/common/application/types';
 import { Telemetry } from '../platform/common/constants';
 import { IDisposableRegistry } from '../platform/common/types';
 import { DataScience } from '../platform/common/utils/localize';
-import { endCellAndDisplayErrorsInCell } from '../platform/errors/errorUtils';
 import { sendKernelTelemetryEvent } from '../telemetry/telemetry';
+import { endCellAndDisplayErrorsInCell } from './execution/helpers';
 import { getDisplayNameOrNameOfKernelConnection } from './helpers';
 import { IKernel, IKernelProvider } from './types';
 

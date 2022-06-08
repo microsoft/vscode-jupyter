@@ -14,7 +14,7 @@ import {
 import { Resource } from '../platform/common/types';
 import { KernelConnectionMetadata, LiveRemoteKernelConnectionMetadata } from '../kernels/types';
 import { IVSCodeNotebookController } from './controllers/types';
-import { InteractiveWindowView, JupyterNotebookView } from './constants';
+import { JupyterNotebookView, InteractiveWindowView } from '../platform/common/constants';
 
 export const INotebookKernelResolver = Symbol('INotebookKernelResolver');
 
@@ -49,11 +49,6 @@ export interface INotebookControllerManager {
         document: NotebookDocument,
         serverId?: string
     ): Promise<{ preferredConnection?: KernelConnectionMetadata; controller?: IVSCodeNotebookController }>;
-}
-export enum CellOutputMimeTypes {
-    error = 'application/vnd.code.notebook.error',
-    stderr = 'application/vnd.code.notebook.stderr',
-    stdout = 'application/vnd.code.notebook.stdout'
 }
 
 export const INotebookCompletionProvider = Symbol('INotebookCompletionProvider');

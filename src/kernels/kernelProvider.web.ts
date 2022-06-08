@@ -11,12 +11,12 @@ import {
     IConfigurationService,
     IExtensionContext
 } from '../platform/common/types';
-import { InteractiveWindowView } from '../notebooks/constants';
 import { Kernel } from './kernel.web';
 import { IKernel, INotebookProvider, ITracebackFormatter, KernelOptions } from './types';
 import { BaseKernelProvider } from './kernelProvider.base';
-import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
 import { IStatusProvider } from '../platform/progress/types';
+import { InteractiveWindowView } from '../platform/common/constants';
+import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 
 @injectable()
 export class KernelProvider extends BaseKernelProvider {

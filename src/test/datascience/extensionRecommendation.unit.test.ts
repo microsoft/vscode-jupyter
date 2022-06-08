@@ -9,11 +9,11 @@ import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable, IExtensions } from '../../platform/common/types';
 import { sleep } from '../../platform/common/utils/async';
 import { Common } from '../../platform/common/utils/localize';
-import { JupyterNotebookView } from '../../notebooks/constants';
 import { VSCodeNotebookController } from '../../notebooks/controllers/vscodeNotebookController';
 import { INotebookControllerManager } from '../../notebooks/types';
 import { IJupyterKernelSpec } from '../../kernels/types';
 import { ExtensionRecommendationService } from '../../platform/common/extensionRecommendation.node';
+import { JupyterNotebookView } from '../../platform/common/constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 suite('DataScience Extension Recommendation', () => {

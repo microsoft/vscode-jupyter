@@ -21,11 +21,11 @@ import { waitForPromise } from '../platform/common/utils/async';
 import { isNotebookCell } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { IJupyterSession, IKernelProvider } from '../kernels/types';
-import { getAssociatedJupyterNotebook } from '../notebooks/helpers';
 import { INotebookCompletionProvider, INotebookEditorProvider } from '../notebooks/types';
 import { mapJupyterKind } from './conversion';
 import { isTestExecution, Settings } from '../platform/common/constants';
 import { INotebookCompletion } from './types';
+import { getAssociatedJupyterNotebook } from '../platform/common/utils';
 
 let IntellisenseTimeout = Settings.IntellisenseTimeout;
 export function setIntellisenseTimeout(timeoutMs: number) {

@@ -35,7 +35,6 @@ import {
     waitForExecutionCompletedWithErrors,
     waitForTextOutput
 } from './notebook/helper';
-import { translateCellErrorOutput, getTextOutputValue } from '../../notebooks/helpers';
 import { INotebookControllerManager } from '../../notebooks/types';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
@@ -43,6 +42,7 @@ import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/
 import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { sleep } from '../core';
 import { IPYTHON_VERSION_CODE } from '../constants';
+import { translateCellErrorOutput, getTextOutputValue } from '../../kernels/execution/helpers';
 
 suite(`Interactive window`, async function () {
     this.timeout(120_000);

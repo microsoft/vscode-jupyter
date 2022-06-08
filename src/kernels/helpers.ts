@@ -33,9 +33,8 @@ import { fsPathToUri } from '../platform/vscode-path/utils';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
 import { JupyterKernelSpec } from './jupyter/jupyterKernelSpec';
 import { Resource } from '../platform/common/types';
-import { getResourceType } from '../platform/common/utils';
+import { getResourceType, isPythonNotebook } from '../platform/common/utils';
 import { sendTelemetryEvent } from '../telemetry';
-import { isPythonNotebook } from '../notebooks/helpers';
 
 // https://jupyter-client.readthedocs.io/en/stable/kernels.html
 export const connectionFilePlaceholder = '{connection_file}';
