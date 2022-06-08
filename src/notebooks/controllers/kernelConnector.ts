@@ -11,28 +11,28 @@ import {
     KernelInterpreterDependencyResponse,
     KernelAction,
     KernelActionSource
-} from './types';
+} from '../../kernels/types';
 import { Memento, NotebookDocument, NotebookController, Uri } from 'vscode';
-import { ICommandManager, IApplicationShell } from '../platform/common/application/types';
-import { traceVerbose, traceWarning } from '../platform/logging';
-import { Resource, IMemento, GLOBAL_MEMENTO, IDisplayOptions, IDisposable } from '../platform/common/types';
-import { createDeferred, createDeferredFromPromise, Deferred } from '../platform/common/utils/async';
-import { DataScience } from '../platform/common/utils/localize';
-import { sendKernelTelemetryEvent } from '../telemetry/telemetry';
-import { IServiceContainer } from '../platform/ioc/types';
-import { Telemetry, Commands } from '../webviews/webview-side/common/constants';
-import { clearInstalledIntoInterpreterMemento } from './installer/productInstaller';
-import { Product } from './installer/types';
-import { INotebookControllerManager, INotebookEditorProvider } from '../notebooks/types';
-import { selectKernel } from '../notebooks/controllers/kernelSelector';
-import { KernelDeadError } from '../platform/errors/kernelDeadError';
-import { noop } from '../platform/common/utils/misc';
-import { IDataScienceErrorHandler } from '../platform/errors/types';
-import { IStatusProvider } from '../platform/progress/types';
-import { IRawNotebookProvider } from './raw/types';
-import { IVSCodeNotebookController } from '../notebooks/controllers/types';
-import { getDisplayNameOrNameOfKernelConnection } from './helpers';
-import { isCancellationError } from '../platform/common/cancellation';
+import { ICommandManager, IApplicationShell } from '../../platform/common/application/types';
+import { traceVerbose, traceWarning } from '../../platform/logging';
+import { Resource, IMemento, GLOBAL_MEMENTO, IDisplayOptions, IDisposable } from '../../platform/common/types';
+import { createDeferred, createDeferredFromPromise, Deferred } from '../../platform/common/utils/async';
+import { DataScience } from '../../platform/common/utils/localize';
+import { sendKernelTelemetryEvent } from '../../telemetry/telemetry';
+import { IServiceContainer } from '../../platform/ioc/types';
+import { Telemetry, Commands } from '../../webviews/webview-side/common/constants';
+import { clearInstalledIntoInterpreterMemento } from '../../kernels/installer/productInstaller';
+import { Product } from '../../kernels/installer/types';
+import { INotebookControllerManager, INotebookEditorProvider } from '../types';
+import { selectKernel } from './kernelSelector';
+import { KernelDeadError } from '../../platform/errors/kernelDeadError';
+import { noop } from '../../platform/common/utils/misc';
+import { IDataScienceErrorHandler } from '../../platform/errors/types';
+import { IStatusProvider } from '../../platform/progress/types';
+import { IRawNotebookProvider } from '../../kernels/raw/types';
+import { IVSCodeNotebookController } from './types';
+import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
+import { isCancellationError } from '../../platform/common/cancellation';
 
 /**
  * Class used for connecting a controller to an instance of an IKernel

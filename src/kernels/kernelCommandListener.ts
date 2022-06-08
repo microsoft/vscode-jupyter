@@ -16,7 +16,7 @@ import { IKernel, IKernelProvider } from './types';
 import { IInteractiveWindowProvider } from '../interactive-window/types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { DisplayOptions } from './displayOptions';
-import { KernelConnector } from './kernelConnector';
+import { KernelConnector } from '../notebooks/controllers/kernelConnector';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { endCellAndDisplayErrorsInCell } from './execution/helpers';
 import { getAssociatedNotebookDocument } from './helpers';
