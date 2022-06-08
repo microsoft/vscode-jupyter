@@ -83,6 +83,7 @@ export interface INotebookCompletionProvider {
 export interface IEmbedNotebookEditorProvider {
     findNotebookEditor(resource: Resource): NotebookEditor | undefined;
     findAssociatedNotebookDocument(uri: Uri): NotebookDocument | undefined;
+    activeEditor: NotebookEditor | undefined;
 }
 
 // For native editing, the provider acts like the IDocumentManager for normal docs
