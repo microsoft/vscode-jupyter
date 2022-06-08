@@ -63,7 +63,7 @@ export namespace Experiments {
     export const inGroup = localize('Experiments.inGroup', "User belongs to experiment group '{0}'");
 }
 export namespace OutputChannelNames {
-    export const Jupyter = localize('OutputChannelNames.jupyter', 'Jupyter');
+    export const jupyter = localize('OutputChannelNames.jupyter', 'Jupyter');
 }
 
 export namespace GitHubIssue {

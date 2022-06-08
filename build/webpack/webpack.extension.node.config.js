@@ -26,6 +26,12 @@ const config = {
     module: {
         rules: [
             {
+                loader: 'vscode-nls-dev/lib/webpack-loader',
+                options: {
+                    base: constants.ExtensionRootDir
+                }
+            },
+            {
                 // JupyterServices imports node-fetch.
                 test: /@jupyterlab[\\\/]services[\\\/].*js$/,
                 use: [
