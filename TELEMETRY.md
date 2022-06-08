@@ -7682,7 +7682,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/kernelConnector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelConnector.ts)
+[src/notebooks/controllers/kernelConnector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/kernelConnector.ts)
 ```typescript
         const rawNotebookProvider = serviceContainer.tryGet<IRawNotebookProvider>(IRawNotebookProvider);
         const rawLocalKernel = rawNotebookProvider?.isSupported && isLocal;

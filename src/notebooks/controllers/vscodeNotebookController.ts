@@ -84,7 +84,7 @@ import {
     sendNotebookOrKernelLanguageTelemetry
 } from '../../platform/common/utils';
 import { ConsoleForegroundColors, TraceOptions } from '../../platform/logging/types';
-import { KernelConnector } from '../../kernels/kernelConnector';
+import { KernelConnector } from './kernelConnector';
 import { IVSCodeNotebookController } from './types';
 import { ILocalResourceUriConverter } from '../../kernels/ipywidgets-message-coordination/types';
 import { isCancellationError } from '../../platform/common/cancellation';

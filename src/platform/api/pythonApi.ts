@@ -18,7 +18,7 @@ import {
 } from './types';
 import * as localize from '../common/utils/localize';
 import { injectable, inject } from 'inversify';
-import { noop } from 'rxjs';
+import { noop } from 'rxjs/util/noop';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { IWorkspaceService, IApplicationShell, ICommandManager } from '../common/application/types';
 import { isCI, PythonExtension, Telemetry } from '../common/constants';

@@ -63,7 +63,7 @@ import { generateInteractiveCode } from './helpers';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { DisplayOptions } from '../kernels/displayOptions';
 import { getInteractiveCellMetadata } from './helpers';
-import { KernelConnector } from '../kernels/kernelConnector';
+import { KernelConnector } from '../notebooks/controllers/kernelConnector';
 import { getFilePath } from '../platform/common/platform/fs-paths';
 import {
     ICodeGeneratorFactory,
