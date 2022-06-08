@@ -3,28 +3,14 @@
 
 const path = require('path');
 const test_web = require('@vscode/test-web');
-const jupyterServer = require('../out/test/datascience/jupyterServer.node');
-const fs = require('fs-extra');
-
+const { startJupyter } = require('./preLaunchWebTest');
 async function go() {
     let exitCode = 0;
-    const server = jupyterServer.JupyterServer.instance;
+    let server;
     try {
-        // Need to start jupyter here before starting the test as it requires node to start it.
-        const uri = await server.startJupyterWithToken();
-
-        // Use this token to write to the bundle so we can transfer this into the test.
+        server = (await startJupyter()).server;
         const extensionDevelopmentPath = path.resolve(__dirname, '../');
         const bundlePath = path.join(extensionDevelopmentPath, 'out', 'extension.web.bundle');
-        const bundleFile = `${bundlePath}.js`;
-        if (await fs.pathExists(bundleFile)) {
-            const bundleContents = await fs.readFile(bundleFile, { encoding: 'utf-8' });
-            const newContents = bundleContents.replace(
-                /^exports\.JUPYTER_SERVER_URI = '(.*)';$/gm,
-                `exports.JUPYTER_SERVER_URI = '${uri.toString()}';`
-            );
-            await fs.writeFile(bundleFile, newContents);
-        }
 
         // Now run the test
         await test_web.runTests({
@@ -36,9 +22,10 @@ async function go() {
             extensionTestsPath: bundlePath
         });
     } catch (err) {
-        console.error('Failed to run tests');
+        console.error('Failed to run tests', err);
         exitCode = 1;
     } finally {
+        console.error(server);
         if (server) {
             await server.dispose();
         }

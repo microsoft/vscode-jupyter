@@ -4,8 +4,6 @@
 import { ICommandManager } from '../../platform/common/application/types';
 import { traceError } from '../../platform/logging';
 import { Resource } from '../../platform/common/types';
-import { IKernel } from '../../kernels/types';
-import { workspace } from 'vscode';
 import { INotebookEditorProvider } from '../types';
 
 /**
@@ -24,12 +22,4 @@ export async function selectKernel(
     }
     traceError(`Unable to select kernel as the Notebook document could not be identified`);
     return false;
-}
-
-export function getAssociatedNotebookDocument(kernel: IKernel | undefined) {
-    if (!kernel) {
-        return;
-    }
-
-    return workspace.notebookDocuments.find((nb) => nb.uri.toString() === kernel.id.toString());
 }

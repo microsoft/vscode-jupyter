@@ -18,12 +18,13 @@ import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IDisposableRegistry, IDisposable } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { CommonMessageCoordinator } from './commonMessageCoordinator';
-import { INotebookCommunication, INotebookControllerManager } from '../../notebooks/types';
+import { INotebookControllerManager } from '../../notebooks/types';
 import { IVSCodeNotebookController } from '../../notebooks/controllers/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
+import { IWebviewCommunication } from '../../platform/webviews/types';
+import { CommonMessageCoordinator } from '../../kernels/ipywidgets-message-coordination/commonMessageCoordinator';
 
-class NotebookCommunication implements INotebookCommunication, IDisposable {
+class NotebookCommunication implements IWebviewCommunication, IDisposable {
     private eventHandlerListening?: boolean;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private pendingMessages: any[] = [];
@@ -164,7 +165,7 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
     }
     private resolveKernel(
         document: NotebookDocument,
-        webview: INotebookCommunication,
+        webview: IWebviewCommunication,
         token: CancellationToken
     ): Promise<void> {
         // Create a handler for this notebook if we don't already have one. Since there's one of the notebookMessageCoordinator's for the

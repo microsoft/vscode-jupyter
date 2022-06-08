@@ -133,7 +133,7 @@ export abstract class BaseKernel implements IKernel {
     private disposingPromise?: Promise<void>;
 
     constructor(
-        public readonly id: Uri,
+        public readonly uri: Uri,
         public readonly resourceUri: Resource,
         public readonly kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
         private readonly notebookProvider: INotebookProvider,
@@ -206,17 +206,17 @@ export abstract class BaseKernel implements IKernel {
         await Promise.all(this.eventHooks.map((h) => h('willInterrupt')));
         trackKernelResourceInformation(this.resourceUri, { interruptKernel: true });
         if (this.restarting) {
-            traceInfo(`Interrupt requested & currently restarting ${getDisplayPath(this.resourceUri || this.id)}`);
+            traceInfo(`Interrupt requested & currently restarting ${getDisplayPath(this.resourceUri || this.uri)}`);
             await this.restarting.promise;
         }
-        traceInfo(`Interrupt requested ${getDisplayPath(this.resourceUri || this.id)}`);
+        traceInfo(`Interrupt requested ${getDisplayPath(this.resourceUri || this.uri)}`);
         this.startCancellation.cancel();
         const interruptResultPromise = this.kernelExecution.interrupt(this._jupyterSessionPromise);
 
         const status = this.statusProvider.set(DataScience.interruptKernelStatus());
         let result: InterruptResult | undefined;
         try {
-            traceInfo(`Interrupt requested & sent for ${getDisplayPath(this.id)} in notebookEditor.`);
+            traceInfo(`Interrupt requested & sent for ${getDisplayPath(this.uri)} in notebookEditor.`);
             result = await interruptResultPromise;
             if (result === InterruptResult.TimedOut) {
                 const message = DataScience.restartKernelAfterInterruptMessage();
@@ -232,7 +232,7 @@ export abstract class BaseKernel implements IKernel {
         }
     }
     public async dispose(): Promise<void> {
-        traceInfo(`Dispose Kernel '${getDisplayPath(this.id)}' associated with '${getDisplayPath(this.resourceUri)}'`);
+        traceInfo(`Dispose Kernel '${getDisplayPath(this.uri)}' associated with '${getDisplayPath(this.resourceUri)}'`);
         this._disposing = true;
         if (this.disposingPromise) {
             return this.disposingPromise;
@@ -271,7 +271,7 @@ export abstract class BaseKernel implements IKernel {
             return this.restarting.promise;
         }
         await Promise.all(this.eventHooks.map((h) => h('willRestart')));
-        traceInfo(`Restart requested ${this.id}`);
+        traceInfo(`Restart requested ${this.uri}`);
         this.startCancellation.cancel();
         // Set our status
         const status = this.statusProvider.set(DataScience.restartingKernelStatus().format(''));
@@ -290,7 +290,7 @@ export abstract class BaseKernel implements IKernel {
                 : this.start(new DisplayOptions(false)));
             sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime);
         } catch (ex) {
-            traceError(`Restart failed ${getDisplayPath(this.id)}`, ex);
+            traceError(`Restart failed ${getDisplayPath(this.uri)}`, ex);
             this._ignoreJupyterSessionDisposedErrors = true;
             // If restart fails, kill the associated session.
             const session = this._session;
@@ -377,7 +377,7 @@ export abstract class BaseKernel implements IKernel {
             }
             this._jupyterSessionPromise = this.createJupyterSession(new StopWatch()).catch((ex) => {
                 traceInfoIfCI(
-                    `Failed to create Jupyter Session in Kernel.startNotebook for ${getDisplayPath(this.id)}`
+                    `Failed to create Jupyter Session in Kernel.startNotebook for ${getDisplayPath(this.uri)}`
                 );
                 // If we fail also clear the promise.
                 this.startCancellation.cancel();
@@ -404,7 +404,7 @@ export abstract class BaseKernel implements IKernel {
             traceInfo(
                 `Starting Jupyter Session id = '${this.kernelConnectionMetadata.kind}:${
                     this.kernelConnectionMetadata.id
-                }'${pythonInfo} for '${getDisplayPath(this.id)}' (disableUI=${this.startupUI.disableUI})`
+                }'${pythonInfo} for '${getDisplayPath(this.uri)}' (disableUI=${this.startupUI.disableUI})`
             );
             this.createProgressIndicator(disposables);
             this.isKernelDead = false;
@@ -483,7 +483,7 @@ export abstract class BaseKernel implements IKernel {
     protected abstract sendTelemetryForPythonKernelExecutable(): Promise<void>;
 
     protected async initializeAfterStart(session: IJupyterSession | undefined) {
-        traceVerbose(`Started running kernel initialization for ${getDisplayPath(this.id)}`);
+        traceVerbose(`Started running kernel initialization for ${getDisplayPath(this.uri)}`);
         if (!session) {
             traceVerbose('Not running kernel initialization');
             return;
@@ -494,14 +494,14 @@ export abstract class BaseKernel implements IKernel {
             session.onDidDispose(() => {
                 traceInfoIfCI(
                     `Kernel got disposed as a result of session.onDisposed ${getDisplayPath(
-                        this.resourceUri || this.id
+                        this.resourceUri || this.uri
                     )}`
                 );
                 // Ignore when session is disposed as a result of failed restarts.
                 if (!this._ignoreJupyterSessionDisposedErrors) {
                     traceInfo(
                         `Kernel got disposed as a result of session.onDisposed ${getDisplayPath(
-                            this.resourceUri || this.id
+                            this.resourceUri || this.uri
                         )} & _ignoreJupyterSessionDisposedErrors = false.`
                     );
                     const isActiveSessionDead = this._session === session;
@@ -522,11 +522,12 @@ export abstract class BaseKernel implements IKernel {
             };
             this.disposables.push(session.onSessionStatusChanged(statusChangeHandler));
         }
-        if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
-            // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
-            // Restart sessions and retries might make this hard to do correctly otherwise.
-            session.registerCommTarget(Identifiers.DefaultCommTarget, noop);
 
+        // So that we don't have problems with ipywidgets, always register the default ipywidgets comm target.
+        // Restart sessions and retries might make this hard to do correctly otherwise.
+        session.registerCommTarget(Identifiers.DefaultCommTarget, noop);
+
+        if (isPythonKernelConnection(this.kernelConnectionMetadata)) {
             // Request completions to warm up the completion engine.
             this.requestEmptyCompletions();
 
@@ -659,11 +660,11 @@ export abstract class BaseKernel implements IKernel {
         const settings = this.configService.getSettings(this.resourceUri);
         if (settings && settings.themeMatplotlibPlots) {
             // We're theming matplotlibs, so we have to setup our default state.
-            traceInfoIfCI(`Initialize config for plots for ${getDisplayPath(this.resourceUri || this.id)}`);
+            traceInfoIfCI(`Initialize config for plots for ${getDisplayPath(this.resourceUri || this.uri)}`);
 
             const matplotInit = CodeSnippets.MatplotLibInit;
 
-            traceInfo(`Initialize matplotlib for ${getDisplayPath(this.resourceUri || this.id)}`);
+            traceInfo(`Initialize matplotlib for ${getDisplayPath(this.resourceUri || this.uri)}`);
             // Force matplotlib to inline and save the default style. We'll use this later if we
             // get a request to update style
             results.push(...matplotInit.splitLines({ trim: false }));

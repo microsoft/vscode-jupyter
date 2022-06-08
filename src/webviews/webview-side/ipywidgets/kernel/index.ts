@@ -11,6 +11,7 @@ import {
     IInteractiveWindowMapping,
     InteractiveWindowMessages
 } from '../../../../platform/messageTypes';
+import { logMessage } from '../../react-common/logger';
 
 class WidgetManagerComponent {
     private readonly widgetManager: WidgetManager;
@@ -126,9 +127,9 @@ function renderIPyWidget(
     container: HTMLElement,
     logger: (message: string) => void
 ) {
-    console.log(`Rendering IPyWidget ${outputId} with model ${model.model_id}`);
+    logger(`Rendering IPyWidget ${outputId} with model ${model.model_id}`);
     if (renderedWidgets.has(outputId)) {
-        return console.error('already rendering');
+        return logger('already rendering');
     }
     const output = document.createElement('div');
     output.className = 'cell-output cell-output';
@@ -241,10 +242,10 @@ let capturedContext: KernelMessagingApi | undefined;
 // To ensure we initialize after the other scripts, wait for them.
 function attemptInitialize(context?: KernelMessagingApi) {
     capturedContext = capturedContext || context;
-    console.log('Attempt Initialize IpyWidgets kernel.js', context);
+    logMessage(`Attempt Initialize IpyWidgets kernel.js : ${JSON.stringify(context)}`);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((window as any).vscIPyWidgets) {
-        console.log('IPyWidget kernel initializing...');
+        logMessage('IPyWidget kernel initializing...');
         initialize(capturedContext);
     } else {
         setTimeout(attemptInitialize, 100);

@@ -62,6 +62,7 @@ import { initialize, waitForCondition } from '../../common';
 import { VSCodeNotebook } from '../../../platform/common/application/notebook';
 import { IDebuggingManager, IKernelDebugAdapter } from '../../../kernels/debugger/types';
 import { PythonKernelCompletionProvider } from '../../../intellisense/pythonKernelCompletionProvider';
+import { verifySelectedControllerIsRemoteForRemoteTests } from '../helpers';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -242,6 +243,7 @@ export async function createEmptyPythonNotebook(
     assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
     if (!dontWaitForKernel) {
         await waitForKernelToGetAutoSelected();
+        await verifySelectedControllerIsRemoteForRemoteTests();
     }
     await deleteAllCellsAndWait();
     return vscodeNotebook.activeNotebookEditor!.notebook;

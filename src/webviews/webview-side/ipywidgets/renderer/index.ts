@@ -67,7 +67,6 @@ function hookupTestScripts(context: RendererContext<unknown>) {
                 message: 'Hook not registered'
             });
         }
-        console.log(`No Widgetentry point`);
         return;
     }
     if (context.postMessage) {
@@ -76,7 +75,6 @@ function hookupTestScripts(context: RendererContext<unknown>) {
             message: 'Hook registered'
         });
     }
-    console.log(`Widgetentry point found`);
     anyWindow.widgetEntryPoint.initialize(context);
 }
 function sendRenderOutputItem(context: RendererContext<unknown>, outputItem: OutputItem, element: HTMLElement) {

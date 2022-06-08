@@ -7,7 +7,7 @@ import type { KernelMessage } from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import type { Data as WebSocketData } from 'ws';
-import { traceInfoIfCI, traceVerbose, traceError } from '../../platform/logging';
+import { traceVerbose, traceError, traceInfo } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import { Deferred, createDeferred } from '../../platform/common/utils/async';
 import { noop } from '../../platform/common/utils/misc';
@@ -18,7 +18,7 @@ import { Identifiers, Telemetry } from '../../webviews/webview-side/common/const
 import { IKernel, IKernelProvider, KernelSocketInformation } from '../types';
 import { WIDGET_MIMETYPE } from './constants';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
-import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
+import { getAssociatedNotebookDocument } from '../helpers';
 
 type PendingMessage = {
     resultPromise: Deferred<void>;
@@ -106,7 +106,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     public receiveMessage(message: IPyWidgetMessage): void {
         switch (message.message) {
             case IPyWidgetMessages.IPyWidgets_logMessage:
-                traceInfoIfCI(`Widget Message: ${message.payload}`);
+                traceInfo(`Widget Message: ${message.payload}`);
                 break;
             case IPyWidgetMessages.IPyWidgets_Ready:
                 this.sendKernelOptions();
