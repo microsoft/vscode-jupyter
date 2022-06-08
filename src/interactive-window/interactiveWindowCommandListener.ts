@@ -47,6 +47,7 @@ import { generateCellsFromDocument } from './editor-integration/cellFactory';
 import { IInteractiveWindowProvider } from './types';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
 import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
+import { openAndShowNotebook } from '../platform/common/utils/notebooks';
 
 @injectable()
 export class InteractiveWindowCommandListener implements IDataScienceCommandListener {
@@ -241,7 +242,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                             openQuestion1
                         );
                         if (selection === openQuestion1) {
-                            await this.ipynbProvider.open(uri);
+                            await openAndShowNotebook(uri);
                         }
                     }
                 }

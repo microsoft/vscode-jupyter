@@ -9,7 +9,6 @@ import * as path from '../../../platform/vscode-path/path';
 import { Uri } from 'vscode';
 import { createCodeCell } from '../../../interactive-window/editor-integration/cellFactory';
 import { CellMatcher } from '../../../interactive-window/editor-integration/cellMatcher';
-import { INotebookEditorProvider } from '../../../notebooks/types';
 import { IWorkspaceService, IApplicationShell } from '../../../platform/common/application/types';
 import { traceError } from '../../../platform/logging';
 import { IPlatformService } from '../../../platform/common/platform/types';
@@ -21,6 +20,7 @@ import { IDataScienceErrorHandler } from '../../../platform/errors/types';
 import { concatMultilineString } from '../../../webviews/webview-side/common';
 import { defaultNotebookFormat, CodeSnippets } from '../../../webviews/webview-side/common/constants';
 import { INotebookExporter, IJupyterExecution } from '../types';
+import { openAndShowNotebook } from '../../../platform/common/utils/notebooks';
 
 @injectable()
 export class JupyterExporter implements INotebookExporter {
@@ -31,7 +31,6 @@ export class JupyterExporter implements INotebookExporter {
         @inject(IFileSystemNode) private fileSystem: IFileSystemNode,
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(INotebookEditorProvider) protected ipynbProvider: INotebookEditorProvider,
         @inject(IDataScienceErrorHandler) protected errorHandler: IDataScienceErrorHandler
     ) {}
 
@@ -61,7 +60,7 @@ export class JupyterExporter implements INotebookExporter {
                 .then(async (str: string | undefined) => {
                     try {
                         if (str === openQuestion1) {
-                            await this.ipynbProvider.open(Uri.file(file));
+                            await openAndShowNotebook(Uri.file(file));
                         }
                     } catch (e) {
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
