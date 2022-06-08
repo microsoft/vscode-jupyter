@@ -58,18 +58,18 @@ gulp.task('validateTranslationFiles', (done) => {
 });
 
 gulp.task('checkTestResults', async (done) => {
+    const core = require('@actions/core');
+
     const data = await fs.promises.readFile('test-results.xml');
     const parser = require('xml-js');
     const report = JSON.parse(parser.xml2json(data, { compact: true }));
-    if (!report) {
-        throw 'test result file not found';
-    }
 
     let testsRun = 0;
     let failCount = 0;
-    if (report) {
+    let skipCount = 0;
+    try {
         if (report.testsuites) {
-            console.log(JSON.stringify(report.testsuites._attributes));
+            core.info(JSON.stringify(report.testsuites._attributes));
         }
 
         const testsuites = report.testsuite
@@ -79,10 +79,13 @@ gulp.task('checkTestResults', async (done) => {
             : [report.testsuites.testsuite];
 
         if (!testsuites) {
-            done('no test suites found in test results');
+            core.setFailed('no test suites found in test results');
+            done();
+            return;
         }
 
         for (const testsuite of testsuites) {
+            skipCount += testsuite._attributes.skipped;
             testsRun += testsRun + testsuite._attributes.tests - testsuite._attributes.skipped;
 
             const testcases = Array.isArray(testsuite.testcase)
@@ -93,10 +96,10 @@ gulp.task('checkTestResults', async (done) => {
 
             for (const testcase of testcases) {
                 if (testcase.failure) {
-                    console.error(`FAILED TEST NAME: ${testcase._attributes.name}`);
-                    console.log(testcase.failure._attributes.message);
-                    console.log(testcase.failure._cdata); // print stacktrace
-                    console.log();
+                    core.error(`FAILED TEST NAME: ${testcase._attributes.name}`);
+                    core.info(testcase.failure._attributes.message);
+                    core.info(testcase.failure._cdata); // print stacktrace
+                    core.info();
 
                     failCount++;
                 }
@@ -104,13 +107,21 @@ gulp.task('checkTestResults', async (done) => {
         }
 
         if (failCount > 0) {
-            done('Test Failures');
+            core.setFailed('Test Failures');
+            done();
+            return;
         }
 
-        if (testsRun < 5) {
-            done('Looks like we did not run enough tests');
+        if (testsRun < 2 || testsRun < skipCount) {
+            core.setFailed('Failing check, not enough passing tests or too many skipped');
+            done();
+            return;
         }
+    } catch (error) {
+        core.error(`Could not parse test results from contents: ${JSON.stringify(report)}`);
+        core.setFailed(error);
     }
+
     done();
 });
 
