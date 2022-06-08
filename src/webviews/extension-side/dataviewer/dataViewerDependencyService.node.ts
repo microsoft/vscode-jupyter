@@ -92,7 +92,7 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
         }
 
         if (selection === Common.install()) {
-            const cancellatonPromise = createPromiseFromCancellation({
+            const cancellationPromise = createPromiseFromCancellation({
                 cancelAction: 'resolve',
                 defaultValue: InstallerResponse.Ignore,
                 token: tokenSource.token
@@ -100,7 +100,7 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
             // Always pass a cancellation token to `install`, to ensure it waits until the module is installed.
             const response = await Promise.race([
                 this.installer.install(Product.pandas, interpreterToInstallDependenciesInto, tokenSource),
-                cancellatonPromise
+                cancellationPromise
             ]);
             if (response === InstallerResponse.Installed) {
                 sendTelemetryEvent(Telemetry.UserInstalledPandas);

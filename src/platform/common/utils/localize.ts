@@ -958,7 +958,7 @@ export namespace DataScience {
     );
     export const jupyterStartTimedout = localize(
         'DataScience.jupyterStartTimedout',
-        "Starting Jupyter has timedout. Please check the 'Jupyter' output panel for further details."
+        "Starting Jupyter has timed out. Please check the 'Jupyter' output panel for further details."
     );
     export const switchingKernelProgress = localize('DataScience.switchingKernelProgress', "Switching Kernel to '{0}'");
     export const waitingForJupyterSessionToBeIdle = localize(

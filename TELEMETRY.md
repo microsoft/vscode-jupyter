@@ -1251,7 +1251,7 @@ No properties for event
 [src/notebooks/controllers/notebookControllerManager.ts#L918](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/notebookControllerManager.ts#L918)
 ```typescript
             }
-            // We know that this fails when we have xeus kernels installed (untill that's resolved thats one instance when we can have duplicates).
+            // We know that this fails when we have xeus kernels installed (until that's resolved thats one instance when we can have duplicates).
             sendTelemetryEvent(
                 Telemetry.FailedToCreateNotebookController,
                 undefined,
@@ -4580,7 +4580,7 @@ No properties for event
 
 [src/webviews/extension-side/dataviewer/dataViewerDependencyService.node.ts#L106](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewerDependencyService.node.ts#L106)
 ```typescript
-                cancellatonPromise
+                cancellationPromise
             ]);
             if (response === InstallerResponse.Installed) {
                 sendTelemetryEvent(Telemetry.UserInstalledPandas);
@@ -6216,7 +6216,7 @@ No properties for event
 
 
 
- Telemetry event sent when an ipywidget version that is not supported is used & we have trapped this and warned the user abou it.
+ Telemetry event sent when an ipywidget version that is not supported is used & we have trapped this and warned the user about it.
 
 ## Properties
 
@@ -6229,7 +6229,7 @@ No properties for event
 [src/kernels/ipywidgets-message-coordination/commonMessageCoordinator.ts#L217](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/commonMessageCoordinator.ts#L217)
 ```typescript
     }
-    private sendUnsupportedWidgetVersionFailureTelemetry(payload: NotifyIPyWidgeWidgetVersionNotSupportedAction) {
+    private sendUnsupportedWidgetVersionFailureTelemetry(payload: NotifyIPyWidgetWidgetVersionNotSupportedAction) {
         try {
             sendTelemetryEvent(Telemetry.IPyWidgetWidgetVersionNotSupportedLoadFailure, 0, {
                 moduleHash: getTelemetrySafeHashedString(payload.moduleName),

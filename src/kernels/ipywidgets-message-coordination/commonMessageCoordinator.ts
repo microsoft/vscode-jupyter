@@ -26,7 +26,7 @@ import { Telemetry, Commands } from '../../webviews/webview-side/common/constant
 import {
     LoadIPyWidgetClassLoadAction,
     ILoadIPyWidgetClassFailureAction,
-    NotifyIPyWidgeWidgetVersionNotSupportedAction
+    NotifyIPyWidgetWidgetVersionNotSupportedAction
 } from '../../webviews/webview-side/interactive-common/redux/reducers/types';
 import { IKernelProvider } from '../types';
 import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherFactory';
@@ -212,7 +212,7 @@ export class CommonMessageCoordinator {
             // do nothing on failure
         }
     }
-    private sendUnsupportedWidgetVersionFailureTelemetry(payload: NotifyIPyWidgeWidgetVersionNotSupportedAction) {
+    private sendUnsupportedWidgetVersionFailureTelemetry(payload: NotifyIPyWidgetWidgetVersionNotSupportedAction) {
         try {
             sendTelemetryEvent(Telemetry.IPyWidgetWidgetVersionNotSupportedLoadFailure, 0, {
                 moduleHash: getTelemetrySafeHashedString(payload.moduleName),
