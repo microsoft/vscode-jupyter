@@ -17,8 +17,6 @@ import {
 import { IVSCodeNotebook, ICommandManager, IApplicationShell } from '../platform/common/application/types';
 import { IConfigurationService, IDataScienceCommandListener, IDisposableRegistry } from '../platform/common/types';
 import { Commands, Telemetry } from '../webviews/webview-side/common/constants';
-import { chainWithPendingUpdates } from './execution/notebookUpdater';
-import { getNotebookMetadata } from './helpers';
 import { noop } from '../platform/common/utils/misc';
 import { NotebookCellLanguageService } from '../intellisense/cellLanguageService';
 import { DisplayOptions } from '../kernels/displayOptions';
@@ -26,14 +24,16 @@ import { KernelConnector } from '../kernels/kernelConnector';
 import { IKernel, IKernelProvider } from '../kernels/types';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { DataScience } from '../platform/common/utils/localize';
-import { endCellAndDisplayErrorsInCell } from '../platform/errors/errorUtils';
 import { traceInfoIfCI, traceInfo } from '../platform/logging';
 import { sendTelemetryEvent } from '../telemetry';
 import { trackKernelResourceInformation } from '../telemetry/telemetry';
-import { getAssociatedNotebookDocument } from './controllers/kernelSelector';
-import { INotebookControllerManager } from './types';
+import { INotebookControllerManager, INotebookEditorProvider } from './types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { IServiceContainer } from '../platform/ioc/types';
+import { endCellAndDisplayErrorsInCell } from '../kernels/execution/helpers';
+import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
+import { getAssociatedNotebookDocument } from '../kernels/helpers';
+import { getNotebookMetadata } from '../platform/common/utils';
 
 @injectable()
 export class NotebookCommandListener implements IDataScienceCommandListener {
@@ -48,6 +48,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         @inject(IKernelProvider) private kernelProvider: IKernelProvider,
         @inject(INotebookControllerManager) private notebookControllerManager: INotebookControllerManager,
         @inject(IDataScienceErrorHandler) private errorHandler: IDataScienceErrorHandler,
+        @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer
     ) {}
 
@@ -179,12 +180,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
     }
 
     public async interruptKernel(notebookUri: Uri | undefined): Promise<void> {
-        const uri =
-            notebookUri ??
-            window.activeNotebookEditor?.notebook.uri ??
-            this.interactiveWindowProvider?.activeWindow?.notebookUri ??
-            (window.activeTextEditor?.document.uri &&
-                this.interactiveWindowProvider?.get(window.activeTextEditor.document.uri)?.notebookUri);
+        const uri = notebookUri ?? this.notebookEditorProvider.activeNotebookEditor?.notebook.uri;
         const document = workspace.notebookDocuments.find((document) => document.uri.toString() === uri?.toString());
 
         if (document === undefined) {
@@ -201,12 +197,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
     }
 
     private async restartKernel(notebookUri: Uri | undefined) {
-        const uri =
-            notebookUri ??
-            window.activeNotebookEditor?.notebook.uri ??
-            this.interactiveWindowProvider?.activeWindow?.notebookUri ??
-            (window.activeTextEditor?.document.uri &&
-                this.interactiveWindowProvider?.get(window.activeTextEditor.document.uri)?.notebookUri);
+        const uri = notebookUri ?? this.notebookEditorProvider.activeNotebookEditor?.notebook.uri;
         const document = workspace.notebookDocuments.find((document) => document.uri.toString() === uri?.toString());
 
         if (document === undefined) {

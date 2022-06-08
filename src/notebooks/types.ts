@@ -66,7 +66,6 @@ export interface INotebookCompletionProvider {
 export interface IEmbedNotebookEditorProvider {
     findNotebookEditor(resource: Resource): NotebookEditor | undefined;
     findAssociatedNotebookDocument(uri: Uri): NotebookDocument | undefined;
-    activeEditor: NotebookEditor | undefined;
 }
 
 // For native editing, the provider acts like the IDocumentManager for normal docs
@@ -74,6 +73,7 @@ export const INotebookEditorProvider = Symbol('INotebookEditorProvider');
 export interface INotebookEditorProvider {
     open(file: Uri): Promise<void>;
     createNew(options?: { contents?: string; defaultCellLanguage?: string }): Promise<void>;
+    activeNotebookEditor: NotebookEditor | undefined;
     findNotebookEditor(resource: Resource): NotebookEditor | undefined;
     findAssociatedNotebookDocument(uri: Uri): NotebookDocument | undefined;
     registerEmbedNotebookProvider(provider: IEmbedNotebookEditorProvider): void;
