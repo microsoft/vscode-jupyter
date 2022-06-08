@@ -347,7 +347,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             promptOptions.dismissPrompt = true;
             delete promptOptions.text;
             // In tests, things hang as the IW isn't focused.
-            void activeInteractiveWindow.show(false);
+            activeInteractiveWindow.show(false).then(noop, noop);
             await waitForKernelToChange({ interpreterPath: venvNoRegPath, isInteractiveController: true });
             return true;
         } as any);

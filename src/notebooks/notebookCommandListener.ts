@@ -116,25 +116,25 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
 
     private runAllCells() {
         if (this.notebooks.activeNotebookEditor) {
-            void this.commandManager.executeCommand('notebook.execute');
+            this.commandManager.executeCommand('notebook.execute').then(noop, noop);
         }
     }
 
     private addCellBelow() {
         if (this.notebooks.activeNotebookEditor) {
-            void this.commandManager.executeCommand('notebook.cell.insertCodeCellBelow');
+            this.commandManager.executeCommand('notebook.cell.insertCodeCellBelow').then(noop, noop);
         }
     }
 
     private undoCells() {
         if (this.notebooks.activeNotebookEditor) {
-            void this.commandManager.executeCommand('notebook.undo');
+            this.commandManager.executeCommand('notebook.undo').then(noop, noop);
         }
     }
 
     private redoCells() {
         if (this.notebooks.activeNotebookEditor) {
-            void this.commandManager.executeCommand('notebook.redo');
+            this.commandManager.executeCommand('notebook.redo').then(noop, noop);
         }
     }
 

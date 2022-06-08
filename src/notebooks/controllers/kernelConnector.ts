@@ -93,7 +93,7 @@ export class KernelConnector {
                 break;
             }
             case DataScience.showJupyterLogs(): {
-                void commandManager.executeCommand(Commands.ViewJupyterOutput);
+                commandManager.executeCommand(Commands.ViewJupyterOutput).then(noop, noop);
             }
         }
         return restartedKernel;

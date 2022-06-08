@@ -218,7 +218,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 if (ev === 'willRestart' && this.notebookDocument && this.currentKernelInfo.metadata) {
                     this._insertSysInfoPromise = undefined;
                     // If we're about to restart, insert a 'restarting' message as it happens
-                    void this.insertSysInfoMessage(this.currentKernelInfo.metadata, SysInfoReason.Restart);
+                    this.insertSysInfoMessage(this.currentKernelInfo.metadata, SysInfoReason.Restart).then(noop, noop);
                 }
             };
             // Hook pre interrupt so we can stick in a message
@@ -442,8 +442,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 execution.start(notebookCell.executionSummary?.timing?.startTime);
             }
             execution.executionOrder = notebookCell.executionSummary?.executionOrder;
-            void execution.appendOutput(output);
-            void execution.end(false, notebookCell.executionSummary?.timing?.endTime);
+            execution.appendOutput(output).then(noop, noop);
+            execution.end(false, notebookCell.executionSummary?.timing?.endTime);
         }
     }
 
@@ -535,7 +535,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                     notebookCellPromise
                         .then((cell) => {
                             if (ex.cell !== cell) {
-                                void this.addErrorMessage(DataScience.cellStopOnErrorMessage(), cell);
+                                this.addErrorMessage(DataScience.cellStopOnErrorMessage(), cell).then(noop, noop);
                             }
                         })
                         .catch(noop);

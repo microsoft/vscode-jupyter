@@ -334,7 +334,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
     private async debugStepOver(): Promise<void> {
         // Make sure that we are in debug mode
         if (this.debugService?.activeDebugSession) {
-            void this.commandManager.executeCommand('workbench.action.debug.stepOver');
+            this.commandManager.executeCommand('workbench.action.debug.stepOver').then(noop, noop);
         }
     }
 
@@ -352,7 +352,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
                 }
             }
 
-            void this.commandManager.executeCommand('workbench.action.debug.stop');
+            this.commandManager.executeCommand('workbench.action.debug.stop').then(noop, noop);
         }
     }
 
@@ -360,7 +360,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
     private async debugContinue(): Promise<void> {
         // Make sure that we are in debug mode
         if (this.debugService?.activeDebugSession) {
-            void this.commandManager.executeCommand('workbench.action.debug.continue');
+            this.commandManager.executeCommand('workbench.action.debug.continue').then(noop, noop);
         }
     }
 
@@ -508,7 +508,10 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
     }
 
     private openPythonExtensionPage() {
-        void env.openExternal(Uri.parse(`https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter`));
+        env.openExternal(Uri.parse(`https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter`)).then(
+            noop,
+            noop
+        );
     }
 
     // Open up our variable viewer using the command that VS Code provides for this
@@ -576,7 +579,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
             } catch (e) {
                 sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR, undefined, undefined, e);
                 traceError(e);
-                void this.errorHandler.handleError(e);
+                this.errorHandler.handleError(e).then(noop, noop);
             }
         }
     }

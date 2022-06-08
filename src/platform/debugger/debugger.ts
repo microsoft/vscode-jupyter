@@ -3,6 +3,7 @@
 
 'use strict';
 import { debug, NotebookDocument, DebugSession, DebugSessionOptions, DebugConfiguration } from 'vscode';
+import { noop } from '../../platform/common/utils/misc';
 
 export class Debugger {
     private resolveFunc?: (value: DebugSession) => void;
@@ -36,6 +37,6 @@ export class Debugger {
     }
 
     async stop() {
-        void debug.stopDebugging(await this.session);
+        void debug.stopDebugging(await this.session).then(noop, noop);
     }
 }

@@ -35,6 +35,7 @@ import { DataViewerChecker } from '../dataviewer/dataViewerChecker';
 import { IJupyterVariableDataProviderFactory, IDataViewerFactory, IDataViewer } from '../dataviewer/types';
 import { WebviewViewHost } from '../webviewViewHost';
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
+import { noop } from '../../../platform/common/utils/misc';
 
 // This is the client side host for the native notebook variable view webview
 // It handles passing messages to and from the react view as well as the connection
@@ -170,7 +171,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
         } catch (e) {
             traceError(e);
             sendTelemetryEvent(Telemetry.FailedShowDataViewer);
-            void this.appShell.showErrorMessage(localize.DataScience.showDataViewerFail());
+            this.appShell.showErrorMessage(localize.DataScience.showDataViewerFail()).then(noop, noop);
         }
     }
 

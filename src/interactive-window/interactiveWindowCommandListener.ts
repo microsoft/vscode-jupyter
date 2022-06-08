@@ -47,6 +47,7 @@ import { generateCellsFromDocument } from './editor-integration/cellFactory';
 import { IInteractiveWindowProvider } from './types';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
 import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
+import { noop } from '../platform/common/utils/misc';
 
 @injectable()
 export class InteractiveWindowCommandListener implements IDataScienceCommandListener {
@@ -195,7 +196,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             return result;
         } catch (err) {
             traceError('listenForErrors', err as any);
-            void this.dataScienceErrorHandler.handleError(err);
+            this.dataScienceErrorHandler.handleError(err).then(noop, noop);
         }
         return result;
     }

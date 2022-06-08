@@ -19,6 +19,7 @@ import { IInteractiveWindowProvider, IInteractiveWindow } from '../../../interac
 import { DisplayOptions } from '../../displayOptions';
 import { IRawNotebookProvider } from '../../raw/types';
 import { isJupyterNotebook } from '../../../platform/common/utils';
+import { noop } from '../../../platform/common/utils/misc';
 
 const LastPythonNotebookCreatedKey = 'last-python-notebook-created';
 const LastNotebookCreatedKey = 'last-notebook-created';
@@ -123,10 +124,10 @@ export class ServerPreload implements IExtensionSingleActivationService {
     private kernelStarted(kernel: IKernel) {
         const language = getKernelConnectionLanguage(kernel.kernelConnectionMetadata);
 
-        void this.mementoStorage.update(LastNotebookCreatedKey, Date.now());
+        this.mementoStorage.update(LastNotebookCreatedKey, Date.now()).then(noop, noop);
 
         if (language === PYTHON_LANGUAGE) {
-            void this.mementoStorage.update(LastPythonNotebookCreatedKey, Date.now());
+            this.mementoStorage.update(LastPythonNotebookCreatedKey, Date.now()).then(noop, noop);
         }
     }
 }

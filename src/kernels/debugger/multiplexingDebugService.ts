@@ -20,6 +20,7 @@ import { IJupyterDebugService } from './types';
 import { ICommandManager, IDebugService } from '../../platform/common/application/types';
 import { Identifiers } from '../../platform/common/constants';
 import { IDisposableRegistry } from '../../platform/common/types';
+import { noop } from '../../platform/common/utils/misc';
 
 /**
  * IJupyterDebugService that will pick the correct debugger based on if doing run by line or normal debugging.
@@ -169,7 +170,7 @@ export class MultiplexingDebugService implements IJupyterDebugService {
             this.jupyterDebugService.stop();
         } else {
             // Stop our debugging UI session, no await as we just want it stopped
-            void this.commandManager.executeCommand('workbench.action.debug.stop');
+            this.commandManager.executeCommand('workbench.action.debug.stop').then(noop, noop);
         }
     }
 

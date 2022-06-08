@@ -11,7 +11,7 @@ import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platf
 import { traceInfo } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
-import { isUri } from '../../platform/common/utils/misc';
+import { isUri, noop } from '../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { INotebookControllerManager } from '../../notebooks/types';
@@ -141,7 +141,9 @@ export class ExportCommands implements IExportCommands, IDisposable {
                     sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
                         format: ExportFormat.python
                     });
-                    void this.commandManager.executeCommand(Commands.ExportAsPythonScript, sourceDocument, interpreter);
+                    this.commandManager
+                        .executeCommand(Commands.ExportAsPythonScript, sourceDocument, interpreter)
+                        .then(noop, noop);
                 }
             });
         }
@@ -155,12 +157,9 @@ export class ExportCommands implements IExportCommands, IDisposable {
                         sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
                             format: ExportFormat.html
                         });
-                        void this.commandManager.executeCommand(
-                            Commands.ExportToHTML,
-                            sourceDocument,
-                            defaultFileName,
-                            interpreter
-                        );
+                        this.commandManager
+                            .executeCommand(Commands.ExportToHTML, sourceDocument, defaultFileName, interpreter)
+                            .then(noop, noop);
                     }
                 },
                 {
@@ -170,12 +169,9 @@ export class ExportCommands implements IExportCommands, IDisposable {
                         sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
                             format: ExportFormat.pdf
                         });
-                        void this.commandManager.executeCommand(
-                            Commands.ExportToPDF,
-                            sourceDocument,
-                            defaultFileName,
-                            interpreter
-                        );
+                        this.commandManager
+                            .executeCommand(Commands.ExportToPDF, sourceDocument, defaultFileName, interpreter)
+                            .then(noop, noop);
                     }
                 }
             ]

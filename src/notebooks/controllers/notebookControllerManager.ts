@@ -552,7 +552,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             return;
         }
 
-        void this.initializePreferredNotebookController(document);
+        this.initializePreferredNotebookController(document).catch(noop);
         if (isPythonNotebook(getNotebookMetadata(document)) && this.extensionChecker.isPythonExtensionInstalled) {
             // If we know we're dealing with a Python notebook, load the active interpreter as a kernel asap.
             this.createActiveInterpreterController(JupyterNotebookView, document.uri).catch(noop);
