@@ -91,8 +91,6 @@ class NerfedExecuteCommandFeature implements DynamicFeature<ExecuteCommandRegist
     }
 }
 
-let languageClient: LanguageClient | undefined;
-
 /**
  * This class wraps an instance of the language server (either Pylance or Jedi LSP) per interpreter.
  *
@@ -100,36 +98,41 @@ let languageClient: LanguageClient | undefined;
  *     "notebook-intellisense.trace.server.verbosity": "Verbose",
  */
 export class LanguageServer implements Disposable {
+    private _client: LanguageClient | undefined;
     private _interpreterId: String;
 
     private constructor(
+        client: LanguageClient,
         public interpreter: PythonEnvironment,
         private readonly middleware: NotebookMiddleware,
         private disposables: Disposable[]
     ) {
+        // Client should be already started. We can expose it right away.
+        this._client = client;
         this._interpreterId = getInterpreterId(interpreter);
         workspace.onDidChangeNotebookDocument(this.onDidChangeNotebookDocument, this, disposables);
     }
 
     public async dispose() {
-        if (!languageClient) {
+        if (!this._client) {
             return;
         }
 
-        const client = languageClient;
+        const client = this._client;
 
-        // not exposing language client before client is stopped so that no one can
-        // access it while stopping.
-        languageClient = undefined;
+        // Stop exposing language client so that no one can access it while stopping.
+        this._client = undefined;
 
         this.disposables.forEach((d) => d.dispose());
+
+        // Make sure we dispose middleware before stopping client.
         this.middleware.dispose();
 
         await client.stop();
     }
 
     public get client(): LanguageClient | undefined {
-        return languageClient;
+        return this._client;
     }
 
     public get interpreterId() {
@@ -152,6 +155,8 @@ export class LanguageServer implements Disposable {
         shouldAllowIntellisense: (uri: Uri, interpreterId: string, interpreterPath: Uri) => boolean,
         getNotebookHeader: (uri: Uri) => string
     ): Promise<LanguageServer | undefined> {
+        let languageClient: LanguageClient | undefined;
+
         const cancellationStrategy = new FileBasedCancellationStrategy();
         const serverOptions = await LanguageServer.createServerOptions(interpreter, cancellationStrategy);
         if (serverOptions) {
@@ -211,7 +216,7 @@ export class LanguageServer implements Disposable {
             // Expose client once it is fully initialized.
             languageClient = client;
 
-            return new LanguageServer(interpreter, middleware, [cancellationStrategy, outputChannel]);
+            return new LanguageServer(client, interpreter, middleware, [cancellationStrategy, outputChannel]);
         } else {
             // Not creating a server, so dispose of the cancellation strategy
             cancellationStrategy.dispose();
