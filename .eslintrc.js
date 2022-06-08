@@ -265,7 +265,7 @@ module.exports = {
         ],
         'react/jsx-uses-vars': 'error',
         'react/jsx-uses-react': 'error',
-        'no-restricted-imports': ['error', { paths: ['lodash', 'rxjs'] }],
+        'no-restricted-imports': ['error', { paths: ['lodash', 'rxjs', 'lodash/noop'] }],
         'import/no-restricted-paths': [
             'error',
             {

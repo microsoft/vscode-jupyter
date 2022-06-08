@@ -8,7 +8,6 @@ suite('Dummy13', () => {
     });
 });
 // import { assert } from 'chai';
-// import { noop } from 'jquery';
 // import * as portfinder from 'portfinder';
 // import * as uuid from 'uuid/v4';
 // import { IPythonExtensionChecker } from '../../../platform/api/types';
