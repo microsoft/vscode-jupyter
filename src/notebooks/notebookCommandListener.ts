@@ -20,7 +20,6 @@ import { Commands, Telemetry } from '../webviews/webview-side/common/constants';
 import { noop } from '../platform/common/utils/misc';
 import { NotebookCellLanguageService } from '../intellisense/cellLanguageService';
 import { DisplayOptions } from '../kernels/displayOptions';
-import { KernelConnector } from '../kernels/kernelConnector';
 import { IKernel, IKernelProvider } from '../kernels/types';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { DataScience } from '../platform/common/utils/localize';
@@ -34,6 +33,7 @@ import { endCellAndDisplayErrorsInCell } from '../kernels/execution/helpers';
 import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
 import { getAssociatedNotebookDocument } from '../kernels/helpers';
 import { getNotebookMetadata } from '../platform/common/utils';
+import { KernelConnector } from './controllers/kernelConnector';
 
 @injectable()
 export class NotebookCommandListener implements IDataScienceCommandListener {
