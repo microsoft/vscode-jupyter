@@ -73,6 +73,7 @@ export const INotebookEditorProvider = Symbol('INotebookEditorProvider');
 export interface INotebookEditorProvider {
     open(file: Uri): Promise<void>;
     createNew(options?: { contents?: string; defaultCellLanguage?: string }): Promise<void>;
+    activeNotebookEditor: NotebookEditor | undefined;
     findNotebookEditor(resource: Resource): NotebookEditor | undefined;
     findAssociatedNotebookDocument(uri: Uri): NotebookDocument | undefined;
     registerEmbedNotebookProvider(provider: IEmbedNotebookEditorProvider): void;

@@ -648,10 +648,12 @@ export abstract class BaseKernel implements IKernel {
      * https://github.com/microsoft/vscode-jupyter/issues/9014
      */
     private requestEmptyCompletions() {
-        void this.session?.requestComplete({
-            code: '__file__.',
-            cursor_pos: 9
-        });
+        this.session
+            ?.requestComplete({
+                code: '__file__.',
+                cursor_pos: 9
+            })
+            .ignoreErrors();
     }
 
     private getMatplotLibInitializeCode(): string[] {
