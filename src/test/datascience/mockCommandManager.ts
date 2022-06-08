@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import noop = require('lodash/noop');
 import { Disposable, TextEditor, TextEditorEdit } from 'vscode';
 
 import { ICommandNameArgumentTypeMapping } from '../../platform/common/application/commands';
 import { ICommandManager } from '../../platform/common/application/types';
+import { noop } from '../core';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, , no-multi-str,  */
 export class MockCommandManager implements ICommandManager {

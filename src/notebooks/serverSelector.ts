@@ -60,7 +60,7 @@ export class JupyterServerSelectorCommand implements IDisposable {
         }
 
         // Activate UI Selector
-        void this.serverSelector.selectJupyterURI(local, source);
+        this.serverSelector.selectJupyterURI(local, source).ignoreErrors();
     }
 
     private async clearJupyterUris(): Promise<void> {

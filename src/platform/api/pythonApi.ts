@@ -18,7 +18,6 @@ import {
 } from './types';
 import * as localize from '../common/utils/localize';
 import { injectable, inject } from 'inversify';
-import { noop } from 'rxjs/util/noop';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { IWorkspaceService, IApplicationShell, ICommandManager } from '../common/application/types';
 import { isCI, PythonExtension, Telemetry } from '../common/constants';
@@ -30,6 +29,7 @@ import { IInterpreterSelector, IInterpreterQuickPickItem } from '../interpreter/
 import { IInterpreterService } from '../interpreter/contracts';
 import { areInterpreterPathsSame } from '../pythonEnvironments/info/interpreter';
 import { TraceOptions } from '../logging/types';
+import { noop } from '../common/utils/misc';
 
 export function deserializePythonEnvironment(
     pythonVersion: Partial<PythonEnvironment_PythonApi> | undefined

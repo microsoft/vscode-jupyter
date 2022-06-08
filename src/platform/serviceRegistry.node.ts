@@ -43,7 +43,6 @@ import { ExportToPythonPlain } from './export/exportToPythonPlain';
 import { ExportUtil } from './export/exportUtil.node';
 import { FileConverter } from './export/fileConverter.node';
 import { IFileConverter, INbConvertExport, ExportFormat, IExport, IExportDialog, IExportBase } from './export/types';
-import { GitHubIssueCommandListener } from './logging/gitHubIssueCommandListener.node';
 import { KernelProgressReporter } from './progress/kernelProgressReporter';
 import { ProgressReporter } from './progress/progressReporter';
 import { StatusProvider } from './progress/statusProvider';
@@ -94,7 +93,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
         DataViewerDependencyService
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
-    serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, GitHubIssueCommandListener);
     serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
     serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory, undefined, [
         IDebugLocationTrackerFactory

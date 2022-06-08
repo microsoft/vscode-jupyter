@@ -176,8 +176,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.EnableLoadingWidgetsFrom3rdPartySource]: [];
     [DSCommands.NotebookEditorExpandAllCells]: [];
     [DSCommands.NotebookEditorCollapseAllCells]: [];
-    [DSCommands.CreateGitHubIssue]: [];
-    [DSCommands.SubmitGitHubIssue]: [];
     [DSCommands.ShowDataViewer]: [IShowDataViewerFromVariablePanel];
     [DSCommands.RefreshDataViewer]: [];
     [DSCommands.ClearSavedJupyterUris]: [];

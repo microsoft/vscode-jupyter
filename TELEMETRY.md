@@ -421,7 +421,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/debugger/debuggingManagerBase.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/debugger/debuggingManagerBase.ts)
+[src/notebooks/debugger/debuggingManagerBase.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/debugger/debuggingManagerBase.ts)
 ```typescript
         );
 
@@ -505,7 +505,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/debugger/debuggingManagerBase.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/debugger/debuggingManagerBase.ts)
+[src/notebooks/debugger/debuggingManagerBase.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/debugger/debuggingManagerBase.ts)
 ```typescript
                 'https://github.com/microsoft/vscode-jupyter/wiki/Setting-Up-Run-by-Line-and-Debugging-for-Notebooks'
             );
@@ -550,7 +550,7 @@ No description provided
                         !this.disconnected
                     ) {
                         sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'normally' });
-                        void this.disconnect();
+                        this.disconnect().ignoreErrors();
                     }
                 },
 ```
@@ -583,7 +583,7 @@ No description provided
 
 ## Locations Used
 
-[src/kernels/debugger/debuggingManagerBase.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/debugger/debuggingManagerBase.ts)
+[src/notebooks/debugger/debuggingManagerBase.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/debugger/debuggingManagerBase.ts)
 ```typescript
             }
 
@@ -2574,7 +2574,7 @@ No properties for event
 ```typescript
         }
         this.notebookOpened = true;
-        void this.PreWarmDaemonPool();
+        this.PreWarmDaemonPool().ignoreErrors();
         sendTelemetryEvent(Telemetry.OpenNotebookAll);
 
         if (!this.rawSupported.isSupported && this.extensionChecker.isPythonExtensionInstalled) {
@@ -3175,7 +3175,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/kernelCommandListener.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelCommandListener.ts)
+[src/notebooks/notebookCommandListener.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/notebookCommandListener.ts)
 ```typescript
             return;
         }
@@ -7682,7 +7682,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/kernelConnector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelConnector.ts)
+[src/notebooks/controllers/kernelConnector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/kernelConnector.ts)
 ```typescript
         const rawNotebookProvider = serviceContainer.tryGet<IRawNotebookProvider>(IRawNotebookProvider);
         const rawLocalKernel = rawNotebookProvider?.isSupported && isLocal;

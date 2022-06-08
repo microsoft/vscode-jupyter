@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Uri, NotebookData, NotebookCellData, NotebookCellKind } from 'vscode';
+import { Uri, NotebookData, NotebookCellData, NotebookCellKind, NotebookEditor, window } from 'vscode';
 import { IVSCodeNotebook } from '../platform/common/application/types';
 import { JupyterNotebookView, PYTHON_LANGUAGE } from '../platform/common/constants';
 import '../platform/common/extensions';
@@ -73,6 +73,13 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 return editor;
             }
         }
+    }
+
+    get activeNotebookEditor(): NotebookEditor | undefined {
+        return (
+            this.findNotebookEditor(window.activeNotebookEditor?.notebook.uri) ||
+            this.findNotebookEditor(window.activeTextEditor?.document.uri)
+        );
     }
 
     findAssociatedNotebookDocument(uri: Uri) {
