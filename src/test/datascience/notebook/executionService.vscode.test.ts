@@ -121,6 +121,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await Promise.all([runCell(cell), waitForTextOutput(cell, '123412341234')]);
     });
     test('Test __vsc_ipynb_file__ defined in cell using VSCode Kernel', async () => {
+        assert.ok(false, 'injected failure');
         const uri = vscodeNotebook.activeNotebookEditor?.notebook.uri;
         if (uri && uri.scheme === 'file') {
             await insertCodeCell('print(__vsc_ipynb_file__)', { index: 0 });
