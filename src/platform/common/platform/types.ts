@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { SemVer } from 'semver';
 import * as vscode from 'vscode';
 import { OSType } from '../utils/platform';
 
@@ -21,7 +20,6 @@ export interface IPlatformService {
     readonly isMac: boolean;
     readonly isLinux: boolean;
     readonly is64bit: boolean;
-    getVersion(): Promise<SemVer>;
     readonly homeDir: vscode.Uri | undefined;
     readonly tempDir: vscode.Uri | undefined;
 }

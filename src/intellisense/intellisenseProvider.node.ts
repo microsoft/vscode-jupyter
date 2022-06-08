@@ -23,7 +23,7 @@ import { LanguageServer } from './languageServer.node';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { getComparisonKey } from '../platform/vscode-path/resources';
 import { CompletionRequest } from 'vscode-languageclient';
-import { NotebookPythonPathService } from './notebookPythonPathService';
+import { NotebookPythonPathService } from './notebookPythonPathService.node';
 import { isJupyterNotebook } from '../platform/common/utils';
 
 const EmptyWorkspaceKey = '';
