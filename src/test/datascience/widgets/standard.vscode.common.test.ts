@@ -7,7 +7,7 @@ import { assert } from 'chai';
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import * as urlPath from '../../../platform/vscode-path/resources';
 import * as sinon from 'sinon';
-import { commands, ConfigurationTarget, NotebookCell, notebooks, Uri, workspace } from 'vscode';
+import { commands, ConfigurationTarget, NotebookCell, Uri, workspace } from 'vscode';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
