@@ -550,7 +550,7 @@ No description provided
                         !this.disconnected
                     ) {
                         sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'normally' });
-                        void this.disconnect();
+                        this.disconnect().ignoreErrors();
                     }
                 },
 ```
@@ -2574,7 +2574,7 @@ No properties for event
 ```typescript
         }
         this.notebookOpened = true;
-        void this.PreWarmDaemonPool();
+        this.PreWarmDaemonPool().ignoreErrors();
         sendTelemetryEvent(Telemetry.OpenNotebookAll);
 
         if (!this.rawSupported.isSupported && this.extensionChecker.isPythonExtensionInstalled) {
