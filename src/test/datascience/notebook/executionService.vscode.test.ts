@@ -395,7 +395,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         await Promise.all([
             waitForExecutionCompletedSuccessfully(cell),
-            waitForTextOutput(cell, 'Second Button', 1, false)
+            waitForTextOutput(cell, 'Second Button', 0, false)
         ]);
     });
     test('Clearing output via code only when receiving new output', async function () {
@@ -424,7 +424,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await Promise.all([
             waitForExecutionCompletedSuccessfully(cell),
             waitForTextOutput(cell, 'First Button', 0, false),
-            waitForTextOutput(cell, 'Second Button', 1, false)
+            waitForTextOutput(cell, 'Second Button', 0, false)
         ]);
 
         // Verify first is no longer visible and second is visible.

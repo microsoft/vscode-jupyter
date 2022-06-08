@@ -396,33 +396,33 @@ suite('IPyWisdget Tests', function () {
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
     });
-    test('Nested Output Widgets', async () => {
+    test.only('Nested Output Widgets', async () => {
         const comms = await initializeNotebook({ templateFile: 'nested_output_widget.ipynb' });
         const [cell1, cell2, cell3, cell4] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
         await executeCellAndWaitForOutput(cell1, comms);
 
         // Run the second cell & verify we have output in the first cell.
         await Promise.all([runCell(cell2), waitForCellExecutionToComplete(cell1)]);
-        await assertOutputContainsHtml(cell2, comms, ['First output widget'], '.widget-output');
+        await assertOutputContainsHtml(cell1, comms, ['First output widget'], '.widget-output');
 
         // Run the 3rd cell to add a nested output.
         // Also display the same nested output and the widget in the 3rd cell.
         await Promise.all([runCell(cell3), waitForCellExecutionToComplete(cell3)]);
         await assertOutputContainsHtml(cell1, comms, ['<input type="text', 'Label Widget'], '.widget-output');
-        await assertOutputContainsHtml(cell3, comms, ['<input type="text', 'Label Widget'], '.widget-output');
+        assert.strictEqual(cell3.outputs.length, 0, 'Cell 3 should not have any output');
 
         // Run the 4th cell & verify we have output in the first nested output & second output.
         await Promise.all([runCell(cell4), waitForCellExecutionToComplete(cell2)]);
         await assertOutputContainsHtml(cell1, comms, ['First output widget', 'Second output widget'], '.widget-output');
-        await assertOutputContainsHtml(cell3, comms, ['Second output widget'], '.widget-output');
+        assert.strictEqual(cell3.outputs.length, 0, 'Cell 3 should not have any output');
 
         // Verify both textbox widgets are linked.
         // I.e. updating one textbox will result in the other getting updated with the same value.
         await comms.setValue(cell1, '.widget-text input', 'Widgets are linked an get updated');
         await assertOutputContainsHtml(cell1, comms, ['>Widgets are linked an get updated<'], '.widget-output');
-        await assertOutputContainsHtml(cell3, comms, ['>Widgets are linked an get updated<'], '.widget-output');
+        assert.strictEqual(cell3.outputs.length, 0, 'Cell 3 should not have any output');
     });
-    test('Interactive Button', async () => {
+    test.only('Interactive Button', async () => {
         const comms = await initializeNotebook({ templateFile: 'interactive_button.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0);
 
@@ -433,7 +433,7 @@ suite('IPyWisdget Tests', function () {
         await click(comms, cell, 'button');
         await assertOutputContainsHtml(cell, comms, ['Button clicked']);
     });
-    test('Interactive Function', async () => {
+    test.only('Interactive Function', async () => {
         const comms = await initializeNotebook({ templateFile: 'interactive_function.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0);
 
@@ -441,25 +441,27 @@ suite('IPyWisdget Tests', function () {
         await assertOutputContainsHtml(
             cell,
             comms,
-            ['<input type="text', ">Executing do_something with ''<", ">''<"],
+            [
+                '<input type="text',
+                ">Executing do_something with 'Foo'<",
+                ">'Foo'<",
+                ">Executing do_something with 'Hello World'<",
+                ">'Hello World'<"
+            ],
             '.widget-output'
         );
 
         // Update the textbox and confirm the output is updated accordingly.
-        await comms.setValue(cell, '.widget-text input', 'Updated First Time');
+        await comms.setValue(cell, '.widget-text input', 'Bar');
         await assertOutputContainsHtml(
             cell,
             comms,
-            [">Executing do_something with 'Updated First Time'<", ">'Updated First Time'<"],
-            '.widget-output'
-        );
-
-        // Update the textbox again and confirm the output is updated accordingly (should replace previous output).
-        await comms.setValue(cell, '.widget-text input', 'Updated Second Time');
-        await assertOutputContainsHtml(
-            cell,
-            comms,
-            [">Executing do_something with 'Updated Second Time'<", ">'Updated Second Time'<"],
+            [
+                ">Executing do_something with 'Bar'<",
+                ">'Bar'<",
+                ">Executing do_something with 'Hello World'<",
+                ">'Hello World'<"
+            ],
             '.widget-output'
         );
     });

@@ -81,6 +81,9 @@ function canMimeTypeBeRenderedByWidgetManager(mime: string) {
         // These are plain text mimetypes that can be rendered by the Jupyter Lab widget manager.
         return true;
     }
+    if (mime === WIDGET_MIMETYPE) {
+        return true;
+    }
     if (mime.startsWith('application/vnd')) {
         // Custom vendored mimetypes cannot be rendered by the widget manager, it relies on the output renderers.
         return false;
@@ -93,6 +96,12 @@ function canMimeTypeBeRenderedByWidgetManager(mime: string) {
  * Responsible for handling of jupyter messages as a result of execution of individual cells.
  */
 export class CellExecutionMessageHandler implements IDisposable {
+    /**
+     * Keeps track of the Models Ids (model_id) that is displayed in the output of a specific cell.
+     * model_id's maps to widget outputs.
+     * Hence here we're keeping track of the widgets displayed in outputs of specific cells.
+     */
+    private static modelIdsOwnedByCells = new WeakMap<NotebookCell, Set<string>>();
     /**
      * The msg_id of the original request execute (when executing the cell).
      */
@@ -155,7 +164,7 @@ export class CellExecutionMessageHandler implements IDisposable {
      * or for any subsequent requests as a result of outputs sending custom messages.
      */
     private readonly ownedCommIds = new Set<string>();
-    private readonly outputsOwnedByWidgetModel = new Map<string, Set<string>>();
+    private static readonly outputsOwnedByWidgetModel = new Map<string, Set<string>>();
     /**
      * List of msg_ids of requests sent either as part of request_execute
      * or for any subsequent requests as a result of outputs sending custom messages.
@@ -459,14 +468,21 @@ export class CellExecutionMessageHandler implements IDisposable {
         output: ExecuteResult | DisplayData | nbformat.IStream | nbformat.IError | nbformat.IOutput,
         originalMessage: KernelMessage.IMessage
     ) {
-        if (
-            this.context.extensionMode === ExtensionMode.Test &&
-            output.data &&
-            typeof output.data === 'object' &&
-            WIDGET_MIMETYPE in output.data
-        ) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (output.data[WIDGET_MIMETYPE] as any)['_vsc_test_cellIndex'] = this.cell.index;
+        if (output.data && typeof output.data === 'object' && WIDGET_MIMETYPE in output.data) {
+            const widgetData = output.data[WIDGET_MIMETYPE] as {
+                version_major: number;
+                version_minor: number;
+                model_id: string;
+            };
+            if (widgetData && this.context.extensionMode === ExtensionMode.Test) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (widgetData as any)['_vsc_test_cellIndex'] = this.cell.index;
+            }
+            if (widgetData && 'model_id' in widgetData) {
+                const modelIds = CellExecutionMessageHandler.modelIdsOwnedByCells.get(this.cell) || new Set<string>();
+                modelIds.add(widgetData.model_id);
+                CellExecutionMessageHandler.modelIdsOwnedByCells.set(this.cell, modelIds);
+            }
         }
         const cellOutput = cellOutputToVSCCellOutput(output);
         const displayId =
@@ -509,7 +525,7 @@ export class CellExecutionMessageHandler implements IDisposable {
             this.outputsAreSpecificToAWidget &&
             this.outputsAreSpecificToAWidget?.msgIdsToSwallow === parentHeaderMsgId
         ) {
-            const result = this.updateWidgetOwnedOutput(
+            const result = this.updateJupyterOutputWidgetWithOutput(
                 { commId: this.outputsAreSpecificToAWidget.handlingCommId, outputToAppend: cellOutput },
                 task
             );
@@ -523,7 +539,21 @@ export class CellExecutionMessageHandler implements IDisposable {
         }
         this.endTemporaryTask();
     }
-    private updateWidgetOwnedOutput(
+    /**
+     * Assume we have a Jupyter Output Widget, and we render that in Cell1.
+     * Now we add some output to that output from Cell2, general outputs will be automatically handled by the widget class.
+     * More complex outputs like plotly or the like, need to be handed by us (as Jupyter Output Widget expects Jupyter Notebooks/Jupyter Lab UI to handle that).
+     * To make this possible, we first need to find out the cell that owns the Output Widget, and then add that output to that particular cell.
+     * What we do in such a case is append this complex output just after the Output widget.
+     *
+     * In other cases, when appending such output, we need to clear the previous output that we added.
+     *
+     * This method is responsible for:
+     * - Finding the cell that owns the output widget
+     * - Clearing the custom output that was appended after the output widget.
+     * - Appending custom output after the output widget
+     */
+    private updateJupyterOutputWidgetWithOutput(
         options: { outputToAppend: NotebookCellOutput; commId: string } | { clearOutput: true },
         task?: NotebookCellExecution
     ): { outputAdded: true } | undefined {
@@ -534,7 +564,15 @@ export class CellExecutionMessageHandler implements IDisposable {
         const outputToAppend = 'outputToAppend' in options ? options.outputToAppend : undefined;
 
         const expectedModelId = this.commIdsMappedToParentWidgetModel.get(commId) || commId;
-        const widgetOutput = this.cell.outputs.find((output) => {
+        // Find the cell that owns the widget (where its model_id = commId).
+        const cell = this.cell.notebook
+            .getCells()
+            .find((cell) => CellExecutionMessageHandler.modelIdsOwnedByCells.get(cell)?.has(expectedModelId));
+        if (!cell) {
+            traceWarning(`Unable to find a cell that owns the model ${expectedModelId}`);
+            return;
+        }
+        const widgetOutput = cell.outputs.find((output) => {
             return output.items.find((outputItem) => {
                 if (outputItem.mime !== WIDGET_MIMETYPE) {
                     return false;
@@ -551,7 +589,8 @@ export class CellExecutionMessageHandler implements IDisposable {
         if (!widgetOutput) {
             return;
         }
-        const outputsOwnedByWidgetModel = this.outputsOwnedByWidgetModel.get(expectedModelId) || new Set<string>();
+        const outputsOwnedByWidgetModel =
+            CellExecutionMessageHandler.outputsOwnedByWidgetModel.get(expectedModelId) || new Set<string>();
 
         // We have some new outputs, that need to be placed immediately after the widget and before any other output
         // that doesn't belong to the widget.
@@ -559,7 +598,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         if (this.outputsAreSpecificToAWidget) {
             this.outputsAreSpecificToAWidget.clearOutputOnNextUpdateToOutput = false;
         }
-        const newOutputs = this.cell.outputs.slice().filter((item) => {
+        const newOutputs = cell.outputs.slice().filter((item) => {
             if (clearWidgetOutput) {
                 // If we're supposed to clear the output, then clear all of the output that's
                 // specific to this widget.
@@ -573,7 +612,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         const outputsUptoWidget = newOutputs.slice(0, newOutputs.indexOf(widgetOutput) + 1);
         const outputsAfterWidget = newOutputs.slice(newOutputs.indexOf(widgetOutput) + 1);
 
-        this.outputsOwnedByWidgetModel.set(expectedModelId, outputsOwnedByWidgetModel);
+        CellExecutionMessageHandler.outputsOwnedByWidgetModel.set(expectedModelId, outputsOwnedByWidgetModel);
         if (outputToAppend) {
             // Keep track of the output added that belongs to the widget.
             // Next time when we need to clear the output belonging to this widget, all we need to do is
@@ -585,7 +624,12 @@ export class CellExecutionMessageHandler implements IDisposable {
         const newOutput = outputToAppend
             ? outputsUptoWidget.concat(outputToAppend).concat(outputsAfterWidget)
             : outputsUptoWidget.concat(outputsAfterWidget);
-        task?.replaceOutput(newOutput).then(noop, noop);
+        if (outputsAfterWidget.length === 0 && newOutput) {
+            // No need to replace everything, just append what we need.
+            task?.appendOutput(newOutput, cell).then(noop, noop);
+        } else {
+            task?.replaceOutput(newOutput, cell).then(noop, noop);
+        }
         return { outputAdded: true };
     }
     private async handleInputRequest(msg: KernelMessage.IStdinMessage) {
@@ -788,7 +832,7 @@ export class CellExecutionMessageHandler implements IDisposable {
                 this.outputsAreSpecificToAWidget.clearOutputOnNextUpdateToOutput = true;
             } else {
                 const task = this.execution || this.createTemporaryTask();
-                this.updateWidgetOwnedOutput({ clearOutput: true }, task);
+                this.updateJupyterOutputWidgetWithOutput({ clearOutput: true }, task);
                 this.endTemporaryTask();
             }
             return;
