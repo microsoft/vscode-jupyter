@@ -88,7 +88,6 @@ export namespace GitHubIssue {
         'GitHubIssue.missingFields',
         'Please provide details of the issue you encountered before clicking Submit GitHub Issue.'
     );
-    export const submitGitHubIssue = localize('GitHubIssue.submitGitHubIssue', '✅ Submit GitHub Issue');
 }
 
 export namespace Logging {

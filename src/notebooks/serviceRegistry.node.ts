@@ -5,7 +5,6 @@
 
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
 import { IServiceManager } from '../platform/ioc/types';
-import { GitHubIssueCodeLensProvider } from '../platform/logging/gitHubIssueCodeLensProvider.node';
 import { KernelFilterService } from './controllers/kernelFilter/kernelFilterService';
 import { KernelFilterUI } from './controllers/kernelFilter/kernelFilterUI';
 import { LiveKernelSwitcher } from './controllers/liveKernelSwitcher';
@@ -29,10 +28,6 @@ import { NotebookIPyWidgetCoordinator } from './controllers/notebookIPyWidgetCoo
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        GitHubIssueCodeLensProvider
-    );
     serviceManager.addSingleton<INotebookControllerManager>(INotebookControllerManager, NotebookControllerManager);
     serviceManager.addSingleton<PlotSaveHandler>(PlotSaveHandler, PlotSaveHandler);
     serviceManager.addSingleton<PlotViewHandler>(PlotViewHandler, PlotViewHandler);
