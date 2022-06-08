@@ -397,7 +397,7 @@ suite('IPyWisdget Tests', function () {
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
     });
-    test.only('Nested Output Widgets', async () => {
+    test('Nested Output Widgets', async () => {
         const comms = await initializeNotebook({ templateFile: 'nested_output_widget.ipynb' });
         const [cell1, cell2, cell3, cell4] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
         await executeCellAndWaitForOutput(cell1, comms);
@@ -423,7 +423,7 @@ suite('IPyWisdget Tests', function () {
         await assertOutputContainsHtml(cell1, comms, ['>Widgets are linked an get updated<'], '.widget-output');
         assert.strictEqual(cell3.outputs.length, 0, 'Cell 3 should not have any output');
     });
-    test.only('Interactive Button', async () => {
+    test('Interactive Button', async () => {
         const comms = await initializeNotebook({ templateFile: 'interactive_button.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0);
 
@@ -432,58 +432,56 @@ suite('IPyWisdget Tests', function () {
 
         // Click the button and verify we have output in other cells
         await click(comms, cell, 'button');
-        await assertOutputContainsHtml(cell, comms, ['Button clicked']);
+        await waitForCondition(
+            () => {
+                assert.strictEqual(getTextOutputValue(cell.outputs[1]).trim(), 'Button clicked');
+                return true;
+            },
+            5_000,
+            `Expected 'Button clicked' to exist in ${getTextOutputValue(cell.outputs[1])}`
+        );
     });
-    test.only('Interactive Function', async () => {
+    test('Interactive Function', async () => {
         const comms = await initializeNotebook({ templateFile: 'interactive_function.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0);
 
         await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(
-            cell,
-            comms,
-            [
-                '<input type="text',
-                ">Executing do_something with 'Foo'<",
-                ">'Foo'<",
-                ">Executing do_something with 'Hello World'<",
-                ">'Hello World'<"
-            ],
-            '.widget-output'
-        );
+        await assertOutputContainsHtml(cell, comms, [
+            '<input type="text',
+            ">Executing do_something with 'Foo'",
+            ">'Foo'"
+        ]);
+        await waitForCondition(() => cell.outputs.length >= 3, 5_000, 'Cell must have 3 outputs');
+        assert.strictEqual(getTextOutputValue(cell.outputs[1]).trim(), `Executing do_something with 'Hello World'`);
+        assert.strictEqual(getTextOutputValue(cell.outputs[2]).trim(), `'Hello World'`);
 
         // Update the textbox and confirm the output is updated accordingly.
         await comms.setValue(cell, '.widget-text input', 'Bar');
-        await assertOutputContainsHtml(
-            cell,
-            comms,
-            [
-                ">Executing do_something with 'Bar'<",
-                ">'Bar'<",
-                ">Executing do_something with 'Hello World'<",
-                ">'Hello World'<"
-            ],
-            '.widget-output'
-        );
+        await assertOutputContainsHtml(cell, comms, [
+            '<input type="text',
+            ">Executing do_something with 'Bar'",
+            ">'Bar'"
+        ]);
+        assert.strictEqual(getTextOutputValue(cell.outputs[1]).trim(), `Executing do_something with 'Hello World'`);
+        assert.strictEqual(getTextOutputValue(cell.outputs[2]).trim(), `'Hello World'`);
     });
-    test.only('Interactive Plot', async () => {
+    test('Interactive Plot', async () => {
         const comms = await initializeNotebook({ templateFile: 'interactive_plot.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0);
 
         await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(cell, comms, ['Text Value is Foo'], '.widget-output');
+        await assertOutputContainsHtml(cell, comms, ['Text Value is Foo']);
         assert.strictEqual(cell.outputs.length, 4, 'Cell should have 4 outputs');
 
-        const [, output2, output3, output4] = cell.outputs;
         // This cannot be displayed by output widget, hence we need to handle this.
-        assert.strictEqual(output2.items[0].mime, 'application/vnd.custom');
-        assert.strictEqual(Buffer.from(output2.items[0].data).toString(), 'Text Value is Foo');
+        assert.strictEqual(cell.outputs[1].items[0].mime, 'application/vnd.custom');
+        assert.strictEqual(Buffer.from(cell.outputs[1].items[0].data).toString(), 'Text Value is Foo');
 
-        assert.strictEqual(getTextOutputValue(output3), 'Text Value is Foo');
+        assert.strictEqual(getTextOutputValue(cell.outputs[2]).trim(), 'Text Value is Hello World');
 
         // This cannot be displayed by output widget, hence we need to handle this.
-        assert.strictEqual(output4.items[0].mime, 'application/vnd.custom');
-        assert.strictEqual(Buffer.from(output4.items[0].data).toString(), 'Text Value is Foo');
+        assert.strictEqual(cell.outputs[3].items[0].mime, 'application/vnd.custom');
+        assert.strictEqual(Buffer.from(cell.outputs[3].items[0].data).toString().trim(), 'Text Value is Hello World');
 
         // Wait for the second output to get updated.
         const outputUpdated = new Promise<boolean>((resolve) => {
@@ -508,15 +506,14 @@ suite('IPyWisdget Tests', function () {
         // Wait for the output to get updated.
         await waitForCondition(() => outputUpdated, 5_000, 'Second output not updated');
 
-        // This should have been updated.
-        assert.strictEqual(output2.items[0].mime, 'application/vnd.custom');
-        assert.strictEqual(Buffer.from(output2.items[0].data).toString(), 'Text Value is Bar');
+        // The first & second outputs should have been updated
+        await assertOutputContainsHtml(cell, comms, ['Text Value is Bar']);
+        assert.strictEqual(cell.outputs[1].items[0].mime, 'application/vnd.custom');
+        assert.strictEqual(Buffer.from(cell.outputs[1].items[0].data).toString().trim(), 'Text Value is Bar');
 
-        // This should not have been updated.
-        assert.strictEqual(getTextOutputValue(output3), 'Text Value is Foo');
-
-        // This should not have been updated.
-        assert.strictEqual(output4.items[0].mime, 'application/vnd.custom');
-        assert.strictEqual(Buffer.from(output4.items[0].data).toString(), 'Text Value is Foo');
+        // The last two should not have changed.
+        assert.strictEqual(getTextOutputValue(cell.outputs[2]).trim(), 'Text Value is Hello World');
+        assert.strictEqual(cell.outputs[3].items[0].mime, 'application/vnd.custom');
+        assert.strictEqual(Buffer.from(cell.outputs[3].items[0].data).toString().trim(), 'Text Value is Hello World');
     });
 });
