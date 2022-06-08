@@ -11,7 +11,6 @@ import { KernelFilterUI } from './controllers/kernelFilter/kernelFilterUI';
 import { LiveKernelSwitcher } from './controllers/liveKernelSwitcher';
 import { NotebookControllerManager } from './controllers/notebookControllerManager';
 import { RemoteSwitcher } from './controllers/remoteSwitcher';
-import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { NotebookCommandListener } from './notebookCommandListener';
 import { NotebookEditorProvider } from './notebookEditorProvider';
 import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms.node';
@@ -29,10 +28,10 @@ import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
 import { IJupyterDebugService } from '../kernels/debugger/types';
 import { Identifiers } from '../platform/common/constants';
 import { JupyterDebugService } from './debugger/jupyterDebugService.node';
+import { NotebookIPyWidgetCoordinator } from './controllers/notebookIPyWidgetCoordinator';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
-    serviceManager.addSingleton<CellOutputDisplayIdTracker>(CellOutputDisplayIdTracker, CellOutputDisplayIdTracker);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         GitHubIssueCodeLensProvider
@@ -78,4 +77,9 @@ export function registerTypes(serviceManager: IServiceManager) {
         JupyterDebugService,
         Identifiers.RUN_BY_LINE_DEBUGSERVICE
     );
+    serviceManager.addSingleton<NotebookIPyWidgetCoordinator>(
+        NotebookIPyWidgetCoordinator,
+        NotebookIPyWidgetCoordinator
+    );
+    serviceManager.addBinding(NotebookIPyWidgetCoordinator, IExtensionSyncActivationService);
 }

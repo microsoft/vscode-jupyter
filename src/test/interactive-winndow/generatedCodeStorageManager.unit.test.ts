@@ -11,9 +11,9 @@ import {
 } from '../../interactive-window/editor-integration/types';
 import { GeneratedCodeStorageManager } from '../../interactive-window/generatedCodeStoreManager';
 import { IKernel, IKernelProvider } from '../../kernels/types';
-import { InteractiveWindowView } from '../../notebooks/constants';
 import { IVSCodeNotebookController } from '../../notebooks/controllers/types';
 import { INotebookControllerManager } from '../../notebooks/types';
+import { InteractiveWindowView } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable } from '../../platform/common/types';
 import { mockedVSCodeNamespaces } from '../vscode-mock';
@@ -93,7 +93,7 @@ suite('GeneratedCodeStorageManager', () => {
         const iwKernelRestart = new EventEmitter<void>();
         disposables.push(iwKernelRestart);
         when(kernel.onRestarted).thenReturn(iwKernelRestart.event);
-        when(kernel.id).thenReturn(nbUri);
+        when(kernel.uri).thenReturn(nbUri);
         when(kernel.creator).thenReturn('jupyterExtension');
         when(iwNotebook.notebookType).thenReturn(InteractiveWindowView);
         when(iwNotebook.uri).thenReturn(nbUri);
@@ -116,7 +116,7 @@ suite('GeneratedCodeStorageManager', () => {
 
         // Creating some kernel for a ipynb notebook will have no effect.
         const nbKernel = mock<IKernel>();
-        when(nbKernel.id).thenReturn(ipynbUri);
+        when(nbKernel.uri).thenReturn(ipynbUri);
         onDidCreateKernel.fire(instance(nbKernel));
         verify(storage.clear()).never();
         verify(codeGenerator.reset()).never();

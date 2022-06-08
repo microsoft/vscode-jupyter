@@ -4,8 +4,8 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { assert } from 'chai';
 import { Uri } from 'vscode';
+import { updateNotebookMetadata } from '../../../kernels/execution/helpers';
 import { IJupyterKernelSpec, KernelConnectionMetadata } from '../../../kernels/types';
-import { updateNotebookMetadata } from '../../../notebooks/helpers';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 
 // Function return type

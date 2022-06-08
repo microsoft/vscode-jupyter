@@ -3,7 +3,7 @@
 
 import { injectable } from 'inversify';
 import { NotebookCell, NotebookCellOutput, NotebookDocument, workspace } from 'vscode';
-import { isJupyterNotebook } from '../helpers';
+import { isJupyterNotebook } from '../../platform/common/utils';
 
 @injectable()
 export class CellOutputDisplayIdTracker {

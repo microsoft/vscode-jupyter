@@ -25,11 +25,10 @@ import {
     KernelConnectionMetadata,
     WebSocketData
 } from './extension';
-import { Telemetry } from '../common/constants';
+import { JupyterNotebookView, Telemetry } from '../common/constants';
 import { KernelConnector } from '../../kernels/kernelConnector';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import { IServiceContainer } from '../ioc/types';
-import { JupyterNotebookView } from '../../notebooks/constants';
 import { IExportedKernelServiceFactory } from './types';
 
 @injectable()
@@ -125,7 +124,7 @@ class JupyterKernelService implements IExportedKernelService {
                 (item) => item.startedAtLeastOnce || item.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel'
             )
             .forEach((item) => {
-                const kernel = this.kernelProvider.get(item.id);
+                const kernel = this.kernelProvider.get(item.uri);
                 // When returning list of active sessions, we don't want to return something thats
                 // associated with a controller.
                 // Note: In VS Code, a controller starts a kernel, however the controller only keeps track of the kernel spec.
@@ -135,7 +134,7 @@ class JupyterKernelService implements IExportedKernelService {
                 }
                 kernels.push({
                     metadata: this.translateKernelConnectionMetadataToExportedType(item.kernelConnectionMetadata),
-                    uri: item.id
+                    uri: item.uri
                 });
             });
         this.notebookControllerManager.getRegisteredNotebookControllers().forEach((item) => {

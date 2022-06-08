@@ -52,9 +52,6 @@ import { DataScience } from '../platform/common/utils/localize';
 import { createDeferred, Deferred } from '../platform/common/utils/async';
 import { IServiceContainer } from '../platform/ioc/types';
 import { SysInfoReason } from '../platform/messageTypes';
-import { chainWithPendingUpdates } from '../notebooks/execution/notebookUpdater';
-import { updateNotebookMetadata } from '../notebooks/helpers';
-import { CellExecutionCreator } from '../notebooks/execution/cellExecutionCreator';
 import { createOutputWithErrorMessageForDisplay } from '../platform/errors/errorUtils';
 import { INotebookExporter } from '../kernels/jupyter/types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
@@ -74,6 +71,9 @@ import {
     InteractiveCellMetadata
 } from './editor-integration/types';
 import { IInteractiveWindowDebuggingManager } from '../kernels/debugger/types';
+import { CellExecutionCreator } from '../kernels/execution/cellExecutionCreator';
+import { updateNotebookMetadata } from '../kernels/execution/helpers';
+import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
 
 export class InteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {

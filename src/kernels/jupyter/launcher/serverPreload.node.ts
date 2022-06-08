@@ -13,12 +13,12 @@ import {
     IMemento,
     WORKSPACE_MEMENTO
 } from '../../../platform/common/types';
-import { isJupyterNotebook } from '../../../notebooks/helpers';
 import { getKernelConnectionLanguage } from '../../helpers';
 import { IKernel, IKernelProvider, INotebookProvider } from '../../types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../../interactive-window/types';
 import { DisplayOptions } from '../../displayOptions';
 import { IRawNotebookProvider } from '../../raw/types';
+import { isJupyterNotebook } from '../../../platform/common/utils';
 
 const LastPythonNotebookCreatedKey = 'last-python-notebook-created';
 const LastNotebookCreatedKey = 'last-notebook-created';

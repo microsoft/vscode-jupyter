@@ -16,8 +16,7 @@ import { IKernel, isLocalConnection } from '../../kernels/types';
 import { IInteractiveWindowDebugger } from '../types';
 import { IFileGeneratedCodes } from '../editor-integration/types';
 import { IJupyterDebugService } from '../../kernels/debugger/types';
-import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
-import { executeSilently } from '../../kernels/helpers';
+import { executeSilently, getAssociatedNotebookDocument } from '../../kernels/helpers';
 import { buildSourceMap } from './helper';
 
 @injectable()
