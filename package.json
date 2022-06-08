@@ -542,7 +542,7 @@
             },
             {
                 "command": "jupyter.runallcellsabove",
-                "title": "%jupyter.command.jupyter.runAllCellsAbove.title%",
+                "title": "%jupyter.command.jupyter.runallcellsabove.title%",
                 "category": "Jupyter",
                 "enablement": "isWorkspaceTrusted"
             },

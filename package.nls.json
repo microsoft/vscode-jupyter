@@ -110,7 +110,7 @@
         "message": "Collapse All Notebook Cells",
         "comment": ["{Locked='Notebook'}"]
     },
-    "jupyter.command.jupyter.runAllCellsAbove.title": "Run Above",
+    "jupyter.command.jupyter.runallcellsabove.title": "Run Above",
     "jupyter.command.jupyter.runCellAndAllBelow.title": "Run Below",
     "jupyter.command.jupyter.runallcellsabove.palette.title": "Run Cells Above Current Cell",
     "jupyter.command.jupyter.runcurrentcellandallbelow.palette.title": "Run Current Cell and Below",
