@@ -59,7 +59,7 @@ gulp.task('validateTranslationFiles', (done) => {
 
 gulp.task('checkTestResults', async (done) => {
     const core = require('@actions/core');
-    var glob = require('glob');
+    var glob = require('@actions/glob');
 
     let resultsFile;
     const globber = await glob.create('**/test-results*.xml', { followSymbolicLinks: false });
