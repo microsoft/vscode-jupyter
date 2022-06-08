@@ -536,19 +536,19 @@
             },
             {
                 "command": "jupyter.runallcells",
-                "title": "%jupyter.command.jupyter.runallcells.title%",
+                "title": "%jupyter.command.jupyter.runAllCells.title%",
                 "category": "Jupyter",
                 "enablement": "isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.runallcellsabove",
-                "title": "%jupyter.command.jupyter.runallcellsabove.title%",
+                "title": "%jupyter.command.jupyter.runAllCellsAbove.title%",
                 "category": "Jupyter",
                 "enablement": "isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.runcellandallbelow",
-                "title": "%jupyter.command.jupyter.runcellandallbelow.title%",
+                "title": "%jupyter.command.jupyter.runCellAndAllBelow.title%",
                 "category": "Jupyter",
                 "enablement": "isWorkspaceTrusted"
             },
@@ -572,13 +572,13 @@
             },
             {
                 "command": "jupyter.selectjupyteruri",
-                "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
+                "title": "%jupyter.command.jupyter.selectJupyterUri.title%",
                 "category": "Jupyter",
                 "enablement": "isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.selectNativeJupyterUriFromToolBar",
-                "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
+                "title": "%jupyter.command.jupyter.selectJupyterUri.title%",
                 "category": "Jupyter",
                 "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
             },
@@ -676,7 +676,7 @@
             },
             {
                 "command": "jupyter.selectNativeJupyterUriFromToolBar",
-                "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
+                "title": "%jupyter.command.jupyter.selectJupyterUri.title%",
                 "category": "Jupyter",
                 "icon": "$(debug-disconnect)",
                 "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
@@ -940,7 +940,7 @@
                 },
                 {
                     "command": "jupyter.selectNativeJupyterUriFromToolBar",
-                    "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
+                    "title": "%jupyter.command.jupyter.selectJupyterUri.title%",
                     "group": "overflow@1000",
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.globalToolbar != true"
                 }
@@ -1251,7 +1251,7 @@
                 },
                 {
                     "command": "jupyter.runallcells",
-                    "title": "%jupyter.command.jupyter.runallcells.title%",
+                    "title": "%jupyter.command.jupyter.runAllCells.title%",
                     "category": "Jupyter",
                     "when": "jupyter.hascodecells && jupyter.ispythonornativeactive && isWorkspaceTrusted"
                 },
@@ -1503,7 +1503,7 @@
                 },
                 {
                     "command": "jupyter.selectNativeJupyterUriFromToolBar",
-                    "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
+                    "title": "%jupyter.command.jupyter.selectJupyterUri.title%",
                     "when": "false"
                 },
                 {

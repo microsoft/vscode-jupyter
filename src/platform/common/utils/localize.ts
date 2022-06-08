@@ -63,7 +63,7 @@ export namespace Experiments {
     export const inGroup = localize('Experiments.inGroup', "User belongs to experiment group '{0}'");
 }
 export namespace OutputChannelNames {
-    export const jupyter = localize('OutputChannelNames.jupyter', 'Jupyter');
+    export const Jupyter = localize('OutputChannelNames.jupyter', 'Jupyter');
 }
 
 export namespace GitHubIssue {
@@ -173,7 +173,7 @@ export namespace DataScienceRendererExtension {
 export namespace ExtensionSurveyBanner {
     export const bannerMessage = localize(
         'ExtensionSurveyBanner.bannerMessage',
-        'Can you please take 2 minutes to tell us how the Python extension is working for you?'
+        'Can you please take 2 minutes to tell us how the Python Extension is working for you?'
     );
     export const bannerLabelYes = localize('ExtensionSurveyBanner.bannerLabelYes', 'Yes, take survey now');
     export const bannerLabelNo = localize('ExtensionSurveyBanner.bannerLabelNo', 'No, thanks');
@@ -193,7 +193,7 @@ export namespace DataScience {
     export const customizeLayout = localize('DataScience.customizeLayout', 'Customize Layout');
     export const pythonExtensionRequired = localize(
         'DataScience.pythonExtensionRequired',
-        'The Python extension is required to perform that task. Click Yes to open Python extension installation page.'
+        'The Python Extension is required to perform that task. Click Yes to open Python Extension installation page.'
     );
 
     export const pythonExtensionInstalled = localize(
@@ -218,10 +218,7 @@ export namespace DataScience {
     export const interactiveWindowModeBannerTitle = localize(
         {
             key: 'DataScience.interactiveWindowModeBannerTitle',
-            comment: [
-                "{Locked='command:workbench.action.openSettings?%5B%22jupyter.interactiveWindowMode%22%5D'}",
-                "Do not translate the 'command:*' part inside of the '(..)'."
-            ]
+            comment: ["{Locked='command:workbench.action.openSettings?%5B%22jupyter.interactiveWindowMode%22%5D'}"]
         },
         'Do you want to open a new Interactive Window for this file? [More Information](command:workbench.action.openSettings?%5B%22jupyter.interactiveWindowMode%22%5D).'
     );
@@ -248,8 +245,8 @@ export namespace DataScience {
         '<html><body><h1>{0} is not a valid file name</h1></body></html>'
     );
     export const checkingIfImportIsSupported = localize(
-        'DataScience.checkingIfImportIsSupported',
-        'Checking if import is supported'
+        { key: 'DataScience.checkingIfImportIsSupported', comment: ['{Locked="import"}'] },
+        'Checking if "import" is supported'
     );
     export const installingMissingDependencies = localize(
         'DataScience.installingMissingDependencies',
@@ -262,7 +259,7 @@ export namespace DataScience {
     export const performingExport = localize('DataScience.performingExport', 'Performing Export');
     export const convertingToPDF = localize('DataScience.convertingToPDF', 'Converting to PDF');
     export const exportNotebookToPython = localize(
-        'DataScience.exportNotebookToPython',
+        { key: 'DataScience.exportNotebookToPython', comment: ['{Locked="Notebook"}'] },
         'Exporting Notebook to Python'
     );
     export const sessionDisposed = localize(
@@ -282,19 +279,28 @@ export namespace DataScience {
         'Raw kernel process exited before connecting.'
     );
     export const unknownMimeTypeFormat = localize(
-        'DataScience.unknownMimeTypeFormat',
+        { key: 'DataScience.unknownMimeTypeFormat', comment: ['{Locked="Mime type"}'] },
         'Mime type {0} is not currently supported'
     );
-    export const exportDialogTitle = localize('DataScience.exportDialogTitle', 'Export to Jupyter Notebook');
-    export const exportDialogFilter = localize('DataScience.exportDialogFilter', 'Jupyter Notebooks');
+    export const exportDialogTitle = localize(
+        { key: 'DataScience.exportDialogTitle', comment: ['{Locked="Notebook"}'] },
+        'Export to Jupyter Notebook'
+    );
+    export const exportDialogFilter = localize(
+        { key: 'DataScience.exportDialogFilter', comment: ['{Locked="Notebooks"}'] },
+        'Jupyter Notebooks'
+    );
     export const exportDialogComplete = localize('DataScience.exportDialogComplete', 'Notebook written to {0}');
     export const exportDialogFailed = localize('DataScience.exportDialogFailed', 'Failed to export notebook. {0}');
     export const exportOpenQuestion1 = localize('DataScience.exportOpenQuestion1', 'Open in editor');
     export const runCellLensCommandTitle = localize('jupyter.command.jupyter.runcell.title', 'Run Cell');
-    export const importDialogTitle = localize('DataScience.importDialogTitle', 'Import Jupyter Notebook');
-    export const importDialogFilter = localize('DataScience.importDialogFilter', 'Jupyter Notebooks');
+    export const importDialogTitle = localize(
+        { key: 'DataScience.importDialogTitle', comment: ['{Locked="Notebook"}'] },
+        'Import Jupyter Notebook'
+    );
+    export const importDialogFilter = () => 'Jupyter Notebooks';
     export const notebookCheckForImportTitle = localize(
-        'DataScience.notebookCheckForImportTitle',
+        { key: 'DataScience.notebookCheckForImportTitle', comment: ['{Locked="Notebook"}'] },
         'Do you want to import the Jupyter Notebook into Python code?'
     );
     export const notebookCheckForImportYes = localize('DataScience.notebookCheckForImportYes', 'Import');
@@ -349,7 +355,7 @@ export namespace DataScience {
     );
     export const jupyterInstall = localize('DataScience.jupyterInstall', 'Install');
     export const currentlySelectedJupyterInterpreterForPlaceholder = localize(
-        'Datascience.currentlySelectedJupyterInterpreterForPlaceholder',
+        'DataScience.currentlySelectedJupyterInterpreterForPlaceholder',
         'current: {0}'
     );
     export const jupyterNotSupported = localize(
@@ -407,13 +413,13 @@ export namespace DataScience {
     export const connectedToKernel = localize('DataScience.connectedToKernel', 'Connected.');
     export const connectingToJupyter = localize('DataScience.connectingToJupyter', 'Connecting to Jupyter server');
     export const exportingFormat = localize('DataScience.exportingFormat', 'Exporting {0}');
-    export const runAllCellsLensCommandTitle = localize('jupyter.command.jupyter.runallcells.title', 'Run All Cells');
+    export const runAllCellsLensCommandTitle = localize('jupyter.command.jupyter.runAllCells.title', 'Run All Cells');
     export const runAllCellsAboveLensCommandTitle = localize(
-        'jupyter.command.jupyter.runallcellsabove.title',
+        'jupyter.command.jupyter.runAllCellsAbove.title',
         'Run Above'
     );
     export const runCellAndAllBelowLensCommandTitle = localize(
-        'jupyter.command.jupyter.runcellandallbelow.title',
+        'jupyter.command.jupyter.runCellAndAllBelow.title',
         'Run Below'
     );
     export const importChangeDirectoryComment = localize(
@@ -474,7 +480,7 @@ export namespace DataScience {
     export const failedToStartJupyterDueToOutdatedTraitlets = localize(
         {
             key: 'DataScience.failedToStartJupyterDueToOutdatedTraitlets',
-            comment: ['{Locked="command:jupyter.viewOutput"}']
+            comment: ['{Locked="command:jupyter.viewOutput"}', '{Locked="traitless"}']
         },
         "Failed to start Jupyter in the environment '{0}' possibly due to an outdated version of 'traitlets'. \n{1} \nConsider updating the 'traitlets' module to '5.1.1' or later. \nView Jupyter [log](command:jupyter.viewOutput) for further details."
     );
@@ -508,14 +514,18 @@ export namespace DataScience {
     export const kernelDiedWithoutError = localize(
         {
             key: 'DataScience.kernelDiedWithoutError',
-            comment: ['{Locked="command:jupyter.viewOutput"}']
+            comment: ['{Locked="command:jupyter.viewOutput"}', '{Locked="vscodeJupyterKernelCrash"}']
         },
         "The kernel '{0}' died. Click [here](https://aka.ms/vscodeJupyterKernelCrash) for more info. View Jupyter [log](command:jupyter.viewOutput) for further details."
     );
     export const kernelDiedWithoutErrorAndAutoRestarting = localize(
         {
             key: 'DataScience.kernelDiedWithoutErrorAndAutoRestarting',
-            comment: ['{Locked="kernel"}', '{Locked="command:jupyter.viewOutput"}']
+            comment: [
+                '{Locked="kernel"}',
+                '{Locked="command:jupyter.viewOutput"}',
+                '{Locked="vscodeJupyterKernelCrash"}'
+            ]
         },
         "The kernel '{0}' died and is being automatically restarted by Jupyter. Click [here](https://aka.ms/vscodeJupyterKernelCrash) for more info. View Jupyter [log](command:jupyter.viewOutput) for further details."
     );
@@ -685,7 +695,10 @@ export namespace DataScience {
         'DataScience.jupyterServerCrashed',
         'Jupyter server crashed. Unable to connect. \r\nError code from jupyter: {0}'
     );
-    export const notebookVersionFormat = localize('DataScience.notebookVersionFormat', 'Jupyter Notebook Version: {0}');
+    export const notebookVersionFormat = localize(
+        { key: 'DataScience.notebookVersionFormat', comment: ['{Locked="Notebook"}'] },
+        'Jupyter Notebook version: {0}'
+    );
     export const jupyterKernelSpecNotFound = localize(
         { key: 'DataScience.jupyterKernelSpecNotFound', comment: ['{Locked="kernel"}'] },
         'Cannot create a Jupyter kernel spec and none are available for use'
@@ -714,11 +727,11 @@ export namespace DataScience {
     export const inputWatermark = localize('DataScience.inputWatermark', 'Type code here and press shift-enter to run');
     export const liveShareConnectFailure = localize(
         'DataScience.liveShareConnectFailure',
-        'Cannot connect to host jupyter session. URI not found.'
+        'Cannot connect to host Jupyter session. URI not found.'
     );
     export const liveShareCannotSpawnNotebooks = localize(
         'DataScience.liveShareCannotSpawnNotebooks',
-        'Spawning jupyter notebooks is not supported over a live share connection'
+        'Spawning Jupyter notebooks is not supported over a live share connection'
     );
     export const liveShareCannotImportNotebooks = localize(
         'DataScience.liveShareCannotImportNotebooks',
@@ -759,13 +772,16 @@ export namespace DataScience {
     export const jupyterServer = localize('DataScience.jupyterServer', 'Jupyter Server');
     export const noKernel = localize('DataScience.noKernel', 'No Kernel');
     export const serverNotStarted = localize('DataScience.serverNotStarted', 'Not Started');
-    export const selectKernel = localize('DataScience.selectKernel', 'Change Kernel');
+    export const selectKernel = localize(
+        { key: 'DataScience.selectKernel', comment: ['{Locked="Kernel"}'] },
+        'Change Kernel'
+    );
     export const selectDifferentKernel = localize(
         { key: 'DataScience.selectDifferentKernel', comment: ['{Locked="kernel"}'] },
         'Select a different Kernel'
     );
     export const kernelFilterPlaceholder = localize(
-        { key: 'jupyter.kernel.filter.placeholder', comment: ['{Locked="kernel"}'] },
+        { key: 'jupyter.kernel.filter.placeholder', comment: ['{Locked="kernel"}', '{Locked="kernels"}'] },
         'Choose the kernels that are available in the kernel picker.'
     );
     export const selectDifferentJupyterInterpreter = localize(
@@ -808,9 +824,9 @@ export namespace DataScience {
     export const previewStatusMessage = localize('DataScience.previewStatusMessage', 'Generating preview of {0}');
     export const plotViewerTitle = localize('DataScience.plotViewerTitle', 'Plots');
     export const exportPlotTitle = localize('DataScience.exportPlotTitle', 'Save plot image');
-    export const pdfFilter = localize('DataScience.pdfFilter', 'PDF');
-    export const pngFilter = localize('DataScience.pngFilter', 'PNG');
-    export const svgFilter = localize('DataScience.svgFilter', 'SVG');
+    export const pdfFilter = () => 'PDF';
+    export const pngFilter = () => 'PNG';
+    export const svgFilter = () => 'SVG';
     export const previousPlot = localize('DataScience.previousPlot', 'Previous');
     export const nextPlot = localize('DataScience.nextPlot', 'Next');
     export const panPlot = localize('DataScience.panPlot', 'Pan');
@@ -952,7 +968,7 @@ export namespace DataScience {
             key: 'DataScience.notebookNotFound',
             comment: ["{Locked='version'}"]
         },
-        'python -m jupyter notebook --version is not running'
+        'python -m Jupyter notebook --version is not running'
     );
     export const savePngTitle = localize('DataScience.savePngTitle', 'Save Image');
     export const fallbackToUseActiveInterpreterAsKernel = localize(
@@ -975,33 +991,45 @@ export namespace DataScience {
         'DataScience.jupyterStartTimedout',
         "Starting Jupyter has timed out. Please check the 'Jupyter' output panel for further details."
     );
-    export const switchingKernelProgress = localize('DataScience.switchingKernelProgress', "Switching Kernel to '{0}'");
+    export const switchingKernelProgress = localize(
+        { key: 'DataScience.switchingKernelProgress', comment: ['{Locked="Kernel"}'] },
+        "Switching Kernel to '{0}'"
+    );
     export const waitingForJupyterSessionToBeIdle = localize(
         'DataScience.waitingForJupyterSessionToBeIdle',
         'Waiting for Jupyter Session to be idle'
     );
     export const gettingListOfKernelsForLocalConnection = localize(
-        'DataScience.gettingListOfKernelsForLocalConnection',
+        { key: 'DataScience.gettingListOfKernelsForLocalConnection', comment: ['{Locked="Kernels"}'] },
         'Fetching Kernels'
     );
     export const gettingListOfKernelsForRemoteConnection = localize(
-        'DataScience.gettingListOfKernelsForRemoteConnection',
+        { key: 'DataScience.gettingListOfKernelsForRemoteConnection', comment: ['{Locked="Kernels"}'] },
         'Fetching Kernels'
     );
-    export const gettingListOfKernelSpecs = localize('DataScience.gettingListOfKernelSpecs', 'Fetching Kernel specs');
-    export const startingJupyterNotebook = localize('DataScience.startingJupyterNotebook', 'Starting Jupyter Notebook');
-    export const registeringKernel = localize('DataScience.registeringKernel', 'Registering Kernel');
+    export const gettingListOfKernelSpecs = localize(
+        { key: 'DataScience.gettingListOfKernelSpecs', comment: ['{Locked="Kernel"}'] },
+        'Fetching Kernel specs'
+    );
+    export const startingJupyterNotebook = localize(
+        { key: 'DataScience.startingJupyterNotebook', comment: ['{Locked="Notebook"}'] },
+        'Starting Jupyter Notebook'
+    );
+    export const registeringKernel = localize(
+        { key: 'DataScience.registeringKernel', comment: ['{Locked="Kernel"}'] },
+        'Registering Kernel'
+    );
     export const trimmedOutput = localize(
         {
             key: 'DataScience.trimmedOutput',
-            comment: ["{Locked='command:textOutputLimit'}"]
+            comment: ["{Locked='jupyter.textOutputLimit'}"]
         },
         'Output was trimmed for performance reasons.\nTo see the full output set the setting "jupyter.textOutputLimit" to 0.'
     );
     export const jupyterCommandLineDefaultLabel = localize('DataScience.jupyterCommandLineDefaultLabel', 'Default');
     export const jupyterCommandLineDefaultDetail = localize(
         'DataScience.jupyterCommandLineDefaultDetail',
-        'The Python extension will determine the appropriate command line for Jupyter'
+        'The Python Extension will determine the appropriate command line for Jupyter'
     );
     export const jupyterCommandLineCustomLabel = localize('DataScience.jupyterCommandLineCustomLabel', 'Custom');
     export const jupyterCommandLineCustomDetail = localize(
@@ -1040,14 +1068,14 @@ export namespace DataScience {
 
     export const nativeDependencyFail = localize(
         'DataScience.nativeDependencyFail',
-        '{0}. We cannot launch a jupyter server for you because your OS is not supported. Select an already running server if you wish to continue.'
+        '{0}. We cannot launch a Jupyter server for you because your OS is not supported. Select an already running server if you wish to continue.'
     );
 
     export const selectNewServer = localize('DataScience.selectNewServer', 'Pick Running Server');
     export const jupyterSelectURIRemoteLabel = localize('DataScience.jupyterSelectURIRemoteLabel', 'Existing');
     export const jupyterSelectURIQuickPickTitleRemoteOnly = localize(
         'DataScience.jupyterSelectURIQuickPickTitleRemoteOnly',
-        'Pick an already running jupyter server'
+        'Pick an already running Jupyter server'
     );
     export const jupyterSelectURIRemoteDetail = localize(
         'DataScience.jupyterSelectURIRemoteDetail',
@@ -1058,7 +1086,7 @@ export namespace DataScience {
         'Remove'
     );
     export const specifyLocalOrRemoteJupyterServerForConnections = localize(
-        'jupyter.command.jupyter.selectjupyteruri.title',
+        'jupyter.command.jupyter.selectJupyterUri.title',
         'Specify Jupyter Server for Connections'
     );
     export const jupyterNativeNotebookUriStatusLabelForLocal = localize(
@@ -1086,7 +1114,10 @@ export namespace DataScience {
         'Widgets require us to download supporting files from a 3rd party website. Click [here](https://aka.ms/PVSCIPyWidgets) for more information.'
     );
     export const enableCDNForWidgetsSettingHtml = localize(
-        'DataScience.enableCDNForWidgetsSettingHtml',
+        {
+            key: 'DataScience.enableCDNForWidgetsSettingHtml',
+            comment: ['{Locked="command:jupyter.enableLoadingWidgetScriptsFromThirdPartySource"}']
+        },
         "Widgets require us to download supporting files from a 3rd party website. Click <a href='https://command:jupyter.enableLoadingWidgetScriptsFromThirdPartySource'>here</a> to enable this or click <a href='https://aka.ms/PVSCIPyWidgets'>here</a> for more information. (Error loading {0}:{1})."
     );
 
@@ -1187,11 +1218,20 @@ export namespace DataScience {
         '(Remote) Jupyter Kernel'
     );
     export const kernelCategoryForConda = localize('jupyter.kernel.category.conda', 'Conda Env');
-    export const kernelCategoryForPoetry = localize('jupyter.kernel.category.poetry', 'Poetry Env');
+    export const kernelCategoryForPoetry = localize(
+        { key: 'jupyter.kernel.category.poetry', comment: ['{Locked="Poetry"}'] },
+        'Poetry Env'
+    );
     export const kernelCategoryForPipEnv = localize('jupyter.kernel.category.pipenv', 'Pipenv Env');
     export const kernelCategoryForPyEnv = localize('jupyter.kernel.category.pyenv', 'PyEnv Env');
-    export const kernelCategoryForGlobal = localize('jupyter.kernel.category.global', 'Global Env');
-    export const kernelCategoryForVirtual = localize('jupyter.kernel.category.virtual', 'Virtual Env');
+    export const kernelCategoryForGlobal = localize(
+        { key: 'jupyter.kernel.category.global', comment: ['{Locked="Global"}'] },
+        'Global Env'
+    );
+    export const kernelCategoryForVirtual = localize(
+        { key: 'jupyter.kernel.category.virtual', comment: ['{Locked="Virtual"}'] },
+        'Virtual Env'
+    );
 
     export const fileSeemsToBeInterferingWithKernelStartup = localize(
         { key: 'DataScience.fileSeemsToBeInterferingWithKernelStartup', comment: ['{Locked="kernel"}'] },
@@ -1204,20 +1244,14 @@ export namespace DataScience {
     export const percentPipCondaInstallInsteadOfBang = localize(
         {
             key: 'jupyter.kernel.percentPipCondaInstallInsteadOfBang',
-            comment: [
-                '{Locked="install"}',
-                'Instances of "install" here are parameters to a program, so they should not change.'
-            ]
+            comment: ['{Locked="install"}']
         },
         "Use '%{0} install' instead of '!{0} install'"
     );
     export const replacePipCondaInstallCodeAction = localize(
         {
             key: 'jupyter.kernel.replacePipCondaInstallCodeAction',
-            comment: [
-                '{Locked="install"}',
-                'Instances of "install" here are parameters to a program, so they should not change.'
-            ]
+            comment: ['{Locked="install"}']
         },
         "Replace with '%{0} install'"
     );
