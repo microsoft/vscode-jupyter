@@ -977,9 +977,9 @@ export namespace DataScience {
         localize(
             {
                 key: 'DataScience.notebookNotFound',
-                comment: ["{Locked='version'}"]
+                comment: ["{Locked='python -m jupyter notebook --version'}"]
             },
-            'python -m Jupyter notebook --version is not running'
+            'python -m jupyter notebook --version is not running'
         );
     export const savePngTitle = localize('DataScience.savePngTitle', 'Save Image');
     export const fallbackToUseActiveInterpreterAsKernel = () =>

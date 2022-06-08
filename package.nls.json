@@ -646,7 +646,10 @@
     "DataScience.untitledNotebookYes": "Save",
     "DataScience.untitledNotebookNo": "Cancel",
     "DataScience.noInterpreter": "No python selected",
-    "DataScience.notebookNotFound": "python -m Jupyter notebook --version is not running",
+    "DataScience.notebookNotFound": {
+      "message": "python -m jupyter notebook --version is not running",
+      "comment": ["{Locked='python -m jupyter notebook --version'}"]
+    },
     "DataScience.savePngTitle": "Save Image",
     "DataScience.jupyterSelectURIQuickPickTitle": "Pick how to connect to Jupyter",
     "DataScience.jupyterSelectURIQuickPickPlaceholder": "Choose an option",
