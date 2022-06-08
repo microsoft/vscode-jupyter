@@ -3175,7 +3175,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/kernelCommandListener.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelCommandListener.ts)
+[src/notebooks/notebookCommandListener.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/notebookCommandListener.ts)
 ```typescript
             return;
         }
