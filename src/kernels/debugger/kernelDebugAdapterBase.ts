@@ -106,7 +106,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
                         !this.disconnected
                     ) {
                         sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'normally' });
-                        void this.disconnect();
+                        this.disconnect().ignoreErrors();
                     }
                 },
                 this,
@@ -120,7 +120,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
                     e.contentChanges.forEach((change) => {
                         change.removedCells.forEach((cell: NotebookCell) => {
                             if (cell === this.debugCell) {
-                                void this.disconnect();
+                                this.disconnect().ignoreErrors();
                             }
                         });
                     });

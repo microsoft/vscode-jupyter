@@ -79,9 +79,11 @@ export class JupyterPaths {
                     }
                 }
             })();
-        void this.cachedKernelSpecRootPath.then((value) => {
-            void this.updateCachedRootPath(value);
-        });
+        this.cachedKernelSpecRootPath
+            .then((value) => {
+                return this.updateCachedRootPath(value);
+            })
+            .ignoreErrors();
         if (this.getCachedRootPath()) {
             return this.getCachedRootPath();
         }

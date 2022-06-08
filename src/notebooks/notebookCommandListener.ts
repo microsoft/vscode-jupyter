@@ -79,9 +79,9 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                 Commands.NotebookEditorInterruptKernel,
                 (context?: { notebookEditor: { notebookUri: Uri } } | Uri) => {
                     if (context && 'notebookEditor' in context) {
-                        void this.interruptKernel(context?.notebookEditor?.notebookUri);
+                        this.interruptKernel(context?.notebookEditor?.notebookUri).ignoreErrors();
                     } else {
-                        void this.interruptKernel(context);
+                        this.interruptKernel(context).ignoreErrors();
                     }
                 }
             )
@@ -91,9 +91,9 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                 Commands.NotebookEditorRestartKernel,
                 (context?: { notebookEditor: { notebookUri: Uri } } | Uri) => {
                     if (context && 'notebookEditor' in context) {
-                        void this.restartKernel(context?.notebookEditor?.notebookUri);
+                        this.restartKernel(context?.notebookEditor?.notebookUri).ignoreErrors();
                     } else {
-                        void this.restartKernel(context);
+                        this.restartKernel(context).ignoreErrors();
                     }
                 }
             )
@@ -225,12 +225,12 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                 );
                 if (response === dontAskAgain) {
                     await this.disableAskForRestart(document.uri);
-                    void this.wrapKernelMethod('restart', kernel);
+                    this.wrapKernelMethod('restart', kernel).ignoreErrors();
                 } else if (response === yes) {
-                    void this.wrapKernelMethod('restart', kernel);
+                    this.wrapKernelMethod('restart', kernel).ignoreErrors();
                 }
             } else {
-                void this.wrapKernelMethod('restart', kernel);
+                this.wrapKernelMethod('restart', kernel).ignoreErrors();
             }
         }
     }

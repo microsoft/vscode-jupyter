@@ -38,20 +38,20 @@ export class Activation implements IExtensionSingleActivationService {
             return;
         }
         this.notebookOpened = true;
-        void this.PreWarmDaemonPool();
+        this.PreWarmDaemonPool().ignoreErrors();
         sendTelemetryEvent(Telemetry.OpenNotebookAll);
 
         if (!this.rawSupported.isSupported && this.extensionChecker.isPythonExtensionInstalled) {
             // Warm up our selected interpreter for the extension
-            void this.jupyterInterpreterService.setInitialInterpreter();
+            this.jupyterInterpreterService.setInitialInterpreter().ignoreErrors();
         }
     }
 
     private onDidChangeInterpreter() {
         if (this.notebookOpened && !this.rawSupported.isSupported && this.extensionChecker.isPythonExtensionInstalled) {
             // Warm up our selected interpreter for the extension
-            void this.jupyterInterpreterService.setInitialInterpreter();
-            void this.PreWarmDaemonPool();
+            this.jupyterInterpreterService.setInitialInterpreter().ignoreErrors();
+            this.PreWarmDaemonPool().ignoreErrors();
         }
     }
 
