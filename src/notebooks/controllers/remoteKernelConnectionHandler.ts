@@ -3,15 +3,15 @@
 
 import { inject, injectable } from 'inversify';
 import { Disposable, NotebookDocument } from 'vscode';
-import { IVSCodeNotebookController } from '../../notebooks/controllers/types';
-import { INotebookControllerManager } from '../../notebooks/types';
+import { IVSCodeNotebookController } from './types';
+import { INotebookControllerManager } from '../types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { traceInfo } from '../../platform/logging';
-import { IKernel, IKernelProvider, isLocalConnection } from '../types';
-import { PreferredRemoteKernelIdProvider } from './preferredRemoteKernelIdProvider';
-import { ILiveRemoteKernelConnectionUsageTracker } from './types';
+import { IKernel, IKernelProvider, isLocalConnection } from '../../kernels/types';
+import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/preferredRemoteKernelIdProvider';
+import { ILiveRemoteKernelConnectionUsageTracker } from '../../kernels/jupyter/types';
 
 @injectable()
 export class RemoteKernelConnectionHandler implements IExtensionSyncActivationService {

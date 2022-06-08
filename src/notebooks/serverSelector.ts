@@ -5,13 +5,13 @@
 
 import { inject, injectable } from 'inversify';
 import { NotebookDocument, Uri } from 'vscode';
-import { INotebookControllerManager } from '../../../notebooks/types';
-import { ICommandManager } from '../../../platform/common/application/types';
-import { Commands } from '../../../platform/common/constants';
-import { IDisposable } from '../../../platform/common/types';
-import { traceInfo } from '../../../platform/logging';
-import { JupyterServerSelector, SelectJupyterUriCommandSource } from '../serverSelector';
-import { IJupyterServerUriStorage } from '../types';
+import { INotebookControllerManager } from './types';
+import { ICommandManager } from '../platform/common/application/types';
+import { Commands } from '../platform/common/constants';
+import { IDisposable } from '../platform/common/types';
+import { traceInfo } from '../platform/logging';
+import { JupyterServerSelector, SelectJupyterUriCommandSource } from '../kernels/jupyter/serverSelector';
+import { IJupyterServerUriStorage } from '../kernels/jupyter/types';
 
 @injectable()
 export class JupyterServerSelectorCommand implements IDisposable {

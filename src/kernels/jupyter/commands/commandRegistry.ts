@@ -8,7 +8,7 @@ import { IExtensionSingleActivationService } from '../../../platform/activation/
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { IDisposable } from '../../../platform/common/types';
 import { JupyterCommandLineSelectorCommand } from './commandLineSelector';
-import { JupyterServerSelectorCommand } from './serverSelector';
+import { JupyterServerSelectorCommand } from '../../../notebooks/serverSelector';
 
 @injectable()
 export class CommandRegistry implements IExtensionSingleActivationService {
