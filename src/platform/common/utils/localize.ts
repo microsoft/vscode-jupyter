@@ -135,23 +135,38 @@ export namespace DataScienceSurveyBanner {
 }
 export namespace DataScienceRendererExtension {
     export const installingExtension = localize(
-        'DataScienceRendererExtension.installingExtension',
+        {
+            key: 'DataScienceRendererExtension.installingExtension',
+            comment: ['{Locked="Notebook Renderers"}']
+        },
         'Installing Notebook Renderers extension... '
     );
     export const installationCompleteMessage = localize(
-        'DataScienceRendererExtension.installationCompleteMessage',
+        {
+            key: 'DataScienceRendererExtension.installationCompleteMessage',
+            comment: ['{Locked="Notebook Renderers"}']
+        },
         'complete.'
     );
     export const startingDownloadOutputMessage = localize(
-        'DataScienceRendererExtension.startingDownloadOutputMessage',
+        {
+            key: 'DataScienceRendererExtension.startingDownloadOutputMessage',
+            comment: ['{Locked="Notebook Renderers"}']
+        },
         'Starting download of Notebook Renderers extension.'
     );
     export const downloadingMessage = localize(
-        'DataScienceRendererExtension.downloadingMessage',
+        {
+            key: 'DataScienceRendererExtension.downloadingMessage',
+            comment: ['{Locked="Notebook Renderers"}']
+        },
         'Downloading Notebook Renderers Extension... '
     );
     export const downloadCompletedOutputMessage = localize(
-        'DataScienceRendererExtension.downloadCompletedOutputMessage',
+        {
+            key: 'DataScienceRendererExtension.downloadCompletedOutputMessage',
+            comment: ['{Locked="Notebook Renderers"}']
+        },
         'Notebook Renderers extension download complete.'
     );
 }
