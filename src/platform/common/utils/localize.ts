@@ -428,7 +428,7 @@ export namespace DataScience {
     export const runAllCellsAboveLensCommandTitle = () =>
         localize('jupyter.command.jupyter.runallcellsabove.title', 'Run Above');
     export const runCellAndAllBelowLensCommandTitle = () =>
-        localize('jupyter.command.jupyter.runCellAndAllBelow.title', 'Run Below');
+        localize('jupyter.command.jupyter.runcellandallbelow.title', 'Run Below');
     export const importChangeDirectoryComment = () =>
         localize(
             {

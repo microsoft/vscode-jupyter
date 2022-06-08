@@ -548,7 +548,7 @@
             },
             {
                 "command": "jupyter.runcellandallbelow",
-                "title": "%jupyter.command.jupyter.runCellAndAllBelow.title%",
+                "title": "%jupyter.command.jupyter.runcellandallbelow.title%",
                 "category": "Jupyter",
                 "enablement": "isWorkspaceTrusted"
             },
