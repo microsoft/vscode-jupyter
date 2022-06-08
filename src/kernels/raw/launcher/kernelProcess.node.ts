@@ -275,7 +275,7 @@ export class KernelProcess implements IKernelProcess {
         traceVerbose('Dispose Kernel process');
         this.disposed = true;
         swallowExceptions(() => {
-            void this._interruptDaemon?.kill();
+            this._interruptDaemon?.kill().ignoreErrors();
             this._process?.kill(); // NOSONAR
             this.exitEvent.fire({});
         });

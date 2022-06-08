@@ -4,16 +4,15 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Uri, NotebookData, NotebookCellData, NotebookCellKind } from 'vscode';
+import { Uri, NotebookData, NotebookCellData, NotebookCellKind, NotebookEditor, window } from 'vscode';
 import { IVSCodeNotebook } from '../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../platform/common/constants';
+import { JupyterNotebookView, PYTHON_LANGUAGE } from '../platform/common/constants';
 import '../platform/common/extensions';
 import { Resource } from '../platform/common/types';
 import { getResourceType } from '../platform/common/utils';
 import { getComparisonKey } from '../platform/vscode-path/resources';
 import { captureTelemetry } from '../telemetry';
 import { Telemetry, defaultNotebookFormat } from '../webviews/webview-side/common/constants';
-import { JupyterNotebookView } from './constants';
 import { IEmbedNotebookEditorProvider, INotebookEditorProvider } from './types';
 import { getOSType, OSType } from '../platform/common/utils/platform';
 
@@ -78,6 +77,13 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 return editor;
             }
         }
+    }
+
+    get activeNotebookEditor(): NotebookEditor | undefined {
+        return (
+            this.findNotebookEditor(window.activeNotebookEditor?.notebook.uri) ||
+            this.findNotebookEditor(window.activeTextEditor?.document.uri)
+        );
     }
 
     findAssociatedNotebookDocument(uri: Uri) {

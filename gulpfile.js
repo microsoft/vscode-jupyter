@@ -364,3 +364,27 @@ gulp.task('validateTelemetryMD', async () => {
         throw new Error('Telemetry MD is not valid, please re-run `npm run generateTelemetry`');
     }
 });
+
+gulp.task('validateDependencies', async () => {
+    const packageLock = fs.readFileSync(path.join(__dirname, 'package-lock.json'), 'utf-8');
+    const dependencies = JSON.parse(packageLock).dependencies;
+    const modules = [];
+    Object.keys(dependencies).forEach((key) => {
+        const value = dependencies[key];
+        const requires = value.requires;
+
+        if (requires && requires['moment']) {
+            modules.push(key);
+        }
+    });
+
+    if (modules.length > 0) {
+        console.log(modules);
+        if (modules.length > 1 || modules[0] !== '@jupyterlab/coreutils') {
+            // we already validate that we are not using moment in @jupyterlab/coreutils
+            const message = `The following modules require moment: ${modules.join(', ')}. Please validate if moment is being used.`;
+            console.error(message);
+            throw new Error(message);
+        }
+    }
+});

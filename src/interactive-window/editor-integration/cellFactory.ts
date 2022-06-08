@@ -8,10 +8,10 @@ import { NotebookCell, NotebookCellKind, NotebookDocument, Range, TextDocument, 
 
 import { appendLineFeed, generateMarkdownFromCodeLines, parseForComments } from '../../webviews/webview-side/common';
 import { CellMatcher } from './cellMatcher';
-import { createJupyterCellFromVSCNotebookCell } from '../../notebooks/helpers';
 import { ICell, ICellRange, IJupyterSettings, Resource } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { getInteractiveCellMetadata } from '../helpers';
+import { createJupyterCellFromVSCNotebookCell } from '../../kernels/execution/helpers';
 
 export function createCodeCell(): nbformat.ICodeCell;
 // eslint-disable-next-line @typescript-eslint/unified-signatures

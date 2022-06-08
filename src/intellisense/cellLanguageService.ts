@@ -24,8 +24,7 @@ import {
     getLanguageInNotebookMetadata
 } from '../kernels/helpers';
 import { KernelConnectionMetadata } from '../kernels/types';
-import { isJupyterNotebook, getNotebookMetadata } from '../notebooks/helpers';
-import { translateKernelLanguageToMonaco } from '../platform/common/utils';
+import { getNotebookMetadata, isJupyterNotebook, translateKernelLanguageToMonaco } from '../platform/common/utils';
 
 export const LastSavedNotebookCellLanguage = 'DATASCIENCE.LAST_SAVED_CELL_LANGUAGE';
 /**

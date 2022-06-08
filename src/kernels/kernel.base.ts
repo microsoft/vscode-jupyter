@@ -58,10 +58,10 @@ import { Cancellation, isCancellationError } from '../platform/common/cancellati
 import { KernelProgressReporter } from '../platform/progress/kernelProgressReporter';
 import { DisplayOptions } from './displayOptions';
 import { SilentExecutionErrorOptions } from './helpers';
-import { traceCellMessage } from '../notebooks/helpers';
-import { KernelExecution } from '../notebooks/execution/kernelExecution';
-import { CellOutputDisplayIdTracker } from '../notebooks/execution/cellDisplayIdTracker';
 import { IStatusProvider } from '../platform/progress/types';
+import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
+import { traceCellMessage } from './execution/helpers';
+import { KernelExecution } from './execution/kernelExecution';
 
 export abstract class BaseKernel implements IKernel {
     private readonly disposables: IDisposable[] = [];
@@ -648,10 +648,12 @@ export abstract class BaseKernel implements IKernel {
      * https://github.com/microsoft/vscode-jupyter/issues/9014
      */
     private requestEmptyCompletions() {
-        void this.session?.requestComplete({
-            code: '__file__.',
-            cursor_pos: 9
-        });
+        this.session
+            ?.requestComplete({
+                code: '__file__.',
+                cursor_pos: 9
+            })
+            .ignoreErrors();
     }
 
     private getMatplotLibInitializeCode(): string[] {

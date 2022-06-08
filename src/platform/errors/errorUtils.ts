@@ -1,15 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import {
-    NotebookCell,
-    NotebookCellOutput,
-    NotebookCellOutputItem,
-    NotebookController,
-    Uri,
-    WorkspaceFolder
-} from 'vscode';
-import { CellExecutionCreator } from '../../notebooks/execution/cellExecutionCreator';
+import { NotebookCellOutput, NotebookCellOutputItem, Uri, WorkspaceFolder } from 'vscode';
 import { getDisplayPath } from '../common/platform/fs-paths';
 import { DataScience } from '../common/utils/localize';
 import { JupyterConnectError } from './jupyterConnectError';
@@ -573,30 +565,6 @@ function isBuiltInModuleOverwritten(
         moreInfoLink: 'https://aka.ms/kernelFailuresOverridingBuiltInModules',
         telemetrySafeTags: ['import.error', 'override.modules']
     };
-}
-
-export async function endCellAndDisplayErrorsInCell(
-    cell: NotebookCell,
-    controller: NotebookController,
-    errorMessage: string,
-    isCancelled: boolean
-) {
-    const execution = CellExecutionCreator.getOrCreate(cell, controller);
-    const output = createOutputWithErrorMessageForDisplay(errorMessage);
-    if (!output) {
-        if (execution.started) {
-            execution.end(isCancelled ? undefined : false, cell.executionSummary?.timing?.endTime);
-        }
-        return;
-    }
-    // Start execution if not already (Cell execution wrapper will ensure it won't start twice)
-    const started = execution.started;
-    if (!started) {
-        execution.start(cell.executionSummary?.timing?.endTime);
-        execution.executionOrder = cell.executionSummary?.executionOrder;
-    }
-    await execution.appendOutput(output);
-    execution.end(isCancelled ? undefined : false, cell.executionSummary?.timing?.endTime);
 }
 
 export function createOutputWithErrorMessageForDisplay(errorMessage: string) {

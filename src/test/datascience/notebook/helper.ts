@@ -48,9 +48,7 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { LastSavedNotebookCellLanguage } from '../../../intellisense/cellLanguageService';
 import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeNotebookController';
-import { chainWithPendingUpdates } from '../../../notebooks/execution/notebookUpdater';
-import { NotebookCellStateTracker, hasErrorOutput, getTextOutputValue } from '../../../notebooks/helpers';
-import { INotebookControllerManager, CellOutputMimeTypes, INotebookEditorProvider } from '../../../notebooks/types';
+import { INotebookControllerManager, INotebookEditorProvider } from '../../../notebooks/types';
 import { InteractiveControllerIdSuffix } from '../../../notebooks/controllers/notebookControllerManager';
 import { IVSCodeNotebookController } from '../../../notebooks/controllers/types';
 import { IS_SMOKE_TEST } from '../../constants';
@@ -63,6 +61,13 @@ import { VSCodeNotebook } from '../../../platform/common/application/notebook';
 import { IDebuggingManager, IKernelDebugAdapter } from '../../../kernels/debugger/types';
 import { PythonKernelCompletionProvider } from '../../../intellisense/pythonKernelCompletionProvider';
 import { verifySelectedControllerIsRemoteForRemoteTests } from '../helpers';
+import {
+    NotebookCellStateTracker,
+    hasErrorOutput,
+    CellOutputMimeTypes,
+    getTextOutputValue
+} from '../../../kernels/execution/helpers';
+import { chainWithPendingUpdates } from '../../../kernels/execution/notebookUpdater';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;

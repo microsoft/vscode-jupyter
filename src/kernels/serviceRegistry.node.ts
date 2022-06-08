@@ -7,15 +7,12 @@ import { IExtensionSingleActivationService, IExtensionSyncActivationService } fr
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { IApplicationEnvironment } from '../platform/common/application/types';
 import { JVSC_EXTENSION_ID } from '../platform/common/constants';
-import { IDataScienceCommandListener } from '../platform/common/types';
 import { ProtocolParser } from '../platform/debugger/extension/helpers/protocolParser.node';
 import { IProtocolParser } from '../platform/debugger/extension/types.node';
 import { IServiceManager } from '../platform/ioc/types';
 import { setSharedProperty } from '../telemetry';
 import { InteractiveWindowDebugger } from '../interactive-window/debugger/interactiveWindowDebugger.node';
-import { JupyterDebugService } from '../notebooks/debugger/jupyterDebugService.node';
 import { registerInstallerTypes } from './installer/serviceRegistry.node';
-import { KernelCommandListener } from './kernelCommandListener';
 import { KernelDependencyService } from './kernelDependencyService.node';
 import { JupyterPaths } from './raw/finder/jupyterPaths.node';
 import { LocalKernelFinder } from './raw/finder/localKernelFinder.node';
@@ -51,6 +48,7 @@ import { registerTypes as registerJupyterTypes } from './jupyter/serviceRegistry
 import { KernelProvider } from './kernelProvider.node';
 import { KernelFinder } from './kernelFinder.node';
 import { ServerConnectionType } from './jupyter/launcher/serverConnectionType';
+import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IRawNotebookSupportedService>(
@@ -81,7 +79,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         IExtensionSingleActivationService,
         PreWarmActivatedJupyterEnvironmentVariables
     );
-    serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, KernelCommandListener);
     serviceManager.addSingleton<IInteractiveWindowDebugger>(IInteractiveWindowDebugger, InteractiveWindowDebugger);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
@@ -105,11 +102,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         IJupyterDebugService,
         MultiplexingDebugService,
         Identifiers.MULTIPLEXING_DEBUGSERVICE
-    );
-    serviceManager.addSingleton<IJupyterDebugService>(
-        IJupyterDebugService,
-        JupyterDebugService,
-        Identifiers.RUN_BY_LINE_DEBUGSERVICE
     );
     serviceManager.add<IJupyterVariableDataProvider>(IJupyterVariableDataProvider, JupyterVariableDataProvider);
     serviceManager.addSingleton<IJupyterVariableDataProviderFactory>(
@@ -147,4 +139,5 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     );
     const rawService = serviceManager.get<IRawNotebookSupportedService>(IRawNotebookSupportedService);
     setSharedProperty('rawKernelSupported', rawService.isSupported ? 'true' : 'false');
+    serviceManager.addSingleton<CellOutputDisplayIdTracker>(CellOutputDisplayIdTracker, CellOutputDisplayIdTracker);
 }

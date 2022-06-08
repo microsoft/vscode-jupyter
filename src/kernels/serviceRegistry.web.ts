@@ -18,8 +18,6 @@ import { IKernelFinder, IKernelProvider } from './types';
 import { KernelProvider } from './kernelProvider.web';
 import { KernelFinder } from './kernelFinder.web';
 import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
-import { IDataScienceCommandListener } from '../platform/common/types';
-import { KernelCommandListener } from './kernelCommandListener';
 import { MultiplexingDebugService } from './debugger/multiplexingDebugService';
 import { IJupyterDebugService } from './debugger/types';
 import { JupyterVariableDataProviderFactory } from '../webviews/extension-side/dataviewer/jupyterVariableDataProviderFactory';
@@ -33,6 +31,7 @@ import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
 import { KernelVariables } from './variables/kernelVariables';
 import { JupyterVariables } from './variables/jupyterVariables';
 import { PythonVariablesRequester } from './variables/pythonVariableRequester';
+import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
@@ -92,9 +91,10 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         PreferredRemoteKernelIdProvider
     );
     serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
-    serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, KernelCommandListener);
 
     // Subdirectories
     registerWidgetTypes(serviceManager, isDevMode);
     registerJupyterTypes(serviceManager, isDevMode);
+
+    serviceManager.addSingleton<CellOutputDisplayIdTracker>(CellOutputDisplayIdTracker, CellOutputDisplayIdTracker);
 }

@@ -14,7 +14,7 @@ import {
 import { Resource } from '../platform/common/types';
 import { KernelConnectionMetadata, LiveRemoteKernelConnectionMetadata } from '../kernels/types';
 import { IVSCodeNotebookController } from './controllers/types';
-import { InteractiveWindowView, JupyterNotebookView } from './constants';
+import { JupyterNotebookView, InteractiveWindowView } from '../platform/common/constants';
 
 export const INotebookKernelResolver = Symbol('INotebookKernelResolver');
 
@@ -50,11 +50,6 @@ export interface INotebookControllerManager {
         serverId?: string
     ): Promise<{ preferredConnection?: KernelConnectionMetadata; controller?: IVSCodeNotebookController }>;
 }
-export enum CellOutputMimeTypes {
-    error = 'application/vnd.code.notebook.error',
-    stderr = 'application/vnd.code.notebook.stderr',
-    stdout = 'application/vnd.code.notebook.stdout'
-}
 
 export const INotebookCompletionProvider = Symbol('INotebookCompletionProvider');
 
@@ -78,6 +73,7 @@ export const INotebookEditorProvider = Symbol('INotebookEditorProvider');
 export interface INotebookEditorProvider {
     open(file: Uri): Promise<void>;
     createNew(options?: { contents?: string; defaultCellLanguage?: string }): Promise<void>;
+    activeNotebookEditor: NotebookEditor | undefined;
     findNotebookEditor(resource: Resource): NotebookEditor | undefined;
     findAssociatedNotebookDocument(uri: Uri): NotebookDocument | undefined;
     registerEmbedNotebookProvider(provider: IEmbedNotebookEditorProvider): void;

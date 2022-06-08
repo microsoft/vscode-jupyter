@@ -4,7 +4,7 @@
 import { Disposable, EventEmitter, NotebookCell } from 'vscode';
 import { traceInfo, traceError } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
-import { traceCellMessage } from '../helpers';
+import { traceCellMessage } from './helpers';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
 import { IJupyterSession, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
 

@@ -13,7 +13,7 @@ import { DebuggingTelemetry } from '../../kernels/debugger/constants';
 import { traceInfoIfCI, traceVerbose } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
 import { Commands } from '../../platform/common/constants';
-import { cellDebugSetup } from './helper';
+import { cellDebugSetup } from '../../kernels/debugger/helper';
 import { IDebuggingDelegate, IKernelDebugAdapter, KernelDebugMode } from '../../kernels/debugger/types';
 
 export class RunByLineController implements IDebuggingDelegate {

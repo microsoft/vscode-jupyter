@@ -8,7 +8,6 @@ import * as path from '../platform/vscode-path/path';
 import { NotebookCellExecutionStateChangeEvent, NotebookCellKind, NotebookDocument, TextDocument } from 'vscode';
 import { captureTelemetry, sendTelemetryEvent } from '.';
 import { splitMultilineString } from '../webviews/webview-side/common';
-import { getAssociatedJupyterNotebook, isJupyterNotebook } from '../notebooks/helpers';
 import { IExtensionSingleActivationService } from '../platform/activation/types';
 import { IDocumentManager, IVSCodeNotebook } from '../platform/common/application/types';
 import { isCI, isTestExecution, PYTHON_LANGUAGE } from '../platform/common/constants';
@@ -18,6 +17,7 @@ import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { noop } from '../platform/common/utils/misc';
 import { EventName } from './constants';
 import { getTelemetrySafeHashedString } from './helpers';
+import { getAssociatedJupyterNotebook, isJupyterNotebook } from '../platform/common/utils';
 
 /*
 Python has a fairly rich import statement. Originally the matching regexp was kept simple for

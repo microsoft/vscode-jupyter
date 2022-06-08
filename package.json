@@ -746,18 +746,6 @@
                 "enablement": "!jupyter.webExtension"
             },
             {
-                "command": "jupyter.createGitHubIssue",
-                "title": "%jupyter.command.jupyter.createGitHubIssue.title%",
-                "enablement": "config.noExists",
-                "category": "Jupyter"
-            },
-            {
-                "command": "jupyter.submitGitHubIssue",
-                "title": "%jupyter.command.jupyter.submitGitHubIssue.title%",
-                "enablement": "config.noExists",
-                "category": "Jupyter"
-            },
-            {
                 "command": "jupyter.enableDebugLogging",
                 "title": "%jupyter.command.jupyter.enableDebugLogging.title%",
                 "category": "Jupyter",
@@ -1475,16 +1463,6 @@
                     "when": "config.jupyter.logging.level != debug"
                 },
                 {
-                    "command": "jupyter.createGitHubIssue",
-                    "category": "Jupyter",
-                    "when": "config.jupyter.logging.level == debug && config.noExists"
-                },
-                {
-                    "command": "jupyter.submitGitHubIssue",
-                    "category": "Jupyter",
-                    "when": "false"
-                },
-                {
                     "command": "jupyter.showDataViewer",
                     "category": "Jupyter",
                     "when": "false"
@@ -2141,6 +2119,7 @@
         "download-api": "vscode-dts dev",
         "postdownload-api": "vscode-dts main",
         "generateTelemetry": "gulp generateTelemetryMd",
+        "validateDependencies": "gulp validateDependencies",
         "openInBrowser": "vscode-test-web --extensionDevelopmentPath=. ./src/test/datascience",
         "startJupyterServer": "node build/preDebugWebTest.js",
         "stopJupyterServer": "node build/postDebugWebTest.js",

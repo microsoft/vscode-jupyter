@@ -14,12 +14,12 @@ import { DataScience } from '../../platform/common/utils/localize';
 import { isUri } from '../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
-import { getNotebookMetadata, isPythonNotebook } from '../../notebooks/helpers';
 import { INotebookControllerManager } from '../../notebooks/types';
 import { Commands, Telemetry } from '../../platform/common/constants';
 import { IFileConverter, ExportFormat } from '../../platform/export/types';
 import { IExportCommands, IInteractiveWindowProvider } from '../types';
 import { IFileSystem } from '../../platform/common/platform/types';
+import { isPythonNotebook, getNotebookMetadata } from '../../platform/common/utils';
 
 interface IExportQuickPickItem extends QuickPickItem {
     handler(): void;

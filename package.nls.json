@@ -196,14 +196,6 @@
     "jupyter.command.jupyter.addcellbelow.title": "Add Empty Cell to File",
     "jupyter.command.jupyter.scrolltocell.title": "Scroll Cell Into View",
     "jupyter.command.jupyter.selectJupyterInterpreter.title": "Select Interpreter to Start Jupyter Server",
-    "jupyter.command.jupyter.createGitHubIssue.title": {
-        "message": "Create GitHub Issue",
-        "comment": ["{Locked='Issue'}"]
-    },
-    "jupyter.command.jupyter.submitGitHubIssue.title": {
-        "message": "Submit GitHub Issue",
-        "comment": ["{Locked='Issue'}"]
-    },
     "jupyter.command.jupyter.enableDebugLogging.title": "Enable Debug Logging",
     "jupyter.command.jupyter.resetLoggingLevel.title": "Reset Logging Level",
     "jupyter.command.jupyter.showDataViewer.title": "View Value in Data Viewer",
@@ -340,10 +332,6 @@
         "comment": ["{Locked='Issue'}"]
     },
     "GitHubIssue.copyToClipboardAndOpenIssue": "Yes, copy content to clipboard and open issue",
-    "GitHubIssue.submitGitHubIssue": {
-        "message": "✅ Submit GitHub Issue",
-        "comment": ["{Locked='Issue'}"]
-    },
     "GitHubIssue.pleaseFillThisOut": "Please fill this section out and delete this comment before submitting an issue!",
     "GitHubIssue.missingFields": {
         "message": "Please provide details of the issue you encountered before clicking Submit GitHub Issue.",

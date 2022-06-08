@@ -18,13 +18,13 @@ import { IDisposableRegistry, IConfigurationService, IsPreRelease } from '../pla
 import { IInterpreterService } from '../platform/interpreter/contracts';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { getInterpreterId } from '../platform/pythonEnvironments/info/interpreter';
-import { isJupyterNotebook } from '../notebooks/helpers';
 import { INotebookControllerManager, INotebookCompletionProvider, INotebookEditorProvider } from '../notebooks/types';
 import { LanguageServer } from './languageServer.node';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { getComparisonKey } from '../platform/vscode-path/resources';
 import { CompletionRequest } from 'vscode-languageclient';
 import { NotebookPythonPathService } from './notebookPythonPathService';
+import { isJupyterNotebook } from '../platform/common/utils';
 
 const EmptyWorkspaceKey = '';
 

@@ -5,16 +5,16 @@
 import { inject, injectable, optional } from 'inversify';
 import { NotebookEditor, TextEditor } from 'vscode';
 import { IKernel, IKernelProvider } from '../../kernels/types';
-import { getNotebookMetadata, isJupyterNotebook, isPythonNotebook } from '../../notebooks/helpers';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { ICommandManager, IDocumentManager, IVSCodeNotebook } from './application/types';
 import { EditorContexts, PYTHON_LANGUAGE } from './constants';
 import { ContextKey } from './contextKey';
 import { IDisposable, IDisposableRegistry } from './types';
 import { isNotebookCell, noop } from './utils/misc';
-import { InteractiveWindowView, JupyterNotebookView } from '../../notebooks/constants';
+import { InteractiveWindowView, JupyterNotebookView } from '../../platform/common/constants';
 import { INotebookControllerManager } from '../../notebooks/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../interactive-window/types';
+import { getNotebookMetadata, isJupyterNotebook, isPythonNotebook } from './utils';
 import { getAssociatedNotebookDocument } from '../../kernels/helpers';
 
 @injectable()

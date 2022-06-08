@@ -99,10 +99,6 @@ export namespace GitHubIssue {
         { key: 'GitHubIssue.missingFields', comment: ['{Locked="Issue"}'] },
         'Please provide details of the issue you encountered before clicking Submit GitHub Issue.'
     );
-    export const submitGitHubIssue = localize(
-        { key: 'GitHubIssue.submitGitHubIssue', comment: ['{Locked="Issue"}'] },
-        '✅ Submit GitHub Issue'
-    );
 }
 
 export namespace Logging {
