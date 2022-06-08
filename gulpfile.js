@@ -59,70 +59,85 @@ gulp.task('validateTranslationFiles', (done) => {
 
 gulp.task('checkTestResults', async (done) => {
     const core = require('@actions/core');
+    var glob = require("glob")
 
-    const data = await fs.promises.readFile('test-results.xml');
-    const parser = require('xml-js');
-    const report = JSON.parse(parser.xml2json(data, { compact: true }));
-
-    let testsRun = 0;
-    let failCount = 0;
-    let skipCount = 0;
-    try {
-        if (report.testsuites) {
-            core.info(JSON.stringify(report.testsuites._attributes));
-        }
-
-        const testsuites = report.testsuite
-            ? [report.testsuite]
-            : Array.isArray(report.testsuites.testsuite)
-            ? report.testsuites.testsuite
-            : [report.testsuites.testsuite];
-
-        if (!testsuites) {
-            core.setFailed('no test suites found in test results');
+    glob('**/test-results*.xml', function (err, files) {
+        if (err) {
+            core.setFailed(err)
             done();
             return;
         }
+        if (!files) {
+            // web runs do not have a results file
+            core.warning('test results file not found');
+            done();
+            return;
+        };
 
-        for (const testsuite of testsuites) {
-            skipCount += testsuite._attributes.skipped;
-            testsRun += testsRun + testsuite._attributes.tests - testsuite._attributes.skipped;
+        const resultsFile = files[0]
+        const data = await fs.promises.readFile(resultsFile);
+        const parser = require('xml-js');
+        const report = JSON.parse(parser.xml2json(data, { compact: true }));
 
-            const testcases = Array.isArray(testsuite.testcase)
-                ? testsuite.testcase
-                : testsuite.testcase
-                ? [testsuite.testcase]
-                : [];
+        let testsRun = 0;
+        let failCount = 0;
+        let skipCount = 0;
+        try {
+            if (report.testsuites) {
+                core.info(JSON.stringify(report.testsuites._attributes));
+            }
 
-            for (const testcase of testcases) {
-                if (testcase.failure) {
-                    core.error(`FAILED TEST NAME: ${testcase._attributes.name}`);
-                    core.info(testcase.failure._attributes.message);
-                    core.info(testcase.failure._cdata); // print stacktrace
-                    core.info();
+            const testsuites = report.testsuite
+                ? [report.testsuite]
+                : Array.isArray(report.testsuites.testsuite)
+                ? report.testsuites.testsuite
+                : [report.testsuites.testsuite];
 
-                    failCount++;
+            if (!testsuites) {
+                core.setFailed('no test suites found in test results');
+                done();
+                return;
+            }
+
+            for (const testsuite of testsuites) {
+                skipCount += testsuite._attributes.skipped;
+                testsRun += testsRun + testsuite._attributes.tests - testsuite._attributes.skipped;
+
+                const testcases = Array.isArray(testsuite.testcase)
+                    ? testsuite.testcase
+                    : testsuite.testcase
+                    ? [testsuite.testcase]
+                    : [];
+
+                for (const testcase of testcases) {
+                    if (testcase.failure) {
+                        core.error(`FAILED TEST NAME: ${testcase._attributes.name}`);
+                        core.info(testcase.failure._attributes.message);
+                        core.info(testcase.failure._cdata); // print stacktrace
+                        core.info();
+
+                        failCount++;
+                    }
                 }
             }
-        }
 
-        if (failCount > 0) {
-            core.setFailed('Test Failures');
-            done();
-            return;
-        }
+            if (failCount > 0) {
+                core.setFailed('Test Failures');
+                done();
+                return;
+            }
 
-        if (testsRun < 2 || testsRun < skipCount) {
-            core.setFailed('Failing check, not enough passing tests or too many skipped');
-            done();
-            return;
+            if (testsRun < 2 || testsRun < skipCount) {
+                core.setFailed('Failing check, not enough passing tests or too many skipped');
+                done();
+                return;
+            }
+        } catch (error) {
+            core.error(`Could not parse test results from contents: ${JSON.stringify(report)}`);
+            core.setFailed(error);
         }
-    } catch (error) {
-        core.error(`Could not parse test results from contents: ${JSON.stringify(report)}`);
-        core.setFailed(error);
-    }
-
-    done();
+        done();
+    });
 });
 
 gulp.task('output:clean', () => del(['coverage']));
