@@ -28,6 +28,7 @@ import {
     IVSCodeNotebook
 } from './application/types';
 import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
+import { CryptoUtils } from './crypto';
 import { CryptoUtilsNode } from './crypto.node';
 import { ExperimentService } from './experiments/service';
 import { FeatureDeprecationManager } from './featureDeprecationManager';
@@ -73,6 +74,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ILanguageService>(ILanguageService, LanguageService);
     serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
     serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
+    serviceManager.addSingleton<CryptoUtils>(CryptoUtils, CryptoUtils);
     serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtilsNode);
     serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
     serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
