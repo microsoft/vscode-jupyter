@@ -13,7 +13,6 @@ import { IPythonExecutionFactory, IPythonDaemonExecutionService } from '../platf
 import { IDisposableRegistry } from '../platform/common/types';
 import { isJupyterNotebook } from '../platform/common/utils';
 import { debounceAsync, swallowExceptions } from '../platform/common/utils/decorators';
-import { noop } from '../platform/common/utils/misc';
 import { sendTelemetryEvent } from '../telemetry';
 import { JupyterInterpreterService } from './jupyter/interpreter/jupyterInterpreterService.node';
 import { IRawNotebookSupportedService } from './raw/types';

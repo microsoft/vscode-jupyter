@@ -274,7 +274,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                         false
                     );
                 } else {
-                    void this.applicationShell.showErrorMessage(ex.toString());
+                    this.applicationShell.showErrorMessage(ex.toString()).then(noop, noop);
                 }
             }
         })();
