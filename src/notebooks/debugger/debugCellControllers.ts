@@ -7,7 +7,7 @@ import { ICommandManager } from '../../platform/common/application/types';
 import { IKernel } from '../../kernels/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DebuggingTelemetry } from '../../kernels/debugger/constants';
-import { cellDebugSetup } from './helper';
+import { cellDebugSetup } from '../../kernels/debugger/helper';
 import { IDebuggingDelegate, IKernelDebugAdapter } from '../../kernels/debugger/types';
 
 export class DebugCellController implements IDebuggingDelegate {

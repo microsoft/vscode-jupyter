@@ -13,7 +13,6 @@ import { IProtocolParser } from '../platform/debugger/extension/types.node';
 import { IServiceManager } from '../platform/ioc/types';
 import { setSharedProperty } from '../telemetry';
 import { InteractiveWindowDebugger } from '../interactive-window/debugger/interactiveWindowDebugger.node';
-import { JupyterDebugService } from '../notebooks/debugger/jupyterDebugService.node';
 import { registerInstallerTypes } from './installer/serviceRegistry.node';
 import { KernelCommandListener } from './kernelCommandListener';
 import { KernelDependencyService } from './kernelDependencyService.node';
@@ -105,11 +104,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         IJupyterDebugService,
         MultiplexingDebugService,
         Identifiers.MULTIPLEXING_DEBUGSERVICE
-    );
-    serviceManager.addSingleton<IJupyterDebugService>(
-        IJupyterDebugService,
-        JupyterDebugService,
-        Identifiers.RUN_BY_LINE_DEBUGSERVICE
     );
     serviceManager.add<IJupyterVariableDataProvider>(IJupyterVariableDataProvider, JupyterVariableDataProvider);
     serviceManager.addSingleton<IJupyterVariableDataProviderFactory>(

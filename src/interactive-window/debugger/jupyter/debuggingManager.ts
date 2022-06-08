@@ -21,7 +21,7 @@ import {
     IDebugLocationTrackerFactory
 } from '../../../kernels/debugger/types';
 import { IKernelProvider } from '../../../kernels/types';
-import { IpykernelCheckResult, assertIsDebugConfig } from '../../../notebooks/debugger/helper';
+import { IpykernelCheckResult, assertIsDebugConfig } from '../../../kernels/debugger/helper';
 import { KernelDebugAdapter } from './kernelDebugAdapter';
 import { INotebookControllerManager } from '../../../notebooks/types';
 import { IExtensionSingleActivationService } from '../../../platform/activation/types';
@@ -31,7 +31,7 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { traceInfoIfCI, traceInfo, traceError } from '../../../platform/logging';
 import * as path from '../../../platform/vscode-path/path';
 import { DebugCellController } from './debugCellControllers';
-import { DebuggingManagerBase } from '../../../kernels/debugger/debuggingManagerBase';
+import { DebuggingManagerBase } from '../../../notebooks/debugger/debuggingManagerBase';
 import { IConfigurationService } from '../../../platform/common/types';
 import { IFileGeneratedCodes } from '../../editor-integration/types';
 import { buildSourceMap } from '../helper';
