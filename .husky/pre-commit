@@ -15,4 +15,5 @@ if [ -z "$changed" ]; then
 fi
 
 npm run generateTelemetry
+npm run validateDependencies
 npx prettier $changed --check
