@@ -421,7 +421,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/debugger/debuggingManagerBase.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/debugger/debuggingManagerBase.ts)
+[src/notebooks/debugger/debuggingManagerBase.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/debugger/debuggingManagerBase.ts)
 ```typescript
         );
 
@@ -505,7 +505,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/debugger/debuggingManagerBase.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/debugger/debuggingManagerBase.ts)
+[src/notebooks/debugger/debuggingManagerBase.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/debugger/debuggingManagerBase.ts)
 ```typescript
                 'https://github.com/microsoft/vscode-jupyter/wiki/Setting-Up-Run-by-Line-and-Debugging-for-Notebooks'
             );
@@ -583,7 +583,7 @@ No description provided
 
 ## Locations Used
 
-[src/kernels/debugger/debuggingManagerBase.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/debugger/debuggingManagerBase.ts)
+[src/notebooks/debugger/debuggingManagerBase.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/debugger/debuggingManagerBase.ts)
 ```typescript
             }
 
