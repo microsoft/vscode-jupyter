@@ -149,7 +149,7 @@ export class MockCode2ProtocolConverter implements Code2ProtocolConverter {
     public asDiagnostic(_item: code.Diagnostic): proto.Diagnostic {
         throw new Error('Method not implemented.');
     }
-    public asDiagnostics(_items: code.Diagnostic[]): proto.Diagnostic[] {
+    public asDiagnostics(_items: code.Diagnostic[], _token?: code.CancellationToken): Promise<proto.Diagnostic[]> {
         throw new Error('Method not implemented.');
     }
     public asCompletionItem(_item: code.CompletionItem): proto.CompletionItem {
@@ -165,10 +165,13 @@ export class MockCode2ProtocolConverter implements Code2ProtocolConverter {
     ): proto.ReferenceParams {
         throw new Error('Method not implemented.');
     }
-    asCodeAction(_item: code.CodeAction): proto.CodeAction {
+    public asCodeAction(_item: code.CodeAction, _token?: code.CancellationToken): Promise<proto.CodeAction> {
         throw new Error('Method not implemented.');
     }
-    public asCodeActionContext(_context: code.CodeActionContext): proto.CodeActionContext {
+    public asCodeActionContext(
+        _context: code.CodeActionContext,
+        _token?: code.CancellationToken
+    ): Promise<proto.CodeActionContext> {
         throw new Error('Method not implemented.');
     }
     public asCommand(_item: code.Command): proto.Command {
@@ -199,7 +202,7 @@ export class MockCode2ProtocolConverter implements Code2ProtocolConverter {
     ): proto.SignatureHelpParams {
         throw new Error('Method not implemented.');
     }
-    public asPositions(_value: code.Position[]): proto.Position[] {
+    public asPositions(_value: readonly code.Position[], _token?: code.CancellationToken): Promise<proto.Position[]> {
         throw new Error('Method not implemented.');
     }
     public asLocation(value: code.Location): proto.Location;
@@ -225,6 +228,21 @@ export class MockCode2ProtocolConverter implements Code2ProtocolConverter {
         throw new Error('Method not implemented.');
     }
     public asCallHierarchyItem(_value: code.CallHierarchyItem): proto.CallHierarchyItem {
+        throw new Error('Method not implemented.');
+    }
+    public asTextDocumentItem(_textDocument: code.TextDocument): proto.TextDocumentItem {
+        throw new Error('Method not implemented.');
+    }
+    public asInlineValueContext(_context: code.InlineValueContext): proto.InlineValueContext {
+        throw new Error('Method not implemented.');
+    }
+    public asTypeHierarchyItem(_value: code.TypeHierarchyItem): proto.TypeHierarchyItem {
+        throw new Error('Method not implemented.');
+    }
+    public asWorkspaceSymbol(_item: code.SymbolInformation): proto.WorkspaceSymbol {
+        throw new Error('Method not implemented.');
+    }
+    public asInlayHint(_value: code.InlayHint): proto.InlayHint {
         throw new Error('Method not implemented.');
     }
     private isTextDocumentChangeEvent(value: any): value is code.TextDocumentChangeEvent {

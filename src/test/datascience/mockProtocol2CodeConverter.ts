@@ -16,7 +16,10 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
     public asDiagnostic(_diagnostic: proto.Diagnostic): code.Diagnostic {
         throw new Error('Method not implemented.');
     }
-    public asDiagnostics(_diagnostics: proto.Diagnostic[]): code.Diagnostic[] {
+    public asDiagnostics(
+        _diagnostics: proto.Diagnostic[],
+        _token?: code.CancellationToken
+    ): Promise<code.Diagnostic[]> {
         throw new Error('Method not implemented.');
     }
 
@@ -55,22 +58,38 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
         }
         return hover;
     }
-    public asCompletionResult(result: proto.CompletionList): code.CompletionList;
-    public asCompletionResult(result: proto.CompletionItem[]): code.CompletionItem[];
-    public asCompletionResult(result: null | undefined): undefined;
     public asCompletionResult(
-        result: proto.CompletionList | proto.CompletionItem[] | null | undefined
-    ): code.CompletionList | code.CompletionItem[] | undefined;
-    public asCompletionResult(result: any): any {
+        value: undefined | null,
+        allCommitCharacters?: string[],
+        token?: code.CancellationToken
+    ): Promise<undefined>;
+    public asCompletionResult(
+        value: proto.CompletionList,
+        allCommitCharacters?: string[],
+        token?: code.CancellationToken
+    ): Promise<code.CompletionList>;
+    public asCompletionResult(
+        value: proto.CompletionItem[],
+        allCommitCharacters?: string[],
+        token?: code.CancellationToken
+    ): Promise<code.CompletionItem[]>;
+    public asCompletionResult(
+        value: proto.CompletionItem[] | proto.CompletionList | undefined | null,
+        allCommitCharacters?: string[],
+        token?: code.CancellationToken
+    ): Promise<code.CompletionItem[] | code.CompletionList | undefined>;
+    public asCompletionResult(result: any): Promise<any> {
         if (!result) {
-            return undefined;
+            return Promise.resolve(undefined);
         }
         if (Array.isArray(result)) {
             const items = <proto.CompletionItem[]>result;
-            return items.map(this.asCompletionItem.bind(this));
+            return Promise.resolve(items.map(this.asCompletionItem.bind(this)));
         }
         const list = <proto.CompletionList>result;
-        return new code.CompletionList(list.items.map(this.asCompletionItem.bind(this)), list.isIncomplete);
+        return Promise.resolve(
+            new code.CompletionList(list.items.map(this.asCompletionItem.bind(this)), list.isIncomplete)
+        );
     }
     public asCompletionItem(item: proto.CompletionItem): ProtocolCompletionItem {
         const result = new ProtocolCompletionItem(item.label);
@@ -101,7 +120,7 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
             result.sortText = item.sortText;
         }
         if (item.additionalTextEdits) {
-            result.additionalTextEdits = this.asTextEdits(item.additionalTextEdits);
+            result.additionalTextEdits = this.asCodeTextEdits(item.additionalTextEdits);
         }
         if (this.isStringArray(item.commitCharacters)) {
             result.commitCharacters = item.commitCharacters.slice();
@@ -126,111 +145,167 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
     public asTextEdit(_edit: any): any {
         throw new Error('Method not implemented.');
     }
-    public asTextEdits(items: proto.TextEdit[]): code.TextEdit[];
-    public asTextEdits(items: null | undefined): undefined;
-    public asTextEdits(items: proto.TextEdit[] | null | undefined): code.TextEdit[] | undefined;
-    public asTextEdits(_items: any): any {
+    public asTextEdits(items: undefined | null, token?: code.CancellationToken): Promise<undefined>;
+    public asTextEdits(items: proto.TextEdit[], token?: code.CancellationToken): Promise<code.TextEdit[]>;
+    public asTextEdits(
+        items: proto.TextEdit[] | undefined | null,
+        token?: code.CancellationToken
+    ): Promise<code.TextEdit[] | undefined>;
+    public asTextEdits(_items: any): Promise<any> {
         throw new Error('Method not implemented.');
     }
-    public asSignatureHelp(item: null | undefined): undefined;
-    public asSignatureHelp(item: proto.SignatureHelp): code.SignatureHelp;
-    public asSignatureHelp(item: proto.SignatureHelp | null | undefined): code.SignatureHelp | undefined;
-    public asSignatureHelp(_item: any): any {
+    public asSignatureHelp(item: undefined | null, token?: code.CancellationToken): Promise<undefined>;
+    public asSignatureHelp(item: proto.SignatureHelp, token?: code.CancellationToken): Promise<code.SignatureHelp>;
+    public asSignatureHelp(
+        item: proto.SignatureHelp | undefined | null,
+        token?: code.CancellationToken
+    ): Promise<code.SignatureHelp | undefined>;
+    public asSignatureHelp(_item: any): Promise<any> {
         throw new Error('Method not implemented.');
     }
-    public asSignatureInformation(_item: proto.SignatureInformation): code.SignatureInformation {
+
+    public asSignatureInformation(
+        _item: proto.SignatureInformation,
+        _token?: code.CancellationToken
+    ): Promise<code.SignatureInformation> {
         throw new Error('Method not implemented.');
     }
-    public asSignatureInformations(_items: proto.SignatureInformation[]): code.SignatureInformation[] {
+
+    public asSignatureInformations(
+        _items: proto.SignatureInformation[],
+        _token?: code.CancellationToken
+    ): Promise<code.SignatureInformation[]> {
         throw new Error('Method not implemented.');
     }
+
     public asParameterInformation(_item: proto.ParameterInformation): code.ParameterInformation {
         throw new Error('Method not implemented.');
     }
-    public asParameterInformations(_item: proto.ParameterInformation[]): code.ParameterInformation[] {
+
+    public asParameterInformations(
+        _item: proto.ParameterInformation[],
+        _token?: code.CancellationToken
+    ): Promise<code.ParameterInformation[]> {
         throw new Error('Method not implemented.');
     }
+
     public asLocation(item: proto.Location): code.Location;
     public asLocation(item: null | undefined): undefined;
     public asLocation(item: proto.Location | null | undefined): code.Location | undefined;
     public asLocation(_item: any): any {
         throw new Error('Method not implemented.');
     }
-    public asDeclarationResult(item: proto.Declaration): code.Location | code.Location[];
-    public asDeclarationResult(item: proto.LocationLink[]): code.LocationLink[];
-    public asDeclarationResult(item: null | undefined): undefined;
+    public asDeclarationResult(item: undefined | null, token?: code.CancellationToken): Promise<undefined>;
     public asDeclarationResult(
-        item: proto.Location | proto.Location[] | proto.LocationLink[] | null | undefined
-    ): code.Location | code.Location[] | code.LocationLink[] | undefined;
-    public asDeclarationResult(_item: any): any {
+        item: proto.Declaration,
+        token?: code.CancellationToken
+    ): Promise<code.Location | code.Location[]>;
+    public asDeclarationResult(
+        item: proto.DeclarationLink[],
+        token?: code.CancellationToken
+    ): Promise<code.LocationLink[]>;
+    public asDeclarationResult(
+        item: proto.Declaration | proto.DeclarationLink[] | undefined | null,
+        token?: code.CancellationToken
+    ): Promise<code.Declaration | undefined>;
+    public asDeclarationResult(_item: any): Promise<any> {
         throw new Error('Method not implemented.');
     }
-    public asDefinitionResult(item: proto.Definition): code.Definition;
-    public asDefinitionResult(item: proto.LocationLink[]): code.LocationLink[];
-    public asDefinitionResult(item: null | undefined): undefined;
+
+    public asDefinitionResult(item: undefined | null, token?: code.CancellationToken): Promise<undefined>;
+    public asDefinitionResult(item: proto.Definition, token?: code.CancellationToken): Promise<code.Definition>;
     public asDefinitionResult(
-        item: proto.Location | proto.LocationLink[] | proto.Location[] | null | undefined
-    ): code.Location | code.LocationLink[] | code.Location[] | undefined;
-    public asDefinitionResult(_item: any): any {
+        item: proto.DefinitionLink[],
+        token?: code.CancellationToken
+    ): Promise<code.DefinitionLink[]>;
+    public asDefinitionResult(
+        item: proto.Definition | proto.DefinitionLink[] | undefined | null,
+        token?: code.CancellationToken
+    ): Promise<code.Definition | code.DefinitionLink[] | undefined>;
+    public asDefinitionResult(_item: any): Promise<any> {
         throw new Error('Method not implemented.');
     }
-    public asReferences(values: proto.Location[]): code.Location[];
-    public asReferences(values: null | undefined): code.Location[] | undefined;
-    public asReferences(values: proto.Location[] | null | undefined): code.Location[] | undefined;
-    public asReferences(_values: any): any {
+
+    public asReferences(values: undefined | null, token?: code.CancellationToken): Promise<undefined>;
+    public asReferences(values: proto.Location[], token?: code.CancellationToken): Promise<code.Location[]>;
+    public asReferences(
+        values: proto.Location[] | undefined | null,
+        token?: code.CancellationToken
+    ): Promise<code.Location[] | undefined>;
+    public asReferences(_values: any): Promise<any> {
         throw new Error('Method not implemented.');
     }
+
     public asDocumentHighlightKind(_item: number): code.DocumentHighlightKind {
         throw new Error('Method not implemented.');
     }
     public asDocumentHighlight(_item: proto.DocumentHighlight): code.DocumentHighlight {
         throw new Error('Method not implemented.');
     }
-    public asDocumentHighlights(values: proto.DocumentHighlight[]): code.DocumentHighlight[];
-    public asDocumentHighlights(values: null | undefined): undefined;
+
+    public asDocumentHighlights(values: undefined | null, token?: code.CancellationToken): Promise<undefined>;
     public asDocumentHighlights(
-        values: proto.DocumentHighlight[] | null | undefined
-    ): code.DocumentHighlight[] | undefined;
+        values: proto.DocumentHighlight[],
+        token?: code.CancellationToken
+    ): Promise<code.DocumentHighlight[]>;
+    public asDocumentHighlights(
+        values: proto.DocumentHighlight[] | undefined | null,
+        token?: code.CancellationToken
+    ): Promise<code.DocumentHighlight[] | undefined>;
     public asDocumentHighlights(_values: any): any {
         throw new Error('Method not implemented.');
     }
     public asSymbolInformation(_item: proto.SymbolInformation, _uri?: code.Uri | undefined): code.SymbolInformation {
         throw new Error('Method not implemented.');
     }
+
+    public asSymbolInformations(values: undefined | null, token?: code.CancellationToken): Promise<undefined>;
     public asSymbolInformations(
-        values: proto.SymbolInformation[],
-        uri?: code.Uri | undefined
-    ): code.SymbolInformation[];
-    public asSymbolInformations(values: null | undefined, uri?: code.Uri | undefined): undefined;
+        values: proto.SymbolInformation[] | proto.WorkspaceSymbol[],
+        token?: code.CancellationToken
+    ): Promise<code.SymbolInformation[]>;
     public asSymbolInformations(
-        values: proto.SymbolInformation[] | null | undefined,
-        uri?: code.Uri | undefined
-    ): code.SymbolInformation[] | undefined;
-    public asSymbolInformations(_values: any, _uri?: any): any {
+        values: proto.SymbolInformation[] | proto.WorkspaceSymbol[] | undefined | null,
+        token?: code.CancellationToken
+    ): Promise<code.SymbolInformation[] | undefined>;
+    public asSymbolInformations(_values: any, _uri?: any): Promise<any> {
         throw new Error('Method not implemented.');
     }
     public asDocumentSymbol(_value: proto.DocumentSymbol): code.DocumentSymbol {
         throw new Error('Method not implemented.');
     }
-    public asDocumentSymbols(value: null | undefined): undefined;
-    public asDocumentSymbols(value: proto.DocumentSymbol[]): code.DocumentSymbol[];
-    public asDocumentSymbols(value: proto.DocumentSymbol[] | null | undefined): code.DocumentSymbol[] | undefined;
-    public asDocumentSymbols(_value: any): any {
+
+    public asDocumentSymbols(value: undefined | null, token?: code.CancellationToken): Promise<undefined>;
+    public asDocumentSymbols(
+        value: proto.DocumentSymbol[],
+        token?: code.CancellationToken
+    ): Promise<code.DocumentSymbol[]>;
+    public asDocumentSymbols(
+        value: proto.DocumentSymbol[] | undefined | null,
+        token?: code.CancellationToken
+    ): Promise<code.DocumentSymbol[] | undefined>;
+    public asDocumentSymbols(_value: any): Promise<any> {
         throw new Error('Method not implemented.');
     }
     public asCommand(_item: proto.Command): code.Command {
         throw new Error('Method not implemented.');
     }
-    public asCommands(items: proto.Command[]): code.Command[];
-    public asCommands(items: null | undefined): undefined;
-    public asCommands(items: proto.Command[] | null | undefined): code.Command[] | undefined;
-    public asCommands(_items: any): any {
+    public asCommands(items: undefined | null, token?: code.CancellationToken): Promise<undefined>;
+    public asCommands(items: proto.Command[], token?: code.CancellationToken): Promise<code.Command[]>;
+    public asCommands(
+        items: proto.Command[] | undefined | null,
+        token?: code.CancellationToken
+    ): Promise<code.Command[] | undefined>;
+    public asCommands(_items: any): Promise<any> {
         throw new Error('Method not implemented.');
     }
-    public asCodeAction(item: proto.CodeAction): code.CodeAction;
-    public asCodeAction(item: null | undefined): undefined;
-    public asCodeAction(item: proto.CodeAction | null | undefined): code.CodeAction | undefined;
-    public asCodeAction(_item: any): any {
+    public asCodeAction(item: undefined | null, token?: code.CancellationToken): Promise<undefined>;
+    public asCodeAction(item: proto.CodeAction, token?: code.CancellationToken): Promise<code.CodeAction>;
+    public asCodeAction(
+        item: proto.CodeAction | undefined | null,
+        token?: code.CancellationToken
+    ): Promise<code.CodeAction | undefined>;
+    public asCodeAction(_item: any): Promise<any> {
         throw new Error('Method not implemented.');
     }
     public asCodeActionKind(item: null | undefined): undefined;
@@ -251,25 +326,35 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
     public asCodeLens(_item: any): any {
         throw new Error('Method not implemented.');
     }
-    public asCodeLenses(items: proto.CodeLens[]): code.CodeLens[];
-    public asCodeLenses(items: null | undefined): undefined;
-    public asCodeLenses(items: proto.CodeLens[] | null | undefined): code.CodeLens[] | undefined;
-    public asCodeLenses(_items: any): any {
+    public asCodeLenses(items: undefined | null, token?: code.CancellationToken): Promise<undefined>;
+    public asCodeLenses(items: proto.CodeLens[], token?: code.CancellationToken): Promise<code.CodeLens[]>;
+    public asCodeLenses(
+        items: proto.CodeLens[] | undefined | null,
+        token?: code.CancellationToken
+    ): Promise<code.CodeLens[] | undefined>;
+    public asCodeLenses(_items: any): Promise<any> {
         throw new Error('Method not implemented.');
     }
-    public asWorkspaceEdit(item: proto.WorkspaceEdit): code.WorkspaceEdit;
-    public asWorkspaceEdit(item: null | undefined): undefined;
-    public asWorkspaceEdit(item: proto.WorkspaceEdit | null | undefined): code.WorkspaceEdit | undefined;
-    public asWorkspaceEdit(_item: any): any {
+
+    public asWorkspaceEdit(item: undefined | null, token?: code.CancellationToken): Promise<undefined>;
+    public asWorkspaceEdit(item: proto.WorkspaceEdit, token?: code.CancellationToken): Promise<code.WorkspaceEdit>;
+    public asWorkspaceEdit(
+        item: proto.WorkspaceEdit | undefined | null,
+        token?: code.CancellationToken
+    ): Promise<code.WorkspaceEdit | undefined>;
+    public asWorkspaceEdit(_item: any): Promise<any> {
         throw new Error('Method not implemented.');
     }
     public asDocumentLink(_item: proto.DocumentLink): code.DocumentLink {
         throw new Error('Method not implemented.');
     }
-    public asDocumentLinks(items: proto.DocumentLink[]): code.DocumentLink[];
-    public asDocumentLinks(items: null | undefined): undefined;
-    public asDocumentLinks(items: proto.DocumentLink[] | null | undefined): code.DocumentLink[] | undefined;
-    public asDocumentLinks(_items: any): any {
+    public asDocumentLinks(items: undefined | null, token?: code.CancellationToken): Promise<undefined>;
+    public asDocumentLinks(items: proto.DocumentLink[], token?: code.CancellationToken): Promise<code.DocumentLink[]>;
+    public asDocumentLinks(
+        items: proto.DocumentLink[] | undefined | null,
+        token?: code.CancellationToken
+    ): Promise<code.DocumentLink[] | undefined>;
+    public asDocumentLinks(_items: any): Promise<any> {
         throw new Error('Method not implemented.');
     }
     public asColor(_color: proto.Color): code.Color {
@@ -278,19 +363,37 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
     public asColorInformation(_ci: proto.ColorInformation): code.ColorInformation {
         throw new Error('Method not implemented.');
     }
-    public asColorInformations(colorPresentations: proto.ColorInformation[]): code.ColorInformation[];
-    public asColorInformations(colorPresentations: null | undefined): undefined;
-    public asColorInformations(colorInformation: proto.ColorInformation[] | null | undefined): code.ColorInformation[];
-    public asColorInformations(_colorInformation: any): any {
+    public asColorInformations(
+        colorPresentations: undefined | null,
+        token?: code.CancellationToken
+    ): Promise<undefined>;
+    public asColorInformations(
+        colorPresentations: proto.ColorInformation[],
+        token?: code.CancellationToken
+    ): Promise<code.ColorInformation[]>;
+    public asColorInformations(
+        colorInformation: proto.ColorInformation[] | undefined | null,
+        token?: code.CancellationToken
+    ): Promise<code.ColorInformation[]>;
+    public asColorInformations(_colorInformation: any): Promise<any> {
         throw new Error('Method not implemented.');
     }
     public asColorPresentation(_cp: proto.ColorPresentation): code.ColorPresentation {
         throw new Error('Method not implemented.');
     }
-    public asColorPresentations(colorPresentations: proto.ColorPresentation[]): code.ColorPresentation[];
-    public asColorPresentations(colorPresentations: null | undefined): undefined;
-    public asColorPresentations(colorPresentations: proto.ColorPresentation[] | null | undefined): undefined;
-    public asColorPresentations(_colorPresentations: any): any {
+    public asColorPresentations(
+        colorPresentations: undefined | null,
+        token?: code.CancellationToken
+    ): Promise<undefined>;
+    public asColorPresentations(
+        colorPresentations: proto.ColorPresentation[],
+        token?: code.CancellationToken
+    ): Promise<code.ColorPresentation[]>;
+    public asColorPresentations(
+        colorPresentations: proto.ColorPresentation[] | undefined | null,
+        token?: code.CancellationToken
+    ): Promise<code.ColorPresentation[] | undefined>;
+    public asColorPresentations(_colorPresentations: any): Promise<any> {
         throw new Error('Method not implemented.');
     }
     public asFoldingRangeKind(_kind: string | undefined): code.FoldingRangeKind | undefined {
@@ -299,14 +402,19 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
     public asFoldingRange(_r: proto.FoldingRange): code.FoldingRange {
         throw new Error('Method not implemented.');
     }
-    public asFoldingRanges(foldingRanges: proto.FoldingRange[]): code.FoldingRange[];
-    public asFoldingRanges(foldingRanges: null | undefined): undefined;
-    public asFoldingRanges(foldingRanges: proto.FoldingRange[] | null | undefined): code.FoldingRange[] | undefined;
-    public asFoldingRanges(foldingRanges: proto.FoldingRange[] | null | undefined): code.FoldingRange[] | undefined;
-    public asFoldingRanges(_foldingRanges: any): any {
+    public asFoldingRanges(foldingRanges: undefined | null, token?: code.CancellationToken): Promise<undefined>;
+    public asFoldingRanges(
+        foldingRanges: proto.FoldingRange[],
+        token?: code.CancellationToken
+    ): Promise<code.FoldingRange[]>;
+    public asFoldingRanges(
+        foldingRanges: proto.FoldingRange[] | undefined | null,
+        token?: code.CancellationToken
+    ): Promise<code.FoldingRange[] | undefined>;
+    public asFoldingRanges(_foldingRanges: any): Promise<any> {
         throw new Error('Method not implemented.');
     }
-    public asRanges(_values: proto.Range[]): code.Range[] {
+    public asRanges(_items: ReadonlyArray<proto.Range>, _token?: code.CancellationToken): Promise<code.Range[]> {
         throw new Error('Method not implemented.');
     }
     public asDiagnosticTag(_tag: proto.InsertTextFormat): code.DiagnosticTag | undefined {
@@ -327,39 +435,44 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
     public asSelectionRange(_selectionRange: proto.SelectionRange): code.SelectionRange {
         throw new Error('Method not implemented.');
     }
-    public asSelectionRanges(selectionRanges: proto.SelectionRange[]): code.SelectionRange[];
-    public asSelectionRanges(selectionRanges: null | undefined): undefined;
+    public asSelectionRanges(selectionRanges: undefined | null, token?: code.CancellationToken): Promise<undefined>;
     public asSelectionRanges(
-        selectionRanges: proto.SelectionRange[] | null | undefined
-    ): code.SelectionRange[] | undefined;
+        selectionRanges: proto.SelectionRange[],
+        token?: code.CancellationToken
+    ): Promise<code.SelectionRange[]>;
     public asSelectionRanges(
-        selectionRanges: proto.SelectionRange[] | null | undefined
-    ): code.SelectionRange[] | undefined;
-    public asSelectionRanges(_selectionRanges: any): any {
+        selectionRanges: proto.SelectionRange[] | undefined | null,
+        token?: code.CancellationToken
+    ): Promise<code.SelectionRange[] | undefined>;
+    public asSelectionRanges(_selectionRanges: any): Promise<any> {
         throw new Error('Method not implemented.');
     }
     public asSemanticTokensLegend(_value: proto.SemanticTokensLegend): code.SemanticTokensLegend {
         throw new Error('Method not implemented.');
     }
-    public asSemanticTokens(value: proto.SemanticTokens): code.SemanticTokens;
-    public asSemanticTokens(value: undefined | null): undefined;
-    public asSemanticTokens(value: proto.SemanticTokens | undefined | null): code.SemanticTokens | undefined;
-    public asSemanticTokens(value: proto.SemanticTokens | undefined | null): code.SemanticTokens | undefined;
-    public asSemanticTokens(_value: any): code.SemanticTokens | undefined {
+
+    public asSemanticTokens(value: undefined | null, token?: code.CancellationToken): Promise<undefined>;
+    public asSemanticTokens(value: proto.SemanticTokens, token?: code.CancellationToken): Promise<code.SemanticTokens>;
+    public asSemanticTokens(
+        value: proto.SemanticTokens | undefined | null,
+        token?: code.CancellationToken
+    ): Promise<code.SemanticTokens | undefined>;
+    public asSemanticTokens(_value: any): Promise<any> {
         throw new Error('Method not implemented.');
     }
     public asSemanticTokensEdit(_value: proto.SemanticTokensEdit): code.SemanticTokensEdit {
         throw new Error('Method not implemented.');
     }
-    public asSemanticTokensEdits(value: proto.SemanticTokensDelta): code.SemanticTokensEdits;
-    public asSemanticTokensEdits(value: undefined | null): undefined;
+    public asSemanticTokensEdits(value: undefined | null, token?: code.CancellationToken): Promise<undefined>;
     public asSemanticTokensEdits(
-        value: proto.SemanticTokensDelta | undefined | null
-    ): code.SemanticTokensEdits | undefined;
+        value: proto.SemanticTokensDelta,
+        token?: code.CancellationToken
+    ): Promise<code.SemanticTokensEdits>;
     public asSemanticTokensEdits(
-        value: proto.SemanticTokensDelta | undefined | null
-    ): code.SemanticTokensEdits | undefined;
-    public asSemanticTokensEdits(_value: any): code.SemanticTokensEdits | undefined {
+        value: proto.SemanticTokensDelta | undefined | null,
+        token?: code.CancellationToken
+    ): Promise<code.SemanticTokensEdits | undefined>;
+    public asSemanticTokensEdits(_value: any): Promise<any> {
         throw new Error('Method not implemented.');
     }
     public asCallHierarchyItem(item: null): undefined;
@@ -369,52 +482,132 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
     public asCallHierarchyItem(_item: any): code.CallHierarchyItem | undefined {
         throw new Error('Method not implemented.');
     }
-    public asCallHierarchyItems(items: null): undefined;
-    public asCallHierarchyItems(items: proto.CallHierarchyItem[]): code.CallHierarchyItem[];
-    public asCallHierarchyItems(items: proto.CallHierarchyItem[] | null): code.CallHierarchyItem[] | undefined;
-    public asCallHierarchyItems(items: proto.CallHierarchyItem[] | null): code.CallHierarchyItem[] | undefined;
-    public asCallHierarchyItems(_items: any): code.CallHierarchyItem[] | undefined {
+    public asCallHierarchyItems(items: null, token?: code.CancellationToken): Promise<undefined>;
+    public asCallHierarchyItems(
+        items: proto.CallHierarchyItem[],
+        token?: code.CancellationToken
+    ): Promise<code.CallHierarchyItem[]>;
+    public asCallHierarchyItems(
+        items: proto.CallHierarchyItem[] | null,
+        token?: code.CancellationToken
+    ): Promise<code.CallHierarchyItem[] | undefined>;
+    public asCallHierarchyItems(_items: any): Promise<any> {
         throw new Error('Method not implemented.');
     }
-    public asCallHierarchyIncomingCall(_item: proto.CallHierarchyIncomingCall): code.CallHierarchyIncomingCall {
+    public asCallHierarchyIncomingCall(
+        _item: proto.CallHierarchyIncomingCall,
+        _token?: code.CancellationToken
+    ): Promise<code.CallHierarchyIncomingCall> {
         throw new Error('Method not implemented.');
     }
-    public asCallHierarchyIncomingCalls(items: null): undefined;
+
+    public asCallHierarchyIncomingCalls(items: null, token?: code.CancellationToken): Promise<undefined>;
     public asCallHierarchyIncomingCalls(
-        items: ReadonlyArray<proto.CallHierarchyIncomingCall>
-    ): code.CallHierarchyIncomingCall[];
+        items: ReadonlyArray<proto.CallHierarchyIncomingCall>,
+        token?: code.CancellationToken
+    ): Promise<code.CallHierarchyIncomingCall[]>;
     public asCallHierarchyIncomingCalls(
-        items: ReadonlyArray<proto.CallHierarchyIncomingCall> | null
-    ): code.CallHierarchyIncomingCall[] | undefined;
-    public asCallHierarchyIncomingCalls(
-        items: ReadonlyArray<proto.CallHierarchyIncomingCall> | null
-    ): code.CallHierarchyIncomingCall[] | undefined;
-    public asCallHierarchyIncomingCalls(_items: any): code.CallHierarchyIncomingCall[] | undefined {
+        items: ReadonlyArray<proto.CallHierarchyIncomingCall> | null,
+        token?: code.CancellationToken
+    ): Promise<code.CallHierarchyIncomingCall[] | undefined>;
+    public asCallHierarchyIncomingCalls(_items: any): Promise<any> {
         throw new Error('Method not implemented.');
     }
-    public asCallHierarchyOutgoingCall(_item: proto.CallHierarchyOutgoingCall): code.CallHierarchyOutgoingCall {
+    public asCallHierarchyOutgoingCall(
+        _item: proto.CallHierarchyOutgoingCall,
+        _token?: code.CancellationToken
+    ): Promise<code.CallHierarchyOutgoingCall> {
         throw new Error('Method not implemented.');
     }
-    public asCallHierarchyOutgoingCalls(items: null): undefined;
+
+    public asCallHierarchyOutgoingCalls(items: null, token?: code.CancellationToken): Promise<undefined>;
     public asCallHierarchyOutgoingCalls(
-        items: ReadonlyArray<proto.CallHierarchyOutgoingCall>
-    ): code.CallHierarchyOutgoingCall[];
+        items: ReadonlyArray<proto.CallHierarchyOutgoingCall>,
+        token?: code.CancellationToken
+    ): Promise<code.CallHierarchyOutgoingCall[]>;
     public asCallHierarchyOutgoingCalls(
-        items: ReadonlyArray<proto.CallHierarchyOutgoingCall> | null
-    ): code.CallHierarchyOutgoingCall[] | undefined;
-    public asCallHierarchyOutgoingCalls(
-        items: ReadonlyArray<proto.CallHierarchyOutgoingCall> | null
-    ): code.CallHierarchyOutgoingCall[] | undefined;
-    public asCallHierarchyOutgoingCalls(_items: any): code.CallHierarchyOutgoingCall[] | undefined {
+        items: ReadonlyArray<proto.CallHierarchyOutgoingCall> | null,
+        token?: code.CancellationToken
+    ): Promise<code.CallHierarchyOutgoingCall[] | undefined>;
+    public asCallHierarchyOutgoingCalls(_items: any): Promise<any> {
         throw new Error('Method not implemented.');
     }
-    public asLinkedEditingRanges(value: null | undefined): undefined;
-    public asLinkedEditingRanges(value: proto.LinkedEditingRanges): code.LinkedEditingRanges;
+
+    public asLinkedEditingRanges(value: null | undefined, token?: code.CancellationToken): Promise<undefined>;
     public asLinkedEditingRanges(
-        value: proto.LinkedEditingRanges | null | undefined
-    ): code.LinkedEditingRanges | undefined;
-    public asLinkedEditingRanges(_value: any): code.LinkedEditingRanges | undefined {
+        value: proto.LinkedEditingRanges,
+        token?: code.CancellationToken
+    ): Promise<code.LinkedEditingRanges>;
+    public asLinkedEditingRanges(
+        value: proto.LinkedEditingRanges | null | undefined,
+        token?: code.CancellationToken
+    ): Promise<code.LinkedEditingRanges | undefined>;
+    public asLinkedEditingRanges(_value: any): Promise<any> {
         throw new Error('Method not implemented.');
+    }
+    public asDocumentSelector(_value: proto.DocumentSelector): code.DocumentSelector {
+        throw new Error('Method not implemented.');
+    }
+    public asCodeActionResult(
+        _items: (proto.Command | proto.CodeAction)[],
+        _token?: code.CancellationToken
+    ): Promise<(code.Command | code.CodeAction)[]> {
+        throw new Error('Method not implemented.');
+    }
+    public asInlineValue(_value: proto.InlineValue): code.InlineValue {
+        throw new Error('Method not implemented.');
+    }
+    public asInlineValues(values: null | undefined, token?: code.CancellationToken): Promise<undefined>;
+    public asInlineValues(values: proto.InlineValue[], token?: code.CancellationToken): Promise<code.InlineValue[]>;
+    public asInlineValues(
+        values: proto.InlineValue[] | null | undefined,
+        _token?: code.CancellationToken
+    ): Promise<code.InlineValue[] | undefined>;
+    public asInlineValues(_values: any): Promise<any> {
+        throw new Error('Method not implemented.');
+    }
+    public asInlayHint(_value: proto.InlayHint, _token?: code.CancellationToken): Promise<code.InlayHint> {
+        throw new Error('Method not implemented.');
+    }
+    public asInlayHints(values: null | undefined, token?: code.CancellationToken): Promise<undefined>;
+    public asInlayHints(values: proto.InlayHint[], token?: code.CancellationToken): Promise<code.InlayHint[]>;
+    public asInlayHints(
+        values: proto.InlayHint[] | null | undefined,
+        token?: code.CancellationToken
+    ): Promise<code.InlayHint[] | undefined>;
+    public asInlayHints(_values: any): Promise<any> {
+        throw new Error('Method not implemented.');
+    }
+    public asTypeHierarchyItem(item: null): undefined;
+    public asTypeHierarchyItem(item: proto.TypeHierarchyItem): code.TypeHierarchyItem;
+    public asTypeHierarchyItem(item: proto.TypeHierarchyItem | null): code.TypeHierarchyItem | undefined;
+    public asTypeHierarchyItem(_item: any): code.TypeHierarchyItem | undefined {
+        throw new Error('Method not implemented.');
+    }
+    public asTypeHierarchyItems(items: null, token?: code.CancellationToken): Promise<undefined>;
+    public asTypeHierarchyItems(
+        items: proto.TypeHierarchyItem[],
+        token?: code.CancellationToken
+    ): Promise<code.TypeHierarchyItem[]>;
+    public asTypeHierarchyItems(
+        items: proto.TypeHierarchyItem[] | null,
+        token?: code.CancellationToken
+    ): Promise<code.TypeHierarchyItem[] | undefined>;
+    public asTypeHierarchyItems(_items: any): Promise<any> {
+        throw new Error('Method not implemented.');
+    }
+    public asGlobPattern(_pattern: proto.GlobPattern): code.GlobPattern | undefined {
+        throw new Error('Method not implemented.');
+    }
+
+    private asCodeTextEdits(additionalTextEdits: proto.TextEdit[]): code.TextEdit[] | undefined {
+        return additionalTextEdits.map((e) => {
+            const range = new code.Range(
+                new code.Position(e.range.start.line, e.range.start.character),
+                new code.Position(e.range.end.line, e.range.end.character)
+            );
+            return new code.TextEdit(range, e.newText);
+        });
     }
 
     private asCompletionItemKind(
