@@ -57,7 +57,7 @@ gulp.task('validateTranslationFiles', (done) => {
     done();
 });
 
-gulp.task('checkTestResults', async (done) => {
+gulp.task('checkTestResults', (done) => {
     const core = require('@actions/core');
     var glob = require("glob")
 
@@ -75,7 +75,7 @@ gulp.task('checkTestResults', async (done) => {
         };
 
         const resultsFile = files[0]
-        const data = await fs.promises.readFile(resultsFile);
+        const data = await fs.promises.readFileSync(resultsFile);
         const parser = require('xml-js');
         const report = JSON.parse(parser.xml2json(data, { compact: true }));
 
