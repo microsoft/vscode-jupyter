@@ -2208,6 +2208,7 @@
         "vscode-languageclient": "7.0.0",
         "vscode-languageserver": "7.0.0",
         "vscode-languageserver-protocol": "3.16.0",
+        "vscode-nls": "^5.0.1",
         "vscode-tas-client": "^0.1.27",
         "ws": "^6.2.2",
         "zeromq": "^6.0.0-beta.6"
@@ -2387,6 +2388,7 @@
         "util": "^0.12.4",
         "uuid-to-hex": "^1.1.1",
         "vscode-dts": "^0.3.2",
+        "vscode-nls-dev": "^4.0.0",
         "webpack": "^5.68.0",
         "webpack-bundle-analyzer": "^4.5.0",
         "webpack-cli": "^4.9.2",

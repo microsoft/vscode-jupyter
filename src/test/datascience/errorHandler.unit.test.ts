@@ -150,7 +150,7 @@ suite('DataScience Error Handler Unit Tests', () => {
             };
         });
         const stdErrorMessages = {
-            userOrverridingRandomPyFile_Unix: dedent`
+            userOverridingRandomPyFile_Unix: dedent`
                 Info 14:45:47: KernelProcess Exit Exit - 1 Traceback (most recent call last):
                 File "/home/xyz/.pyenv/versions/3.8.12/lib/python3.8/runpy.py", line 194, in _run_module_as_main
                     return _run_code(code, main_globals, None,
@@ -182,7 +182,7 @@ suite('DataScience Error Handler Unit Tests', () => {
                     from string import Template
                 ImportError: cannot import name 'Template' from 'string' (/home/xyz/samples/pySamples/crap/kernel_crash/no_start/string.py)
                 `,
-            userOrverridingRandomPyFile_Windows: `
+            userOverridingRandomPyFile_Windows: `
                 Info 14:16:26: Cancel pending cells
                 Info 14:16:26: KernelProcess Exit Exit - 1 Traceback (most recent call last):
                     File "C:\\Python39\\lib\\runpy.py", line 197, in _run_module_as_main
@@ -238,7 +238,7 @@ suite('DataScience Error Handler Unit Tests', () => {
             await dataScienceErrorHandler.handleKernelError(
                 new KernelDiedError(
                     'Hello',
-                    stdErrorMessages.userOrverridingRandomPyFile_Windows,
+                    stdErrorMessages.userOverridingRandomPyFile_Windows,
                     undefined,
                     kernelConnection
                 ),
@@ -267,7 +267,7 @@ suite('DataScience Error Handler Unit Tests', () => {
             await dataScienceErrorHandler.handleKernelError(
                 new KernelDiedError(
                     'Hello',
-                    stdErrorMessages.userOrverridingRandomPyFile_Windows,
+                    stdErrorMessages.userOverridingRandomPyFile_Windows,
                     undefined,
                     kernelConnection
                 ),
@@ -290,7 +290,7 @@ suite('DataScience Error Handler Unit Tests', () => {
             await dataScienceErrorHandler.handleKernelError(
                 new KernelDiedError(
                     'Hello',
-                    stdErrorMessages.userOrverridingRandomPyFile_Unix,
+                    stdErrorMessages.userOverridingRandomPyFile_Unix,
                     undefined,
                     kernelConnection
                 ),
@@ -323,7 +323,7 @@ suite('DataScience Error Handler Unit Tests', () => {
             await dataScienceErrorHandler.handleKernelError(
                 new KernelDiedError(
                     'Hello',
-                    stdErrorMessages.userOrverridingRandomPyFile_Unix,
+                    stdErrorMessages.userOverridingRandomPyFile_Unix,
                     undefined,
                     kernelConnection
                 ),
@@ -412,7 +412,7 @@ ImportError: No module named 'xyz'
                 'jupyterExtension'
             );
 
-            const expectedMessage = DataScience.failedToStartKernelDueToUnknowDllLoadFailure();
+            const expectedMessage = DataScience.failedToStartKernelDueToUnknownDllLoadFailure();
 
             verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresDllLoad');
         });

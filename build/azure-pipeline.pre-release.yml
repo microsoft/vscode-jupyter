@@ -22,6 +22,8 @@ resources:
 extends:
   template: azure-pipelines/extension/pre-release.yml@templates
   parameters:
+    locTsConfigs: $(Build.SourcesDirectory)/tsconfig.json
+    locBundleDestination: $(Build.SourcesDirectory)/out/client
     buildSteps:
       - script: npm ci
         displayName: Install dependencies
