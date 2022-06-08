@@ -6,7 +6,6 @@ import { IRemoteKernelFinder } from '../raw/types';
 import { INotebookProvider } from '../types';
 import { JupyterCommandLineSelectorCommand } from './commands/commandLineSelector';
 import { CommandRegistry } from './commands/commandRegistry';
-import { JupyterServerSelectorCommand } from '../../notebooks/serverSelector';
 import { JupyterConnection } from './jupyterConnection';
 import { JupyterKernelService } from './jupyterKernelService.web';
 import { JupyterRemoteCachedKernelValidator } from './jupyterRemoteCachedKernelValidator';
@@ -21,7 +20,6 @@ import { NotebookServerProvider } from './launcher/notebookServerProvider';
 import { ServerConnectionType } from './launcher/serverConnectionType';
 import { JupyterServerUriStorage } from './launcher/serverUriStorage';
 import { LiveRemoteKernelConnectionUsageTracker } from './liveRemoteKernelConnectionTracker';
-import { RemoteKernelConnectionHandler } from '../../notebooks/controllers/remoteKernelConnectionHandler';
 import { RemoteKernelFinder } from './remoteKernelFinder';
 import { JupyterServerSelector } from './serverSelector';
 import { BackingFileCreator } from './session/backingFileCreator.web';
@@ -69,10 +67,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         JupyterCommandLineSelectorCommand,
         JupyterCommandLineSelectorCommand
     );
-    serviceManager.addSingleton<JupyterServerSelectorCommand>(
-        JupyterServerSelectorCommand,
-        JupyterServerSelectorCommand
-    );
     serviceManager.addSingleton<IJupyterServerProvider>(IJupyterServerProvider, NotebookServerProvider);
     serviceManager.addSingleton<IJupyterRequestCreator>(IJupyterRequestCreator, JupyterRequestCreator);
     serviceManager.addSingleton<ServerConnectionType>(ServerConnectionType, ServerConnectionType);
@@ -83,10 +77,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         LiveRemoteKernelConnectionUsageTracker
     );
     serviceManager.addBinding(ILiveRemoteKernelConnectionUsageTracker, IExtensionSyncActivationService);
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        RemoteKernelConnectionHandler
-    );
     serviceManager.addSingleton<IJupyterRemoteCachedKernelValidator>(
         IJupyterRemoteCachedKernelValidator,
         JupyterRemoteCachedKernelValidator

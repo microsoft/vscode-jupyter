@@ -17,6 +17,8 @@ import { RemoteKernelControllerWatcher } from './controllers/remoteKernelControl
 import { ITracebackFormatter } from '../kernels/types';
 import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
 import { NotebookIPyWidgetCoordinator } from './controllers/notebookIPyWidgetCoordinator';
+import { RemoteKernelConnectionHandler } from './controllers/remoteKernelConnectionHandler';
+import { JupyterServerSelectorCommand } from './serverSelector';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
@@ -44,4 +46,12 @@ export function registerTypes(serviceManager: IServiceManager) {
         NotebookIPyWidgetCoordinator
     );
     serviceManager.addBinding(NotebookIPyWidgetCoordinator, IExtensionSyncActivationService);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        RemoteKernelConnectionHandler
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        JupyterServerSelectorCommand
+    );
 }
