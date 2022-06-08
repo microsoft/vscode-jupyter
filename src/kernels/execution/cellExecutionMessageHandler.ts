@@ -624,9 +624,9 @@ export class CellExecutionMessageHandler implements IDisposable {
         const newOutput = outputToAppend
             ? outputsUptoWidget.concat(outputToAppend).concat(outputsAfterWidget)
             : outputsUptoWidget.concat(outputsAfterWidget);
-        if (outputsAfterWidget.length === 0 && newOutput) {
+        if (outputsAfterWidget.length === 0 && outputToAppend) {
             // No need to replace everything, just append what we need.
-            task?.appendOutput(newOutput, cell).then(noop, noop);
+            task?.appendOutput(outputToAppend, cell).then(noop, noop);
         } else {
             task?.replaceOutput(newOutput, cell).then(noop, noop);
         }

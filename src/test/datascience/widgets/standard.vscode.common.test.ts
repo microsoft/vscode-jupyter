@@ -7,7 +7,7 @@ import { assert } from 'chai';
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import * as urlPath from '../../../platform/vscode-path/resources';
 import * as sinon from 'sinon';
-import { commands, ConfigurationTarget, NotebookCell, Uri, workspace } from 'vscode';
+import { commands, ConfigurationTarget, NotebookCell, notebooks, Uri, workspace } from 'vscode';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
@@ -30,6 +30,7 @@ import {
 } from '../notebook/helper';
 import { initializeWidgetComms, Utils } from './commUtils';
 import { WidgetRenderingTimeoutForTests } from './constants';
+import { getTextOutputValue } from '../../../notebooks/helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('IPyWisdget Tests', function () {
@@ -464,5 +465,58 @@ suite('IPyWisdget Tests', function () {
             ],
             '.widget-output'
         );
+    });
+    test.only('Interactive Plot', async () => {
+        const comms = await initializeNotebook({ templateFile: 'interactive_plot.ipynb' });
+        const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0);
+
+        await executeCellAndWaitForOutput(cell, comms);
+        await assertOutputContainsHtml(cell, comms, ['Text Value is Foo'], '.widget-output');
+        assert.strictEqual(cell.outputs.length, 4, 'Cell should have 4 outputs');
+
+        const [, output2, output3, output4] = cell.outputs;
+        // This cannot be displayed by output widget, hence we need to handle this.
+        assert.strictEqual(output2.items[0].mime, 'application/vnd.custom');
+        assert.strictEqual(Buffer.from(output2.items[0].data).toString(), 'Text Value is Foo');
+
+        assert.strictEqual(getTextOutputValue(output3), 'Text Value is Foo');
+
+        // This cannot be displayed by output widget, hence we need to handle this.
+        assert.strictEqual(output4.items[0].mime, 'application/vnd.custom');
+        assert.strictEqual(Buffer.from(output4.items[0].data).toString(), 'Text Value is Foo');
+
+        // Wait for the second output to get updated.
+        const outputUpdated = new Promise<boolean>((resolve) => {
+            workspace.onDidChangeNotebookDocument(
+                (e) => {
+                    const currentCellChange = e.cellChanges.find((item) => item.cell === cell);
+                    if (!currentCellChange || !currentCellChange.outputs || currentCellChange.outputs.length < 4) {
+                        return;
+                    }
+                    const secondOutput = currentCellChange.outputs[1];
+                    if (Buffer.from(secondOutput.items[0].data).toString() === 'Text Value is Bar') {
+                        resolve(true);
+                    }
+                },
+                undefined,
+                disposables
+            );
+        });
+        // Update the textbox and confirm the output is updated accordingly.
+        await comms.setValue(cell, '.widget-text input', 'Bar');
+
+        // Wait for the output to get updated.
+        await waitForCondition(() => outputUpdated, 5_000, 'Second output not updated');
+
+        // This should have been updated.
+        assert.strictEqual(output2.items[0].mime, 'application/vnd.custom');
+        assert.strictEqual(Buffer.from(output2.items[0].data).toString(), 'Text Value is Bar');
+
+        // This should not have been updated.
+        assert.strictEqual(getTextOutputValue(output3), 'Text Value is Foo');
+
+        // This should not have been updated.
+        assert.strictEqual(output4.items[0].mime, 'application/vnd.custom');
+        assert.strictEqual(Buffer.from(output4.items[0].data).toString(), 'Text Value is Foo');
     });
 });
