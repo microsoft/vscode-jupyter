@@ -205,9 +205,6 @@ jobs:
       - name: Verify Translation files
         run: npm run validateTranslationFiles
 
-      - name: Validate npm dependencies
-        run: npm run validateDependencies
-
       - name: Run linting on TypeScript code (eslint)
         run: npm run lint
 

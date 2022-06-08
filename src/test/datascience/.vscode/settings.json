@@ -36,5 +36,5 @@
     "task.problemMatchers.neverPrompt": {
         "shell": true,
         "npm": true
-    }
+    },"jupyter.DEBUG_JUPYTER_SERVER_URI": "http://localhost:60333/?token=3177ed30dd2642a3a3fed5cccd450a36"
 }
