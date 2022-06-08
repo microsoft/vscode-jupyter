@@ -6,20 +6,20 @@
 import { assert, expect } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from '../../platform/vscode-path/path';
-import { CryptoUtils } from '../../platform/common/crypto';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants.node';
+import { CryptoUtilsNode } from '../../platform/common/crypto.node';
 
 const RANDOM_WORDS = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'common', 'randomWords.txt');
 
 // eslint-disable-next-line
 suite('Crypto Utils', async () => {
-    let crypto: CryptoUtils;
+    let crypto: CryptoUtilsNode;
     let wordsText: string;
     suiteSetup(async () => {
         wordsText = await fs.readFile(RANDOM_WORDS, 'utf8');
     });
     setup(() => {
-        crypto = new CryptoUtils();
+        crypto = new CryptoUtilsNode();
     });
     async function getRandomWords(): Promise<string[]> {
         return wordsText.split('\n');
