@@ -120,7 +120,7 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         this.registerCommand(Commands.RunCurrentCell, this.runCurrentCell);
         this.registerCommand(Commands.RunCurrentCellAdvance, this.runCurrentCellAndAdvance);
         this.registerCommand(Commands.ExecSelectionInInteractiveWindow, (textOrUri: string | undefined | Uri) => {
-            void this.runSelectionOrLine(textOrUri);
+            this.runSelectionOrLine(textOrUri).catch(noop);
         });
         this.registerCommand(Commands.RunAllCellsAbove, this.runAllCellsAbove);
         this.registerCommand(Commands.RunCellAndAllBelow, this.runCellAndAllBelow);

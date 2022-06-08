@@ -62,6 +62,7 @@ import { IStatusProvider } from '../platform/progress/types';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { traceCellMessage } from './execution/helpers';
 import { KernelExecution } from './execution/kernelExecution';
+import { KernelProcessExitedError } from '../platform/errors/kernelProcessExitedError';
 
 export abstract class BaseKernel implements IKernel {
     private readonly disposables: IDisposable[] = [];
@@ -199,7 +200,7 @@ export abstract class BaseKernel implements IKernel {
         const sessionPromise = this.startJupyterSession();
         const promise = this.kernelExecution.executeCell(sessionPromise, cell, codeOverride);
         this.trackNotebookCellPerceivedColdTime(stopWatch, sessionPromise, promise).catch(noop);
-        void promise.then((state) => traceInfo(`Cell ${cell.index} executed with state ${state}`));
+        promise.then((state) => traceInfo(`Cell ${cell.index} executed with state ${state}`), noop);
         return promise;
     }
     public async interrupt(): Promise<void> {
@@ -290,6 +291,14 @@ export abstract class BaseKernel implements IKernel {
                 : this.start(new DisplayOptions(false)));
             sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime);
         } catch (ex) {
+            if (ex instanceof KernelProcessExitedError) {
+                ex = new KernelProcessExitedError(
+                    ex.exitCode,
+                    ex.stdErr,
+                    ex.kernelConnectionMetadata,
+                    'Kernel died in kernel.base of restart'
+                );
+            }
             traceError(`Restart failed ${getDisplayPath(this.uri)}`, ex);
             this._ignoreJupyterSessionDisposedErrors = true;
             // If restart fails, kill the associated session.
@@ -302,6 +311,14 @@ export abstract class BaseKernel implements IKernel {
             sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime, undefined, ex);
             await session?.dispose().catch(noop);
             this._ignoreJupyterSessionDisposedErrors = false;
+            if (ex instanceof KernelProcessExitedError) {
+                throw new KernelProcessExitedError(
+                    ex.exitCode,
+                    ex.stdErr,
+                    ex.kernelConnectionMetadata,
+                    'Kernel died in base'
+                );
+            }
             throw ex;
         } finally {
             status.dispose();
@@ -330,9 +347,11 @@ export abstract class BaseKernel implements IKernel {
         if (!this.perceivedJupyterStartupTelemetryCaptured) {
             this.perceivedJupyterStartupTelemetryCaptured = true;
             sendTelemetryEvent(Telemetry.PerceivedJupyterStartupNotebook, stopWatch.elapsedTime);
-            executionPromise.finally(() =>
-                sendTelemetryEvent(Telemetry.StartExecuteNotebookCellPerceivedCold, stopWatch.elapsedTime)
-            );
+            executionPromise
+                .finally(() =>
+                    sendTelemetryEvent(Telemetry.StartExecuteNotebookCellPerceivedCold, stopWatch.elapsedTime)
+                )
+                .catch(noop);
         }
     }
     protected async startJupyterSession(
@@ -385,7 +404,14 @@ export abstract class BaseKernel implements IKernel {
                 throw ex;
             });
         }
-        return this._jupyterSessionPromise;
+        try {
+            return await this._jupyterSessionPromise;
+        } catch (ex) {
+            if (ex instanceof KernelProcessExitedError) {
+                throw new KernelProcessExitedError(ex.exitCode, ex.stdErr, ex.kernelConnectionMetadata, 'Hello1234');
+            }
+            throw ex;
+        }
     }
 
     private async createJupyterSession(stopWatch: StopWatch): Promise<IJupyterSession> {

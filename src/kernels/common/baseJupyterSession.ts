@@ -32,6 +32,7 @@ import { getResourceType } from '../../platform/common/utils';
 import { KernelProgressReporter } from '../../platform/progress/kernelProgressReporter';
 import { isTestExecution } from '../../platform/common/constants';
 import { KernelConnectionWrapper } from './kernelConnectionWrapper';
+import { KernelProcessExitedError } from '../../platform/errors/kernelProcessExitedError';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function suppressShutdownErrors(realKernel: any) {
@@ -204,18 +205,27 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         // Just switch to the other session. It should already be ready
 
         // Start the restart session now in case it wasn't started
-        const newSession = await this.startRestartSession(false);
-        this.setSession(newSession);
+        try {
+            const newSession = await this.startRestartSession(false);
+            this.setSession(newSession);
 
-        if (newSession.kernel) {
-            traceInfo(`Got new session ${newSession.kernel.id}`);
+            if (newSession.kernel) {
+                traceInfo(`Got new session ${newSession.kernel.id}`);
 
-            // Rewire our status changed event.
-            newSession.statusChanged.connect(this.statusHandler);
-        }
-        traceInfo('Started new restart session');
-        if (oldStatusHandler && oldSession) {
-            oldSession.statusChanged.disconnect(oldStatusHandler);
+                // Rewire our status changed event.
+                newSession.statusChanged.connect(this.statusHandler);
+            }
+            traceInfo('Started new restart session');
+            if (oldStatusHandler && oldSession) {
+                oldSession.statusChanged.disconnect(oldStatusHandler);
+            }
+        } catch (ex) {
+            throw new KernelProcessExitedError(
+                ex.exitCode,
+                ex.stdErr,
+                ex.kernelConnectionMetadata,
+                'Kernel died in kernelCommandListener.restart'
+            );
         }
         this.shutdownSession(oldSession, undefined, false).ignoreErrors();
     }

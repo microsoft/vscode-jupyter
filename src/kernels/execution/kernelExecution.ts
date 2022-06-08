@@ -28,6 +28,7 @@ import { traceCellMessage } from './helpers';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { CellExecutionMessageHandlerService } from './cellExecutionMessageHandlerService';
 import { getAssociatedNotebookDocument } from '../helpers';
+import { noop } from '../../platform/common/utils/misc';
 
 /**
  * Separate class that deals just with kernel execution.
@@ -169,10 +170,12 @@ export class KernelExecution implements IDisposable {
         // Restart the active execution
         if (!this._restartPromise) {
             this._restartPromise = this.restartExecution(session);
-            this._restartPromise.finally(() => {
-                // Done restarting, clear restart promise
-                this._restartPromise = undefined;
-            });
+            this._restartPromise
+                .finally(() => {
+                    // Done restarting, clear restart promise
+                    this._restartPromise = undefined;
+                })
+                .catch(noop);
         }
         await this._restartPromise;
     }

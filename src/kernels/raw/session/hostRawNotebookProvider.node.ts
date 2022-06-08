@@ -27,6 +27,8 @@ import { IJupyterSession, KernelConnectionMetadata } from '../../types';
 import { IKernelLauncher, IRawNotebookProvider, IRawNotebookSupportedService } from '../types';
 import { RawJupyterSession } from './rawJupyterSession.node';
 import { Cancellation } from '../../../platform/common/cancellation';
+import { noop } from '../../../platform/common/utils/misc';
+import { KernelProcessExitedError } from '../../../platform/errors/kernelProcessExitedError';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -130,6 +132,14 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
             rawSession?.dispose().catch((error) => {
                 traceError(`Failed to dispose of raw session on launch error: ${error} `);
             });
+            if (ex instanceof KernelProcessExitedError) {
+                ex = new KernelProcessExitedError(
+                    ex.exitCode,
+                    ex.stdErr,
+                    ex.kernelConnectionMetadata,
+                    'Kernel died in hostRawNotebookProvider.node'
+                );
+            }
             // If there's an error, then reject the promise that is returned.
             // This original promise must be rejected as it is cached (check `setNotebook`).
             sessionPromise.reject(ex);
@@ -139,15 +149,17 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
     }
 
     private trackDisposable(sessionPromise: Promise<IJupyterSession>) {
-        void sessionPromise.then((session) => {
-            session.onDidDispose(
-                () => {
-                    this.sessions.delete(sessionPromise);
-                },
-                this,
-                this.disposables
-            );
-        });
+        void sessionPromise
+            .then((session) => {
+                session.onDidDispose(
+                    () => {
+                        this.sessions.delete(sessionPromise);
+                    },
+                    this,
+                    this.disposables
+                );
+            })
+            .catch(noop);
 
         // Save the session
         this.sessions.add(sessionPromise);

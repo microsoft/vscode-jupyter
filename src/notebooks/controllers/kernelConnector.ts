@@ -293,6 +293,7 @@ export class KernelConnector {
             onAction
         );
         const deferred = createDeferredFromPromise(promise);
+        deferred.promise.catch(noop);
         // If the kernel gets disposed or we fail to create the kernel, then ensure we remove the cached result.
         promise
             .then((result) => {

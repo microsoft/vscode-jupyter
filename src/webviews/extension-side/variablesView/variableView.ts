@@ -34,6 +34,7 @@ import { Telemetry } from '../../webview-side/common/constants';
 import { DataViewerChecker } from '../dataviewer/dataViewerChecker';
 import { IJupyterVariableDataProviderFactory, IDataViewerFactory, IDataViewer } from '../dataviewer/types';
 import { WebviewViewHost } from '../webviewViewHost';
+import { swallowExceptions } from '../../../platform/common/utils/decorators';
 
 // This is the client side host for the native notebook variable view webview
 // It handles passing messages to and from the react view as well as the connection
@@ -151,6 +152,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
     }
 
     // Handle a request from the react UI to show our data viewer. Public for testing
+    @swallowExceptions()
     public async showDataViewer(request: IShowDataViewer): Promise<IDataViewer | undefined> {
         try {
             if (
@@ -174,6 +176,7 @@ export class VariableView extends WebviewViewHost<IVariableViewPanelMapping> imp
 
     // Variables for the current active editor are being requested, check that we have a valid active notebook
     // and use the variables interface to fetch them and pass them to the variable view UI
+    @swallowExceptions()
     private async requestVariables(args: IJupyterVariablesRequest): Promise<void> {
         const activeNotebook = this.notebookWatcher.activeKernel;
         if (activeNotebook) {

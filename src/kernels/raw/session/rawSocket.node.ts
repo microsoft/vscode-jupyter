@@ -278,6 +278,8 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
                 this.postToSocket(msg.channel, data);
             });
         }
+        // Ensure we don't have any unhandled exceptions (swallow exceptions as we're not awaiting on this promise).
+        this.sendChain.catch(noop);
     }
 
     private postToSocket(channel: string, data: any) {

@@ -388,3 +388,11 @@ gulp.task('validateDependencies', async () => {
         }
     }
 });
+gulp.task('verifyUnhandledErrors', async () => {
+    const fileName = path.join(__dirname, 'unhandledErrors.txt');
+    const contents = fs.pathExistsSync(fileName) ? fs.readFileSync(fileName, 'utf8') : '';
+    if (contents.trim().length) {
+        console.error(contents);
+        throw new Error('Unhandled errors detected. Please fix them before merging this PR.', contents);
+    }
+});

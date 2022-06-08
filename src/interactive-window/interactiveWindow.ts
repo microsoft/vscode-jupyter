@@ -30,7 +30,7 @@ import {
 } from '../platform/common/application/types';
 import { Commands, defaultNotebookFormat, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants';
 import '../platform/common/extensions';
-import { traceInfoIfCI } from '../platform/logging';
+import { traceError, traceInfoIfCI } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
 import * as uuid from 'uuid/v4';
 
@@ -178,6 +178,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             return this.currentKernelInfo.kernel.promise;
         }
         const kernelPromise = createDeferred<IKernel>();
+        kernelPromise.promise.catch(noop);
         this.currentKernelInfo = { controller, metadata, kernel: kernelPromise };
 
         const sysInfoCell = this.insertSysInfoMessage(metadata, SysInfoReason.Start);
@@ -234,6 +235,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                     );
                     try {
                         await this.runInitialization(kernel, this.owner);
+                    } catch (ex) {
+                        traceError(`Failed to run initialization after restarting`);
                     } finally {
                         this.finishSysInfoMessage(kernel, cellPromise, SysInfoReason.Restart);
                     }
@@ -529,18 +532,22 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             promise.catch((ex) => {
                 // If execution fails due to a failure in another cell, then log that error against the cell.
                 if (ex instanceof InteractiveCellResultError) {
-                    void notebookCellPromise.then((cell) => {
-                        if (ex.cell !== cell) {
-                            void this.addErrorMessage(DataScience.cellStopOnErrorMessage(), cell);
-                        }
-                    });
+                    notebookCellPromise
+                        .then((cell) => {
+                            if (ex.cell !== cell) {
+                                void this.addErrorMessage(DataScience.cellStopOnErrorMessage(), cell);
+                            }
+                        })
+                        .catch(noop);
                 } else {
-                    void notebookCellPromise.then((cell) =>
-                        // If our cell result was a failure show an error
-                        this.errorHandler
-                            .getErrorMessageForDisplayInCell(ex, 'execution')
-                            .then((message) => this.addErrorMessage(message, cell))
-                    );
+                    notebookCellPromise
+                        .then((cell) =>
+                            // If our cell result was a failure show an error
+                            this.errorHandler
+                                .getErrorMessageForDisplayInCell(ex, 'execution')
+                                .then((message) => this.addErrorMessage(message, cell))
+                        )
+                        .catch(noop);
                 }
             });
             return promise;
@@ -561,6 +568,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.start');
         // Kick of starting kernels early.
         const kernelPromise = this.startKernel();
+        kernelPromise.then(noop, noop);
         const cell = await notebookCellPromise;
 
         let success = true;

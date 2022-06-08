@@ -25,9 +25,9 @@ import { ISessionWithSocket, KernelConnectionMetadata } from '../../../kernels/t
 import { BaseJupyterSession } from '../../common/baseJupyterSession';
 import { IKernelLauncher, IKernelProcess } from '../types';
 import { RawSession } from './rawSession.node';
-import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { DisplayOptions } from '../../displayOptions';
 import { noop } from '../../../platform/common/utils/misc';
+import { KernelProcessExitedError } from '../../../platform/errors/kernelProcessExitedError';
 
 /*
 RawJupyterSession is the implementation of IJupyterSession that instead of
@@ -93,6 +93,15 @@ export class RawJupyterSession extends BaseJupyterSession {
             // Listen for session status changes
             this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
         } catch (error) {
+            if (error instanceof KernelProcessExitedError) {
+                error = new KernelProcessExitedError(
+                    error.exitCode,
+                    error.stdErr,
+                    error.kernelConnectionMetadata,
+                    'Kernel died in rawJuptyerSession.node'
+                );
+            }
+
             this.connected = false;
             if (isCancellationError(error) || options.token.isCancellationRequested) {
                 sendKernelTelemetryEvent(
@@ -217,12 +226,14 @@ export class RawJupyterSession extends BaseJupyterSession {
         const promise = this.createRestartSession(disableUI, token.token);
         this.restartSessionPromise = { token, promise };
         promise.catch(noop);
-        promise.finally(() => {
-            token.dispose();
-            if (this.restartSessionPromise?.promise === promise) {
-                this.restartSessionPromise = undefined;
-            }
-        });
+        promise
+            .finally(() => {
+                token.dispose();
+                if (this.restartSessionPromise?.promise === promise) {
+                    this.restartSessionPromise = undefined;
+                }
+            })
+            .catch(noop);
         return promise;
     }
     protected async createRestartSession(
@@ -237,6 +248,7 @@ export class RawJupyterSession extends BaseJupyterSession {
 
     @captureTelemetry(Telemetry.RawKernelStartRawSession, undefined, true)
     private async startRawSession(options: { token: CancellationToken; ui: IDisplayOptions }): Promise<RawSession> {
+        const stack = new Error('').stack || '<empty>';
         if (
             this.kernelConnectionMetadata.kind !== 'startUsingLocalKernelSpec' &&
             this.kernelConnectionMetadata.kind !== 'startUsingPythonInterpreter'
@@ -253,27 +265,28 @@ export class RawJupyterSession extends BaseJupyterSession {
         );
 
         this.terminatingStatus = undefined;
-        const process = await KernelProgressReporter.wrapAndReportProgress(
-            this.resource,
-            DataScience.connectingToKernel().format(
-                getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
-            ),
-            () =>
-                this.kernelLauncher.launch(
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    this.kernelConnectionMetadata as any,
-                    this.launchTimeout,
-                    this.resource,
-                    this.workingDirectory.fsPath,
-                    options.token
-                )
-        );
+        try {
+            const process = await this.kernelLauncher.launch(
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                this.kernelConnectionMetadata as any,
+                this.launchTimeout,
+                this.resource,
+                this.workingDirectory.fsPath,
+                options.token
+            );
 
-        return KernelProgressReporter.wrapAndReportProgress(
-            this.resource,
-            DataScience.waitingForJupyterSessionToBeIdle(),
-            () => this.postStartRawSession(options, process)
-        );
+            return await this.postStartRawSession(options, process);
+        } catch (ex) {
+            if (ex instanceof KernelProcessExitedError) {
+                throw new KernelProcessExitedError(
+                    ex.exitCode,
+                    ex.stdErr,
+                    ex.kernelConnectionMetadata,
+                    'Kernel died in rawJupterSerssion.now startREawEs with stack' + stack
+                );
+            }
+            throw ex;
+        }
     }
     private async postStartRawSession(
         options: { token: CancellationToken; ui: IDisplayOptions },

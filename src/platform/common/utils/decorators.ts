@@ -103,6 +103,7 @@ export function makeDebounceAsyncDecorator(wait?: number) {
             const existingDeferredCompleted = existingDeferred && existingDeferred.completed;
             const deferred = (state.deferred =
                 !existingDeferred || existingDeferredCompleted ? createDeferred<any>() : existingDeferred);
+            deferred.promise.catch(noop);
             if (state.timer) {
                 clearTimeout(state.timer as any);
             }
@@ -204,7 +205,7 @@ export function displayProgress(title: string, location = ProgressLocation.Windo
             // eslint-disable-next-line no-invalid-this
             const promise = originalMethod.apply(this, args);
             if (!isTestExecution()) {
-                void window.withProgress(progressOptions, () => promise);
+                void window.withProgress(progressOptions, () => promise).then(noop, noop);
             }
             return promise;
         };
