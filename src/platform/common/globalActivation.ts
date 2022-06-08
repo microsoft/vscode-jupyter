@@ -90,12 +90,12 @@ export class GlobalActivation implements IExtensionSingleActivationService {
         const settings = this.configuration.getSettings(undefined);
         const ownsSelection = settings.sendSelectionToInteractiveWindow;
         const editorContext = new ContextKey(EditorContexts.OwnsSelection, this.commandManager);
-        void editorContext.set(ownsSelection).catch(noop);
+        editorContext.set(ownsSelection).catch(noop);
     };
 
     private computeZmqAvailable() {
         const zmqContext = new ContextKey(EditorContexts.ZmqAvailable, this.commandManager);
-        void zmqContext.set(this.rawSupported ? this.rawSupported.isSupported : false);
+        zmqContext.set(this.rawSupported ? this.rawSupported.isSupported : false).then(noop, noop);
     }
 
     private onChangedActiveTextEditor() {
@@ -106,9 +106,9 @@ export class GlobalActivation implements IExtensionSingleActivationService {
         if (activeEditor && activeEditor.document.languageId === PYTHON_LANGUAGE) {
             // Inform the editor context that we have cells, fire and forget is ok on the promise here
             // as we don't care to wait for this context to be set and we can't do anything if it fails
-            void editorContext.set(hasCells(activeEditor.document, this.configuration.getSettings())).catch(noop);
+            editorContext.set(hasCells(activeEditor.document, this.configuration.getSettings())).catch(noop);
         } else {
-            void editorContext.set(false).catch(noop);
+            editorContext.set(false).catch(noop);
         }
     }
 

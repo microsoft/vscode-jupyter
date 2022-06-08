@@ -17,14 +17,10 @@ export class CryptoUtils implements ICryptoUtils {
     public createHash<E extends keyof IHashFormat>(
         data: string,
         hashFormat: E,
-        algorithm: 'SHA512' | 'SHA256' | 'FNV' = 'FNV'
+        algorithm: 'SHA512' | 'SHA256' = 'SHA256'
     ): IHashFormat[E] {
         let hash: string;
-        if (algorithm === 'FNV') {
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            const fnv = require('@enonic/fnv-plus');
-            hash = fnv.fast1a32hex(data) as string;
-        } else if (algorithm === 'SHA256') {
+        if (algorithm === 'SHA256') {
             hash = hashjs.sha256().update(data).digest('hex');
         } else {
             hash = hashjs.sha512().update(data).digest('hex');

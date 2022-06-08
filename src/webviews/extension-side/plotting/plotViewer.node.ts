@@ -22,6 +22,7 @@ import * as localize from '../../../platform/common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { WebviewPanelHost } from '../webviewPanelHost.node';
 import { joinPath } from '../../../platform/vscode-path/resources';
+import { noop } from '../../../platform/common/utils/misc';
 
 const plotDir = joinPath(Uri.file(EXTENSION_ROOT_DIR), 'out', 'webviews', 'webview-side', 'viewers');
 @injectable()
@@ -152,7 +153,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
             }
         } catch (e) {
             traceError(e);
-            void this.applicationShell.showErrorMessage(localize.DataScience.exportImageFailed().format(e));
+            this.applicationShell.showErrorMessage(localize.DataScience.exportImageFailed().format(e)).then(noop, noop);
         }
     }
 }

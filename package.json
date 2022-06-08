@@ -2078,6 +2078,7 @@
         "packagePreRelease": "gulp clean && gulp prePublishBundle && vsce package --pre-release -o ms-toolsai-jupyter-insiders.vsix",
         "prePublishNonBundle": "gulp clean && gulp prePublishNonBundle",
         "createNycFolder": "gulp createNycFolder",
+        "checkTestResults": "gulp checkTestResults",
         "validateTranslationFiles": "gulp validateTranslationFiles",
         "compile": "tsc -watch -p ./",
         "compiled": "deemon npm run compile",
@@ -2124,6 +2125,7 @@
         "startJupyterServer": "node build/preDebugWebTest.js",
         "stopJupyterServer": "node build/postDebugWebTest.js",
         "validateTelemetryMD": "gulp validateTelemetryMD",
+        "verifyUnhandledErrors": "gulp verifyUnhandledErrors",
         "prepare": "husky install"
     },
     "dependencies": {
@@ -2211,6 +2213,7 @@
         "zeromq": "^6.0.0-beta.6"
     },
     "devDependencies": {
+        "@actions/glob": "^0.3.0",
         "@actions/core": "^1.2.6",
         "@actions/github": "^4.0.0",
         "@babel/cli": "^7.15.4",
@@ -2388,6 +2391,7 @@
         "webpack-bundle-analyzer": "^4.5.0",
         "webpack-cli": "^4.9.2",
         "why-is-node-running": "^2.0.3",
+        "xml-js": "^1.6.11",
         "yargs": "^17.3.1",
         "yargs-parser": "^13.1.2"
     },

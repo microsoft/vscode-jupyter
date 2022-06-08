@@ -54,7 +54,6 @@ import { IVSCodeNotebookController } from '../../../notebooks/controllers/types'
 import { IS_SMOKE_TEST } from '../../constants';
 import * as urlPath from '../../../platform/vscode-path/resources';
 import * as uuid from 'uuid/v4';
-import { swallowExceptions } from '../../../platform/common/utils/misc';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { initialize, waitForCondition } from '../../common';
 import { VSCodeNotebook } from '../../../platform/common/application/notebook';
@@ -172,7 +171,9 @@ async function createTemporaryNotebookFromNotebook(
     await workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(notebook)));
 
     disposables.push({
-        dispose: () => swallowExceptions(() => workspace.fs.delete(uri))
+        dispose: () => {
+            void workspace.fs.delete(uri).then(noop, noop);
+        }
     });
     return uri;
 }
@@ -997,7 +998,7 @@ export async function hijackPrompt(
                     }
                     clickButton.resolve(buttonToClick.text);
                 }
-                return buttonToClick.dismissPrompt ? undefined : clickButton.promise;
+                return buttonToClick.dismissPrompt ? Promise.resolve(undefined) : clickButton.promise;
             }
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

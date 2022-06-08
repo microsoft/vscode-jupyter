@@ -25,7 +25,7 @@ import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { Commands } from '../../platform/common/constants';
 import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
 import { pythonIWKernelDebugAdapter } from '../../kernels/debugger/constants';
-import { isWeb } from '../../platform/common/utils/misc';
+import { isWeb, noop } from '../../platform/common/utils/misc';
 
 export type DebuggerType = 'VSCodePythonDebugger' | 'JupyterProtocolDebugger';
 
@@ -131,7 +131,7 @@ export function sharedIWDebuggerTests(
                 assert.ok(codeLenses, `No code lenses found`);
                 assert.equal(codeLenses.length, 3, `Wrong number of code lenses found`);
                 const args = codeLenses[2].command!.arguments || [];
-                void vscode.commands.executeCommand(codeLenses[2].command!.command, ...args);
+                vscode.commands.executeCommand(codeLenses[2].command!.command, ...args).then(noop, noop);
 
                 // Wait for breakpoint to be hit
                 await waitForCondition(
@@ -200,7 +200,7 @@ export function sharedIWDebuggerTests(
                 assert.ok(codeLenses, `No code lenses found`);
                 assert.equal(codeLenses.length, 3, `Wrong number of code lenses found`);
                 let args = codeLenses[2].command!.arguments || [];
-                void vscode.commands.executeCommand(codeLenses[2].command!.command, ...args);
+                vscode.commands.executeCommand(codeLenses[2].command!.command, ...args).then(noop, noop);
 
                 // Wait for breakpoint to be hit
                 await waitForCondition(
@@ -215,7 +215,7 @@ export function sharedIWDebuggerTests(
                 stopped = false;
                 // Continue and wait for stopped.
                 args = codeLenses[0].command!.arguments || [];
-                void vscode.commands.executeCommand(codeLenses[0].command!.command, ...args);
+                vscode.commands.executeCommand(codeLenses[0].command!.command, ...args).then(noop, noop);
                 await waitForCondition(
                     async () => {
                         return stoppedOnBreakpoint && stopped;
@@ -259,7 +259,7 @@ export function sharedIWDebuggerTests(
                 assert.ok(codeLenses, `No code lenses found`);
                 assert.equal(codeLenses.length, 3, `Wrong number of code lenses found`);
                 let args = codeLenses[2].command!.arguments || [];
-                void vscode.commands.executeCommand(codeLenses[2].command!.command, ...args);
+                vscode.commands.executeCommand(codeLenses[2].command!.command, ...args).then(noop, noop);
 
                 // Wait for breakpoint to be hit
                 await waitForCondition(
@@ -276,7 +276,7 @@ export function sharedIWDebuggerTests(
                 stopped = false;
                 // Continue and wait for stopped.
                 args = codeLenses[2].command!.arguments || [];
-                void vscode.commands.executeCommand(codeLenses[2].command!.command, ...args);
+                vscode.commands.executeCommand(codeLenses[2].command!.command, ...args).then(noop, noop);
                 await waitForCondition(
                     async () => {
                         return stopped;
@@ -300,7 +300,7 @@ export function sharedIWDebuggerTests(
                 stopped = false;
                 // Continue and wait for stopped.
                 args = codeLenses[2].command!.arguments || [];
-                void vscode.commands.executeCommand(codeLenses[2].command!.command, ...args);
+                vscode.commands.executeCommand(codeLenses[2].command!.command, ...args).then(noop, noop);
                 await waitForCondition(
                     async () => {
                         return stopped;
@@ -315,7 +315,7 @@ export function sharedIWDebuggerTests(
                 stopped = false;
                 // Continue and wait for stopped.
                 args = codeLenses[2].command!.arguments || [];
-                void vscode.commands.executeCommand(codeLenses[2].command!.command, ...args);
+                vscode.commands.executeCommand(codeLenses[2].command!.command, ...args).then(noop, noop);
                 await waitForCondition(
                     async () => {
                         return stopped;
@@ -362,7 +362,7 @@ export function sharedIWDebuggerTests(
                 assert.ok(codeLenses, `No code lenses found`);
                 assert.equal(codeLenses.length, 3, `Wrong number of code lenses found`);
                 let args = codeLenses[2].command!.arguments || [];
-                void vscode.commands.executeCommand(codeLenses[2].command!.command, ...args);
+                vscode.commands.executeCommand(codeLenses[2].command!.command, ...args).then(noop, noop);
 
                 // Wait for breakpoint to be hit
                 await waitForCondition(
@@ -424,7 +424,7 @@ b = 200
                 assert.ok(codeLenses, `No code lenses found`);
                 assert.equal(codeLenses.length, 3, `Wrong number of code lenses found`);
                 let args = codeLenses[2].command!.arguments || [];
-                void vscode.commands.executeCommand(codeLenses[2].command!.command, ...args);
+                vscode.commands.executeCommand(codeLenses[2].command!.command, ...args).then(noop, noop);
 
                 // Wait for breakpoint to be hit
                 await waitForCondition(
@@ -485,7 +485,7 @@ def foo():
                 assert.ok(codeLenses, `No code lenses found`);
                 assert.equal(codeLenses.length, 3, `Wrong number of code lenses found`);
                 let args = codeLenses[2].command!.arguments || [];
-                void vscode.commands.executeCommand(codeLenses[2].command!.command, ...args);
+                vscode.commands.executeCommand(codeLenses[2].command!.command, ...args).then(noop, noop);
 
                 // Wait for breakpoint to be hit
                 await waitForCondition(
@@ -510,7 +510,7 @@ def foo():
                 stoppedOnLine = false;
                 targetLine = 7;
 
-                void vscode.commands.executeCommand('workbench.action.debug.stepInto');
+                vscode.commands.executeCommand('workbench.action.debug.stepInto').then(noop, noop);
                 await waitForCondition(
                     async () => {
                         return stopped;
@@ -563,7 +563,7 @@ foo()
                 const debugCellCodeLenses = codeLenses.filter((c) => c.command?.command === Commands.DebugCell);
                 const debugCellCodeLens = debugCellCodeLenses[1];
                 let args = debugCellCodeLens.command!.arguments || [];
-                void vscode.commands.executeCommand(debugCellCodeLens.command!.command, ...args);
+                vscode.commands.executeCommand(debugCellCodeLens.command!.command, ...args).then(noop, noop);
 
                 // Wait for breakpoint to be hit
                 await waitForCondition(
@@ -588,7 +588,7 @@ foo()
                 stoppedOnLine = false;
                 targetLine = 4;
 
-                void vscode.commands.executeCommand('workbench.action.debug.stepInto');
+                vscode.commands.executeCommand('workbench.action.debug.stepInto').then(noop, noop);
                 await waitForCondition(
                     async () => {
                         return stopped;

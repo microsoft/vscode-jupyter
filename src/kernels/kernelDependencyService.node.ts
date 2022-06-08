@@ -166,15 +166,15 @@ export class KernelDependencyService implements IKernelDependencyService {
         const installedPromise = this.installer
             .isInstalled(Product.ipykernel, kernelConnection.interpreter)
             .then((installed) => installed === true);
-        void installedPromise.then((installed) => {
+        installedPromise.then((installed) => {
             if (installed) {
-                void trackPackageInstalledIntoInterpreter(
+                trackPackageInstalledIntoInterpreter(
                     this.memento,
                     Product.ipykernel,
                     kernelConnection.interpreter
-                );
+                ).catch(noop);
             }
-        });
+        }, noop);
         return Promise.race([
             installedPromise,
             createPromiseFromCancellation({ token, defaultValue: false, cancelAction: 'resolve' })

@@ -6,6 +6,7 @@ import { Disposable, ProgressLocation, ProgressOptions } from 'vscode';
 
 import { IApplicationShell } from '../common/application/types';
 import { createDeferred, Deferred } from '../common/utils/async';
+import { noop } from '../common/utils/misc';
 import { IStatusProvider } from './types';
 
 class StatusItem implements Disposable {
@@ -69,15 +70,17 @@ export class StatusProvider implements IStatusProvider {
         };
 
         // Set our application shell status with a busy icon
-        void this.applicationShell.withProgress(progressOptions, (_p, c) => {
-            if (c && cancel) {
-                c.onCancellationRequested(() => {
-                    cancel();
-                    statusItem.reject();
-                });
-            }
-            return statusItem.promise();
-        });
+        this.applicationShell
+            .withProgress(progressOptions, (_p, c) => {
+                if (c && cancel) {
+                    c.onCancellationRequested(() => {
+                        cancel();
+                        statusItem.reject();
+                    });
+                }
+                return statusItem.promise();
+            })
+            .then(noop, noop);
 
         return statusItem;
     }

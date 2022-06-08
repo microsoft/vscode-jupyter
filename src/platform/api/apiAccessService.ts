@@ -10,6 +10,7 @@ import { PromiseChain } from '../common/utils/async';
 import { Common, DataScience } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { traceError } from '../logging';
+import { noop } from '../common/utils/misc';
 
 type ApiExtensionInfo = {
     extensionId: string;
@@ -40,9 +41,9 @@ export class ApiAccessService {
         const publisherId = info.extensionId.split('.')[0];
         if (this.context.extensionMode === ExtensionMode.Test) {
             if (!TrustedExtensionPublishers.has(publisherId) || PublishersAllowedWithPrompts.has(publisherId)) {
-                void this.appShell.showInformationMessage(
-                    DataScience.thanksForUsingJupyterKernelApiPleaseRegisterWithUs()
-                );
+                this.appShell
+                    .showInformationMessage(DataScience.thanksForUsingJupyterKernelApiPleaseRegisterWithUs())
+                    .then(noop, noop);
             }
             return { extensionId: info.extensionId, accessAllowed: true };
         }
@@ -55,9 +56,11 @@ export class ApiAccessService {
             // This cannot happen in the real world, unless someone has written an extension.
             // without testing it at all. Safe to display an error message.
             // This way extension author knows they need to contact us.
-            void this.appShell.showErrorMessage(
-                `Please contact the Jupyter Extension to get access to the Kernel API. Publisher ${publisherId}`
-            );
+            this.appShell
+                .showErrorMessage(
+                    `Please contact the Jupyter Extension to get access to the Kernel API. Publisher ${publisherId}`
+                )
+                .then(noop, noop);
             traceError(`Publisher ${publisherId} is not allowed to access the Kernel API.`);
             return { extensionId: info.extensionId, accessAllowed: false };
         }
@@ -86,12 +89,14 @@ export class ApiAccessService {
                 Common.bannerLabelNo()
             );
             const allow = selection === Common.bannerLabelYes();
-            void this.promiseChain.chainFinally(async () => {
-                let extensionPermissions = [...this.globalState.get<ApiExtensionInfo>(API_ACCESS_GLOBAL_KEY, [])];
-                extensionPermissions = extensionPermissions.filter((item) => item.extensionId !== info.extensionId);
-                extensionPermissions.push({ allowed: allow ? 'yes' : 'no', extensionId: info.extensionId });
-                return this.globalState.update(API_ACCESS_GLOBAL_KEY, extensionPermissions);
-            });
+            this.promiseChain
+                .chainFinally(async () => {
+                    let extensionPermissions = [...this.globalState.get<ApiExtensionInfo>(API_ACCESS_GLOBAL_KEY, [])];
+                    extensionPermissions = extensionPermissions.filter((item) => item.extensionId !== info.extensionId);
+                    extensionPermissions.push({ allowed: allow ? 'yes' : 'no', extensionId: info.extensionId });
+                    return this.globalState.update(API_ACCESS_GLOBAL_KEY, extensionPermissions);
+                })
+                .then(noop, noop);
             sendTelemetryEvent(Telemetry.JupyterKernelApiAccess, undefined, {
                 extensionId: info.extensionId,
                 allowed: allow ? 'yes' : 'no'

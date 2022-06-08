@@ -5,7 +5,7 @@ import * as sinon from 'sinon';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from '../../platform/vscode-path/path';
-import { sleep } from '../core';
+import { noop, sleep } from '../core';
 import { ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { IDisposable } from '../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common.node';
@@ -259,7 +259,7 @@ suite('VSCode Notebook - Run By Line', function () {
         const doc = vscodeNotebook.activeNotebookEditor?.notebook!;
         const cell = doc.getCells()[0];
 
-        void commandManager.executeCommand(Commands.RunByLine, cell);
+        commandManager.executeCommand(Commands.RunByLine, cell).then(noop, noop);
         const { debugAdapter } = await getDebugSessionAndAdapter(debuggingManager, doc);
 
         await waitForStoppedEvent(debugAdapter!);
@@ -274,7 +274,7 @@ suite('VSCode Notebook - Run By Line', function () {
         assert.isFalse(getCellOutputs(cell).includes('final output'), `Final line did run even with an interrupt`);
 
         // Start over and make sure we can execute all lines
-        void commandManager.executeCommand(Commands.RunByLine, cell);
+        commandManager.executeCommand(Commands.RunByLine, cell).then(noop, noop);
         const { debugAdapter: debugAdapter2 } = await getDebugSessionAndAdapter(debuggingManager, doc);
         await waitForStoppedEvent(debugAdapter2!);
         await waitForCondition(

@@ -8,6 +8,7 @@ import { IApplicationShell, IDocumentManager } from '../../common/application/ty
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IServiceContainer } from '../../ioc/types';
 import { ICodeExecutionHelper } from '../types';
+import { noop } from '../../common/utils/misc';
 
 export class CodeExecutionHelperBase implements ICodeExecutionHelper {
     protected readonly documentManager: IDocumentManager;
@@ -25,15 +26,17 @@ export class CodeExecutionHelperBase implements ICodeExecutionHelper {
     public async getFileToExecute(): Promise<Uri | undefined> {
         const activeEditor = this.documentManager.activeTextEditor;
         if (!activeEditor) {
-            void this.applicationShell.showErrorMessage('No open file to run in terminal');
+            this.applicationShell.showErrorMessage('No open file to run in terminal').then(noop, noop);
             return;
         }
         if (activeEditor.document.isUntitled) {
-            void this.applicationShell.showErrorMessage('The active file needs to be saved before it can be run');
+            this.applicationShell
+                .showErrorMessage('The active file needs to be saved before it can be run')
+                .then(noop, noop);
             return;
         }
         if (activeEditor.document.languageId !== PYTHON_LANGUAGE) {
-            void this.applicationShell.showErrorMessage('The active file is not a Python source file');
+            this.applicationShell.showErrorMessage('The active file is not a Python source file').then(noop, noop);
             return;
         }
         if (activeEditor.document.isDirty) {

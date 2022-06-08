@@ -7,6 +7,7 @@ import { PythonExtension, setTestExecution } from '../platform/common/constants'
 import { activateExtension, closeActiveWindows } from './initialize';
 import { IS_REMOTE_NATIVE_TEST } from './constants';
 import { ServerConnectionType } from '../kernels/jupyter/launcher/serverConnectionType';
+import { noop } from './core';
 
 export * from './initialize';
 export * from './constants.node';
@@ -40,7 +41,7 @@ export async function initialize(): Promise<IExtensionTestApi> {
         await startJupyterServer();
     }
     if (IS_REMOTE_NATIVE_TEST()) {
-        void api.serviceContainer.get<ServerConnectionType>(ServerConnectionType).setIsLocalLaunch(false);
+        api.serviceContainer.get<ServerConnectionType>(ServerConnectionType).setIsLocalLaunch(false).then(noop, noop);
     }
     return api;
 }
