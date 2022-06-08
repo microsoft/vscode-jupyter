@@ -46,13 +46,13 @@ import {
 } from './helper.node';
 import { openNotebook } from '../helpers.node';
 import { noop } from '../../../platform/common/utils/misc';
-import { getTextOutputValue, hasErrorOutput, translateCellErrorOutput } from '../../../notebooks/helpers';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { ProductNames } from '../../../kernels/installer/productNames';
 import { Product } from '../../../kernels/installer/types';
 import { IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 import { getOSType, OSType } from '../../../platform/common/utils/platform';
+import { getTextOutputValue, translateCellErrorOutput, hasErrorOutput } from '../../../kernels/execution/helpers';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;

@@ -31,8 +31,8 @@ import { PYTHON_LANGUAGE } from '../platform/common/constants';
 import { disposeAllDisposables } from '../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { DataScience } from '../platform/common/utils/localize';
-import { JupyterNotebookView } from '../notebooks/constants';
-import { getAssociatedJupyterNotebook } from '../notebooks/helpers';
+import { JupyterNotebookView } from '../platform/common/constants';
+import { getAssociatedJupyterNotebook } from '../platform/common/utils';
 
 type CellUri = string;
 type CellVersion = number;

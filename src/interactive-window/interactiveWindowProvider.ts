@@ -42,7 +42,7 @@ import { IServiceContainer } from '../platform/ioc/types';
 import { KernelConnectionMetadata } from '../kernels/types';
 import { IEmbedNotebookEditorProvider, INotebookControllerManager, INotebookEditorProvider } from '../notebooks/types';
 import { InteractiveWindow } from './interactiveWindow';
-import { JVSC_EXTENSION_ID, NotebookCellScheme } from '../platform/common/constants';
+import { InteractiveWindowView, JVSC_EXTENSION_ID, NotebookCellScheme } from '../platform/common/constants';
 import {
     IInteractiveWindow,
     IInteractiveWindowDebugger,
@@ -56,7 +56,6 @@ import { INotebookExporter } from '../kernels/jupyter/types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { IExportDialog } from '../platform/export/types';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
-import { InteractiveWindowView } from '../notebooks/constants';
 import { ICodeGeneratorFactory, IGeneratedCodeStorageFactory } from './editor-integration/types';
 import { IInteractiveWindowDebuggingManager } from '../kernels/debugger/types';
 import { getResourceType } from '../platform/common/utils';

@@ -6,10 +6,10 @@ import { notebooks, NotebookCellExecutionStateChangeEvent, NotebookDocument, Not
 import { IExtensionSingleActivationService } from '../platform/activation/types';
 import { IVSCodeNotebook } from '../platform/common/application/types';
 import { IDisposableRegistry } from '../platform/common/types';
+import { isJupyterNotebook } from '../platform/common/utils';
 import { ResourceSet } from '../platform/vscode-path/map';
 import { sendTelemetryEvent } from '../telemetry';
 import { Telemetry } from '../webviews/webview-side/common/constants';
-import { isJupyterNotebook } from './helpers';
 
 /**
  * This class tracks opened notebooks & # of executed notebooks.

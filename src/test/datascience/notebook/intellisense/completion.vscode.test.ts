@@ -9,7 +9,6 @@ import { IVSCodeNotebook } from '../../../../platform/common/application/types';
 import { traceInfo } from '../../../../platform/logging';
 import { IDisposable } from '../../../../platform/common/types';
 import { InteractiveWindowProvider } from '../../../../interactive-window/interactiveWindowProvider';
-import { getTextOutputValue } from '../../../../notebooks/helpers';
 import { captureScreenShot, IExtensionTestApi } from '../../../common.node';
 import { IS_REMOTE_NATIVE_TEST } from '../../../constants.node';
 import { initialize } from '../../../initialize.node';
@@ -26,6 +25,7 @@ import {
 import { IInteractiveWindowProvider } from '../../../../interactive-window/types';
 import { setIntellisenseTimeout } from '../../../../intellisense/pythonKernelCompletionProvider';
 import { Settings } from '../../../../platform/common/constants';
+import { getTextOutputValue } from '../../../../kernels/execution/helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Intellisense Notebook and Interactive Code Completion (slow)', function () {

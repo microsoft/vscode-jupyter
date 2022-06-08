@@ -15,10 +15,10 @@ import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { Commands } from '../../webviews/webview-side/common/constants';
 import { JupyterServerSelector } from '../../kernels/jupyter/serverSelector';
-import { isJupyterNotebook } from '../helpers';
 import { INotebookControllerManager } from '../types';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { Settings } from '../../platform/common/constants';
+import { isJupyterNotebook } from '../../platform/common/utils';
 
 @injectable()
 export class RemoteSwitcher implements IExtensionSingleActivationService {

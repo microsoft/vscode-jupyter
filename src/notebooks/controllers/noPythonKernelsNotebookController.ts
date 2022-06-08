@@ -6,6 +6,7 @@ import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IVSCodeNotebook, ICommandManager, IApplicationShell } from '../../platform/common/application/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
+import { getNotebookMetadata, isPythonNotebook } from '../../platform/common/utils';
 import { DataScience, Common } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -14,7 +15,6 @@ import {
     Telemetry,
     PythonExtension
 } from '../../webviews/webview-side/common/constants';
-import { getNotebookMetadata, isPythonNotebook } from '../helpers';
 
 export class NoPythonKernelsNotebookController implements Disposable {
     private readonly disposables: IDisposable[] = [];

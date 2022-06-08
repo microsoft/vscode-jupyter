@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { clearPendingChainedUpdatesForTests } from '../notebooks/execution/notebookUpdater';
+import { clearPendingChainedUpdatesForTests } from '../kernels/execution/notebookUpdater';
 import { IExtensionApi } from '../platform/api';
 import { disposeAllDisposables } from '../platform/common/helpers';
 import { IDisposable } from '../platform/common/types';

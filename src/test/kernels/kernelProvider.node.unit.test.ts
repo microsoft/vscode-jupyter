@@ -4,12 +4,12 @@
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { EventEmitter, NotebookController, NotebookDocument, Uri } from 'vscode';
+import { CellOutputDisplayIdTracker } from '../../kernels/execution/cellDisplayIdTracker';
 import { KernelProvider as NodeKernelProvider } from '../../kernels/kernelProvider.node';
 import { IKernelProvider, INotebookProvider, KernelConnectionMetadata, KernelOptions } from '../../kernels/types';
-import { JupyterNotebookView } from '../../notebooks/constants';
-import { CellOutputDisplayIdTracker } from '../../notebooks/execution/cellDisplayIdTracker';
 import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
 import { AsyncDisposableRegistry } from '../../platform/common/asyncDisposableRegistry';
+import { JupyterNotebookView } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { IPythonExecutionFactory } from '../../platform/common/process/types.node';
@@ -121,7 +121,7 @@ suite('KernelProvider Node', () => {
         const kernel = kernelProvider.getOrCreate(sampleUri1, options);
         asyncDisposables.push(kernel);
 
-        assert.equal(kernel.id, sampleUri1, 'Kernel id should match the uri');
+        assert.equal(kernel.uri, sampleUri1, 'Kernel id should match the uri');
         assert.isUndefined(kernelProvider.get(sampleUri2), 'Should not return an instance');
         assert.isUndefined(kernelProvider.get(sampleUri3), 'Should not return an instance');
         assert.equal(onKernelCreated.count, 1, 'Should have triggered the event');
@@ -160,7 +160,7 @@ suite('KernelProvider Node', () => {
         const kernel = kernelProvider.getOrCreate(uri, options);
         asyncDisposables.push(kernel);
 
-        assert.equal(kernel.id, uri, 'Kernel id should match the uri');
+        assert.equal(kernel.uri, uri, 'Kernel id should match the uri');
         assert.isUndefined(kernelProvider.get(sampleUri2), 'Should not return an instance');
         assert.isUndefined(kernelProvider.get(sampleUri3), 'Should not return an instance');
         assert.equal(onKernelCreated.count, 1, 'Should have triggered the event');

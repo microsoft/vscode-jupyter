@@ -13,7 +13,7 @@ import {
     IDocumentManager,
     IApplicationShell
 } from '../../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import {
     traceInfoIfCI,
     traceError,
@@ -50,8 +50,6 @@ import {
     IKernelFinder,
     isLocalConnection
 } from '../../kernels/types';
-import { JupyterNotebookView, InteractiveWindowView } from '../constants';
-import { isPythonNotebook, getNotebookMetadata } from '../helpers';
 import { INotebookControllerManager } from '../types';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
 import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController';
@@ -66,7 +64,7 @@ import {
     getLanguageInNotebookMetadata,
     isPythonKernelConnection
 } from '../../kernels/helpers';
-import { getResourceType } from '../../platform/common/utils';
+import { getNotebookMetadata, getResourceType, isPythonNotebook } from '../../platform/common/utils';
 import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
 import { INotebookMetadata } from '@jupyterlab/nbformat';
 import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConnectionType';

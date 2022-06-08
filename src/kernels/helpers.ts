@@ -16,9 +16,10 @@ import {
     LiveRemoteKernelConnectionMetadata,
     PythonKernelConnectionMetadata,
     IJupyterKernelSpec,
-    IJupyterSession
+    IJupyterSession,
+    IKernel
 } from './types';
-import { Uri } from 'vscode';
+import { Uri, workspace } from 'vscode';
 import { IWorkspaceService } from '../platform/common/application/types';
 import { isCI, PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
 import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../platform/logging';
@@ -32,9 +33,8 @@ import { fsPathToUri } from '../platform/vscode-path/utils';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
 import { JupyterKernelSpec } from './jupyter/jupyterKernelSpec';
 import { Resource } from '../platform/common/types';
-import { getResourceType } from '../platform/common/utils';
+import { getResourceType, isPythonNotebook } from '../platform/common/utils';
 import { sendTelemetryEvent } from '../telemetry';
-import { isPythonNotebook } from '../notebooks/helpers';
 
 // https://jupyter-client.readthedocs.io/en/stable/kernels.html
 export const connectionFilePlaceholder = '{connection_file}';
@@ -1573,4 +1573,12 @@ export function deserializeKernelConnection(kernelConnection: any): KernelConnec
         };
     }
     return kernelConnection;
+}
+
+export function getAssociatedNotebookDocument(kernel: IKernel | undefined) {
+    if (!kernel) {
+        return;
+    }
+
+    return workspace.notebookDocuments.find((nb) => nb.uri.toString() === kernel.uri.toString());
 }

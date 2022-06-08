@@ -11,7 +11,6 @@ import { KernelFilterUI } from './controllers/kernelFilter/kernelFilterUI';
 import { LiveKernelSwitcher } from './controllers/liveKernelSwitcher';
 import { NotebookControllerManager } from './controllers/notebookControllerManager';
 import { RemoteSwitcher } from './controllers/remoteSwitcher';
-import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { NotebookCommandListener } from './notebookCommandListener';
 import { NotebookEditorProvider } from './notebookEditorProvider';
 import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms.node';
@@ -26,10 +25,10 @@ import { IntellisenseProvider } from '../intellisense/intellisenseProvider.node'
 import { RemoteKernelControllerWatcher } from './controllers/remoteKernelControllerWatcher';
 import { ITracebackFormatter } from '../kernels/types';
 import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
+import { NotebookIPyWidgetCoordinator } from './controllers/notebookIPyWidgetCoordinator';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
-    serviceManager.addSingleton<CellOutputDisplayIdTracker>(CellOutputDisplayIdTracker, CellOutputDisplayIdTracker);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         GitHubIssueCodeLensProvider
@@ -70,4 +69,9 @@ export function registerTypes(serviceManager: IServiceManager) {
         RemoteKernelControllerWatcher
     );
     serviceManager.addSingleton<ITracebackFormatter>(ITracebackFormatter, NotebookTracebackFormatter);
+    serviceManager.addSingleton<NotebookIPyWidgetCoordinator>(
+        NotebookIPyWidgetCoordinator,
+        NotebookIPyWidgetCoordinator
+    );
+    serviceManager.addBinding(NotebookIPyWidgetCoordinator, IExtensionSyncActivationService);
 }

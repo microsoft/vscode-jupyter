@@ -5,9 +5,9 @@
 
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
-import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { IPyWidgetMessages } from '../../platform/messageTypes';
+import { getAssociatedNotebookDocument } from '../helpers';
 import { IKernel, IKernelProvider } from '../types';
 import { IPyWidgetMessageDispatcher } from './ipyWidgetMessageDispatcher';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
