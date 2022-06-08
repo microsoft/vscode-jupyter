@@ -144,8 +144,6 @@ export namespace Commands {
     export const NotebookEditorCollapseAllCells = 'jupyter.notebookeditor.collapseallcells';
     export const EnableDebugLogging = 'jupyter.enableDebugLogging';
     export const ResetLoggingLevel = 'jupyter.resetLoggingLevel';
-    export const CreateGitHubIssue = 'jupyter.createGitHubIssue';
-    export const SubmitGitHubIssue = 'jupyter.submitGitHubIssue';
     export const ShowDataViewer = 'jupyter.showDataViewer';
     export const RefreshDataViewer = 'jupyter.refreshDataViewer';
     export const ClearSavedJupyterUris = 'jupyter.clearSavedJupyterUris';
