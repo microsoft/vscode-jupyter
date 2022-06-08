@@ -26,7 +26,7 @@ import {
     WebSocketData
 } from './extension';
 import { JupyterNotebookView, Telemetry } from '../common/constants';
-import { KernelConnector } from '../../kernels/kernelConnector';
+import { KernelConnector } from '../../notebooks/controllers/kernelConnector';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import { IServiceContainer } from '../ioc/types';
 import { IExportedKernelServiceFactory } from './types';
