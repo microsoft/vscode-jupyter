@@ -1938,9 +1938,9 @@ No properties for event
 
 [src/notebooks/notebookEditorProvider.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/notebookEditorProvider.ts)
 ```typescript
-        const nb = await this.vscodeNotebook.openNotebookDocument(file);
-        await this.vscodeNotebook.showNotebookDocument(nb);
-    }
+export class NotebookEditorProvider implements INotebookEditorProvider {
+    private providers: Set<IEmbedNotebookEditorProvider> = new Set();
+    constructor(@inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook) {}
     @captureTelemetry(Telemetry.CreateNewNotebook, undefined, false)
     public async createNew(options?: { contents?: string; defaultCellLanguage: string }): Promise<void> {
         // contents will be ignored
