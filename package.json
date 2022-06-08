@@ -572,13 +572,13 @@
             },
             {
                 "command": "jupyter.selectjupyteruri",
-                "title": "%jupyter.command.jupyter.selectJupyterUri.title%",
+                "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
                 "category": "Jupyter",
                 "enablement": "isWorkspaceTrusted"
             },
             {
                 "command": "jupyter.selectNativeJupyterUriFromToolBar",
-                "title": "%jupyter.command.jupyter.selectJupyterUri.title%",
+                "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
                 "category": "Jupyter",
                 "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
             },
@@ -676,7 +676,7 @@
             },
             {
                 "command": "jupyter.selectNativeJupyterUriFromToolBar",
-                "title": "%jupyter.command.jupyter.selectJupyterUri.title%",
+                "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
                 "category": "Jupyter",
                 "icon": "$(debug-disconnect)",
                 "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
@@ -940,7 +940,7 @@
                 },
                 {
                     "command": "jupyter.selectNativeJupyterUriFromToolBar",
-                    "title": "%jupyter.command.jupyter.selectJupyterUri.title%",
+                    "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
                     "group": "overflow@1000",
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted && config.notebook.globalToolbar != true"
                 }
@@ -1503,7 +1503,7 @@
                 },
                 {
                     "command": "jupyter.selectNativeJupyterUriFromToolBar",
-                    "title": "%jupyter.command.jupyter.selectJupyterUri.title%",
+                    "title": "%jupyter.command.jupyter.selectjupyteruri.title%",
                     "when": "false"
                 },
                 {

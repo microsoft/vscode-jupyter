@@ -141,7 +141,7 @@
     "jupyter.command.jupyter.gotoPrevCellInFile.title": "Go to Previous Cell",
     "jupyter.command.jupyter.showhistorypane.title": "Show Interactive Window",
     "jupyter.command.jupyter.createnewinteractive.title": "Create Interactive Window",
-    "jupyter.command.jupyter.selectJupyterUri.title": "Specify Jupyter Server for Connections",
+    "jupyter.command.jupyter.selectjupyteruri.title": "Specify Jupyter Server for Connections",
     "DataScience.jupyterNativeNotebookUriStatusLabelForLocal": "Jupyter Server: Local",
     "DataScience.jupyterNativeNotebookUriStatusLabelForRemote": "Jupyter Server: Remote",
     "jupyter.command.jupyter.selectjupytercommandline.title": "Specify Jupyter Command Line Arguments",

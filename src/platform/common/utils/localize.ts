@@ -1097,7 +1097,7 @@ export namespace DataScience {
     export const removeRemoteJupyterServerEntryInQuickPick = () =>
         localize('DataScience.removeRemoteJupyterServerEntryInQuickPick', 'Remove');
     export const specifyLocalOrRemoteJupyterServerForConnections = () =>
-        localize('jupyter.command.jupyter.selectJupyterUri.title', 'Specify Jupyter Server for Connections');
+        localize('jupyter.command.jupyter.selectjupyteruri.title', 'Specify Jupyter Server for Connections');
     export const jupyterNativeNotebookUriStatusLabelForLocal = () =>
         localize('DataScience.jupyterNativeNotebookUriStatusLabelForLocal', 'Jupyter Server: Local');
     export const jupyterNativeNotebookUriStatusLabelForRemote = () =>
