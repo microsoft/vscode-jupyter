@@ -99,7 +99,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             await startJupyterServer();
             await createEmptyPythonNotebook(disposables);
             assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
-            // Verify the selected
             traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
         } catch (e) {
             await captureScreenShot(this.currentTest?.title || 'unknown');

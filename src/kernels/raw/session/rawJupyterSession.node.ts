@@ -27,7 +27,6 @@ import { IKernelLauncher, IKernelProcess } from '../types';
 import { RawSession } from './rawSession.node';
 import { DisplayOptions } from '../../displayOptions';
 import { noop } from '../../../platform/common/utils/misc';
-import { KernelProcessExitedError } from '../../../platform/errors/kernelProcessExitedError';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 
 /*
@@ -94,15 +93,6 @@ export class RawJupyterSession extends BaseJupyterSession {
             // Listen for session status changes
             this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
         } catch (error) {
-            if (error instanceof KernelProcessExitedError) {
-                error = new KernelProcessExitedError(
-                    error.exitCode,
-                    error.stdErr,
-                    error.kernelConnectionMetadata,
-                    'Kernel died in rawJuptyerSession.node'
-                );
-            }
-
             this.connected = false;
             if (isCancellationError(error) || options.token.isCancellationRequested) {
                 sendKernelTelemetryEvent(
