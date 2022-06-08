@@ -492,8 +492,14 @@
     "Common.canceled": "Canceled",
     "Common.cancel": "Cancel",
     "Common.yesPlease": "Yes, please",
-    "DataScience.importChangeDirectoryComment": "{0} Change working directory from the workspace root to the ipynb file location. Turn this addition off with the DataScience.changeDirOnImportExport setting",
-    "DataScience.exportChangeDirectoryComment": "# Change directory to VS Code workspace root so that relative path loads work correctly. Turn this addition off with the DataScience.changeDirOnImportExport setting",
+    "DataScience.importChangeDirectoryComment": {
+      "message": "{0} Change working directory from the workspace root to the ipynb file location. Turn this addition off with the DataScience.changeDirOnImportExport setting",
+      "comment": ["{Locked='DataScience.changeDirOnImportExport'}"]
+    },
+    "DataScience.exportChangeDirectoryComment": {
+      "message": "# Change directory to VS Code workspace root so that relative path loads work correctly. Turn this addition off with the DataScience.changeDirOnImportExport setting",
+      "comment": ["{Locked='DataScience.changeDirOnImportExport'}"]
+    },
     "DataScience.interruptKernelStatus": {
         "message": "Interrupting Jupyter Kernel",
         "comment": ["{Locked='Kernel'}"]
@@ -577,7 +583,7 @@
     "downloading.file.progress": "{0}{1} of {2} KB ({3}%)",
     "DataScience.jupyterDataRateExceeded": {
         "message": "Cannot view variable because data rate exceeded. Please restart your server with a higher data rate limit. For example, --NotebookApp.iopub_data_rate_limit=10000000000.0",
-        "comment": ["{Locked='Notebook'}"]
+        "comment": ["{Locked='NotebookApp.iopub_data_rate_limit'}"]
     },
     "DataScience.addCellBelowCommandTitle": "Add cell",
     "DataScience.debugCellCommandTitle": "Debug Cell",
@@ -683,7 +689,7 @@
     },
     "DataScience.sessionStartFailedWithKernel": {
         "message": "Failed to start the Kernel '{0}'. \nView Jupyter [log](command:jupyter.viewOutput) for further details.",
-        "comment": ["{Locked='Kernel'}"]
+        "comment": ["{Locked='Kernel'}", "{Locked='command:jupyter.viewOutput'}"]
     },
     "DataScience.failedToStartKernel": {
         "message": "Failed to start the Kernel.",
@@ -703,15 +709,15 @@
     },
     "DataScience.kernelDiedWithoutError": {
         "message": "The kernel '{0}' died. Click [here](https://aka.ms/vscodeJupyterKernelCrash) for more info. View Jupyter [log](command:jupyter.viewOutput) for further details.",
-        "comment": ["{Locked='Kernel'}"]
+        "comment": ["{Locked='Kernel'}", "{Locked='command:jupyter.viewOutput'}", "{Locked='vscodeJupyterKernelCrash'}"]
     },
     "DataScience.kernelDiedWithoutErrorAndAutoRestarting": {
         "message": "The kernel '{0}' died and is being automatically restarted by Jupyter. Click [here](https://aka.ms/vscodeJupyterKernelCrash) for more info. View Jupyter [log](command:jupyter.viewOutput) for further details.",
-        "comment": ["{Locked='Kernel'}"]
+        "comment": ["{Locked='Kernel'}", "{Locked='command:jupyter.viewOutput'}", "{Locked='vscodeJupyterKernelCrash'}"]
     },
     "DataScience.kernelCrashedDueToCodeInCurrentOrPreviousCell": {
         "message": "The Kernel crashed while executing code in the the current cell or a previous cell. Please review the code in the cell(s) to identify a possible cause of the failure. Click <a href='https://aka.ms/vscodeJupyterKernelCrash'>here</a> for more info. View Jupyter [log](command:jupyter.viewOutput) for further details.",
-        "comment": ["{Locked='Kernel'}"]
+        "comment": ["{Locked='Kernel'}", "{Locked='command:jupyter.viewOutput'}", "{Locked='vscodeJupyterKernelCrash'}"]
     },
     "DataScience.fileSeemsToBeInterferingWithKernelStartup": {
         "message": "The file '{0}' seems to be overriding built in modules and interfering with the startup of the kernel. Consider renaming the file and starting the kernel again.",
@@ -846,7 +852,7 @@
     },
     "DataScience.rawKernelStartFailedDueToTimeout": {
         "message": "Unable to start Kernel '{0}' due to connection timeout. \nView Jupyter [log](command:jupyter.viewOutput) for further details.",
-        "comment": ["{Locked='Kernel'}"]
+        "comment": ["{Locked='Kernel'}", "{Locked='command:jupyter.viewOutput'}"]
     },
     "DataScience.rawKernelConnectingSession": {
         "message": "Connecting to kernel {0}",
