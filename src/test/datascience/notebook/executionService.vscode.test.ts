@@ -99,6 +99,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             await startJupyterServer();
             await createEmptyPythonNotebook(disposables);
             assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
+            // With less realestate, the outputs might not get rendered (VS Code optimization to avoid rendering if not in viewport).
+            await commands.executeCommand('workbench.action.closePanel');
             traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
         } catch (e) {
             await captureScreenShot(this.currentTest?.title || 'unknown');
@@ -863,7 +865,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     });
 
     test('Handling of carriage returns', async () => {
-        await insertCodeCell('print("one\\r", end="")\nprint("two\\r", end="")\nprint("three\\r", end="")', {
+        await insertCodeCell('print("one\\r", e nd="")\nprint("two\\r", end="")\nprint("three\\r", end="")', {
             index: 0
         });
         await insertCodeCell('print("one\\r")\nprint("two\\r")\nprint("three\\r")', { index: 1 });

@@ -75,6 +75,7 @@ suite('IPyWisdget Tests', function () {
         await startJupyterServer();
         await closeNotebooks();
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        // With less realestate, the outputs might not get rendered (VS Code optimization to avoid rendering if not in viewport).
         await commands.executeCommand('workbench.action.closePanel');
     });
     teardown(async function () {
