@@ -412,7 +412,7 @@ ImportError: No module named 'xyz'
                 'jupyterExtension'
             );
 
-            const expectedMessage = DataScience.failedToStartKernelDueToUnknowDllLoadFailure();
+            const expectedMessage = DataScience.failedToStartKernelDueToUnknownDllLoadFailure();
 
             verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresDllLoad');
         });
