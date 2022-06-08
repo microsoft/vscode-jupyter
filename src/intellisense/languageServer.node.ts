@@ -155,11 +155,10 @@ export class LanguageServer implements Disposable {
         shouldAllowIntellisense: (uri: Uri, interpreterId: string, interpreterPath: Uri) => boolean,
         getNotebookHeader: (uri: Uri) => string
     ): Promise<LanguageServer | undefined> {
-        let languageClient: LanguageClient | undefined;
-
         const cancellationStrategy = new FileBasedCancellationStrategy();
         const serverOptions = await LanguageServer.createServerOptions(interpreter, cancellationStrategy);
         if (serverOptions) {
+            let languageClient: LanguageClient | undefined;
             const outputChannel = window.createOutputChannel(`${interpreter.displayName || 'notebook'}-languageserver`);
             const interpreterId = getInterpreterId(interpreter);
             const middleware =
