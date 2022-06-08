@@ -33,6 +33,7 @@ import { KernelDebugAdapter } from './kernelDebugAdapter';
 import { assertIsDebugConfig, IpykernelCheckResult } from '../../kernels/debugger/helper';
 import { IDebuggingManager, IKernelDebugAdapterConfig, KernelDebugMode } from '../../kernels/debugger/types';
 import { DebuggingManagerBase } from './debuggingManagerBase';
+import { noop } from '../../platform/common/utils/misc';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
@@ -181,7 +182,7 @@ export class DebuggingManager
         traceInfoIfCI(`Starting debugging with mode ${mode}`);
 
         if (!editor) {
-            void this.appShell.showErrorMessage(DataScience.noNotebookToDebug());
+            this.appShell.showErrorMessage(DataScience.noNotebookToDebug()).then(noop, noop);
             return;
         }
 
@@ -207,7 +208,7 @@ export class DebuggingManager
                     return;
                 case IpykernelCheckResult.Outdated:
                 case IpykernelCheckResult.Unknown: {
-                    void this.promptInstallIpykernel6();
+                    this.promptInstallIpykernel6().then(noop, noop);
                     return;
                 }
                 case IpykernelCheckResult.Ok: {
@@ -333,7 +334,7 @@ export class DebuggingManager
                     debug.resolve(session);
                     return new DebugAdapterInlineImplementation(adapter);
                 } else {
-                    void this.appShell.showInformationMessage(DataScience.kernelWasNotStarted());
+                    this.appShell.showInformationMessage(DataScience.kernelWasNotStarted()).then(noop, noop);
                 }
             }
         }

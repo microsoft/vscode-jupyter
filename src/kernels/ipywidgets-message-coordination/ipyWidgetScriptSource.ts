@@ -21,6 +21,7 @@ import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider';
 import { ILocalResourceUriConverter, IWidgetScriptSourceProviderFactory, WidgetScriptSource } from './types';
 import { ConsoleForegroundColors } from '../../platform/logging/types';
 import { getAssociatedNotebookDocument } from '../helpers';
+import { noop } from '../../platform/common/utils/misc';
 
 export class IPyWidgetScriptSource {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -108,7 +109,8 @@ export class IPyWidgetScriptSource {
                             this.sendWidgetSource(moduleName, moduleVersion).catch(
                                 traceError.bind(undefined, 'Failed to send widget sources upon ready')
                             );
-                        });
+                        })
+                        .catch(noop);
                 } else {
                     traceInfo(`${ConsoleForegroundColors.Green}Fetch Script for ${JSON.stringify(payload)}`);
                     this.sendWidgetSource(moduleName, moduleVersion).catch(

@@ -464,9 +464,20 @@ gulp.task('validateDependencies', async () => {
         console.log(modules);
         if (modules.length > 1 || modules[0] !== '@jupyterlab/coreutils') {
             // we already validate that we are not using moment in @jupyterlab/coreutils
-            const message = `The following modules require moment: ${modules.join(', ')}. Please validate if moment is being used.`;
+            const message = `The following modules require moment: ${modules.join(
+                ', '
+            )}. Please validate if moment is being used.`;
             console.error(message);
             throw new Error(message);
         }
+    }
+});
+
+gulp.task('verifyUnhandledErrors', async () => {
+    const fileName = path.join(__dirname, 'unhandledErrors.txt');
+    const contents = fs.pathExistsSync(fileName) ? fs.readFileSync(fileName, 'utf8') : '';
+    if (contents.trim().length) {
+        console.error(contents);
+        throw new Error('Unhandled errors detected. Please fix them before merging this PR.', contents);
     }
 });

@@ -45,6 +45,7 @@ import { Commands, EditorContexts } from '../../../platform/common/constants';
 import { IDataScienceErrorHandler } from '../../../platform/errors/types';
 import { SystemVariables } from '../../../platform/common/variables/systemVariables.node';
 import { IDebugLocationTracker } from '../../../kernels/debugger/types';
+import { noop } from '../../core';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -609,7 +610,7 @@ testing3`;
             })
             .verifiable(TypeMoq.Times.exactly(2));
 
-        void codeWatcher.runAllCells();
+        codeWatcher.runAllCells().then(noop, noop);
         await codeWatcher.runAllCells();
 
         expect(funcOrder).deep.equals(expectedFuncOrder);

@@ -282,7 +282,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             this.controllersPromise = this.loadNotebookControllersImpl(cancelToken.token)
                 .catch((e) => {
                     traceError('Error loading notebook controllers', e);
-                    if (!isCancellationError(e)) {
+                    if (!isCancellationError(e, true)) {
                         // This can happen in the tests, and these get bubbled upto VSC and are logged as unhandled exceptions.
                         // Hence swallow cancellation errors.
                         throw e;
@@ -552,7 +552,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             return;
         }
 
-        void this.initializePreferredNotebookController(document);
+        this.initializePreferredNotebookController(document).catch(noop);
         if (isPythonNotebook(getNotebookMetadata(document)) && this.extensionChecker.isPythonExtensionInstalled) {
             // If we know we're dealing with a Python notebook, load the active interpreter as a kernel asap.
             this.createActiveInterpreterController(JupyterNotebookView, document.uri).catch(noop);
@@ -813,7 +813,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 this.createNotebookController(value.connection, value.label, doNotHideInteractiveKernel);
             });
         } catch (ex) {
-            if (!isCancellationError(ex)) {
+            if (!isCancellationError(ex, true)) {
                 // This can happen in the tests, and these get bubbled upto VSC and are logged as unhandled exceptions.
                 // Hence swallow cancellation errors.
                 throw ex;
@@ -907,7 +907,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     this.registeredControllers.set(controller.id, controller);
                 });
         } catch (ex) {
-            if (isCancellationError(ex)) {
+            if (isCancellationError(ex, true)) {
                 // This can happen in the tests, and these get bubbled upto VSC and are logged as unhandled exceptions.
                 // Hence swallow cancellation errors.
                 return;

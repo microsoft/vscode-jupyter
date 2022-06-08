@@ -35,6 +35,7 @@ import { DebuggingManagerBase } from '../../../notebooks/debugger/debuggingManag
 import { IConfigurationService } from '../../../platform/common/types';
 import { IFileGeneratedCodes } from '../../editor-integration/types';
 import { buildSourceMap } from '../helper';
+import { noop } from '../../../platform/common/utils/misc';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
@@ -91,7 +92,7 @@ export class InteractiveWindowDebuggingManager
                     return;
                 case IpykernelCheckResult.Outdated:
                 case IpykernelCheckResult.Unknown: {
-                    void this.promptInstallIpykernel6();
+                    this.promptInstallIpykernel6().then(noop, noop);
                     return;
                 }
                 case IpykernelCheckResult.Ok: {
@@ -157,7 +158,7 @@ export class InteractiveWindowDebuggingManager
             return;
         }
         if (!kernel?.session) {
-            void this.appShell.showInformationMessage(DataScience.kernelWasNotStarted());
+            this.appShell.showInformationMessage(DataScience.kernelWasNotStarted()).then(noop, noop);
             return;
         }
         const adapter = new KernelDebugAdapter(

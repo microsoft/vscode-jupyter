@@ -39,7 +39,7 @@ export abstract class LocalKernelSpecFinderBase {
     }
     private set oldKernelSpecsFolder(value: string) {
         this._oldKernelSpecsFolder = value;
-        void this.globalState.update('OLD_KERNEL_SPECS_FOLDER__', value);
+        this.globalState.update('OLD_KERNEL_SPECS_FOLDER__', value).then(noop, noop);
     }
     private cache?: KernelSpecFileWithContainingInterpreter[];
     // Store our results when listing all possible kernelspecs for a resource

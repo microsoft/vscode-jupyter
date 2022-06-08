@@ -100,7 +100,7 @@ export class CommonMessageCoordinator {
                             response: webview.asWebviewUri(e.payload)
                         });
                     } else {
-                        void webview.postMessage({ type: e.message, payload: e.payload });
+                        webview.postMessage({ type: e.message, payload: e.payload }).then(noop, noop);
                     }
                 },
                 this,
@@ -193,7 +193,9 @@ export class CommonMessageCoordinator {
                             this.appShell.openUrl('https://aka.ms/PVSCIPyWidgets');
                             break;
                         case enableDownloads:
-                            void this.commandManager.executeCommand(Commands.EnableLoadingWidgetsFrom3rdPartySource);
+                            this.commandManager
+                                .executeCommand(Commands.EnableLoadingWidgetsFrom3rdPartySource)
+                                .then(noop, noop);
                             break;
                         default:
                             break;

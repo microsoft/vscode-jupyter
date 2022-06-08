@@ -324,6 +324,9 @@ jobs:
         id: test_unittests
         run: npm run test:unittests
 
+      - name: Verify there are no unhandled errors
+        run: npm run verifyUnhandledErrors
+
       - name: Publish Test Report
         uses: scacap/action-surefire-report@v1
         if: steps.test_unittests.outcome == 'failure' && failure()
@@ -727,6 +730,9 @@ jobs:
           name: SD-memtest.json
           path: './SD-memtest.json'
           retention-days: 20
+
+      - name: Verify there are no unhandled errors
+        run: npm run verifyUnhandledErrors
 
   smoke-tests:
     timeout-minutes: 30

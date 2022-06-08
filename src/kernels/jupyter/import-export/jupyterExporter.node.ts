@@ -21,6 +21,7 @@ import { IDataScienceErrorHandler } from '../../../platform/errors/types';
 import { concatMultilineString } from '../../../webviews/webview-side/common';
 import { defaultNotebookFormat, CodeSnippets } from '../../../webviews/webview-side/common/constants';
 import { INotebookExporter, IJupyterExecution } from '../types';
+import { noop } from '../../../platform/common/utils/misc';
 
 @injectable()
 export class JupyterExporter implements INotebookExporter {
@@ -56,7 +57,7 @@ export class JupyterExporter implements INotebookExporter {
                 return;
             }
             const openQuestion1 = DataScience.exportOpenQuestion1();
-            void this.applicationShell
+            this.applicationShell
                 .showInformationMessage(DataScience.exportDialogComplete().format(file), openQuestion1)
                 .then(async (str: string | undefined) => {
                     try {
@@ -67,13 +68,15 @@ export class JupyterExporter implements INotebookExporter {
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         await this.errorHandler.handleError(e as any);
                     }
-                });
+                }, noop);
         } catch (exc) {
             traceError('Error in exporting notebook file');
-            void this.applicationShell.showInformationMessage(
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                DataScience.exportDialogFailed().format(exc as any)
-            );
+            this.applicationShell
+                .showInformationMessage(
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    DataScience.exportDialogFailed().format(exc as any)
+                )
+                .then(noop, noop);
         }
     }
     public async translateToNotebook(

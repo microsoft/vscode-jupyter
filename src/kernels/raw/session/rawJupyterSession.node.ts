@@ -25,9 +25,9 @@ import { ISessionWithSocket, KernelConnectionMetadata } from '../../../kernels/t
 import { BaseJupyterSession } from '../../common/baseJupyterSession';
 import { IKernelLauncher, IKernelProcess } from '../types';
 import { RawSession } from './rawSession.node';
-import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 import { DisplayOptions } from '../../displayOptions';
 import { noop } from '../../../platform/common/utils/misc';
+import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 
 /*
 RawJupyterSession is the implementation of IJupyterSession that instead of
@@ -217,12 +217,14 @@ export class RawJupyterSession extends BaseJupyterSession {
         const promise = this.createRestartSession(disableUI, token.token);
         this.restartSessionPromise = { token, promise };
         promise.catch(noop);
-        promise.finally(() => {
-            token.dispose();
-            if (this.restartSessionPromise?.promise === promise) {
-                this.restartSessionPromise = undefined;
-            }
-        });
+        promise
+            .finally(() => {
+                token.dispose();
+                if (this.restartSessionPromise?.promise === promise) {
+                    this.restartSessionPromise = undefined;
+                }
+            })
+            .catch(noop);
         return promise;
     }
     protected async createRestartSession(
@@ -268,7 +270,6 @@ export class RawJupyterSession extends BaseJupyterSession {
                     options.token
                 )
         );
-
         return KernelProgressReporter.wrapAndReportProgress(
             this.resource,
             DataScience.waitingForJupyterSessionToBeIdle(),
