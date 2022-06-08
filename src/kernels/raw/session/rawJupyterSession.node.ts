@@ -28,6 +28,7 @@ import { RawSession } from './rawSession.node';
 import { DisplayOptions } from '../../displayOptions';
 import { noop } from '../../../platform/common/utils/misc';
 import { KernelProcessExitedError } from '../../../platform/errors/kernelProcessExitedError';
+import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 
 /*
 RawJupyterSession is the implementation of IJupyterSession that instead of
@@ -248,7 +249,6 @@ export class RawJupyterSession extends BaseJupyterSession {
 
     @captureTelemetry(Telemetry.RawKernelStartRawSession, undefined, true)
     private async startRawSession(options: { token: CancellationToken; ui: IDisplayOptions }): Promise<RawSession> {
-        const stack = new Error('').stack || '<empty>';
         if (
             this.kernelConnectionMetadata.kind !== 'startUsingLocalKernelSpec' &&
             this.kernelConnectionMetadata.kind !== 'startUsingPythonInterpreter'
@@ -265,28 +265,26 @@ export class RawJupyterSession extends BaseJupyterSession {
         );
 
         this.terminatingStatus = undefined;
-        try {
-            const process = await this.kernelLauncher.launch(
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                this.kernelConnectionMetadata as any,
-                this.launchTimeout,
-                this.resource,
-                this.workingDirectory.fsPath,
-                options.token
-            );
-
-            return await this.postStartRawSession(options, process);
-        } catch (ex) {
-            if (ex instanceof KernelProcessExitedError) {
-                throw new KernelProcessExitedError(
-                    ex.exitCode,
-                    ex.stdErr,
-                    ex.kernelConnectionMetadata,
-                    'Kernel died in rawJupterSerssion.now startREawEs with stack' + stack
-                );
-            }
-            throw ex;
-        }
+        const process = await KernelProgressReporter.wrapAndReportProgress(
+            this.resource,
+            DataScience.connectingToKernel().format(
+                getDisplayNameOrNameOfKernelConnection(this.kernelConnectionMetadata)
+            ),
+            () =>
+                this.kernelLauncher.launch(
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    this.kernelConnectionMetadata as any,
+                    this.launchTimeout,
+                    this.resource,
+                    this.workingDirectory.fsPath,
+                    options.token
+                )
+        );
+        return KernelProgressReporter.wrapAndReportProgress(
+            this.resource,
+            DataScience.waitingForJupyterSessionToBeIdle(),
+            () => this.postStartRawSession(options, process)
+        );
     }
     private async postStartRawSession(
         options: { token: CancellationToken; ui: IDisplayOptions },

@@ -34,7 +34,7 @@ import { JupyterPaths } from '../finder/jupyterPaths.node';
 import { isTestExecution } from '../../../platform/common/constants';
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { noop } from '../../../platform/common/utils/misc';
-import { KernelProcessExitedError } from '../../../platform/errors/kernelProcessExitedError';
+import { sendKernelTelemetryWhenDone } from '../../../telemetry/telemetry';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.
@@ -112,27 +112,9 @@ export class KernelLauncher implements IKernelLauncher {
             this.logIPyKernelPath(resource, kernelConnectionMetadata, cancelToken).catch(noop);
 
             // Should be available now, wait with a timeout
-            try {
-                return await this.launchProcess(
-                    kernelConnectionMetadata,
-                    resource,
-                    workingDirectory,
-                    timeout,
-                    cancelToken
-                );
-            } catch (ex) {
-                if (ex instanceof KernelProcessExitedError) {
-                    throw new KernelProcessExitedError(
-                        ex.exitCode,
-                        ex.stdErr,
-                        ex.kernelConnectionMetadata,
-                        'Kernel died in launch method'
-                    );
-                }
-                throw ex;
-            }
+            return await this.launchProcess(kernelConnectionMetadata, resource, workingDirectory, timeout, cancelToken);
         })();
-        // sendKernelTelemetryWhenDone(resource, Telemetry.KernelLauncherPerf, promise);
+        sendKernelTelemetryWhenDone(resource, Telemetry.KernelLauncherPerf, promise);
         return promise;
     }
 
@@ -234,14 +216,6 @@ export class KernelLauncher implements IKernelLauncher {
         } catch (ex) {
             kernelProcess.dispose();
             Cancellation.throwIfCanceled(cancelToken);
-            if (ex instanceof KernelProcessExitedError) {
-                throw new KernelProcessExitedError(
-                    ex.exitCode,
-                    ex.stdErr,
-                    ex.kernelConnectionMetadata,
-                    'Kernel died in kernelLauncher.node'
-                );
-            }
             throw ex;
         }
 

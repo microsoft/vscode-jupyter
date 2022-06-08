@@ -171,10 +171,8 @@ export class KernelExecution implements IDisposable {
         if (!this._restartPromise) {
             this._restartPromise = this.restartExecution(session);
             this._restartPromise
-                .finally(() => {
-                    // Done restarting, clear restart promise
-                    this._restartPromise = undefined;
-                })
+                // Done restarting, clear restart promise
+                .finally(() => (this._restartPromise = undefined))
                 .catch(noop);
         }
         await this._restartPromise;

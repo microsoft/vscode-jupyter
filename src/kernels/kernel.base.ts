@@ -62,7 +62,6 @@ import { IStatusProvider } from '../platform/progress/types';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { traceCellMessage } from './execution/helpers';
 import { KernelExecution } from './execution/kernelExecution';
-import { KernelProcessExitedError } from '../platform/errors/kernelProcessExitedError';
 
 export abstract class BaseKernel implements IKernel {
     private readonly disposables: IDisposable[] = [];
@@ -291,14 +290,6 @@ export abstract class BaseKernel implements IKernel {
                 : this.start(new DisplayOptions(false)));
             sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime);
         } catch (ex) {
-            if (ex instanceof KernelProcessExitedError) {
-                ex = new KernelProcessExitedError(
-                    ex.exitCode,
-                    ex.stdErr,
-                    ex.kernelConnectionMetadata,
-                    'Kernel died in kernel.base of restart'
-                );
-            }
             traceError(`Restart failed ${getDisplayPath(this.uri)}`, ex);
             this._ignoreJupyterSessionDisposedErrors = true;
             // If restart fails, kill the associated session.
@@ -311,14 +302,6 @@ export abstract class BaseKernel implements IKernel {
             sendKernelTelemetryEvent(this.resourceUri, Telemetry.NotebookRestart, stopWatch.elapsedTime, undefined, ex);
             await session?.dispose().catch(noop);
             this._ignoreJupyterSessionDisposedErrors = false;
-            if (ex instanceof KernelProcessExitedError) {
-                throw new KernelProcessExitedError(
-                    ex.exitCode,
-                    ex.stdErr,
-                    ex.kernelConnectionMetadata,
-                    'Kernel died in base'
-                );
-            }
             throw ex;
         } finally {
             status.dispose();
@@ -404,14 +387,7 @@ export abstract class BaseKernel implements IKernel {
                 throw ex;
             });
         }
-        try {
-            return await this._jupyterSessionPromise;
-        } catch (ex) {
-            if (ex instanceof KernelProcessExitedError) {
-                throw new KernelProcessExitedError(ex.exitCode, ex.stdErr, ex.kernelConnectionMetadata, 'Hello1234');
-            }
-            throw ex;
-        }
+        return this._jupyterSessionPromise;
     }
 
     private async createJupyterSession(stopWatch: StopWatch): Promise<IJupyterSession> {
