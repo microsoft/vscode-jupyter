@@ -38,7 +38,7 @@ export function localizeReplacement(key: string | nls.LocalizeInfo, defaultValue
 }
 
 const osType = getOSType();
-const localize = osType !== OSType.Unknown ? standardLocalize : localizeReplacement;
+const localize = osType === OSType.Unknown ? localizeReplacement : standardLocalize;
 
 // External callers of localize use these tables to retrieve localized values.
 
