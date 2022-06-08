@@ -4,7 +4,7 @@
     "jupyter.command.jupyter.runcurrentcelladvance.title": "Uruchom bieżące komórki i pokaż",
     "jupyter.command.jupyter.execSelectionInteractive.title": "Uruchom zaznaczony obszar w oknie IPythona",
     "jupyter.command.jupyter.runcell.title": "Uruchom komórki",
-    "jupyter.command.jupyter.selectJupyterUri.title": "Podaj identyfikator URI serwera Jupyter",
+    "jupyter.command.jupyter.selectjupyteruri.title": "Podaj identyfikator URI serwera Jupyter",
     "jupyter.command.jupyter.importnotebook.title": "Importuj notatnik Jupyter",
     "jupyter.command.jupyter.importnotebookonfile.title": "Importuj notatnik Jupyter",
     "jupyter.command.jupyter.exportoutputasnotebook.title": "Eksportuj okno IPython jako notatnik Jupyter",
