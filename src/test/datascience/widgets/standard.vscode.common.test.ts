@@ -30,7 +30,7 @@ import {
 } from '../notebook/helper';
 import { initializeWidgetComms, Utils } from './commUtils';
 import { WidgetRenderingTimeoutForTests } from './constants';
-import { getTextOutputValue } from '../../../notebooks/helpers';
+import { getTextOutputValue } from '../../../kernels/execution/helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('IPyWisdget Tests', function () {
