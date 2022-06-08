@@ -203,7 +203,7 @@ export function displayProgress(title: string, location = ProgressLocation.Windo
         descriptor.value = async function (...args: any[]) {
             const progressOptions: ProgressOptions = { location, title };
             // eslint-disable-next-line no-invalid-this
-            const promise = originalMethod.apply(this, args) as Promise<string>;
+            const promise = originalMethod.apply(this, args);
             if (!isTestExecution()) {
                 return window.withProgress(progressOptions, () => promise);
             }
