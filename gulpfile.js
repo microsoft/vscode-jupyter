@@ -75,7 +75,7 @@ gulp.task('checkTestResults', (done) => {
         };
 
         const resultsFile = files[0]
-        const data = fs.promises.readFileSync(resultsFile);
+        const data = fs.readFileSync(resultsFile);
         const parser = require('xml-js');
         const report = JSON.parse(parser.xml2json(data, { compact: true }));
 
