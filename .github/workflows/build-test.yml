@@ -881,6 +881,14 @@ jobs:
         with:
           run: npm run testPerformance
 
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: Screenshots-perf-${{matrix.os}}
+          path: './${{env.IPYWIDGET_SCREENSHOT_PATH}}'
+          retention-days: 1
+
   coverage:
     name: Coverage reports upload
     runs-on: ubuntu-latest
