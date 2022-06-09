@@ -87,7 +87,7 @@ const config = {
             }
         ]
     },
-    externals: ['vscode', 'commonjs', 'electron', 'moment'], // Don't bundle these
+    externals: ['vscode', 'commonjs', 'electron'], // Don't bundle these
     plugins: [
         // Work around for Buffer is undefined:
         new webpack.ProvidePlugin({
