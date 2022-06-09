@@ -120,7 +120,7 @@ const config = {
         new copyWebpackPlugin({ patterns: [{ from: './node_modules/@vscode/jupyter-ipywidgets/dist/*.js' }] }),
         new webpack.IgnorePlugin({
             resourceRegExp: /^\.\/locale$/,
-            contextRegExp: /moment$/,
+            contextRegExp: /moment$/
         })
     ],
     resolve: {

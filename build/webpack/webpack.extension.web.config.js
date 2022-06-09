@@ -106,7 +106,7 @@ const config = {
         new CleanTerminalPlugin(),
         new webpack.IgnorePlugin({
             resourceRegExp: /^\.\/locale$/,
-            contextRegExp: /moment$/,
+            contextRegExp: /moment$/
         })
     ],
     resolve: {
