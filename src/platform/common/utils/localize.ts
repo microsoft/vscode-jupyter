@@ -14,7 +14,7 @@ nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFo
 // - Only use this nlsLocalize function, but name it `localize`.
 // - Change the signature of the localize properties in this file to not be functions but constants.
 //   - Instead of `Common.bannerLabelYes()`, make them `Common.bannerLabelYes`.
-const standardLocalize = nls.loadMessageBundle();
+let localize = nls.loadMessageBundle();
 
 // Embed all known translations so we can use them on the web too
 const packageBaseNlsJson = require('../../../../package.nls.json');
@@ -38,7 +38,9 @@ export function localizeReplacement(key: string | nls.LocalizeInfo, defaultValue
 }
 
 const osType = getOSType();
-const localize = osType === OSType.Unknown ? localizeReplacement : standardLocalize;
+if (osType === OSType.Unknown) {
+    localize = localizeReplacement;
+}
 
 // External callers of localize use these tables to retrieve localized values.
 
