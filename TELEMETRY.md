@@ -8063,6 +8063,18 @@ No description provided
             dimensions = { ...dimensions, commitHash: process.env.GIT_SHA };
         }
 
+        traceVerbose(`Sending telemetry event ${Telemetry.RunTest} with dimensions ${dimensions}`);
+        telemetryReporter.sendDangerousTelemetryEvent(Telemetry.RunTest, dimensions, measures);
+    },
+    afterAll: async () => {
+```
+
+
+[src/test/testHooks.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/test/testHooks.node.ts)
+```typescript
+        }
+
+        traceVerbose(`Sending telemetry event ${Telemetry.RunTest} with dimensions ${dimensions}`);
         telemetryReporter.sendDangerousTelemetryEvent(Telemetry.RunTest, dimensions, measures);
     },
     afterAll: async () => {
