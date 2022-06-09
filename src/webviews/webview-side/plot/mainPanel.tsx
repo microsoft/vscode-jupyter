@@ -10,7 +10,6 @@ import * as uuid from 'uuid/v4';
 import { storeLocStrings } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { getDefaultSettings } from '../react-common/settingsReactSide';
-import { StyleInjector } from '../react-common/styleInjector';
 import { SvgList } from '../react-common/svgList';
 import { SvgViewer } from '../react-common/svgViewer';
 import { TestSvg } from './testSvg';
@@ -98,12 +97,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             const baseTheme = this.computeBaseTheme();
             return (
                 <div className="main-panel" role="group" ref={this.container}>
-                    <StyleInjector
-                        expectingDark={this.props.baseTheme !== 'vscode-light'}
-                        settings={this.state.settings}
-                        darkChanged={this.darkChanged}
-                        postOffice={this.postOffice}
-                    />
                     {this.renderToolbar(baseTheme)}
                     {this.renderThumbnails(baseTheme)}
                     {this.renderPlot(baseTheme)}
@@ -148,16 +141,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             settings: newSettings
         });
     }
-
-    private darkChanged = (newDark: boolean) => {
-        // update our base theme if allowed. Don't do this
-        // during testing as it will mess up the expected render count.
-        if (!this.props.testMode) {
-            this.setState({
-                forceDark: newDark
-            });
-        }
-    };
 
     private computeBaseTheme(): string {
         // If we're ignoring, always light
