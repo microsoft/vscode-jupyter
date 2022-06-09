@@ -8795,16 +8795,7 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/webviewHost.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/webviewHost.ts)
-```typescript
-        this.dispose();
-    };
-
-    @captureTelemetry(Telemetry.WebviewStyleUpdate)
-    private async handleCssRequest(): Promise<void> {
-        const isDark = await this.isDark();
-        return this.postMessageInternal(CssMessages.GetCssResponse, {
-```
+Event can be removed. Not referenced anywhere
 
 </details>
 <details>
