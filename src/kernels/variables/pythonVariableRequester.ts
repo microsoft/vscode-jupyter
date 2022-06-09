@@ -8,11 +8,12 @@ import { DataScience } from '../../platform/common/utils/localize';
 import { stripAnsi } from '../../platform/common/utils/regexp';
 import { JupyterDataRateLimitError } from '../../platform/errors/jupyterDataRateLimitError';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
-import { executeSilently, getAssociatedNotebookDocument } from '../helpers';
+import { executeSilently, getAssociatedNotebookDocument, SilentExecutionErrorOptions } from '../helpers';
 import { IKernel } from '../types';
 import { IKernelVariableRequester, IJupyterVariable } from './types';
 import { DataFrameLoading, GetVariableInfo } from '../../platform/common/scriptConstants';
 import { IExtensionContext } from '../../platform/common/types';
+import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
 
 type DataFrameSplitFormat = {
     index: (number | string)[];
@@ -36,6 +37,24 @@ export function parseDataFrame(df: DataFrameSplitFormat) {
     return { data };
 }
 
+export async function safeExecuteSilently(
+    kernel: IKernel,
+    code: string,
+    errorOptions?: SilentExecutionErrorOptions
+): Promise<nbformat.IOutput[]> {
+    if (kernel.disposed || kernel.disposing || !kernel.session || !kernel.session.kernel || kernel.session.disposed) {
+        return [];
+    }
+    try {
+        return await executeSilently(kernel.session, code, errorOptions);
+    } catch (ex) {
+        if (ex instanceof SessionDisposedError) {
+            return [];
+        }
+        throw ex;
+    }
+}
+
 @injectable()
 export class PythonVariablesRequester implements IKernelVariableRequester {
     private importedDataFrameScripts = new WeakMap<NotebookDocument, boolean>();
@@ -55,17 +74,15 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         await this.importDataFrameScripts(kernel);
 
         // Then execute a call to get the info and turn it into JSON
-        const results = kernel.session
-            ? await executeSilently(
-                  kernel.session,
-                  `import builtins\nbuiltins.print(${DataFrameLoading.DataFrameInfoFunc}(${expression}))`,
-                  {
-                      traceErrors: true,
-                      traceErrorsMessage: 'Failure in execute_request for getDataFrameInfo',
-                      telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-                  }
-              )
-            : [];
+        const results = await safeExecuteSilently(
+            kernel,
+            `import builtins\nbuiltins.print(${DataFrameLoading.DataFrameInfoFunc}(${expression}))`,
+            {
+                traceErrors: true,
+                traceErrorsMessage: 'Failure in execute_request for getDataFrameInfo',
+                telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+            }
+        );
 
         const fileName = getAssociatedNotebookDocument(kernel)?.uri || kernel.resourceUri || kernel.uri;
 
@@ -86,17 +103,15 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         await this.importDataFrameScripts(kernel);
 
         // Then execute a call to get the rows and turn it into JSON
-        const results = kernel.session
-            ? await executeSilently(
-                  kernel.session,
-                  `import builtins\nbuiltins.print(${DataFrameLoading.DataFrameRowFunc}(${expression}, ${start}, ${end}))`,
-                  {
-                      traceErrors: true,
-                      traceErrorsMessage: 'Failure in execute_request for getDataFrameRows',
-                      telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-                  }
-              )
-            : [];
+        const results = await safeExecuteSilently(
+            kernel,
+            `import builtins\nbuiltins.print(${DataFrameLoading.DataFrameRowFunc}(${expression}, ${start}, ${end}))`,
+            {
+                traceErrors: true,
+                traceErrorsMessage: 'Failure in execute_request for getDataFrameRows',
+                telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+            }
+        );
 
         return parseDataFrame(this.deserializeJupyterResult<DataFrameSplitFormat>(results));
     }
@@ -119,17 +134,15 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
                 const attributeNames = languageSettings[type];
                 const stringifiedAttributeNameList =
                     '[' + attributeNames.reduce((accumulator, currVal) => accumulator + `"${currVal}", `, '') + ']';
-                const attributes = kernel.session
-                    ? await executeSilently(
-                          kernel.session,
-                          `import builtins\nbuiltins.print(${GetVariableInfo.VariablePropertiesFunc}(${matchingVariable.name}, ${stringifiedAttributeNameList}))`,
-                          {
-                              traceErrors: true,
-                              traceErrorsMessage: 'Failure in execute_request for getVariableProperties',
-                              telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-                          }
-                      )
-                    : [];
+                const attributes = await safeExecuteSilently(
+                    kernel,
+                    `import builtins\nbuiltins.print(${GetVariableInfo.VariablePropertiesFunc}(${matchingVariable.name}, ${stringifiedAttributeNameList}))`,
+                    {
+                        traceErrors: true,
+                        traceErrorsMessage: 'Failure in execute_request for getVariableProperties',
+                        telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+                    }
+                );
                 result = { ...result, ...this.deserializeJupyterResult(attributes) };
             } else {
                 result[`${word}`] = matchingVariable.value;
@@ -147,17 +160,15 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             await this.importGetVariableInfoScripts(kernel);
 
             // VariableTypesFunc takes in list of vars and the corresponding var names
-            const results = kernel.session
-                ? await executeSilently(
-                      kernel.session,
-                      `import builtins\n_rwho_ls = %who_ls\nbuiltins.print(${GetVariableInfo.VariableTypesFunc}(_rwho_ls))`,
-                      {
-                          traceErrors: true,
-                          traceErrorsMessage: 'Failure in execute_request for getVariableNamesAndTypesFromKernel',
-                          telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-                      }
-                  )
-                : [];
+            const results = await safeExecuteSilently(
+                kernel,
+                `import builtins\n_rwho_ls = %who_ls\nbuiltins.print(${GetVariableInfo.VariableTypesFunc}(_rwho_ls))`,
+                {
+                    traceErrors: true,
+                    traceErrorsMessage: 'Failure in execute_request for getVariableNamesAndTypesFromKernel',
+                    telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+                }
+            );
 
             if (kernel.disposed || kernel.disposing) {
                 return [];
@@ -193,17 +204,15 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         await this.importGetVariableInfoScripts(kernel);
 
         // Then execute a call to get the info and turn it into JSON
-        const results = kernel.session
-            ? await executeSilently(
-                  kernel.session,
-                  `import builtins\nbuiltins.print(${GetVariableInfo.VariableInfoFunc}(${targetVariable.name}))`,
-                  {
-                      traceErrors: true,
-                      traceErrorsMessage: 'Failure in execute_request for getFullVariable',
-                      telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-                  }
-              )
-            : [];
+        const results = await safeExecuteSilently(
+            kernel,
+            `import builtins\nbuiltins.print(${GetVariableInfo.VariableInfoFunc}(${targetVariable.name}))`,
+            {
+                traceErrors: true,
+                traceErrorsMessage: 'Failure in execute_request for getFullVariable',
+                telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+            }
+        );
 
         // Combine with the original result (the call only returns the new fields)
         return {
@@ -253,7 +262,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
     private async runScriptFile(kernel: IKernel, scriptFile: Uri) {
         if (await this.fs.exists(scriptFile)) {
             const fileContents = await this.fs.readFile(scriptFile);
-            return kernel.session ? executeSilently(kernel.session, fileContents) : [];
+            return safeExecuteSilently(kernel, fileContents);
         }
         traceError('Cannot run non-existent script file');
     }

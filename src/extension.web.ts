@@ -197,7 +197,7 @@ async function handleError(ex: Error, startupDurations: Record<string, number>) 
 
 function notifyUser(msg: string) {
     try {
-        void window.showErrorMessage(msg);
+        window.showErrorMessage(msg).then(noop, noop);
     } catch (ex) {
         traceError('failed to notify user', ex);
     }
@@ -274,9 +274,9 @@ async function activateLegacy(
     serviceManager.addSingletonInstance<boolean>(IsDevMode, isDevMode);
     serviceManager.addSingletonInstance<boolean>(IsWebExtension, true);
     if (isDevMode) {
-        void commands.executeCommand('setContext', 'jupyter.development', true);
+        commands.executeCommand('setContext', 'jupyter.development', true).then(noop, noop);
     }
-    void commands.executeCommand('setContext', 'jupyter.webExtension', true);
+    commands.executeCommand('setContext', 'jupyter.webExtension', true).then(noop, noop);
 
     // Output channel is special. We need it before everything else
     addOutputChannel(context, serviceManager, isDevMode);

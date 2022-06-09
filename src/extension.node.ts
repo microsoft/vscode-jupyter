@@ -204,7 +204,7 @@ async function handleError(ex: Error, startupDurations: Record<string, number>) 
 
 function notifyUser(msg: string) {
     try {
-        void window.showErrorMessage(msg);
+        window.showErrorMessage(msg).then(noop, noop);
     } catch (ex) {
         traceError('failed to notify user', ex);
     }
@@ -300,9 +300,9 @@ async function activateLegacy(
         });
     serviceManager.addSingletonInstance<Promise<boolean>>(IsPreRelease, isPreReleasePromise);
     if (isDevMode) {
-        void commands.executeCommand('setContext', 'jupyter.development', true);
+        commands.executeCommand('setContext', 'jupyter.development', true).then(noop, noop);
     }
-    void commands.executeCommand('setContext', 'jupyter.webExtension', false);
+    commands.executeCommand('setContext', 'jupyter.webExtension', false).then(noop, noop);
 
     // Set the logger home dir (we can compute this in a node app)
     setHomeDirectory(require('untildify')('~') || '');

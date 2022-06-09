@@ -199,7 +199,7 @@ export abstract class BaseKernel implements IKernel {
         const sessionPromise = this.startJupyterSession();
         const promise = this.kernelExecution.executeCell(sessionPromise, cell, codeOverride);
         this.trackNotebookCellPerceivedColdTime(stopWatch, sessionPromise, promise).catch(noop);
-        void promise.then((state) => traceInfo(`Cell ${cell.index} executed with state ${state}`));
+        promise.then((state) => traceInfo(`Cell ${cell.index} executed with state ${state}`), noop);
         return promise;
     }
     public async interrupt(): Promise<void> {
@@ -330,9 +330,11 @@ export abstract class BaseKernel implements IKernel {
         if (!this.perceivedJupyterStartupTelemetryCaptured) {
             this.perceivedJupyterStartupTelemetryCaptured = true;
             sendTelemetryEvent(Telemetry.PerceivedJupyterStartupNotebook, stopWatch.elapsedTime);
-            executionPromise.finally(() =>
-                sendTelemetryEvent(Telemetry.StartExecuteNotebookCellPerceivedCold, stopWatch.elapsedTime)
-            );
+            executionPromise
+                .finally(() =>
+                    sendTelemetryEvent(Telemetry.StartExecuteNotebookCellPerceivedCold, stopWatch.elapsedTime)
+                )
+                .catch(noop);
         }
     }
     protected async startJupyterSession(

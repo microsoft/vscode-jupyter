@@ -9,6 +9,7 @@ import { IApplicationShell } from '../platform/common/application/types';
 import { Telemetry } from '../platform/common/constants';
 import { IDisposableRegistry } from '../platform/common/types';
 import { DataScience } from '../platform/common/utils/localize';
+import { noop } from '../platform/common/utils/misc';
 import { sendKernelTelemetryEvent } from '../telemetry/telemetry';
 import { endCellAndDisplayErrorsInCell } from './execution/helpers';
 import { getDisplayNameOrNameOfKernelConnection } from './helpers';
@@ -46,11 +47,13 @@ export class KernelCrashMonitor implements IExtensionSyncActivationService {
         // and the session has died, then notify the user of this dead kernel.
         // Note: We know this kernel started successfully.
         if (kernel.session.kind === 'localRaw' && kernel.status === 'dead') {
-            void this.applicationShell.showErrorMessage(
-                DataScience.kernelDiedWithoutError().format(
-                    getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
+            this.applicationShell
+                .showErrorMessage(
+                    DataScience.kernelDiedWithoutError().format(
+                        getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
+                    )
                 )
-            );
+                .then(noop, noop);
 
             await this.endCellAndDisplayErrorsInCell(kernel);
         }
@@ -59,11 +62,13 @@ export class KernelCrashMonitor implements IExtensionSyncActivationService {
         // and the session is auto restarting, then this means the kernel died.
         // notify the user of this
         if (kernel.session.kind !== 'localRaw' && kernel.status === 'autorestarting') {
-            void this.applicationShell.showErrorMessage(
-                DataScience.kernelDiedWithoutErrorAndAutoRestarting().format(
-                    getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
+            this.applicationShell
+                .showErrorMessage(
+                    DataScience.kernelDiedWithoutErrorAndAutoRestarting().format(
+                        getDisplayNameOrNameOfKernelConnection(kernel.kernelConnectionMetadata)
+                    )
                 )
-            );
+                .then(noop, noop);
 
             await this.endCellAndDisplayErrorsInCell(kernel);
         }

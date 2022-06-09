@@ -57,6 +57,88 @@ gulp.task('validateTranslationFiles', (done) => {
     done();
 });
 
+gulp.task('checkTestResults', async (done) => {
+    const core = require('@actions/core');
+    var glob = require('@actions/glob');
+
+    let resultsFile;
+    const globber = await glob.create('**/test-results*.xml', { followSymbolicLinks: false });
+    for await (const file of globber.globGenerator()) {
+        core.info(`found ${file}`);
+        resultsFile = file;
+    }
+
+    if (!resultsFile) {
+        // web runs do not have a results file
+        core.warning('test results file not found');
+        done();
+        return;
+    }
+
+    const data = fs.readFileSync(resultsFile);
+    const parser = require('xml-js');
+    const report = JSON.parse(parser.xml2json(data, { compact: true }));
+
+    let testsRun = 0;
+    let failCount = 0;
+    let skipCount = 0;
+    try {
+        if (report.testsuites) {
+            core.info(JSON.stringify(report.testsuites._attributes));
+        }
+
+        const testsuites = report.testsuite
+            ? [report.testsuite]
+            : Array.isArray(report.testsuites.testsuite)
+            ? report.testsuites.testsuite
+            : [report.testsuites.testsuite];
+
+        if (!testsuites) {
+            core.setFailed('no test suites found in test results');
+            done();
+            return;
+        }
+
+        for (const testsuite of testsuites) {
+            skipCount += testsuite._attributes.skipped;
+            testsRun += testsRun + testsuite._attributes.tests - testsuite._attributes.skipped;
+
+            const testcases = Array.isArray(testsuite.testcase)
+                ? testsuite.testcase
+                : testsuite.testcase
+                ? [testsuite.testcase]
+                : [];
+
+            for (const testcase of testcases) {
+                if (testcase.failure) {
+                    core.error(`FAILED TEST NAME: ${testcase._attributes.name}`);
+                    core.info(testcase.failure._attributes.message);
+                    core.info(testcase.failure._cdata); // print stacktrace
+                    core.info(' ');
+
+                    failCount++;
+                }
+            }
+        }
+
+        if (failCount > 0) {
+            core.setFailed('Test Failures');
+            done();
+            return;
+        }
+
+        if (testsRun < 2 || testsRun < skipCount) {
+            core.setFailed('Failing check, not enough passing tests or too many skipped');
+            done();
+            return;
+        }
+    } catch (error) {
+        core.error(`Could not parse test results from contents: ${JSON.stringify(report)}`);
+        core.setFailed(error);
+    }
+    done();
+});
+
 gulp.task('output:clean', () => del(['coverage']));
 
 gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out', '!out/test']));
@@ -382,9 +464,20 @@ gulp.task('validateDependencies', async () => {
         console.log(modules);
         if (modules.length > 1 || modules[0] !== '@jupyterlab/coreutils') {
             // we already validate that we are not using moment in @jupyterlab/coreutils
-            const message = `The following modules require moment: ${modules.join(', ')}. Please validate if moment is being used.`;
+            const message = `The following modules require moment: ${modules.join(
+                ', '
+            )}. Please validate if moment is being used.`;
             console.error(message);
             throw new Error(message);
         }
+    }
+});
+
+gulp.task('verifyUnhandledErrors', async () => {
+    const fileName = path.join(__dirname, 'unhandledErrors.txt');
+    const contents = fs.pathExistsSync(fileName) ? fs.readFileSync(fileName, 'utf8') : '';
+    if (contents.trim().length) {
+        console.error(contents);
+        throw new Error('Unhandled errors detected. Please fix them before merging this PR.', contents);
     }
 });

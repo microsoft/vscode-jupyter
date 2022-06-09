@@ -10,6 +10,7 @@ import { ConfigurationChangeEvent, ConfigurationTarget, QuickPickItem, Uri } fro
 import { IWorkspaceService, IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
 import { IConfigurationService } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
+import { noop } from '../../../platform/common/utils/misc';
 import {
     IMultiStepInputFactory,
     IMultiStepInput,
@@ -47,7 +48,7 @@ export class JupyterCommandLineSelector {
                 reload
             );
             if (item === reload) {
-                void this.commandManager.executeCommand('workbench.action.reloadWindow');
+                this.commandManager.executeCommand('workbench.action.reloadWindow').then(noop, noop);
             }
         }
     }

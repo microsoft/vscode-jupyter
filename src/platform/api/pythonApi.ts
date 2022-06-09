@@ -227,7 +227,7 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
     }
     private async installPythonExtension() {
         // Have the user install python
-        void this.commandManager.executeCommand('extension.open', PythonExtension);
+        this.commandManager.executeCommand('extension.open', PythonExtension).then(noop, noop);
     }
 
     private async extensionsChangeHandler(): Promise<void> {

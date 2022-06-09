@@ -15,7 +15,10 @@ export function noop() {}
  */
 export function swallowExceptions(cb: Function) {
     try {
-        cb();
+        const result = cb();
+        if (isPromise(result)) {
+            result.catch(noop);
+        }
     } catch {
         // Ignore errors.
     }

@@ -28,6 +28,7 @@ import { DisplayOptions } from '../../displayOptions';
 import { IBackupFile, IJupyterBackingFileCreator, IJupyterKernelService, IJupyterRequestCreator } from '../types';
 import { Uri } from 'vscode';
 import { generateBackingIPyNbFileName } from './backingFileCreator.base';
+import { noop } from '../../../platform/common/utils/misc';
 
 // function is
 export class JupyterSession extends BaseJupyterSession implements IJupyterServerSession {
@@ -180,12 +181,14 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
         const token = new CancellationTokenSource();
         const promise = this.createRestartSession(disableUI, this.session, token.token);
         this.restartSessionPromise = { token, promise };
-        promise.finally(() => {
-            token.dispose();
-            if (this.restartSessionPromise?.promise === promise) {
-                this.restartSessionPromise = undefined;
-            }
-        });
+        promise
+            .finally(() => {
+                token.dispose();
+                if (this.restartSessionPromise?.promise === promise) {
+                    this.restartSessionPromise = undefined;
+                }
+            })
+            .catch(noop);
         return promise;
     }
 
