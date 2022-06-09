@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
+const webpack = require('webpack');
 const copyWebpackPlugin = require('copy-webpack-plugin');
 const removeFilesWebpackPlugin = require('remove-files-webpack-plugin');
 const path = require('path');
