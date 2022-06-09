@@ -19,7 +19,7 @@ extends:
   parameters:
     publishExtension: true
     locTsConfigs: $(Build.SourcesDirectory)/tsconfig.json
-    locBundleDestination: $(Build.SourcesDirectory)/out/client
+    locBundleDestination: $(Build.SourcesDirectory)/out
     buildSteps:
       - script: npm ci
         displayName: Install dependencies
