@@ -71,7 +71,6 @@ export interface IEmbedNotebookEditorProvider {
 // For native editing, the provider acts like the IDocumentManager for normal docs
 export const INotebookEditorProvider = Symbol('INotebookEditorProvider');
 export interface INotebookEditorProvider {
-    open(file: Uri): Promise<void>;
     createNew(options?: { contents?: string; defaultCellLanguage?: string }): Promise<void>;
     activeNotebookEditor: NotebookEditor | undefined;
     findNotebookEditor(resource: Resource): NotebookEditor | undefined;

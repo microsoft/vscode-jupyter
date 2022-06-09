@@ -54,7 +54,6 @@ import { IVSCodeNotebookController } from '../../../notebooks/controllers/types'
 import { IS_SMOKE_TEST } from '../../constants';
 import * as urlPath from '../../../platform/vscode-path/resources';
 import * as uuid from 'uuid/v4';
-import { swallowExceptions } from '../../../platform/common/utils/misc';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { initialize, waitForCondition } from '../../common';
 import { VSCodeNotebook } from '../../../platform/common/application/notebook';
@@ -68,6 +67,7 @@ import {
     getTextOutputValue
 } from '../../../kernels/execution/helpers';
 import { chainWithPendingUpdates } from '../../../kernels/execution/notebookUpdater';
+import { openAndShowNotebook } from '../../../platform/common/utils/notebooks';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -171,7 +171,9 @@ async function createTemporaryNotebookFromNotebook(
     await workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(notebook)));
 
     disposables.push({
-        dispose: () => swallowExceptions(() => workspace.fs.delete(uri))
+        dispose: () => {
+            void workspace.fs.delete(uri).then(noop, noop);
+        }
     });
     return uri;
 }
@@ -238,13 +240,12 @@ export async function createEmptyPythonNotebook(
 ) {
     traceInfoIfCI('Creating an empty notebook');
     const { serviceContainer } = await getServices();
-    const editorProvider = serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
     const vscodeNotebook = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     // Don't use same file (due to dirty handling, we might save in dirty.)
     // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
     const nbFile = await createTemporaryNotebook([], disposables, 'Python 3', rootFolder, 'emptyPython');
     // Open a python notebook and use this for all tests in this test suite.
-    await editorProvider.open(nbFile);
+    await openAndShowNotebook(nbFile);
     assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
     if (!dontWaitForKernel) {
         await waitForKernelToGetAutoSelected();
@@ -997,7 +998,7 @@ export async function hijackPrompt(
                     }
                     clickButton.resolve(buttonToClick.text);
                 }
-                return buttonToClick.dismissPrompt ? undefined : clickButton.promise;
+                return buttonToClick.dismissPrompt ? Promise.resolve(undefined) : clickButton.promise;
             }
         }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

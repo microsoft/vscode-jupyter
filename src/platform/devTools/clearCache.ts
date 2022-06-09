@@ -1,5 +1,6 @@
 import { commands } from 'vscode';
 import { IExtensionContext } from '../common/types';
+import { noop } from '../common/utils/misc';
 
 export function addClearCacheCommand(context: IExtensionContext, isDevMode: boolean) {
     if (!isDevMode) {
@@ -8,11 +9,11 @@ export function addClearCacheCommand(context: IExtensionContext, isDevMode: bool
     commands.registerCommand('dataScience.ClearCache', () => {
         // eslint-disable-next-line no-restricted-syntax
         for (const key of context.globalState.keys()) {
-            void context.globalState.update(key, undefined);
+            context.globalState.update(key, undefined).then(noop, noop);
         }
         // eslint-disable-next-line no-restricted-syntax
         for (const key of context.workspaceState.keys()) {
-            void context.workspaceState.update(key, undefined);
+            context.workspaceState.update(key, undefined).then(noop, noop);
         }
     });
 }

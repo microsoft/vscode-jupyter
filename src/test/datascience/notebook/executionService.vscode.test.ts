@@ -45,7 +45,7 @@ import {
     createTemporaryNotebookFromFile
 } from './helper.node';
 import { openNotebook } from '../helpers.node';
-import { noop } from '../../../platform/common/utils/misc';
+import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { ProductNames } from '../../../kernels/installer/productNames';
 import { Product } from '../../../kernels/installer/types';
@@ -1218,7 +1218,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
                 cell = await insertMarkdownCell(`Markdown Cell ${index}`, { index: index });
             }
 
-            cellInfo.push({ runToCompletion: () => fs.unlinkSync(tmpFile), cell });
+            cellInfo.push({ runToCompletion: () => swallowExceptions(() => fs.unlinkSync(tmpFile)), cell });
         }
 
         return cellInfo;

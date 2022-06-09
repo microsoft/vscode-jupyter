@@ -279,7 +279,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         }
 
         if (pyVersion.major < 3 || (pyVersion.major === 3 && pyVersion.minor <= 5)) {
-            void this.appShell
+            this.appShell
                 .showWarningMessage(
                     DataScience.warnWhenSelectingKernelWithUnSupportedPythonVersion(),
                     Common.learnMore()
@@ -289,7 +289,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                         return;
                     }
                     return this.browser.launch('https://aka.ms/jupyterUnSupportedPythonKernelVersions');
-                });
+                }, noop);
         }
     }
     private async onDidChangeSelectedNotebooks(event: { notebook: NotebookDocument; selected: boolean }) {
@@ -494,7 +494,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             }
             if (!kernelStarted) {
                 exec.start();
-                void exec.clearOutput(cell);
+                exec.clearOutput(cell).then(noop, noop);
             }
             const errorHandler = this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
             ex = WrappedError.unwrap(ex);

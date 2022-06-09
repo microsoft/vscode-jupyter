@@ -27,6 +27,7 @@ import { IJupyterSession, KernelConnectionMetadata } from '../../types';
 import { IKernelLauncher, IRawNotebookProvider, IRawNotebookSupportedService } from '../types';
 import { RawJupyterSession } from './rawJupyterSession.node';
 import { Cancellation } from '../../../platform/common/cancellation';
+import { noop } from '../../../platform/common/utils/misc';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -139,15 +140,17 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
     }
 
     private trackDisposable(sessionPromise: Promise<IJupyterSession>) {
-        void sessionPromise.then((session) => {
-            session.onDidDispose(
-                () => {
-                    this.sessions.delete(sessionPromise);
-                },
-                this,
-                this.disposables
-            );
-        });
+        void sessionPromise
+            .then((session) => {
+                session.onDidDispose(
+                    () => {
+                        this.sessions.delete(sessionPromise);
+                    },
+                    this,
+                    this.disposables
+                );
+            })
+            .catch(noop);
 
         // Save the session
         this.sessions.add(sessionPromise);

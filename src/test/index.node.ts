@@ -15,6 +15,7 @@ if ((Reflect as any).metadata === undefined) {
 const { setupCoverage } = require('./coverage.node');
 const nyc = setupCoverage();
 
+import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import * as Mocha from 'mocha';
 import * as path from '../platform/vscode-path/path';
@@ -26,12 +27,14 @@ import {
     IS_PERF_TEST,
     MAX_EXTENSION_ACTIVATION_TIME,
     TEST_RETRYCOUNT,
-    TEST_TIMEOUT
+    TEST_TIMEOUT,
+    EXTENSION_ROOT_DIR_FOR_TESTS
 } from './constants.node';
 import { noop } from './core';
 import { stopJupyterServer } from './datascience/notebook/helper.node';
 import { initialize } from './initialize.node';
 import { rootHooks } from './testHooks.node';
+import { isCI } from '../platform/common/constants';
 
 type SetupOptions = Mocha.MochaOptions & {
     testFilesSuffix: string;
@@ -57,13 +60,20 @@ process.on('unhandledRejection', (ex: any, _a) => {
         }
     }
     // eslint-disable-next-line no-console
-    console.log(`Unhandled Promise Rejection with the message ${message.join(', ')}`);
+    const msg = `Unhandled Promise Rejection with the message ${message.join(', ')}`;
+
+    if (msg.includes('Error: custom request failed')) {
+        // Some error from VS Code, we can ignore this.
+        return;
+    }
+    console.log(msg);
+    if (isCI) {
+        fs.appendFileSync(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'unhandledErrors.txt'), `${msg}\n`);
+    }
 });
 
 /**
- * Configure the test environment and return the optoins required to run moch tests.
- *
- * @returns {SetupOptions}
+ * Configure the test environment and return the options required to run mocha tests.
  */
 function configure(): SetupOptions {
     process.env.VSC_JUPYTER_CI_TEST = '1';

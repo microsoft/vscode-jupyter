@@ -59,10 +59,12 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
     let testEmptyPythonNb: Uri;
     let editorProvider: INotebookEditorProvider;
     let languageService: NotebookCellLanguageService;
+    // eslint-disable-next-line local-rules/dont-use-process
     const testJavaKernels = (process.env.VSC_JUPYTER_CI_RUN_JAVA_NB_TEST || '').toLowerCase() === 'true';
     suiteSetup(async function () {
         api = await initialize();
         verifyPromptWasNotDisplayed();
+        // eslint-disable-next-line local-rules/dont-use-process
         if (!process.env.VSC_JUPYTER_CI_RUN_NON_PYTHON_NB_TEST || IS_REMOTE_NATIVE_TEST() || IS_NON_RAW_NATIVE_TEST()) {
             return this.skip();
         }

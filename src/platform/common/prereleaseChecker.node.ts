@@ -11,6 +11,7 @@ import { GLOBAL_MEMENTO, IMemento, IsPreRelease } from '../common/types';
 import * as localize from './utils/localize';
 import { JVSC_EXTENSION_ID } from './constants';
 import * as vscode from 'vscode';
+import { noop } from './utils/misc';
 
 const PRERELEASE_DONT_ASK_FLAG = 'dontAskForPrereleaseUpgrade';
 
@@ -32,7 +33,7 @@ export class PreReleaseChecker implements IExtensionSingleActivationService {
                     const yes = localize.DataScience.usingNonPrereleaseYes();
                     const no = localize.DataScience.usingNonPrereleaseNo();
                     const dontAskAgain = localize.DataScience.usingNonPrereleaseNoAndDontAskAgain();
-                    void this.appShell
+                    this.appShell
                         .showWarningMessage(localize.DataScience.usingNonPrerelease(), yes, no, dontAskAgain)
                         .then((answer) => {
                             if (answer === yes) {
@@ -46,7 +47,7 @@ export class PreReleaseChecker implements IExtensionSingleActivationService {
                             } else if (answer == dontAskAgain) {
                                 return this.globalState.update(PRERELEASE_DONT_ASK_FLAG, true);
                             }
-                        });
+                        }, noop);
                 }
             })
             .ignoreErrors();

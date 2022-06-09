@@ -27,10 +27,6 @@ import { getOSType, OSType } from '../platform/common/utils/platform';
 export class NotebookEditorProvider implements INotebookEditorProvider {
     private providers: Set<IEmbedNotebookEditorProvider> = new Set();
     constructor(@inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook) {}
-    public async open(file: Uri): Promise<void> {
-        const nb = await this.vscodeNotebook.openNotebookDocument(file);
-        await this.vscodeNotebook.showNotebookDocument(nb);
-    }
     @captureTelemetry(Telemetry.CreateNewNotebook, undefined, false)
     public async createNew(options?: { contents?: string; defaultCellLanguage: string }): Promise<void> {
         // contents will be ignored

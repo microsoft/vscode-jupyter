@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { isTestExecution } from '../../../platform/common/constants';
 import { IDisposable } from '../../../platform/common/types';
 import { getCollectionJSON } from '../../../platform/common/utils/localize';
+import { noop } from '../../../platform/common/utils/misc';
 
 const enum MessageType {
     ExtensionInit = 1,
@@ -38,21 +39,25 @@ export class ExtensionSideRenderer implements IDisposable {
         );
 
         // broadcast extension init message
-        void this.errorRendererMessage.postMessage({
-            type: MessageType.ExtensionInit
-        });
+        this.errorRendererMessage
+            .postMessage({
+                type: MessageType.ExtensionInit
+            })
+            .then(noop, noop);
     }
 
     loadLoc(editor: vscode.NotebookEditor) {
         const locStrings = isTestExecution() ? '{}' : getCollectionJSON();
 
-        void this.errorRendererMessage.postMessage(
-            {
-                type: MessageType.LoadLoc,
-                data: locStrings
-            },
-            editor
-        );
+        this.errorRendererMessage
+            .postMessage(
+                {
+                    type: MessageType.LoadLoc,
+                    data: locStrings
+                },
+                editor
+            )
+            .then(noop, noop);
     }
 
     dispose(): void {

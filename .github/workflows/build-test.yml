@@ -205,9 +205,6 @@ jobs:
       - name: Verify Translation files
         run: npm run validateTranslationFiles
 
-      - name: Validate npm dependencies
-        run: npm run validateDependencies
-
       - name: Run linting on TypeScript code (eslint)
         run: npm run lint
 
@@ -323,6 +320,9 @@ jobs:
       - name: Run TypeScript unit tests
         id: test_unittests
         run: npm run test:unittests
+
+      - name: Verify there are no unhandled errors
+        run: npm run verifyUnhandledErrors
 
       - name: Publish Test Report
         uses: scacap/action-surefire-report@v1
@@ -617,14 +617,6 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: echo "xvfbCommand=--server-args=\"-screen 0 1024x768x24\"" >> $GITHUB_ENV
 
-      - name: Publish VSCode Test Report
-        uses: scacap/action-surefire-report@v1
-        with:
-          github_token: ${{ secrets.TOKEN_TO_CREATE_RELEASE }}
-          report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: VSCode Test Report
-        if: (steps.test_vscode.outcome == 'failure' || steps.test_vscode.outcome == 'failure') && failure()
-
       - name: Run Native Notebook with VSCode & Jupyter (ubuntu)
         uses: GabrielBB/xvfb-action@v1.4
         with:
@@ -678,14 +670,6 @@ jobs:
         id: test_notebook_vscode_windows
         if: matrix.python != 'noPython' && matrix.os == 'windows-latest' && matrix.webOrDesktop != 'web'
 
-      - name: Publish Notebook Test Report
-        uses: scacap/action-surefire-report@v1
-        with:
-          github_token: ${{ secrets.TOKEN_TO_CREATE_RELEASE }}
-          report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Notebook Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}}
-        if: (steps.test_notebook_vscode_windows.outcome == 'failure' || steps.test_notebook_vscode_ubuntu.outcome == 'failure') && failure()
-
       - name: Run Native Notebook with VSCode & Jupyter (without Python)
         uses: GabrielBB/xvfb-action@v1.4
         with:
@@ -697,13 +681,17 @@ jobs:
         id: test_notebookWithoutPythonExt_vscode
         if: matrix.python == 'noPython' && matrix.os != 'windows-latest'
 
-      - name: Publish Notebook Test Report
-        uses: scacap/action-surefire-report@v1
+      - name: Check test run
+        run: npm run checkTestResults
+        if: always()
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v2
+        if: always()
         with:
-          github_token: ${{ secrets.TOKEN_TO_CREATE_RELEASE }}
-          report_paths: ${{ env.TEST_RESULTS_GLOB }}
-          check_name: Notebook without Python Test Report ${{matrix.os}} ${{matrix.pythonVersion}} ${{matrix.python}} ${{matrix.jupyter}}
-        if: steps.test_notebookWithoutPythonExt_vscode.outcome == 'failure' && failure()
+          name: testResults-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.os}}.xml
+          path: './${{env.TEST_RESULTS_GLOB}}'
+          retention-days: 1
 
       - name: Create coverage folder (if not created)
         run: npm run createNycFolder
@@ -739,6 +727,9 @@ jobs:
           name: SD-memtest.json
           path: './SD-memtest.json'
           retention-days: 20
+
+      - name: Verify there are no unhandled errors
+        run: npm run verifyUnhandledErrors
 
   smoke-tests:
     timeout-minutes: 30
@@ -889,6 +880,14 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.4
         with:
           run: npm run testPerformance
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: Screenshots-perf-${{matrix.os}}
+          path: './${{env.IPYWIDGET_SCREENSHOT_PATH}}'
+          retention-days: 1
 
   coverage:
     name: Coverage reports upload
