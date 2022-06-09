@@ -13,7 +13,7 @@ import {
     IDocumentManager,
     IApplicationShell
 } from '../../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import {
     traceInfoIfCI,
     traceError,
@@ -50,8 +50,6 @@ import {
     IKernelFinder,
     isLocalConnection
 } from '../../kernels/types';
-import { JupyterNotebookView, InteractiveWindowView } from '../constants';
-import { isPythonNotebook, getNotebookMetadata } from '../helpers';
 import { INotebookControllerManager } from '../types';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
 import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController';
@@ -66,7 +64,7 @@ import {
     getLanguageInNotebookMetadata,
     isPythonKernelConnection
 } from '../../kernels/helpers';
-import { getResourceType } from '../../platform/common/utils';
+import { getNotebookMetadata, getResourceType, isPythonNotebook } from '../../platform/common/utils';
 import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
 import { INotebookMetadata } from '@jupyterlab/nbformat';
 import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConnectionType';
@@ -284,7 +282,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             this.controllersPromise = this.loadNotebookControllersImpl(cancelToken.token)
                 .catch((e) => {
                     traceError('Error loading notebook controllers', e);
-                    if (!isCancellationError(e)) {
+                    if (!isCancellationError(e, true)) {
                         // This can happen in the tests, and these get bubbled upto VSC and are logged as unhandled exceptions.
                         // Hence swallow cancellation errors.
                         throw e;
@@ -554,7 +552,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             return;
         }
 
-        void this.initializePreferredNotebookController(document);
+        this.initializePreferredNotebookController(document).catch(noop);
         if (isPythonNotebook(getNotebookMetadata(document)) && this.extensionChecker.isPythonExtensionInstalled) {
             // If we know we're dealing with a Python notebook, load the active interpreter as a kernel asap.
             this.createActiveInterpreterController(JupyterNotebookView, document.uri).catch(noop);
@@ -815,7 +813,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 this.createNotebookController(value.connection, value.label, doNotHideInteractiveKernel);
             });
         } catch (ex) {
-            if (!isCancellationError(ex)) {
+            if (!isCancellationError(ex, true)) {
                 // This can happen in the tests, and these get bubbled upto VSC and are logged as unhandled exceptions.
                 // Hence swallow cancellation errors.
                 throw ex;
@@ -909,7 +907,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     this.registeredControllers.set(controller.id, controller);
                 });
         } catch (ex) {
-            if (isCancellationError(ex)) {
+            if (isCancellationError(ex, true)) {
                 // This can happen in the tests, and these get bubbled upto VSC and are logged as unhandled exceptions.
                 // Hence swallow cancellation errors.
                 return;

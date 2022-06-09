@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { noop } from 'lodash';
 import { isPromise } from 'rxjs/internal-compatibility';
 import { NotebookDocument, NotebookEditor, workspace, WorkspaceEdit, window } from 'vscode';
 import { createDeferred } from '../../platform/common/utils/async';
+import { noop } from '../../platform/common/utils/misc';
 
 /**
  * Use this class to perform updates on all cells.

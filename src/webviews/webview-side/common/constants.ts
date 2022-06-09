@@ -8,8 +8,6 @@ export const JUPYTER_OUTPUT_CHANNEL = 'JUPYTER_OUTPUT_CHANNEL';
 
 // Python Module to be used when instantiating the Python Daemon.
 export const JupyterDaemonModule = 'vscode_datascience_helpers.jupyter_daemon';
-export const KernelLauncherDaemonModule = 'vscode_datascience_helpers.kernel_launcher_daemon';
-
 export const KernelInterruptDaemonModule = 'vscode_datascience_helpers.kernel_interrupt_daemon';
 
 export const PythonExtension = 'ms-python.python';
@@ -144,8 +142,6 @@ export namespace Commands {
     export const NotebookEditorCollapseAllCells = 'jupyter.notebookeditor.collapseallcells';
     export const EnableDebugLogging = 'jupyter.enableDebugLogging';
     export const ResetLoggingLevel = 'jupyter.resetLoggingLevel';
-    export const CreateGitHubIssue = 'jupyter.createGitHubIssue';
-    export const SubmitGitHubIssue = 'jupyter.submitGitHubIssue';
     export const ShowDataViewer = 'jupyter.showDataViewer';
     export const RefreshDataViewer = 'jupyter.refreshDataViewer';
     export const ClearSavedJupyterUris = 'jupyter.clearSavedJupyterUris';
@@ -518,7 +514,10 @@ export enum Telemetry {
     KernelCrash = 'DATASCIENCE.KERNEL_CRASH',
     RunTest = 'DS_INTERNAL.RUNTEST',
     PreferredKernelExactMatch = 'DS_INTERNAL.PREFERRED_KERNEL_EXACT_MATCH',
-    FetchError = 'DS_INTERNAL.WEB_FETCH_ERROR'
+    FetchError = 'DS_INTERNAL.WEB_FETCH_ERROR',
+    TerminalShellIdentification = 'TERMINAL_SHELL_IDENTIFICATION',
+    TerminalEnvVariableExtraction = 'TERMINAL_ENV_VAR_EXTRACTION',
+    JupyterInstalled = 'JUPYTER_IS_INSTALLED'
 }
 
 export enum NativeKeyboardCommandTelemetry {

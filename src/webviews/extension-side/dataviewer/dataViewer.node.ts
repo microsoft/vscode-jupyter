@@ -305,7 +305,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
                 this.dispose();
             }
             traceError(e);
-            void this.errorHandler.handleError(e);
+            this.errorHandler.handleError(e).then(noop, noop);
         } finally {
             this.sendElapsedTimeTelemetry();
         }

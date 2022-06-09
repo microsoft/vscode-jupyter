@@ -157,7 +157,6 @@ export function sendKernelTelemetryWhenDone<P extends IEventNamePropertyMapping,
                     );
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     incrementStartFailureCount(resource, eventName as any, props);
-                    return Promise.reject(ex);
                 }
             )
             .finally(() => {

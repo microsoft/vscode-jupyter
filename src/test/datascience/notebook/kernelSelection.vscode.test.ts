@@ -35,8 +35,9 @@ import {
     defaultNotebookTestTimeout,
     createTemporaryNotebookFromFile
 } from './helper.node';
-import { getTextOutputValue } from '../../../notebooks/helpers';
 import { getOSType, OSType } from '../../../platform/common/utils/platform';
+import { getTextOutputValue } from '../../../kernels/execution/helpers';
+import { noop } from '../../core';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience - VSCode Notebook - Kernel Selection', function () {
@@ -331,7 +332,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await waitForKernelToChange({ interpreterPath: venvNoRegPythonPath });
 
         // Clear the cells & execute again
-        void commands.executeCommand('notebook.clearAllCellsOutputs');
+        commands.executeCommand('notebook.clearAllCellsOutputs').then(noop, noop);
         await waitForCondition(async () => cell.outputs.length === 0, 5_000, 'Cell did not get cleared');
         await Promise.all([
             runAllCellsInActiveNotebook(),

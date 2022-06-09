@@ -3,11 +3,11 @@
 
 import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
+import { getAssociatedNotebookDocument } from '../kernels/helpers';
 import { IKernel, IKernelProvider } from '../kernels/types';
-import { InteractiveWindowView } from '../notebooks/constants';
-import { getAssociatedNotebookDocument } from '../notebooks/controllers/kernelSelector';
 import { INotebookControllerManager } from '../notebooks/types';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
+import { InteractiveWindowView } from '../platform/common/constants';
 import { disposeAllDisposables } from '../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { ICodeGeneratorFactory, IGeneratedCodeStorageFactory } from './editor-integration/types';

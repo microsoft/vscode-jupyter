@@ -5,16 +5,23 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import * as uriPath from '../../platform/vscode-path/resources';
 import { SemVer, parse } from 'semver';
-import { Uri } from 'vscode';
+import { NotebookData, NotebookDocument, TextDocument, Uri, workspace } from 'vscode';
 import { sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
 import { splitMultilineString } from '../../webviews/webview-side/common';
 
-import { jupyterLanguageToMonacoLanguageMapping, Telemetry } from './constants';
+import {
+    InteractiveWindowView,
+    jupyterLanguageToMonacoLanguageMapping,
+    JupyterNotebookView,
+    PYTHON_LANGUAGE,
+    Telemetry
+} from './constants';
 import { traceError, traceInfo } from '../logging';
 
 import { ICell } from './types';
 import { DataScience } from './utils/localize';
+import { IJupyterKernelSpec } from '../api/extension';
 
 // Can't figure out a better way to do this. Enumerate
 // the allowed keys of different output formats.
@@ -166,4 +173,47 @@ export function sendNotebookOrKernelLanguageTelemetry(
 ) {
     language = getTelemetrySafeLanguage(language);
     sendTelemetryEvent(telemetryEvent, undefined, { language });
+}
+
+/**
+ * Whether this is a Notebook we created/manage/use.
+ * Remember, there could be other notebooks such as GitHub Issues nb by VS Code.
+ */
+export function isJupyterNotebook(document: NotebookDocument): boolean;
+// eslint-disable-next-line @typescript-eslint/unified-signatures
+export function isJupyterNotebook(viewType: string): boolean;
+export function isJupyterNotebook(option: NotebookDocument | string) {
+    if (typeof option === 'string') {
+        return option === JupyterNotebookView || option === InteractiveWindowView;
+    } else {
+        return option.notebookType === JupyterNotebookView || option.notebookType === InteractiveWindowView;
+    }
+}
+
+export function getNotebookMetadata(document: NotebookDocument | NotebookData): nbformat.INotebookMetadata | undefined {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const notebookContent: undefined | Partial<nbformat.INotebookContent> = document.metadata?.custom as any;
+    // Create a clone.
+    return JSON.parse(JSON.stringify(notebookContent?.metadata || {}));
+}
+
+export function getAssociatedJupyterNotebook(document: TextDocument): NotebookDocument | undefined {
+    return workspace.notebookDocuments.find(
+        (notebook) => isJupyterNotebook(notebook) && notebook.getCells().some((cell) => cell.document === document)
+    );
+}
+
+export function isPythonNotebook(metadata?: nbformat.INotebookMetadata) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const kernelSpec = metadata?.kernelspec as any as Partial<IJupyterKernelSpec> | undefined;
+    if (metadata?.language_info?.name && metadata.language_info.name !== PYTHON_LANGUAGE) {
+        return false;
+    }
+
+    if (kernelSpec?.name?.includes(PYTHON_LANGUAGE)) {
+        return true;
+    }
+
+    // Valid notebooks will have a language information in the metadata.
+    return kernelSpec?.language === PYTHON_LANGUAGE || metadata?.language_info?.name === PYTHON_LANGUAGE;
 }

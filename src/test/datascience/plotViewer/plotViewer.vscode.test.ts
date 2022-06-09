@@ -8,7 +8,6 @@ import * as vscode from 'vscode';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
-import { createJupyterCellFromVSCNotebookCell } from '../../../notebooks/helpers';
 import { IExtensionTestApi, waitForCondition } from '../../common.node';
 import { closeActiveWindows, initialize } from '../../initialize.node';
 import {
@@ -19,6 +18,7 @@ import {
     runAllCellsInActiveNotebook,
     waitForExecutionCompletedSuccessfully
 } from '../notebook/helper.node';
+import { createJupyterCellFromVSCNotebookCell } from '../../../kernels/execution/helpers';
 
 suite('VSCode Notebook PlotViewer integration - VSCode Notebook', function () {
     let api: IExtensionTestApi;

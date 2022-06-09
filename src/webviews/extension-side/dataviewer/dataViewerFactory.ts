@@ -7,12 +7,13 @@ import { inject, injectable } from 'inversify';
 
 import { captureTelemetry } from '../../../telemetry';
 import { IDataViewer, IDataViewerDataProvider, IDataViewerFactory } from './types';
-import { debounce } from 'lodash';
+import debounce = require('lodash/debounce');
 import { ICommandManager } from '../../../platform/common/application/types';
 import { ContextKey } from '../../../platform/common/contextKey';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from '../../../platform/common/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { EditorContexts, Commands, Telemetry } from '../../webview-side/common/constants';
+import { noop } from '../../../platform/common/utils/misc';
 
 @injectable()
 export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
@@ -89,7 +90,7 @@ export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
         for (const viewer of this.knownViewers) {
             if (viewer.active) {
                 // There should only be one of these
-                void viewer.refreshData();
+                viewer.refreshData().then(noop, noop);
             }
         }
     }, 1000);

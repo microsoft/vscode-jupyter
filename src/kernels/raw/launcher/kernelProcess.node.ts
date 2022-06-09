@@ -50,7 +50,7 @@ import {
 import { Resource, IOutputChannel, IJupyterSettings } from '../../../platform/common/types';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { swallowExceptions } from '../../../platform/common/utils/misc';
+import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
 import { KernelDiedError } from '../../../platform/errors/kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from '../../../platform/errors/kernelPortNotUsedTimeoutError';
 import { KernelProcessExitedError } from '../../../platform/errors/kernelProcessExitedError';
@@ -153,6 +153,7 @@ export class KernelProcess implements IKernelProcess {
         let exitEventFired = false;
         let providedExitCode: number | null;
         const deferred = createDeferred();
+        deferred.promise.catch(noop);
         exeObs.proc!.on('exit', (exitCode) => {
             exitCode = exitCode || providedExitCode;
             traceVerbose('KernelProcess Exit', `Exit - ${exitCode}`, stderrProc);
@@ -213,6 +214,9 @@ export class KernelProcess implements IKernelProcess {
 
         // Don't return until our heartbeat channel is open for connections or the kernel died or we timed out
         try {
+            if (deferred.rejected) {
+                await deferred.promise;
+            }
             const tcpPortUsed = require('tcp-port-used') as typeof import('tcp-port-used');
             // Wait on shell port as this is used for communications (hence shell port is guaranteed to be used, where as heart beat isn't).
             // Wait for shell & iopub to be used (iopub is where we get a response & this is similar to what Jupyter does today).
@@ -275,7 +279,7 @@ export class KernelProcess implements IKernelProcess {
         traceVerbose('Dispose Kernel process');
         this.disposed = true;
         swallowExceptions(() => {
-            void this._interruptDaemon?.kill();
+            this._interruptDaemon?.kill().ignoreErrors();
             this._process?.kill(); // NOSONAR
             this.exitEvent.fire({});
         });
@@ -354,10 +358,10 @@ export class KernelProcess implements IKernelProcess {
             // Remember, non-python kernels can have argv as `--connection-file={connection_file}`,
             // hence we should not replace the entire entry, but just replace the text `{connection_file}`
             // See https://github.com/microsoft/vscode-jupyter/issues/7203
+            const connectionFile = this.connectionFile.includes(' ')
+                ? `"${this.connectionFile}"` // Quoted for spaces in file paths.
+                : this.connectionFile;
             if (this.launchKernelSpec.argv[indexOfConnectionFile].includes('--connection-file')) {
-                const connectionFile = this.connectionFile.includes(' ')
-                    ? `"${this.connectionFile}"` // Quoted for spaces in file paths.
-                    : this.connectionFile;
                 this.launchKernelSpec.argv[indexOfConnectionFile] = this.launchKernelSpec.argv[
                     indexOfConnectionFile
                 ].replace(connectionFilePlaceholder, connectionFile);
@@ -366,7 +370,7 @@ export class KernelProcess implements IKernelProcess {
                 // E.g. in Python the name of the argument is `-f` and in.
                 this.launchKernelSpec.argv[indexOfConnectionFile] = this.launchKernelSpec.argv[
                     indexOfConnectionFile
-                ].replace(connectionFilePlaceholder, this.connectionFile);
+                ].replace(connectionFilePlaceholder, connectionFile);
             }
         }
     }
@@ -409,7 +413,10 @@ export class KernelProcess implements IKernelProcess {
 
         // We still put in the tmp name to make sure the kernel picks a valid connection file name. It won't read it as
         // we passed in the arguments, but it will use it as the file name so it doesn't clash with other kernels.
-        newConnectionArgs.push(`--f=${this.connectionFile}`);
+        const connectionFile = this.connectionFile!.includes(' ')
+            ? `"${this.connectionFile}"` // Quoted for spaces in file paths.
+            : this.connectionFile;
+        newConnectionArgs.push(`--f=${connectionFile}`);
 
         return newConnectionArgs;
     }
@@ -480,20 +487,8 @@ export class KernelProcess implements IKernelProcess {
                     promiseCancellation as Promise<NodeJS.ProcessEnv | undefined>
                 ])
             ]);
-            // Add quotations to arguments if they have a blank space in them.
-            // This will mainly quote paths so that they can run, other arguments shouldn't be quoted or it may cause errors.
             // The first argument is sliced because it is the executable command.
-            const args = this.launchKernelSpec.argv.slice(1).map((a) => {
-                // Some kernel specs (non-python) can have argv as `--connection-file={connection_file}`
-                // The `connection-file` will be quoted when we update it with the real path.
-                if (a.includes('--connection-file')) {
-                    return a;
-                }
-                if (a.includes(' ')) {
-                    return `"${a}"`;
-                }
-                return a;
-            });
+            const args = this.launchKernelSpec.argv.slice(1);
             exeObs = executionService.execObservable(executable, args, {
                 env,
                 cwd: workingDirectory

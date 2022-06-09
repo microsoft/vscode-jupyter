@@ -6,7 +6,6 @@ import { IRemoteKernelFinder } from '../raw/types';
 import { INotebookProvider } from '../types';
 import { JupyterCommandLineSelectorCommand } from './commands/commandLineSelector';
 import { CommandRegistry } from './commands/commandRegistry';
-import { JupyterServerSelectorCommand } from './commands/serverSelector';
 import { JupyterExporter } from './import-export/jupyterExporter.node';
 import { JupyterImporter } from './import-export/jupyterImporter.node';
 import { JupyterCommandFactory } from './interpreter/jupyterCommand.node';
@@ -24,6 +23,7 @@ import { NbConvertExportToPythonService } from './interpreter/nbconvertExportToP
 import { NbConvertInterpreterDependencyChecker } from './interpreter/nbconvertInterpreterDependencyChecker.node';
 import { CellOutputMimeTypeTracker } from './jupyterCellOutputMimeTypeTracker.node';
 import { JupyterConnection } from './jupyterConnection';
+import { JupyterDetectionTelemetry } from './jupyterDetectionTelemetry.node';
 import { JupyterKernelService } from './jupyterKernelService.node';
 import { JupyterRemoteCachedKernelValidator } from './jupyterRemoteCachedKernelValidator';
 import { JupyterUriProviderRegistration } from './jupyterUriProviderRegistration';
@@ -39,7 +39,6 @@ import { ServerConnectionType } from './launcher/serverConnectionType';
 import { ServerPreload } from './launcher/serverPreload.node';
 import { JupyterServerUriStorage } from './launcher/serverUriStorage';
 import { LiveRemoteKernelConnectionUsageTracker } from './liveRemoteKernelConnectionTracker';
-import { RemoteKernelConnectionHandler } from './remoteKernelConnectionHandler';
 import { RemoteKernelFinder } from './remoteKernelFinder';
 import { JupyterServerSelector } from './serverSelector';
 import { BackingFileCreator } from './session/backingFileCreator.node';
@@ -143,10 +142,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         JupyterCommandLineSelectorCommand,
         JupyterCommandLineSelectorCommand
     );
-    serviceManager.addSingleton<JupyterServerSelectorCommand>(
-        JupyterServerSelectorCommand,
-        JupyterServerSelectorCommand
-    );
     serviceManager.addSingleton<IJupyterRequestCreator>(IJupyterRequestCreator, JupyterRequestCreator);
     serviceManager.addSingleton<IJupyterRequestAgentCreator>(IJupyterRequestAgentCreator, RequestAgentCreator);
     serviceManager.addSingleton<ServerConnectionType>(ServerConnectionType, ServerConnectionType);
@@ -157,12 +152,9 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         LiveRemoteKernelConnectionUsageTracker
     );
     serviceManager.addBinding(ILiveRemoteKernelConnectionUsageTracker, IExtensionSyncActivationService);
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        RemoteKernelConnectionHandler
-    );
     serviceManager.addSingleton<IJupyterRemoteCachedKernelValidator>(
         IJupyterRemoteCachedKernelValidator,
         JupyterRemoteCachedKernelValidator
     );
+    serviceManager.addSingleton<JupyterDetectionTelemetry>(IExtensionSyncActivationService, JupyterDetectionTelemetry);
 }

@@ -4,7 +4,7 @@
 import '../../../platform/common/extensions';
 
 import { ChildProcess } from 'child_process';
-import { Subscription } from 'rxjs';
+import { Subscription } from 'rxjs/Subscription';
 import { CancellationError, CancellationToken, Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
 import { Cancellation } from '../../../platform/common/cancellation';

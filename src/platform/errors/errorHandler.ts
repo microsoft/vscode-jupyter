@@ -286,21 +286,24 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             // On a self cert error, warn the user and ask if they want to change the setting
             const enableOption: string = DataScience.jupyterSelfCertEnable();
             const closeOption: string = DataScience.jupyterSelfCertClose();
-            void this.applicationShell
+            this.applicationShell
                 .showErrorMessage(DataScience.jupyterSelfCertFail().format(err.message), enableOption, closeOption)
                 .then((value) => {
                     if (value === enableOption) {
                         sendTelemetryEvent(Telemetry.SelfCertsMessageEnabled);
-                        void this.configuration.updateSetting(
-                            'allowUnauthorizedRemoteConnection',
-                            true,
-                            undefined,
-                            ConfigurationTarget.Workspace
-                        );
+                        this.configuration
+                            .updateSetting(
+                                'allowUnauthorizedRemoteConnection',
+                                true,
+                                undefined,
+                                ConfigurationTarget.Workspace
+                            )
+                            .catch(noop);
                     } else if (value === closeOption) {
                         sendTelemetryEvent(Telemetry.SelfCertsMessageClose);
                     }
-                });
+                })
+                .then(noop, noop);
             return KernelInterpreterDependencyResponse.failed;
         } else if (isCancellationError(err)) {
             // Don't show the message for cancellation errors
@@ -333,11 +336,11 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                 kernelConnection.interpreter?.sysPrefix
             );
             if (failureInfo) {
-                void this.showMessageWithMoreInfo(failureInfo?.message, failureInfo?.moreInfoLink);
+                this.showMessageWithMoreInfo(failureInfo?.message, failureInfo?.moreInfoLink).catch(noop);
             } else {
                 // These are generic errors, we have no idea what went wrong,
                 // hence add a descriptive prefix (message), that provides more context to the user.
-                void this.showMessageWithMoreInfo(getUserFriendlyErrorMessage(err, errorContext));
+                this.showMessageWithMoreInfo(getUserFriendlyErrorMessage(err, errorContext)).catch(noop);
             }
             return KernelInterpreterDependencyResponse.failed;
         }

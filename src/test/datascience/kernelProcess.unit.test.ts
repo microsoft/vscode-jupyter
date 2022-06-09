@@ -29,7 +29,8 @@ import { IDisposable, IJupyterSettings, IOutputChannel } from '../../platform/co
 import { CancellationTokenSource, Uri } from 'vscode';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { noop } from '../core';
-import { Observable, Subject } from 'rxjs';
+import { Observable } from 'rxjs/Observable';
+import { Subject } from 'rxjs/Subject';
 import { ChildProcess } from 'child_process';
 import { EventEmitter } from 'stream';
 import { PythonKernelInterruptDaemon } from '../../kernels/raw/finder/pythonKernelInterruptDaemon.node';
@@ -301,7 +302,7 @@ suite('kernel Process', () => {
             `--shell=${connection.shell_port}`,
             `--transport="${connection.transport}"`,
             `--iopub=${connection.iopub_port}`,
-            `--f=${expectedConnectionFile}`,
+            `--f="${expectedConnectionFile}"`,
             `--debug`
         ];
         await kernelProcess.launch(__dirname, 0, token.token);
@@ -349,7 +350,7 @@ suite('kernel Process', () => {
             `--shell=${connection.shell_port}`,
             `--transport="${connection.transport}"`,
             `--iopub=${connection.iopub_port}`,
-            `--f=${tempFile}`,
+            `--f="${tempFile}"`,
             `--debug`
         ];
         await kernelProcess.launch(__dirname, 0, token.token);

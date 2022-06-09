@@ -5,16 +5,17 @@
 
 import { inject, injectable } from 'inversify';
 import { NotebookDocument, Uri } from 'vscode';
-import { INotebookControllerManager } from '../../../notebooks/types';
-import { ICommandManager } from '../../../platform/common/application/types';
-import { Commands } from '../../../platform/common/constants';
-import { IDisposable } from '../../../platform/common/types';
-import { traceInfo } from '../../../platform/logging';
-import { JupyterServerSelector, SelectJupyterUriCommandSource } from '../serverSelector';
-import { IJupyterServerUriStorage } from '../types';
+import { INotebookControllerManager } from './types';
+import { ICommandManager } from '../platform/common/application/types';
+import { Commands } from '../platform/common/constants';
+import { IDisposable } from '../platform/common/types';
+import { traceInfo } from '../platform/logging';
+import { JupyterServerSelector, SelectJupyterUriCommandSource } from '../kernels/jupyter/serverSelector';
+import { IJupyterServerUriStorage } from '../kernels/jupyter/types';
+import { IExtensionSyncActivationService } from '../platform/activation/types';
 
 @injectable()
-export class JupyterServerSelectorCommand implements IDisposable {
+export class JupyterServerSelectorCommand implements IExtensionSyncActivationService {
     private readonly disposables: IDisposable[] = [];
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
@@ -22,7 +23,7 @@ export class JupyterServerSelectorCommand implements IDisposable {
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(INotebookControllerManager) private readonly controllerManager: INotebookControllerManager
     ) {}
-    public register() {
+    public activate() {
         this.disposables.push(
             this.commandManager.registerCommand(Commands.SelectJupyterURI, this.selectJupyterUri, this)
         );
@@ -60,7 +61,7 @@ export class JupyterServerSelectorCommand implements IDisposable {
         }
 
         // Activate UI Selector
-        void this.serverSelector.selectJupyterURI(local, source);
+        this.serverSelector.selectJupyterURI(local, source).ignoreErrors();
     }
 
     private async clearJupyterUris(): Promise<void> {

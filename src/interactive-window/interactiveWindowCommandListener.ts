@@ -23,7 +23,13 @@ import {
     IDocumentManager,
     IVSCodeNotebook
 } from '../platform/common/application/types';
-import { Commands, JVSC_EXTENSION_ID, PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
+import {
+    Commands,
+    JupyterNotebookView,
+    JVSC_EXTENSION_ID,
+    PYTHON_LANGUAGE,
+    Telemetry
+} from '../platform/common/constants';
 import { traceError, traceInfo } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
 import { IConfigurationService, IDataScienceCommandListener, IDisposableRegistry } from '../platform/common/types';
@@ -33,15 +39,16 @@ import { CommandSource } from '../platform/testing/common/constants';
 import { JupyterInstallError } from '../platform/errors/jupyterInstallError';
 import { INotebookControllerManager, INotebookEditorProvider } from '../notebooks/types';
 import { KernelConnectionMetadata } from '../kernels/types';
-import { chainWithPendingUpdates } from '../notebooks/execution/notebookUpdater';
 import { INotebookExporter, IJupyterExecution } from '../kernels/jupyter/types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { IFileConverter, IExportDialog, ExportFormat } from '../platform/export/types';
 import { IStatusProvider } from '../platform/progress/types';
 import { generateCellsFromDocument } from './editor-integration/cellFactory';
 import { IInteractiveWindowProvider } from './types';
-import { JupyterNotebookView } from '../notebooks/constants';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
+import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
+import { openAndShowNotebook } from '../platform/common/utils/notebooks';
+import { noop } from '../platform/common/utils/misc';
 
 @injectable()
 export class InteractiveWindowCommandListener implements IDataScienceCommandListener {
@@ -190,7 +197,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             return result;
         } catch (err) {
             traceError('listenForErrors', err as any);
-            void this.dataScienceErrorHandler.handleError(err);
+            this.dataScienceErrorHandler.handleError(err).then(noop, noop);
         }
         return result;
     }
@@ -236,7 +243,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                             openQuestion1
                         );
                         if (selection === openQuestion1) {
-                            await this.ipynbProvider.open(uri);
+                            await openAndShowNotebook(uri);
                         }
                     }
                 }

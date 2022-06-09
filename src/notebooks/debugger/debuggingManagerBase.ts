@@ -14,18 +14,19 @@ import {
     EventEmitter,
     NotebookCell
 } from 'vscode';
-import { IKernel, IKernelProvider } from '../types';
+import { IKernel, IKernelProvider } from '../../kernels/types';
 import { IDisposable } from '../../platform/common/types';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
-import { DebuggingTelemetry } from './constants';
+import { DebuggingTelemetry } from '../../kernels/debugger/constants';
 import { sendTelemetryEvent } from '../../telemetry';
 import { traceError, traceInfoIfCI } from '../../platform/logging';
 import { DataScience } from '../../platform/common/utils/localize';
-import { IKernelDebugAdapterConfig } from './types';
-import { Debugger } from '../../notebooks/debugger/debugger';
-import { KernelDebugAdapterBase } from './kernelDebugAdapterBase';
-import { INotebookControllerManager } from '../../notebooks/types';
-import { IpykernelCheckResult, isUsingIpykernel6OrLater } from '../../notebooks/debugger/helper';
+import { IKernelDebugAdapterConfig } from '../../kernels/debugger/types';
+import { Debugger } from '../../platform/debugger/debugger';
+import { KernelDebugAdapterBase } from '../../kernels/debugger/kernelDebugAdapterBase';
+import { INotebookControllerManager } from '../types';
+import { IpykernelCheckResult, isUsingIpykernel6OrLater } from '../../kernels/debugger/helper';
+import { noop } from '../../platform/common/utils/misc';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
@@ -106,7 +107,7 @@ export abstract class DebuggingManagerBase implements IDisposable {
                 traceInfoIfCI(`Debugger session is ready. Should be debugging ${session.id} now`);
             } catch (err) {
                 traceError(`Can't start debugging (${err})`);
-                void this.appShell.showErrorMessage(DataScience.cantStartDebugging());
+                this.appShell.showErrorMessage(DataScience.cantStartDebugging()).then(noop, noop);
             }
         } else {
             traceInfoIfCI(`Not starting debugging because already debugging in this notebook`);

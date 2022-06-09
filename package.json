@@ -746,18 +746,6 @@
                 "enablement": "!jupyter.webExtension"
             },
             {
-                "command": "jupyter.createGitHubIssue",
-                "title": "%jupyter.command.jupyter.createGitHubIssue.title%",
-                "enablement": "config.noExists",
-                "category": "Jupyter"
-            },
-            {
-                "command": "jupyter.submitGitHubIssue",
-                "title": "%jupyter.command.jupyter.submitGitHubIssue.title%",
-                "enablement": "config.noExists",
-                "category": "Jupyter"
-            },
-            {
                 "command": "jupyter.enableDebugLogging",
                 "title": "%jupyter.command.jupyter.enableDebugLogging.title%",
                 "category": "Jupyter",
@@ -1475,16 +1463,6 @@
                     "when": "config.jupyter.logging.level != debug"
                 },
                 {
-                    "command": "jupyter.createGitHubIssue",
-                    "category": "Jupyter",
-                    "when": "config.jupyter.logging.level == debug && config.noExists"
-                },
-                {
-                    "command": "jupyter.submitGitHubIssue",
-                    "category": "Jupyter",
-                    "when": "false"
-                },
-                {
                     "command": "jupyter.showDataViewer",
                     "category": "Jupyter",
                     "when": "false"
@@ -2100,8 +2078,10 @@
         "packagePreRelease": "gulp clean && gulp prePublishBundle && vsce package --pre-release -o ms-toolsai-jupyter-insiders.vsix",
         "prePublishNonBundle": "gulp clean && gulp prePublishNonBundle",
         "createNycFolder": "gulp createNycFolder",
+        "checkTestResults": "gulp checkTestResults",
         "validateTranslationFiles": "gulp validateTranslationFiles",
         "compile": "tsc -watch -p ./",
+        "compile-no-watch": "tsc -p ./",
         "compiled": "deemon npm run compile",
         "kill-compiled": "deemon --kill npm run compile",
         "compile-webviews-watch": "webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
@@ -2142,6 +2122,10 @@
         "postdownload-api": "vscode-dts main",
         "generateTelemetry": "gulp generateTelemetryMd",
         "openInBrowser": "vscode-test-web --extensionDevelopmentPath=. ./src/test/datascience",
+        "startJupyterServer": "node build/preDebugWebTest.js",
+        "stopJupyterServer": "node build/postDebugWebTest.js",
+        "validateTelemetryMD": "gulp validateTelemetryMD",
+        "verifyUnhandledErrors": "gulp verifyUnhandledErrors",
         "prepare": "husky install"
     },
     "dependencies": {
@@ -2156,7 +2140,7 @@
         "@lumino/widgets": "^1.28.0",
         "@nteract/messaging": "^7.0.0",
         "@vscode/extension-telemetry": "^0.5.2",
-        "@vscode/jupyter-ipywidgets": "1.0.8",
+        "@vscode/jupyter-ipywidgets": "^1.0.9",
         "@vscode/jupyter-lsp-middleware": "0.2.38",
         "ajv-keywords": "^3.5.2",
         "ansi-to-html": "^0.6.7",
@@ -2229,6 +2213,7 @@
         "zeromq": "^6.0.0-beta.6"
     },
     "devDependencies": {
+        "@actions/glob": "^0.3.0",
         "@actions/core": "^1.2.6",
         "@actions/github": "^4.0.0",
         "@babel/cli": "^7.15.4",
@@ -2406,6 +2391,7 @@
         "webpack-bundle-analyzer": "^4.5.0",
         "webpack-cli": "^4.9.2",
         "why-is-node-running": "^2.0.3",
+        "xml-js": "^1.6.11",
         "yargs": "^17.3.1",
         "yargs-parser": "^13.1.2"
     },

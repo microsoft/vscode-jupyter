@@ -24,7 +24,6 @@ import { traceError, traceInfoIfCI, traceWarning } from '../../platform/logging'
 import { IDisposable } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { NotebookCellStateTracker, traceCellMessage } from '../helpers';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { noop } from '../../platform/common/utils/misc';
@@ -33,6 +32,7 @@ import { isCancellationError } from '../../platform/common/cancellation';
 import { activeNotebookCellExecution, CellExecutionMessageHandler } from './cellExecutionMessageHandler';
 import { CellExecutionMessageHandlerService } from './cellExecutionMessageHandlerService';
 import { IJupyterSession, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
+import { NotebookCellStateTracker, traceCellMessage } from './helpers';
 
 export class CellExecutionFactory {
     constructor(

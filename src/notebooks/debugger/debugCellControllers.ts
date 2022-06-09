@@ -7,8 +7,9 @@ import { ICommandManager } from '../../platform/common/application/types';
 import { IKernel } from '../../kernels/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { DebuggingTelemetry } from '../../kernels/debugger/constants';
-import { cellDebugSetup } from './helper';
+import { cellDebugSetup } from '../../kernels/debugger/helper';
 import { IDebuggingDelegate, IKernelDebugAdapter } from '../../kernels/debugger/types';
+import { noop } from '../../platform/common/utils/misc';
 
 export class DebugCellController implements IDebuggingDelegate {
     constructor(
@@ -28,10 +29,12 @@ export class DebugCellController implements IDebuggingDelegate {
         if (request.command === 'configurationDone') {
             await cellDebugSetup(this.kernel, this.debugAdapter);
 
-            void this.commandManager.executeCommand('notebook.cell.execute', {
-                ranges: [{ start: this.debugCell.index, end: this.debugCell.index + 1 }],
-                document: this.debugCell.document.uri
-            });
+            this.commandManager
+                .executeCommand('notebook.cell.execute', {
+                    ranges: [{ start: this.debugCell.index, end: this.debugCell.index + 1 }],
+                    document: this.debugCell.document.uri
+                })
+                .then(noop, noop);
         }
     }
 }

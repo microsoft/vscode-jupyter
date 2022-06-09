@@ -24,10 +24,12 @@ import {
     IDocumentManager,
     IEncryptedStorage,
     ILanguageService,
+    ITerminalManager,
     IVSCodeNotebook
 } from './application/types';
 import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
 import { CryptoUtils } from './crypto';
+import { CryptoUtilsNode } from './crypto.node';
 import { ExperimentService } from './experiments/service';
 import { FeatureDeprecationManager } from './featureDeprecationManager';
 import { BrowserService } from './net/browser';
@@ -53,6 +55,7 @@ import { registerTypes as processRegisterTypes } from './process/serviceRegistry
 import { registerTypes as variableRegisterTypes } from './variables/serviceRegistry.node';
 import { RunInDedicatedExtensionHostCommandHandler } from './application/commands/runInDedicatedExtensionHost.node';
 import { ActiveEditorContextService } from './activeEditorContext';
+import { TerminalManager } from './application/terminalManager.node';
 
 // eslint-disable-next-line
 export function registerTypes(serviceManager: IServiceManager) {
@@ -71,8 +74,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ILanguageService>(ILanguageService, LanguageService);
     serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
     serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
-    serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
+    serviceManager.addSingleton<CryptoUtils>(CryptoUtils, CryptoUtils);
+    serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtilsNode);
     serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
+    serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
 
     serviceManager.addSingleton<IFeatureDeprecationManager>(IFeatureDeprecationManager, FeatureDeprecationManager);
 

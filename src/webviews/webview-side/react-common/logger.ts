@@ -8,15 +8,6 @@ export function logMessage(message: string) {
         messageLogger(message);
     }
 }
-/**
- * Logging in production seems to slow down webview (unnecessarily too chatty)
- */
-export function logMessageOnlyOnCI(message: string) {
-    // TODO: No way to check if CI for webview
-    if (messageLogger) {
-        messageLogger(message);
-    }
-}
 
 export function setLogger(logger: (message: string) => void) {
     messageLogger = logger;

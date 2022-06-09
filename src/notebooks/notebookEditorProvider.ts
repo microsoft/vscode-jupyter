@@ -4,16 +4,15 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Uri, NotebookData, NotebookCellData, NotebookCellKind } from 'vscode';
+import { Uri, NotebookData, NotebookCellData, NotebookCellKind, NotebookEditor, window } from 'vscode';
 import { IVSCodeNotebook } from '../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../platform/common/constants';
+import { JupyterNotebookView, PYTHON_LANGUAGE } from '../platform/common/constants';
 import '../platform/common/extensions';
 import { Resource } from '../platform/common/types';
 import { getResourceType } from '../platform/common/utils';
 import { getComparisonKey } from '../platform/vscode-path/resources';
 import { captureTelemetry } from '../telemetry';
 import { Telemetry, defaultNotebookFormat } from '../webviews/webview-side/common/constants';
-import { JupyterNotebookView } from './constants';
 import { IEmbedNotebookEditorProvider, INotebookEditorProvider } from './types';
 import { getOSType, OSType } from '../platform/common/utils/platform';
 
@@ -28,10 +27,6 @@ import { getOSType, OSType } from '../platform/common/utils/platform';
 export class NotebookEditorProvider implements INotebookEditorProvider {
     private providers: Set<IEmbedNotebookEditorProvider> = new Set();
     constructor(@inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook) {}
-    public async open(file: Uri): Promise<void> {
-        const nb = await this.vscodeNotebook.openNotebookDocument(file);
-        await this.vscodeNotebook.showNotebookDocument(nb);
-    }
     @captureTelemetry(Telemetry.CreateNewNotebook, undefined, false)
     public async createNew(options?: { contents?: string; defaultCellLanguage: string }): Promise<void> {
         // contents will be ignored
@@ -78,6 +73,13 @@ export class NotebookEditorProvider implements INotebookEditorProvider {
                 return editor;
             }
         }
+    }
+
+    get activeNotebookEditor(): NotebookEditor | undefined {
+        return (
+            this.findNotebookEditor(window.activeNotebookEditor?.notebook.uri) ||
+            this.findNotebookEditor(window.activeTextEditor?.document.uri)
+        );
     }
 
     findAssociatedNotebookDocument(uri: Uri) {

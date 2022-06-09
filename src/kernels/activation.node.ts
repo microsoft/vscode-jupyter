@@ -5,13 +5,13 @@
 
 import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
-import { isJupyterNotebook } from '../notebooks/helpers';
 import { IExtensionSingleActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { IVSCodeNotebook } from '../platform/common/application/types';
 import { Telemetry, JupyterDaemonModule } from '../platform/common/constants';
 import { IPythonExecutionFactory, IPythonDaemonExecutionService } from '../platform/common/process/types.node';
 import { IDisposableRegistry } from '../platform/common/types';
+import { isJupyterNotebook } from '../platform/common/utils';
 import { debounceAsync, swallowExceptions } from '../platform/common/utils/decorators';
 import { sendTelemetryEvent } from '../telemetry';
 import { JupyterInterpreterService } from './jupyter/interpreter/jupyterInterpreterService.node';
@@ -38,20 +38,20 @@ export class Activation implements IExtensionSingleActivationService {
             return;
         }
         this.notebookOpened = true;
-        void this.PreWarmDaemonPool();
+        this.PreWarmDaemonPool().ignoreErrors();
         sendTelemetryEvent(Telemetry.OpenNotebookAll);
 
         if (!this.rawSupported.isSupported && this.extensionChecker.isPythonExtensionInstalled) {
             // Warm up our selected interpreter for the extension
-            void this.jupyterInterpreterService.setInitialInterpreter();
+            this.jupyterInterpreterService.setInitialInterpreter().ignoreErrors();
         }
     }
 
     private onDidChangeInterpreter() {
         if (this.notebookOpened && !this.rawSupported.isSupported && this.extensionChecker.isPythonExtensionInstalled) {
             // Warm up our selected interpreter for the extension
-            void this.jupyterInterpreterService.setInitialInterpreter();
-            void this.PreWarmDaemonPool();
+            this.jupyterInterpreterService.setInitialInterpreter().ignoreErrors();
+            this.PreWarmDaemonPool().ignoreErrors();
         }
     }
 

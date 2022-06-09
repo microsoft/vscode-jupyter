@@ -206,7 +206,12 @@ module.exports = {
         'no-useless-constructor': 'off',
         '@typescript-eslint/no-useless-constructor': 'error',
         '@typescript-eslint/no-var-requires': 'off',
-        '@typescript-eslint/no-floating-promises': 'error',
+        '@typescript-eslint/no-floating-promises': [
+            'error',
+            {
+                ignoreVoid: false
+            }
+        ],
 
         // Other rules
         'class-methods-use-this': 'off',
@@ -265,6 +270,7 @@ module.exports = {
         ],
         'react/jsx-uses-vars': 'error',
         'react/jsx-uses-react': 'error',
+        'no-restricted-imports': ['error', { paths: ['lodash', 'rxjs', 'lodash/noop', 'rxjs/util/noop'] }],
         'import/no-restricted-paths': [
             'error',
             {
@@ -297,8 +303,14 @@ module.exports = {
                     {
                         target: './src/notebooks/**/*.ts',
                         from: './src/interactive-window/**/*.ts',
-                        message: 'Importing modules from ./src/interactive-window into ./src/notebooks code is not allowed.'
+                        message:
+                            'Importing modules from ./src/interactive-window into ./src/notebooks code is not allowed.'
                     },
+                    {
+                        target: './src/kernels/**/*.ts',
+                        from: './src/notebooks/**/*.ts',
+                        message: 'Importing modules from ./src/notebooks into ./src/kernels code is not allowed.'
+                    }
                 ]
             }
         ],
@@ -308,6 +320,18 @@ module.exports = {
         'local-rules/dont-use-filename': ['error'],
         strict: 'off'
     },
+    overrides: [
+        {
+            files: ['gulpfile.js', 'build/**/*.js'],
+            rules: {
+                'local-rules/node-imports': ['off'],
+                'local-rules/dont-use-process': ['off'],
+                'local-rules/dont-use-fspath': ['off'],
+                'local-rules/dont-use-filename': ['off'],
+                'import/no-restricted-paths': ['off']
+            }
+        }
+    ],
     settings: {
         'import/extensions': ['.ts', '.tsx', '.d.ts', '.js', '.jsx'],
         'import/external-module-folders': ['node_modules', 'node_modules/@types'],

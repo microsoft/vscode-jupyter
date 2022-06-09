@@ -2,10 +2,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { assert } from 'chai';
 import * as vscode from 'vscode';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { traceInfo } from '../../platform/logging';
-import { noop } from 'lodash';
 import { IPythonApiProvider } from '../../platform/api/types';
 import { IJupyterSettings, Resource } from '../../platform/common/types';
 import { InteractiveWindow } from '../../interactive-window/interactiveWindow';
@@ -19,8 +19,11 @@ import {
 import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../interactive-window/types';
 import { Commands } from '../../platform/common/constants';
-import { sleep } from '../core';
+import { noop, sleep } from '../core';
 import { arePathsSame } from '../../platform/common/platform/fileUtils';
+import { IS_REMOTE_NATIVE_TEST } from '../constants';
+import { isWeb } from '../../platform/common/utils/misc';
+import { INotebookControllerManager } from '../../notebooks/types';
 
 export async function openNotebook(ipynbFile: vscode.Uri) {
     traceInfo(`Opening notebook ${getFilePath(ipynbFile)}`);
@@ -134,7 +137,8 @@ export async function submitFromPythonFile(
         untitledPythonFile.uri
     )) as InteractiveWindow;
     await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0).catch(noop);
-    await waitForInteractiveWindow(activeInteractiveWindow);
+    const notebook = await waitForInteractiveWindow(activeInteractiveWindow);
+    await verifySelectedControllerIsRemoteForRemoteTests(notebook);
     return { activeInteractiveWindow, untitledPythonFile };
 }
 
@@ -271,4 +275,26 @@ export async function waitForCodeLenses(document: vscode.Uri, command: string) {
     );
 
     return codeLenses;
+}
+
+export async function verifySelectedControllerIsRemoteForRemoteTests(notebook?: vscode.NotebookDocument) {
+    if (!IS_REMOTE_NATIVE_TEST() || !isWeb()) {
+        return;
+    }
+    notebook = notebook || vscode.window.activeNotebookEditor!.notebook;
+    const api = await initialize();
+    const controller = api.serviceContainer
+        .get<INotebookControllerManager>(INotebookControllerManager)
+        .getSelectedNotebookController(notebook);
+    if (!controller) {
+        return;
+    }
+    if (
+        controller.connection.kind !== 'connectToLiveRemoteKernel' &&
+        controller.connection.kind !== 'startUsingRemoteKernelSpec'
+    ) {
+        assert.fail(
+            `Notebook Controller is not a remote controller, it is ${controller.connection.kind}:${controller.id}`
+        );
+    }
 }

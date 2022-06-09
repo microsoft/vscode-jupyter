@@ -20,7 +20,7 @@ import {
 import { IDocumentManager } from '../../platform/common/application/types';
 import { ICellRange, IConfigurationService, IDisposable, Resource } from '../../platform/common/types';
 import { chainable } from '../../platform/common/utils/decorators';
-import { isUri } from '../../platform/common/utils/misc';
+import { isUri, noop } from '../../platform/common/utils/misc';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../platform/terminals/types';
@@ -360,23 +360,25 @@ export class CodeWatcher implements ICodeWatcher {
         const cellDelineator = this.getDefaultCellMarker(editor.document.uri);
 
         if (editor) {
-            void editor.edit((editBuilder) => {
-                let lastCell = true;
+            editor
+                .edit((editBuilder) => {
+                    let lastCell = true;
 
-                for (let i = editor.selection.end.line + 1; i < editor.document.lineCount; i += 1) {
-                    if (cellMatcher.isCell(editor.document.lineAt(i).text)) {
-                        lastCell = false;
-                        index = i;
-                        editBuilder.insert(new Position(i, 0), `${cellDelineator}\n\n`);
-                        break;
+                    for (let i = editor.selection.end.line + 1; i < editor.document.lineCount; i += 1) {
+                        if (cellMatcher.isCell(editor.document.lineAt(i).text)) {
+                            lastCell = false;
+                            index = i;
+                            editBuilder.insert(new Position(i, 0), `${cellDelineator}\n\n`);
+                            break;
+                        }
                     }
-                }
 
-                if (lastCell) {
-                    index = editor.document.lineCount;
-                    editBuilder.insert(new Position(editor.document.lineCount, 0), `\n${cellDelineator}\n`);
-                }
-            });
+                    if (lastCell) {
+                        index = editor.document.lineCount;
+                        editBuilder.insert(new Position(editor.document.lineCount, 0), `\n${cellDelineator}\n`);
+                    }
+                })
+                .then(noop, noop);
         }
 
         // Run the cell that matches the current cursor position, and then advance to the new cell
@@ -451,10 +453,12 @@ export class CodeWatcher implements ICodeWatcher {
             new Position(startLineNumber, startCharacterNumber),
             new Position(endLineNumber, endCharacterNumber)
         );
-        void editor.edit((editBuilder) => {
-            editBuilder.replace(cellExtendedRange, '');
-            this.codeLensUpdatedEvent.fire();
-        });
+        editor
+            .edit((editBuilder) => {
+                editBuilder.replace(cellExtendedRange, '');
+                this.codeLensUpdatedEvent.fire();
+            })
+            .then(noop, noop);
     }
 
     @captureTelemetry(Telemetry.SelectCell)
@@ -747,25 +751,27 @@ export class CodeWatcher implements ICodeWatcher {
                 ? `${cellMarker} [markdown]${definitionExtra}` // code -> markdown
                 : `${cellMarker}${definitionExtra}`; // markdown -> code
 
-        void editor.edit(async (editBuilder) => {
-            editBuilder.replace(definitionLine.range, newDefinitionText);
-            cell.cell_type = toCellType;
-            if (cell.range.start.line < cell.range.end.line) {
-                editor.selection = new Selection(
-                    cell.range.start.line + 1,
-                    0,
-                    cell.range.end.line,
-                    cell.range.end.character
-                );
-                // ensure all lines in markdown cell have a comment.
-                // these are not included in the test because it's unclear
-                // how TypeMoq works with them.
-                void commands.executeCommand('editor.action.removeCommentLine');
-                if (toCellType === 'markdown') {
-                    void commands.executeCommand('editor.action.addCommentLine');
+        editor
+            .edit(async (editBuilder) => {
+                editBuilder.replace(definitionLine.range, newDefinitionText);
+                cell.cell_type = toCellType;
+                if (cell.range.start.line < cell.range.end.line) {
+                    editor.selection = new Selection(
+                        cell.range.start.line + 1,
+                        0,
+                        cell.range.end.line,
+                        cell.range.end.character
+                    );
+                    // ensure all lines in markdown cell have a comment.
+                    // these are not included in the test because it's unclear
+                    // how TypeMoq works with them.
+                    commands.executeCommand('editor.action.removeCommentLine').then(noop, noop);
+                    if (toCellType === 'markdown') {
+                        commands.executeCommand('editor.action.addCommentLine').then(noop, noop);
+                    }
                 }
-            }
-        });
+            })
+            .then(noop, noop);
     }
 
     private async moveCellsDirection(directionUp: boolean): Promise<boolean> {
@@ -944,10 +950,12 @@ export class CodeWatcher implements ICodeWatcher {
         const cellStartPosition = new Position(line, 0);
         const newCursorPosition = new Position(line + 1, 0);
 
-        void editor.edit((editBuilder) => {
-            editBuilder.insert(cellStartPosition, newCell);
-            this.codeLensUpdatedEvent.fire();
-        });
+        editor
+            .edit((editBuilder) => {
+                editBuilder.insert(cellStartPosition, newCell);
+                this.codeLensUpdatedEvent.fire();
+            })
+            .then(noop, noop);
 
         editor.selection = new Selection(newCursorPosition, newCursorPosition);
     }

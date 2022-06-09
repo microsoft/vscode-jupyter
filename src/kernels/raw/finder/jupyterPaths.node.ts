@@ -16,6 +16,7 @@ import { traceDecoratorVerbose } from '../../../platform/logging';
 import { getUserHomeDir } from '../../../platform/common/utils/platform.node';
 import { fsPathToUri } from '../../../platform/vscode-path/utils';
 import { ResourceSet } from '../../../platform/vscode-path/map';
+import { noop } from '../../../platform/common/utils/misc';
 
 const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
@@ -79,9 +80,11 @@ export class JupyterPaths {
                     }
                 }
             })();
-        void this.cachedKernelSpecRootPath.then((value) => {
-            void this.updateCachedRootPath(value);
-        });
+        this.cachedKernelSpecRootPath
+            .then((value) => {
+                return this.updateCachedRootPath(value);
+            })
+            .ignoreErrors();
         if (this.getCachedRootPath()) {
             return this.getCachedRootPath();
         }
@@ -187,14 +190,14 @@ export class JupyterPaths {
 
                 return Array.from(paths);
             })();
-        void this.cachedJupyterPaths.then((value) => {
+        this.cachedJupyterPaths.then((value) => {
             if (value.length > 0) {
-                void this.updateCachedPaths(value);
+                this.updateCachedPaths(value).then(noop, noop);
             }
             if (this.getCachedPaths().length > 0) {
                 return this.getCachedPaths();
             }
-        });
+        }, noop);
         return this.cachedJupyterPaths;
     }
 
@@ -217,9 +220,9 @@ export class JupyterPaths {
 
     private updateCachedRootPath(path: Uri | undefined) {
         if (path) {
-            void this.globalState.update(CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH, path.toString());
+            this.globalState.update(CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH, path.toString()).then(noop, noop);
         } else {
-            void this.globalState.update(CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH, undefined);
+            this.globalState.update(CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH, undefined).then(noop, noop);
         }
     }
 }

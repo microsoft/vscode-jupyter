@@ -13,7 +13,7 @@ import { DebuggingTelemetry } from '../../kernels/debugger/constants';
 import { traceInfoIfCI, traceVerbose } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
 import { Commands } from '../../platform/common/constants';
-import { cellDebugSetup } from './helper';
+import { cellDebugSetup } from '../../kernels/debugger/helper';
 import { IDebuggingDelegate, IKernelDebugAdapter, KernelDebugMode } from '../../kernels/debugger/types';
 
 export class RunByLineController implements IDebuggingDelegate {
@@ -36,14 +36,14 @@ export class RunByLineController implements IDebuggingDelegate {
             return;
         }
 
-        void this.debugAdapter.stepIn(this.lastPausedThreadId);
+        this.debugAdapter.stepIn(this.lastPausedThreadId).then(noop, noop);
     }
 
     public stop(): void {
         traceInfoIfCI(`RunbylineController::stop()`);
         // When debugpy gets stuck, running a cell fixes it and allows us to start another debugging session
-        void this.kernel.executeHidden('pass');
-        void this.debugAdapter.disconnect();
+        this.kernel.executeHidden('pass').then(noop, noop);
+        this.debugAdapter.disconnect().then(noop, noop);
     }
 
     public getMode(): KernelDebugMode {
@@ -75,7 +75,7 @@ export class RunByLineController implements IDebuggingDelegate {
 
     private async handleStoppedEvent(threadId: number): Promise<boolean> {
         if (await this.shouldStepIn(threadId)) {
-            void this.debugAdapter.stepIn(threadId);
+            this.debugAdapter.stepIn(threadId).then(noop, noop);
             return true;
         }
 
@@ -134,14 +134,16 @@ export class RunByLineController implements IDebuggingDelegate {
             // Open variables view
             const settings = this.settings.getSettings();
             if (settings.showVariableViewWhenDebugging) {
-                void this.commandManager.executeCommand(Commands.OpenVariableView);
+                this.commandManager.executeCommand(Commands.OpenVariableView).then(noop, noop);
             }
         }
 
         // Run cell
-        void this.commandManager.executeCommand('notebook.cell.execute', {
-            ranges: [{ start: this.debugCell.index, end: this.debugCell.index + 1 }],
-            document: this.debugCell.document.uri
-        });
+        this.commandManager
+            .executeCommand('notebook.cell.execute', {
+                ranges: [{ start: this.debugCell.index, end: this.debugCell.index + 1 }],
+                document: this.debugCell.document.uri
+            })
+            .then(noop, noop);
     }
 }

@@ -46,6 +46,7 @@ import {
 } from '../../logging';
 import { TraceOptions } from '../../logging/types';
 import { serializePythonEnvironment } from '../../api/pythonApi';
+import { noop } from '../utils/misc';
 
 const ENVIRONMENT_PREFIX = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const ENVIRONMENT_TIMEOUT = 30000;
@@ -173,12 +174,18 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         );
 
         await Promise.race([envVariablesOurSelves.promise, envVariablesFromPython.promise]);
-        void envVariablesFromPython.promise.then(() =>
-            traceVerbose(`Got env vars with python ${getDisplayPath(interpreter?.uri)} in ${stopWatch.elapsedTime}ms`)
-        );
-        void envVariablesOurSelves.promise.then(() =>
-            traceVerbose(`Got env vars ourselves ${getDisplayPath(interpreter?.uri)} in ${stopWatch.elapsedTime}ms`)
-        );
+        envVariablesFromPython.promise
+            .then(() =>
+                traceVerbose(
+                    `Got env vars with python ${getDisplayPath(interpreter?.uri)} in ${stopWatch.elapsedTime}ms`
+                )
+            )
+            .catch(noop);
+        envVariablesOurSelves.promise
+            .then(() =>
+                traceVerbose(`Got env vars ourselves ${getDisplayPath(interpreter?.uri)} in ${stopWatch.elapsedTime}ms`)
+            )
+            .catch(noop);
         // If this is a conda environment and we get empty env variables from the Python extension,
         // Then try our approach.
         // This could happen when Python extension fails to get the activated env variables.
@@ -214,7 +221,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     ): Promise<NodeJS.ProcessEnv | undefined> {
         const stopWatch = new StopWatch();
         // We'll need this later.
-        void this.envVarsService.getEnvironmentVariables(resource);
+        this.envVarsService.getEnvironmentVariables(resource).catch(noop);
 
         // Check cache.
         let reasonForFailure:
@@ -269,10 +276,10 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         );
         if (env && stopWatch.elapsedTime > EnvironmentActivationService.minTimeAfterWhichWeShouldCacheEnvVariables) {
             const customEnvVariablesHash = getTelemetrySafeHashedString(JSON.stringify(customEnvVars));
-            void this.storeActivatedEnvVariablesInCache(resource, interpreter, env, customEnvVariablesHash);
+            this.storeActivatedEnvVariablesInCache(resource, interpreter, env, customEnvVariablesHash).catch(noop);
         } else if (this.memento.get(key)) {
             // Remove it from cache (if it exists).
-            void this.memento.update(key, undefined);
+            this.memento.update(key, undefined).then(noop, noop);
         }
         if (env && customEnvVars) {
             env = {
@@ -724,7 +731,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     return;
                 }
                 traceInfo(`Activation Commands received ${activationCommands} for shell ${shellInfo.shell}`);
-                void this.memento.update(key, activationCommands);
+                this.memento.update(key, activationCommands).then(noop, noop);
                 return activationCommands;
             } catch (ex) {
                 traceError(`Failed to get env activation commands for ${getDisplayPath(interpreter.uri)}`, ex);

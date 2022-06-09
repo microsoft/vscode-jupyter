@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import type * as nbformat from '@jupyterlab/nbformat';
 import {
     Disposable,
     EventEmitter,
@@ -12,9 +13,11 @@ import {
     NotebookController,
     NotebookControllerAffinity,
     NotebookDocument,
+    NotebookEdit,
     NotebookEditor,
     NotebookRendererScript,
-    Uri
+    Uri,
+    WorkspaceEdit
 } from 'vscode';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import {
@@ -24,7 +27,7 @@ import {
     IDocumentManager,
     IApplicationShell
 } from '../../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { InteractiveWindowView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import {
     traceInfoIfCI,
@@ -53,7 +56,6 @@ import {
 import { IServiceContainer } from '../../platform/ioc/types';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { Telemetry, Commands } from '../../webviews/webview-side/common/constants';
-import { endCellAndDisplayErrorsInCell } from '../../platform/errors/errorUtils';
 import { IDataScienceErrorHandler, WrappedError } from '../../platform/errors/types';
 import { IPyWidgetMessages } from '../../platform/messageTypes';
 import { NotebookCellLanguageService } from '../../intellisense/cellLanguageService';
@@ -74,17 +76,25 @@ import {
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../../kernels/types';
-import { InteractiveWindowView } from '../constants';
-import { CellExecutionCreator } from '../execution/cellExecutionCreator';
-import { isJupyterNotebook, traceCellMessage, updateNotebookDocumentMetadata } from '../helpers';
 import { KernelDeadError } from '../../platform/errors/kernelDeadError';
 import { DisplayOptions } from '../../kernels/displayOptions';
-import { sendNotebookOrKernelLanguageTelemetry } from '../../platform/common/utils';
+import {
+    getNotebookMetadata,
+    isJupyterNotebook,
+    sendNotebookOrKernelLanguageTelemetry
+} from '../../platform/common/utils';
 import { ConsoleForegroundColors, TraceOptions } from '../../platform/logging/types';
-import { KernelConnector } from '../../kernels/kernelConnector';
+import { KernelConnector } from './kernelConnector';
 import { IVSCodeNotebookController } from './types';
 import { ILocalResourceUriConverter } from '../../kernels/ipywidgets-message-coordination/types';
 import { isCancellationError } from '../../platform/common/cancellation';
+import { CellExecutionCreator } from '../../kernels/execution/cellExecutionCreator';
+import {
+    traceCellMessage,
+    endCellAndDisplayErrorsInCell,
+    updateNotebookMetadata
+} from '../../kernels/execution/helpers';
+import { KernelMessage } from '@jupyterlab/services';
 
 export class VSCodeNotebookController implements Disposable, IVSCodeNotebookController {
     private readonly _onNotebookControllerSelected: EventEmitter<{
@@ -269,7 +279,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         }
 
         if (pyVersion.major < 3 || (pyVersion.major === 3 && pyVersion.minor <= 5)) {
-            void this.appShell
+            this.appShell
                 .showWarningMessage(
                     DataScience.warnWhenSelectingKernelWithUnSupportedPythonVersion(),
                     Common.learnMore()
@@ -279,7 +289,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                         return;
                     }
                     return this.browser.launch('https://aka.ms/jupyterUnSupportedPythonKernelVersions');
-                });
+                }, noop);
         }
     }
     private async onDidChangeSelectedNotebooks(event: { notebook: NotebookDocument; selected: boolean }) {
@@ -484,7 +494,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             }
             if (!kernelStarted) {
                 exec.start();
-                void exec.clearOutput(cell);
+                exec.clearOutput(cell).then(noop, noop);
             }
             const errorHandler = this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
             ex = WrappedError.unwrap(ex);
@@ -632,6 +642,37 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             // Startup could fail due to missing dependencies or the like.
             this.connectToKernel(document, new DisplayOptions(true)).catch(noop);
         }
+    }
+}
+
+async function updateNotebookDocumentMetadata(
+    document: NotebookDocument,
+    editManager: IDocumentManager,
+    kernelConnection?: KernelConnectionMetadata,
+    kernelInfo?: Partial<KernelMessage.IInfoReplyMsg['content']>
+) {
+    let metadata = getNotebookMetadata(document) || { orig_nbformat: 3 };
+    const { changed } = updateNotebookMetadata(metadata, kernelConnection, kernelInfo);
+    if (changed) {
+        const edit = new WorkspaceEdit();
+        // Create a clone.
+        const docMetadata = JSON.parse(
+            JSON.stringify(
+                (document.metadata as {
+                    custom?: Exclude<Partial<nbformat.INotebookContent>, 'cells'>;
+                }) || { custom: {} }
+            )
+        );
+
+        docMetadata.custom = docMetadata.custom || {};
+        docMetadata.custom.metadata = metadata;
+        edit.set(document.uri, [
+            NotebookEdit.updateNotebookMetadata({
+                ...(document.metadata || {}),
+                custom: docMetadata.custom
+            })
+        ]);
+        await editManager.applyEdit(edit);
     }
 }
 

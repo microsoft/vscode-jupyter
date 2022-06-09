@@ -21,11 +21,10 @@ import { ICellRange, IConfigurationService, IDisposableRegistry, Resource } from
 import * as localize from '../../platform/common/utils/localize';
 import { getInteractiveCellMetadata } from '../helpers';
 import { IKernelProvider } from '../../kernels/types';
-import { InteractiveWindowView } from '../../notebooks/constants';
-import { CodeLensCommands, Commands } from '../../platform/common/constants';
+import { CodeLensCommands, Commands, InteractiveWindowView } from '../../platform/common/constants';
 import { generateCellRangesFromDocument } from './cellFactory';
 import { ICodeLensFactory, IGeneratedCode, IGeneratedCodeStorageFactory } from './types';
-import { getAssociatedNotebookDocument } from '../../notebooks/controllers/kernelSelector';
+import { getAssociatedNotebookDocument } from '../../kernels/helpers';
 
 type CodeLensCacheData = {
     cachedDocumentVersion: number | undefined;

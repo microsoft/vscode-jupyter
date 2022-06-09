@@ -35,14 +35,10 @@ import {
 } from './types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose, traceWarning } from '../../platform/logging';
-import {
-    assertIsDebugConfig,
-    isShortNamePath,
-    shortNameMatchesLongName,
-    getMessageSourceAndHookIt
-} from '../../notebooks/debugger/helper';
+import { assertIsDebugConfig, isShortNamePath, shortNameMatchesLongName, getMessageSourceAndHookIt } from './helper';
 import { IDisposable } from '../../platform/common/types';
 import { executeSilently } from '../helpers';
+import { noop } from '../../platform/common/utils/misc';
 
 /**
  * For info on the custom requests implemented by jupyter see:
@@ -89,7 +85,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
             this.kernel.addEventHook(this.kernelEventHook);
             this.disposables.push(
                 this.kernel.onDisposed(() => {
-                    void debug.stopDebugging(this.session);
+                    debug.stopDebugging(this.session).then(noop, noop);
                     this.endSession.fire(this.session);
                     sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'onKernelDisposed' });
                 })
@@ -106,7 +102,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
                         !this.disconnected
                     ) {
                         sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'normally' });
-                        void this.disconnect();
+                        this.disconnect().ignoreErrors();
                     }
                 },
                 this,
@@ -120,7 +116,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
                     e.contentChanges.forEach((change) => {
                         change.removedCells.forEach((cell: NotebookCell) => {
                             if (cell === this.debugCell) {
-                                void this.disconnect();
+                                this.disconnect().ignoreErrors();
                             }
                         });
                     });

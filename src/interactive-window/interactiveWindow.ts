@@ -30,7 +30,7 @@ import {
 } from '../platform/common/application/types';
 import { Commands, defaultNotebookFormat, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants';
 import '../platform/common/extensions';
-import { traceInfoIfCI } from '../platform/logging';
+import { traceError, traceInfoIfCI } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
 import * as uuid from 'uuid/v4';
 
@@ -52,9 +52,6 @@ import { DataScience } from '../platform/common/utils/localize';
 import { createDeferred, Deferred } from '../platform/common/utils/async';
 import { IServiceContainer } from '../platform/ioc/types';
 import { SysInfoReason } from '../platform/messageTypes';
-import { chainWithPendingUpdates } from '../notebooks/execution/notebookUpdater';
-import { updateNotebookMetadata } from '../notebooks/helpers';
-import { CellExecutionCreator } from '../notebooks/execution/cellExecutionCreator';
 import { createOutputWithErrorMessageForDisplay } from '../platform/errors/errorUtils';
 import { INotebookExporter } from '../kernels/jupyter/types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
@@ -66,7 +63,7 @@ import { generateInteractiveCode } from './helpers';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { DisplayOptions } from '../kernels/displayOptions';
 import { getInteractiveCellMetadata } from './helpers';
-import { KernelConnector } from '../kernels/kernelConnector';
+import { KernelConnector } from '../notebooks/controllers/kernelConnector';
 import { getFilePath } from '../platform/common/platform/fs-paths';
 import {
     ICodeGeneratorFactory,
@@ -74,6 +71,9 @@ import {
     InteractiveCellMetadata
 } from './editor-integration/types';
 import { IInteractiveWindowDebuggingManager } from '../kernels/debugger/types';
+import { CellExecutionCreator } from '../kernels/execution/cellExecutionCreator';
+import { updateNotebookMetadata } from '../kernels/execution/helpers';
+import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
 
 export class InteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
@@ -178,6 +178,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             return this.currentKernelInfo.kernel.promise;
         }
         const kernelPromise = createDeferred<IKernel>();
+        kernelPromise.promise.catch(noop);
         this.currentKernelInfo = { controller, metadata, kernel: kernelPromise };
 
         const sysInfoCell = this.insertSysInfoMessage(metadata, SysInfoReason.Start);
@@ -217,7 +218,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 if (ev === 'willRestart' && this.notebookDocument && this.currentKernelInfo.metadata) {
                     this._insertSysInfoPromise = undefined;
                     // If we're about to restart, insert a 'restarting' message as it happens
-                    void this.insertSysInfoMessage(this.currentKernelInfo.metadata, SysInfoReason.Restart);
+                    this.insertSysInfoMessage(this.currentKernelInfo.metadata, SysInfoReason.Restart).then(noop, noop);
                 }
             };
             // Hook pre interrupt so we can stick in a message
@@ -234,6 +235,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                     );
                     try {
                         await this.runInitialization(kernel, this.owner);
+                    } catch (ex) {
+                        traceError(`Failed to run initialization after restarting`);
                     } finally {
                         this.finishSysInfoMessage(kernel, cellPromise, SysInfoReason.Restart);
                     }
@@ -439,8 +442,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                 execution.start(notebookCell.executionSummary?.timing?.startTime);
             }
             execution.executionOrder = notebookCell.executionSummary?.executionOrder;
-            void execution.appendOutput(output);
-            void execution.end(false, notebookCell.executionSummary?.timing?.endTime);
+            execution.appendOutput(output).then(noop, noop);
+            execution.end(false, notebookCell.executionSummary?.timing?.endTime);
         }
     }
 
@@ -529,18 +532,22 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             promise.catch((ex) => {
                 // If execution fails due to a failure in another cell, then log that error against the cell.
                 if (ex instanceof InteractiveCellResultError) {
-                    void notebookCellPromise.then((cell) => {
-                        if (ex.cell !== cell) {
-                            void this.addErrorMessage(DataScience.cellStopOnErrorMessage(), cell);
-                        }
-                    });
+                    notebookCellPromise
+                        .then((cell) => {
+                            if (ex.cell !== cell) {
+                                this.addErrorMessage(DataScience.cellStopOnErrorMessage(), cell).then(noop, noop);
+                            }
+                        })
+                        .catch(noop);
                 } else {
-                    void notebookCellPromise.then((cell) =>
-                        // If our cell result was a failure show an error
-                        this.errorHandler
-                            .getErrorMessageForDisplayInCell(ex, 'execution')
-                            .then((message) => this.addErrorMessage(message, cell))
-                    );
+                    notebookCellPromise
+                        .then((cell) =>
+                            // If our cell result was a failure show an error
+                            this.errorHandler
+                                .getErrorMessageForDisplayInCell(ex, 'execution')
+                                .then((message) => this.addErrorMessage(message, cell))
+                        )
+                        .catch(noop);
                 }
             });
             return promise;
@@ -561,6 +568,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         traceInfoIfCI('InteractiveWindow.ts.createExecutionPromise.start');
         // Kick of starting kernels early.
         const kernelPromise = this.startKernel();
+        kernelPromise.then(noop, noop);
         const cell = await notebookCellPromise;
 
         let success = true;
