@@ -19,7 +19,7 @@ export function setupCoverage() {
     const nyc = new NYC({
         cwd: path.join(EXTENSION_ROOT_DIR_FOR_TESTS),
         extension: ['.ts'],
-        include: ['**/src/platform/**/*.ts', '**/out/platform/**/*.js'],
+        include: ['**/src/**/*.ts', '**/out/**/*.js'],
         exclude: ['**/test/**', '.vscode-test/**', '**/ipywidgets/**', '**/node_modules/**'],
         reporter: reports,
         'report-dir': path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'coverage'),
