@@ -8,7 +8,7 @@ The Jupyter Extension includes the Jupyter Keymaps and the Jupyter Notebook Rend
 | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | [File an issue](https://github.com/microsoft/vscode-jupyter/issues/new/choose)  | Report problems and suggest enhancements                                         |
 | [Go to docs](https://code.visualstudio.com/docs/datascience/jupyter-notebooks)  | Jupyter extension and data science in VS Code documentation, tutorials, and more |
-| [Discussions](https://code.visualstudio.com/docs/datascience/jupyter-notebooks) | Post questions, and engage in community discussions                              |
+| [Discussions](https://github.com/microsoft/vscode-jupyter/discussions) | Post questions, and engage in community discussions                              |
 
 ## Notebook support
 
