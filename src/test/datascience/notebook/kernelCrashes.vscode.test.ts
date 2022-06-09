@@ -39,8 +39,8 @@ import { sleep } from '../../core';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
 import { Uri, window, workspace } from 'vscode';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
-import { INotebookEditorProvider } from '../../../notebooks/types';
 import { translateCellErrorOutput } from '../../../kernels/execution/helpers';
+import { openAndShowNotebook } from '../../../platform/common/utils/notebooks';
 
 const codeToKillKernel = dedent`
 import IPython
@@ -350,7 +350,6 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
         });
         async function createAndOpenTemporaryNotebookForKernelCrash(nbFileName: string) {
             const { serviceContainer } = await initialize();
-            const editorProvider = serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
             const vscodeNotebook = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
             const nbFile = path.join(
                 EXTENSION_ROOT_DIR_FOR_TESTS,
@@ -360,7 +359,7 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
             fs.writeFileSync(nbFile, '');
             disposables.push({ dispose: () => fs.unlinkSync(nbFile) });
             // Open a python notebook and use this for all tests in this test suite.
-            await editorProvider.open(Uri.file(nbFile));
+            await openAndShowNotebook(Uri.file(nbFile));
             assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
             await waitForKernelToGetAutoSelected();
         }

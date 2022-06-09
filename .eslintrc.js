@@ -305,6 +305,11 @@ module.exports = {
                         from: './src/interactive-window/**/*.ts',
                         message:
                             'Importing modules from ./src/interactive-window into ./src/notebooks code is not allowed.'
+                    },
+                    {
+                        target: './src/kernels/**/*.ts',
+                        from: './src/notebooks/**/*.ts',
+                        message: 'Importing modules from ./src/notebooks into ./src/kernels code is not allowed.'
                     }
                 ]
             }
