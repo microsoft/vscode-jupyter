@@ -103,7 +103,11 @@ const config = {
                 platform: JSON.stringify('web')
             }
         }),
-        new CleanTerminalPlugin()
+        new CleanTerminalPlugin(),
+        new webpack.IgnorePlugin({
+            resourceRegExp: /^\.\/locale$/,
+            contextRegExp: /moment$/,
+        })
     ],
     resolve: {
         extensions: ['.ts', '.js'],
