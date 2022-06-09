@@ -4,7 +4,7 @@ import TelemetryReporter from '@vscode/extension-telemetry/lib/telemetryReporter
 import { IS_CI_SERVER } from './ciConstants.node';
 import { extensions } from 'vscode';
 import { sleep } from '../platform/common/utils/async';
-import { traceVerbose } from '../platform/logging';
+import { traceInfoIfCI } from '../platform/logging';
 
 let telemetryReporter: TelemetryReporter;
 
@@ -48,7 +48,7 @@ export const rootHooks: Mocha.RootHookObject = {
             dimensions = { ...dimensions, commitHash: process.env.GIT_SHA };
         }
 
-        traceVerbose(`Sending telemetry event ${Telemetry.RunTest} with dimensions ${dimensions}`);
+        traceInfoIfCI(`Sending telemetry event ${Telemetry.RunTest} with dimensions ${dimensions}`);
         telemetryReporter.sendDangerousTelemetryEvent(Telemetry.RunTest, dimensions, measures);
     },
     afterAll: async () => {

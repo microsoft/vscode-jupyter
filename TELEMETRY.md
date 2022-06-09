@@ -8063,7 +8063,7 @@ No description provided
             dimensions = { ...dimensions, commitHash: process.env.GIT_SHA };
         }
 
-        traceVerbose(`Sending telemetry event ${Telemetry.RunTest} with dimensions ${dimensions}`);
+        traceInfoIfCI(`Sending telemetry event ${Telemetry.RunTest} with dimensions ${dimensions}`);
         telemetryReporter.sendDangerousTelemetryEvent(Telemetry.RunTest, dimensions, measures);
     },
     afterAll: async () => {
@@ -8074,7 +8074,7 @@ No description provided
 ```typescript
         }
 
-        traceVerbose(`Sending telemetry event ${Telemetry.RunTest} with dimensions ${dimensions}`);
+        traceInfoIfCI(`Sending telemetry event ${Telemetry.RunTest} with dimensions ${dimensions}`);
         telemetryReporter.sendDangerousTelemetryEvent(Telemetry.RunTest, dimensions, measures);
     },
     afterAll: async () => {
