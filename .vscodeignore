@@ -112,4 +112,4 @@ typings/**
 types/**
 test-results*
 *.zip
-!nls.*.json
+!**/*nls.*.json
