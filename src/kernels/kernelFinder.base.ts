@@ -9,7 +9,7 @@ import { createDeferredFromPromise } from '../platform/common/utils/async';
 import { noop } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { isArray } from '../platform/common/utils/sysTypes';
-import { traceError, traceDecoratorVerbose } from '../platform/logging';
+import { traceError, traceDecoratorVerbose, traceWarning, traceVerbose } from '../platform/logging';
 import { TraceOptions } from '../platform/logging/types';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
@@ -108,6 +108,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
             })
         ]);
 
+        traceVerbose(`KernelFinder discovered ${localKernels.length} local and ${remoteKernels.length} remote kernels`);
         // Combine the results from local and remote
         return [...localKernels, ...remoteKernels];
     }
@@ -182,6 +183,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
             try {
                 kernels = await kernelsWithoutCachePromise;
             } catch (ex) {
+                traceWarning(`Could not fetch kernels from the ${kind} server, falling back to cache: ${ex}`);
                 // Since fetching the remote kernels failed, we fall back to the cache,
                 // at this point no need to display all of the kernel specs,
                 // Its possible the connection is dead, just display the live kernels we had.
