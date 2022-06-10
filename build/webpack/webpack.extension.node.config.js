@@ -38,6 +38,12 @@ const config = {
                 test: /\.ts$/,
                 use: [
                     {
+                        loader: 'vscode-nls-dev/lib/webpack-loader',
+                        options: {
+                            base: __dirname
+                        }
+                    },
+                    {
                         loader: path.join(__dirname, 'loaders', 'externalizeDependencies.js')
                     }
                 ]
@@ -83,19 +89,6 @@ const config = {
                         loader: 'transform-loader',
                         options: {
                             brfs: true
-                        }
-                    }
-                ]
-            },
-            {
-                enforce: 'post',
-                test: /.js$/,
-                exclude: /node_modules/,
-                use: [
-                    {
-                        loader: 'vscode-nls-dev/lib/webpack-loader',
-                        options: {
-                            base: constants.ExtensionRootDir
                         }
                     }
                 ]
