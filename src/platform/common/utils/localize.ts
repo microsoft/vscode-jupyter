@@ -10,10 +10,6 @@ import { getOSType, OSType } from './platform';
 // This is configuring vscode-nls and saying "I'm bundling translations with webpack and I am not a part of language packs (aka standalone)".
 nls.config({ messageFormat: nls.MessageFormat.bundle, bundleFormat: nls.BundleFormat.standalone });
 
-// TODO: Once vscode-nls supports the web environment, we should:
-// - Only use this nlsLocalize function, but name it `localize`.
-// - Change the signature of the localize properties in this file to not be functions but constants.
-//   - Instead of `Common.bannerLabelYes()`, make them `Common.bannerLabelYes`.
 let localize = nls.loadMessageBundle();
 
 // Embed all known translations so we can use them on the web too
@@ -30,13 +26,16 @@ const packageNlsJsons: Record<string, any> = {
     'zh-tw': require('../../../../package.nls.zh-tw.json')
 };
 
+// TODO: Once vscode-nls supports the web environment, we should:
+// - Remove this function and the conditional afterwards that uses `osType`.
+// - Change the signature of the localize properties in this file to not be functions but constants.
+//   - Instead of `Common.bannerLabelYes()`, make them `Common.bannerLabelYes`.
 export function localizeReplacement(key: string | nls.LocalizeInfo, defaultValue: string): string {
     if (typeof key !== 'string') {
         key = key.key;
     }
     return getString(key as string, defaultValue);
 }
-
 const osType = getOSType();
 if (osType === OSType.Unknown) {
     localize = localizeReplacement;
