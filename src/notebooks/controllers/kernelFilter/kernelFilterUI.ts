@@ -108,7 +108,7 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
                 const hiddenConnections = items
                     .map((item) => item.connection)
                     .filter((item) => !selectedItems.has(item));
-                void this.kernelFilter.storeHiddenKernels(hiddenConnections.map((item) => item));
+                this.kernelFilter.storeHiddenKernels(hiddenConnections.map((item) => item)).then(noop, noop);
                 sendTelemetryEvent(Telemetry.JupyterKernelFilterUsed);
             },
             this,

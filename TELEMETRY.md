@@ -65,7 +65,7 @@ No description provided
                     sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
                         format: ExportFormat.python
                     });
-                    void this.commandManager.executeCommand(Commands.ExportAsPythonScript, sourceDocument, interpreter);
+                    this.commandManager
 ```
 
 
@@ -77,7 +77,7 @@ No description provided
                         sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
                             format: ExportFormat.html
                         });
-                        void this.commandManager.executeCommand(
+                        this.commandManager
 ```
 
 
@@ -89,7 +89,7 @@ No description provided
                         sendTelemetryEvent(Telemetry.ClickedExportNotebookAsQuickPick, undefined, {
                             format: ExportFormat.pdf
                         });
-                        void this.commandManager.executeCommand(
+                        this.commandManager
 ```
 
 </details>
@@ -535,7 +535,7 @@ No description provided
 [src/kernels/debugger/kernelDebugAdapterBase.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/debugger/kernelDebugAdapterBase.ts)
 ```typescript
                 this.kernel.onDisposed(() => {
-                    void debug.stopDebugging(this.session);
+                    debug.stopDebugging(this.session).then(noop, noop);
                     this.endSession.fire(this.session);
                     sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'onKernelDisposed' });
                 })
@@ -1225,7 +1225,7 @@ No properties for event
         } catch (e) {
             traceError(e);
             sendTelemetryEvent(Telemetry.FailedShowDataViewer);
-            void this.appShell.showErrorMessage(localize.DataScience.showDataViewerFail());
+            this.appShell.showErrorMessage(localize.DataScience.showDataViewerFail()).then(noop, noop);
         }
     }
 ```
@@ -1608,9 +1608,9 @@ No description provided
 
 [src/platform/api/apiAccessService.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/apiAccessService.ts)
 ```typescript
-                extensionPermissions.push({ allowed: allow ? 'yes' : 'no', extensionId: info.extensionId });
-                return this.globalState.update(API_ACCESS_GLOBAL_KEY, extensionPermissions);
-            });
+                    return this.globalState.update(API_ACCESS_GLOBAL_KEY, extensionPermissions);
+                })
+                .then(noop, noop);
             sendTelemetryEvent(Telemetry.JupyterKernelApiAccess, undefined, {
                 extensionId: info.extensionId,
                 allowed: allow ? 'yes' : 'no'
@@ -1739,7 +1739,7 @@ No properties for event
 ```typescript
                     .map((item) => item.connection)
                     .filter((item) => !selectedItems.has(item));
-                void this.kernelFilter.storeHiddenKernels(hiddenConnections.map((item) => item));
+                this.kernelFilter.storeHiddenKernels(hiddenConnections.map((item) => item)).then(noop, noop);
                 sendTelemetryEvent(Telemetry.JupyterKernelFilterUsed);
             },
             this,
@@ -1938,9 +1938,9 @@ No properties for event
 
 [src/notebooks/notebookEditorProvider.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/notebookEditorProvider.ts)
 ```typescript
-        const nb = await this.vscodeNotebook.openNotebookDocument(file);
-        await this.vscodeNotebook.showNotebookDocument(nb);
-    }
+export class NotebookEditorProvider implements INotebookEditorProvider {
+    private providers: Set<IEmbedNotebookEditorProvider> = new Set();
+    constructor(@inject(IVSCodeNotebook) private readonly vscodeNotebook: IVSCodeNotebook) {}
     @captureTelemetry(Telemetry.CreateNewNotebook, undefined, false)
     public async createNew(options?: { contents?: string; defaultCellLanguage: string }): Promise<void> {
         // contents will be ignored
@@ -2964,61 +2964,61 @@ No description provided
 
 [src/kernels/variables/pythonVariableRequester.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/variables/pythonVariableRequester.ts)
 ```typescript
-                  {
-                      traceErrors: true,
-                      traceErrorsMessage: 'Failure in execute_request for getDataFrameInfo',
-                      telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-                  }
-              )
-            : [];
+            {
+                traceErrors: true,
+                traceErrorsMessage: 'Failure in execute_request for getDataFrameInfo',
+                telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+            }
+        );
+
 ```
 
 
 [src/kernels/variables/pythonVariableRequester.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/variables/pythonVariableRequester.ts)
 ```typescript
-                  {
-                      traceErrors: true,
-                      traceErrorsMessage: 'Failure in execute_request for getDataFrameRows',
-                      telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-                  }
-              )
-            : [];
+            {
+                traceErrors: true,
+                traceErrorsMessage: 'Failure in execute_request for getDataFrameRows',
+                telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+            }
+        );
+
 ```
 
 
 [src/kernels/variables/pythonVariableRequester.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/variables/pythonVariableRequester.ts)
 ```typescript
-                          {
-                              traceErrors: true,
-                              traceErrorsMessage: 'Failure in execute_request for getVariableProperties',
-                              telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-                          }
-                      )
-                    : [];
+                    {
+                        traceErrors: true,
+                        traceErrorsMessage: 'Failure in execute_request for getVariableProperties',
+                        telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+                    }
+                );
+                result = { ...result, ...this.deserializeJupyterResult(attributes) };
 ```
 
 
 [src/kernels/variables/pythonVariableRequester.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/variables/pythonVariableRequester.ts)
 ```typescript
-                      {
-                          traceErrors: true,
-                          traceErrorsMessage: 'Failure in execute_request for getVariableNamesAndTypesFromKernel',
-                          telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-                      }
-                  )
-                : [];
+                {
+                    traceErrors: true,
+                    traceErrorsMessage: 'Failure in execute_request for getVariableNamesAndTypesFromKernel',
+                    telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+                }
+            );
+
 ```
 
 
 [src/kernels/variables/pythonVariableRequester.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/variables/pythonVariableRequester.ts)
 ```typescript
-                  {
-                      traceErrors: true,
-                      traceErrorsMessage: 'Failure in execute_request for getFullVariable',
-                      telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-                  }
-              )
-            : [];
+            {
+                traceErrors: true,
+                traceErrorsMessage: 'Failure in execute_request for getFullVariable',
+                telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+            }
+        );
+
 ```
 
 </details>
@@ -3851,7 +3851,7 @@ No properties for event
 
 [src/interactive-window/editor-integration/codewatcher.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/editor-integration/codewatcher.ts)
 ```typescript
-        });
+            .then(noop, noop);
     }
 
     @captureTelemetry(Telemetry.SelectCell)
@@ -4154,13 +4154,13 @@ No properties for event
 
 [src/platform/errors/errorHandler.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/errors/errorHandler.ts)
 ```typescript
-                            ConfigurationTarget.Workspace
-                        );
+                            )
+                            .catch(noop);
                     } else if (value === closeOption) {
                         sendTelemetryEvent(Telemetry.SelfCertsMessageClose);
                     }
-                });
-            return KernelInterpreterDependencyResponse.failed;
+                })
+                .then(noop, noop);
 ```
 
 
@@ -4222,9 +4222,9 @@ No properties for event
                 .then((value) => {
                     if (value === enableOption) {
                         sendTelemetryEvent(Telemetry.SelfCertsMessageEnabled);
-                        void this.configuration.updateSetting(
-                            'allowUnauthorizedRemoteConnection',
-                            true,
+                        this.configuration
+                            .updateSetting(
+                                'allowUnauthorizedRemoteConnection',
 ```
 
 
@@ -6978,9 +6978,9 @@ No properties for event
         if (!this.perceivedJupyterStartupTelemetryCaptured) {
             this.perceivedJupyterStartupTelemetryCaptured = true;
             sendTelemetryEvent(Telemetry.PerceivedJupyterStartupNotebook, stopWatch.elapsedTime);
-            executionPromise.finally(() =>
-                sendTelemetryEvent(Telemetry.StartExecuteNotebookCellPerceivedCold, stopWatch.elapsedTime)
-            );
+            executionPromise
+                .finally(() =>
+                    sendTelemetryEvent(Telemetry.StartExecuteNotebookCellPerceivedCold, stopWatch.elapsedTime)
 ```
 
 
@@ -8063,6 +8063,18 @@ No description provided
             dimensions = { ...dimensions, commitHash: process.env.GIT_SHA };
         }
 
+        traceInfoIfCI(`Sending telemetry event ${Telemetry.RunTest} with dimensions ${dimensions}`);
+        telemetryReporter.sendDangerousTelemetryEvent(Telemetry.RunTest, dimensions, measures);
+    },
+    afterAll: async () => {
+```
+
+
+[src/test/testHooks.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/test/testHooks.node.ts)
+```typescript
+        }
+
+        traceInfoIfCI(`Sending telemetry event ${Telemetry.RunTest} with dimensions ${dimensions}`);
         telemetryReporter.sendDangerousTelemetryEvent(Telemetry.RunTest, dimensions, measures);
     },
     afterAll: async () => {
@@ -8313,13 +8325,13 @@ No properties for event
 
 [src/kernels/kernel.base.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts)
 ```typescript
-            this.perceivedJupyterStartupTelemetryCaptured = true;
             sendTelemetryEvent(Telemetry.PerceivedJupyterStartupNotebook, stopWatch.elapsedTime);
-            executionPromise.finally(() =>
-                sendTelemetryEvent(Telemetry.StartExecuteNotebookCellPerceivedCold, stopWatch.elapsedTime)
-            );
+            executionPromise
+                .finally(() =>
+                    sendTelemetryEvent(Telemetry.StartExecuteNotebookCellPerceivedCold, stopWatch.elapsedTime)
+                )
+                .catch(noop);
         }
-    }
 ```
 
 </details>
@@ -9228,7 +9240,7 @@ No properties for event
             } catch (e) {
                 sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR, undefined, undefined, e);
                 traceError(e);
-                void this.errorHandler.handleError(e);
+                this.errorHandler.handleError(e).then(noop, noop);
             }
 ```
 

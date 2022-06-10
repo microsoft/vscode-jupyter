@@ -15,6 +15,7 @@ import * as uriPath from '../../../platform/vscode-path/resources';
 import { swallowExceptions } from '../utils/decorators';
 import { IFileSystemNode } from '../platform/types.node';
 import { homePath } from '../platform/fs-paths.node';
+import { noop } from '../utils/misc';
 
 const CACHEKEY_FOR_CONDA_INFO = 'CONDA_INFORMATION_CACHE';
 const condaEnvironmentsFile = uriPath.joinPath(homePath, '.conda', 'environments.txt');
@@ -37,7 +38,7 @@ export class CondaService {
         @inject(IPlatformService) private readonly ps: IPlatformService,
         @inject(IDisposableRegistry) private readonly disposables: IDisposable[]
     ) {
-        void this.monitorCondaEnvFile();
+        this.monitorCondaEnvFile().catch(noop);
     }
 
     @traceDecoratorVerbose('getCondaVersion', TraceOptions.BeforeCall)
@@ -50,10 +51,12 @@ export class CondaService {
         }
         const promise = async () => {
             const latestInfo = this.getCondaVersionFromPython();
-            void latestInfo.then((version) => {
-                this._version = version;
-                void this.updateCache();
-            });
+            latestInfo
+                .then((version) => {
+                    this._version = version;
+                    this.updateCache().catch(noop);
+                })
+                .catch(noop);
             const cachedInfo = createDeferredFromPromise(this.getCachedInformation());
             await Promise.race([cachedInfo.promise, latestInfo]);
             if (cachedInfo.completed && cachedInfo.value?.version) {
@@ -76,10 +79,12 @@ export class CondaService {
             const latestInfo = this.pythonApi
                 .getApi()
                 .then((api) => (api.getCondaFile ? api.getCondaFile() : undefined));
-            void latestInfo.then((file) => {
-                this._file = file ? Uri.file(file) : undefined;
-                void this.updateCache();
-            });
+            latestInfo
+                .then((file) => {
+                    this._file = file ? Uri.file(file) : undefined;
+                    this.updateCache().catch(noop);
+                })
+                .catch(noop);
             const cachedInfo = createDeferredFromPromise(this.getCachedInformation());
             await Promise.race([cachedInfo.promise, latestInfo]);
             if (cachedInfo.completed && cachedInfo.value?.file) {

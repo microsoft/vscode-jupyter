@@ -21,6 +21,7 @@ import {
 import * as localize from './utils/localize';
 import { MillisecondsInADay } from '../constants.node';
 import { isJupyterNotebook } from './utils';
+import { noop } from './utils/misc';
 
 export enum InsidersNotebookSurveyStateKeys {
     ShowBanner = 'ShowInsidersNotebookSurveyBanner',
@@ -205,21 +206,21 @@ export class DataScienceSurveyBanner implements IJupyterExtensionBanner, IExtens
 
         // If cell has moved to executing, update the execution count
         if (cellStateChange.state === NotebookCellExecutionState.Executing) {
-            void this.updateStateAndShowBanner(
+            this.updateStateAndShowBanner(
                 InsidersNotebookSurveyStateKeys.ExecutionCount,
                 BannerType.InsidersNotebookSurvey
-            );
-            void this.updateStateAndShowBanner(
+            ).catch(noop);
+            this.updateStateAndShowBanner(
                 ExperimentNotebookSurveyStateKeys.ExecutionCount,
                 BannerType.ExperimentNotebookSurvey
-            );
+            ).catch(noop);
         }
     }
 
     private async updateStateAndShowBanner(val: string, banner: BannerType) {
         const state = this.persistentState.createGlobalPersistentState<number>(val, 0);
         await state.updateValue(state.value + 1);
-        void this.showBanner(banner);
+        this.showBanner(banner).catch(noop);
     }
 
     private getBannerMessage(type: BannerType): string {

@@ -11,6 +11,7 @@ import { Telemetry, PYTHON_LANGUAGE } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
 import { IBrowserService } from '../common/types';
 import * as localize from '../common/utils/localize';
+import { noop } from '../common/utils/misc';
 import { ExportFormat } from './types';
 
 @injectable()
@@ -69,7 +70,7 @@ export class ExportFileOpener {
 
         if (selected === yes) {
             if (openDirectly) {
-                void this.documentManager.showTextDocument(uri);
+                this.documentManager.showTextDocument(uri).then(noop, noop);
             } else {
                 this.browserService.launch(uri.toString());
             }

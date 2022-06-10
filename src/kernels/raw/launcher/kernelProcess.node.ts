@@ -50,7 +50,7 @@ import {
 import { Resource, IOutputChannel, IJupyterSettings } from '../../../platform/common/types';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { swallowExceptions } from '../../../platform/common/utils/misc';
+import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
 import { KernelDiedError } from '../../../platform/errors/kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from '../../../platform/errors/kernelPortNotUsedTimeoutError';
 import { KernelProcessExitedError } from '../../../platform/errors/kernelProcessExitedError';
@@ -153,6 +153,7 @@ export class KernelProcess implements IKernelProcess {
         let exitEventFired = false;
         let providedExitCode: number | null;
         const deferred = createDeferred();
+        deferred.promise.catch(noop);
         exeObs.proc!.on('exit', (exitCode) => {
             exitCode = exitCode || providedExitCode;
             traceVerbose('KernelProcess Exit', `Exit - ${exitCode}`, stderrProc);
@@ -213,6 +214,9 @@ export class KernelProcess implements IKernelProcess {
 
         // Don't return until our heartbeat channel is open for connections or the kernel died or we timed out
         try {
+            if (deferred.rejected) {
+                await deferred.promise;
+            }
             const tcpPortUsed = require('tcp-port-used') as typeof import('tcp-port-used');
             // Wait on shell port as this is used for communications (hence shell port is guaranteed to be used, where as heart beat isn't).
             // Wait for shell & iopub to be used (iopub is where we get a response & this is similar to what Jupyter does today).

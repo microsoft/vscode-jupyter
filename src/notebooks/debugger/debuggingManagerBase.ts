@@ -26,6 +26,7 @@ import { Debugger } from '../../platform/debugger/debugger';
 import { KernelDebugAdapterBase } from '../../kernels/debugger/kernelDebugAdapterBase';
 import { INotebookControllerManager } from '../types';
 import { IpykernelCheckResult, isUsingIpykernel6OrLater } from '../../kernels/debugger/helper';
+import { noop } from '../../platform/common/utils/misc';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
@@ -106,7 +107,7 @@ export abstract class DebuggingManagerBase implements IDisposable {
                 traceInfoIfCI(`Debugger session is ready. Should be debugging ${session.id} now`);
             } catch (err) {
                 traceError(`Can't start debugging (${err})`);
-                void this.appShell.showErrorMessage(DataScience.cantStartDebugging());
+                this.appShell.showErrorMessage(DataScience.cantStartDebugging()).then(noop, noop);
             }
         } else {
             traceInfoIfCI(`Not starting debugging because already debugging in this notebook`);

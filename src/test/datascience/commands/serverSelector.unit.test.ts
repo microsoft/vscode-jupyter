@@ -7,7 +7,7 @@ import { ICommandManager } from '../../../platform/common/application/types';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { Commands } from '../../../platform/common/constants';
 import { INotebookControllerManager } from '../../../notebooks/types';
-import { JupyterServerSelectorCommand } from '../../../kernels/jupyter/commands/serverSelector';
+import { JupyterServerSelectorCommand } from '../../../notebooks/serverSelector';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 
 /* eslint-disable  */
@@ -32,13 +32,13 @@ suite('DataScience - Server Selector Command', () => {
     });
 
     test('Register Command', () => {
-        serverSelectorCommand.register();
+        serverSelectorCommand.activate();
 
         verify(commandManager.registerCommand(Commands.SelectJupyterURI, anything(), serverSelectorCommand)).once();
     });
 
     test('Command Handler should invoke ServerSelector', () => {
-        serverSelectorCommand.register();
+        serverSelectorCommand.activate();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const handler = (capture(commandManager.registerCommand as any).first()[1] as Function).bind(
             serverSelectorCommand
@@ -50,7 +50,7 @@ suite('DataScience - Server Selector Command', () => {
     });
 
     test(`Command Handler should set URI`, () => {
-        serverSelectorCommand.register();
+        serverSelectorCommand.activate();
         let uri = Uri.parse('http://localhost:1234');
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

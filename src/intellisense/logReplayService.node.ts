@@ -16,6 +16,7 @@ import { IFileSystemNode } from '../platform/common/platform/types.node';
 import { IDisposableRegistry, IConfigurationService } from '../platform/common/types';
 import { Commands, EditorContexts } from '../webviews/webview-side/common/constants';
 import { sleep, waitForCondition } from '../platform/common/utils/async';
+import { noop, swallowExceptions } from '../platform/common/utils/misc';
 
 /**
  * Class used to replay pylance log output to regenerate a series of edits.
@@ -55,7 +56,7 @@ export class LogReplayService implements IExtensionSingleActivationService {
             this.commandService.registerCommand(Commands.ReplayPylanceLogStep, this.step, this)
         );
         this.isLogActive = new ContextKey(EditorContexts.ReplayLogLoaded, this.commandService);
-        void this.isLogActive.set(false);
+        this.isLogActive.set(false).then(noop, noop);
     }
 
     private async replayPylanceLog() {
@@ -68,7 +69,7 @@ export class LogReplayService implements IExtensionSingleActivationService {
                 void this.isLogActive?.set(true);
             }
         } else {
-            void this.appShell.showErrorMessage(`Command should be run with a jupyter notebook open`);
+            this.appShell.showErrorMessage(`Command should be run with a jupyter notebook open`).then(noop, noop);
         }
     }
 
@@ -79,7 +80,9 @@ export class LogReplayService implements IExtensionSingleActivationService {
             this.activeNotebook === vscode.window.activeNotebookEditor?.notebook &&
             this.activeNotebook
         ) {
-            void this.appShell.showInformationMessage(`Replaying step ${this.index + 2} of ${this.steps.length}`);
+            this.appShell
+                .showInformationMessage(`Replaying step ${this.index + 2} of ${this.steps.length}`)
+                .then(noop, noop);
 
             // Move to next step
             this.index += 1;
@@ -220,7 +223,7 @@ export class LogReplayService implements IExtensionSingleActivationService {
                 });
             }
             if (this.steps.length === this.index) {
-                void this.isLogActive?.set(false);
+                swallowExceptions(() => this.isLogActive?.set(false));
                 this.steps = [];
                 this.index = -1;
             }
@@ -228,9 +231,9 @@ export class LogReplayService implements IExtensionSingleActivationService {
             this.activeNotebook?.toString() !== vscode.window.activeNotebookEditor?.notebook.uri.toString() &&
             this.index < this.steps.length - 1
         ) {
-            void this.appShell.showErrorMessage(
-                `You changed the notebook editor in the middle of stepping through the log`
-            );
+            this.appShell
+                .showErrorMessage(`You changed the notebook editor in the middle of stepping through the log`)
+                .then(noop, noop);
         }
     }
 

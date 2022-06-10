@@ -13,7 +13,7 @@
 
 ### Prerequisites
 
-1. [Node.js](https://nodejs.org/) 16.13.0
+1. [Node.js](https://nodejs.org/) 16.14.2
 2. [npm](https://www.npmjs.com/) 8.3
 3. [Python](https://www.python.org/) 3.6 or later
 4. Windows, macOS, or Linux
