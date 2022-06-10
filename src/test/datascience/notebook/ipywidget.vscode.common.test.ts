@@ -62,8 +62,8 @@ suite('DataScience - VSCode Notebook - Standard', function () {
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
-        if (this.currentTest?.isFailed) {
-            await captureScreenShot(this.currentTest?.title);
+        if (this.currentTest?.isFailed()) {
+            await captureScreenShot(`IPyWidget-standard-test-${this.currentTest?.title || 'unknown'}`);
         }
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
