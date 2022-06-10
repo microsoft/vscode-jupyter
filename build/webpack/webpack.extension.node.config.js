@@ -40,7 +40,7 @@ const config = {
                     {
                         loader: 'vscode-nls-dev/lib/webpack-loader',
                         options: {
-                            base: __dirname
+                            base: constants.ExtensionRootDir
                         }
                     },
                     {
