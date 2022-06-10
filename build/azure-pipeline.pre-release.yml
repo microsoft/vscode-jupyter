@@ -28,8 +28,8 @@ extends:
       - script: npm ci
         displayName: Install dependencies
 
-      - script: gulp clean
-        displayName: Clean
+    #   - script: gulp clean
+    #     displayName: Clean
 
       - task: UsePythonVersion@0
         inputs:
