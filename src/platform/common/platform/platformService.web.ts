@@ -3,7 +3,6 @@
 'use strict';
 
 import { injectable } from 'inversify';
-import { SemVer } from 'semver';
 import { OSType } from '../utils/platform';
 import { IPlatformService } from './types';
 
@@ -16,15 +15,11 @@ export class PlatformService implements IPlatformService {
         return undefined;
     }
     public readonly osType: OSType = OSType.Unknown;
-    public version?: SemVer;
     public get pathVariableName() {
         return '';
     }
     public get virtualEnvBinName() {
         return this.isWindows ? 'Scripts' : 'bin';
-    }
-    public async getVersion(): Promise<SemVer> {
-        throw new Error('Not Supported');
     }
 
     public get isWindows(): boolean {
