@@ -49,7 +49,7 @@ async function closeWindowsAndNotebooks(): Promise<void> {
     // Work around VS Code issues (sometimes notebooks do not get closed).
     // Hence keep trying.
     for (let counter = 0; counter <= 5 && isANotebookOpen(); counter += 1) {
-        await sleep(counter * 100);
+        await sleep(counter * 10);
         await closeWindowsInternal();
     }
 }
