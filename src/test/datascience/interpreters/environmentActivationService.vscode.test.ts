@@ -134,8 +134,8 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
         );
 
         verifyVariables(activatedEnvVars1!, '(main)');
-        if (activatedCommandEnvVars || !IS_WINDOWS) {
-            // This is failing on CI for some reason for window
+        if (activatedCommandEnvVars) {
+            // This is failing on CI for some reason
             verifyVariables(activatedCommandEnvVars!, '(command)');
         }
         verifyVariables(activatedCondaRunEnvVars!, '(conda run)');

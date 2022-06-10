@@ -248,6 +248,8 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         console.log('Step4');
         assert.equal(cell1.executionSummary?.executionOrder, 1, 'Execution order of cell 1 is incorrect');
         assert.equal(cell2.executionSummary?.executionOrder, 2, 'Execution order of cell 2 is incorrect');
+
+        const message = showInformationMessage.getCalls()[0]?.args[0];
         const cell2Output = getTextOutputValue(cell2.outputs[0]).trim();
 
         // Run cell 2 again (errors should be cleared and we should start seeing 1,2,3 again)
@@ -257,7 +259,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
             waitForCondition(
                 async () => (cell2.executionSummary?.executionOrder || 0) >= 3,
                 30_000,
-                'Execution order of cell 1 should be greater than previous execution count'
+                `Execution order of cell 1 should be greater than previous execution count. Interrupt had this message ${message}`
             ),
             waitForTextOutput(cell2, '1', 0, false),
             waitForCondition(
