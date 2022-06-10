@@ -67,7 +67,7 @@ async function closeWindowsInternal() {
             super("Command 'workbench.action.closeAllEditors' timed out");
         }
     }
-    const closeWindowsImplementation = (timeout = 2_000) => {
+    const closeWindowsImplementation = (timeout = 1_000) => {
         return new Promise<void>((resolve, reject) => {
             // Attempt to fix #1301.
             // Lets not waste too much time.
