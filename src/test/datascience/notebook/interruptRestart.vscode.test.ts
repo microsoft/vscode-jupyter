@@ -255,7 +255,7 @@ suite('DataScience - VSCode Notebook - Restart/Interrupt/Cancel/Errors (slow)', 
         await Promise.all([
             runCell(cell2),
             waitForCondition(
-                async () => (cell2.executionSummary?.executionOrder || 0) === 3,
+                async () => (cell2.executionSummary?.executionOrder || 0) >= 3,
                 30_000,
                 'Execution order of cell 1 should be greater than previous execution count'
             ),

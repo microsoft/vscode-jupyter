@@ -260,6 +260,8 @@ export async function waitForCodeLenses(document: vscode.Uri, command: string) {
     // Wait for the code lens to appear
     await waitForCondition(
         async () => {
+            const textDocument = await vscode.workspace.openTextDocument(document);
+            await vscode.window.showTextDocument(textDocument, undefined, false);
             codeLenses = (await vscode.commands.executeCommand(
                 'vscode.executeCodeLensProvider',
                 document
