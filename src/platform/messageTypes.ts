@@ -252,12 +252,6 @@ export interface INotebookModelVersionChange extends INotebookModelChange {
     kernelConnection?: KernelConnectionMetadata;
 }
 
-export enum CssMessages {
-    GetCssRequest = 'get_css_request',
-    GetCssResponse = 'get_css_response',
-    GetTheme = 'get_theme'
-}
-
 export enum SharedMessages {
     UpdateSettings = 'update_settings',
     Started = 'started',
@@ -334,8 +328,6 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.VariableExplorerToggle]: boolean;
     public [InteractiveWindowMessages.SetVariableExplorerHeight]: IVariableExplorerHeight;
     public [InteractiveWindowMessages.VariableExplorerHeightResponse]: IVariableExplorerHeight;
-    public [CssMessages.GetCssRequest]: IGetCssRequest;
-    public [CssMessages.GetCssResponse]: IGetCssResponse;
     public [InteractiveWindowMessages.OpenLink]: string | undefined;
     public [InteractiveWindowMessages.SavePng]: string | undefined;
     public [InteractiveWindowMessages.NotebookClose]: INotebookIdentity;

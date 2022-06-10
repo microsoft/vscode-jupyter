@@ -4,9 +4,6 @@ import {
     InteractiveWindowMessages,
     IShowDataViewer,
     IFinishCell,
-    CssMessages,
-    IGetCssRequest,
-    IGetCssResponse,
     SharedMessages
 } from '../../../platform/messageTypes';
 import { IKernel } from '../../../kernels/types';
@@ -24,8 +21,6 @@ export class IVariableViewPanelMapping {
     public [InteractiveWindowMessages.VariableExplorerToggle]: boolean;
     public [InteractiveWindowMessages.SetVariableExplorerHeight]: IVariableExplorerHeight;
     public [InteractiveWindowMessages.VariableExplorerHeightResponse]: IVariableExplorerHeight;
-    public [CssMessages.GetCssRequest]: IGetCssRequest;
-    public [CssMessages.GetCssResponse]: IGetCssResponse;
     public [InteractiveWindowMessages.OpenLink]: string | undefined;
     public [InteractiveWindowMessages.VariablesComplete]: never | undefined;
     public [SharedMessages.UpdateSettings]: string;

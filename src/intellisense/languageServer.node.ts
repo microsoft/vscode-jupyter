@@ -7,6 +7,7 @@ import {
     DynamicFeature,
     ExecuteCommandRegistrationOptions,
     ExecuteCommandRequest,
+    FeatureState,
     LanguageClient,
     LanguageClientOptions,
     RegistrationData,
@@ -26,7 +27,6 @@ import { NOTEBOOK_SELECTOR, PYTHON_LANGUAGE } from '../platform/common/constants
 import { traceInfo } from '../platform/logging';
 import { getInterpreterId } from '../platform/pythonEnvironments/info/interpreter';
 import { noop } from '../platform/common/utils/misc';
-import { sleep } from '../platform/common/utils/async';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { getFilePath } from '../platform/common/platform/fs-paths';
 
@@ -39,7 +39,19 @@ function ensure(target: any, key: string) {
 }
 
 class NerfedExecuteCommandFeature implements DynamicFeature<ExecuteCommandRegistrationOptions> {
+    private _id = uuid();
     private _commands: Map<string, Disposable[]> = new Map<string, Disposable[]>();
+
+    fillInitializeParams = undefined;
+    preInitialize = undefined;
+
+    getState(): FeatureState {
+        return {
+            kind: 'workspace',
+            id: this._id,
+            registrations: true
+        };
+    }
 
     public get registrationType(): RegistrationType<ExecuteCommandRegistrationOptions> {
         return ExecuteCommandRequest.type;
@@ -54,7 +66,7 @@ class NerfedExecuteCommandFeature implements DynamicFeature<ExecuteCommandRegist
             return;
         }
         this.register({
-            id: uuid(),
+            id: this._id,
             registerOptions: Object.assign({}, capabilities.executeCommandProvider)
         });
     }
@@ -86,21 +98,41 @@ class NerfedExecuteCommandFeature implements DynamicFeature<ExecuteCommandRegist
  *     "notebook-intellisense.trace.server.verbosity": "Verbose",
  */
 export class LanguageServer implements Disposable {
+    private _client: LanguageClient | undefined;
     private _interpreterId: String;
+
     private constructor(
-        public client: LanguageClient,
+        client: LanguageClient,
         public interpreter: PythonEnvironment,
         private readonly middleware: NotebookMiddleware,
         private disposables: Disposable[]
     ) {
+        // Client should be already started. We can expose it right away.
+        this._client = client;
         this._interpreterId = getInterpreterId(interpreter);
         workspace.onDidChangeNotebookDocument(this.onDidChangeNotebookDocument, this, disposables);
     }
 
     public async dispose() {
+        if (!this._client) {
+            return;
+        }
+
+        const client = this._client;
+
+        // Stop exposing language client so that no one can access it while stopping.
+        this._client = undefined;
+
         this.disposables.forEach((d) => d.dispose());
+
+        // Make sure we dispose middleware before stopping client.
         this.middleware.dispose();
-        await this.client.stop();
+
+        await client.stop();
+    }
+
+    public get client(): LanguageClient | undefined {
+        return this._client;
     }
 
     public get interpreterId() {
@@ -166,33 +198,24 @@ export class LanguageServer implements Disposable {
                 }
             };
 
-            languageClient = new LanguageClient('notebook-intellisense', serverOptions, clientOptions);
+            const client = new LanguageClient('notebook-intellisense', serverOptions, clientOptions);
 
             // Before starting do a little hack to prevent the pylance double command registration (working with Jake to have an option to skip commands)
             /* eslint-disable @typescript-eslint/no-explicit-any */
-            const features: (StaticFeature | DynamicFeature<any>)[] = (languageClient as unknown as any)._features;
+            const features: (StaticFeature | DynamicFeature<any>)[] = (client as unknown as any)._features;
             const minusCommands = features.filter(
                 (f) => (f as any).registrationType?.method != 'workspace/executeCommand'
             );
             minusCommands.push(new NerfedExecuteCommandFeature());
-            (languageClient as any)._features = minusCommands;
+            (client as any)._features = minusCommands;
 
             // Then start (which will cause the initialize request to be sent to pylance)
-            const languageClientDisposable = languageClient.start();
+            await client.start();
 
-            // After starting, wait for it to be ready
-            while (languageClient && !languageClient.initializeResult) {
-                await sleep(100);
-            }
-            if (languageClient) {
-                await languageClient.onReady();
-            }
+            // Expose client once it is fully initialized.
+            languageClient = client;
 
-            return new LanguageServer(languageClient, interpreter, middleware, [
-                languageClientDisposable,
-                cancellationStrategy,
-                outputChannel
-            ]);
+            return new LanguageServer(client, interpreter, middleware, [cancellationStrategy, outputChannel]);
         } else {
             // Not creating a server, so dispose of the cancellation strategy
             cancellationStrategy.dispose();

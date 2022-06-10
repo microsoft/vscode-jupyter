@@ -4,7 +4,7 @@
 
 import { IDisposable } from '../../../platform/common/types';
 import { Event } from 'vscode';
-import { SharedMessages, CssMessages, IGetCssRequest, IGetCssResponse } from '../../../platform/messageTypes';
+import { SharedMessages } from '../../../platform/messageTypes';
 
 export namespace PlotViewerMessages {
     export const Started = SharedMessages.Started;
@@ -28,8 +28,6 @@ export class IPlotViewerMapping {
     public [PlotViewerMessages.CopyPlot]: string;
     public [PlotViewerMessages.ExportPlot]: IExportPlotRequest;
     public [PlotViewerMessages.RemovePlot]: number;
-    public [CssMessages.GetCssRequest]: IGetCssRequest;
-    public [CssMessages.GetCssResponse]: IGetCssResponse;
 }
 
 export const IPlotViewerProvider = Symbol('IPlotViewerProvider');

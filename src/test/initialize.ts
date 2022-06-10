@@ -49,7 +49,7 @@ async function closeWindowsAndNotebooks(): Promise<void> {
     // Work around VS Code issues (sometimes notebooks do not get closed).
     // Hence keep trying.
     for (let counter = 0; counter <= 5 && isANotebookOpen(); counter += 1) {
-        await sleep(counter * 100);
+        await sleep(counter * 10);
         await closeWindowsInternal();
     }
 }
@@ -67,7 +67,7 @@ async function closeWindowsInternal() {
             super("Command 'workbench.action.closeAllEditors' timed out");
         }
     }
-    const closeWindowsImplementation = (timeout = 2_000) => {
+    const closeWindowsImplementation = (timeout = 1_000) => {
         return new Promise<void>((resolve, reject) => {
             // Attempt to fix #1301.
             // Lets not waste too much time.
