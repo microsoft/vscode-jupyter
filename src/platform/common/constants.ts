@@ -24,22 +24,7 @@ export const NOTEBOOK_SELECTOR = [
 ];
 
 export const JVSC_EXTENSION_ID = 'ms-toolsai.jupyter';
-export const JVSC_EXTENSION_DisplayName = 'Jupyter';
 export const AppinsightsKey = 'AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217';
-
-export namespace Octicons {
-    export const Downloading = '$(cloud-download)';
-    export const Installing = '$(desktop-download)';
-}
-
-export namespace Text {
-    export const CodeLensRunUnitTest = 'Run Test';
-    export const CodeLensDebugUnitTest = 'Debug Test';
-}
-export namespace Delays {
-    // Max time to wait before aborting the generation of code lenses for unit tests
-    export const MaxUnitTestCodeLensDelay = 5000;
-}
 
 export const DEFAULT_INTERPRETER_SETTING = 'python';
 
