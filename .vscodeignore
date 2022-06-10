@@ -95,7 +95,7 @@ out/webviews/webview-side/viewers/ipywidgets/**
 out/webviews/webview-side/viewers/index.*.html
 out/webviews/webview-side/widgetTester/**
 out/pythonFiles/**
-!out/src/**
+out/src/**
 out/test/**
 precommit.hook
 pythonFiles/**/*.pyc
@@ -112,4 +112,4 @@ typings/**
 types/**
 test-results*
 *.zip
-!**/*.nls.bundle.*.json
+!nls.*.json
