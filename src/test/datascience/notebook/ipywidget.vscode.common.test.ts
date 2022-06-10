@@ -9,7 +9,7 @@ import { assert } from 'chai';
 import { NotebookDocument, Uri, window } from 'vscode';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { IDisposable } from '../../../platform/common/types';
-import { IExtensionTestApi, startJupyterServer, waitForCondition } from '../../common';
+import { captureScreenShot, IExtensionTestApi, startJupyterServer, waitForCondition } from '../../common';
 import { openNotebook } from '../helpers';
 import {
     closeNotebooks,
@@ -62,6 +62,9 @@ suite('DataScience - VSCode Notebook - Standard', function () {
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
+        if (this.currentTest?.isFailed()) {
+            await captureScreenShot(`IPyWidget-standard-test-${this.currentTest?.title || 'unknown'}`);
+        }
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
@@ -86,7 +89,7 @@ suite('DataScience - VSCode Notebook - Standard', function () {
             'Widget did not load successfully during execution'
         );
     });
-    test('Can run a widget notebook twice (webview-test)', async function () {
+    test.skip('Can run a widget notebook twice (webview-test)', async function () {
         let notebook = await openNotebook(testWidgetNb);
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
         let cell = notebook.cellAt(0);

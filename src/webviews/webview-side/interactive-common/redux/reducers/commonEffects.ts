@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { IGetCssResponse, InteractiveWindowMessages } from '../../../../../platform/messageTypes';
+import { InteractiveWindowMessages } from '../../../../../platform/messageTypes';
 import { IMainState } from '../../../interactive-common/mainState';
 import { storeLocStrings } from '../../../react-common/locReactSide';
 import { postActionToExtension } from '../helpers';
-import { Helpers } from './helpers';
 import { CommonActionType, CommonReducerArg, IOpenSettingsAction, LoadIPyWidgetClassLoadAction } from './types';
 
 export namespace CommonEffects {
@@ -18,27 +17,6 @@ export namespace CommonEffects {
         const locJSON = JSON.parse(arg.payload.data);
         storeLocStrings(locJSON);
         return arg.prevState;
-    }
-
-    export function handleCss(arg: CommonReducerArg<CommonActionType, IGetCssResponse>): IMainState {
-        // Recompute our known dark value from the class name in the body
-        // VS code should update this dynamically when the theme changes
-        const computedKnownDark = Helpers.computeKnownDark(arg.prevState.settings);
-
-        // We also get this in our response, but computing is more reliable
-        // than searching for it.
-        const newBaseTheme =
-            arg.prevState.knownDark !== computedKnownDark && !arg.prevState.testMode
-                ? computedKnownDark
-                    ? 'vscode-dark'
-                    : 'vscode-light'
-                : arg.prevState.baseTheme;
-
-        return {
-            ...arg.prevState,
-            knownDark: computedKnownDark,
-            baseTheme: newBaseTheme
-        };
     }
 
     export function focusPending(prevState: IMainState): IMainState {
