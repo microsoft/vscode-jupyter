@@ -143,7 +143,9 @@ gulp.task('output:clean', () => del(['coverage']));
 
 gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out', '!out/test']));
 gulp.task('clean:vsix', () => del(['*.vsix']));
-gulp.task('clean:out', () => del(['out/**', '!out', '!out/client_renderer/**']));
+gulp.task('clean:out', () =>
+    del(['out/**', '!out', '!out/client_renderer/**', '!out/nls.bundle.*.json', '!out/**/*.nls.metadata.json'])
+);
 
 gulp.task('clean', gulp.parallel('output:clean', 'clean:vsix', 'clean:out'));
 
