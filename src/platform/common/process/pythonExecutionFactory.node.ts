@@ -82,9 +82,9 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         // No daemon support in Python 2.7 or during shutdown
         if ((interpreter?.version && interpreter.version.major < 3) || this.config.getSettings().disablePythonDaemon) {
             traceInfo(
-                `Not using daemon support for ${getDisplayPath(options.interpreter.uri)} - disablePythonDaemon: ${
-                    this.config.getSettings().disablePythonDaemon
-                }`
+                `Not using daemon support for ${getDisplayPath(options.interpreter.uri)} - Interpreter Version: ${
+                    interpreter?.version?.major
+                } disablePythonDaemon: ${this.config.getSettings().disablePythonDaemon}`
             );
             return activatedProcPromise;
         }
