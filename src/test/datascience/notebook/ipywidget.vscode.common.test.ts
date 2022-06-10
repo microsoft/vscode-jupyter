@@ -9,7 +9,7 @@ import { assert } from 'chai';
 import { NotebookDocument, Uri, window } from 'vscode';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { IDisposable } from '../../../platform/common/types';
-import { IExtensionTestApi, startJupyterServer, waitForCondition } from '../../common';
+import { captureScreenShot, IExtensionTestApi, startJupyterServer, waitForCondition } from '../../common';
 import { openNotebook } from '../helpers';
 import {
     closeNotebooks,
@@ -62,6 +62,9 @@ suite('DataScience - VSCode Notebook - Standard', function () {
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
+        if (this.currentTest?.isFailed) {
+            await captureScreenShot(this.currentTest?.title);
+        }
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
