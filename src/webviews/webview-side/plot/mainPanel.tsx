@@ -41,7 +41,6 @@ interface IMainPanelState {
     ids: string[];
     currentImage: number;
     tool: Tool;
-    forceDark?: boolean;
     settings?: IJupyterExtraSettings;
 }
 
@@ -146,12 +145,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // If we're ignoring, always light
         if (this.state.settings?.ignoreVscodeTheme) {
             return 'vscode-light';
-        }
-
-        // Otherwise see if the style injector has figured out
-        // the theme is dark or not
-        if (this.state.forceDark !== undefined) {
-            return this.state.forceDark ? 'vscode-dark' : 'vscode-light';
         }
 
         return this.props.baseTheme;
