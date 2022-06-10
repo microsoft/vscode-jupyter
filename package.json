@@ -2141,7 +2141,7 @@
         "@nteract/messaging": "^7.0.0",
         "@vscode/extension-telemetry": "^0.5.2",
         "@vscode/jupyter-ipywidgets": "^1.0.9",
-        "@vscode/jupyter-lsp-middleware": "0.2.47",
+        "@vscode/jupyter-lsp-middleware": "^0.2.48",
         "ajv-keywords": "^3.5.2",
         "ansi-to-html": "^0.6.7",
         "arch": "^2.1.0",
@@ -2214,14 +2214,13 @@
         "zeromq": "^6.0.0-beta.6"
     },
     "devDependencies": {
-        "@actions/glob": "^0.3.0",
         "@actions/core": "^1.2.6",
         "@actions/github": "^4.0.0",
+        "@actions/glob": "^0.3.0",
         "@babel/cli": "^7.15.4",
         "@babel/core": "^7.4.4",
         "@babel/plugin-transform-runtime": "^7.4.4",
         "@babel/polyfill": "^7.4.4",
-
         "@babel/preset-env": "^7.1.0",
         "@babel/preset-react": "^7.0.0",
         "@babel/register": "^7.9.0",
