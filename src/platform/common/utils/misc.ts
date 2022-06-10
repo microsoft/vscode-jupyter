@@ -3,7 +3,7 @@
 'use strict';
 import type { TextDocument, Uri } from 'vscode';
 import { InteractiveInputScheme, NotebookCellScheme } from '../constants';
-import { IAsyncDisposable, IDisposable, InterpreterUri, Resource } from '../types';
+import { InterpreterUri, Resource } from '../types';
 import { isPromise } from './async';
 import { StopWatch } from './stopWatch';
 
@@ -21,25 +21,6 @@ export function swallowExceptions(cb: Function) {
         }
     } catch {
         // Ignore errors.
-    }
-}
-
-export function using<T extends IDisposable>(disposable: T, func: (obj: T) => void) {
-    try {
-        func(disposable);
-    } finally {
-        disposable.dispose();
-    }
-}
-
-export async function usingAsync<T extends IAsyncDisposable, R>(
-    disposable: T,
-    func: (obj: T) => Promise<R>
-): Promise<R> {
-    try {
-        return await func(disposable);
-    } finally {
-        await disposable.dispose();
     }
 }
 
@@ -140,10 +121,6 @@ export function isUri(resource?: Uri | any): resource is Uri {
 export function isNotebookCell(documentOrUri: TextDocument | Uri): boolean {
     const uri = isUri(documentOrUri) ? documentOrUri : documentOrUri.uri;
     return uri.scheme.includes(NotebookCellScheme) || uri.scheme.includes(InteractiveInputScheme);
-}
-
-export function isUntitledFile(file?: Uri) {
-    return file?.scheme === 'untitled';
 }
 
 export function isWeb() {
