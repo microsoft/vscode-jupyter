@@ -154,7 +154,6 @@ function createMiddleWare(
     /* Fixup this code if you need to debug redux
     // Create the logger if we're not in production mode or we're forcing logging
     const reduceLogMessage = '<payload too large to displayed in logs (at least on CI)>';
-    const actionsWithLargePayload = [CssMessages.GetCssResponse];
     const logger = createLogger({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         stateTransformer: (state: any) => {
@@ -178,9 +177,6 @@ function createMiddleWare(
         actionTransformer: (action: any) => {
             if (!action) {
                 return action;
-            }
-            if (actionsWithLargePayload.indexOf(action.type) >= 0) {
-                return { ...action, payload: reduceLogMessage };
             }
             return action;
         },

@@ -8,7 +8,6 @@ import * as React from 'react';
 import { getLocString, storeLocStrings } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { Progress } from '../react-common/progress';
-import { StyleInjector } from '../react-common/styleInjector';
 import { cellFormatterFunc } from './cellFormatter';
 import { ISlickGridAdd, ISlickGridSlice, ISlickRow, ReactSlickGrid } from './reactSlickGrid';
 import { generateTestData } from './testData';
@@ -53,7 +52,6 @@ interface IMainPanelState {
     totalRowCount: number;
     filters: {};
     indexColumn: string;
-    styleReady: boolean;
     settings?: IJupyterExtraSettings;
     dataDimensionality: number;
     originalVariableShape?: number[];
@@ -98,7 +96,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 fetchedRowCount: -1,
                 filters: {},
                 indexColumn: data.primaryKeys[0],
-                styleReady: true,
                 dataDimensionality: data.dataDimensionality ?? 2,
                 originalVariableShape: data.originalVariableShape,
                 isSliceDataEnabled: false,
@@ -115,7 +112,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 fetchedRowCount: -1,
                 filters: {},
                 indexColumn: 'index',
-                styleReady: true,
                 dataDimensionality: 2,
                 originalVariableShape: undefined,
                 isSliceDataEnabled: false,
@@ -153,16 +149,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         return (
             <div className="main-panel" ref={this.container}>
-                <StyleInjector
-                    onReady={this.saveReadyState}
-                    settings={this.state.settings}
-                    expectingDark={this.props.baseTheme !== 'vscode-light'}
-                    postOffice={this.postOffice}
-                />
                 {progressBar}
                 {this.renderBreadcrumb()}
                 {this.renderSliceControls()}
-                {this.state.totalRowCount > 0 && this.state.styleReady && this.renderGrid()}
+                {this.state.totalRowCount > 0 && this.renderGrid()}
             </div>
         );
     };
@@ -249,10 +239,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             settings: newSettings
         });
     }
-
-    private saveReadyState = () => {
-        this.setState({ styleReady: true });
-    };
 
     private renderGrid() {
         const filterRowsTooltip = getLocString('DataScience.filterRowsTooltip', 'Click to filter');

@@ -6,7 +6,6 @@
 import * as Redux from 'redux';
 import {
     InteractiveWindowMessages,
-    CssMessages,
     SharedMessages,
     IInteractiveWindowMapping
 } from '../../../../platform/messageTypes';
@@ -16,7 +15,6 @@ import { CommonActionType, CommonActionTypeMapping } from './reducers/types';
 
 const AllowedMessages = [
     ...Object.values(InteractiveWindowMessages),
-    ...Object.values(CssMessages),
     ...Object.values(SharedMessages),
     ...Object.values(CommonActionType)
 ];
