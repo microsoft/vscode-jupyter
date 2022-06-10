@@ -1419,7 +1419,7 @@ function parseLocale(): string {
     return vscode.env.language || 'en-us';
 }
 
-function getString(key: string, defValue?: string) {
+function getString(key: string, defValue?: string): string {
     // Load the current collection
     if (!loadedCollection || parseLocale() !== loadedLocale) {
         load();
@@ -1436,6 +1436,8 @@ function getString(key: string, defValue?: string) {
         collection = loadedCollection;
     }
     let result = collection[key];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    result = (result as any)?.message || result;
     if (!result && defValue) {
         // This can happen during development if you haven't fixed up the nls file yet or
         // if for some reason somebody broke the functional test.
