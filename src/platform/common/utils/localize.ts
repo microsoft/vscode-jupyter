@@ -936,7 +936,7 @@ export namespace DataScience {
     export const instructionComments = () =>
         localize(
             'DataScience.instructionComments',
-            `# To add a new cell, type "{0}"\n# To add a new markdown cell, type '{0} [markdown]'\n`
+            `# To add a new cell, type '{0}'\n# To add a new markdown cell, type '{0} [markdown]'\n`
         );
     export const nativeEditorTitle = () => localize('DataScience.nativeEditorTitle', 'Notebook Editor');
     export const untitledNotebookFileName = () => localize('DataScience.untitledNotebookFileName', 'Untitled');
