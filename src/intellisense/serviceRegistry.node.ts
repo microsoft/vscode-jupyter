@@ -7,7 +7,7 @@ import { IServiceManager } from '../platform/ioc/types';
 import { NotebookCellLanguageService } from './cellLanguageService';
 import { NotebookCellBangInstallDiagnosticsProvider } from './diagnosticsProvider';
 import { EmptyNotebookCellLanguageService } from './emptyNotebookCellLanguageService';
-import { NotebookPythonPathService } from './notebookPythonPathService';
+import { NotebookPythonPathService } from './notebookPythonPathService.node';
 import { PythonKernelCompletionProvider } from './pythonKernelCompletionProvider';
 import { PythonKernelCompletionProviderRegistration } from './pythonKernelCompletionProviderRegistration';
 

@@ -5,7 +5,7 @@ import { Uri } from 'vscode';
 import { InterpreterInformation } from '.';
 import { interpreterInfo as getInterpreterInfoCommand, PythonEnvInfo } from '../../common/process/internal/scripts/index.node';
 import { copyPythonExecInfo, PythonExecInfo } from '../exec';
-import { parsePythonVersion } from './pythonVersion';
+import { parsePythonVersion } from './pythonVersion.node';
 
 
 /**
