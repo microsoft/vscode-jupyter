@@ -87,8 +87,11 @@ export namespace OutputChannelNames {
 export namespace GitHubIssue {
     export const failure = () =>
         localize(
-            'GitHubIssue.Failure',
-            'We encountered an error while submitting your GitHub issue. Would you still like to report an issue?'
+            {
+                key: 'GitHubIssue.Failure',
+                comment: ['{Locked="Issue"']
+            },
+            'We encountered an error while submitting your GitHub Issue. Would you still like to report an issue?'
         );
     export const copyContentToClipboardAndOpenIssue = () =>
         localize('GitHubIssue.copyToClipboardAndOpenIssue', 'Yes, copy content to clipboard and open issue');
@@ -377,7 +380,7 @@ export namespace DataScience {
     export const jupyterNotSupported = () =>
         localize(
             'DataScience.jupyterNotSupported',
-            'Jupyter cannot be started. Error attempting to locate jupyter: {0}'
+            'Jupyter cannot be started. Error attempting to locate Jupyter: {0}'
         );
     export const jupyterNotSupportedBecauseOfEnvironment = () =>
         localize(
@@ -415,7 +418,7 @@ export namespace DataScience {
     export const pythonInteractiveHelpLink = () =>
         localize(
             'DataScience.pythonInteractiveHelpLink',
-            'See <https://aka.ms/pyaiinstall> for help on installing jupyter.'
+            'See <https://aka.ms/pyaiinstall> for help on installing Jupyter.'
         );
     export const markdownHelpInstallingMissingDependencies = () =>
         localize(
@@ -707,7 +710,7 @@ export namespace DataScience {
     export const jupyterServerCrashed = () =>
         localize(
             'DataScience.jupyterServerCrashed',
-            'Jupyter server crashed. Unable to connect. \r\nError code from jupyter: {0}'
+            'Jupyter server crashed. Unable to connect. \r\nError code from Jupyter: {0}'
         );
     export const notebookVersionFormat = () =>
         localize(
@@ -933,7 +936,7 @@ export namespace DataScience {
     export const instructionComments = () =>
         localize(
             'DataScience.instructionComments',
-            '# To add a new cell, type "{0}"\n# To add a new markdown cell, type "{0} [markdown]"\n'
+            `# To add a new cell, type "{0}"\n# To add a new markdown cell, type '{0} [markdown]'\n`
         );
     export const nativeEditorTitle = () => localize('DataScience.nativeEditorTitle', 'Notebook Editor');
     export const untitledNotebookFileName = () => localize('DataScience.untitledNotebookFileName', 'Untitled');
@@ -1218,7 +1221,7 @@ export namespace DataScience {
     export const recommendExtensionForNotebookLanguage = () =>
         localize(
             'DataScience.recommendExtensionForNotebook',
-            "The {0} extension is recommended for notebooks targeting the language '{1}'."
+            "The {0} extension is recommended for notebooks targeting the language '{1}'"
         );
     export const kernelWasNotStarted = () =>
         localize(
@@ -1326,8 +1329,8 @@ export namespace DataScience {
         localize('DataScience.matplotlibWidgetCodeActionTitle', 'More info');
     export const allowExtensionToUseJupyterKernelApi = () =>
         localize(
-            { key: 'DataScience.allowExtensionToUseJupyterKernelApi', comment: ['{Locked="kernel"}'] },
-            "Do you want to give the extension '{0}' access to the Jupyter kernels? Clicking '{1}' would allow this extension to execute code against the Jupyter Kernels."
+            { key: 'DataScience.allowExtensionToUseJupyterKernelApi', comment: ['{Locked="Kernels"}'] },
+            "Do you want to give the extension '{0}' access to the Jupyter Kernels? Clicking '{1}' would allow this extension to execute code against the Jupyter Kernels."
         );
     export const thanksForUsingJupyterKernelApiPleaseRegisterWithUs = () =>
         localize(

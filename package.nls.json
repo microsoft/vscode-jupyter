@@ -343,8 +343,8 @@
         "comment": ["{Locked='kernel'}"]
     },
     "DataScience.allowExtensionToUseJupyterKernelApi": {
-        "message": "Do you want to give the extension '{0}' access to the Jupyter kernels? Clicking '{1}' would allow this extension to execute code against the Jupyter Kernels.",
-        "comment": ["{Locked='Kernel'}"]
+        "message": "Do you want to give the extension '{0}' access to the Jupyter Kernels? Clicking '{1}' would allow this extension to execute code against the Jupyter Kernels.",
+        "comment": ["{Locked='Kernels'}"]
     },
     "DataScience.thanksForUsingJupyterKernelApiPleaseRegisterWithUs": "Thanks for trying the Jupyter API. Please file an issue on our repo to use this API in production. This would prevent us from breaking your extension when updating the API (as it is still a work in progress).",
     "Common.bannerLabelYes": "Yes",
@@ -459,7 +459,7 @@
     },
     "DataScience.jupyterKernelSpecModuleNotFound": {
         "message": "'Kernelspec' module not installed in the selected interpreter ({0}).\n Please re-install or update 'jupyter'.",
-        "comment": ["{Locked='Kernel'}", "{Locked='Kernelspec'}"]
+        "comment": ["{Locked='Kernelspec'}"]
     },
     "DataScience.jupyterGetVariablesBadResults": "Failed to fetch variable info from the Jupyter server.",
     "DataScience.liveShareConnectFailure": "Cannot connect to host Jupyter session. URI not found.",
@@ -767,11 +767,11 @@
     "DataScience.waitingForJupyterSessionToBeIdle": "Waiting for Jupyter Session to be idle",
     "DataScience.gettingListOfKernelsForLocalConnection": {
         "message": "Fetching Kernels",
-        "comment": ["{Locked='Kernel'}"]
+        "comment": ["{Locked='Kernels'}"]
     },
     "DataScience.gettingListOfKernelsForRemoteConnection": {
         "message": "Fetching Kernels",
-        "comment": ["{Locked='Kernel'}"]
+        "comment": ["{Locked='Kernels'}"]
     },
     "DataScience.gettingListOfKernelSpecs": {
         "message": "Fetching Kernel specs",
@@ -925,7 +925,7 @@
     "DataScience.sliceMismatchedAxesError": "Expected {0} axes, got {1} in slice expression",
     "DataScience.clearFilters": "Clear all filters",
     "DataScience.defaultNotebookName": "default",
-    "DataScience.recommendExtensionForNotebook": "The {0} extension is recommended for notebooks targeting the language '{1}'.",
+    "DataScience.recommendExtensionForNotebook": "The {0} extension is recommended for notebooks targeting the language '{1}'",
     "DataScience.interactiveClearAllCells": "Clear All",
     "DataScience.interactiveRemoveCell": "Remove Cell",
     "DataScience.interactiveGoToCode": "Go to code",
