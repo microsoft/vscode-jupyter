@@ -323,7 +323,7 @@
     "DataScience.disconnected": "Disconnected",
     "Experiments.inGroup": "User belongs to experiment group '{0}'",
     "Logging.CurrentWorkingDirectory": "cwd:",
-    "Logging.WarnUserAboutDebugLoggingSetting": "You have enabled debug logging for the Jupyter extension, which will continue to write logs to disk. Would you like to turn debug logging off?",
+    "Logging.WarnUserAboutDebugLoggingSetting": "You have enabled debug logging for the Jupyter Extension, which will continue to write logs to disk. Would you like to turn debug logging off?",
     "Logging.YesTurnOffDebugLogging": "Yes, turn off debug logging",
     "Logging.NoResponse": "No",
     "Logging.NoAndDontAskAgain": "No, and don't ask again",
@@ -366,7 +366,7 @@
     "OutputChannelNames.python": "Python",
     "OutputChannelNames.pythonTest": "Python Test Log",
     "OutputChannelNames.jupyter": "Jupyter",
-    "ExtensionSurveyBanner.bannerMessage": "Can you please take 2 minutes to tell us how the Jupyter extension is working for you?",
+    "ExtensionSurveyBanner.bannerMessage": "Can you please take 2 minutes to tell us how the Jupyter Extension is working for you?",
     "ExtensionSurveyBanner.bannerLabelYes": "Yes, take survey now",
     "ExtensionSurveyBanner.bannerLabelNo": "No, thanks",
     "ExtensionSurveyBanner.maybeLater": "Maybe later",
@@ -469,7 +469,7 @@
     "DataScience.liveShareSyncFailure": "Synchronization failure during live share startup.",
     "DataScience.liveShareServiceFailure": "Failure starting '{0}' service during live share connection.",
     "DataScience.documentMismatch": "Cannot run cells, duplicate documents for {0} found.",
-    "DataScience.pythonInteractiveCreateFailed": "Failure to create a 'Interactive' window. Try reinstalling the Jupyter extension.",
+    "DataScience.pythonInteractiveCreateFailed": "Failure to create a 'Interactive' window. Try reinstalling the Jupyter Extension.",
     "DataScience.interruptKernel": {
         "message": "Interrupt Jupyter kernel",
         "comment": ["{Locked='kernel'}"]
@@ -504,7 +504,7 @@
     "DataScience.jupyterStartTimedout": "Starting Jupyter has timed out. Please check the 'Jupyter' output panel for further details.",
     "DataScience.startingJupyterLogMessage": "Starting Jupyter from {0} with command line {1}",
     "DataScience.jupyterCommandLineDefaultLabel": "Default (recommended)",
-    "DataScience.jupyterCommandLineDefaultDetail": "The Jupyter extension will determine the appropriate command line for Jupyter",
+    "DataScience.jupyterCommandLineDefaultDetail": "The Jupyter Extension will determine the appropriate command line for Jupyter",
     "DataScience.jupyterCommandLineCustomLabel": "Custom",
     "DataScience.jupyterCommandLineCustomDetail": "Customize the command line passed to Jupyter on startup",
     "DataScience.jupyterCommandLineReloadQuestion": "Please reload the window when changing the Jupyter command line.",
@@ -512,7 +512,7 @@
     "DataScience.jupyterCommandLineQuickPickPlaceholder": "Choose an option",
     "DataScience.jupyterCommandLineQuickPickTitle": "Pick command line for Jupyter",
     "DataScience.jupyterCommandLinePrompt": "Enter your custom command line for Jupyter",
-    "Common.loadingExtension": "Jupyter extension loading...",
+    "Common.loadingExtension": "Jupyter Extension loading...",
     "Common.openOutputPanel": "Show output",
     "DataScience.variableExplorerNameColumn": "Name",
     "DataScience.variableExplorerTypeColumn": "Type",
@@ -616,7 +616,7 @@
         "message": "Jupyter Notebooks",
         "comment": ["{Locked='Notebook'}"]
     },
-    "DataScience.exportAsPythonFileTooltip": "Convert and save to a python script",
+    "DataScience.exportAsPythonFileTooltip": "Convert and save to a Python script",
     "DataScience.exportAsPythonFileTitle": "Save as Python File",
     "DataScience.exportButtonTitle": "Export",
     "DataScience.runCell": "Run cell",
@@ -907,9 +907,9 @@
         "message": "CustomEditor and NativeNotebook experiments cannot be turned on together",
         "comment": ["{Locked='Notebook'}"]
     },
-    "DataScience.pythonExtensionRequired": "The Python extension is required to perform that task. Click Yes to open Python extension installation page.",
+    "DataScience.pythonExtensionRequired": "The Python Extension is required to perform that task. Click Yes to open Python Extension installation page.",
     "DataScience.pythonExtensionRequiredToRunNotebook": "Python Extension required to run Python notebooks.",
-    "DataScience.pythonExtensionInstalled": "Python extension is now installed. Some features might not be available until a notebook or interactive window session is restarted.",
+    "DataScience.pythonExtensionInstalled": "Python Extension is now installed. Some features might not be available until a notebook or interactive window session is restarted.",
     "DataScience.showDataViewerFail": "Failed to create the Data Viewer. Check the Jupyter tab of the Output window for more info.",
     "DataScience.notebookCreationPickerPlaceHolder": "Select an option to create a blank notebook",
     "DataScience.refreshDataViewer": "Refresh data viewer",
@@ -946,7 +946,7 @@
     "DataScience.usingNonPrereleaseYes": "Yes",
     "DataScience.usingNonPrereleaseNo": "No",
     "DataScience.usingNonPrereleaseNoAndDontAskAgain": "Don't ask again",
-    "DataScience.usingNonPrerelease": "The 'prerelease' version of the Jupyter extension is recommended when running on VS Code Insiders. Would you like to switch?",
+    "DataScience.usingNonPrerelease": "The 'prerelease' version of the Jupyter Extension is recommended when running on VS Code Insiders. Would you like to switch?",
     "DataScience.cellAtFormat": "{0} Cell {1}'",
     "DataScience.jupyterServerConsoleOutputChannel": "Jupyter Server Console",
     "DataScience.kernelConsoleOutputChannel": {
@@ -959,6 +959,6 @@
     "Installer.couldNotInstallLibrary": "Could not install {0}. If pip is not available, please use the package manager of your choice to manually install this library into your Python environment.",
     "Installer.dataScienceInstallPrompt": "Data Science library {0} is not installed. Install?",
     "Products.installingModule": "Installing {0}",
-    "DataScience.webNotSupported": "Operation not supported in web version of Jupyter extension.",
+    "DataScience.webNotSupported": "Operation not supported in web version of Jupyter Extension.",
     "DataScience.outputSizeExceedLimit": "Output exceeds the <a href={0}>size limit</a>. Open the full output data <a href={1}>in a text editor</a>"
 }

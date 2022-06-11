@@ -56,7 +56,7 @@ export class NotebookProvider implements INotebookProvider {
             if (!this.startupUi.disableUI) {
                 await this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
             }
-            throw new Error('Python extension is not installed');
+            throw new Error('Python Extension is not installed');
         }
     }
     public async create(options: NotebookCreationOptions): Promise<IJupyterSession> {

@@ -53,7 +53,7 @@ export namespace Common {
     export const download = () => localize('Common.download', 'Download');
     export const gotIt = () => localize('Common.gotIt', 'Got it!');
     export const install = () => localize('Common.install', 'Install');
-    export const loadingExtension = () => localize('Common.loadingExtension', 'Jupyter extension loading...');
+    export const loadingExtension = () => localize('Common.loadingExtension', 'Jupyter Extension loading...');
     export const openOutputPanel = () => localize('Common.openOutputPanel', 'Show output');
     export const noIWillDoItLater = () => localize('Common.noIWillDoItLater', 'No, I will do it later');
     export const notNow = () => localize('Common.notNow', 'Not now');
@@ -119,7 +119,7 @@ export namespace Logging {
     export const warnUserAboutDebugLoggingSetting = () =>
         localize(
             'Logging.WarnUserAboutDebugLoggingSetting',
-            'You have enabled debug logging for the Jupyter extension, which will continue to write logs to disk. Would you like to turn debug logging off?'
+            'You have enabled debug logging for the Jupyter Extension, which will continue to write logs to disk. Would you like to turn debug logging off?'
         );
     export const bannerYesTurnOffDebugLogging = () =>
         localize('Logging.YesTurnOffDebugLogging', 'Yes, turn off debug logging');
@@ -227,7 +227,7 @@ export namespace DataScience {
     export const pythonExtensionInstalled = () =>
         localize(
             'DataScience.pythonInstalledReloadPromptMessage',
-            'Python extension is now installed. Some features might not be available until a notebook or interactive window session is restarted.'
+            'Python Extension is now installed. Some features might not be available until a notebook or interactive window session is restarted.'
         );
     export const unknownServerUri = () =>
         localize(
@@ -776,7 +776,7 @@ export namespace DataScience {
     export const pythonInteractiveCreateFailed = () =>
         localize(
             'DataScience.pythonInteractiveCreateFailed',
-            "Failure to create an 'Interactive' window. Try reinstalling the Python extension."
+            "Failure to create an 'Interactive' window. Try reinstalling the Python Extension."
         );
     export const jupyterGetVariablesExecutionError = () =>
         localize('DataScience.jupyterGetVariablesExecutionError', 'Failure during variable extraction: \r\n{0}');
@@ -951,7 +951,7 @@ export namespace DataScience {
     export const dirtyNotebookDialogFilter = () =>
         localize('DataScience.dirtyNotebookDialogFilter', 'Jupyter Notebooks');
     export const notebookExportAs = () => localize('DataScience.notebookExportAs', 'Export As');
-    export const exportAsPythonFileTitle = () => localize('DataScience.exportAsPythonFileTitle', 'Save As Python File');
+    export const exportAsPythonFileTitle = () => localize('DataScience.exportAsPythonFileTitle', 'Save as Python File');
     export const exportButtonTitle = () => localize('DataScience.exportButtonTitle', 'Export');
     export const exportAsQuickPickPlaceholder = () =>
         localize('DataScience.exportAsQuickPickPlaceholder', 'Export As...');
@@ -1349,7 +1349,7 @@ export namespace DataScience {
     export const usingNonPrerelease = () =>
         localize(
             'DataScience.usingNonPrerelease',
-            `The 'prerelease' version of the Jupyter extension is recommended when running on VS Code insiders. Would you like to switch?`
+            `The 'prerelease' version of the Jupyter Extension is recommended when running on VS Code insiders. Would you like to switch?`
         );
 
     export const jupyterServerConsoleOutputChannel = () =>
@@ -1358,7 +1358,7 @@ export namespace DataScience {
     export const kernelConsoleOutputChannel = () =>
         localize('DataScience.kernelConsoleOutputChannel', `{0} Kernel Console Output`);
     export const webNotSupported = () =>
-        localize('DataScience.webNotSupported', `Operation not supported in web version of Jupyter extension.`);
+        localize('DataScience.webNotSupported', `Operation not supported in web version of Jupyter Extension.`);
     export const validationErrorMessageForRemoteUrlProtocolNeedsToBeHttpOrHttps = () =>
         localize('DataScience.validationErrorMessageForRemoteUrlProtocolNeedsToBeHttpOrHttps', 'Has to be http(s)');
 }
