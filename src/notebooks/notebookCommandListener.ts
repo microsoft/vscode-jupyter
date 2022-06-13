@@ -25,7 +25,7 @@ import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { DataScience } from '../platform/common/utils/localize';
 import { traceInfoIfCI, traceInfo } from '../platform/logging';
 import { sendTelemetryEvent } from '../telemetry';
-import { trackKernelResourceInformation } from '../telemetry/telemetry';
+import { trackKernelResourceInformation } from '../kernels/telemetry/helper';
 import { INotebookControllerManager, INotebookEditorProvider } from './types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { IServiceContainer } from '../platform/ioc/types';

@@ -34,7 +34,7 @@ import { JupyterPaths } from '../finder/jupyterPaths.node';
 import { isTestExecution } from '../../../platform/common/constants';
 import { getDisplayPathFromLocalFile } from '../../../platform/common/platform/fs-paths.node';
 import { noop } from '../../../platform/common/utils/misc';
-import { sendKernelTelemetryWhenDone } from '../../../telemetry/telemetry';
+import { sendKernelTelemetryWhenDone } from '../../telemetry/sendKernelTelemetryEvent';
 
 const PortFormatString = `kernelLauncherPortStart_{0}.tmp`;
 // Launches and returns a kernel process given a resource or python interpreter.

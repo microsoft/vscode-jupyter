@@ -11,7 +11,7 @@ import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { INotebookControllerManager } from '../types';
 import { IInstaller, Product } from '../../kernels/installer/types';
 import { IVSCodeNotebookController } from '../controllers/types';
-import { trackKernelResourceInformation } from '../../telemetry/telemetry';
+import { trackKernelResourceInformation } from '../../kernels/telemetry/helper';
 import { IInterpreterPackages } from '../../telemetry/types';
 
 @injectable()

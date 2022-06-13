@@ -17,7 +17,8 @@ import { IDisplayOptions, IDisposable, Resource } from '../../../platform/common
 import { TimedOutError, createDeferred, sleep } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
-import { trackKernelResourceInformation, sendKernelTelemetryEvent } from '../../../telemetry/telemetry';
+import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEvent';
+import { trackKernelResourceInformation } from '../../telemetry/helper';
 import { sendTelemetryEvent, captureTelemetry } from '../../../telemetry';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';

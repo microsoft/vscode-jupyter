@@ -6,7 +6,8 @@ import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { KernelConnectionMetadata } from '../../kernels/types';
 import { Telemetry } from '../../platform/common/constants';
-import { sendKernelTelemetryEvent, trackKernelResourceInformation } from '../../telemetry/telemetry';
+import { sendKernelTelemetryEvent } from '../../kernels/telemetry/sendKernelTelemetryEvent';
+import { trackKernelResourceInformation } from '../../kernels/telemetry/helper';
 import { ResourceSet } from '../../platform/vscode-path/map';
 
 export function sendKernelListTelemetry(

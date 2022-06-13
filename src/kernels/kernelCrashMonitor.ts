@@ -10,7 +10,7 @@ import { Telemetry } from '../platform/common/constants';
 import { IDisposableRegistry } from '../platform/common/types';
 import { DataScience } from '../platform/common/utils/localize';
 import { noop } from '../platform/common/utils/misc';
-import { sendKernelTelemetryEvent } from '../telemetry/telemetry';
+import { sendKernelTelemetryEvent } from './telemetry/sendKernelTelemetryEvent';
 import { endCellAndDisplayErrorsInCell } from './execution/helpers';
 import { getDisplayNameOrNameOfKernelConnection } from './helpers';
 import { IKernel, IKernelProvider } from './types';
