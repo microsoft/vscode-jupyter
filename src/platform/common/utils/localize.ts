@@ -1134,6 +1134,11 @@ export namespace DataScience {
             'DataScience.useCDNForWidgets',
             'Widgets require us to download supporting files from a 3rd party website. Click [here](https://aka.ms/PVSCIPyWidgets) for more information.'
         );
+    export const useCDNForWidgetsNoInformation = () =>
+        localize(
+            'DataScience.useCDNForWidgetsNoInformation',
+            'Widgets require us to download supporting files from a 3rd party website.'
+        );
     export const enableCDNForWidgetsSettingHtml = () =>
         localize(
             {
