@@ -391,14 +391,15 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     }
     public async getActivatedEnvVarsUsingActivationCommands(resource: Resource, interpreter: PythonEnvironment) {
         const shellInfo = defaultShells[this.platform.osType]!;
-        const envType = interpreter?.envType;
+        const interpreterDetails = await this.interpreterService.getInterpreterDetails(interpreter.uri, resource);
+        const envType = interpreterDetails?.envType;
         const stopWatch = new StopWatch();
         try {
             let isPossiblyCondaEnv = false;
             const processServicePromise = this.processServiceFactory.create(resource);
 
             const [activationCommands, customEnvVars] = await Promise.all([
-                this.getActivationCommands(resource, interpreter),
+                this.getActivationCommands(resource, interpreterDetails || interpreter),
                 this.envVarsService.getEnvironmentVariables(resource)
             ]);
             const processService = await processServicePromise;

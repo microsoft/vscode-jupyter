@@ -547,6 +547,7 @@ jobs:
         shell: bash -l {0}
         if: matrix.python == 'conda'
         run: |
+          conda init bash
           conda activate functional_test_env
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r ./requirements.txt
           python -m pip --disable-pip-version-check install -r build/conda-nonconda-test-requirements.txt

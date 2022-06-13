@@ -31,6 +31,7 @@ import {
     isDaemonPoolCreationOption
 } from './types.node';
 import { TraceOptions } from '../../logging/types';
+import { IInterpreterService } from '../../interpreter/contracts';
 
 // Minimum version number of conda required to be able to use 'conda run'
 export const CONDA_RUN_VERSION = '4.6.0';
@@ -48,7 +49,8 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IConfigurationService) private readonly config: IConfigurationService
+        @inject(IConfigurationService) private readonly config: IConfigurationService,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {
         // Acquire other objects here so that if we are called during dispose they are available.
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
@@ -74,14 +76,22 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     ): Promise<T | IPythonExecutionService> {
         const daemonPoolKey = `${options.interpreter.uri}#${options.daemonClass || ''}#${options.daemonModule || ''}`;
         const interpreter = options.interpreter;
+        const interpreterDetails = await this.interpreterService.getInterpreterDetails(interpreter.uri);
         const activatedProcPromise = this.createActivatedEnvironment({
             allowEnvironmentFetchExceptions: true,
             interpreter: options.interpreter,
             resource: options.resource
         });
         // No daemon support in Python 2.7 or during shutdown
-        if ((interpreter?.version && interpreter.version.major < 3) || this.config.getSettings().disablePythonDaemon) {
-            traceInfo(`Not using daemon support for ${getDisplayPath(options.interpreter.uri)}`);
+        if (
+            (interpreterDetails?.version && interpreterDetails.version.major < 3) ||
+            this.config.getSettings().disablePythonDaemon
+        ) {
+            traceInfo(
+                `Not using daemon support for ${getDisplayPath(options.interpreter.uri)} - Interpreter Version: ${
+                    interpreterDetails?.version?.major
+                } disablePythonDaemon: ${this.config.getSettings().disablePythonDaemon}`
+            );
             return activatedProcPromise;
         }
 
