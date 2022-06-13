@@ -187,20 +187,22 @@ export class CommonMessageCoordinator {
                     payload.moduleName,
                     payload.moduleVersion
                 );
-                this.appShell.showErrorMessage(errorMessage, ...[enableDownloads, moreInfo]).then((selection) => {
-                    switch (selection) {
-                        case moreInfo:
-                            this.appShell.openUrl('https://aka.ms/PVSCIPyWidgets');
-                            break;
-                        case enableDownloads:
-                            this.commandManager
-                                .executeCommand(Commands.EnableLoadingWidgetsFrom3rdPartySource)
-                                .then(noop, noop);
-                            break;
-                        default:
-                            break;
-                    }
-                }, noop);
+                this.appShell
+                    .showErrorMessage(errorMessage, { modal: true }, ...[enableDownloads, moreInfo])
+                    .then((selection) => {
+                        switch (selection) {
+                            case moreInfo:
+                                this.appShell.openUrl('https://aka.ms/PVSCIPyWidgets');
+                                break;
+                            case enableDownloads:
+                                this.commandManager
+                                    .executeCommand(Commands.EnableLoadingWidgetsFrom3rdPartySource)
+                                    .then(noop, noop);
+                                break;
+                            default:
+                                break;
+                        }
+                    }, noop);
             }
             traceError(`Widget load failure ${errorMessage}`, payload);
 
