@@ -138,7 +138,9 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
             // This is failing on CI for some reason
             verifyVariables(activatedCommandEnvVars!, '(command)');
         }
-        verifyVariables(activatedCondaRunEnvVars!, '(conda run)');
+        if (activatedCondaRunEnvVars) {
+            verifyVariables(activatedCondaRunEnvVars!, '(conda run)');
+        }
     });
     test('Verify env variables are cached and we do not attempt to get env vars using Conda scripts our selves', async function () {
         return this.skip();
