@@ -34,8 +34,8 @@ import {
 } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { sendKernelListTelemetry } from '../../telemetry/kernelTelemetry';
-import { trackKernelResourceInformation } from '../../telemetry/telemetry';
+import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
+import { trackKernelResourceInformation } from '../../kernels/telemetry/helper';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';

@@ -18,7 +18,7 @@ import { traceVerbose, traceWarning } from '../../platform/logging';
 import { Resource, IMemento, GLOBAL_MEMENTO, IDisplayOptions, IDisposable } from '../../platform/common/types';
 import { createDeferred, createDeferredFromPromise, Deferred } from '../../platform/common/utils/async';
 import { DataScience } from '../../platform/common/utils/localize';
-import { sendKernelTelemetryEvent } from '../../telemetry/telemetry';
+import { sendKernelTelemetryEvent } from '../../kernels/telemetry/sendKernelTelemetryEvent';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { Telemetry, Commands } from '../../webviews/webview-side/common/constants';
 import { clearInstalledIntoInterpreterMemento } from '../../kernels/installer/productInstaller';

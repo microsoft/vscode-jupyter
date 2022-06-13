@@ -49,10 +49,7 @@ import {
 import { createDeferred } from '../../platform/common/utils/async';
 import { DataScience, Common } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
-import {
-    initializeInteractiveOrNotebookTelemetryBasedOnUserAction,
-    sendKernelTelemetryEvent
-} from '../../telemetry/telemetry';
+import { sendKernelTelemetryEvent } from '../../kernels/telemetry/sendKernelTelemetryEvent';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { Telemetry, Commands } from '../../webviews/webview-side/common/constants';
@@ -95,6 +92,7 @@ import {
     updateNotebookMetadata
 } from '../../kernels/execution/helpers';
 import { KernelMessage } from '@jupyterlab/services';
+import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../../kernels/telemetry/helper';
 
 export class VSCodeNotebookController implements Disposable, IVSCodeNotebookController {
     private readonly _onNotebookControllerSelected: EventEmitter<{

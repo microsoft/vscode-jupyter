@@ -21,6 +21,7 @@ import { RemoteKernelConnectionHandler } from './controllers/remoteKernelConnect
 import { JupyterServerSelectorCommand } from './serverSelector';
 import { IDataScienceCommandListener } from '../platform/common/types';
 import { NotebookCommandListener } from './notebookCommandListener';
+import { InterpreterPackageTracker } from './telemetry/interpreterPackageTracker';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
@@ -57,4 +58,8 @@ export function registerTypes(serviceManager: IServiceManager) {
         JupyterServerSelectorCommand
     );
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NotebookCommandListener);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        InterpreterPackageTracker
+    );
 }

@@ -925,7 +925,7 @@ No properties for event
 
 ## Locations Used
 
-[src/telemetry/telemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/telemetry.ts)
+[src/kernels/telemetry/sendKernelTelemetryEvent.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/telemetry/sendKernelTelemetryEvent.ts)
 ```typescript
     properties?: P[E] & { waitBeforeSending?: Promise<void> },
     ex?: Error
@@ -937,7 +937,7 @@ No properties for event
 ```
 
 
-[src/telemetry/telemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/telemetry.ts)
+[src/kernels/telemetry/sendKernelTelemetryEvent.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/telemetry/sendKernelTelemetryEvent.ts)
 ```typescript
     stopWatch?: StopWatch,
     properties?: P[E] & { [waitBeforeSending]?: Promise<void> }
@@ -1251,7 +1251,7 @@ No properties for event
 [src/notebooks/controllers/notebookControllerManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/notebookControllerManager.ts)
 ```typescript
             }
-            // We know that this fails when we have xeus kernels installed (until that's resolved thats one instance when we can have duplicates).
+            // We know that this fails when we have xeus kernels installed (untill that's resolved thats one instance when we can have duplicates).
             sendTelemetryEvent(
                 Telemetry.FailedToCreateNotebookController,
                 undefined,
@@ -2653,7 +2653,7 @@ No properties for event
 
 ## Locations Used
 
-[src/telemetry/telemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/telemetry.ts)
+[src/kernels/telemetry/sendKernelTelemetryEvent.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/telemetry/sendKernelTelemetryEvent.ts)
 ```typescript
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function resetData(resource: Resource, eventName: string, properties: any) {
@@ -2665,7 +2665,7 @@ function resetData(resource: Resource, eventName: string, properties: any) {
 ```
 
 
-[src/telemetry/telemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/telemetry.ts)
+[src/kernels/telemetry/sendKernelTelemetryEvent.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/telemetry/sendKernelTelemetryEvent.ts)
 ```typescript
 function resetData(resource: Resource, eventName: string, properties: any) {
     // Once we have successfully interrupted, clear the interrupt counter.
@@ -2677,7 +2677,7 @@ function resetData(resource: Resource, eventName: string, properties: any) {
 ```
 
 
-[src/telemetry/telemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/telemetry.ts)
+[src/kernels/telemetry/sendKernelTelemetryEvent.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/telemetry/sendKernelTelemetryEvent.ts)
 ```typescript
     // Once we have successfully interrupted, clear the interrupt counter.
     if (eventName === Telemetry.NotebookInterrupt) {
@@ -2762,7 +2762,7 @@ No properties for event
 
 ## Locations Used
 
-[src/telemetry/telemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/telemetry.ts)
+[src/kernels/telemetry/sendKernelTelemetryEvent.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/telemetry/sendKernelTelemetryEvent.ts)
 ```typescript
         }
     }
@@ -2774,7 +2774,7 @@ No properties for event
 ```
 
 
-[src/telemetry/telemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/telemetry.ts)
+[src/kernels/telemetry/sendKernelTelemetryEvent.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/telemetry/sendKernelTelemetryEvent.ts)
 ```typescript
     }
     // Once we have successfully restarted, clear the interrupt counter.
@@ -2786,7 +2786,7 @@ No properties for event
 ```
 
 
-[src/telemetry/telemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/telemetry.ts)
+[src/kernels/telemetry/sendKernelTelemetryEvent.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/telemetry/sendKernelTelemetryEvent.ts)
 ```typescript
     // Once we have successfully restarted, clear the interrupt counter.
     if (eventName === Telemetry.NotebookRestart) {
@@ -2838,9 +2838,9 @@ No properties for event
 
 ## Locations Used
 
-[src/telemetry/telemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/telemetry.ts)
+[src/kernels/telemetry/sendKernelTelemetryEvent.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/telemetry/sendKernelTelemetryEvent.ts)
 ```typescript
-}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function incrementStartFailureCount(resource: Resource, eventName: any, properties: any) {
     if (eventName === Telemetry.NotebookStart) {
@@ -2850,7 +2850,7 @@ function incrementStartFailureCount(resource: Resource, eventName: any, properti
 ```
 
 
-[src/telemetry/telemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/telemetry.ts)
+[src/kernels/telemetry/sendKernelTelemetryEvent.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/telemetry/sendKernelTelemetryEvent.ts)
 ```typescript
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function incrementStartFailureCount(resource: Resource, eventName: any, properties: any) {
@@ -2862,7 +2862,7 @@ function incrementStartFailureCount(resource: Resource, eventName: any, properti
 ```
 
 
-[src/telemetry/telemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/telemetry.ts)
+[src/kernels/telemetry/sendKernelTelemetryEvent.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/telemetry/sendKernelTelemetryEvent.ts)
 ```typescript
 function incrementStartFailureCount(resource: Resource, eventName: any, properties: any) {
     if (eventName === Telemetry.NotebookStart) {
@@ -6216,7 +6216,7 @@ No properties for event
 
 
 
- Telemetry event sent when an ipywidget version that is not supported is used & we have trapped this and warned the user about it.
+ Telemetry event sent when an ipywidget version that is not supported is used & we have trapped this and warned the user abou it.
 
 ## Properties
 
@@ -6491,7 +6491,7 @@ No properties for event
 
 ## Locations Used
 
-[src/telemetry/kernelTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/kernelTelemetry.ts)
+[src/notebooks/telemetry/kernelTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/telemetry/kernelTelemetry.ts)
 ```typescript
     });
     trackKernelResourceInformation(resource, counters);
@@ -8990,7 +8990,7 @@ No properties for event
 
 ## Locations Used
 
-[src/telemetry/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/importTracker.node.ts)
+[src/platform/common/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/importTracker.node.ts)
 ```typescript
         // Hash the package name so that we will never accidentally see a
         // user's private package name.
@@ -9030,7 +9030,7 @@ No properties for event
 
 ## Locations Used
 
-[src/telemetry/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/importTracker.node.ts)
+[src/platform/common/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/importTracker.node.ts)
 ```typescript
         }
     }
@@ -9042,7 +9042,7 @@ No properties for event
 ```
 
 
-[src/telemetry/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/importTracker.node.ts)
+[src/platform/common/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/importTracker.node.ts)
 ```typescript
         this.lookForImports(lines);
     }
@@ -9054,7 +9054,7 @@ No properties for event
 ```
 
 
-[src/telemetry/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/importTracker.node.ts)
+[src/platform/common/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/importTracker.node.ts)
 ```typescript
         this.lookForImports(result);
     }

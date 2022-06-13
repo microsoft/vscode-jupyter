@@ -332,8 +332,8 @@ function generateDocumentation(fileNames: string[], options: ts.CompilerOptions)
                                 const refSourceFile = program?.getSourceFile(r.fileName);
                                 if (refSourceFile) {
                                     const refNode = findNode(refSourceFile, r.textSpan.start);
-                                    // See if this is the special 'index.ts' file that forces telemetry to be type safe
-                                    if (refNode && r.fileName.endsWith('src/telemetry/index.ts')) {
+                                    // See if this is the special 'types.ts' file that forces telemetry to be type safe
+                                    if (refNode && r.fileName.endsWith('src/telemetry/types.ts')) {
                                         entries.push(
                                             generateTelemetryEntry(
                                                 program!,

@@ -33,11 +33,11 @@ import { DataScience } from '../platform/common/utils/localize';
 import { noop } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
 import { JupyterConnectError } from '../platform/errors/jupyterConnectError';
+import { sendKernelTelemetryEvent } from './telemetry/sendKernelTelemetryEvent';
 import {
-    sendKernelTelemetryEvent,
     initializeInteractiveOrNotebookTelemetryBasedOnUserAction,
     trackKernelResourceInformation
-} from '../telemetry/telemetry';
+} from './telemetry/helper';
 import { sendTelemetryEvent } from '../telemetry';
 import { concatMultilineString } from '../webviews/webview-side/common';
 import { Telemetry, Identifiers, CodeSnippets } from '../webviews/webview-side/common/constants';

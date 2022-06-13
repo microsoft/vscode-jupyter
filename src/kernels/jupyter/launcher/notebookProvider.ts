@@ -5,7 +5,7 @@
 
 import { inject, injectable, optional } from 'inversify';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
-import { trackKernelResourceInformation, sendKernelTelemetryWhenDone } from '../../../telemetry/telemetry';
+import { trackKernelResourceInformation } from '../../telemetry/helper';
 import { Telemetry } from '../../../webviews/webview-side/common/constants';
 import {
     ConnectNotebookProviderOptions,
@@ -21,6 +21,7 @@ import { DisplayOptions } from '../../displayOptions';
 import { IRawNotebookProvider } from '../../raw/types';
 import { IJupyterNotebookProvider } from '../types';
 import { ServerConnectionType } from './serverConnectionType';
+import { sendKernelTelemetryWhenDone } from '../../telemetry/sendKernelTelemetryEvent';
 
 @injectable()
 export class NotebookProvider implements INotebookProvider {
