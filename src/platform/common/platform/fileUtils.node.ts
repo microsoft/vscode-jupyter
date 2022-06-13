@@ -1,15 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IDisposable } from '@fluentui/react';
 import * as fsapi from 'fs-extra';
 import * as path from '../../../platform/vscode-path/path';
-import * as vscode from 'vscode';
-import { ShellOptions, ExecutionResult, IProcessServiceFactory, SpawnOptions } from '../process/types.node';
+import { ShellOptions, ExecutionResult, IProcessServiceFactory } from '../process/types.node';
 import { IConfigurationService } from '../types';
-import { chain, iterable } from '../utils/async';
 import { IServiceContainer } from '../../ioc/types';
-import { getOSType, OSType } from '../utils/platform';
 import { normCasePath } from './fileUtils';
 export { arePathsSame } from './fileUtils';
 
@@ -23,11 +19,6 @@ export function initializeExternalDependencies(serviceContainer: IServiceContain
 export async function shellExecute(command: string, options: ShellOptions = {}): Promise<ExecutionResult<string>> {
     const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
     return service.shellExec(command, options);
-}
-
-export async function exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
-    const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
-    return service.exec(file, args, options);
 }
 
 // filesystem
@@ -66,36 +57,6 @@ export function isParentPath(filePath: string, parentPath: string): boolean {
     return normCasePath(filePath).startsWith(normCasePath(parentPath));
 }
 
-export async function isDirectory(filename: string): Promise<boolean> {
-    const stat = await fsapi.lstat(filename);
-    return stat.isDirectory();
-}
-
-/**
- * Produce a uniform representation of the given filename.
- *
- * The result is especially suitable for cases where a filename is used
- * as a key (e.g. in a mapping).
- */
-export function normalizeFilename(filename: string): string {
-    // `path.resolve()` returns the absolute path.  Note that it also
-    // has the same behavior as `path.normalize()`.
-    const resolved = path.resolve(filename);
-    return getOSType() === OSType.Windows ? resolved.toLowerCase() : resolved;
-}
-
-export function normalizePath(filename: string): string {
-    return normalizeFilename(filename);
-}
-
-export function resolvePath(filename: string): string {
-    return path.resolve(filename);
-}
-
-export function getWorkspaceFolders(): string[] {
-    return vscode.workspace.workspaceFolders?.map((w) => w.uri.fsPath) ?? [];
-}
-
 export async function resolveSymbolicLink(absPath: string): Promise<string> {
     const stats = await fsapi.lstat(absPath);
     if (stats.isSymbolicLink()) {
@@ -111,40 +72,6 @@ export async function resolveSymbolicLink(absPath: string): Promise<string> {
 }
 
 /**
- * Returns full path to sub directories of a given directory.
- * @param {string} root : path to get sub-directories from.
- * @param options : If called with `resolveSymlinks: true`, then symlinks found in
- *                  the directory are resolved and if they resolve to directories
- *                  then resolved values are returned.
- */
-export async function* getSubDirs(
-    root: string,
-    options?: { resolveSymlinks?: boolean }
-): AsyncIterableIterator<string> {
-    const dirContents = await fsapi.promises.readdir(root, { withFileTypes: true });
-    const generators = dirContents.map((item) => {
-        async function* generator() {
-            const fullPath = path.join(root, item.name);
-            if (item.isDirectory()) {
-                yield fullPath;
-            } else if (options?.resolveSymlinks && item.isSymbolicLink()) {
-                // The current FS item is a symlink. It can potentially be a file
-                // or a directory. Resolve it first and then check if it is a directory.
-                const resolvedPath = await resolveSymbolicLink(fullPath);
-                const resolvedPathStat = await fsapi.lstat(resolvedPath);
-                if (resolvedPathStat.isDirectory()) {
-                    yield resolvedPath;
-                }
-            }
-        }
-
-        return generator();
-    });
-
-    yield* iterable(chain(generators));
-}
-
-/**
  * Returns the value for setting `python.<name>`.
  * @param name The name of the setting.
  */
@@ -152,19 +79,6 @@ export function getPythonSetting<T>(name: string): T | undefined {
     const settings = internalServiceContainer.get<IConfigurationService>(IConfigurationService).getSettings();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (settings as any)[name];
-}
-
-/**
- * Registers the listener to be called when a particular setting changes.
- * @param name The name of the setting.
- * @param callback The listener function to be called when the setting changes.
- */
-export function onDidChangePythonSetting(name: string, callback: () => void): IDisposable {
-    return vscode.workspace.onDidChangeConfiguration((event: vscode.ConfigurationChangeEvent) => {
-        if (event.affectsConfiguration(`python.${name}`)) {
-            callback();
-        }
-    });
 }
 
 /**
