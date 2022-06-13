@@ -10,12 +10,11 @@ import { traceError, traceVerbose } from '../platform/logging';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IPythonExecutionFactory } from '../platform/common/process/types.node';
 import { Resource } from '../platform/common/types';
+import { concatMultilineString } from '../platform/common/utils';
 import { trackKernelResourceInformation } from './telemetry/helper';
 import { areInterpreterPathsSame } from '../platform/pythonEnvironments/info/interpreter';
-import { sendTelemetryEvent } from '../telemetry';
-import { Telemetry } from '../telemetry';
+import { sendTelemetryEvent, Telemetry } from '../telemetry';
 import { executeSilently, isPythonKernelConnection } from './helpers';
-import { concatMultilineString } from '../platform/common/utils';
 
 export async function sendTelemetryForPythonKernelExecutable(
     kernel: IKernel,

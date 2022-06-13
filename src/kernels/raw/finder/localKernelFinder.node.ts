@@ -10,8 +10,7 @@ import { LocalPythonAndRelatedNonPythonKernelSpecFinder } from './localPythonAnd
 import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder.node';
 import { traceInfo, ignoreLogging, traceDecoratorError } from '../../../platform/logging';
 import { Resource } from '../../../platform/common/types';
-import { captureTelemetry } from '../../../telemetry';
-import { Telemetry } from '../../../telemetry';
+import { captureTelemetry, Telemetry } from '../../../telemetry';
 import { ILocalKernelFinder } from '../types';
 
 // This class searches for a kernel that matches the given kernel name.

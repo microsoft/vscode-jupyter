@@ -21,10 +21,10 @@ import fastDeepEqual = require('fast-deep-equal');
 import * as path from '../../platform/vscode-path/path';
 import * as uriPath from '../../platform/vscode-path/resources';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { concatMultilineString, splitMultilineString } from '../../platform/common/utils';
 import { traceInfoIfCI, traceError, traceWarning } from '../../platform/logging';
 import { getInterpreterHash } from '../../platform/pythonEnvironments/info/interpreter';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../../telemetry';
+import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { getOSType, OSType } from '../../platform/common/utils/platform';
 import { createOutputWithErrorMessageForDisplay } from '../../platform/errors/errorUtils';
 import { CellExecutionCreator } from './cellExecutionCreator';
@@ -35,7 +35,6 @@ import {
     kernelConnectionMetadataHasKernelModel,
     getKernelRegistrationInfo
 } from '../helpers';
-import { concatMultilineString, splitMultilineString } from '../../platform/common/utils';
 
 export enum CellOutputMimeTypes {
     error = 'application/vnd.code.notebook.error',

@@ -30,10 +30,9 @@ import {
 } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { InterpreterPackages } from '../../telemetry/interpreterPackages.node';
 import { getInterpreterHash } from '../../platform/pythonEnvironments/info/interpreter';
-import { Telemetry } from '../../telemetry';
 import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants';
 import { sleep } from '../../platform/common/utils/async';
 import { trackPackageInstalledIntoInterpreter } from './productInstaller';

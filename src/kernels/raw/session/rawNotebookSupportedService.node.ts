@@ -4,8 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { traceInfo, traceError } from '../../../platform/logging';
 import { IConfigurationService } from '../../../platform/common/types';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../../telemetry';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { IRawNotebookSupportedService } from '../types';
 
 // This class check to see if we have everything in place to support a raw kernel launch on the machine

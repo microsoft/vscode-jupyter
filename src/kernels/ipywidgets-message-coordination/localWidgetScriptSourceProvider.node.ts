@@ -9,8 +9,7 @@ import { traceError } from '../../platform/logging';
 import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { IPythonExecutionFactory } from '../../platform/common/process/types.node';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { captureTelemetry } from '../../telemetry';
-import { Telemetry } from '../../telemetry';
+import { captureTelemetry, Telemetry } from '../../telemetry';
 import {
     getInterpreterFromKernelConnectionMetadata,
     isPythonKernelConnection,

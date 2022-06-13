@@ -24,8 +24,7 @@ import { traceError, traceInfoIfCI, traceWarning } from '../../platform/logging'
 import { IDisposable } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../../telemetry';
+import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { noop } from '../../platform/common/utils/misc';
 import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from '../../kernels/helpers';
 import { isCancellationError } from '../../platform/common/cancellation';

@@ -32,14 +32,14 @@ import { Deferred, sleep } from '../platform/common/utils/async';
 import { DataScience } from '../platform/common/utils/localize';
 import { noop } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
+import { concatMultilineString } from '../platform/common/utils';
 import { JupyterConnectError } from '../platform/errors/jupyterConnectError';
 import { sendKernelTelemetryEvent } from './telemetry/sendKernelTelemetryEvent';
 import {
     initializeInteractiveOrNotebookTelemetryBasedOnUserAction,
     trackKernelResourceInformation
 } from './telemetry/helper';
-import { sendTelemetryEvent } from '../telemetry';
-import { Telemetry } from '../telemetry';
+import { sendTelemetryEvent, Telemetry } from '../telemetry';
 import { Identifiers, CodeSnippets } from '../webviews/webview-side/common/constants';
 import { executeSilently, getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from './helpers';
 import {
@@ -62,7 +62,6 @@ import { IStatusProvider } from '../platform/progress/types';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { traceCellMessage } from './execution/helpers';
 import { KernelExecution } from './execution/kernelExecution';
-import { concatMultilineString } from '../platform/common/utils';
 
 export abstract class BaseKernel implements IKernel {
     private readonly disposables: IDisposable[] = [];

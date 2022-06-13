@@ -21,9 +21,7 @@ export {
     NativeKeyboardCommandTelemetry,
     NativeMouseCommandTelemetry,
     Telemetry,
-    VSCodeNativeTelemetry,
-    Identifiers,
-    CodeSnippets
+    VSCodeNativeTelemetry
 } from '../platform/common/constants';
 
 export const waitBeforeSending = 'waitBeforeSending';

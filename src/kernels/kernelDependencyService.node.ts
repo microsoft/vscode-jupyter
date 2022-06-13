@@ -20,9 +20,8 @@ import { IMemento, GLOBAL_MEMENTO, IsCodeSpace, Resource, IDisplayOptions } from
 import { DataScience, Common } from '../platform/common/utils/localize';
 import { IServiceContainer } from '../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { sendTelemetryEvent } from '../telemetry';
+import { sendTelemetryEvent, Telemetry } from '../telemetry';
 import { getTelemetrySafeHashedString } from '../telemetry/helpers';
-import { Telemetry } from '../telemetry';
 import { isModulePresentInEnvironmentCache, trackPackageInstalledIntoInterpreter } from './installer/productInstaller';
 import { ProductNames } from './installer/productNames';
 import { IInstaller, Product, InstallerResponse } from './installer/types';
