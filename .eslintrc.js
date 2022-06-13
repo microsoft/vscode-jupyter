@@ -310,6 +310,11 @@ module.exports = {
                         target: './src/kernels/**/*.ts',
                         from: './src/notebooks/**/*.ts',
                         message: 'Importing modules from ./src/notebooks into ./src/kernels code is not allowed.'
+                    },
+                    {
+                        target: './src/telemetry/**/**[!types]**.ts',
+                        from: './src/**[!telemetry,platform]**/**/*.ts',
+                        message: 'Importing non-platform modules into telemetry files is not allowed.'
                     }
                 ]
             }

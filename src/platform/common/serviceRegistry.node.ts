@@ -4,7 +4,7 @@ import { IExtensionSingleActivationService, IExtensionSyncActivationService } fr
 import { IExperimentService, IHttpClient } from '../common/types';
 import { AmlComputeContext } from './amlContext.node';
 import { IServiceManager } from '../ioc/types';
-import { ImportTracker } from '../../telemetry/importTracker.node';
+import { ImportTracker } from './importTracker.node';
 import { IImportTracker } from '../../telemetry/types';
 import { ActiveResourceService } from './application/activeResource.node';
 import { ApplicationEnvironment } from './application/applicationEnvironment.node';

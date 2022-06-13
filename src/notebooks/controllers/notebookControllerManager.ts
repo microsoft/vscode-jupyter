@@ -34,7 +34,7 @@ import {
 } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { sendKernelListTelemetry } from '../../telemetry/kernelTelemetry';
+import { sendKernelListTelemetry } from '../telemetry/kernelTelemetry';
 import { trackKernelResourceInformation } from '../../telemetry/telemetry';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { IServiceContainer } from '../../platform/ioc/types';

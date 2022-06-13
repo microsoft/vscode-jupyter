@@ -3,16 +3,16 @@
 
 import { inject, injectable, optional } from 'inversify';
 import { NotebookDocument } from 'vscode';
-import { IExtensionSingleActivationService } from '../platform/activation/types';
-import { IPythonExtensionChecker, IPythonApiProvider } from '../platform/api/types';
-import { IExtensions, IDisposableRegistry, InterpreterUri } from '../platform/common/types';
-import { isResource, noop } from '../platform/common/utils/misc';
-import { IInterpreterService } from '../platform/interpreter/contracts';
-import { INotebookControllerManager } from '../notebooks/types';
-import { IInstaller, Product } from '../kernels/installer/types';
-import { IVSCodeNotebookController } from '../notebooks/controllers/types';
-import { trackKernelResourceInformation } from './telemetry';
-import { IInterpreterPackages } from './types';
+import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IPythonExtensionChecker, IPythonApiProvider } from '../../platform/api/types';
+import { IExtensions, IDisposableRegistry, InterpreterUri } from '../../platform/common/types';
+import { isResource, noop } from '../../platform/common/utils/misc';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { INotebookControllerManager } from '../types';
+import { IInstaller, Product } from '../../kernels/installer/types';
+import { IVSCodeNotebookController } from '../controllers/types';
+import { trackKernelResourceInformation } from '../../telemetry/telemetry';
+import { IInterpreterPackages } from '../../telemetry/types';
 
 @injectable()
 export class InterpreterPackageTracker implements IExtensionSingleActivationService {
