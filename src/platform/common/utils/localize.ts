@@ -39,6 +39,13 @@ export function localizeReplacement(key: string | nls.LocalizeInfo, defaultValue
 const osType = getOSType();
 if (osType === OSType.Unknown) {
     localize = localizeReplacement;
+} else {
+    // Python should never be localized, so it should always be equal to Python,
+    // unless there's an error in localization.
+    let localizeTest = localize('test', 'Python');
+    if (localizeTest !== 'Python') {
+        localize = localizeReplacement;
+    }
 }
 
 // External callers of localize use these tables to retrieve localized values.
