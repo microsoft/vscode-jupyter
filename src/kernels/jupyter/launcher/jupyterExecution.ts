@@ -14,7 +14,7 @@ import { JupyterWaitForIdleError } from '../../../platform/errors/jupyterWaitFor
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, captureTelemetry } from '../../../telemetry';
-import { Telemetry } from '../../../webviews/webview-side/common/constants';
+import { Telemetry } from '../../../telemetry';
 import { expandWorkingDir } from '../jupyterUtils';
 import { IJupyterConnection } from '../../types';
 import {

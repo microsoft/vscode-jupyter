@@ -12,6 +12,20 @@ import { isPromise } from 'rxjs/internal-compatibility';
 import { populateTelemetryWithErrorInfo } from '../platform/errors';
 import { IEventNamePropertyMapping } from './types';
 
+/**
+ * TODO@rebornix
+ * `../platform/common/constants/Telemetry` is a re-export from `webview`, it should be moved into `src/telemetry`
+ */
+export {
+    JupyterCommands,
+    NativeKeyboardCommandTelemetry,
+    NativeMouseCommandTelemetry,
+    Telemetry,
+    VSCodeNativeTelemetry,
+    Identifiers,
+    CodeSnippets
+} from '../platform/common/constants';
+
 export const waitBeforeSending = 'waitBeforeSending';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

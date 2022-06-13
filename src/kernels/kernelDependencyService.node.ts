@@ -22,7 +22,7 @@ import { IServiceContainer } from '../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../telemetry';
 import { getTelemetrySafeHashedString } from '../telemetry/helpers';
-import { Telemetry } from '../webviews/webview-side/common/constants';
+import { Telemetry } from '../telemetry';
 import { isModulePresentInEnvironmentCache, trackPackageInstalledIntoInterpreter } from './installer/productInstaller';
 import { ProductNames } from './installer/productNames';
 import { IInstaller, Product, InstallerResponse } from './installer/types';

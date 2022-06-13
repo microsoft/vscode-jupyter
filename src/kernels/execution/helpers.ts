@@ -24,8 +24,7 @@ import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { traceInfoIfCI, traceError, traceWarning } from '../../platform/logging';
 import { getInterpreterHash } from '../../platform/pythonEnvironments/info/interpreter';
 import { sendTelemetryEvent } from '../../telemetry';
-import { splitMultilineString, concatMultilineString } from '../../webviews/webview-side/common';
-import { Telemetry } from '../../webviews/webview-side/common/constants';
+import { Telemetry } from '../../telemetry';
 import { getOSType, OSType } from '../../platform/common/utils/platform';
 import { createOutputWithErrorMessageForDisplay } from '../../platform/errors/errorUtils';
 import { CellExecutionCreator } from './cellExecutionCreator';
@@ -36,6 +35,7 @@ import {
     kernelConnectionMetadataHasKernelModel,
     getKernelRegistrationInfo
 } from '../helpers';
+import { concatMultilineString, splitMultilineString } from '../../platform/common/utils';
 
 export enum CellOutputMimeTypes {
     error = 'application/vnd.code.notebook.error',

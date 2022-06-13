@@ -13,7 +13,7 @@ import { IDisposableRegistry } from '../../platform/common/types';
 import { isJupyterNotebook } from '../../platform/common/utils';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
-import { Telemetry } from '../../webviews/webview-side/common/constants';
+import { Telemetry } from '../../telemetry';
 import { createJupyterCellFromVSCNotebookCell } from '../execution/helpers';
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');

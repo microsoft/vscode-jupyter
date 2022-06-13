@@ -9,7 +9,6 @@ import * as path from '../../platform/vscode-path/path';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import { executeSilently } from '../../kernels/helpers';
 import { IKernel, IKernelProvider } from '../../kernels/types';
-import { concatMultilineString } from '../../webviews/webview-side/common';
 import { IFileSystem } from '../common/platform/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { ExportUtilBase } from './exportUtil';
@@ -17,6 +16,7 @@ import { ExportFormat, IExportBase, IExportDialog, INbConvertExport } from './ty
 import { traceLog } from '../logging';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
+import { concatMultilineString } from '../common/utils';
 
 @injectable()
 export class ExportBase implements INbConvertExport, IExportBase {

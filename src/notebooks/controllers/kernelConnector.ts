@@ -20,7 +20,8 @@ import { createDeferred, createDeferredFromPromise, Deferred } from '../../platf
 import { DataScience } from '../../platform/common/utils/localize';
 import { sendKernelTelemetryEvent } from '../../kernels/telemetry/sendKernelTelemetryEvent';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { Telemetry, Commands } from '../../webviews/webview-side/common/constants';
+import { Commands } from '../../webviews/webview-side/common/constants';
+import { Telemetry } from '../../telemetry';
 import { clearInstalledIntoInterpreterMemento } from '../../kernels/installer/productInstaller';
 import { Product } from '../../kernels/installer/types';
 import { INotebookControllerManager, INotebookEditorProvider } from '../types';

@@ -6,7 +6,7 @@
 import { inject, injectable, optional } from 'inversify';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { trackKernelResourceInformation } from '../../telemetry/helper';
-import { Telemetry } from '../../../webviews/webview-side/common/constants';
+import { Telemetry } from '../../../telemetry';
 import {
     ConnectNotebookProviderOptions,
     GetServerOptions,

@@ -13,7 +13,7 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterInvalidKernelError } from '../../../platform/errors/jupyterInvalidKernelError';
 import { SessionDisposedError } from '../../../platform/errors/sessionDisposedError';
 import { captureTelemetry } from '../../../telemetry';
-import { Telemetry } from '../../../webviews/webview-side/common/constants';
+import { Telemetry } from '../../../telemetry';
 import { BaseJupyterSession, JupyterSessionStartError } from '../../common/baseJupyterSession';
 import { getNameOfKernelConnection } from '../../helpers';
 import {

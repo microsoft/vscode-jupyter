@@ -1,47 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import type * as nbformat from '@jupyterlab/nbformat';
 
 const SingleQuoteMultiline = "'''";
 const DoubleQuoteMultiline = '"""';
-
-export function concatMultilineString(str: nbformat.MultilineString): string {
-    if (Array.isArray(str)) {
-        let result = '';
-        for (let i = 0; i < str.length; i += 1) {
-            const s = str[i];
-            if (i < str.length - 1 && !s.endsWith('\n')) {
-                result = result.concat(`${s}\n`);
-            } else {
-                result = result.concat(s);
-            }
-        }
-        return result;
-    }
-    return str.toString();
-}
-
-export function splitMultilineString(source: nbformat.MultilineString): string[] {
-    // Make sure a multiline string is back the way Jupyter expects it
-    if (Array.isArray(source)) {
-        return source as string[];
-    }
-    const str = source.toString();
-    if (str.length > 0) {
-        // Each line should be a separate entry, but end with a \n if not last entry
-        const arr = str.split('\n');
-        return arr
-            .map((s, i) => {
-                if (i < arr.length - 1) {
-                    return `${s}\n`;
-                }
-                return s;
-            })
-            .filter((s) => s.length > 0); // Skip last one if empty (it's the only one that could be length 0)
-    }
-    return [];
-}
 
 export function removeLinesFromFrontAndBackNoConcat(lines: string[]): string[] {
     let lastNonEmptyLine = lines.length;

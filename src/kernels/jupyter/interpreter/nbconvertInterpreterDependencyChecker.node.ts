@@ -9,7 +9,7 @@ import { CancellationToken } from 'vscode';
 import { parseSemVer } from '../../../platform/common/utils.node';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { ResourceSet } from '../../../platform/vscode-path/map';
-import { JupyterCommands } from '../../../webviews/webview-side/common/constants';
+import { JupyterCommands } from '../../../telemetry';
 import { IInstaller, Product } from '../../installer/types';
 import { INbConvertInterpreterDependencyChecker } from '../types';
 import { IJupyterCommandFactory } from '../types.node';

@@ -18,7 +18,7 @@ import {
     IQuickPickParameters
 } from '../../../platform/common/utils/multiStepInput';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../../webviews/webview-side/common/constants';
+import { Telemetry } from '../../../telemetry';
 
 @injectable()
 export class JupyterCommandLineSelector {

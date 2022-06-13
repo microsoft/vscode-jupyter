@@ -12,13 +12,13 @@ import {
     Uri
 } from 'vscode';
 
-import { splitMultilineString } from '../../webviews/webview-side/common';
 import { IDocumentManager } from '../../platform/common/application/types';
 import { traceInfo } from '../../platform/logging';
 import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
 import { uncommentMagicCommands } from './cellFactory';
 import { CellMatcher } from './cellMatcher';
 import { IGeneratedCode, IInteractiveWindowCodeGenerator, IGeneratedCodeStore, InteractiveCellMetadata } from './types';
+import { splitMultilineString } from '../../platform/common/utils';
 
 // This class provides generated code for debugging jupyter cells. Call getGeneratedCode just before starting debugging to compute all of the
 // generated codes for cells & update the source maps in the python debugger.
@@ -280,7 +280,7 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
     But when not debugging, the leading spaces are stripped so you need to map to the first real line
     /n
     /n
-    first line of code // <-- We need to start source mapping here
+    first line of code // <-- We need to star t source mapping here
 
     Given that the hash still needs to map to the actual file contents calculating this mapping at this point
     where we are making debugging calculations for runtimeLine feels appropriate.

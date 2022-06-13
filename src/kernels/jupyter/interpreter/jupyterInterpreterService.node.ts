@@ -12,7 +12,7 @@ import { noop } from '../../../platform/common/utils/misc';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../../webviews/webview-side/common/constants';
+import { Telemetry } from '../../../telemetry';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { JupyterInterpreterDependencyService } from './jupyterInterpreterDependencyService.node';
 import { JupyterInterpreterOldCacheStateStore } from './jupyterInterpreterOldCacheStateStore.node';

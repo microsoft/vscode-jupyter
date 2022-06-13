@@ -39,8 +39,7 @@ import { trackKernelResourceInformation } from '../../kernels/telemetry/helper';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../../webviews/webview-side/common/constants';
+import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { NotebookCellLanguageService } from '../../intellisense/cellLanguageService';
 import {
     LiveRemoteKernelConnectionMetadata,

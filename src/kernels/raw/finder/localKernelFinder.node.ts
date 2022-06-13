@@ -11,7 +11,7 @@ import { LocalKnownPathKernelSpecFinder } from './localKnownPathKernelSpecFinder
 import { traceInfo, ignoreLogging, traceDecoratorError } from '../../../platform/logging';
 import { Resource } from '../../../platform/common/types';
 import { captureTelemetry } from '../../../telemetry';
-import { Telemetry } from '../../../webviews/webview-side/common/constants';
+import { Telemetry } from '../../../telemetry';
 import { ILocalKernelFinder } from '../types';
 
 // This class searches for a kernel that matches the given kernel name.

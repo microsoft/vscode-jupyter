@@ -39,8 +39,8 @@ import {
     trackKernelResourceInformation
 } from './telemetry/helper';
 import { sendTelemetryEvent } from '../telemetry';
-import { concatMultilineString } from '../webviews/webview-side/common';
-import { Telemetry, Identifiers, CodeSnippets } from '../webviews/webview-side/common/constants';
+import { Telemetry } from '../telemetry';
+import { Identifiers, CodeSnippets } from '../webviews/webview-side/common/constants';
 import { executeSilently, getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from './helpers';
 import {
     IJupyterSession,
@@ -62,6 +62,7 @@ import { IStatusProvider } from '../platform/progress/types';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { traceCellMessage } from './execution/helpers';
 import { KernelExecution } from './execution/kernelExecution';
+import { concatMultilineString } from '../platform/common/utils';
 
 export abstract class BaseKernel implements IKernel {
     private readonly disposables: IDisposable[] = [];

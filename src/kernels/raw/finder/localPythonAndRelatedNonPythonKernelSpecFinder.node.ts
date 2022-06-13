@@ -30,7 +30,7 @@ import { IMemento, GLOBAL_MEMENTO, Resource } from '../../../platform/common/typ
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 import { captureTelemetry } from '../../../telemetry';
-import { Telemetry } from '../../../webviews/webview-side/common/constants';
+import { Telemetry } from '../../../telemetry';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { fsPathToUri } from '../../../platform/vscode-path/utils';
 import { ResourceSet } from '../../../platform/vscode-path/map';

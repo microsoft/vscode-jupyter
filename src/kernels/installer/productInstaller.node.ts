@@ -33,7 +33,7 @@ import { IServiceContainer } from '../../platform/ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { InterpreterPackages } from '../../telemetry/interpreterPackages.node';
 import { getInterpreterHash } from '../../platform/pythonEnvironments/info/interpreter';
-import { Telemetry } from '../../webviews/webview-side/common/constants';
+import { Telemetry } from '../../telemetry';
 import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants';
 import { sleep } from '../../platform/common/utils/async';
 import { trackPackageInstalledIntoInterpreter } from './productInstaller';

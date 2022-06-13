@@ -21,7 +21,7 @@ import { IDisposableRegistry, IConfigurationService, Resource } from '../../../p
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../../webviews/webview-side/common/constants';
+import { Telemetry } from '../../../telemetry';
 import {
     isLocalConnection,
     LocalKernelSpecConnectionMetadata,

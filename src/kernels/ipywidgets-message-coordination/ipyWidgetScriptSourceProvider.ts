@@ -19,7 +19,7 @@ import { DataScience, Common } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
-import { Telemetry } from '../../webviews/webview-side/common/constants';
+import { Telemetry } from '../../telemetry';
 import { IKernel } from '../types';
 import {
     ILocalResourceUriConverter,

@@ -13,9 +13,9 @@ import { Resource } from '../platform/common/types';
 import { trackKernelResourceInformation } from './telemetry/helper';
 import { areInterpreterPathsSame } from '../platform/pythonEnvironments/info/interpreter';
 import { sendTelemetryEvent } from '../telemetry';
-import { concatMultilineString } from '../webviews/webview-side/common';
-import { Telemetry } from '../webviews/webview-side/common/constants';
+import { Telemetry } from '../telemetry';
 import { executeSilently, isPythonKernelConnection } from './helpers';
+import { concatMultilineString } from '../platform/common/utils';
 
 export async function sendTelemetryForPythonKernelExecutable(
     kernel: IKernel,

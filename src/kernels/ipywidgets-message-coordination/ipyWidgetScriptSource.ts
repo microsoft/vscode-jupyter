@@ -15,7 +15,7 @@ import {
 } from '../../platform/common/types';
 import { InteractiveWindowMessages, IPyWidgetMessages } from '../../platform/messageTypes';
 import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../../webviews/webview-side/common/constants';
+import { Telemetry } from '../../telemetry';
 import { IKernel, IKernelProvider } from '../types';
 import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider';
 import { ILocalResourceUriConverter, IWidgetScriptSourceProviderFactory, WidgetScriptSource } from './types';

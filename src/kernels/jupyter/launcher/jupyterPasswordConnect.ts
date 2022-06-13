@@ -8,7 +8,7 @@ import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } 
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IMultiStepInputFactory, IMultiStepInput } from '../../../platform/common/utils/multiStepInput';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../../webviews/webview-side/common/constants';
+import { Telemetry } from '../../../telemetry';
 import {
     IJupyterPasswordConnect,
     IJupyterPasswordConnectInfo,
