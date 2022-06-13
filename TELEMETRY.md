@@ -1251,7 +1251,7 @@ No properties for event
 [src/notebooks/controllers/notebookControllerManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/notebookControllerManager.ts)
 ```typescript
             }
-            // We know that this fails when we have xeus kernels installed (until that's resolved thats one instance when we can have duplicates).
+            // We know that this fails when we have xeus kernels installed (untill that's resolved thats one instance when we can have duplicates).
             sendTelemetryEvent(
                 Telemetry.FailedToCreateNotebookController,
                 undefined,
@@ -6031,8 +6031,8 @@ No properties for event
         this.configurationPromise = createDeferred();
         sendTelemetryEvent(Telemetry.IPyWidgetPromptToUseCDN);
         const selection = await this.appShell.showInformationMessage(
-            DataScience.useCDNForWidgets(),
-            Common.ok(),
+            DataScience.useCDNForWidgetsNoInformation(),
+            { modal: true },
 ```
 
 </details>
@@ -6216,7 +6216,7 @@ No properties for event
 
 
 
- Telemetry event sent when an ipywidget version that is not supported is used & we have trapped this and warned the user about it.
+ Telemetry event sent when an ipywidget version that is not supported is used & we have trapped this and warned the user abou it.
 
 ## Properties
 
