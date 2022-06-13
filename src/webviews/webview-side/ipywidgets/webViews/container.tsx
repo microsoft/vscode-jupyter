@@ -12,7 +12,7 @@ import {
     CommonActionType,
     ILoadIPyWidgetClassFailureAction,
     LoadIPyWidgetClassLoadAction,
-    NotifyIPyWidgeWidgetVersionNotSupportedAction
+    NotifyIPyWidgetWidgetVersionNotSupportedAction
 } from '../../interactive-common/redux/reducers/types';
 import { IStore } from '../../interactive-common/redux/store';
 import { PostOffice } from '../../react-common/postOffice';
@@ -97,7 +97,7 @@ export class WidgetManagerComponent extends React.Component<Props> {
     private createWidgetVersionNotSupportedErrorAction(
         moduleName: 'qgrid',
         moduleVersion: string
-    ): CommonAction<NotifyIPyWidgeWidgetVersionNotSupportedAction> {
+    ): CommonAction<NotifyIPyWidgetWidgetVersionNotSupportedAction> {
         return {
             type: CommonActionType.IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED,
             payload: {

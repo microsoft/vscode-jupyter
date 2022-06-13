@@ -110,7 +110,7 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
         );
         verifyVariables(envVarsOurselves!, '(ourselves)');
     });
-    test('Acitvate conda environment using conda run and activation commands', async () => {
+    test('Activate conda environment using conda run and activation commands', async () => {
         // Ensure we don't get stuff from Python extension.
         const deferred = createDeferred<PythonApi>();
         const stub = sinon.stub(pythonApiProvider, 'getApi').returns(deferred.promise);

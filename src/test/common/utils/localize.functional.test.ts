@@ -54,7 +54,7 @@ suite('Localization', () => {
         const val = localize.ExtensionSurveyBanner.bannerMessage();
         assert.equal(
             val,
-            'Can you please take 2 minutes to tell us how the Python extension is working for you?',
+            'Can you please take 2 minutes to tell us how the Python Extension is working for you?',
             'LanguageService string doesnt match'
         );
         done();

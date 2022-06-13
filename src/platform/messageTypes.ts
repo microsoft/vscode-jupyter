@@ -9,7 +9,7 @@ import {
     CommonActionType,
     LoadIPyWidgetClassLoadAction,
     ILoadIPyWidgetClassFailureAction,
-    NotifyIPyWidgeWidgetVersionNotSupportedAction
+    NotifyIPyWidgetWidgetVersionNotSupportedAction
 } from '../webviews/webview-side/interactive-common/redux/reducers/types';
 import { WidgetScriptSource } from '../kernels/ipywidgets-message-coordination/types';
 import { KernelConnectionMetadata, KernelSocketOptions } from '../kernels/types';
@@ -342,7 +342,7 @@ export class IInteractiveWindowMapping {
     public [SharedMessages.LocInit]: string;
     public [InteractiveWindowMessages.IPyWidgetLoadSuccess]: LoadIPyWidgetClassLoadAction;
     public [InteractiveWindowMessages.IPyWidgetLoadFailure]: ILoadIPyWidgetClassFailureAction;
-    public [InteractiveWindowMessages.IPyWidgetWidgetVersionNotSupported]: NotifyIPyWidgeWidgetVersionNotSupportedAction;
+    public [InteractiveWindowMessages.IPyWidgetWidgetVersionNotSupported]: NotifyIPyWidgetWidgetVersionNotSupportedAction;
     public [InteractiveWindowMessages.ConvertUriForUseInWebViewRequest]: Uri;
     public [InteractiveWindowMessages.ConvertUriForUseInWebViewResponse]: { request: Uri; response: Uri };
     public [InteractiveWindowMessages.IPyWidgetRenderFailure]: Error;

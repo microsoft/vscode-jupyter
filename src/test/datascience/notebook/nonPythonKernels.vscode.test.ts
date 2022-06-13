@@ -79,7 +79,7 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
         assert.strictEqual(
             PythonExtensionChecker.promptDisplayed,
             undefined,
-            'Prompt for requiring Python extension should not have been displayed'
+            'Prompt for requiring Python Extension should not have been displayed'
         );
     }
     setup(async function () {

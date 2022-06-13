@@ -142,7 +142,7 @@ export type CommonActionTypeMapping = {
     [CommonActionType.FOCUS_INPUT]: never | undefined;
     [CommonActionType.LOAD_IPYWIDGET_CLASS_SUCCESS]: LoadIPyWidgetClassLoadAction;
     [CommonActionType.LOAD_IPYWIDGET_CLASS_FAILURE]: ILoadIPyWidgetClassFailureAction;
-    [CommonActionType.IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED]: NotifyIPyWidgeWidgetVersionNotSupportedAction;
+    [CommonActionType.IPYWIDGET_WIDGET_VERSION_NOT_SUPPORTED]: NotifyIPyWidgetWidgetVersionNotSupportedAction;
     [CommonActionType.IPYWIDGET_RENDER_FAILURE]: Error;
     [CommonActionType.STEP]: ICellAction;
     [CommonActionType.CONTINUE]: ICellAction;
@@ -257,7 +257,7 @@ export type LoadIPyWidgetClassLoadAction = {
     moduleName: string;
     moduleVersion: string;
 };
-export type NotifyIPyWidgeWidgetVersionNotSupportedAction = {
+export type NotifyIPyWidgetWidgetVersionNotSupportedAction = {
     moduleName: 'qgrid';
     moduleVersion: string;
 };

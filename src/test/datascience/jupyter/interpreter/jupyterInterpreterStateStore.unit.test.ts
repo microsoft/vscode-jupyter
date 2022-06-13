@@ -27,7 +27,7 @@ suite('DataScience - Jupyter Interpreter State', () => {
         selected = new JupyterInterpreterStateStore(instance(memento));
     });
 
-    test('Interpeter should not be set for fresh installs', async () => {
+    test('Interpreter should not be set for fresh installs', async () => {
         when(memento.get(anything(), false)).thenReturn(false);
 
         assert.isFalse(selected.interpreterSetAtleastOnce);

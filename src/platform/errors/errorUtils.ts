@@ -311,7 +311,7 @@ export function analyzeKernelErrors(
             moduleName,
             message: moduleName
                 ? DataScience.failedToStartKernelDueToDllLoadFailure().format(moduleName)
-                : DataScience.failedToStartKernelDueToUnknowDllLoadFailure(),
+                : DataScience.failedToStartKernelDueToUnknownDllLoadFailure(),
             moreInfoLink: 'https://aka.ms/kernelFailuresDllLoad',
             telemetrySafeTags: ['dll.load.failed']
         };

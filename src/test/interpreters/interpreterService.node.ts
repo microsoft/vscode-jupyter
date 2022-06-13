@@ -61,7 +61,7 @@ export class InterpreterService implements IInterpreterService {
 
     private validatePythonExtension() {
         if (!this.extensionChecker.isPythonExtensionInstalled) {
-            throw new Error('Python extension should be installed when using interpreter service.');
+            throw new Error('Python Extension should be installed when using interpreter service.');
         }
     }
 }
