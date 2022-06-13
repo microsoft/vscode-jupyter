@@ -68,11 +68,6 @@ export async function waitForCondition(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isThenable<T>(v: any): v is Thenable<T> {
-    return typeof v?.then === 'function';
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isPromise<T>(v: any): v is Promise<T> {
     return typeof v?.then === 'function' && typeof v?.catch === 'function';
 }

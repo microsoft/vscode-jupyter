@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports, , no-invalid-this */
 
-import { ProgressLocation, ProgressOptions, window } from 'vscode';
 import '../extensions';
 import { isTestExecution } from '../constants';
 import { createDeferred, Deferred } from './async';
@@ -195,22 +194,6 @@ export function swallowExceptions(scopeName?: string) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type PromiseFunction = (...any: any[]) => Promise<any>;
-
-export function displayProgress(title: string, location = ProgressLocation.Window) {
-    return function (_target: Object, _propertyName: string, descriptor: TypedPropertyDescriptor<PromiseFunction>) {
-        const originalMethod = descriptor.value!;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any,
-        descriptor.value = async function (...args: any[]) {
-            const progressOptions: ProgressOptions = { location, title };
-            // eslint-disable-next-line no-invalid-this
-            const promise = originalMethod.apply(this, args);
-            if (!isTestExecution()) {
-                return window.withProgress(progressOptions, () => promise);
-            }
-            return promise;
-        };
-    };
-}
 
 // Information about a function/method call.
 export type CallInfo = {

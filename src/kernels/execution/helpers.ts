@@ -60,27 +60,6 @@ export function createJupyterCellFromVSCNotebookCell(
     return cell;
 }
 
-/**
- * Identifies Jupyter Cell metadata that are to be stored in VSCode Cells.
- * This is used to facilitate:
- * 1. When a user copies and pastes a cell, then the corresponding metadata is also copied across.
- * 2. Diffing (VSC knows about metadata & stuff that contributes changes to a cell).
- */
-export function getNotebookCellMetadata(cell: nbformat.IBaseCell): CellMetadata {
-    // We put this only for VSC to display in diff view.
-    // Else we don't use this.
-    const propertiesToClone: (keyof CellMetadata)[] = ['metadata', 'attachments'];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const custom: CellMetadata = {};
-    propertiesToClone.forEach((propertyToClone) => {
-        if (cell[propertyToClone]) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            custom[propertyToClone] = cloneDeep(cell[propertyToClone]) as any;
-        }
-    });
-    return custom;
-}
-
 function createRawCellFromNotebookCell(cell: NotebookCell | NotebookCellData): nbformat.IRawCell {
     const cellMetadata = cell.metadata?.custom as CellMetadata | undefined;
     const rawCell: nbformat.IRawCell = {
@@ -191,10 +170,6 @@ export function traceCellMessage(cell: NotebookCell, message: string) {
     );
 }
 
-export function createVSCCellOutputsFromOutputs(outputs?: nbformat.IOutput[]): NotebookCellOutput[] {
-    const cellOutputs: nbformat.IOutput[] = Array.isArray(outputs) ? (outputs as []) : [];
-    return cellOutputs.map(cellOutputToVSCCellOutput);
-}
 const cellOutputMappers = new Map<nbformat.OutputType, (output: nbformat.IOutput) => NotebookCellOutput>();
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 cellOutputMappers.set('display_data', translateDisplayDataOutput as any);
@@ -312,11 +287,6 @@ function translateStreamOutput(output: nbformat.IStream): NotebookCellOutput {
     const value = concatMultilineString(output.text);
     const factoryFn = output.name === 'stderr' ? NotebookCellOutputItem.stderr : NotebookCellOutputItem.stdout;
     return new NotebookCellOutput([factoryFn(value)], getOutputMetadata(output));
-}
-
-export function isStreamOutput(output: NotebookCellOutput, expectedStreamName: string): boolean {
-    const metadata = output.metadata as CellOutputMetadata | undefined;
-    return metadata?.outputType === 'stream' && getOutputStreamType(output) === expectedStreamName;
 }
 
 // Output stream can only have stderr or stdout so just check the first output. Undefined if no outputs
