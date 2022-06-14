@@ -2075,8 +2075,8 @@
     ],
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",
-        "package:nls": "cross-env BUILD_WITH_VSCODE_NLS=true npm run package",
         "packagePreRelease": "gulp clean && gulp prePublishBundle && vsce package --pre-release -o ms-toolsai-jupyter-insiders.vsix",
+        "prePublishBundleNLS": "cross-env BUILD_WITH_VSCODE_NLS=true gulp prePublishBundle",
         "prePublishNonBundle": "gulp clean && gulp prePublishNonBundle",
         "createNycFolder": "gulp createNycFolder",
         "checkTestResults": "gulp checkTestResults",

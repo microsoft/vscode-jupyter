@@ -43,5 +43,5 @@ extends:
       - script: npm run updateBuildNumber
         displayName: Update build number
 
-      - script: gulp prePublishBundle
+      - script: npm run prePublishBundleNLS
         displayName: Build
