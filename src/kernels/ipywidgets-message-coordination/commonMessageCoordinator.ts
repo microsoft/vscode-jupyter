@@ -18,16 +18,17 @@ import {
 import { Common, DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { stripAnsi } from '../../platform/common/utils/regexp';
-import { InteractiveWindowMessages, IPyWidgetMessages } from '../../platform/messageTypes';
+import {
+    ILoadIPyWidgetClassFailureAction,
+    InteractiveWindowMessages,
+    IPyWidgetMessages,
+    LoadIPyWidgetClassLoadAction,
+    NotifyIPyWidgetWidgetVersionNotSupportedAction
+} from '../../platform/messageTypes';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { Commands } from '../../platform/common/constants';
-import {
-    LoadIPyWidgetClassLoadAction,
-    ILoadIPyWidgetClassFailureAction,
-    NotifyIPyWidgetWidgetVersionNotSupportedAction
-} from '../../webviews/webview-side/interactive-common/redux/reducers/types';
 import { IKernelProvider } from '../types';
 import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherFactory';
 import { IPyWidgetScriptSource } from './ipyWidgetScriptSource';
