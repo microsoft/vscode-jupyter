@@ -89,7 +89,7 @@ suite('DataScience - VSCode Notebook - Standard', function () {
             'Widget did not load successfully during execution'
         );
     });
-    test.skip('Can run a widget notebook twice (webview-test)', async function () {
+    test('Can run a widget notebook twice (webview-test)', async function () {
         let notebook = await openNotebook(testWidgetNb);
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
         let cell = notebook.cellAt(0);
