@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { InteractiveWindowMessages } from '../../../../../platform/messageTypes';
+import { InteractiveWindowMessages, LoadIPyWidgetClassLoadAction } from '../../../../../platform/messageTypes';
 import { IMainState } from '../../../interactive-common/mainState';
 import { storeLocStrings } from '../../../react-common/locReactSide';
 import { postActionToExtension } from '../helpers';
-import { CommonActionType, CommonReducerArg, IOpenSettingsAction, LoadIPyWidgetClassLoadAction } from './types';
+import { CommonActionType, CommonReducerArg, IOpenSettingsAction } from './types';
 
 export namespace CommonEffects {
     export function activate(arg: CommonReducerArg): IMainState {

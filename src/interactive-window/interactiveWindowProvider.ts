@@ -46,6 +46,7 @@ import { InteractiveWindowView, JVSC_EXTENSION_ID, NotebookCellScheme } from '..
 import {
     IInteractiveWindow,
     IInteractiveWindowDebugger,
+    IInteractiveWindowDebuggingManager,
     IInteractiveWindowProvider,
     INativeInteractiveWindow
 } from './types';
@@ -57,7 +58,6 @@ import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { IExportDialog } from '../platform/export/types';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { ICodeGeneratorFactory, IGeneratedCodeStorageFactory } from './editor-integration/types';
-import { IInteractiveWindowDebuggingManager } from '../kernels/debugger/types';
 import { getResourceType } from '../platform/common/utils';
 
 // Export for testing

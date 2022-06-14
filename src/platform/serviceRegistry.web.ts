@@ -45,13 +45,7 @@ import { DataViewerFactory } from '../webviews/extension-side/dataviewer/dataVie
 import { IDataViewerFactory } from '../webviews/extension-side/dataviewer/types';
 import { INotebookWatcher } from '../webviews/extension-side/variablesView/types';
 import { DebuggingManager } from '../notebooks/debugger/debuggingManager';
-import {
-    IDebuggingManager,
-    IDebugLocationTracker,
-    IDebugLocationTrackerFactory,
-    IInteractiveWindowDebuggingManager
-} from '../kernels/debugger/types';
-import { InteractiveWindowDebuggingManager } from '../interactive-window/debugger/jupyter/debuggingManager';
+import { IDebuggingManager, IDebugLocationTracker, IDebugLocationTrackerFactory } from '../kernels/debugger/types';
 import { DebugLocationTrackerFactory } from '../kernels/debugger/debugLocationTrackerFactory';
 import { KernelProgressReporter } from './progress/kernelProgressReporter';
 
@@ -92,12 +86,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IDebuggingManager>(IDebuggingManager, DebuggingManager, undefined, [
         IExtensionSingleActivationService
     ]);
-    serviceManager.addSingleton<IInteractiveWindowDebuggingManager>(
-        IInteractiveWindowDebuggingManager,
-        InteractiveWindowDebuggingManager,
-        undefined,
-        [IExtensionSingleActivationService]
-    );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         KernelProgressReporter

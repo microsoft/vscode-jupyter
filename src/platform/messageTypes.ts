@@ -6,16 +6,35 @@ import type { KernelMessage } from '@jupyterlab/services';
 import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../webviews/webview-side/common/constants';
 import {
     IVariableExplorerHeight,
-    CommonActionType,
-    LoadIPyWidgetClassLoadAction,
-    ILoadIPyWidgetClassFailureAction,
-    NotifyIPyWidgetWidgetVersionNotSupportedAction
+    CommonActionType
 } from '../webviews/webview-side/interactive-common/redux/reducers/types';
 import { WidgetScriptSource } from '../kernels/ipywidgets-message-coordination/types';
 import { KernelConnectionMetadata, KernelSocketOptions } from '../kernels/types';
 import { BaseReduxActionPayload } from '../webviews/types';
 import { ICell } from './common/types';
 import { IJupyterVariable, IJupyterVariablesRequest, IJupyterVariablesResponse } from '../kernels/variables/types';
+
+export type NotifyIPyWidgetWidgetVersionNotSupportedAction = {
+    moduleName: 'qgrid';
+    moduleVersion: string;
+};
+
+export interface ILoadIPyWidgetClassFailureAction {
+    className: string;
+    moduleName: string;
+    moduleVersion: string;
+    cdnsUsed: boolean;
+    isOnline: boolean;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    error: any;
+    timedout: boolean;
+}
+
+export type LoadIPyWidgetClassLoadAction = {
+    className: string;
+    moduleName: string;
+    moduleVersion: string;
+};
 
 export enum InteractiveWindowMessages {
     FinishCell = 'finish_cell',
