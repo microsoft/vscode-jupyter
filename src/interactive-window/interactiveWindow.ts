@@ -57,7 +57,7 @@ import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { IExportDialog, ExportFormat } from '../platform/export/types';
 import { generateCellsFromNotebookDocument } from './editor-integration/cellFactory';
 import { CellMatcher } from './editor-integration/cellMatcher';
-import { IInteractiveWindowLoadable, IInteractiveWindowDebugger } from './types';
+import { IInteractiveWindowLoadable, IInteractiveWindowDebugger, IInteractiveWindowDebuggingManager } from './types';
 import { generateInteractiveCode } from './helpers';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { DisplayOptions } from '../kernels/displayOptions';
@@ -69,7 +69,6 @@ import {
     IGeneratedCodeStorageFactory,
     InteractiveCellMetadata
 } from './editor-integration/types';
-import { IInteractiveWindowDebuggingManager } from '../kernels/debugger/types';
 import { CellExecutionCreator } from '../kernels/execution/cellExecutionCreator';
 import { updateNotebookMetadata } from '../kernels/execution/helpers';
 import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';

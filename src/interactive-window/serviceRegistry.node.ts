@@ -26,8 +26,14 @@ import {
 } from './editor-integration/types';
 import { GeneratedCodeStorageManager } from './generatedCodeStoreManager';
 import { InteractiveWindowTracebackFormatter } from './outputs/tracebackFormatter';
-import { IExportCommands, IInteractiveWindowDebugger, IInteractiveWindowProvider } from './types';
+import {
+    IExportCommands,
+    IInteractiveWindowDebugger,
+    IInteractiveWindowDebuggingManager,
+    IInteractiveWindowProvider
+} from './types';
 import { InteractiveWindowDebugger } from './debugger/interactiveWindowDebugger.node';
+import { InteractiveWindowDebuggingManager } from './debugger/jupyter/debuggingManager';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
@@ -58,4 +64,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<ITracebackFormatter>(ITracebackFormatter, InteractiveWindowTracebackFormatter);
     serviceManager.addSingleton<IInteractiveWindowDebugger>(IInteractiveWindowDebugger, InteractiveWindowDebugger);
+    serviceManager.addSingleton<IInteractiveWindowDebuggingManager>(
+        IInteractiveWindowDebuggingManager,
+        InteractiveWindowDebuggingManager,
+        undefined,
+        [IExtensionSingleActivationService]
+    );
 }

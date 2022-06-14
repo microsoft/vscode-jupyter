@@ -15,7 +15,6 @@ import {
 import { pythonIWKernelDebugAdapter } from '../../../kernels/debugger/constants';
 import {
     IDebuggingManager,
-    IInteractiveWindowDebuggingManager,
     KernelDebugMode,
     IKernelDebugAdapterConfig,
     IDebugLocationTrackerFactory
@@ -36,6 +35,7 @@ import { IConfigurationService } from '../../../platform/common/types';
 import { IFileGeneratedCodes } from '../../editor-integration/types';
 import { buildSourceMap } from '../helper';
 import { noop } from '../../../platform/common/utils/misc';
+import { IInteractiveWindowDebuggingManager } from '../../types';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
