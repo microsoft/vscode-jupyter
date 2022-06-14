@@ -15,6 +15,7 @@ import {
     createPromiseFromCancellation,
     isCancellationError
 } from '../../../platform/common/cancellation';
+import { JUPYTER_OUTPUT_CHANNEL } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceInfo, traceError } from '../../../platform/logging';
 import { TemporaryDirectory } from '../../../platform/common/platform/types';
@@ -25,7 +26,6 @@ import { JupyterConnectError } from '../../../platform/errors/jupyterConnectErro
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
-import { JUPYTER_OUTPUT_CHANNEL } from '../../../webviews/webview-side/common/constants';
 import { JupyterConnectionWaiter } from './jupyterConnection.node';
 import { WrappedError } from '../../../platform/errors/types';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';

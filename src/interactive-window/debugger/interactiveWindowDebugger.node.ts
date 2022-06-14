@@ -9,7 +9,7 @@ import { traceInfo, traceInfoIfCI, traceWarning } from '../../platform/logging';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { IConfigurationService } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
-import { Identifiers } from '../../webviews/webview-side/common/constants';
+import { Identifiers } from '../../platform/common/constants';
 import { Telemetry } from '../../telemetry';
 import { JupyterDebuggerNotInstalledError } from '../../platform/errors/jupyterDebuggerNotInstalledError';
 import { getPlainTextOrStreamOutput } from '../../kernels/kernel.base';

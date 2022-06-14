@@ -16,6 +16,7 @@ import {
     Disposable,
     Uri
 } from 'vscode';
+import { CodeSnippets, Identifiers } from '../platform/common/constants';
 import { IApplicationShell, IWorkspaceService } from '../platform/common/application/types';
 import { WrappedError } from '../platform/errors/types';
 import { disposeAllDisposables } from '../platform/common/helpers';
@@ -40,7 +41,6 @@ import {
     trackKernelResourceInformation
 } from './telemetry/helper';
 import { sendTelemetryEvent, Telemetry } from '../telemetry';
-import { Identifiers, CodeSnippets } from '../webviews/webview-side/common/constants';
 import { executeSilently, getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from './helpers';
 import {
     IJupyterSession,

@@ -62,7 +62,7 @@ import { Common, OutputChannelNames } from './platform/common/utils/localize';
 import { IServiceContainer, IServiceManager } from './platform/ioc/types';
 import { sendErrorTelemetry, sendStartupTelemetry } from './platform/startupTelemetry';
 import { noop } from './platform/common/utils/misc';
-import { JUPYTER_OUTPUT_CHANNEL, PythonExtension } from './webviews/webview-side/common/constants';
+import { PythonExtension } from './webviews/webview-side/common/constants';
 import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.web';
 import { registerTypes as registerTelemetryTypes } from './telemetry/serviceRegistry.web';
 import { registerTypes as registerKernelTypes } from './kernels/serviceRegistry.web';
@@ -72,7 +72,7 @@ import { registerTypes as registerIntellisenseTypes } from './intellisense/servi
 import { registerTypes as registerTerminalTypes } from './platform/terminals/serviceRegistry.web';
 import { registerTypes as registerWebviewTypes } from './webviews/extension-side/serviceRegistry.web';
 import { IExtensionActivationManager } from './platform/activation/types';
-import { isCI, isTestExecution, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants';
+import { isCI, isTestExecution, JUPYTER_OUTPUT_CHANNEL, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants';
 import { getJupyterOutputChannel } from './platform/devTools/jupyterOutputChannel';
 import { registerLogger, setLoggingLevel } from './platform/logging';
 import { Container } from 'inversify/lib/container/container';

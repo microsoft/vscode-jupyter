@@ -12,10 +12,9 @@ import {
     ICommandManager,
     IDocumentManager
 } from '../../../platform/common/application/types';
-import { isTestExecution } from '../../../platform/common/constants';
+import { Identifiers, isTestExecution } from '../../../platform/common/constants';
 import { IConfigurationService, IDisposableRegistry, IExtensionContext } from '../../../platform/common/types';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
-import { Identifiers } from '../../webview-side/common/constants';
 import { IJupyterVariableDataProviderFactory, IDataViewerFactory } from '../dataviewer/types';
 import { INotebookWatcher, IVariableViewProvider } from './types';
 import { VariableView } from './variableView';

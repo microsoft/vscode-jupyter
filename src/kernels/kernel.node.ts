@@ -4,12 +4,12 @@
 'use strict';
 import { NotebookController, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../platform/common/application/types';
+import { CodeSnippets, InteractiveWindowView } from '../platform/common/constants';
 import { traceInfo, traceError } from '../platform/logging';
 import { IFileSystemNode } from '../platform/common/platform/types.node';
 import { IPythonExecutionFactory } from '../platform/common/process/types.node';
 import { Resource, IConfigurationService, IExtensionContext } from '../platform/common/types';
 import { calculateWorkingDirectory } from '../platform/common/utils.node';
-import { CodeSnippets } from '../webviews/webview-side/common/constants';
 import { getAssociatedNotebookDocument, isLocalHostConnection, isPythonKernelConnection } from './helpers';
 import { expandWorkingDir } from './jupyter/jupyterUtils';
 import {
@@ -23,7 +23,6 @@ import { AddRunCellHook } from '../platform/common/scriptConstants';
 import { IStatusProvider } from '../platform/progress/types';
 import { sendTelemetryForPythonKernelExecutable } from './helpers.node';
 import { BaseKernel } from './kernel.base';
-import { InteractiveWindowView } from '../platform/common/constants';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 
 export class Kernel extends BaseKernel {

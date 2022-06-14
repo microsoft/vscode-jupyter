@@ -22,7 +22,6 @@ import { IEnvironmentActivationService } from '../../../platform/interpreter/act
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
-import { JupyterDaemonModule, JUPYTER_OUTPUT_CHANNEL } from '../../../webviews/webview-side/common/constants';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { Product } from '../../installer/types';
 import { JupyterPaths } from '../../raw/finder/jupyterPaths.node';
@@ -38,6 +37,7 @@ import {
 } from '../types';
 import { IJupyterSubCommandExecutionService } from '../types.node';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths.node';
+import { JupyterDaemonModule, JUPYTER_OUTPUT_CHANNEL } from '../../../platform/common/constants';
 
 /**
  * Responsible for execution of jupyter sub commands using a single/global interpreter set aside for launching jupyter server.

@@ -5,10 +5,9 @@ import { inject, injectable, named } from 'inversify';
 import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, ProviderResult } from 'vscode';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { IDebugService } from '../../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { Identifiers, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { pythonIWKernelDebugAdapter, pythonKernelDebugAdapter } from '../debugger/constants';
-import { Identifiers } from '../../webviews/webview-side/common/constants';
 import { IJupyterDebugService } from '../debugger/types';
 import { IJupyterVariables } from './types';
 
