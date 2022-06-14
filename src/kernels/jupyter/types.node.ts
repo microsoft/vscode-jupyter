@@ -3,7 +3,7 @@
 'use strict';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { JupyterCommands } from '../../webviews/webview-side/common/constants';
+import { JupyterCommands } from '../../platform/common/constants';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../../platform/common/process/types.node';
 import { JupyterServerInfo } from './types';
 

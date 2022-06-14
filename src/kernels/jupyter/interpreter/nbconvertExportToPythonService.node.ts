@@ -10,7 +10,7 @@ import { IPythonExecutionFactory, IPythonDaemonExecutionService } from '../../..
 import { reportAction } from '../../../platform/progress/decorator';
 import { ReportableAction } from '../../../platform/progress/types';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { JupyterDaemonModule } from '../../../webviews/webview-side/common/constants';
+import { JupyterDaemonModule } from '../../../platform/common/constants';
 
 @injectable()
 export class NbConvertExportToPythonService {

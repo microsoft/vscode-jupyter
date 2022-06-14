@@ -15,7 +15,7 @@ import {
 import { IKernel } from '../../../kernels/types';
 import { IJupyterVariable, IJupyterVariables } from '../../../kernels/variables/types';
 import { traceError } from '../../../platform/logging';
-import { Identifiers } from '../../webview-side/common/constants';
+import { Identifiers } from '../../../platform/common/constants';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
 
 @injectable()

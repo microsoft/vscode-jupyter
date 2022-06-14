@@ -2,11 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 import * as vscode from 'vscode';
-import { Identifiers } from '../webviews/webview-side/common/constants';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
 import { IPythonExtensionChecker } from '../platform/api/types';
 import { IApplicationEnvironment } from '../platform/common/application/types';
-import { JVSC_EXTENSION_ID } from '../platform/common/constants';
+import { Identifiers, JVSC_EXTENSION_ID } from '../platform/common/constants';
 import { ProtocolParser } from '../platform/debugger/extension/helpers/protocolParser.node';
 import { IProtocolParser } from '../platform/debugger/extension/types.node';
 import { IServiceManager } from '../platform/ioc/types';

@@ -14,7 +14,7 @@ import { ObservableExecutionResult, Output } from '../../../platform/common/proc
 import { Deferred, createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IServiceContainer } from '../../../platform/ioc/types';
-import { RegExpValues } from '../../../webviews/webview-side/common/constants';
+import { RegExpValues } from '../../../platform/common/constants';
 import { JupyterConnectError } from '../../../platform/errors/jupyterConnectError';
 import { IJupyterConnection } from '../../types';
 import { JupyterServerInfo } from '../types';

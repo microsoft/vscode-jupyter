@@ -26,6 +26,7 @@ import {
     createPromiseFromCancellation,
     isCancellationError
 } from '../../../platform/common/cancellation';
+import { KernelInterruptDaemonModule } from '../../../platform/common/constants';
 import {
     getTelemetrySafeErrorMessageFromPythonTraceback,
     getErrorMessageFromPythonTraceback
@@ -55,7 +56,6 @@ import { KernelDiedError } from '../../../platform/errors/kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from '../../../platform/errors/kernelPortNotUsedTimeoutError';
 import { KernelProcessExitedError } from '../../../platform/errors/kernelProcessExitedError';
 import { captureTelemetry, Telemetry } from '../../../telemetry';
-import { KernelInterruptDaemonModule } from '../../../webviews/webview-side/common/constants';
 import { PythonKernelInterruptDaemon } from '../finder/pythonKernelInterruptDaemon.node';
 import { TraceOptions } from '../../../platform/logging/types';
 import { JupyterPaths } from '../finder/jupyterPaths.node';

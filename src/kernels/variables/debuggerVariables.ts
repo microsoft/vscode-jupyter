@@ -7,13 +7,13 @@ import * as uriPath from '../../platform/vscode-path/resources';
 
 import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
+import { Identifiers } from '../../platform/common/constants';
 import { IDebugService, IVSCodeNotebook } from '../../platform/common/application/types';
 import { DataFrameLoading, GetVariableInfo } from '../../platform/common/scriptConstants';
 import { traceError, traceVerbose } from '../../platform/logging';
 import { IConfigurationService, IExtensionContext, Resource } from '../../platform/common/types';
 import { DebugLocationTracker } from '../debugger/debugLocationTracker';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { Identifiers } from '../../webviews/webview-side/common/constants';
 import { IDebuggingManager, IJupyterDebugService, KernelDebugMode } from '../debugger/types';
 import { IKernel } from '../types';
 import { parseDataFrame } from './pythonVariableRequester';

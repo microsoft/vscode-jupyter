@@ -385,8 +385,8 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
             await createAndOpenTemporaryNotebookForKernelCrash(`nb.ipynb`);
             await insertCodeCell('print("123412341234")');
             await runAllCellsInActiveNotebook();
-            // Wait for a max of 1s for error message to be dispalyed.
-            await Promise.race([prompt.displayed, sleep(5_000).then(() => Promise.reject('Prompt not displayed'))]);
+            // Wait for a max of 10s for error message to be dispalyed.
+            await Promise.race([prompt.displayed, sleep(10_000).then(() => Promise.reject('Prompt not displayed'))]);
             prompt.dispose();
 
             // Verify we have an output in the cell that contains the same information (about overirding built in modules).

@@ -13,10 +13,10 @@ import {
 } from 'vscode';
 import { IWebview, IWebviewOptions, WebviewMessage } from '../../../platform/common/application/types';
 import { traceError } from '../../../platform/logging';
+import { Identifiers } from '../../../platform/common/constants';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { IDisposableRegistry, IExtensionContext } from '../../../platform/common/types';
 import * as localize from '../../../platform/common/utils/localize';
-import { Identifiers } from '../../webview-side/common/constants';
 import { joinPath } from '../../../platform/vscode-path/resources';
 
 // Wrapper over a vscode webview. To be used with either WebviewPanel or WebviewView

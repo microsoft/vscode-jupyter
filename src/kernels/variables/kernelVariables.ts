@@ -4,11 +4,10 @@
 import type { JSONObject } from '@lumino/coreutils';
 import { inject, injectable, named } from 'inversify';
 import { CancellationError, CancellationToken, Event, EventEmitter } from 'vscode';
-import { PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { Identifiers, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { Experiments } from '../../platform/common/experiments/groups';
 import { IConfigurationService, IExperimentService, IDisposableRegistry } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
-import { Identifiers } from '../../webviews/webview-side/common/constants';
 import { getKernelConnectionLanguage, isPythonKernelConnection } from '../helpers';
 import { IJupyterSession, IKernel } from '../types';
 import {
