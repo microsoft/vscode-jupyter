@@ -691,7 +691,7 @@ jobs:
         uses: actions/upload-artifact@v2
         if: always()
         with:
-          name: testResults-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.os}}.xml
+          name: testResults-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.os}}-${{matrix.webOrDesktop}}.xml
           path: './${{env.TEST_RESULTS_GLOB}}'
           retention-days: 1
 
