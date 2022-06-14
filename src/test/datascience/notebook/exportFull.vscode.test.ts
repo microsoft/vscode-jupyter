@@ -33,7 +33,7 @@ import { Product } from '../../../kernels/installer/types';
 import { ProcessService } from '../../../platform/common/process/proc.node';
 import { BufferDecoder } from '../../../platform/common/process/decoder.node';
 import { INbConvertInterpreterDependencyChecker, INotebookImporter } from '../../../kernels/jupyter/types';
-import { JupyterImporter } from '../../../kernels/jupyter/import-export/jupyterImporter.node';
+import { JupyterImporter } from '../../../webviews/extension-side/import-export/jupyterImporter.node';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/api/extension';
 import { CodeSnippets, Identifiers } from '../../../platform/common/constants';

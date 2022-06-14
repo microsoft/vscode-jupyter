@@ -13,8 +13,13 @@ import { WebviewViewProvider } from './webviewViews/webviewViewProvider';
 import { JupyterVariableDataProvider } from './dataviewer/jupyterVariableDataProvider';
 import { JupyterVariableDataProviderFactory } from './dataviewer/jupyterVariableDataProviderFactory';
 import { IJupyterVariableDataProvider, IJupyterVariableDataProviderFactory } from './dataviewer/types';
+import { INotebookExporter, INotebookImporter } from '../../kernels/jupyter/types';
+import { JupyterExporter } from './import-export/jupyterExporter.node';
+import { JupyterImporter } from './import-export/jupyterImporter.node';
+import { ServerPreload } from './serverPreload/serverPreload.node';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
     serviceManager.add<IWebviewViewProvider>(IWebviewViewProvider, WebviewViewProvider);
     serviceManager.add<IWebviewPanelProvider>(IWebviewPanelProvider, WebviewPanelProvider);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
@@ -27,4 +32,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         IJupyterVariableDataProviderFactory,
         JupyterVariableDataProviderFactory
     );
+    serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
+    serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
 }

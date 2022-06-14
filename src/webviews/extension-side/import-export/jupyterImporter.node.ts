@@ -16,7 +16,11 @@ import { IDisposableRegistry, IConfigurationService } from '../../../platform/co
 import { DataScience } from '../../../platform/common/utils/localize';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { noop } from '../../../platform/common/utils/misc';
-import { INotebookImporter, INbConvertInterpreterDependencyChecker, INbConvertExportToPythonService } from '../types';
+import {
+    INotebookImporter,
+    INbConvertInterpreterDependencyChecker,
+    INbConvertExportToPythonService
+} from '../../../kernels/jupyter/types';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 
 @injectable()
