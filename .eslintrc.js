@@ -315,11 +315,6 @@ module.exports = {
                         target: './src/telemetry/**/**[!types]**.ts',
                         from: './src/**[!telemetry,platform]**/**/*.ts',
                         message: 'Importing non-platform modules into telemetry files is not allowed.'
-                    },
-                    {
-                        target: './src/kernels/**/*.ts',
-                        from: './src/**[!platform,telemetry,kernels]**/**/*.ts',
-                        message: 'Only modules from ./src/platform and ./src/telemetry can be imported into ./src/kernels.'
                     }
                 ]
             }
