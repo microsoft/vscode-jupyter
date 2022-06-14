@@ -200,10 +200,11 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         this.configurationPromise = createDeferred();
         sendTelemetryEvent(Telemetry.IPyWidgetPromptToUseCDN);
         const selection = await this.appShell.showInformationMessage(
-            DataScience.useCDNForWidgets(),
+            DataScience.useCDNForWidgetsNoInformation(),
+            { modal: true },
             Common.ok(),
-            Common.cancel(),
-            Common.doNotShowAgain()
+            Common.doNotShowAgain(),
+            Common.moreInfo()
         );
 
         let selectionForTelemetry: 'ok' | 'cancel' | 'dismissed' | 'doNotShowAgain' = 'dismissed';
@@ -221,6 +222,11 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                 selectionForTelemetry = 'doNotShowAgain';
                 // At a minimum search local interpreter or attempt to fetch scripts from remote jupyter server.
                 await Promise.all([this.updateScriptSources([]), this.userConfiguredCDNAtLeastOnce.updateValue(true)]);
+                break;
+            }
+
+            case Common.moreInfo(): {
+                this.appShell.openUrl('https://aka.ms/PVSCIPyWidgets');
                 break;
             }
             default:

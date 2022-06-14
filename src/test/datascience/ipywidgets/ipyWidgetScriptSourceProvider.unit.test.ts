@@ -92,31 +92,37 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
                 }
             });
             test('Prompt to use CDN', async () => {
-                when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve();
+                when(
+                    appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())
+                ).thenResolve();
 
                 await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
 
                 verify(
                     appShell.showInformationMessage(
-                        DataScience.useCDNForWidgets(),
+                        DataScience.useCDNForWidgetsNoInformation(),
+                        anything(),
                         Common.ok(),
-                        Common.cancel(),
-                        Common.doNotShowAgain()
+                        Common.doNotShowAgain(),
+                        Common.moreInfo()
                     )
                 ).once();
             });
             test('Do  not prompt to use CDN if user has chosen not to use a CDN', async () => {
-                when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve();
+                when(
+                    appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())
+                ).thenResolve();
                 when(userSelectedOkOrDoNotShowAgainInPrompt.value).thenReturn(true);
 
                 await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
 
                 verify(
                     appShell.showInformationMessage(
-                        DataScience.useCDNForWidgets(),
+                        DataScience.useCDNForWidgetsNoInformation(),
+                        anything(),
                         Common.ok(),
-                        Common.cancel(),
-                        Common.doNotShowAgain()
+                        Common.doNotShowAgain(),
+                        Common.moreInfo()
                     )
                 ).never();
             });
@@ -124,10 +130,11 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
                 // Confirm message was displayed.
                 verify(
                     appShell.showInformationMessage(
-                        DataScience.useCDNForWidgets(),
+                        DataScience.useCDNForWidgetsNoInformation(),
+                        anything(),
                         Common.ok(),
-                        Common.cancel(),
-                        Common.doNotShowAgain()
+                        Common.doNotShowAgain(),
+                        Common.moreInfo()
                     )
                 ).once();
 
@@ -142,7 +149,9 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
                 ).once();
             }
             test('Do not update if prompt is dismissed', async () => {
-                when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve();
+                when(
+                    appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())
+                ).thenResolve();
 
                 await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
 
@@ -150,9 +159,9 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
                 verify(userSelectedOkOrDoNotShowAgainInPrompt.updateValue(true)).never();
             });
             test('Do not update settings if Cancel is clicked in prompt', async () => {
-                when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
-                    Common.cancel() as any
-                );
+                when(
+                    appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())
+                ).thenResolve(Common.cancel() as any);
 
                 await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
 
@@ -160,9 +169,9 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
                 verify(userSelectedOkOrDoNotShowAgainInPrompt.updateValue(true)).never();
             });
             test('Update settings to not use CDN if `Do Not Show Again` is clicked in prompt', async () => {
-                when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
-                    Common.doNotShowAgain() as any
-                );
+                when(
+                    appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())
+                ).thenResolve(Common.doNotShowAgain() as any);
 
                 await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
 
@@ -170,19 +179,20 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
                 verify(userSelectedOkOrDoNotShowAgainInPrompt.updateValue(true)).once();
             });
             test('Update settings to use CDN based on prompt', async () => {
-                when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
-                    Common.ok() as any
-                );
+                when(
+                    appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())
+                ).thenResolve(Common.ok() as any);
 
                 await scriptSourceProvider.getWidgetScriptSource('HelloWorld', '1');
 
                 // Confirm message was displayed.
                 verify(
                     appShell.showInformationMessage(
-                        DataScience.useCDNForWidgets(),
+                        DataScience.useCDNForWidgetsNoInformation(),
+                        anything(),
                         Common.ok(),
-                        Common.cancel(),
-                        Common.doNotShowAgain()
+                        Common.doNotShowAgain(),
+                        Common.moreInfo()
                     )
                 ).once();
                 // Confirm settings were updated.

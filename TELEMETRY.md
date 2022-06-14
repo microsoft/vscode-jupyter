@@ -6031,8 +6031,8 @@ No properties for event
         this.configurationPromise = createDeferred();
         sendTelemetryEvent(Telemetry.IPyWidgetPromptToUseCDN);
         const selection = await this.appShell.showInformationMessage(
-            DataScience.useCDNForWidgets(),
-            Common.ok(),
+            DataScience.useCDNForWidgetsNoInformation(),
+            { modal: true },
 ```
 
 </details>

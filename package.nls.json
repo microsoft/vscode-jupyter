@@ -481,12 +481,12 @@
     "Common.cancel": "Cancel",
     "Common.yesPlease": "Yes, please",
     "DataScience.importChangeDirectoryComment": {
-      "message": "{0} Change working directory from the workspace root to the ipynb file location. Turn this addition off with the DataScience.changeDirOnImportExport setting",
-      "comment": ["{Locked='DataScience.changeDirOnImportExport'}"]
+        "message": "{0} Change working directory from the workspace root to the ipynb file location. Turn this addition off with the DataScience.changeDirOnImportExport setting",
+        "comment": ["{Locked='DataScience.changeDirOnImportExport'}"]
     },
     "DataScience.exportChangeDirectoryComment": {
-      "message": "# Change directory to VS Code workspace root so that relative path loads work correctly. Turn this addition off with the DataScience.changeDirOnImportExport setting",
-      "comment": ["{Locked='DataScience.changeDirOnImportExport'}"]
+        "message": "# Change directory to VS Code workspace root so that relative path loads work correctly. Turn this addition off with the DataScience.changeDirOnImportExport setting",
+        "comment": ["{Locked='DataScience.changeDirOnImportExport'}"]
     },
     "DataScience.interruptKernelStatus": {
         "message": "Interrupting Jupyter Kernel",
@@ -807,6 +807,7 @@
     "DataScience.latestExtension": "Download the latest version of the Jupyter Extension",
     "DataScience.loadClassFailedWithNoInternet": "Error loading {0}:{1}. Internet connection required for loading 3rd party widgets.",
     "DataScience.useCDNForWidgets": "Widgets require us to download supporting files from a 3rd party website. Click [here](https://aka.ms/PVSCIPyWidgets) for more information.",
+    "DataScience.useCDNForWidgetsNoInformation": "Widgets require us to download supporting files from a 3rd party website.",
     "DataScience.loadThirdPartyWidgetScriptsPostEnabled": {
         "message": "Please restart the Kernel when changing the setting 'jupyter.widgetScriptSources'.",
         "comment": ["{Locked='Kernel'}"]
