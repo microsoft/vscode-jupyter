@@ -12,7 +12,7 @@ import { DataScience, Common } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
-import { JupyterCommands } from '../../../webviews/webview-side/common/constants';
+import { JupyterCommands } from '../../../platform/common/constants';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { ProductNames } from '../../installer/productNames';
 import { Product, IInstaller, InstallerResponse } from '../../installer/types';

@@ -22,7 +22,7 @@ import { InteractiveWindowMessages, IPyWidgetMessages } from '../../platform/mes
 import { IServiceContainer } from '../../platform/ioc/types';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
-import { Commands } from '../../webviews/webview-side/common/constants';
+import { Commands } from '../../platform/common/constants';
 import {
     LoadIPyWidgetClassLoadAction,
     ILoadIPyWidgetClassFailureAction,
