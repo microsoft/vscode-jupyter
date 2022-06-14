@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { assert } from 'chai';
-import { formatStreamText } from '../../webviews/webview-side/common';
+import { formatStreamText } from '../../platform/common/utils';
 
 suite('DataScience Common Tests', () => {
     test('formatting stream text', async () => {

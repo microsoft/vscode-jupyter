@@ -26,7 +26,8 @@ import {
 } from './editor-integration/types';
 import { GeneratedCodeStorageManager } from './generatedCodeStoreManager';
 import { InteractiveWindowTracebackFormatter } from './outputs/tracebackFormatter';
-import { IExportCommands, IInteractiveWindowProvider } from './types';
+import { IExportCommands, IInteractiveWindowDebugger, IInteractiveWindowProvider } from './types';
+import { InteractiveWindowDebugger } from './debugger/interactiveWindowDebugger.node';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
@@ -56,4 +57,5 @@ export function registerTypes(serviceManager: IServiceManager) {
         GeneratedCodeStorageFactory
     );
     serviceManager.addSingleton<ITracebackFormatter>(ITracebackFormatter, InteractiveWindowTracebackFormatter);
+    serviceManager.addSingleton<IInteractiveWindowDebugger>(IInteractiveWindowDebugger, InteractiveWindowDebugger);
 }
