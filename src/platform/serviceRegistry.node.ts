@@ -59,13 +59,7 @@ import { ExtensionSideRenderer, IExtensionSideRenderer } from '../webviews/exten
 import { OutputCommandListener } from './logging/outputCommandListener';
 import { ExportUtilBase } from './export/exportUtil';
 import { DebuggingManager } from '../notebooks/debugger/debuggingManager';
-import {
-    IDebuggingManager,
-    IDebugLocationTracker,
-    IDebugLocationTrackerFactory,
-    IInteractiveWindowDebuggingManager
-} from '../kernels/debugger/types';
-import { InteractiveWindowDebuggingManager } from '../interactive-window/debugger/jupyter/debuggingManager';
+import { IDebuggingManager, IDebugLocationTracker, IDebugLocationTrackerFactory } from '../kernels/debugger/types';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<FileSystem>(FileSystem, FileSystem);
@@ -132,12 +126,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IDebuggingManager>(IDebuggingManager, DebuggingManager, undefined, [
         IExtensionSingleActivationService
     ]);
-    serviceManager.addSingleton<IInteractiveWindowDebuggingManager>(
-        IInteractiveWindowDebuggingManager,
-        InteractiveWindowDebuggingManager,
-        undefined,
-        [IExtensionSingleActivationService]
-    );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         PreReleaseChecker

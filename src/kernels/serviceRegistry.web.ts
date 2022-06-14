@@ -20,12 +20,6 @@ import { KernelFinder } from './kernelFinder.web';
 import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
 import { MultiplexingDebugService } from './debugger/multiplexingDebugService';
 import { IJupyterDebugService } from './debugger/types';
-import { JupyterVariableDataProviderFactory } from '../webviews/extension-side/dataviewer/jupyterVariableDataProviderFactory';
-import {
-    IJupyterVariableDataProvider,
-    IJupyterVariableDataProviderFactory
-} from '../webviews/extension-side/dataviewer/types';
-import { JupyterVariableDataProvider } from '../webviews/extension-side/dataviewer/jupyterVariableDataProvider';
 import { DebuggerVariables } from './variables/debuggerVariables';
 import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
 import { KernelVariables } from './variables/kernelVariables';
@@ -77,11 +71,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         IJupyterVariables,
         DebuggerVariables,
         Identifiers.DEBUGGER_VARIABLES
-    );
-    serviceManager.add<IJupyterVariableDataProvider>(IJupyterVariableDataProvider, JupyterVariableDataProvider);
-    serviceManager.addSingleton<IJupyterVariableDataProviderFactory>(
-        IJupyterVariableDataProviderFactory,
-        JupyterVariableDataProviderFactory
     );
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelCrashMonitor);

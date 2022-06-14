@@ -5,15 +5,14 @@
 
 import * as React from 'react';
 import { Store } from 'redux';
-import { SharedMessages } from '../../../../platform/messageTypes';
-import { IJupyterExtraSettings } from '../../../extension-side/types';
 import {
-    CommonAction,
-    CommonActionType,
     ILoadIPyWidgetClassFailureAction,
     LoadIPyWidgetClassLoadAction,
-    NotifyIPyWidgetWidgetVersionNotSupportedAction
-} from '../../interactive-common/redux/reducers/types';
+    NotifyIPyWidgetWidgetVersionNotSupportedAction,
+    SharedMessages
+} from '../../../../platform/messageTypes';
+import { IJupyterExtraSettings } from '../../../extension-side/types';
+import { CommonAction, CommonActionType } from '../../interactive-common/redux/reducers/types';
 import { IStore } from '../../interactive-common/redux/store';
 import { PostOffice } from '../../react-common/postOffice';
 import { WidgetManager } from '../common/manager';

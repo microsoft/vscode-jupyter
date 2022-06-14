@@ -12,10 +12,8 @@ import {
     DebugSession,
     Event,
     NotebookCell,
-    NotebookDocument,
-    NotebookEditor
+    NotebookDocument
 } from 'vscode';
-import { IFileGeneratedCodes } from '../../interactive-window/editor-integration/types';
 
 export interface ISourceMapMapping {
     line: number;
@@ -81,12 +79,6 @@ export interface IDebuggingManager {
     getDebugSession(notebook: NotebookDocument): Promise<DebugSession> | undefined;
     getDebugCell(notebook: NotebookDocument): NotebookCell | undefined;
     getDebugAdapter(notebook: NotebookDocument): IKernelDebugAdapter | undefined;
-}
-
-export const IInteractiveWindowDebuggingManager = Symbol('IInteractiveWindowDebuggingManager');
-export interface IInteractiveWindowDebuggingManager extends IDebuggingManager {
-    start(editor: NotebookEditor, cell: NotebookCell): Promise<void>;
-    updateSourceMaps(editor: NotebookEditor, generatedCodes: IFileGeneratedCodes[]): Promise<void>;
 }
 
 export interface IDebuggingDelegate {
