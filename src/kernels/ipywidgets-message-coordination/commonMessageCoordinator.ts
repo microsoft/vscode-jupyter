@@ -20,9 +20,9 @@ import { noop } from '../../platform/common/utils/misc';
 import { stripAnsi } from '../../platform/common/utils/regexp';
 import { InteractiveWindowMessages, IPyWidgetMessages } from '../../platform/messageTypes';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
-import { Telemetry, Commands } from '../../webviews/webview-side/common/constants';
+import { Commands } from '../../webviews/webview-side/common/constants';
 import {
     LoadIPyWidgetClassLoadAction,
     ILoadIPyWidgetClassFailureAction,

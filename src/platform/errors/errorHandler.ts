@@ -12,8 +12,8 @@ import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common
 import { traceError, traceVerbose, traceWarning } from '../logging';
 import { IBrowserService, IConfigurationService, IExtensions, IsWebExtension, Resource } from '../common/types';
 import { DataScience, Common } from '../common/utils/localize';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry, Commands } from '../../webviews/webview-side/common/constants';
+import { sendTelemetryEvent, Telemetry } from '../../telemetry';
+import { Commands } from '../../webviews/webview-side/common/constants';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { translateProductToModule } from '../../kernels/installer/utils';
 import { ProductNames } from '../../kernels/installer/productNames';

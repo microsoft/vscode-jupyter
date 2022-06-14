@@ -8,8 +8,7 @@ import { IVSCodeNotebook } from '../platform/common/application/types';
 import { IDisposableRegistry } from '../platform/common/types';
 import { isJupyterNotebook } from '../platform/common/utils';
 import { ResourceSet } from '../platform/vscode-path/map';
-import { sendTelemetryEvent } from '../telemetry';
-import { Telemetry } from '../webviews/webview-side/common/constants';
+import { sendTelemetryEvent, Telemetry } from '../telemetry';
 
 /**
  * This class tracks opened notebooks & # of executed notebooks.

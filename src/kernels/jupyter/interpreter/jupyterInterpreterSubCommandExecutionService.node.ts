@@ -21,12 +21,8 @@ import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { IEnvironmentActivationService } from '../../../platform/interpreter/activation/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../telemetry';
-import {
-    JupyterDaemonModule,
-    JUPYTER_OUTPUT_CHANNEL,
-    Telemetry
-} from '../../../webviews/webview-side/common/constants';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
+import { JupyterDaemonModule, JUPYTER_OUTPUT_CHANNEL } from '../../../webviews/webview-side/common/constants';
 import { JupyterInstallError } from '../../../platform/errors/jupyterInstallError';
 import { Product } from '../../installer/types';
 import { JupyterPaths } from '../../raw/finder/jupyterPaths.node';

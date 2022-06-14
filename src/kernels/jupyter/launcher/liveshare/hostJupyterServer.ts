@@ -21,7 +21,7 @@ import { DataScience } from '../../../../platform/common/utils/localize';
 import { StopWatch } from '../../../../platform/common/utils/stopWatch';
 import { SessionDisposedError } from '../../../../platform/errors/sessionDisposedError';
 import { sendKernelTelemetryEvent } from '../../../telemetry/sendKernelTelemetryEvent';
-import { Telemetry } from '../../../../webviews/webview-side/common/constants';
+import { Telemetry } from '../../../../telemetry';
 import {
     KernelConnectionMetadata,
     isLocalConnection,

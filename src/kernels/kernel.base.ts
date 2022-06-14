@@ -32,15 +32,15 @@ import { Deferred, sleep } from '../platform/common/utils/async';
 import { DataScience } from '../platform/common/utils/localize';
 import { noop } from '../platform/common/utils/misc';
 import { StopWatch } from '../platform/common/utils/stopWatch';
+import { concatMultilineString } from '../platform/common/utils';
 import { JupyterConnectError } from '../platform/errors/jupyterConnectError';
 import { sendKernelTelemetryEvent } from './telemetry/sendKernelTelemetryEvent';
 import {
     initializeInteractiveOrNotebookTelemetryBasedOnUserAction,
     trackKernelResourceInformation
 } from './telemetry/helper';
-import { sendTelemetryEvent } from '../telemetry';
-import { concatMultilineString } from '../webviews/webview-side/common';
-import { Telemetry, Identifiers, CodeSnippets } from '../webviews/webview-side/common/constants';
+import { sendTelemetryEvent, Telemetry } from '../telemetry';
+import { Identifiers, CodeSnippets } from '../webviews/webview-side/common/constants';
 import { executeSilently, getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from './helpers';
 import {
     IJupyterSession,

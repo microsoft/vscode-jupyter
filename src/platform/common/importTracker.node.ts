@@ -7,7 +7,6 @@ import { inject, injectable } from 'inversify';
 import * as path from '../vscode-path/path';
 import { NotebookCellExecutionStateChangeEvent, NotebookCellKind, NotebookDocument, TextDocument } from 'vscode';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { splitMultilineString } from '../../webviews/webview-side/common';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IDocumentManager, IVSCodeNotebook } from './application/types';
 import { isCI, isTestExecution, PYTHON_LANGUAGE } from './constants';
@@ -17,7 +16,7 @@ import { IDisposable, IDisposableRegistry } from './types';
 import { noop } from './utils/misc';
 import { EventName } from '../../telemetry/constants';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
-import { getAssociatedJupyterNotebook, isJupyterNotebook } from './utils';
+import { getAssociatedJupyterNotebook, isJupyterNotebook, splitMultilineString } from './utils';
 
 /*
 Python has a fairly rich import statement. Originally the matching regexp was kept simple for

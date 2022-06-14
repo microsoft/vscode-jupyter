@@ -12,7 +12,7 @@ import {
     Uri
 } from 'vscode';
 
-import { splitMultilineString } from '../../webviews/webview-side/common';
+import { splitMultilineString } from '../../platform/common/utils';
 import { IDocumentManager } from '../../platform/common/application/types';
 import { traceInfo } from '../../platform/logging';
 import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';

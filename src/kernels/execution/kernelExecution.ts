@@ -14,8 +14,7 @@ import { createDeferred, waitForPromise } from '../../platform/common/utils/asyn
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { sendKernelTelemetryEvent } from '../telemetry/sendKernelTelemetryEvent';
 import { trackKernelResourceInformation } from '../telemetry/helper';
-import { captureTelemetry } from '../../telemetry';
-import { Telemetry } from '../../webviews/webview-side/common/constants';
+import { captureTelemetry, Telemetry } from '../../telemetry';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import {
     IJupyterSession,

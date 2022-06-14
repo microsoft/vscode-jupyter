@@ -16,7 +16,7 @@ import {
 } from 'vscode';
 import { IVSCodeNotebook, ICommandManager, IApplicationShell } from '../platform/common/application/types';
 import { IConfigurationService, IDataScienceCommandListener, IDisposableRegistry } from '../platform/common/types';
-import { Commands, Telemetry } from '../webviews/webview-side/common/constants';
+import { Commands } from '../webviews/webview-side/common/constants';
 import { noop } from '../platform/common/utils/misc';
 import { NotebookCellLanguageService } from '../intellisense/cellLanguageService';
 import { DisplayOptions } from '../kernels/displayOptions';
@@ -24,7 +24,7 @@ import { IKernel, IKernelProvider } from '../kernels/types';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { DataScience } from '../platform/common/utils/localize';
 import { traceInfoIfCI, traceInfo } from '../platform/logging';
-import { sendTelemetryEvent } from '../telemetry';
+import { sendTelemetryEvent, Telemetry } from '../telemetry';
 import { trackKernelResourceInformation } from '../kernels/telemetry/helper';
 import { INotebookControllerManager, INotebookEditorProvider } from './types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';

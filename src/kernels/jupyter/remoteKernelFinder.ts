@@ -14,8 +14,7 @@ import {
 } from '../types';
 import { IsWebExtension, Resource } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { captureTelemetry } from '../../telemetry';
-import { Telemetry } from '../../webviews/webview-side/common/constants';
+import { captureTelemetry, Telemetry } from '../../telemetry';
 import { IRemoteKernelFinder } from '../raw/types';
 import { IJupyterSessionManagerFactory, IJupyterSessionManager } from './types';
 import { sendKernelSpecTelemetry } from '../raw/finder/helper';

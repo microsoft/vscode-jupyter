@@ -5,10 +5,10 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ICell } from '../../platform/common/types';
+import { concatMultilineString } from '../../platform/common/utils';
 
 import { createDeferred, Deferred } from '../../platform/common/utils/async';
 import { noop, swallowExceptions } from '../../platform/common/utils/misc';
-import { concatMultilineString } from '../../webviews/webview-side/common';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 interface IMessageResult {

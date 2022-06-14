@@ -12,8 +12,8 @@ import { DataFrameLoading, GetVariableInfo } from '../../platform/common/scriptC
 import { traceError, traceVerbose } from '../../platform/logging';
 import { IConfigurationService, IExtensionContext, Resource } from '../../platform/common/types';
 import { DebugLocationTracker } from '../debugger/debugLocationTracker';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Identifiers, Telemetry } from '../../webviews/webview-side/common/constants';
+import { sendTelemetryEvent, Telemetry } from '../../telemetry';
+import { Identifiers } from '../../webviews/webview-side/common/constants';
 import { IDebuggingManager, IJupyterDebugService, KernelDebugMode } from '../debugger/types';
 import { IKernel } from '../types';
 import { parseDataFrame } from './pythonVariableRequester';

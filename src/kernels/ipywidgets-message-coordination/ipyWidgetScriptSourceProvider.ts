@@ -17,9 +17,8 @@ import {
 import { Deferred, createDeferred } from '../../platform/common/utils/async';
 import { DataScience, Common } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
-import { sendTelemetryEvent } from '../../telemetry';
+import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
-import { Telemetry } from '../../webviews/webview-side/common/constants';
 import { IKernel } from '../types';
 import {
     ILocalResourceUriConverter,
