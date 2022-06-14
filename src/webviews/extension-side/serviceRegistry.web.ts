@@ -10,6 +10,9 @@ import { IExtensionSingleActivationService } from '../../platform/activation/typ
 import { VariableViewActivationService } from './variablesView/variableViewActivationService';
 import { IVariableViewProvider } from './variablesView/types';
 import { VariableViewProvider } from './variablesView/variableViewProvider';
+import { JupyterVariableDataProvider } from './dataviewer/jupyterVariableDataProvider';
+import { JupyterVariableDataProviderFactory } from './dataviewer/jupyterVariableDataProviderFactory';
+import { IJupyterVariableDataProvider, IJupyterVariableDataProviderFactory } from './dataviewer/types';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.add<IWebviewViewProvider>(IWebviewViewProvider, WebviewViewProvider);
@@ -19,4 +22,9 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         VariableViewActivationService
     );
     serviceManager.addSingleton<IVariableViewProvider>(IVariableViewProvider, VariableViewProvider);
+    serviceManager.add<IJupyterVariableDataProvider>(IJupyterVariableDataProvider, JupyterVariableDataProvider);
+    serviceManager.addSingleton<IJupyterVariableDataProviderFactory>(
+        IJupyterVariableDataProviderFactory,
+        JupyterVariableDataProviderFactory
+    );
 }

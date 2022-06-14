@@ -31,12 +31,6 @@ import { PreWarmActivatedJupyterEnvironmentVariables } from './variables/preWarm
 import { PythonVariablesRequester } from './variables/pythonVariableRequester';
 import { IInteractiveWindowDebugger } from '../interactive-window/types';
 import { MultiplexingDebugService } from './debugger/multiplexingDebugService';
-import { JupyterVariableDataProvider } from '../webviews/extension-side/dataviewer/jupyterVariableDataProvider';
-import { JupyterVariableDataProviderFactory } from '../webviews/extension-side/dataviewer/jupyterVariableDataProviderFactory';
-import {
-    IJupyterVariableDataProvider,
-    IJupyterVariableDataProviderFactory
-} from '../webviews/extension-side/dataviewer/types';
 import { IJupyterDebugService } from './debugger/types';
 import { IKernelDependencyService, IKernelFinder, IKernelProvider } from './types';
 import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
@@ -101,11 +95,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         IJupyterDebugService,
         MultiplexingDebugService,
         Identifiers.MULTIPLEXING_DEBUGSERVICE
-    );
-    serviceManager.add<IJupyterVariableDataProvider>(IJupyterVariableDataProvider, JupyterVariableDataProvider);
-    serviceManager.addSingleton<IJupyterVariableDataProviderFactory>(
-        IJupyterVariableDataProviderFactory,
-        JupyterVariableDataProviderFactory
     );
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelCrashMonitor);
     serviceManager.addSingleton<IExtensionSyncActivationService>(

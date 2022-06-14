@@ -128,6 +128,7 @@ export function buildApi(
         }
     };
 
+    console.log('activate extension', isTestExecution(), context.extensionMode);
     // In test/dev environment return the DI Container.
     if (
         isTestExecution() ||
