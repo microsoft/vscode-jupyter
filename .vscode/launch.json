@@ -111,7 +111,7 @@
             ],
             "outFiles": ["${workspaceFolder}/out/**/*.*"],
             "sourceMaps": true,
-            "preLaunchTask": "Start Jupyter Server",
+            "preLaunchTask": "Start Jupyter Server", // Update the env variables for this script in tasks.json with a remote URI to use your own
             "postDebugTask": "Stop Jupyter Server",
             "presentation": {
                 "group": "2_tests",
