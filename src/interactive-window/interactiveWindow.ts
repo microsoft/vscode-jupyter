@@ -44,7 +44,7 @@ import {
     NotebookCellRunState
 } from '../kernels/types';
 import { INotebookControllerManager } from '../notebooks/types';
-import { generateMarkdownFromCodeLines, parseForComments } from '../webviews/webview-side/common';
+import { generateMarkdownFromCodeLines } from '../webviews/webview-side/common';
 import { chainable } from '../platform/common/utils/decorators';
 import { InteractiveCellResultError } from '../platform/errors/interactiveCellResultError';
 import { DataScience } from '../platform/common/utils/localize';
@@ -73,6 +73,7 @@ import { CellExecutionCreator } from '../kernels/execution/cellExecutionCreator'
 import { updateNotebookMetadata } from '../kernels/execution/helpers';
 import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../kernels/telemetry/helper';
+import { parseForComments } from '../platform/common/utils';
 
 export class InteractiveWindow implements IInteractiveWindowLoadable {
     public get onDidChangeViewState(): Event<void> {
