@@ -800,14 +800,12 @@
                 "command": "jupyter.interactive.removeCell",
                 "title": "%DataScience.interactiveRemoveCell%",
                 "icon": "$(close)",
-                "enablement": "!jupyter.webExtension",
                 "category": "Jupyter"
             },
             {
                 "command": "jupyter.interactive.goToCode",
                 "title": "%DataScience.interactiveGoToCode%",
                 "icon": "$(go-to-file)",
-                "enablement": "!jupyter.webExtension",
                 "category": "Jupyter"
             },
             {
@@ -832,7 +830,6 @@
                 "command": "jupyter.interactive.copyCell",
                 "title": "%DataScience.interactiveCopyCell%",
                 "icon": "$(copy)",
-                "enablement": "!jupyter.webExtension",
                 "category": "Jupyter"
             },
             {
