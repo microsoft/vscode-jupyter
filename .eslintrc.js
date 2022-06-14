@@ -308,8 +308,8 @@ module.exports = {
                     },
                     {
                         target: './src/kernels/**/*.ts',
-                        from: './src/notebooks/**/*.ts',
-                        message: 'Importing modules from ./src/notebooks into ./src/kernels code is not allowed.'
+                        from: './src/**[!platform,telemetry,kernels]**/**/*.ts',
+                        message: 'Only modules from ./src/platform and ./src/telemetry can be imported into ./src/kernels.'
                     },
                     {
                         target: './src/telemetry/**/**[!types]**.ts',

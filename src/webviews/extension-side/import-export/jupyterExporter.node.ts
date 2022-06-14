@@ -18,7 +18,7 @@ import { concatMultilineString, pruneCell } from '../../../platform/common/utils
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IDataScienceErrorHandler } from '../../../platform/errors/types';
 import { defaultNotebookFormat } from '../../../platform/common/constants';
-import { INotebookExporter, IJupyterExecution } from '../types';
+import { INotebookExporter, IJupyterExecution } from '../../../kernels/jupyter/types';
 import { openAndShowNotebook } from '../../../platform/common/utils/notebooks';
 import { noop } from '../../../platform/common/utils/misc';
 import { CodeSnippets } from '../../../platform/common/constants';

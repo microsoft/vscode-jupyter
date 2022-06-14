@@ -6,8 +6,6 @@ import { IRemoteKernelFinder } from '../raw/types';
 import { INotebookProvider } from '../types';
 import { JupyterCommandLineSelectorCommand } from './commands/commandLineSelector';
 import { CommandRegistry } from './commands/commandRegistry';
-import { JupyterExporter } from './import-export/jupyterExporter.node';
-import { JupyterImporter } from './import-export/jupyterImporter.node';
 import { JupyterCommandFactory } from './interpreter/jupyterCommand.node';
 import { JupyterInterpreterDependencyService } from './interpreter/jupyterInterpreterDependencyService.node';
 import { JupyterInterpreterOldCacheStateStore } from './interpreter/jupyterInterpreterOldCacheStateStore.node';
@@ -36,7 +34,6 @@ import { NotebookProvider } from './launcher/notebookProvider';
 import { NotebookServerProvider } from './launcher/notebookServerProvider';
 import { NotebookStarter } from './launcher/notebookStarter.node';
 import { ServerConnectionType } from './launcher/serverConnectionType';
-import { ServerPreload } from './launcher/serverPreload.node';
 import { JupyterServerUriStorage } from './launcher/serverUriStorage';
 import { LiveRemoteKernelConnectionUsageTracker } from './liveRemoteKernelConnectionTracker';
 import { RemoteKernelFinder } from './remoteKernelFinder';
@@ -46,8 +43,6 @@ import { JupyterRequestCreator } from './session/jupyterRequestCreator.node';
 import { JupyterSessionManagerFactory } from './session/jupyterSessionManagerFactory';
 import { RequestAgentCreator } from './session/requestAgentCreator.node';
 import {
-    INotebookExporter,
-    INotebookImporter,
     IJupyterNotebookProvider,
     IJupyterExecution,
     IJupyterPasswordConnect,
@@ -71,8 +66,6 @@ import { IJupyterCommandFactory, IJupyterSubCommandExecutionService } from './ty
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
-    serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
-    serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
     serviceManager.add<INotebookServerFactory>(INotebookServerFactory, HostJupyterServerFactory);
     serviceManager.addSingleton<IJupyterNotebookProvider>(IJupyterNotebookProvider, JupyterNotebookProvider);
     serviceManager.addSingleton<IRemoteKernelFinder>(IRemoteKernelFinder, RemoteKernelFinder);
@@ -135,7 +128,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
     serviceManager.addSingleton<INotebookStarter>(INotebookStarter, NotebookStarter);
     serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
     serviceManager.addSingleton<IJupyterBackingFileCreator>(IJupyterBackingFileCreator, BackingFileCreator);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, CommandRegistry);
     serviceManager.addSingleton<JupyterCommandLineSelectorCommand>(

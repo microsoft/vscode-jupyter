@@ -13,11 +13,11 @@ import {
     IMemento,
     WORKSPACE_MEMENTO
 } from '../../../platform/common/types';
-import { getKernelConnectionLanguage } from '../../helpers';
-import { IKernel, IKernelProvider, INotebookProvider } from '../../types';
+import { getKernelConnectionLanguage } from '../../../kernels/helpers';
+import { IKernel, IKernelProvider, INotebookProvider } from '../../../kernels/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../../interactive-window/types';
-import { DisplayOptions } from '../../displayOptions';
-import { IRawNotebookProvider } from '../../raw/types';
+import { DisplayOptions } from '../../../kernels/displayOptions';
+import { IRawNotebookProvider } from '../../../kernels/raw/types';
 import { isJupyterNotebook } from '../../../platform/common/utils';
 import { noop } from '../../../platform/common/utils/misc';
 
