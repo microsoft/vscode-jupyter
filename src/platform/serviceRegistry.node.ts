@@ -11,19 +11,6 @@ import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistr
 import { DataScienceStartupTime } from './common/constants';
 import { LogReplayService } from '../intellisense/logReplayService.node';
 import { Activation } from '../kernels/activation.node';
-import { DataViewer } from '../webviews/extension-side/dataviewer/dataViewer.node';
-import { DataViewerDependencyService } from '../webviews/extension-side/dataviewer/dataViewerDependencyService.node';
-import { DataViewerFactory } from '../webviews/extension-side/dataviewer/dataViewerFactory';
-import {
-    IDataViewer,
-    IDataViewerDependencyService,
-    IDataViewerFactory
-} from '../webviews/extension-side/dataviewer/types';
-import { PlotViewer } from '../webviews/extension-side/plotting/plotViewer.node';
-import { PlotViewerProvider } from '../webviews/extension-side/plotting/plotViewerProvider.node';
-import { IPlotViewer, IPlotViewerProvider } from '../webviews/extension-side/plotting/types';
-import { NotebookWatcher } from '../webviews/extension-side/variablesView/notebookWatcher';
-import { INotebookWatcher } from '../webviews/extension-side/variablesView/types';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from './activation/types';
 import { ExtensionRecommendationService } from './common/extensionRecommendation.node';
 import { GlobalActivation } from './common/globalActivation';
@@ -80,14 +67,8 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
     serviceManager.addSingletonInstance<IExtensionSideRenderer>(IExtensionSideRenderer, new ExtensionSideRenderer());
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
-    serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
-    serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
-    serviceManager.addSingleton<IDataViewerDependencyService>(
-        IDataViewerDependencyService,
-        DataViewerDependencyService
-    );
+
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
-    serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
     serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory, undefined, [
         IDebugLocationTrackerFactory
     ]);
@@ -98,7 +79,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
             LogReplayService
         );
     }
-    serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);
     serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
     serviceManager.addSingleton<ProgressReporter>(ProgressReporter, ProgressReporter);
     serviceManager.addSingleton<IFileConverter>(IFileConverter, FileConverter);
@@ -114,7 +94,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<ExportUtilBase>(ExportUtilBase, ExportUtilBase);
     serviceManager.addSingleton<ExportUtil>(ExportUtil, ExportUtil);
     serviceManager.addSingleton<IExportDialog>(IExportDialog, ExportDialog);
-    serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         ExtensionRecommendationService

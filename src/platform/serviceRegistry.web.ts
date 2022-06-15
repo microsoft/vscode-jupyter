@@ -26,7 +26,6 @@ import { DataScienceErrorHandler } from './errors/errorHandler';
 import { IDataScienceErrorHandler } from './errors/types';
 import { GlobalActivation } from './common/globalActivation';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from './activation/types';
-import { ExtensionSideRenderer, IExtensionSideRenderer } from '../webviews/extension-side/renderer';
 import { OutputCommandListener } from './logging/outputCommandListener';
 import { ExportDialog } from './export/exportDialog';
 import { ExportFormat, IExport, IExportBase, IExportDialog, IFileConverter, INbConvertExport } from './export/types';
@@ -40,10 +39,6 @@ import { ExportUtilBase } from './export/exportUtil';
 import { ExportToHTML } from './export/exportToHTML';
 import { ExportToPDF } from './export/exportToPDF';
 import { ExportToPython } from './export/exportToPython';
-import { NotebookWatcher } from '../webviews/extension-side/variablesView/notebookWatcher';
-import { DataViewerFactory } from '../webviews/extension-side/dataviewer/dataViewerFactory';
-import { IDataViewerFactory } from '../webviews/extension-side/dataviewer/types';
-import { INotebookWatcher } from '../webviews/extension-side/variablesView/types';
 import { DebuggingManager } from '../notebooks/debugger/debuggingManager';
 import { IDebuggingManager, IDebugLocationTracker, IDebugLocationTrackerFactory } from '../kernels/debugger/types';
 import { DebugLocationTrackerFactory } from '../kernels/debugger/debugLocationTrackerFactory';
@@ -59,7 +54,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
-    serviceManager.addSingletonInstance<IExtensionSideRenderer>(IExtensionSideRenderer, new ExtensionSideRenderer());
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, OutputCommandListener);
     serviceManager.addSingleton<ExportFileOpener>(ExportFileOpener, ExportFileOpener);
     serviceManager.addSingleton<IExportBase>(IExportBase, ExportBase);
@@ -79,9 +73,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     registerApiTypes(serviceManager);
     registerActivationTypes(serviceManager);
     registerDevToolTypes(context, serviceManager, isDevMode);
-
-    serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
-    serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
 
     serviceManager.addSingleton<IDebuggingManager>(IDebuggingManager, DebuggingManager, undefined, [
         IExtensionSingleActivationService

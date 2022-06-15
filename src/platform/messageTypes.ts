@@ -3,7 +3,7 @@
 'use strict';
 import { Uri } from 'vscode';
 import type { KernelMessage } from '@jupyterlab/services';
-import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../webviews/webview-side/common/constants';
+import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../platform/common/constants';
 import {
     IVariableExplorerHeight,
     CommonActionType
