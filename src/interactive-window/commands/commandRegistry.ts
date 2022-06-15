@@ -81,7 +81,6 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         if (!this.workspace.isTrusted) {
             return;
         }
-        this.exportCommand?.register();
         this.registerCommand(Commands.RunAllCells, this.runAllCells);
         this.registerCommand(Commands.RunCell, this.runCell);
         this.registerCommand(Commands.RunCurrentCell, this.runCurrentCell);
