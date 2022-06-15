@@ -40,7 +40,6 @@ import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { NotebookCellLanguageService } from '../../intellisense/cellLanguageService';
 import {
     LiveRemoteKernelConnectionMetadata,
     IKernelProvider,
@@ -139,7 +138,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(NotebookCellLanguageService) private readonly languageService: NotebookCellLanguageService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IDocumentManager) private readonly docManager: IDocumentManager,
@@ -873,7 +871,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         this.kernelProvider,
                         this.context,
                         this.disposables,
-                        this.languageService,
                         this.workspace,
                         this.configuration,
                         this.docManager,

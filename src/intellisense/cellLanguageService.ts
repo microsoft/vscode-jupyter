@@ -14,16 +14,7 @@ import { PYTHON_LANGUAGE } from '../platform/common/constants';
 import { traceWarning } from '../platform/logging';
 import { IDisposableRegistry, IMemento, GLOBAL_MEMENTO } from '../platform/common/types';
 import { swallowExceptions } from '../platform/common/utils/decorators';
-import {
-    LanguagesSupportedByPythonkernel,
-    VSCodeKnownNotebookLanguages
-} from '../webviews/webview-side/common/constants';
-import {
-    isPythonKernelConnection,
-    getKernelConnectionLanguage,
-    getLanguageInNotebookMetadata
-} from '../kernels/helpers';
-import { KernelConnectionMetadata } from '../kernels/types';
+import { getLanguageInNotebookMetadata } from '../kernels/helpers';
 import { getNotebookMetadata, isJupyterNotebook, translateKernelLanguageToMonaco } from '../platform/common/utils';
 
 export const LastSavedNotebookCellLanguage = 'DATASCIENCE.LAST_SAVED_CELL_LANGUAGE';
@@ -56,21 +47,6 @@ export class NotebookCellLanguageService implements IExtensionSingleActivationSe
     }
     public async activate() {
         this.vscNotebook.onDidSaveNotebookDocument(this.onDidSaveNotebookDocument, this, this.disposables);
-    }
-    public getSupportedLanguages(kernelConnection: KernelConnectionMetadata): string[] {
-        if (isPythonKernelConnection(kernelConnection)) {
-            return LanguagesSupportedByPythonkernel;
-        } else {
-            const language = translateKernelLanguageToMonaco(getKernelConnectionLanguage(kernelConnection) || '');
-            // We should set `supportedLanguages` only if VS Code knows about them.
-            // Assume user has a kernel for `go` & VS Code doesn't know about `go` language, & we initailize `supportedLanguages` to [go]
-            // In such cases VS Code will not allow execution of this cell (because `supportedLanguages` by definition limits execution to languages defined).
-            if (language && VSCodeKnownNotebookLanguages.includes(language.toLowerCase())) {
-                return [language];
-            }
-            // Support all languages
-            return [];
-        }
     }
     private get lastSavedNotebookCellLanguage(): string | undefined {
         return this.globalMemento.get<string | undefined>(LastSavedNotebookCellLanguage);

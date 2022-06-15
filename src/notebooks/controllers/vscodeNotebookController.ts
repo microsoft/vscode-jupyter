@@ -56,14 +56,14 @@ import { Commands } from '../../platform/common/constants';
 import { Telemetry } from '../../telemetry';
 import { IDataScienceErrorHandler, WrappedError } from '../../platform/errors/types';
 import { IPyWidgetMessages } from '../../platform/messageTypes';
-import { NotebookCellLanguageService } from '../../intellisense/cellLanguageService';
 import {
     getKernelConnectionPath,
     getRemoteKernelSessionInformation,
     getDisplayNameOrNameOfKernelConnection,
     isPythonKernelConnection,
     areKernelConnectionsEqual,
-    getKernelRegistrationInfo
+    getKernelRegistrationInfo,
+    getSupportedLanguages
 } from '../../kernels/helpers';
 import {
     IKernel,
@@ -153,7 +153,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private readonly kernelProvider: IKernelProvider,
         private readonly context: IExtensionContext,
         disposableRegistry: IDisposableRegistry,
-        private readonly languageService: NotebookCellLanguageService,
         private readonly workspace: IWorkspaceService,
         private readonly configuration: IConfigurationService,
         private readonly documentManager: IDocumentManager,
@@ -188,7 +187,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                 : '';
         this.controller.kind = getKernelConnectionCategory(kernelConnection);
         this.controller.supportsExecutionOrder = true;
-        this.controller.supportedLanguages = this.languageService.getSupportedLanguages(kernelConnection);
+        this.controller.supportedLanguages = getSupportedLanguages(kernelConnection);
         // Hook up to see when this NotebookController is selected by the UI
         this.controller.onDidChangeSelectedNotebooks(this.onDidChangeSelectedNotebooks, this, this.disposables);
     }
