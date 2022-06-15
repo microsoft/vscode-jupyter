@@ -872,7 +872,6 @@ suite('Jupyter Execution', async () => {
             jupyterLaunchRetries: 3,
             // eslint-disable-next-line no-template-curly-in-string
             notebookFileRoot: '${fileDirname}',
-            changeDirOnImportExport: true,
             useDefaultConfigForJupyter: true,
             jupyterInterruptTimeout: 10000,
             searchForJupyter: !skipSearch,

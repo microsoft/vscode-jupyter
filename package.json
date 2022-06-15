@@ -1632,13 +1632,6 @@
                     "description": "Search all installed Python interpreters for a Jupyter installation when starting the Interactive window",
                     "scope": "resource"
                 },
-                "jupyter.changeDirOnImportExport": {
-                    "type": "boolean",
-                    "default": false,
-                    "deprecationMessage": "This setting is deprecated and will be removed in the next release.",
-                    "description": "When importing or exporting a Jupyter Notebook add a directory change command to allow relative path loading to work.",
-                    "scope": "resource"
-                },
                 "jupyter.useDefaultConfigForJupyter": {
                     "type": "boolean",
                     "default": true,

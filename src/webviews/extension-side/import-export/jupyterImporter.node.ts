@@ -4,14 +4,9 @@
 import '../../../platform/common/extensions';
 
 import { inject, injectable } from 'inversify';
-import * as os from 'os';
-import * as path from '../../../platform/vscode-path/path';
 
 import { Uri } from 'vscode';
-import { IWorkspaceService } from '../../../platform/common/application/types';
-import { traceError } from '../../../platform/logging';
 import { Identifiers, CodeSnippets } from '../../../platform/common/constants';
-import { IPlatformService } from '../../../platform/common/platform/types';
 import { IDisposableRegistry, IConfigurationService } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
@@ -48,21 +43,12 @@ export class JupyterImporter implements INotebookImporter {
         @inject(IFileSystemNode) private fs: IFileSystemNode,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IConfigurationService) private configuration: IConfigurationService,
-        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
-        @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(INbConvertInterpreterDependencyChecker)
         private readonly nbConvertDependencyChecker: INbConvertInterpreterDependencyChecker,
         @inject(INbConvertExportToPythonService) private readonly exportToPythonService: INbConvertExportToPythonService
     ) {}
 
     public async importFromFile(sourceFile: Uri, interpreter: PythonEnvironment): Promise<string> {
-        // If the user has requested it, add a cd command to the imported file so that relative paths still work
-        const settings = this.configuration.getSettings();
-        let directoryChange: string | undefined;
-        if (settings.changeDirOnImportExport) {
-            directoryChange = await this.calculateDirectoryChange(sourceFile);
-        }
-
         const nbConvertVersion = await this.nbConvertDependencyChecker.getNbConvertVersion(interpreter);
         // Use the jupyter nbconvert functionality to turn the notebook into a python file
         if (nbConvertVersion) {
@@ -91,9 +77,6 @@ export class JupyterImporter implements INotebookImporter {
             if (fileOutput.includes('get_ipython()')) {
                 fileOutput = this.addIPythonImport(fileOutput);
             }
-            if (directoryChange) {
-                fileOutput = this.addDirectoryChange(fileOutput, directoryChange);
-            }
             return this.addInstructionComments(fileOutput);
         }
 
@@ -116,58 +99,6 @@ export class JupyterImporter implements INotebookImporter {
     private addIPythonImport = (pythonOutput: string): string => {
         return CodeSnippets.ImportIPython.format(this.defaultCellMarker, pythonOutput);
     };
-
-    private addDirectoryChange = (pythonOutput: string, directoryChange: string): string => {
-        const newCode = CodeSnippets.ChangeDirectory.join(os.EOL).format(
-            DataScience.importChangeDirectoryComment().format(this.defaultCellMarker),
-            CodeSnippets.ChangeDirectoryCommentIdentifier,
-            directoryChange
-        );
-        return newCode.concat(pythonOutput);
-    };
-
-    // When importing a file, calculate if we can create a %cd so that the relative paths work
-    private async calculateDirectoryChange(notebookFile: Uri): Promise<string | undefined> {
-        let directoryChange: string | undefined;
-        try {
-            // Make sure we don't already have an import/export comment in the file
-            const contents = await this.fs.readFile(notebookFile);
-            const haveChangeAlready = contents.includes(CodeSnippets.ChangeDirectoryCommentIdentifier);
-
-            if (!haveChangeAlready) {
-                const notebookFilePath = path.dirname(notebookFile.fsPath);
-                // First see if we have a workspace open, this only works if we have a workspace root to be relative to
-                if (this.workspaceService.hasWorkspaceFolders) {
-                    const workspacePath = this.workspaceService.workspaceFolders![0].uri.fsPath;
-
-                    // Make sure that we have everything that we need here
-                    if (
-                        workspacePath &&
-                        path.isAbsolute(workspacePath) &&
-                        notebookFilePath &&
-                        path.isAbsolute(notebookFilePath)
-                    ) {
-                        directoryChange = path.relative(workspacePath, notebookFilePath);
-                    }
-                }
-            }
-
-            // If path.relative can't calculate a relative path, then it just returns the full second path
-            // so check here, we only want this if we were able to calculate a relative path, no network shares or drives
-            if (directoryChange && !path.isAbsolute(directoryChange)) {
-                // Escape windows path chars so they end up in the source escaped
-                if (this.platform.isWindows) {
-                    directoryChange = directoryChange.replace('\\', '\\\\');
-                }
-
-                return directoryChange;
-            } else {
-                return undefined;
-            }
-        } catch (e) {
-            traceError(e);
-        }
-    }
 
     public async createTemplateFile(nbconvert6: boolean): Promise<string | undefined> {
         // Create a temp file on disk

@@ -44,7 +44,6 @@ export class JupyterSettings implements IWatchableJupyterSettings {
     public jupyterLaunchTimeout: number = 60_000;
     public jupyterLaunchRetries: number = 3;
     public notebookFileRoot: string = '';
-    public changeDirOnImportExport: boolean = false;
     public useDefaultConfigForJupyter: boolean = false;
     public searchForJupyter: boolean = false;
     public allowInput: boolean = false;

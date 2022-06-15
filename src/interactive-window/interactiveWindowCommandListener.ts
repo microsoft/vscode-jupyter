@@ -219,16 +219,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                     await this.waitForStatus(
                         async () => {
                             if (uri) {
-                                let directoryChange;
-                                const settings = this.configuration.getSettings(activeEditor.document.uri);
-                                if (settings.changeDirOnImportExport) {
-                                    directoryChange = uri;
-                                }
-
-                                const notebook = await this.jupyterExporter?.translateToNotebook(
-                                    cells,
-                                    getFilePath(directoryChange)
-                                );
+                                const notebook = await this.jupyterExporter?.translateToNotebook(cells);
                                 await this.fileSystem.writeFile(uri, JSON.stringify(notebook));
                             }
                         },
@@ -280,16 +271,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                     await this.waitForStatus(
                         async () => {
                             if (uri) {
-                                let directoryChange;
-                                const settings = this.configuration.getSettings(activeEditor.document.uri);
-                                if (settings.changeDirOnImportExport) {
-                                    directoryChange = uri;
-                                }
-
-                                const notebook = await this.jupyterExporter?.translateToNotebook(
-                                    cells,
-                                    getFilePath(directoryChange)
-                                );
+                                const notebook = await this.jupyterExporter?.translateToNotebook(cells);
                                 await this.fileSystem.writeFile(uri, JSON.stringify(notebook));
                             }
                         },
