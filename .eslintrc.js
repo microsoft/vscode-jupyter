@@ -311,6 +311,11 @@ module.exports = {
                         message: 'Only modules from ./src/platform, ./src/telemetry and ./src/kernels can be imported into ./src/notebooks.'
                     },
                     {
+                        target: './src/interactive-window/**/*.ts',
+                        from: './src/**webview**/**/*.ts',
+                        message: 'Only modules from ./src/platform, ./src/telemetry, ./src/kernels and ./src/notebooks can be imported into ./src/interactive-window.'
+                    },
+                    {
                         target: './src/telemetry/**/**[!types]**.ts',
                         from: './src/**[!telemetry,platform]**/**/*.ts',
                         message: 'Importing non-platform modules into telemetry files is not allowed.'
