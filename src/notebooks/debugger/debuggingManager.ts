@@ -17,7 +17,7 @@ import {
 import * as path from '../../platform/vscode-path/path';
 import { IKernelProvider } from '../../kernels/types';
 import { IConfigurationService } from '../../platform/common/types';
-import { Commands as DSCommands, EditorContexts } from '../../webviews/webview-side/common/constants';
+import { Commands as DSCommands, EditorContexts } from '../../platform/common/constants';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { ContextKey } from '../../platform/common/contextKey';
 import { RunByLineController } from './runByLineController';

@@ -12,7 +12,7 @@ import { Resource } from '../platform/common/types';
 import { getResourceType } from '../platform/common/utils';
 import { getComparisonKey } from '../platform/vscode-path/resources';
 import { captureTelemetry, Telemetry } from '../telemetry';
-import { defaultNotebookFormat } from '../webviews/webview-side/common/constants';
+import { defaultNotebookFormat } from '../platform/common/constants';
 import { IEmbedNotebookEditorProvider, INotebookEditorProvider } from './types';
 import { getOSType, OSType } from '../platform/common/utils/platform';
 
