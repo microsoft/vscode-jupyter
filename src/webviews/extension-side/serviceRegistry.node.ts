@@ -20,6 +20,7 @@ import { ServerPreload } from './serverPreload/serverPreload.node';
 import { RendererCommunication } from './plotView/rendererCommunication.node';
 import { PlotSaveHandler } from './plotView/plotSaveHandler.node';
 import { PlotViewHandler } from './plotView/plotViewHandler.node';
+import { DataViewerCommandRegistry } from './dataviewer/dataViewerCommandRegistry';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
@@ -43,4 +44,8 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     );
     serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
     serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        DataViewerCommandRegistry
+    );
 }
