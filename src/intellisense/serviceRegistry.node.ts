@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 
+import { INotebookCompletionProvider } from '../notebooks/types';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
 import { IServiceManager } from '../platform/ioc/types';
-import { NotebookCellLanguageService } from './cellLanguageService';
 import { NotebookCellBangInstallDiagnosticsProvider } from './diagnosticsProvider';
-import { EmptyNotebookCellLanguageService } from './emptyNotebookCellLanguageService';
+import { IntellisenseProvider } from './intellisenseProvider.node';
 import { NotebookPythonPathService } from './notebookPythonPathService.node';
 import { PythonKernelCompletionProvider } from './pythonKernelCompletionProvider';
 import { PythonKernelCompletionProviderRegistration } from './pythonKernelCompletionProviderRegistration';
@@ -24,13 +24,8 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         IExtensionSyncActivationService,
         NotebookCellBangInstallDiagnosticsProvider
     );
-    serviceManager.addSingleton<NotebookCellLanguageService>(NotebookCellLanguageService, NotebookCellLanguageService);
-    serviceManager.addBinding(NotebookCellLanguageService, IExtensionSingleActivationService);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        EmptyNotebookCellLanguageService
-    );
 
     serviceManager.addSingleton<NotebookPythonPathService>(NotebookPythonPathService, NotebookPythonPathService);
     serviceManager.addBinding(NotebookPythonPathService, IExtensionSingleActivationService);
+    serviceManager.addSingleton<INotebookCompletionProvider>(INotebookCompletionProvider, IntellisenseProvider);
 }

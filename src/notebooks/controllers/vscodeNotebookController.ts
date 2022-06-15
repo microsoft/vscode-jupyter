@@ -52,11 +52,10 @@ import { noop } from '../../platform/common/utils/misc';
 import { sendKernelTelemetryEvent } from '../../kernels/telemetry/sendKernelTelemetryEvent';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
-import { Commands } from '../../webviews/webview-side/common/constants';
+import { Commands } from '../../platform/common/constants';
 import { Telemetry } from '../../telemetry';
 import { IDataScienceErrorHandler, WrappedError } from '../../platform/errors/types';
 import { IPyWidgetMessages } from '../../platform/messageTypes';
-import { NotebookCellLanguageService } from '../../intellisense/cellLanguageService';
 import {
     getKernelConnectionPath,
     getRemoteKernelSessionInformation,
@@ -94,6 +93,7 @@ import {
 } from '../../kernels/execution/helpers';
 import { KernelMessage } from '@jupyterlab/services';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../../kernels/telemetry/helper';
+import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 
 export class VSCodeNotebookController implements Disposable, IVSCodeNotebookController {
     private readonly _onNotebookControllerSelected: EventEmitter<{

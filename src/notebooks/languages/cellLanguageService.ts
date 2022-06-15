@@ -6,25 +6,25 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable, named } from 'inversify';
 import { Memento, NotebookCellKind, NotebookDocument } from 'vscode';
-import { IExtensionSingleActivationService } from '../platform/activation/types';
-import { IJupyterKernelSpec } from '../platform/api/extension';
-import { IPythonExtensionChecker } from '../platform/api/types';
-import { IVSCodeNotebook } from '../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../platform/common/constants';
-import { traceWarning } from '../platform/logging';
-import { IDisposableRegistry, IMemento, GLOBAL_MEMENTO } from '../platform/common/types';
-import { swallowExceptions } from '../platform/common/utils/decorators';
+import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IJupyterKernelSpec } from '../../platform/api/extension';
+import { IPythonExtensionChecker } from '../../platform/api/types';
+import { IVSCodeNotebook } from '../../platform/common/application/types';
 import {
     LanguagesSupportedByPythonkernel,
+    PYTHON_LANGUAGE,
     VSCodeKnownNotebookLanguages
-} from '../webviews/webview-side/common/constants';
+} from '../../platform/common/constants';
+import { traceWarning } from '../../platform/logging';
+import { IDisposableRegistry, IMemento, GLOBAL_MEMENTO } from '../../platform/common/types';
+import { swallowExceptions } from '../../platform/common/utils/decorators';
 import {
-    isPythonKernelConnection,
     getKernelConnectionLanguage,
-    getLanguageInNotebookMetadata
-} from '../kernels/helpers';
-import { KernelConnectionMetadata } from '../kernels/types';
-import { getNotebookMetadata, isJupyterNotebook, translateKernelLanguageToMonaco } from '../platform/common/utils';
+    getLanguageInNotebookMetadata,
+    isPythonKernelConnection
+} from '../../kernels/helpers';
+import { getNotebookMetadata, isJupyterNotebook, translateKernelLanguageToMonaco } from '../../platform/common/utils';
+import { KernelConnectionMetadata } from '../../kernels/types';
 
 export const LastSavedNotebookCellLanguage = 'DATASCIENCE.LAST_SAVED_CELL_LANGUAGE';
 /**

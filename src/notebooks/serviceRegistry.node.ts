@@ -13,14 +13,10 @@ import { RemoteSwitcher } from './controllers/remoteSwitcher';
 import { NotebookCommandListener } from './notebookCommandListener';
 import { NotebookEditorProvider } from './notebookEditorProvider';
 import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms.node';
-import { PlotSaveHandler } from './outputs/plotSaveHandler.node';
-import { PlotViewHandler } from './outputs/plotViewHandler.node';
-import { RendererCommunication } from './outputs/rendererCommunication.node';
 import { INotebookCompletionProvider, INotebookControllerManager, INotebookEditorProvider } from './types';
 import { NotebookUsageTracker } from './notebookUsageTracker';
 import { IDataScienceCommandListener } from '../platform/common/types';
 import { CondaControllerRefresher } from './controllers/condaControllerRefresher.node';
-import { IntellisenseProvider } from '../intellisense/intellisenseProvider.node';
 import { RemoteKernelControllerWatcher } from './controllers/remoteKernelControllerWatcher';
 import { ITracebackFormatter } from '../kernels/types';
 import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
@@ -31,16 +27,12 @@ import { NotebookIPyWidgetCoordinator } from './controllers/notebookIPyWidgetCoo
 import { RemoteKernelConnectionHandler } from './controllers/remoteKernelConnectionHandler';
 import { JupyterServerSelectorCommand } from './serverSelector';
 import { InterpreterPackageTracker } from './telemetry/interpreterPackageTracker';
+import { NotebookCellLanguageService } from './languages/cellLanguageService';
+import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellLanguageService';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
     serviceManager.addSingleton<INotebookControllerManager>(INotebookControllerManager, NotebookControllerManager);
-    serviceManager.addSingleton<PlotSaveHandler>(PlotSaveHandler, PlotSaveHandler);
-    serviceManager.addSingleton<PlotViewHandler>(PlotViewHandler, PlotViewHandler);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSyncActivationService,
-        RendererCommunication
-    );
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelFilterUI);
     serviceManager.addBinding(INotebookControllerManager, IExtensionSyncActivationService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
@@ -63,7 +55,6 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         NotebookUsageTracker
     );
-    serviceManager.addSingleton<INotebookCompletionProvider>(INotebookCompletionProvider, IntellisenseProvider);
     serviceManager.addBinding(INotebookCompletionProvider, IExtensionSyncActivationService);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
@@ -91,5 +82,11 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         InterpreterPackageTracker
+    );
+    serviceManager.addSingleton<NotebookCellLanguageService>(NotebookCellLanguageService, NotebookCellLanguageService);
+    serviceManager.addBinding(NotebookCellLanguageService, IExtensionSingleActivationService);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        EmptyNotebookCellLanguageService
     );
 }

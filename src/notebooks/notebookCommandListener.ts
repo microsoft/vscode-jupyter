@@ -16,9 +16,9 @@ import {
 } from 'vscode';
 import { IVSCodeNotebook, ICommandManager, IApplicationShell } from '../platform/common/application/types';
 import { IConfigurationService, IDataScienceCommandListener, IDisposableRegistry } from '../platform/common/types';
-import { Commands } from '../webviews/webview-side/common/constants';
+import { Commands } from '../platform/common/constants';
 import { noop } from '../platform/common/utils/misc';
-import { NotebookCellLanguageService } from '../intellisense/cellLanguageService';
+import { NotebookCellLanguageService } from './languages/cellLanguageService';
 import { DisplayOptions } from '../kernels/displayOptions';
 import { IKernel, IKernelProvider } from '../kernels/types';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';

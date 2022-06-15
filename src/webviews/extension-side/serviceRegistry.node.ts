@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IWebviewViewProvider, IWebviewPanelProvider } from '../../platform/common/application/types';
 import { IServiceManager } from '../../platform/ioc/types';
 import { IVariableViewProvider } from './variablesView/types';
@@ -17,9 +17,18 @@ import { INotebookExporter, INotebookImporter } from '../../kernels/jupyter/type
 import { JupyterExporter } from './import-export/jupyterExporter.node';
 import { JupyterImporter } from './import-export/jupyterImporter.node';
 import { ServerPreload } from './serverPreload/serverPreload.node';
+import { RendererCommunication } from './plotView/rendererCommunication.node';
+import { PlotSaveHandler } from './plotView/plotSaveHandler.node';
+import { PlotViewHandler } from './plotView/plotViewHandler.node';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
+    serviceManager.addSingleton<PlotSaveHandler>(PlotSaveHandler, PlotSaveHandler);
+    serviceManager.addSingleton<PlotViewHandler>(PlotViewHandler, PlotViewHandler);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSyncActivationService,
+        RendererCommunication
+    );
     serviceManager.add<IWebviewViewProvider>(IWebviewViewProvider, WebviewViewProvider);
     serviceManager.add<IWebviewPanelProvider>(IWebviewPanelProvider, WebviewPanelProvider);
     serviceManager.addSingleton<IExtensionSingleActivationService>(

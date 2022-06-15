@@ -7071,42 +7071,6 @@ No description provided
 
 ## Locations Used
 
-[src/platform/api/pythonApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/pythonApi.ts)
-```typescript
-        // Ask user if they want to install and then wait for them to actually install it.
-        const yes = localize.Common.bannerLabelYes();
-        const no = localize.Common.bannerLabelNo();
-        sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
-        const answer = await this.appShell.showInformationMessage(
-            localize.DataScience.pythonExtensionRequired(),
-            { modal: true },
-```
-
-
-[src/platform/api/pythonApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/pythonApi.ts)
-```typescript
-            no
-        );
-        if (answer === yes) {
-            sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
-            await this.installPythonExtension();
-        } else {
-            sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
-```
-
-
-[src/platform/api/pythonApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/pythonApi.ts)
-```typescript
-            sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
-            await this.installPythonExtension();
-        } else {
-            sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
-        }
-    }
-    private async installPythonExtension() {
-```
-
-
 [src/notebooks/controllers/noPythonKernelsNotebookController.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/noPythonKernelsNotebookController.ts)
 ```typescript
         }
@@ -7140,6 +7104,42 @@ No description provided
         }
     }
     private async handleExecutionWithoutPython() {
+```
+
+
+[src/platform/api/pythonApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/pythonApi.ts)
+```typescript
+        // Ask user if they want to install and then wait for them to actually install it.
+        const yes = localize.Common.bannerLabelYes();
+        const no = localize.Common.bannerLabelNo();
+        sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
+        const answer = await this.appShell.showInformationMessage(
+            localize.DataScience.pythonExtensionRequired(),
+            { modal: true },
+```
+
+
+[src/platform/api/pythonApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/pythonApi.ts)
+```typescript
+            no
+        );
+        if (answer === yes) {
+            sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
+            await this.installPythonExtension();
+        } else {
+            sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
+```
+
+
+[src/platform/api/pythonApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/pythonApi.ts)
+```typescript
+            sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
+            await this.installPythonExtension();
+        } else {
+            sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
+        }
+    }
+    private async installPythonExtension() {
 ```
 
 </details>

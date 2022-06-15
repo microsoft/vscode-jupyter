@@ -12,7 +12,7 @@ import {
 } from '../../platform/common/application/types';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
-import { Commands } from '../../webviews/webview-side/common/constants';
+import { Commands } from '../../platform/common/constants';
 import { JupyterServerSelector } from '../../kernels/jupyter/serverSelector';
 import { INotebookControllerManager } from '../types';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
