@@ -149,7 +149,6 @@ export const INotebookExporter = Symbol('INotebookExporter');
 export interface INotebookExporter extends Disposable {
     translateToNotebook(
         cells: ICell[],
-        directoryChange?: string,
         kernelSpec?: nbformat.IKernelspecMetadata
     ): Promise<nbformat.INotebookContent | undefined>;
     exportToFile(cells: ICell[], file: string, showOpenPrompt?: boolean): Promise<void>;

@@ -49,7 +49,6 @@ export function defaultDataScienceSettings(): IJupyterSettings {
         jupyterLaunchRetries: 3,
         // eslint-disable-next-line no-template-curly-in-string
         notebookFileRoot: '${fileDirname}',
-        changeDirOnImportExport: false,
         useDefaultConfigForJupyter: true,
         jupyterInterruptTimeout: 10000,
         searchForJupyter: true,

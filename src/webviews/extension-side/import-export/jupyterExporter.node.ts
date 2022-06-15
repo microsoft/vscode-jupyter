@@ -3,34 +3,27 @@
 'use strict';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
-import * as os from 'os';
-import * as path from '../../../platform/vscode-path/path';
 
 import { Uri } from 'vscode';
-import { createCodeCell } from '../../../interactive-window/editor-integration/cellFactory';
 import { CellMatcher } from '../../../interactive-window/editor-integration/cellMatcher';
-import { IWorkspaceService, IApplicationShell } from '../../../platform/common/application/types';
+import { IApplicationShell } from '../../../platform/common/application/types';
 import { traceError } from '../../../platform/logging';
-import { IPlatformService } from '../../../platform/common/platform/types';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { ICell, IConfigurationService } from '../../../platform/common/types';
-import { concatMultilineString, pruneCell } from '../../../platform/common/utils';
+import { pruneCell } from '../../../platform/common/utils';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { IDataScienceErrorHandler } from '../../../platform/errors/types';
 import { defaultNotebookFormat } from '../../../platform/common/constants';
 import { INotebookExporter, IJupyterExecution } from '../../../kernels/jupyter/types';
 import { openAndShowNotebook } from '../../../platform/common/utils/notebooks';
 import { noop } from '../../../platform/common/utils/misc';
-import { CodeSnippets } from '../../../platform/common/constants';
 
 @injectable()
 export class JupyterExporter implements INotebookExporter {
     constructor(
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
-        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IFileSystemNode) private fileSystem: IFileSystemNode,
-        @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IDataScienceErrorHandler) protected errorHandler: IDataScienceErrorHandler
     ) {}
@@ -40,13 +33,7 @@ export class JupyterExporter implements INotebookExporter {
     }
 
     public async exportToFile(cells: ICell[], file: string, showOpenPrompt: boolean = true): Promise<void> {
-        let directoryChange;
-        const settings = this.configService.getSettings();
-        if (settings.changeDirOnImportExport) {
-            directoryChange = file;
-        }
-
-        const notebook = await this.translateToNotebook(cells, directoryChange);
+        const notebook = await this.translateToNotebook(cells);
 
         try {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -80,14 +67,8 @@ export class JupyterExporter implements INotebookExporter {
     }
     public async translateToNotebook(
         cells: ICell[],
-        changeDirectory?: string,
         kernelSpec?: nbformat.IKernelspecMetadata
     ): Promise<nbformat.INotebookContent | undefined> {
-        // If requested, add in a change directory cell to fix relative paths
-        if (changeDirectory && this.configService.getSettings().changeDirOnImportExport) {
-            cells = await this.addDirectoryChangeCell(cells, changeDirectory);
-        }
-
         const pythonNumber = await this.extractPythonMainVersion();
 
         // Use this to build our metadata object
@@ -120,84 +101,6 @@ export class JupyterExporter implements INotebookExporter {
             metadata: metadata
         };
     }
-
-    // For exporting, put in a cell that will change the working directory back to the workspace directory so relative data paths will load correctly
-    private addDirectoryChangeCell = async (cells: ICell[], file: string): Promise<ICell[]> => {
-        const changeDirectory = await this.calculateDirectoryChange(file, cells);
-
-        if (changeDirectory) {
-            const exportChangeDirectory = CodeSnippets.ChangeDirectory.join(os.EOL).format(
-                DataScience.exportChangeDirectoryComment(),
-                CodeSnippets.ChangeDirectoryCommentIdentifier,
-                changeDirectory
-            );
-
-            const cell: ICell = {
-                data: createCodeCell(exportChangeDirectory)
-            };
-
-            return [cell, ...cells];
-        } else {
-            return cells;
-        }
-    };
-
-    // When we export we want to our change directory back to the first real file that we saw run from any workspace folder
-    private firstWorkspaceFolder = async (cells: ICell[]): Promise<string | undefined> => {
-        for (const cell of cells) {
-            const filename = cell.uri?.fsPath;
-
-            // First check that this is an absolute file that exists (we add in temp files to run system cell)
-            if (filename && path.isAbsolute(filename) && (await this.fileSystem.localFileExists(filename))) {
-                // We've already check that workspace folders above
-                for (const folder of this.workspaceService.workspaceFolders!) {
-                    if (filename.toLowerCase().startsWith(folder.uri.fsPath.toLowerCase())) {
-                        return folder.uri.fsPath;
-                    }
-                }
-            }
-        }
-
-        return undefined;
-    };
-
-    private calculateDirectoryChange = async (notebookFile: string, cells: ICell[]): Promise<string | undefined> => {
-        // Make sure we don't already have a cell with a ChangeDirectory comment in it.
-        let directoryChange: string | undefined;
-        const haveChangeAlready = cells.find((c) =>
-            concatMultilineString(c.data.source).includes(CodeSnippets.ChangeDirectoryCommentIdentifier)
-        );
-        if (!haveChangeAlready) {
-            const notebookFilePath = path.dirname(notebookFile);
-            // First see if we have a workspace open, this only works if we have a workspace root to be relative to
-            if (this.workspaceService.hasWorkspaceFolders) {
-                const workspacePath = await this.firstWorkspaceFolder(cells);
-
-                // Make sure that we have everything that we need here
-                if (
-                    workspacePath &&
-                    path.isAbsolute(workspacePath) &&
-                    notebookFilePath &&
-                    path.isAbsolute(notebookFilePath)
-                ) {
-                    directoryChange = path.relative(notebookFilePath, workspacePath);
-                }
-            }
-        }
-
-        // If path.relative can't calculate a relative path, then it just returns the full second path
-        // so check here, we only want this if we were able to calculate a relative path, no network shares or drives
-        if (directoryChange && !path.isAbsolute(directoryChange)) {
-            // Escape windows path chars so they end up in the source escaped
-            if (this.platform.isWindows) {
-                directoryChange = directoryChange.replace('\\', '\\\\');
-            }
-
-            return directoryChange;
-        } else {
-            return undefined;
-        }
-    };
 
     private pruneCells = (cells: ICell[], cellMatcher: CellMatcher): nbformat.IBaseCell[] => {
         // First filter out sys info cells. Jupyter doesn't understand these

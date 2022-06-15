@@ -60,7 +60,6 @@ export interface IJupyterSettings {
     readonly jupyterLaunchTimeout: number;
     readonly jupyterLaunchRetries: number;
     readonly notebookFileRoot: string;
-    readonly changeDirOnImportExport: boolean;
     readonly useDefaultConfigForJupyter: boolean;
     readonly searchForJupyter: boolean;
     readonly allowInput: boolean;
