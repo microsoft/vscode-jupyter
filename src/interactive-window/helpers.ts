@@ -3,7 +3,7 @@
 
 import { NotebookCell } from 'vscode';
 import { IJupyterSettings } from '../platform/common/types';
-import { removeLinesFromFrontAndBackNoConcat, appendLineFeed } from '../webviews/webview-side/common';
+import { appendLineFeed, removeLinesFromFrontAndBackNoConcat } from '../platform/common/utils';
 import { uncommentMagicCommands } from './editor-integration/cellFactory';
 import { CellMatcher } from './editor-integration/cellMatcher';
 import { InteractiveCellMetadata } from './editor-integration/types';
