@@ -22,6 +22,8 @@ import { JupyterServerSelectorCommand } from './serverSelector';
 import { IDataScienceCommandListener } from '../platform/common/types';
 import { NotebookCommandListener } from './notebookCommandListener';
 import { InterpreterPackageTracker } from './telemetry/interpreterPackageTracker';
+import { NotebookCellLanguageService } from './languages/cellLanguageService';
+import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellLanguageService';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
@@ -61,5 +63,11 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         InterpreterPackageTracker
+    );
+    serviceManager.addSingleton<NotebookCellLanguageService>(NotebookCellLanguageService, NotebookCellLanguageService);
+    serviceManager.addBinding(NotebookCellLanguageService, IExtensionSingleActivationService);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        EmptyNotebookCellLanguageService
     );
 }

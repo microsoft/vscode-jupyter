@@ -5,9 +5,7 @@
 import { INotebookCompletionProvider } from '../notebooks/types';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
 import { IServiceManager } from '../platform/ioc/types';
-import { NotebookCellLanguageService } from './cellLanguageService';
 import { NotebookCellBangInstallDiagnosticsProvider } from './diagnosticsProvider';
-import { EmptyNotebookCellLanguageService } from './emptyNotebookCellLanguageService';
 import { IntellisenseProvider } from './intellisenseProvider.node';
 import { NotebookPythonPathService } from './notebookPythonPathService.node';
 import { PythonKernelCompletionProvider } from './pythonKernelCompletionProvider';
@@ -25,12 +23,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         NotebookCellBangInstallDiagnosticsProvider
-    );
-    serviceManager.addSingleton<NotebookCellLanguageService>(NotebookCellLanguageService, NotebookCellLanguageService);
-    serviceManager.addBinding(NotebookCellLanguageService, IExtensionSingleActivationService);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        EmptyNotebookCellLanguageService
     );
 
     serviceManager.addSingleton<NotebookPythonPathService>(NotebookPythonPathService, NotebookPythonPathService);

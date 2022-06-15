@@ -46,7 +46,7 @@ import { noop } from '../../core';
 import { closeActiveWindows, isInsiders } from '../../initialize';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { LastSavedNotebookCellLanguage } from '../../../intellisense/cellLanguageService';
+import { LastSavedNotebookCellLanguage } from '../../../notebooks/languages/cellLanguageService';
 import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeNotebookController';
 import { INotebookControllerManager, INotebookEditorProvider } from '../../../notebooks/types';
 import { InteractiveControllerIdSuffix } from '../../../notebooks/controllers/notebookControllerManager';

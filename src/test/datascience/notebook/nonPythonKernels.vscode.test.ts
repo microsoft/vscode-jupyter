@@ -31,7 +31,7 @@ import {
     createTemporaryNotebookFromFile
 } from './helper.node';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
-import { NotebookCellLanguageService } from '../../../intellisense/cellLanguageService';
+import { NotebookCellLanguageService } from '../../../notebooks/languages/cellLanguageService';
 import { INotebookEditorProvider } from '../../../notebooks/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
