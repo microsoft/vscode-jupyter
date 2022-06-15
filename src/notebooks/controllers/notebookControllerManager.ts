@@ -382,9 +382,14 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         cancelToken: CancellationToken,
         useCache: 'ignoreCache' | 'useCache'
     ): Promise<KernelConnectionMetadata[]> {
-        return this.kernelFinder
-            .listKernels(undefined, cancelToken, useCache)
-            .then((l) => l.filter((item) => !this.kernelFilter.isKernelHidden(item)));
+        return this.kernelFinder.listKernels(undefined, cancelToken, useCache).then((l) =>
+            l
+                .filter((item) => !this.kernelFilter.isKernelHidden(item))
+                .filter((item) => {
+                    return item.kind === 'startUsingPythonInterpreter';
+                })
+        );
+        //.then((l) => l.filter((item) => !this.kernelFilter.isKernelHidden(item)));
     }
 
     public getOrCreateControllerForActiveInterpreter(

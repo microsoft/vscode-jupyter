@@ -837,6 +837,10 @@
                 "title": "%DataScience.runInDedicatedExtensionHost%",
                 "enablement": "!jupyter.webExtension",
                 "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.installPythonExtensionViaKernelPicker",
+                "title": "Install Python Extension"
             }
         ],
         "menus": {
@@ -990,6 +994,11 @@
                     "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && !jupyter.notebookeditor.runByLineInProgress"
                 }
             ],
+            "notebook/kernelSource": [
+                {
+                    "command": "jupyter.installPythonExtensionViaKernelPicker"
+                }
+            ],
             "interactive/toolbar": [
                 {
                     "command": "jupyter.interactive.clearAllCells",
@@ -1062,6 +1071,10 @@
                 }
             ],
             "commandPalette": [
+                {
+                    "command": "jupyter.installPythonExtensionViaKernelPicker",
+                    "when": "false"
+                },
                 {
                     "command": "jupyter.replayPylanceLog",
                     "title": "Replay Pylance Log",
@@ -2068,7 +2081,8 @@
         "notebookMime",
         "notebookCellExecutionState",
         "portsAttributes",
-        "quickPickSortByLabel"
+        "quickPickSortByLabel",
+        "notebookKernelSource"
     ],
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",
