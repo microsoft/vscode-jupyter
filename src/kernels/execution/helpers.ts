@@ -35,6 +35,7 @@ import {
     kernelConnectionMetadataHasKernelModel,
     getKernelRegistrationInfo
 } from '../helpers';
+import * as uuid from 'uuid/v4';
 
 export enum CellOutputMimeTypes {
     error = 'application/vnd.code.notebook.error',
@@ -219,6 +220,7 @@ export function cellOutputToVSCCellOutput(output: nbformat.IOutput): NotebookCel
 function getOutputMetadata(output: nbformat.IOutput): CellOutputMetadata {
     // Add on transient data if we have any. This should be removed by our save functions elsewhere.
     const metadata: CellOutputMetadata = {
+        id: uuid(),
         outputType: output.output_type
     };
     if (output.transient) {
@@ -353,6 +355,7 @@ export type CellOutputMetadata = {
      * Whether to display the open plot icon.
      */
     __displayOpenPlotIcon?: boolean;
+    id?: string;
 };
 
 export function translateCellErrorOutput(output: NotebookCellOutput): nbformat.IError {

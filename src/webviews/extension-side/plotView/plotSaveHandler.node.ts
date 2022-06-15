@@ -7,6 +7,7 @@ import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { saveSvgToPdf } from '../plotting/plotViewer.node';
+import { getCellOutputMetadata } from './helpers';
 
 const svgMimeType = 'image/svg+xml';
 const imageExtensionForMimeType: Record<string, string> = {
@@ -96,7 +97,8 @@ export class PlotSaveHandler {
 function getOutputItem(notebook: NotebookDocument, outputId: string, mimeType: string): NotebookCellOutput | undefined {
     for (const cell of notebook.getCells()) {
         for (const output of cell.outputs) {
-            if (output.id !== outputId) {
+            const metadata = getCellOutputMetadata(output);
+            if (metadata && metadata.id !== outputId) {
                 continue;
             }
             if (output.items.find((item) => item.mime === mimeType)) {
