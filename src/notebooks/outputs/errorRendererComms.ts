@@ -2,7 +2,17 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { commands, NotebookRange, notebooks, Position, Range, Selection, TextEditorRevealType, Uri } from 'vscode';
+import {
+    commands,
+    NotebookCell,
+    NotebookRange,
+    notebooks,
+    Position,
+    Range,
+    Selection,
+    TextEditorRevealType,
+    Uri
+} from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import {
     IDocumentManager,
@@ -10,11 +20,10 @@ import {
     IApplicationShell,
     IVSCodeNotebook
 } from '../../platform/common/application/types';
-import { arePathsSame } from '../../platform/common/platform/fileUtils.node';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { InteractiveWindowMessages } from '../../platform/messageTypes';
-import { linkCommandAllowList, LineQueryRegex } from './linkProvider.node';
+import { linkCommandAllowList, LineQueryRegex } from './linkProvider';
 
 @injectable()
 export class ErrorRendererCommunicationHandler implements IExtensionSyncActivationService {
@@ -105,27 +114,27 @@ export class ErrorRendererCommunicationHandler implements IExtensionSyncActivati
         const uri = Uri.parse(cellUri);
 
         // Show the matching notebook if there is one
-        let editor = this.notebooks.notebookEditors.find((n) => arePathsSame(n.notebook.uri.fsPath, uri.fsPath));
-        if (editor) {
-            // If there is one, go to the cell that matches
-            const cell = editor.notebook.getCells().find((c) => c.document.uri.toString() === cellUri);
-            if (cell) {
-                const cellRange = new NotebookRange(cell.index, cell.index);
-                return this.notebooks
-                    .showNotebookDocument(editor.notebook.uri, { selections: [cellRange] })
-                    .then((_e) => {
-                        return this.commandManager.executeCommand('notebook.cell.edit').then(() => {
-                            const cellEditor = this.documentManager.visibleTextEditors.find(
-                                (v) => v.document.uri.toString() === cellUri
-                            );
-                            if (cellEditor) {
-                                // Force the selection to change
-                                cellEditor.revealRange(selection);
-                                cellEditor.selection = new Selection(selection.start, selection.start);
-                            }
-                        });
-                    });
-            }
+        let cell: NotebookCell | undefined;
+        for (let i = 0; i < this.notebooks.notebookDocuments.length && !cell; i++) {
+            cell = this.notebooks.notebookDocuments[i]
+                .getCells()
+                .find((c) => c.document.uri.toString() === uri.toString());
+        }
+        // If there is one, go to the cell that matches
+        if (cell) {
+            const cellRange = new NotebookRange(cell.index, cell.index);
+            return this.notebooks.showNotebookDocument(cell.notebook.uri, { selections: [cellRange] }).then((_e) => {
+                return this.commandManager.executeCommand('notebook.cell.edit').then(() => {
+                    const cellEditor = this.documentManager.visibleTextEditors.find(
+                        (v) => v.document.uri.toString() === cellUri
+                    );
+                    if (cellEditor) {
+                        // Force the selection to change
+                        cellEditor.revealRange(selection);
+                        cellEditor.selection = new Selection(selection.start, selection.start);
+                    }
+                });
+            });
         }
     }
 }
