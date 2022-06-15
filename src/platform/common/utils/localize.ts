@@ -449,22 +449,6 @@ export namespace DataScience {
         localize('jupyter.command.jupyter.runallcellsabove.title', 'Run Above');
     export const runCellAndAllBelowLensCommandTitle = () =>
         localize('jupyter.command.jupyter.runcellandallbelow.title', 'Run Below');
-    export const importChangeDirectoryComment = () =>
-        localize(
-            {
-                key: 'DataScience.importChangeDirectoryComment',
-                comment: ['{Locked="DataScience.changeDirOnImportExport"}']
-            },
-            '{0} Change working directory from the workspace root to the ipynb file location. Turn this addition off with the DataScience.changeDirOnImportExport setting'
-        );
-    export const exportChangeDirectoryComment = () =>
-        localize(
-            {
-                key: 'DataScience.exportChangeDirectoryComment',
-                comment: ['{Locked="DataScience.changeDirOnImportExport"}']
-            },
-            '# Change directory to VS Code workspace root so that relative path loads work correctly. Turn this addition off with the DataScience.changeDirOnImportExport setting'
-        );
 
     export const restartKernelMessage = () =>
         localize(

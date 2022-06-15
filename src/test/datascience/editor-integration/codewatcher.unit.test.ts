@@ -110,7 +110,6 @@ suite('DataScience Code Watcher Unit Tests', () => {
             jupyterLaunchTimeout: 20000,
             jupyterLaunchRetries: 3,
             notebookFileRoot: 'WORKSPACE',
-            changeDirOnImportExport: true,
             useDefaultConfigForJupyter: true,
             jupyterInterruptTimeout: 10000,
             searchForJupyter: true,
