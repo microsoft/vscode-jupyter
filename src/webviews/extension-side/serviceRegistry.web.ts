@@ -14,6 +14,7 @@ import { JupyterVariableDataProvider } from './dataviewer/jupyterVariableDataPro
 import { JupyterVariableDataProviderFactory } from './dataviewer/jupyterVariableDataProviderFactory';
 import { IJupyterVariableDataProvider, IJupyterVariableDataProviderFactory } from './dataviewer/types';
 import { DataViewerCommandRegistry } from './dataviewer/dataViewerCommandRegistry';
+import { CommandRegistry as ExportCommandRegistry } from './import-export/commandRegistry';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.add<IWebviewViewProvider>(IWebviewViewProvider, WebviewViewProvider);
@@ -31,5 +32,9 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         DataViewerCommandRegistry
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        ExportCommandRegistry
     );
 }

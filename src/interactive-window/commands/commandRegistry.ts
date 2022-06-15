@@ -21,7 +21,7 @@ import { isUri, noop } from '../../platform/common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
 import { Commands, Telemetry } from '../../platform/common/constants';
 import { IDataScienceCodeLensProvider, ICodeWatcher } from '../editor-integration/types';
-import { IExportCommands, IInteractiveWindowProvider } from '../types';
+import { IInteractiveWindowProvider } from '../types';
 import * as urlPath from '../../platform/vscode-path/resources';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
@@ -38,7 +38,6 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         @inject(IDebugService) @optional() private debugService: IDebugService | undefined,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IExportCommands) @optional() private readonly exportCommand: IExportCommands | undefined,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IInteractiveWindowProvider)
         @optional()

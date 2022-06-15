@@ -16,6 +16,7 @@ import { IJupyterVariableDataProvider, IJupyterVariableDataProviderFactory } fro
 import { INotebookExporter, INotebookImporter } from '../../kernels/jupyter/types';
 import { JupyterExporter } from './import-export/jupyterExporter.node';
 import { JupyterImporter } from './import-export/jupyterImporter.node';
+import { CommandRegistry as ExportCommandRegistry } from './import-export/commandRegistry';
 import { ServerPreload } from './serverPreload/serverPreload.node';
 import { RendererCommunication } from './plotView/rendererCommunication.node';
 import { PlotSaveHandler } from './plotView/plotSaveHandler.node';
@@ -47,5 +48,9 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         DataViewerCommandRegistry
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        ExportCommandRegistry
     );
 }

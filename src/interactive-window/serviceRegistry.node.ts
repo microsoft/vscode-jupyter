@@ -7,7 +7,6 @@ import { IExtensionSyncActivationService, IExtensionSingleActivationService } fr
 import { IDataScienceCommandListener } from '../platform/common/types';
 import { IServiceManager } from '../platform/ioc/types';
 import { CommandRegistry } from './commands/commandRegistry';
-import { ExportCommands } from './commands/exportCommands';
 import { CodeGeneratorFactory } from './editor-integration/codeGeneratorFactory';
 import { CodeLensFactory } from './editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
@@ -26,12 +25,7 @@ import {
 } from './editor-integration/types';
 import { GeneratedCodeStorageManager } from './generatedCodeStoreManager';
 import { InteractiveWindowTracebackFormatter } from './outputs/tracebackFormatter';
-import {
-    IExportCommands,
-    IInteractiveWindowDebugger,
-    IInteractiveWindowDebuggingManager,
-    IInteractiveWindowProvider
-} from './types';
+import { IInteractiveWindowDebugger, IInteractiveWindowDebuggingManager, IInteractiveWindowProvider } from './types';
 import { InteractiveWindowDebugger } from './debugger/interactiveWindowDebugger.node';
 import { InteractiveWindowDebuggingManager } from './debugger/jupyter/debuggingManager';
 
@@ -50,7 +44,6 @@ export function registerTypes(serviceManager: IServiceManager) {
         DataScienceCodeLensProvider
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Decorator);
-    serviceManager.addSingleton<IExportCommands>(IExportCommands, ExportCommands);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         GeneratedCodeStorageManager
