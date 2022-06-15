@@ -80,11 +80,6 @@ export interface IInteractiveWindowLoadable extends IInteractiveWindow {
     changeMode(newMode: InteractiveWindowMode): void;
 }
 
-export const IExportCommands = Symbol('IExportCommands');
-export interface IExportCommands {
-    register(): void;
-}
-
 export const IInteractiveWindowDebuggingManager = Symbol('IInteractiveWindowDebuggingManager');
 export interface IInteractiveWindowDebuggingManager extends IDebuggingManager {
     start(editor: NotebookEditor, cell: NotebookCell): Promise<void>;

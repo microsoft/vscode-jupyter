@@ -3,41 +3,37 @@
 
 'use strict';
 
-import { inject, injectable, optional } from 'inversify';
 import { NotebookDocument, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
-import { getLocString } from '../../webviews/webview-side/react-common/locReactSide';
-import { ICommandNameArgumentTypeMapping } from '../../platform/common/application/commands';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
-import { traceInfo } from '../../platform/logging';
-import { IDisposable } from '../../platform/common/types';
-import { DataScience } from '../../platform/common/utils/localize';
-import { isUri, noop } from '../../platform/common/utils/misc';
-import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../telemetry';
-import { INotebookControllerManager } from '../../notebooks/types';
-import { Commands, Telemetry } from '../../platform/common/constants';
-import { IFileConverter, ExportFormat } from '../../platform/export/types';
-import { IExportCommands, IInteractiveWindowProvider } from '../types';
-import { IFileSystem } from '../../platform/common/platform/types';
-import { isPythonNotebook, getNotebookMetadata } from '../../platform/common/utils';
+import { getLocString } from '../../webview-side/react-common/locReactSide';
+import { ICommandNameArgumentTypeMapping } from '../../../platform/common/application/commands';
+import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../platform/common/application/types';
+import { traceInfo } from '../../../platform/logging';
+import { IDisposable } from '../../../platform/common/types';
+import { DataScience } from '../../../platform/common/utils/localize';
+import { isUri, noop } from '../../../platform/common/utils/misc';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { INotebookControllerManager } from '../../../notebooks/types';
+import { Commands, Telemetry } from '../../../platform/common/constants';
+import { IFileConverter, ExportFormat } from '../../../platform/export/types';
+import { IInteractiveWindowProvider } from '../../../interactive-window/types';
+import { IFileSystem } from '../../../platform/common/platform/types';
+import { isPythonNotebook, getNotebookMetadata } from '../../../platform/common/utils';
 
 interface IExportQuickPickItem extends QuickPickItem {
     handler(): void;
 }
 
-@injectable()
-export class ExportCommands implements IExportCommands, IDisposable {
+export class ExportCommands implements IDisposable {
     private readonly disposables: IDisposable[] = [];
     constructor(
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IFileConverter) private fileConverter: IFileConverter,
-        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
-        @inject(IInteractiveWindowProvider)
-        @optional()
+        private readonly commandManager: ICommandManager,
+        private fileConverter: IFileConverter,
+        private readonly applicationShell: IApplicationShell,
+        private readonly fs: IFileSystem,
+        private readonly notebooks: IVSCodeNotebook,
         private readonly interactiveProvider: IInteractiveWindowProvider | undefined,
-        @inject(INotebookControllerManager) private readonly controllers: INotebookControllerManager
+        private readonly controllers: INotebookControllerManager
     ) {}
     public register() {
         this.registerCommand(Commands.ExportAsPythonScript, (sourceDocument, interpreter?) =>

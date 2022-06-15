@@ -45,7 +45,7 @@ No description provided
 
 ## Locations Used
 
-[src/interactive-window/commands/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/exportCommands.ts)
+[src/webviews/extension-side/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/import-export/exportCommands.ts)
 ```typescript
             if (pickedItem !== undefined) {
                 pickedItem.handler();
@@ -57,7 +57,7 @@ No description provided
 ```
 
 
-[src/interactive-window/commands/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/exportCommands.ts)
+[src/webviews/extension-side/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/import-export/exportCommands.ts)
 ```typescript
                 label: DataScience.exportPythonQuickPickLabel(),
                 picked: true,
@@ -69,7 +69,7 @@ No description provided
 ```
 
 
-[src/interactive-window/commands/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/exportCommands.ts)
+[src/webviews/extension-side/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/import-export/exportCommands.ts)
 ```typescript
                     label: DataScience.exportHTMLQuickPickLabel(),
                     picked: false,
@@ -81,7 +81,7 @@ No description provided
 ```
 
 
-[src/interactive-window/commands/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/exportCommands.ts)
+[src/webviews/extension-side/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/import-export/exportCommands.ts)
 ```typescript
                     label: DataScience.exportPDFQuickPickLabel(),
                     picked: false,
@@ -1109,7 +1109,7 @@ No description provided
 
 ## Locations Used
 
-[src/interactive-window/commands/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/exportCommands.ts)
+[src/webviews/extension-side/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/import-export/exportCommands.ts)
 ```typescript
                 this.controllers.getSelectedNotebookController(sourceDocument)?.connection.interpreter ||
                 this.controllers.getPreferredNotebookController(sourceDocument)?.connection.interpreter;
@@ -9224,7 +9224,7 @@ No properties for event
 
 ## Locations Used
 
-[src/interactive-window/commands/commandRegistry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/commandRegistry.ts)
+[src/webviews/extension-side/dataviewer/dataViewerCommandRegistry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewerCommandRegistry.ts)
 ```typescript
                     sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS);
                 }
@@ -9252,9 +9252,9 @@ No properties for event
 
 ## Locations Used
 
-[src/interactive-window/commands/commandRegistry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/commandRegistry.ts)
+[src/webviews/extension-side/dataviewer/dataViewerCommandRegistry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewerCommandRegistry.ts)
 ```typescript
-        return this.commandManager.executeCommand('outline.focus');
+        this.disposables.push(disposable);
     }
     private async onVariablePanelShowDataViewerRequest(request: IShowDataViewerFromVariablePanel) {
         sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST);
@@ -9280,7 +9280,7 @@ No properties for event
 
 ## Locations Used
 
-[src/interactive-window/commands/commandRegistry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/commands/commandRegistry.ts)
+[src/webviews/extension-side/dataviewer/dataViewerCommandRegistry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewerCommandRegistry.ts)
 ```typescript
                 if (columnSize && (await this.dataViewerChecker.isRequestedColumnSizeAllowed(columnSize))) {
                     const title: string = `${DataScience.dataExplorerTitle()} - ${jupyterVariable.name}`;

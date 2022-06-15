@@ -3,13 +3,9 @@
 
 'use strict';
 
-import { inject, injectable, named, optional } from 'inversify';
+import { inject, injectable, optional } from 'inversify';
 import { CodeLens, ConfigurationTarget, env, Range, Uri, commands } from 'vscode';
-import { DebugProtocol } from 'vscode-debugprotocol';
-import { IShowDataViewerFromVariablePanel } from '../../platform/messageTypes';
 import { IKernelProvider } from '../../kernels/types';
-import { convertDebugProtocolVariableToIJupyterVariable } from '../../kernels/variables/helpers';
-import { DataViewerChecker } from '../../webviews/extension-side/dataviewer/dataViewerChecker';
 import { ICommandNameArgumentTypeMapping } from '../../platform/common/application/commands';
 import {
     IApplicationShell,
@@ -18,33 +14,20 @@ import {
     IDocumentManager,
     IWorkspaceService
 } from '../../platform/common/application/types';
-import { traceError } from '../../platform/logging';
 
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { isUri, noop } from '../../platform/common/utils/misc';
-import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { EventName } from '../../telemetry/constants';
-import { Identifiers, Commands, Telemetry } from '../../platform/common/constants';
-import {
-    IDataViewerDependencyService,
-    IDataViewerFactory,
-    IJupyterVariableDataProviderFactory
-} from '../../webviews/extension-side/dataviewer/types';
-import { IJupyterVariables } from '../../kernels/variables/types';
-import { IDataScienceErrorHandler } from '../../platform/errors/types';
+import { captureTelemetry } from '../../telemetry';
+import { Commands, Telemetry } from '../../platform/common/constants';
 import { IDataScienceCodeLensProvider, ICodeWatcher } from '../editor-integration/types';
-import { IExportCommands, IInteractiveWindowProvider } from '../types';
+import { IInteractiveWindowProvider } from '../types';
 import * as urlPath from '../../platform/vscode-path/resources';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
-import { untildify } from '../../platform/common/utils/platform';
-import { IPlatformService } from '../../platform/common/platform/types';
 
 @injectable()
 export class CommandRegistry implements IDisposable, IExtensionSingleActivationService {
-    private dataViewerChecker: DataViewerChecker;
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
@@ -55,28 +38,12 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         @inject(IDebugService) @optional() private debugService: IDebugService | undefined,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IExportCommands) @optional() private readonly exportCommand: IExportCommands | undefined,
-        @inject(IJupyterVariableDataProviderFactory)
-        @optional()
-        private readonly jupyterVariableDataProviderFactory: IJupyterVariableDataProviderFactory | undefined,
-        @inject(IDataViewerFactory) @optional() private readonly dataViewerFactory: IDataViewerFactory | undefined,
-        @inject(IJupyterVariables)
-        @optional()
-        @named(Identifiers.DEBUGGER_VARIABLES)
-        private variableProvider: IJupyterVariables | undefined,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IInteractiveWindowProvider)
         @optional()
         private readonly interactiveWindowProvider: IInteractiveWindowProvider | undefined,
-        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler,
-        @inject(IDataViewerDependencyService)
-        @optional()
-        private readonly dataViewerDependencyService: IDataViewerDependencyService | undefined,
-        @inject(IInterpreterService) @optional() private readonly interpreterService: IInterpreterService | undefined,
-        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(IPlatformService) private readonly platformService: IPlatformService
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
     ) {
-        this.dataViewerChecker = new DataViewerChecker(configService, appShell);
         if (!this.workspace.isTrusted) {
             this.workspace.onDidGrantWorkspaceTrust(this.registerCommandsIfTrusted, this, this.disposables);
         }
@@ -114,7 +81,6 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         if (!this.workspace.isTrusted) {
             return;
         }
-        this.exportCommand?.register();
         this.registerCommand(Commands.RunAllCells, this.runAllCells);
         this.registerCommand(Commands.RunCell, this.runCell);
         this.registerCommand(Commands.RunCurrentCell, this.runCurrentCell);
@@ -134,7 +100,6 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         this.registerCommand(Commands.DebugCurrentCellPalette, this.debugCurrentCellFromCursor);
         this.registerCommand(Commands.OpenVariableView, this.openVariableView);
         this.registerCommand(Commands.OpenOutlineView, this.openOutlineView);
-        this.registerCommand(Commands.ShowDataViewer, this.onVariablePanelShowDataViewerRequest);
         this.registerCommand(Commands.RunToLine, this.runToLine);
         this.registerCommand(Commands.RunFromLine, this.runFromLine);
         this.registerCommand(Commands.RunFileInInteractiveWindows, this.runFileInteractive);
@@ -524,63 +489,5 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
     // Open the VS Code outline view
     private async openOutlineView(): Promise<void> {
         return this.commandManager.executeCommand('outline.focus');
-    }
-    private async onVariablePanelShowDataViewerRequest(request: IShowDataViewerFromVariablePanel) {
-        sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST);
-        if (
-            this.debugService?.activeDebugSession &&
-            this.variableProvider &&
-            this.jupyterVariableDataProviderFactory &&
-            this.dataViewerFactory
-        ) {
-            try {
-                // First find out the current python environment that we are working with
-                if (
-                    this.debugService.activeDebugSession.configuration.python &&
-                    this.dataViewerDependencyService &&
-                    this.interpreterService
-                ) {
-                    // Check to see that we are actually getting a string here as it looks like one customer was not
-                    if (typeof this.debugService.activeDebugSession.configuration.python !== 'string') {
-                        // https://github.com/microsoft/vscode-jupyter/issues/10007
-                        // Error thrown here will be caught and logged by the catch below to send
-                        throw new Error(
-                            `active.DebugSession.configuration.python is not a string: ${JSON.stringify(
-                                this.debugService.activeDebugSession.configuration.python
-                            )}`
-                        );
-                    }
-
-                    // Uri won't work with ~ so untildify first
-                    let untildePath = this.debugService.activeDebugSession.configuration.python;
-                    if (untildePath.startsWith('~') && this.platformService.homeDir) {
-                        untildePath = untildify(untildePath, this.platformService.homeDir.path);
-                    }
-
-                    const pythonEnv = await this.interpreterService.getInterpreterDetails(Uri.file(untildePath));
-                    // Check that we have dependencies installed for data viewer
-                    pythonEnv && (await this.dataViewerDependencyService.checkAndInstallMissingDependencies(pythonEnv));
-                }
-
-                const variable = convertDebugProtocolVariableToIJupyterVariable(
-                    request.variable as DebugProtocol.Variable
-                );
-                const jupyterVariable = await this.variableProvider.getFullVariable(variable);
-                const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
-                    jupyterVariable
-                );
-                const dataFrameInfo = await jupyterVariableDataProvider.getDataFrameInfo();
-                const columnSize = dataFrameInfo?.columns?.length;
-                if (columnSize && (await this.dataViewerChecker.isRequestedColumnSizeAllowed(columnSize))) {
-                    const title: string = `${DataScience.dataExplorerTitle()} - ${jupyterVariable.name}`;
-                    await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
-                    sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS);
-                }
-            } catch (e) {
-                sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR, undefined, undefined, e);
-                traceError(e);
-                this.errorHandler.handleError(e).then(noop, noop);
-            }
-        }
     }
 }
