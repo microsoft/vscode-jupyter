@@ -21,7 +21,7 @@ import {
 } from './types';
 import { Uri, workspace } from 'vscode';
 import { IWorkspaceService } from '../platform/common/application/types';
-import { isCI, PYTHON_LANGUAGE } from '../platform/common/constants';
+import { isCI, PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
 import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../platform/logging';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
 import { DataScience } from '../platform/common/utils/localize';
@@ -34,7 +34,7 @@ import { deserializePythonEnvironment, serializePythonEnvironment } from '../pla
 import { JupyterKernelSpec } from './jupyter/jupyterKernelSpec';
 import { Resource } from '../platform/common/types';
 import { getResourceType, isPythonNotebook } from '../platform/common/utils';
-import { sendTelemetryEvent, Telemetry } from '../telemetry';
+import { sendTelemetryEvent } from '../telemetry';
 
 // https://jupyter-client.readthedocs.io/en/stable/kernels.html
 export const connectionFilePlaceholder = '{connection_file}';
