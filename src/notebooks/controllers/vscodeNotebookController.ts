@@ -62,8 +62,7 @@ import {
     getDisplayNameOrNameOfKernelConnection,
     isPythonKernelConnection,
     areKernelConnectionsEqual,
-    getKernelRegistrationInfo,
-    getSupportedLanguages
+    getKernelRegistrationInfo
 } from '../../kernels/helpers';
 import {
     IKernel,
@@ -94,6 +93,7 @@ import {
 } from '../../kernels/execution/helpers';
 import { KernelMessage } from '@jupyterlab/services';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../../kernels/telemetry/helper';
+import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 
 export class VSCodeNotebookController implements Disposable, IVSCodeNotebookController {
     private readonly _onNotebookControllerSelected: EventEmitter<{
@@ -154,6 +154,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private readonly context: IExtensionContext,
         disposableRegistry: IDisposableRegistry,
         private readonly workspace: IWorkspaceService,
+        private readonly languageService: NotebookCellLanguageService,
         private readonly configuration: IConfigurationService,
         private readonly documentManager: IDocumentManager,
         private readonly appShell: IApplicationShell,
@@ -187,7 +188,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
                 : '';
         this.controller.kind = getKernelConnectionCategory(kernelConnection);
         this.controller.supportsExecutionOrder = true;
-        this.controller.supportedLanguages = getSupportedLanguages(kernelConnection);
+        this.controller.supportedLanguages = this.languageService.getSupportedLanguages(kernelConnection);
         // Hook up to see when this NotebookController is selected by the UI
         this.controller.onDidChangeSelectedNotebooks(this.onDidChangeSelectedNotebooks, this, this.disposables);
     }

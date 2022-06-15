@@ -21,13 +21,7 @@ import {
 } from './types';
 import { Uri, workspace } from 'vscode';
 import { IWorkspaceService } from '../platform/common/application/types';
-import {
-    isCI,
-    LanguagesSupportedByPythonkernel,
-    PYTHON_LANGUAGE,
-    Telemetry,
-    VSCodeKnownNotebookLanguages
-} from '../platform/common/constants';
+import { isCI, PYTHON_LANGUAGE } from '../platform/common/constants';
 import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../platform/logging';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
 import { DataScience } from '../platform/common/utils/localize';
@@ -39,8 +33,8 @@ import { fsPathToUri } from '../platform/vscode-path/utils';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
 import { JupyterKernelSpec } from './jupyter/jupyterKernelSpec';
 import { Resource } from '../platform/common/types';
-import { getResourceType, isPythonNotebook, translateKernelLanguageToMonaco } from '../platform/common/utils';
-import { sendTelemetryEvent } from '../telemetry';
+import { getResourceType, isPythonNotebook } from '../platform/common/utils';
+import { sendTelemetryEvent, Telemetry } from '../telemetry';
 
 // https://jupyter-client.readthedocs.io/en/stable/kernels.html
 export const connectionFilePlaceholder = '{connection_file}';
@@ -1315,22 +1309,6 @@ export function getLanguageInKernelSpec(kernelSpec?: Partial<IJupyterKernelSpec>
     // When a kernel spec is stored in ipynb, the `language` of the kernel spec is also saved.
     // Unfortunately there's no strong typing for this.
     return kernelSpec?.language;
-}
-
-export function getSupportedLanguages(kernelConnection: KernelConnectionMetadata): string[] {
-    if (isPythonKernelConnection(kernelConnection)) {
-        return LanguagesSupportedByPythonkernel;
-    } else {
-        const language = translateKernelLanguageToMonaco(getKernelConnectionLanguage(kernelConnection) || '');
-        // We should set `supportedLanguages` only if VS Code knows about them.
-        // Assume user has a kernel for `go` & VS Code doesn't know about `go` language, & we initailize `supportedLanguages` to [go]
-        // In such cases VS Code will not allow execution of this cell (because `supportedLanguages` by definition limits execution to languages defined).
-        if (language && VSCodeKnownNotebookLanguages.includes(language.toLowerCase())) {
-            return [language];
-        }
-        // Support all languages
-        return [];
-    }
 }
 
 /**

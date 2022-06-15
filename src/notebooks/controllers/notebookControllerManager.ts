@@ -69,6 +69,7 @@ import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConne
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
 import { ILocalResourceUriConverter } from '../../kernels/ipywidgets-message-coordination/types';
 import { isCancellationError } from '../../platform/common/cancellation';
+import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -138,6 +139,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
+        @inject(NotebookCellLanguageService) private readonly languageService: NotebookCellLanguageService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IDocumentManager) private readonly docManager: IDocumentManager,
@@ -872,6 +874,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                         this.context,
                         this.disposables,
                         this.workspace,
+                        this.languageService,
                         this.configuration,
                         this.docManager,
                         this.appShell,
