@@ -12,6 +12,8 @@ import { IJupyterExtensionBanner, IPersistentStateFactory, IConfigurationService
 import * as localize from '../platform/common/utils/localize';
 import { sendTelemetryEvent, captureTelemetry } from '../telemetry';
 
+export const BANNER_NAME_INTERACTIVE_SHIFTENTER: string = 'InteractiveShiftEnterBanner';
+
 export enum InteractiveShiftEnterStateKeys {
     ShowBanner = 'InteractiveShiftEnterBanner'
 }

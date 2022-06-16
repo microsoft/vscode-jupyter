@@ -20,7 +20,7 @@ import { CondaControllerRefresher } from './controllers/condaControllerRefresher
 import { RemoteKernelControllerWatcher } from './controllers/remoteKernelControllerWatcher';
 import { ITracebackFormatter } from '../kernels/types';
 import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
-import { IJupyterDebugService } from '../kernels/debugger/types';
+import { IDebuggingManager, IJupyterDebugService } from '../kernels/debugger/types';
 import { Identifiers } from '../platform/common/constants';
 import { JupyterDebugService } from './debugger/jupyterDebugService.node';
 import { NotebookIPyWidgetCoordinator } from './controllers/notebookIPyWidgetCoordinator';
@@ -29,6 +29,7 @@ import { JupyterServerSelectorCommand } from './serverSelector';
 import { InterpreterPackageTracker } from './telemetry/interpreterPackageTracker';
 import { NotebookCellLanguageService } from './languages/cellLanguageService';
 import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellLanguageService';
+import { DebuggingManager } from './debugger/debuggingManager';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
@@ -89,4 +90,8 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         EmptyNotebookCellLanguageService
     );
+
+    serviceManager.addSingleton<IDebuggingManager>(IDebuggingManager, DebuggingManager, undefined, [
+        IExtensionSingleActivationService
+    ]);
 }

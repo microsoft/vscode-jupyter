@@ -8,17 +8,34 @@ import { WebviewViewProvider } from './webviewViews/webviewViewProvider';
 import { WebviewPanelProvider } from './webviewPanels/webviewPanelProvider';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { VariableViewActivationService } from './variablesView/variableViewActivationService';
-import { IVariableViewProvider } from './variablesView/types';
+import { INotebookWatcher, IVariableViewProvider } from './variablesView/types';
 import { VariableViewProvider } from './variablesView/variableViewProvider';
 import { JupyterVariableDataProvider } from './dataviewer/jupyterVariableDataProvider';
 import { JupyterVariableDataProviderFactory } from './dataviewer/jupyterVariableDataProviderFactory';
-import { IJupyterVariableDataProvider, IJupyterVariableDataProviderFactory } from './dataviewer/types';
+import {
+    IDataViewerFactory,
+    IJupyterVariableDataProvider,
+    IJupyterVariableDataProviderFactory
+} from './dataviewer/types';
 import { DataViewerCommandRegistry } from './dataviewer/dataViewerCommandRegistry';
 import { CommandRegistry as ExportCommandRegistry } from './import-export/commandRegistry';
+import { NotebookWatcher } from './variablesView/notebookWatcher';
+import { DataViewerFactory } from './dataviewer/dataViewerFactory';
+import { ExtensionSideRenderer, IExtensionSideRenderer } from './renderer';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.add<IWebviewViewProvider>(IWebviewViewProvider, WebviewViewProvider);
     serviceManager.add<IWebviewPanelProvider>(IWebviewPanelProvider, WebviewPanelProvider);
+
+    // Data viewer
+    serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        DataViewerCommandRegistry
+    );
+
+    // Variables view
+    serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         VariableViewActivationService
@@ -29,12 +46,11 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         IJupyterVariableDataProviderFactory,
         JupyterVariableDataProviderFactory
     );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        DataViewerCommandRegistry
-    );
+
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         ExportCommandRegistry
     );
+
+    serviceManager.addSingletonInstance<IExtensionSideRenderer>(IExtensionSideRenderer, new ExtensionSideRenderer());
 }
