@@ -2195,7 +2195,7 @@
         "underscore": "^1.12.1",
         "unicode": "^10.0.0",
         "untildify": "^3.0.2",
-        "url-parse": "1.5.8",
+        "url-parse": "^1.5.10",
         "uuid": "^3.3.2",
         "vscode-debugprotocol": "^1.41.0",
         "vscode-jsonrpc": "8.0.2-next.1",
@@ -2339,7 +2339,7 @@
         "lru-cache": "^6.0.0",
         "md5": "^2.3.0",
         "mimic-response": "^4.0.0",
-        "mocha": "9.1.1",
+        "mocha": "^9.2.2",
         "mocha-junit-reporter": "^2.0.2",
         "mocha-multi-reporters": "^1.1.7",
         "nocache": "^2.1.0",
@@ -2397,7 +2397,9 @@
     },
     "overrides": {
         "simple-get": "3.1.1",
-        "url-parse": "1.5.8",
-        "fs-path": "0.0.25"
+        "fs-path": "0.0.25",
+        "@jupyterlab/coreutils": {
+            "url-parse": "$url-parse"
+        }
     }
 }
