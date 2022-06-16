@@ -39,9 +39,6 @@ import { ExportUtilBase } from './export/exportUtil';
 import { ExportToHTML } from './export/exportToHTML';
 import { ExportToPDF } from './export/exportToPDF';
 import { ExportToPython } from './export/exportToPython';
-import { DebuggingManager } from '../notebooks/debugger/debuggingManager';
-import { IDebuggingManager, IDebugLocationTracker, IDebugLocationTrackerFactory } from '../kernels/debugger/types';
-import { DebugLocationTrackerFactory } from '../kernels/debugger/debugLocationTrackerFactory';
 import { KernelProgressReporter } from './progress/kernelProgressReporter';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
@@ -65,18 +62,12 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToPDF, ExportFormat.pdf);
     serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToPython, ExportFormat.python);
     serviceManager.addSingleton<ExportUtilBase>(ExportUtilBase, ExportUtilBase);
-    serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory, undefined, [
-        IDebugLocationTrackerFactory
-    ]);
 
     registerCommonTypes(serviceManager);
     registerApiTypes(serviceManager);
     registerActivationTypes(serviceManager);
     registerDevToolTypes(context, serviceManager, isDevMode);
 
-    serviceManager.addSingleton<IDebuggingManager>(IDebuggingManager, DebuggingManager, undefined, [
-        IExtensionSingleActivationService
-    ]);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         KernelProgressReporter

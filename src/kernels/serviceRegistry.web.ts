@@ -19,13 +19,14 @@ import { KernelProvider } from './kernelProvider.web';
 import { KernelFinder } from './kernelFinder.web';
 import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
 import { MultiplexingDebugService } from './debugger/multiplexingDebugService';
-import { IJupyterDebugService } from './debugger/types';
+import { IDebugLocationTracker, IDebugLocationTrackerFactory, IJupyterDebugService } from './debugger/types';
 import { DebuggerVariables } from './variables/debuggerVariables';
 import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
 import { KernelVariables } from './variables/kernelVariables';
 import { JupyterVariables } from './variables/jupyterVariables';
 import { PythonVariablesRequester } from './variables/pythonVariableRequester';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
+import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFactory';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
@@ -86,4 +87,9 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     registerJupyterTypes(serviceManager, isDevMode);
 
     serviceManager.addSingleton<CellOutputDisplayIdTracker>(CellOutputDisplayIdTracker, CellOutputDisplayIdTracker);
+
+    // debugging
+    serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory, undefined, [
+        IDebugLocationTrackerFactory
+    ]);
 }

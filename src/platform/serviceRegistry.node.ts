@@ -16,7 +16,6 @@ import { ExtensionRecommendationService } from './common/extensionRecommendation
 import { GlobalActivation } from './common/globalActivation';
 import { PreReleaseChecker } from './common/prereleaseChecker.node';
 import { IConfigurationService, IDataScienceCommandListener, IExtensionContext } from './common/types';
-import { DebugLocationTrackerFactory } from '../kernels/debugger/debugLocationTrackerFactory';
 import { DataScienceErrorHandler } from './errors/errorHandler';
 import { IDataScienceErrorHandler } from './errors/types';
 import { ExportBase } from './export/exportBase.node';
@@ -45,8 +44,6 @@ import { WorkspaceService } from './common/application/workspace.node';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from '../webviews/extension-side/renderer';
 import { OutputCommandListener } from './logging/outputCommandListener';
 import { ExportUtilBase } from './export/exportUtil';
-import { DebuggingManager } from '../notebooks/debugger/debuggingManager';
-import { IDebuggingManager, IDebugLocationTracker, IDebugLocationTrackerFactory } from '../kernels/debugger/types';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<FileSystem>(FileSystem, FileSystem);
@@ -69,9 +66,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
 
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
-    serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory, undefined, [
-        IDebugLocationTrackerFactory
-    ]);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Activation);
     if (isDevMode) {
         serviceManager.addSingleton<IExtensionSingleActivationService>(
@@ -102,9 +96,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
         IExtensionSyncActivationService,
         KernelProgressReporter
     );
-    serviceManager.addSingleton<IDebuggingManager>(IDebuggingManager, DebuggingManager, undefined, [
-        IExtensionSingleActivationService
-    ]);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         PreReleaseChecker

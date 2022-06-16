@@ -29,7 +29,7 @@ import { KernelVariables } from './variables/kernelVariables';
 import { PreWarmActivatedJupyterEnvironmentVariables } from './variables/preWarmVariables.node';
 import { PythonVariablesRequester } from './variables/pythonVariableRequester';
 import { MultiplexingDebugService } from './debugger/multiplexingDebugService';
-import { IJupyterDebugService } from './debugger/types';
+import { IDebugLocationTracker, IDebugLocationTrackerFactory, IJupyterDebugService } from './debugger/types';
 import { IKernelDependencyService, IKernelFinder, IKernelProvider } from './types';
 import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
 import { KernelCrashMonitor } from './kernelCrashMonitor';
@@ -40,6 +40,7 @@ import { KernelProvider } from './kernelProvider.node';
 import { KernelFinder } from './kernelFinder.node';
 import { ServerConnectionType } from './jupyter/launcher/serverConnectionType';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
+import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFactory';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IRawNotebookSupportedService>(
@@ -125,4 +126,8 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     const rawService = serviceManager.get<IRawNotebookSupportedService>(IRawNotebookSupportedService);
     setSharedProperty('rawKernelSupported', rawService.isSupported ? 'true' : 'false');
     serviceManager.addSingleton<CellOutputDisplayIdTracker>(CellOutputDisplayIdTracker, CellOutputDisplayIdTracker);
+
+    serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory, undefined, [
+        IDebugLocationTrackerFactory
+    ]);
 }

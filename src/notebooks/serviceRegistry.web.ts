@@ -24,6 +24,8 @@ import { NotebookCommandListener } from './notebookCommandListener';
 import { InterpreterPackageTracker } from './telemetry/interpreterPackageTracker';
 import { NotebookCellLanguageService } from './languages/cellLanguageService';
 import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellLanguageService';
+import { IDebuggingManager } from '../kernels/debugger/types';
+import { DebuggingManager } from './debugger/debuggingManager';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
@@ -70,4 +72,8 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         EmptyNotebookCellLanguageService
     );
+
+    serviceManager.addSingleton<IDebuggingManager>(IDebuggingManager, DebuggingManager, undefined, [
+        IExtensionSingleActivationService
+    ]);
 }
