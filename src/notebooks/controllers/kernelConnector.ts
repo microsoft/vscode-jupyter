@@ -26,7 +26,7 @@ import { clearInstalledIntoInterpreterMemento } from '../../kernels/installer/pr
 import { Product } from '../../kernels/installer/types';
 import { INotebookControllerManager, INotebookEditorProvider } from '../types';
 import { selectKernel } from './kernelSelector';
-import { KernelDeadError } from '../../platform/errors/kernelDeadError';
+import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
 import { noop } from '../../platform/common/utils/misc';
 import { IDataScienceErrorHandler } from '../../platform/errors/types';
 import { IStatusProvider } from '../../platform/progress/types';

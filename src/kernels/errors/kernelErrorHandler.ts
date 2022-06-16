@@ -4,10 +4,10 @@ import { inject, injectable, optional } from 'inversify';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
 import { CancellationTokenSource, ConfigurationTarget, workspace } from 'vscode';
-import { KernelConnectionTimeoutError } from '../../platform/errors/kernelConnectionTimeoutError';
-import { KernelDiedError } from '../../platform/errors/kernelDiedError';
-import { KernelPortNotUsedTimeoutError } from '../../platform/errors/kernelPortNotUsedTimeoutError';
-import { KernelProcessExitedError } from '../../platform/errors/kernelProcessExitedError';
+import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError';
+import { KernelDiedError } from './kernelDiedError';
+import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError';
+import { KernelProcessExitedError } from './kernelProcessExitedError';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../platform/common/application/types';
 import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
 import {
@@ -37,7 +37,7 @@ import {
     getErrorMessageFromPythonTraceback
 } from '../../platform/errors/errorUtils';
 import { JupyterConnectError } from '../../platform/errors/jupyterConnectError';
-import { JupyterKernelDependencyError } from '../../platform/errors/jupyterKernelDependencyError';
+import { JupyterKernelDependencyError } from './jupyterKernelDependencyError';
 import {
     WrappedError,
     BaseKernelError,
@@ -47,7 +47,7 @@ import {
 } from '../../platform/errors/types';
 import { noop } from '../../platform/common/utils/misc';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
-import { KernelDeadError } from '../../platform/errors/kernelDeadError';
+import { KernelDeadError } from './kernelDeadError';
 import { DisplayOptions } from '../displayOptions';
 import {
     IJupyterInterpreterDependencyManager,
@@ -60,8 +60,8 @@ import { isCancellationError } from '../../platform/common/cancellation';
 import { JupyterExpiredCertsError } from '../../platform/errors/jupyterExpiredCertsError';
 import { computeServerId } from '../jupyter/jupyterUtils';
 import { RemoteJupyterServerConnectionError } from '../../platform/errors/remoteJupyterServerConnectionError';
-import { RemoteJupyterServerUriProviderError } from '../../platform/errors/remoteJupyterServerUriProviderError';
-import { InvalidRemoteJupyterServerUriHandleError } from '../../platform/errors/invalidRemoteJupyterServerUriHandleError';
+import { RemoteJupyterServerUriProviderError } from './remoteJupyterServerUriProviderError';
+import { InvalidRemoteJupyterServerUriHandleError } from './invalidRemoteJupyterServerUriHandleError';
 
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {

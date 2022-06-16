@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../activation/types';
+import { IExtensionSingleActivationService } from '../activation/types';
 import { IExperimentService, IHttpClient } from '../common/types';
 import { IServiceManager } from '../ioc/types';
 import { ActiveResourceService } from './application/activeResource.node';

@@ -15,9 +15,9 @@ import { createDeferred, sleep, waitForPromise } from '../../platform/common/uti
 import * as localize from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { JupyterInvalidKernelError } from '../../platform/errors/jupyterInvalidKernelError';
-import { JupyterWaitForIdleError } from '../../platform/errors/jupyterWaitForIdleError';
-import { KernelInterruptTimeoutError } from '../../platform/errors/kernelInterruptTimeoutError';
+import { JupyterInvalidKernelError } from '../errors/jupyterInvalidKernelError';
+import { JupyterWaitForIdleError } from '../errors/jupyterWaitForIdleError';
+import { KernelInterruptTimeoutError } from '../errors/kernelInterruptTimeoutError';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
 import {
     IJupyterServerSession,

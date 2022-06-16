@@ -3,10 +3,10 @@
 
 'use strict';
 
-import { DataScience } from '../common/utils/localize';
-import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
-import { KernelConnectionMetadata, KernelInterpreterDependencyResponse } from '../../kernels/types';
-import { BaseKernelError } from './types';
+import { DataScience } from '../../platform/common/utils/localize';
+import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
+import { KernelConnectionMetadata, KernelInterpreterDependencyResponse } from '../types';
+import { BaseKernelError } from '../../platform/errors/types';
 
 export class JupyterKernelDependencyError extends BaseKernelError {
     constructor(
