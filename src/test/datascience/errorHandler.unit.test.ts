@@ -18,7 +18,7 @@ import {
 } from '../../platform/../kernels/types';
 import { PythonEnvironment, EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
-import { DataScienceErrorHandler } from '../../platform/errors/errorHandler';
+import { DataScienceErrorHandler } from '../../kernels/errors/kernelErrorHandler';
 import { JupyterConnectError } from '../../platform/errors/jupyterConnectError';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';

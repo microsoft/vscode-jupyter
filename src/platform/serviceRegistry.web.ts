@@ -22,8 +22,6 @@ import { ProgressReporter } from './progress/progressReporter';
 import { StatusProvider } from './progress/statusProvider';
 import { IStatusProvider } from './progress/types';
 import { WorkspaceService } from './common/application/workspace.web';
-import { DataScienceErrorHandler } from './errors/errorHandler';
-import { IDataScienceErrorHandler } from './errors/types';
 import { GlobalActivation } from './common/globalActivation';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from './activation/types';
 import { OutputCommandListener } from './logging/outputCommandListener';
@@ -49,7 +47,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
     serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
     serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
-    serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, OutputCommandListener);
     serviceManager.addSingleton<ExportFileOpener>(ExportFileOpener, ExportFileOpener);

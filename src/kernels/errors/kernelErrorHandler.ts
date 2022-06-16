@@ -1,51 +1,67 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable, optional } from 'inversify';
-import { JupyterInstallError } from './jupyterInstallError';
-import { JupyterSelfCertsError } from './jupyterSelfCertsError';
+import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
+import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
 import { CancellationTokenSource, ConfigurationTarget, workspace } from 'vscode';
-import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError';
-import { KernelDiedError } from './kernelDiedError';
-import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError';
-import { KernelProcessExitedError } from './kernelProcessExitedError';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
-import { traceError, traceVerbose, traceWarning } from '../logging';
-import { IBrowserService, IConfigurationService, IExtensions, IsWebExtension, Resource } from '../common/types';
-import { DataScience, Common } from '../common/utils/localize';
+import { KernelConnectionTimeoutError } from '../../platform/errors/kernelConnectionTimeoutError';
+import { KernelDiedError } from '../../platform/errors/kernelDiedError';
+import { KernelPortNotUsedTimeoutError } from '../../platform/errors/kernelPortNotUsedTimeoutError';
+import { KernelProcessExitedError } from '../../platform/errors/kernelProcessExitedError';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../platform/common/application/types';
+import { traceError, traceVerbose, traceWarning } from '../../platform/logging';
+import {
+    IBrowserService,
+    IConfigurationService,
+    IExtensions,
+    IsWebExtension,
+    Resource
+} from '../../platform/common/types';
+import { DataScience, Common } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { Commands } from '../../webviews/webview-side/common/constants';
-import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
-import { translateProductToModule } from '../../kernels/installer/utils';
-import { ProductNames } from '../../kernels/installer/productNames';
-import { Product } from '../../kernels/installer/types';
+import { Commands } from '../../platform/common/constants';
+import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
+import { translateProductToModule } from '../installer/utils';
+import { ProductNames } from '../installer/productNames';
+import { Product } from '../installer/types';
 import {
     IKernelDependencyService,
     KernelAction,
     KernelActionSource,
     KernelConnectionMetadata,
     KernelInterpreterDependencyResponse
-} from '../../kernels/types';
-import { analyzeKernelErrors, KernelFailureReason, getErrorMessageFromPythonTraceback } from './errorUtils';
-import { JupyterConnectError } from './jupyterConnectError';
-import { JupyterKernelDependencyError } from './jupyterKernelDependencyError';
-import { WrappedError, BaseKernelError, WrappedKernelError, BaseError, IDataScienceErrorHandler } from './types';
-import { noop } from '../common/utils/misc';
-import { EnvironmentType } from '../pythonEnvironments/info';
-import { KernelDeadError } from './kernelDeadError';
-import { DisplayOptions } from '../../kernels/displayOptions';
+} from '../types';
+import {
+    analyzeKernelErrors,
+    KernelFailureReason,
+    getErrorMessageFromPythonTraceback
+} from '../../platform/errors/errorUtils';
+import { JupyterConnectError } from '../../platform/errors/jupyterConnectError';
+import { JupyterKernelDependencyError } from '../../platform/errors/jupyterKernelDependencyError';
+import {
+    WrappedError,
+    BaseKernelError,
+    WrappedKernelError,
+    BaseError,
+    IDataScienceErrorHandler
+} from '../../platform/errors/types';
+import { noop } from '../../platform/common/utils/misc';
+import { EnvironmentType } from '../../platform/pythonEnvironments/info';
+import { KernelDeadError } from '../../platform/errors/kernelDeadError';
+import { DisplayOptions } from '../displayOptions';
 import {
     IJupyterInterpreterDependencyManager,
     IJupyterServerUriStorage,
     JupyterInterpreterDependencyResponse
-} from '../../kernels/jupyter/types';
-import { handleExpiredCertsError, handleSelfCertsError } from '../../kernels/jupyter/jupyterUtils';
-import { getFilePath } from '../common/platform/fs-paths';
-import { isCancellationError } from '../common/cancellation';
-import { JupyterExpiredCertsError } from './jupyterExpiredCertsError';
-import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
-import { RemoteJupyterServerConnectionError } from './remoteJupyterServerConnectionError';
-import { RemoteJupyterServerUriProviderError } from './remoteJupyterServerUriProviderError';
-import { InvalidRemoteJupyterServerUriHandleError } from './invalidRemoteJupyterServerUriHandleError';
+} from '../jupyter/types';
+import { handleExpiredCertsError, handleSelfCertsError } from '../jupyter/jupyterUtils';
+import { getFilePath } from '../../platform/common/platform/fs-paths';
+import { isCancellationError } from '../../platform/common/cancellation';
+import { JupyterExpiredCertsError } from '../../platform/errors/jupyterExpiredCertsError';
+import { computeServerId } from '../jupyter/jupyterUtils';
+import { RemoteJupyterServerConnectionError } from '../../platform/errors/remoteJupyterServerConnectionError';
+import { RemoteJupyterServerUriProviderError } from '../../platform/errors/remoteJupyterServerUriProviderError';
+import { InvalidRemoteJupyterServerUriHandleError } from '../../platform/errors/invalidRemoteJupyterServerUriHandleError';
 
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {
