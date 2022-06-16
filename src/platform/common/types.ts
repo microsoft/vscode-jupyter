@@ -248,7 +248,6 @@ export interface IJupyterExtensionBanner {
     isEnabled(type: BannerType): boolean;
     showBanner(type: BannerType): Promise<void>;
 }
-export const BANNER_NAME_INTERACTIVE_SHIFTENTER: string = 'InteractiveShiftEnterBanner';
 
 export const ISurveyBanner = Symbol('ISurveyBanner');
 export interface ISurveyBanner extends IExtensionSingleActivationService, IJupyterExtensionBanner {}

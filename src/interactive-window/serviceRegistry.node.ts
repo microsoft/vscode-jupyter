@@ -4,7 +4,7 @@
 
 import { ITracebackFormatter } from '../kernels/types';
 import { IExtensionSyncActivationService, IExtensionSingleActivationService } from '../platform/activation/types';
-import { IDataScienceCommandListener } from '../platform/common/types';
+import { IDataScienceCommandListener, IJupyterExtensionBanner } from '../platform/common/types';
 import { IServiceManager } from '../platform/ioc/types';
 import { CommandRegistry } from './commands/commandRegistry';
 import { CodeGeneratorFactory } from './editor-integration/codeGeneratorFactory';
@@ -28,6 +28,7 @@ import { InteractiveWindowTracebackFormatter } from './outputs/tracebackFormatte
 import { IInteractiveWindowDebugger, IInteractiveWindowDebuggingManager, IInteractiveWindowProvider } from './types';
 import { InteractiveWindowDebugger } from './debugger/interactiveWindowDebugger.node';
 import { InteractiveWindowDebuggingManager } from './debugger/jupyter/debuggingManager';
+import { BANNER_NAME_INTERACTIVE_SHIFTENTER, InteractiveShiftEnterBanner } from './shiftEnterBanner';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
@@ -62,5 +63,10 @@ export function registerTypes(serviceManager: IServiceManager) {
         InteractiveWindowDebuggingManager,
         undefined,
         [IExtensionSingleActivationService]
+    );
+    serviceManager.addSingleton<IJupyterExtensionBanner>(
+        IJupyterExtensionBanner,
+        InteractiveShiftEnterBanner,
+        BANNER_NAME_INTERACTIVE_SHIFTENTER
     );
 }
