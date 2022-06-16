@@ -26,6 +26,7 @@ import { NotebookCellLanguageService } from './languages/cellLanguageService';
 import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellLanguageService';
 import { IDebuggingManager } from '../kernels/debugger/types';
 import { DebuggingManager } from './debugger/debuggingManager';
+import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
@@ -76,4 +77,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDebuggingManager>(IDebuggingManager, DebuggingManager, undefined, [
         IExtensionSingleActivationService
     ]);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        ErrorRendererCommunicationHandler
+    );
 }

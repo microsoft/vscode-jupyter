@@ -48,9 +48,6 @@ export class NotebookTracebackFormatter implements ITracebackFormatter {
 
         const inputMatch = /^Input.*?\[.*32mIn\s+\[(\d+).*?0;36m(.*?)\n.*/.exec(traceFrame);
         if (inputMatch && inputMatch.length > 1) {
-            const executionCount = parseInt(inputMatch[1]);
-            // Don't assume the current cell is where the error is.
-            cell = cell.notebook.getCells().find((c) => c.executionSummary?.executionOrder === executionCount) || cell;
             // We have a match, replace source lines first
             const afterLineReplace = traceFrame.replace(LineNumberMatchRegex, (_s, prefix, num, suffix) => {
                 const n = parseInt(num, 10);
