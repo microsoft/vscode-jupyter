@@ -8936,7 +8936,7 @@ No properties for event
 
 ## Locations Used
 
-[src/platform/startupTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/startupTelemetry.ts)
+[src/telemetry/startupTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/startupTelemetry.ts)
 ```typescript
         await activatedPromise;
         durations.totalActivateTime = stopWatch.elapsedTime;
@@ -8948,7 +8948,7 @@ No properties for event
 ```
 
 
-[src/platform/startupTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/startupTelemetry.ts)
+[src/telemetry/startupTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/startupTelemetry.ts)
 ```typescript
                 traceError('getActivationTelemetryProps() failed.', ex);
             }
@@ -8960,7 +8960,7 @@ No properties for event
 ```
 
 
-[src/platform/startupTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/startupTelemetry.ts)
+[src/telemetry/startupTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/startupTelemetry.ts)
 ```typescript
 
 async function getActivationTelemetryProps(
