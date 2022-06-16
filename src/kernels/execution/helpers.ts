@@ -355,6 +355,9 @@ export type CellOutputMetadata = {
      * Whether to display the open plot icon.
      */
     __displayOpenPlotIcon?: boolean;
+    /**
+     * A unique identifier to track a specific output.
+     */
     id?: string;
 };
 
