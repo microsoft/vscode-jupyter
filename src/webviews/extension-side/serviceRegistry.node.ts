@@ -39,6 +39,7 @@ import { ExtensionSideRenderer, IExtensionSideRenderer } from './renderer';
 import { ExtensionRecommendationService } from './extensionRecommendation.node';
 import { ActiveEditorContextService } from './activeEditorContext';
 import { AmlComputeContext } from './amlContext.node';
+import { IImportTracker, ImportTracker } from './importTracker.node';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
@@ -58,8 +59,9 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         IExtensionSingleActivationService,
         AmlComputeContext
     );
-
     serviceManager.addSingleton<AmlComputeContext>(AmlComputeContext, AmlComputeContext);
+    serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ImportTracker);
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
     serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
     serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);

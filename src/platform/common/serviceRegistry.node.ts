@@ -3,8 +3,6 @@
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../activation/types';
 import { IExperimentService, IHttpClient } from '../common/types';
 import { IServiceManager } from '../ioc/types';
-import { ImportTracker } from './importTracker.node';
-import { IImportTracker } from '../../telemetry/types';
 import { ActiveResourceService } from './application/activeResource.node';
 import { ApplicationEnvironment } from './application/applicationEnvironment.node';
 import { ClipboardService } from './application/clipboard';
@@ -81,8 +79,6 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
-    serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ImportTracker);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         LanguageInitializer
