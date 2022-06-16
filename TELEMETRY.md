@@ -5831,7 +5831,7 @@ No properties for event
 
 ## Locations Used
 
-[src/platform/errors/jupyterInvalidKernelError.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/errors/jupyterInvalidKernelError.ts)
+[src/kernels/errors/jupyterInvalidKernelError.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/errors/jupyterInvalidKernelError.ts)
 ```typescript
             DataScience.kernelInvalid().format(getDisplayNameOrNameOfKernelConnection(kernelConnectionMetadata)),
             kernelConnectionMetadata
@@ -6326,7 +6326,7 @@ No properties for event
 
 ## Locations Used
 
-[src/platform/errors/jupyterWaitForIdleError.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/errors/jupyterWaitForIdleError.ts)
+[src/kernels/errors/jupyterWaitForIdleError.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/errors/jupyterWaitForIdleError.ts)
 ```typescript
 export class JupyterWaitForIdleError extends BaseKernelError {
     constructor(kernelConnectionMetadata: KernelConnectionMetadata) {
