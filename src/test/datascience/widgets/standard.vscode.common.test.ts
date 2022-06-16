@@ -33,6 +33,7 @@ import { WidgetRenderingTimeoutForTests } from './constants';
 import { getTextOutputValue } from '../../../kernels/execution/helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
+// eslint-disable-next-line no-only-tests/no-only-tests
 suite.only('IPyWisdget Tests', function () {
     const templateRootPath: Uri =
         workspace.workspaceFolders && workspace.workspaceFolders.length > 0
