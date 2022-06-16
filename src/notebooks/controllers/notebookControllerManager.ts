@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken, NotebookControllerAffinity, Uri } from 'vscode';
 import { CancellationTokenSource, EventEmitter, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { IPythonExtensionChecker } from '../../platform/api/types';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../../platform/api/types';
 import {
     IVSCodeNotebook,
     ICommandManager,
@@ -13,7 +13,13 @@ import {
     IDocumentManager,
     IApplicationShell
 } from '../../platform/common/application/types';
-import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
+import {
+    Commands,
+    InteractiveWindowView,
+    JupyterNotebookView,
+    PythonExtension,
+    PYTHON_LANGUAGE
+} from '../../platform/common/constants';
 import {
     traceInfoIfCI,
     traceError,
@@ -70,6 +76,7 @@ import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConne
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
 import { ILocalResourceUriConverter } from '../../kernels/ipywidgets-message-coordination/types';
 import { isCancellationError } from '../../platform/common/cancellation';
+import { createDeferred } from '../../platform/common/utils/async';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -151,7 +158,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IsWebExtension) private readonly isWeb: boolean,
         @inject(ServerConnectionType) private readonly serverConnectionType: ServerConnectionType,
-        @inject(ILocalResourceUriConverter) private readonly resourceConverter: ILocalResourceUriConverter
+        @inject(ILocalResourceUriConverter) private readonly resourceConverter: ILocalResourceUriConverter,
+        @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -214,6 +222,15 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             () => setTimeout(forceLoad, REMOTE_KERNEL_REFRESH_INTERVAL),
             this,
             this.disposables
+        );
+
+        // IANHU
+        this.disposables.push(
+            this.commandManager.registerCommand(
+                Commands.InstallPythonExtensionViaKernelPicker,
+                this.installPythonExtensionViaKernelPicker,
+                this
+            )
         );
     }
     public async getActiveInterpreterOrDefaultController(
@@ -376,6 +393,56 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         if (liveConnections.length > 0) {
             this.remoteRefreshedEmitter.fire(liveConnections);
         }
+    }
+
+    private async installPythonExtensionViaKernelPicker(): Promise<void> {
+        if (!this.extensionChecker.isPythonExtensionInstalled) {
+            const extensionHooked = createDeferred<void>();
+
+            // Allow forward movement when the extension is installed, active, and hooked
+            this.pythonApi.onPythonExtensionHooked(
+                () => {
+                    extensionHooked.resolve();
+                },
+                this,
+                this.disposables
+            );
+
+            // IANHU: Progress bar here
+            await this.commandManager.executeCommand('workbench.extensions.installExtension', PythonExtension);
+            await extensionHooked.promise;
+
+            // const pyExt = this.extensions.getExtension(PythonExtension);
+            // traceInfo('log here');
+
+            // IANHU: This plus the install above should probably be installed into the python API or
+            // the python extensionChecker?
+            // await this.pythonApi.getApi();
+
+            // Wait until the python extension is installed and hooked
+            // IANHU: Error handling for the install?
+
+            if (this.extensionChecker.isPythonExtensionInstalled) {
+                traceInfo('Installed');
+                await this.loadNotebookControllers(true);
+            } else {
+                traceInfo('Not Installed');
+            }
+
+            traceInfo('Done');
+        }
+        // sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
+        // const selection = await this.appShell.showInformationMessage(
+        // DataScience.pythonExtensionRequiredToRunNotebook(),
+        // { modal: true },
+        // Common.install()
+        // );
+        // if (selection === Common.install()) {
+        // sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
+        // this.commandManager.executeCommand('extension.open', PythonExtension).then(noop, noop);
+        // } else {
+        // sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
+        // }
     }
 
     private listKernels(

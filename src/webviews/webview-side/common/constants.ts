@@ -156,6 +156,7 @@ export namespace Commands {
     export const RunByLineStop = 'jupyter.runByLineStop';
     export const ReplayPylanceLog = 'jupyter.replayPylanceLog';
     export const ReplayPylanceLogStep = 'jupyter.replayPylanceLogStep';
+    export const InstallPythonExtensionViaKernelPicker = 'jupyter.installPythonExtensionViaKernelPicker';
 }
 
 export namespace CodeLensCommands {

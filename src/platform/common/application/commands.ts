@@ -81,7 +81,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['vscode.openWith']: [Uri, string];
     ['jupyter.filterKernels']: [never];
     ['workbench.action.quickOpen']: [string];
-    ['workbench.extensions.installExtension']: [Uri | 'ms-toolsai.jupyter'];
+    ['workbench.extensions.installExtension']: [Uri | 'ms-toolsai.jupyter' | 'ms-python.python'];
     ['workbench.action.files.openFolder']: [];
     ['workbench.action.openWorkspace']: [];
     ['extension.open']: [string];
@@ -192,4 +192,5 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.RunByLineStop]: [];
     [DSCommands.ReplayPylanceLog]: [Uri];
     [DSCommands.ReplayPylanceLogStep]: [];
+    [DSCommands.InstallPythonExtensionViaKernelPicker]: [];
 }

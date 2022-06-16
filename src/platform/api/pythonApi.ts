@@ -71,8 +71,16 @@ export function serializePythonEnvironment(
 export class PythonApiProvider implements IPythonApiProvider {
     private readonly api = createDeferred<PythonApi>();
     private readonly didActivatePython = new EventEmitter<void>();
+    private readonly pythonExtensionHooked = new EventEmitter<void>();
     public get onDidActivatePythonExtension() {
         return this.didActivatePython.event;
+    }
+
+    // IANHU issue here is we only trigger activated if we trigger the activate
+    // note that this might be better to call activate even if we didn't trigger it
+    // but for now do this
+    public get onPythonExtensionHooked(): Event<void> {
+        return this.pythonExtensionHooked.event;
     }
 
     private initialized?: boolean;
@@ -169,6 +177,7 @@ export class PythonApiProvider implements IPythonApiProvider {
             }
         }
         pythonExtension.exports.jupyter.registerHooks();
+        this.pythonExtensionHooked.fire();
     }
 }
 
