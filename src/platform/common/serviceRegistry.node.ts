@@ -45,7 +45,6 @@ import {
     IsWindows
 } from './types';
 import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
-import { PortAttributesProviders } from './net/portAttributeProvider.node';
 import { LanguageInitializer } from '../../telemetry/languageInitializer';
 import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.node';
 import { registerTypes as processRegisterTypes } from './process/serviceRegistry.node';
@@ -90,10 +89,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         RunInDedicatedExtensionHostCommandHandler
-    );
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        PortAttributesProviders
     );
     registerPlatformTypes(serviceManager);
     processRegisterTypes(serviceManager);
