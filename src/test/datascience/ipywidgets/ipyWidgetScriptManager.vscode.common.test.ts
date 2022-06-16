@@ -22,7 +22,7 @@ import { IKernel, IKernelProvider, isLocalConnection } from '../../../kernels/ty
 import {
     IIPyWidgetScriptManager,
     IIPyWidgetScriptManagerFactory
-} from '../../../kernels/ipywidgets-message-coordination/types';
+} from '../../../kernels/ipywidgets/types';
 import { getTelemetrySafeHashedString } from '../../../telemetry/helpers';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
