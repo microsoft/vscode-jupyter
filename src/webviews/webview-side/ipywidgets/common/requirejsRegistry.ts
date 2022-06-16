@@ -11,7 +11,7 @@ type NonPartial<T> = {
 };
 
 // Key = module name, value = path to script.
-const scriptsAlreadyRegisteredInRequireJs = new Map<string, string>();
+export const scriptsAlreadyRegisteredInRequireJs = new Map<string, string>();
 
 function getScriptsToBeRegistered(scripts: WidgetScriptSource[]) {
     return scripts.filter((script) => {

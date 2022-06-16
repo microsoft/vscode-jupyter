@@ -1154,6 +1154,11 @@ export namespace DataScience {
             'Unhandled kernel message from a widget: {0} : {1}'
         );
 
+    export const cdnWidgetScriptNotAccessibleWarningMessage = () =>
+        localize(
+            'DataScience.cdnWidgetScriptNotAccessibleWarningMessage',
+            "Unable to download widget '{0}' from 3rd party website {1}, due to network access. Expected behavior may be affected. Click [here](https://aka.ms/PVSCIPyWidgets) for more information."
+        );
     export const widgetScriptNotFoundOnCDNWidgetMightNotWork = () =>
         localize(
             'DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork',

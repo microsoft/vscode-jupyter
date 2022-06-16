@@ -379,7 +379,9 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                             const jupyterLabSerialize =
                                 require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
                             const message =
-                                typeof msg.msg === 'string' ? jupyterLabSerialize.deserialize(msg.msg) : msg.msg;
+                                typeof msg.msg === 'string' || msg.msg instanceof ArrayBuffer
+                                    ? jupyterLabSerialize.deserialize(msg.msg)
+                                    : msg.msg;
                             this._wrappedKernel.anyMessage.emit({ direction: msg.direction, msg: message });
                         }
                     } catch (ex) {

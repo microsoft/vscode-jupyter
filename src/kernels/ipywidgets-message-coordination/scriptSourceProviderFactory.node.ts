@@ -1,55 +1,47 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
-import { IFileSystemNode } from '../../platform/common/platform/types.node';
-import { IPythonExecutionFactory } from '../../platform/common/process/types.node';
-import { IConfigurationService, IHttpClient, WidgetCDNs } from '../../platform/common/types';
-import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { inject, injectable, named } from 'inversify';
+import { GLOBAL_MEMENTO, IConfigurationService, IHttpClient, IMemento } from '../../platform/common/types';
 import { IKernel } from '../types';
-import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider.node';
 import { LocalWidgetScriptSourceProvider } from './localWidgetScriptSourceProvider.node';
 import { RemoteWidgetScriptSourceProvider } from './remoteWidgetScriptSourceProvider';
-import { ILocalResourceUriConverter, IWidgetScriptSourceProvider, IWidgetScriptSourceProviderFactory } from './types';
+import {
+    IIPyWidgetScriptManagerFactory,
+    ILocalResourceUriConverter,
+    IWidgetScriptSourceProvider,
+    IWidgetScriptSourceProviderFactory
+} from './types';
+import { IApplicationShell } from '../../platform/common/application/types';
+import { Memento } from 'vscode';
+import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider';
 
 @injectable()
 export class ScriptSourceProviderFactory implements IWidgetScriptSourceProviderFactory {
-    private get configuredScriptSources(): readonly WidgetCDNs[] {
-        const settings = this.configurationSettings.getSettings(undefined);
-        return settings.widgetScriptSources;
-    }
-
     constructor(
         @inject(IConfigurationService) private readonly configurationSettings: IConfigurationService,
-        @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IPythonExecutionFactory) private readonly factory: IPythonExecutionFactory
+        @inject(IIPyWidgetScriptManagerFactory)
+        private readonly widgetScriptManagerFactory: IIPyWidgetScriptManagerFactory,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
     ) {}
 
     public getProviders(kernel: IKernel, uriConverter: ILocalResourceUriConverter, httpClient: IHttpClient) {
         const scriptProviders: IWidgetScriptSourceProvider[] = [];
 
-        // If we're allowed to use CDN providers, then use them, and use in order of preference.
-        if (this.configuredScriptSources.length > 0) {
-            scriptProviders.push(
-                new CDNWidgetScriptSourceProvider(this.configurationSettings, uriConverter, this.fs, httpClient)
-            );
-        }
+        // Give preference to CDN.
+        scriptProviders.push(
+            new CDNWidgetScriptSourceProvider(this.appShell, this.globalMemento, this.configurationSettings, httpClient)
+        );
         switch (kernel.kernelConnectionMetadata.kind) {
             case 'connectToLiveRemoteKernel':
             case 'startUsingRemoteKernelSpec':
-                scriptProviders.push(new RemoteWidgetScriptSourceProvider(kernel.kernelConnectionMetadata.baseUrl));
+                scriptProviders.push(new RemoteWidgetScriptSourceProvider(kernel, this.widgetScriptManagerFactory));
                 break;
 
             default:
                 scriptProviders.push(
-                    new LocalWidgetScriptSourceProvider(
-                        kernel,
-                        uriConverter,
-                        this.fs,
-                        this.interpreterService,
-                        this.factory
-                    )
+                    new LocalWidgetScriptSourceProvider(kernel, uriConverter, this.widgetScriptManagerFactory)
                 );
         }
 

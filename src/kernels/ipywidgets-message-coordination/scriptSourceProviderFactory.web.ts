@@ -1,34 +1,43 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
-import { IConfigurationService, IHttpClient, WidgetCDNs } from '../../platform/common/types';
+import { inject, injectable, named } from 'inversify';
+import { Memento } from 'vscode';
+import { IApplicationShell } from '../../platform/common/application/types';
+import { GLOBAL_MEMENTO, IConfigurationService, IHttpClient, IMemento } from '../../platform/common/types';
 import { IKernel } from '../types';
-import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider.web';
+import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider';
 import { RemoteWidgetScriptSourceProvider } from './remoteWidgetScriptSourceProvider';
-import { ILocalResourceUriConverter, IWidgetScriptSourceProvider, IWidgetScriptSourceProviderFactory } from './types';
+import {
+    IIPyWidgetScriptManagerFactory,
+    ILocalResourceUriConverter,
+    IWidgetScriptSourceProvider,
+    IWidgetScriptSourceProviderFactory
+} from './types';
 
 @injectable()
 export class ScriptSourceProviderFactory implements IWidgetScriptSourceProviderFactory {
-    private get configuredScriptSources(): readonly WidgetCDNs[] {
-        const settings = this.configurationSettings.getSettings(undefined);
-        return settings.widgetScriptSources;
-    }
-    constructor(@inject(IConfigurationService) private readonly configurationSettings: IConfigurationService) {}
+    constructor(
+        @inject(IConfigurationService) private readonly configurationSettings: IConfigurationService,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
+        @inject(IIPyWidgetScriptManagerFactory)
+        private readonly widgetScriptManagerFactory: IIPyWidgetScriptManagerFactory
+    ) {}
 
     public getProviders(kernel: IKernel, _uriConverter: ILocalResourceUriConverter, httpClient: IHttpClient) {
         const scriptProviders: IWidgetScriptSourceProvider[] = [];
 
-        // If we're allowed to use CDN providers, then use them, and use in order of preference.
-        if (this.configuredScriptSources.length > 0) {
-            scriptProviders.push(new CDNWidgetScriptSourceProvider(this.configurationSettings, httpClient));
-        }
+        // Give preference to CDN.
+        scriptProviders.push(
+            new CDNWidgetScriptSourceProvider(this.appShell, this.globalMemento, this.configurationSettings, httpClient)
+        );
 
         // Only remote is supported at the moment
         switch (kernel.kernelConnectionMetadata.kind) {
             case 'connectToLiveRemoteKernel':
             case 'startUsingRemoteKernelSpec':
-                scriptProviders.push(new RemoteWidgetScriptSourceProvider(kernel.kernelConnectionMetadata.baseUrl));
+                scriptProviders.push(new RemoteWidgetScriptSourceProvider(kernel, this.widgetScriptManagerFactory));
                 break;
         }
 
