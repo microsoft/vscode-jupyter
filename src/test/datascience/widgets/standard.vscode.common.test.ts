@@ -33,7 +33,7 @@ import { WidgetRenderingTimeoutForTests } from './constants';
 import { getTextOutputValue } from '../../../kernels/execution/helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('IPyWisdget Tests', function () {
+suite.only('IPyWisdget Tests', function () {
     const templateRootPath: Uri =
         workspace.workspaceFolders && workspace.workspaceFolders.length > 0
             ? urlPath.joinPath(workspace.workspaceFolders[0].uri, 'widgets', 'notebooks')
@@ -217,7 +217,7 @@ suite('IPyWisdget Tests', function () {
         await assertOutputContainsHtml(cell1, comms, ['Button clicked']);
         await assertOutputContainsHtml(cell2, comms, ['Button clicked']);
     });
-    test.skip('Button Widget with custom comm message', async () => {
+    test('Button Widget with custom comm message', async () => {
         const comms = await initializeNotebook({ templateFile: 'button_widget_comm_msg.ipynb' });
         const [cell0, cell1] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
 
@@ -229,7 +229,7 @@ suite('IPyWisdget Tests', function () {
         await click(comms, cell0, 'button');
         await waitForTextOutput(cell0, 'Button clicked.', 1, false);
     });
-    test.skip('Button Widget with custom comm message rendering a matplotlib widget', async () => {
+    test('Button Widget with custom comm message rendering a matplotlib widget', async () => {
         const comms = await initializeNotebook({ templateFile: 'button_widget_comm_msg_matplotlib.ipynb' });
         const [cell0, cell1] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
 
@@ -276,28 +276,28 @@ suite('IPyWisdget Tests', function () {
         await comms.setValue(cell2, '.widget-text input', '5255');
         await assertOutputContainsHtml(cell3, comms, ['>5255<', '>5378.0']);
     });
-    test.skip('Render ipyvolume (slider, color picker, figure)', async function () {
+    test('Render ipyvolume (slider, color picker, figure)', async function () {
         const comms = await initializeNotebook({ templateFile: 'ipyvolume_widgets.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
 
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['<input type="color"', '>Slider1<', '>Slider2<', '<canvas']);
     });
-    test.skip('Render pythreejs', async function () {
+    test('Render pythreejs', async function () {
         const comms = await initializeNotebook({ templateFile: 'pythreejs_widgets.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
 
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['<canvas']);
     });
-    test.skip('Render pythreejs, 2', async function () {
+    test('Render pythreejs, 2', async function () {
         const comms = await initializeNotebook({ templateFile: 'pythreejs_widgets2.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
 
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['<canvas']);
     });
-    test.skip('Render matplotlib, interactive inline', async function () {
+    test('Render matplotlib, interactive inline', async function () {
         const comms = await initializeNotebook({ templateFile: 'matplotlib_widgets_interactive.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
 
@@ -318,14 +318,14 @@ suite('IPyWisdget Tests', function () {
             () => `Timeout waiting for matplotlib inline image, got ${mimTypes()}`
         );
     });
-    test.skip('Render matplotlib, widget', async function () {
+    test('Render matplotlib, widget', async function () {
         const comms = await initializeNotebook({ templateFile: 'matplotlib_widgets_widget.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(3);
 
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['>Figure 1<', '<canvas', 'Download plot']);
     });
-    test.skip('Render matplotlib, widget in multiple cells', async function () {
+    test('Render matplotlib, widget in multiple cells', async function () {
         const comms = await initializeNotebook({ templateFile: 'matplotlib_multiple_cells_widgets.ipynb' });
         const [, cell1, cell2, cell3, cell4] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
 
@@ -336,7 +336,7 @@ suite('IPyWisdget Tests', function () {
         await assertOutputContainsHtml(cell3, comms, ['>Figure 1<', '<canvas', 'Download plot']);
         await assertOutputContainsHtml(cell4, comms, ['>Figure 2<', '<canvas', 'Download plot']);
     });
-    test.skip('Widget renders after executing a notebook which was saved after previous execution', async () => {
+    test('Widget renders after executing a notebook which was saved after previous execution', async () => {
         // https://github.com/microsoft/vscode-jupyter/issues/8748
         let comms = await initializeNotebook({ templateFile: 'standard_widgets.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
@@ -357,7 +357,7 @@ suite('IPyWisdget Tests', function () {
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
     });
-    test.skip('Widget renders after restarting kernel', async () => {
+    test('Widget renders after restarting kernel', async () => {
         const comms = await initializeNotebook({ templateFile: 'standard_widgets.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         await executeCellAndWaitForOutput(cell, comms);
@@ -377,7 +377,7 @@ suite('IPyWisdget Tests', function () {
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
     });
-    test.skip('Widget renders after interrupting kernel', async () => {
+    test('Widget renders after interrupting kernel', async () => {
         // https://github.com/microsoft/vscode-jupyter/issues/8749
         const comms = await initializeNotebook({ templateFile: 'standard_widgets.ipynb' });
         const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
