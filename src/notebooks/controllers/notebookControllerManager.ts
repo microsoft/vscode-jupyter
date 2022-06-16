@@ -77,6 +77,7 @@ import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
 import { ILocalResourceUriConverter } from '../../kernels/ipywidgets-message-coordination/types';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { createDeferred } from '../../platform/common/utils/async';
+import { ProgressReporter } from '../../platform/progress/progressReporter';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -159,7 +160,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(IsWebExtension) private readonly isWeb: boolean,
         @inject(ServerConnectionType) private readonly serverConnectionType: ServerConnectionType,
         @inject(ILocalResourceUriConverter) private readonly resourceConverter: ILocalResourceUriConverter,
-        @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider
+        @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
+        @inject(ProgressReporter) private readonly progressReporter: ProgressReporter
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -343,7 +345,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             if ([...this.registeredControllers.values()].some((item) => isPythonKernelConnection(item.connection))) {
                 this.removeNoPythonControllers();
             } else {
-                this.registerNoPythonControllers();
+                // IANHU
+                //this.registerNoPythonControllers();
             }
         }
 
@@ -397,39 +400,46 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
 
     private async installPythonExtensionViaKernelPicker(): Promise<void> {
         if (!this.extensionChecker.isPythonExtensionInstalled) {
-            const extensionHooked = createDeferred<void>();
-
-            // Allow forward movement when the extension is installed, active, and hooked
-            this.pythonApi.onPythonExtensionHooked(
-                () => {
-                    extensionHooked.resolve();
-                },
-                this,
-                this.disposables
+            const reporter = this.progressReporter.createProgressIndicator(
+                'Installing Python Extension And Locating Kernels.'
             );
+            try {
+                const extensionHooked = createDeferred<void>();
 
-            // IANHU: Progress bar here
-            await this.commandManager.executeCommand('workbench.extensions.installExtension', PythonExtension);
-            await extensionHooked.promise;
+                // Allow forward movement when the extension is installed, active, and hooked
+                this.pythonApi.onPythonExtensionHooked(
+                    () => {
+                        extensionHooked.resolve();
+                    },
+                    this,
+                    this.disposables
+                );
 
-            // const pyExt = this.extensions.getExtension(PythonExtension);
-            // traceInfo('log here');
+                // IANHU: Progress bar here
+                await this.commandManager.executeCommand('workbench.extensions.installExtension', PythonExtension);
+                await extensionHooked.promise;
 
-            // IANHU: This plus the install above should probably be installed into the python API or
-            // the python extensionChecker?
-            // await this.pythonApi.getApi();
+                // const pyExt = this.extensions.getExtension(PythonExtension);
+                // traceInfo('log here');
 
-            // Wait until the python extension is installed and hooked
-            // IANHU: Error handling for the install?
+                // IANHU: This plus the install above should probably be installed into the python API or
+                // the python extensionChecker?
+                // await this.pythonApi.getApi();
 
-            if (this.extensionChecker.isPythonExtensionInstalled) {
-                traceInfo('Installed');
-                await this.loadNotebookControllers(true);
-            } else {
-                traceInfo('Not Installed');
+                // Wait until the python extension is installed and hooked
+                // IANHU: Error handling for the install?
+
+                if (this.extensionChecker.isPythonExtensionInstalled) {
+                    traceInfo('Installed');
+                    await this.loadNotebookControllers(true);
+                } else {
+                    traceInfo('Not Installed');
+                }
+
+                traceInfo('Done');
+            } finally {
+                reporter.dispose();
             }
-
-            traceInfo('Done');
         }
         // sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
         // const selection = await this.appShell.showInformationMessage(
