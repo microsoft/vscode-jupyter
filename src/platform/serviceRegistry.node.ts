@@ -10,12 +10,8 @@ import { registerTypes as registerActivationTypes } from './activation/serviceRe
 import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
 import { DataScienceStartupTime } from './common/constants';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from './activation/types';
-import { ExtensionRecommendationService } from './common/extensionRecommendation.node';
-import { GlobalActivation } from './common/globalActivation';
 import { PreReleaseChecker } from './common/prereleaseChecker.node';
 import { IConfigurationService, IDataScienceCommandListener, IExtensionContext } from './common/types';
-import { DataScienceErrorHandler } from './errors/errorHandler';
-import { IDataScienceErrorHandler } from './errors/types';
 import { ExportBase } from './export/exportBase.node';
 import { ExportDialog } from './export/exportDialog';
 import { ExportFileOpener } from './export/exportFileOpener';
@@ -59,9 +55,7 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
 
     // Root platform types
     serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
-    serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
 
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
     serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
     serviceManager.addSingleton<ProgressReporter>(ProgressReporter, ProgressReporter);
     serviceManager.addSingleton<IFileConverter>(IFileConverter, FileConverter);
@@ -77,10 +71,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<ExportUtilBase>(ExportUtilBase, ExportUtilBase);
     serviceManager.addSingleton<ExportUtil>(ExportUtil, ExportUtil);
     serviceManager.addSingleton<IExportDialog>(IExportDialog, ExportDialog);
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        ExtensionRecommendationService
-    );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         KernelProgressReporter

@@ -23,9 +23,6 @@ import { PreferredKernelExactMatchReason } from '../notebooks/controllers/notebo
 import { SelectJupyterUriCommandSource } from '../kernels/jupyter/serverSelector';
 import { TerminalShellType } from '../platform/terminals/types';
 
-export const IImportTracker = Symbol('IImportTracker');
-export interface IImportTracker {}
-
 export type ResourceSpecificTelemetryProperties = Partial<{
     resourceType: 'notebook' | 'interactive';
     /**

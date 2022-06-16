@@ -7,7 +7,7 @@ import { GLOBAL_MEMENTO, IDisposableRegistry, IExtensions, IMemento } from '../.
 import { swallowExceptions } from '../../platform/common/utils/decorators';
 import * as localize from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
-import { InvalidRemoteJupyterServerUriHandleError } from '../../platform/errors/invalidRemoteJupyterServerUriHandleError';
+import { InvalidRemoteJupyterServerUriHandleError } from '../errors/invalidRemoteJupyterServerUriHandleError';
 import { JupyterUriProviderWrapper } from './jupyterUriProviderWrapper';
 import {
     IJupyterServerUri,

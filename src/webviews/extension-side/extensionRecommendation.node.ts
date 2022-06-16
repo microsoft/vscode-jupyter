@@ -3,14 +3,14 @@
 
 import { inject, injectable, named } from 'inversify';
 import { Memento, NotebookDocument } from 'vscode';
-import { IExtensionSyncActivationService } from '../activation/types';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../common/application/types';
-import { disposeAllDisposables } from '../common/helpers';
-import { GLOBAL_MEMENTO, IDisposable, IDisposableRegistry, IExtensions, IMemento } from '../common/types';
-import { Common, DataScience } from './utils/localize';
-import { noop } from './utils/misc';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
+import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import { disposeAllDisposables } from '../../platform/common/helpers';
+import { GLOBAL_MEMENTO, IDisposable, IDisposableRegistry, IExtensions, IMemento } from '../../platform/common/types';
+import { Common, DataScience } from '../../platform/common/utils/localize';
+import { noop } from '../../platform/common/utils/misc';
 import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from './constants';
+import { Telemetry } from '../../platform/common/constants';
 import {
     getKernelConnectionLanguage,
     getLanguageInNotebookMetadata,
@@ -18,7 +18,7 @@ import {
 } from '../../kernels/helpers';
 import { INotebookControllerManager } from '../../notebooks/types';
 import { IVSCodeNotebookController } from '../../notebooks/controllers/types';
-import { getNotebookMetadata, isJupyterNotebook } from './utils';
+import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
 
 const mementoKeyToNeverPromptExtensionAgain = 'JVSC_NEVER_PROMPT_EXTENSIONS_LIST';
 const knownExtensionsToRecommend = new Map<string, { displayName: string; extensionLink: string }>([

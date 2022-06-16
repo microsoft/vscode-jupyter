@@ -73,7 +73,7 @@ import {
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../../kernels/types';
-import { KernelDeadError } from '../../platform/errors/kernelDeadError';
+import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import {
     getNotebookMetadata,

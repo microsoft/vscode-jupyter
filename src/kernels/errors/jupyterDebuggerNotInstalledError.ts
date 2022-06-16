@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { DataScience } from '../common/utils/localize';
-import { KernelConnectionMetadata } from '../../kernels/types';
-import { BaseKernelError } from './types';
+import { DataScience } from '../../platform/common/utils/localize';
+import { KernelConnectionMetadata } from '../types';
+import { BaseKernelError } from '../../platform/errors/types';
 
 export class JupyterDebuggerNotInstalledError extends BaseKernelError {
     constructor(debuggerPkg: string, message: string | undefined, kernelConnectionMetadata: KernelConnectionMetadata) {

@@ -36,14 +36,34 @@ import { PlotViewerProvider } from './plotting/plotViewerProvider.node';
 import { DataViewerFactory } from './dataviewer/dataViewerFactory';
 import { NotebookWatcher } from './variablesView/notebookWatcher';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from './renderer';
+import { ExtensionRecommendationService } from './extensionRecommendation.node';
+import { ActiveEditorContextService } from './activeEditorContext';
+import { AmlComputeContext } from './amlContext.node';
+import { IImportTracker, ImportTracker } from './importTracker.node';
+import { GlobalActivation } from './globalActivation';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSyncActivationService,
         RendererCommunication
     );
-
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        ExtensionRecommendationService
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        ActiveEditorContextService
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        AmlComputeContext
+    );
+    serviceManager.addSingleton<AmlComputeContext>(AmlComputeContext, AmlComputeContext);
+    serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ImportTracker);
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
     serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
     serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);

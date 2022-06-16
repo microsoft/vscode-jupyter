@@ -3050,7 +3050,7 @@ No description provided
 
 ## Locations Used
 
-[src/platform/common/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/extensionRecommendation.node.ts)
+[src/webviews/extension-side/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/extensionRecommendation.node.ts)
 ```typescript
             `[${extensionInfo.displayName}](${extensionInfo.extensionLink})`,
             language
@@ -3062,7 +3062,7 @@ No description provided
 ```
 
 
-[src/platform/common/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/extensionRecommendation.node.ts)
+[src/webviews/extension-side/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/extensionRecommendation.node.ts)
 ```typescript
         );
         switch (selection) {
@@ -3074,7 +3074,7 @@ No description provided
 ```
 
 
-[src/platform/common/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/extensionRecommendation.node.ts)
+[src/webviews/extension-side/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/extensionRecommendation.node.ts)
 ```typescript
                 break;
             }
@@ -3086,7 +3086,7 @@ No description provided
 ```
 
 
-[src/platform/common/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/extensionRecommendation.node.ts)
+[src/webviews/extension-side/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/extensionRecommendation.node.ts)
 ```typescript
                 break;
             }
@@ -3098,7 +3098,7 @@ No description provided
 ```
 
 
-[src/platform/common/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/extensionRecommendation.node.ts)
+[src/webviews/extension-side/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/extensionRecommendation.node.ts)
 ```typescript
                 break;
             }
@@ -4152,7 +4152,7 @@ No properties for event
 ```
 
 
-[src/platform/errors/errorHandler.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/errors/errorHandler.ts)
+[src/kernels/errors/kernelErrorHandler.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/errors/kernelErrorHandler.ts)
 ```typescript
                             )
                             .catch(noop);
@@ -4216,7 +4216,7 @@ No properties for event
 ```
 
 
-[src/platform/errors/errorHandler.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/errors/errorHandler.ts)
+[src/kernels/errors/kernelErrorHandler.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/errors/kernelErrorHandler.ts)
 ```typescript
                 .showErrorMessage(DataScience.jupyterSelfCertFail().format(err.message), enableOption, closeOption)
                 .then((value) => {
@@ -5831,7 +5831,7 @@ No properties for event
 
 ## Locations Used
 
-[src/platform/errors/jupyterInvalidKernelError.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/errors/jupyterInvalidKernelError.ts)
+[src/kernels/errors/jupyterInvalidKernelError.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/errors/jupyterInvalidKernelError.ts)
 ```typescript
             DataScience.kernelInvalid().format(getDisplayNameOrNameOfKernelConnection(kernelConnectionMetadata)),
             kernelConnectionMetadata
@@ -6326,7 +6326,7 @@ No properties for event
 
 ## Locations Used
 
-[src/platform/errors/jupyterWaitForIdleError.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/errors/jupyterWaitForIdleError.ts)
+[src/kernels/errors/jupyterWaitForIdleError.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/errors/jupyterWaitForIdleError.ts)
 ```typescript
 export class JupyterWaitForIdleError extends BaseKernelError {
     constructor(kernelConnectionMetadata: KernelConnectionMetadata) {
@@ -8185,7 +8185,7 @@ No properties for event
 
 ## Locations Used
 
-[src/platform/common/globalActivation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/globalActivation.ts)
+[src/webviews/extension-side/globalActivation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/globalActivation.ts)
 ```typescript
                     resultSettings[k] = currentValue;
                 }
@@ -8990,7 +8990,7 @@ No properties for event
 
 ## Locations Used
 
-[src/platform/common/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/importTracker.node.ts)
+[src/webviews/extension-side/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/importTracker.node.ts)
 ```typescript
         // Hash the package name so that we will never accidentally see a
         // user's private package name.
@@ -9030,7 +9030,7 @@ No properties for event
 
 ## Locations Used
 
-[src/platform/common/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/importTracker.node.ts)
+[src/webviews/extension-side/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/importTracker.node.ts)
 ```typescript
         }
     }
@@ -9042,7 +9042,7 @@ No properties for event
 ```
 
 
-[src/platform/common/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/importTracker.node.ts)
+[src/webviews/extension-side/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/importTracker.node.ts)
 ```typescript
         this.lookForImports(lines);
     }
@@ -9054,7 +9054,7 @@ No properties for event
 ```
 
 
-[src/platform/common/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/importTracker.node.ts)
+[src/webviews/extension-side/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/importTracker.node.ts)
 ```typescript
         this.lookForImports(result);
     }

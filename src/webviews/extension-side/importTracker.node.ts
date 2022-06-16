@@ -4,19 +4,19 @@
 
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
-import * as path from '../vscode-path/path';
+import * as path from '../../platform/vscode-path/path';
 import { NotebookCellExecutionStateChangeEvent, NotebookCellKind, NotebookDocument, TextDocument } from 'vscode';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { IExtensionSingleActivationService } from '../activation/types';
-import { IDocumentManager, IVSCodeNotebook } from './application/types';
-import { isCI, isTestExecution, PYTHON_LANGUAGE } from './constants';
-import './extensions';
-import { disposeAllDisposables } from './helpers';
-import { IDisposable, IDisposableRegistry } from './types';
-import { noop } from './utils/misc';
+import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import { isCI, isTestExecution, PYTHON_LANGUAGE } from '../../platform/common/constants';
+import '../../platform/common/extensions';
+import { disposeAllDisposables } from '../../platform/common/helpers';
+import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
+import { noop } from '../../platform/common/utils/misc';
 import { EventName } from '../../telemetry/constants';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
-import { getAssociatedJupyterNotebook, isJupyterNotebook, splitMultilineString } from './utils';
+import { getAssociatedJupyterNotebook, isJupyterNotebook, splitMultilineString } from '../../platform/common/utils';
 
 /*
 Python has a fairly rich import statement. Originally the matching regexp was kept simple for
@@ -46,6 +46,9 @@ const MAX_DOCUMENT_LINES = 1000;
 // Capture isTestExecution on module load so that a test can turn it off and still
 // have this value set.
 const testExecution = isTestExecution();
+
+export const IImportTracker = Symbol('IImportTracker');
+export interface IImportTracker {}
 
 @injectable()
 export class ImportTracker implements IExtensionSingleActivationService, IDisposable {

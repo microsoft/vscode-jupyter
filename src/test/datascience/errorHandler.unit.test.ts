@@ -18,11 +18,11 @@ import {
 } from '../../platform/../kernels/types';
 import { PythonEnvironment, EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { JupyterInterpreterService } from '../../kernels/jupyter/interpreter/jupyterInterpreterService.node';
-import { DataScienceErrorHandler } from '../../platform/errors/errorHandler';
+import { DataScienceErrorHandler } from '../../kernels/errors/kernelErrorHandler';
 import { JupyterConnectError } from '../../platform/errors/jupyterConnectError';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
-import { KernelDiedError } from '../../platform/errors/kernelDiedError';
+import { KernelDiedError } from '../../kernels/errors/kernelDiedError';
 import {
     IJupyterInterpreterDependencyManager,
     IJupyterServerUriStorage,
@@ -33,7 +33,7 @@ import { getOSType, OSType } from '../../platform/common/utils/platform';
 import { RemoteJupyterServerConnectionError } from '../../platform/errors/remoteJupyterServerConnectionError';
 import { computeServerId, generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 import { Commands } from '../../platform/common/constants';
-import { RemoteJupyterServerUriProviderError } from '../../platform/errors/remoteJupyterServerUriProviderError';
+import { RemoteJupyterServerUriProviderError } from '../../kernels/errors/remoteJupyterServerUriProviderError';
 
 suite('DataScience Error Handler Unit Tests', () => {
     let applicationShell: IApplicationShell;

@@ -10,7 +10,7 @@ import { traceInfo } from '../../../platform/logging';
 import { IDisposableRegistry, IConfigurationService, Resource } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { JupyterSelfCertsError } from '../../../platform/errors/jupyterSelfCertsError';
-import { JupyterWaitForIdleError } from '../../../platform/errors/jupyterWaitForIdleError';
+import { JupyterWaitForIdleError } from '../../errors/jupyterWaitForIdleError';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, captureTelemetry, Telemetry } from '../../../telemetry';

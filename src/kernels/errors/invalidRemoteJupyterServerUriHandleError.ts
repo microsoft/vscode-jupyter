@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { computeServerId, generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
-import { BaseError } from './types';
+import { computeServerId, generateUriFromRemoteProvider } from '../jupyter/jupyterUtils';
+import { BaseError } from '../../platform/errors/types';
 
 export class InvalidRemoteJupyterServerUriHandleError extends BaseError {
     public readonly serverId: string;
