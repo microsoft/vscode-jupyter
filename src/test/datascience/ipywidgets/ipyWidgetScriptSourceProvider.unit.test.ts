@@ -20,10 +20,7 @@ import {
 import { IPyWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/ipyWidgetScriptSourceProvider';
 import { LocalWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/localWidgetScriptSourceProvider.node';
 import { RemoteWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/remoteWidgetScriptSourceProvider';
-import {
-    ILocalResourceUriConverter,
-    IWidgetScriptSourceProviderFactory
-} from '../../../kernels/ipywidgets/types';
+import { ILocalResourceUriConverter, IWidgetScriptSourceProviderFactory } from '../../../kernels/ipywidgets/types';
 import { ScriptSourceProviderFactory } from '../../../kernels/ipywidgets/scriptSourceProviderFactory.node';
 import { CDNWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/cdnWidgetScriptSourceProvider';
 import { IPyWidgetScriptManagerFactory } from '../../../kernels/ipywidgets/ipyWidgetScriptManagerFactory.node';
