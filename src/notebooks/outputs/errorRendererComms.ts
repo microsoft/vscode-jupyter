@@ -5,6 +5,7 @@ import { inject, injectable } from 'inversify';
 import {
     commands,
     NotebookCell,
+    NotebookEditor,
     NotebookRange,
     notebooks,
     Position,
@@ -38,33 +39,36 @@ export class ErrorRendererCommunicationHandler implements IExtensionSyncActivati
 
     activate(): void {
         const messageChannel = notebooks.createRendererMessaging('jupyter-error-renderer');
-        this.disposables.push(
-            messageChannel.onDidReceiveMessage(async (e) => {
-                const message = e.message;
-                if (message.message === InteractiveWindowMessages.OpenLink) {
-                    const href = message.payload;
-                    if (href.startsWith('file')) {
-                        await this.openFile(href);
-                    } else if (href.startsWith('vscode-notebook-cell')) {
-                        await this.openCell(href);
-                    } else if (href.startsWith('https://command:') || href.startsWith('command:')) {
-                        const temp: string = href.startsWith('https://command:')
-                            ? href.split(':')[2]
-                            : href.split(':')[1];
-                        const params: string[] = temp.includes('/?') ? temp.split('/?')[1].split(',') : [];
-                        let command = temp.split('/?')[0];
-                        if (command.endsWith('/')) {
-                            command = command.substring(0, command.length - 1);
-                        }
-                        if (linkCommandAllowList.includes(command)) {
-                            await commands.executeCommand(command, params);
-                        }
-                    } else {
-                        this.applicationShell.openUrl(href);
-                    }
+        messageChannel.onDidReceiveMessage(this.onDidReceiveMessage, this, this.disposables);
+    }
+
+    // Public for testing
+    public async onDidReceiveMessage(e: {
+        readonly editor: NotebookEditor;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        readonly message: any;
+    }) {
+        const message = e.message;
+        if (message.message === InteractiveWindowMessages.OpenLink) {
+            const href = message.payload;
+            if (href.startsWith('file')) {
+                await this.openFile(href);
+            } else if (href.startsWith('vscode-notebook-cell')) {
+                await this.openCell(href);
+            } else if (href.startsWith('https://command:') || href.startsWith('command:')) {
+                const temp: string = href.startsWith('https://command:') ? href.split(':')[2] : href.split(':')[1];
+                const params: string[] = temp.includes('/?') ? temp.split('/?')[1].split(',') : [];
+                let command = temp.split('/?')[0];
+                if (command.endsWith('/')) {
+                    command = command.substring(0, command.length - 1);
                 }
-            })
-        );
+                if (linkCommandAllowList.includes(command)) {
+                    await commands.executeCommand(command, params);
+                }
+            } else {
+                this.applicationShell.openUrl(href);
+            }
+        }
     }
 
     private async openFile(fileUri: string) {
