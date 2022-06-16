@@ -34,7 +34,16 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this, no-only-tests/no-only-tests */
 [true, false].forEach((useCDN) => {
-    suite.only(`IPyWisdget Tests '${useCDN ? 'with CDN' : 'without CDN'}'`, function () {
+    /**
+     * Testing the following permutations:
+     * - VSCode Web + Remote Jupyter + CDN
+     * - VSCode Web + Remote Jupyter + No CDN
+     * - Desktop + Remote Jupyter + CDN
+     * - Desktop + Remote Jupyter + No CDN
+     * - Desktop + Local Kernel + CDN
+     * - Desktop + Local Kernel + No CDN
+     */
+    suite.only(`IPyWidget Tests '${useCDN ? 'with CDN' : 'without CDN'}'`, function () {
         const templateRootPath: Uri =
             workspace.workspaceFolders && workspace.workspaceFolders.length > 0
                 ? urlPath.joinPath(workspace.workspaceFolders[0].uri, 'widgets', 'notebooks')
@@ -333,16 +342,15 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
         });
         test('Render matplotlib, widget in multiple cells', async function () {
             const comms = await initializeNotebook({ templateFile: 'matplotlib_multiple_cells_widgets.ipynb' });
-            const [, cell1, cell2, cell3, cell4] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+            const [, cell1, cell2, cell3] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
 
             await executeCellAndDontWaitForOutput(cell1);
-            await executeCellAndDontWaitForOutput(cell2);
+            await executeCellAndWaitForOutput(cell2, comms);
             await executeCellAndWaitForOutput(cell3, comms);
-            await executeCellAndWaitForOutput(cell4, comms);
-            await assertOutputContainsHtml(cell3, comms, ['>Figure 1<', '<canvas', 'Download plot']);
-            await assertOutputContainsHtml(cell4, comms, ['>Figure 2<', '<canvas', 'Download plot']);
+            await assertOutputContainsHtml(cell2, comms, ['>Figure 1<', '<canvas', 'Download plot']);
+            await assertOutputContainsHtml(cell3, comms, ['>Figure 2<', '<canvas', 'Download plot']);
         });
-        test('Widget renders after executing a notebook which was saved after previous execution', async () => {
+        test.only('Widget renders after executing a notebook which was saved after previous execution', async () => {
             // https://github.com/microsoft/vscode-jupyter/issues/8748
             let comms = await initializeNotebook({ templateFile: 'standard_widgets.ipynb' });
             const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
@@ -363,7 +371,7 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
             await executeCellAndWaitForOutput(cell, comms);
             await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
         });
-        test('Widget renders after restarting kernel', async () => {
+        test.only('Widget renders after restarting kernel', async () => {
             const comms = await initializeNotebook({ templateFile: 'standard_widgets.ipynb' });
             const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
             await executeCellAndWaitForOutput(cell, comms);
@@ -383,7 +391,7 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
             await executeCellAndWaitForOutput(cell, comms);
             await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
         });
-        test('Widget renders after interrupting kernel', async () => {
+        test.only('Widget renders after interrupting kernel', async () => {
             // https://github.com/microsoft/vscode-jupyter/issues/8749
             const comms = await initializeNotebook({ templateFile: 'standard_widgets.ipynb' });
             const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
