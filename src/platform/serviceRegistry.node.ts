@@ -10,7 +10,6 @@ import { registerTypes as registerActivationTypes } from './activation/serviceRe
 import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
 import { DataScienceStartupTime } from './common/constants';
 import { LogReplayService } from '../intellisense/logReplayService.node';
-import { Activation } from '../kernels/activation.node';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from './activation/types';
 import { ExtensionRecommendationService } from './common/extensionRecommendation.node';
 import { GlobalActivation } from './common/globalActivation';
@@ -66,7 +65,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
 
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Activation);
     if (isDevMode) {
         serviceManager.addSingleton<IExtensionSingleActivationService>(
             IExtensionSingleActivationService,

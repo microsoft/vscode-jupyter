@@ -41,8 +41,11 @@ import { KernelFinder } from './kernelFinder.node';
 import { ServerConnectionType } from './jupyter/launcher/serverConnectionType';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFactory';
+import { Activation } from './activation.node';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Activation);
+
     serviceManager.addSingleton<IRawNotebookSupportedService>(
         IRawNotebookSupportedService,
         RawNotebookSupportedService
