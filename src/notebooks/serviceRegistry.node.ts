@@ -12,7 +12,7 @@ import { NotebookControllerManager } from './controllers/notebookControllerManag
 import { RemoteSwitcher } from './controllers/remoteSwitcher';
 import { NotebookCommandListener } from './notebookCommandListener';
 import { NotebookEditorProvider } from './notebookEditorProvider';
-import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms.node';
+import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms';
 import { INotebookCompletionProvider, INotebookControllerManager, INotebookEditorProvider } from './types';
 import { NotebookUsageTracker } from './notebookUsageTracker';
 import { IDataScienceCommandListener } from '../platform/common/types';

@@ -24,6 +24,7 @@ import { NotebookCommandListener } from './notebookCommandListener';
 import { InterpreterPackageTracker } from './telemetry/interpreterPackageTracker';
 import { NotebookCellLanguageService } from './languages/cellLanguageService';
 import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellLanguageService';
+import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
@@ -69,5 +70,9 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         EmptyNotebookCellLanguageService
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        ErrorRendererCommunicationHandler
     );
 }
