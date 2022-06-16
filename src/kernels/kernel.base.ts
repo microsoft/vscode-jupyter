@@ -103,6 +103,9 @@ export abstract class BaseKernel implements IKernel {
     get kernelSocket(): Observable<KernelSocketInformation | undefined> {
         return this._kernelSocket.asObservable();
     }
+    get executionCount(): number {
+        return this._visibleExecutionCount;
+    }
     protected _session?: IJupyterSession;
     /**
      * If the session died, then ensure the status is set to `dead`.
@@ -131,6 +134,7 @@ export abstract class BaseKernel implements IKernel {
     private startupUI = new DisplayOptions(true);
     private readonly kernelExecution: KernelExecution;
     private disposingPromise?: Promise<void>;
+    private _visibleExecutionCount = 0;
 
     constructor(
         public readonly uri: Uri,
@@ -199,6 +203,7 @@ export abstract class BaseKernel implements IKernel {
         const sessionPromise = this.startJupyterSession();
         const promise = this.kernelExecution.executeCell(sessionPromise, cell, codeOverride);
         this.trackNotebookCellPerceivedColdTime(stopWatch, sessionPromise, promise).catch(noop);
+        promise.finally(() => (this._visibleExecutionCount += 1));
         promise.then((state) => traceInfo(`Cell ${cell.index} executed with state ${state}`), noop);
         return promise;
     }
@@ -490,6 +495,7 @@ export abstract class BaseKernel implements IKernel {
             traceVerbose('Not running kernel initialization');
             return;
         }
+        this._visibleExecutionCount = 0;
         if (!this.hookedSessionForEvents.has(session)) {
             this.hookedSessionForEvents.add(session);
             session.kernelSocket.subscribe(this._kernelSocket);
