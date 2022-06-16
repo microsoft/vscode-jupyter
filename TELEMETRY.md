@@ -3050,7 +3050,7 @@ No description provided
 
 ## Locations Used
 
-[src/platform/common/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/extensionRecommendation.node.ts)
+[src/webviews/extension-side/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/extensionRecommendation.node.ts)
 ```typescript
             `[${extensionInfo.displayName}](${extensionInfo.extensionLink})`,
             language
@@ -3062,7 +3062,7 @@ No description provided
 ```
 
 
-[src/platform/common/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/extensionRecommendation.node.ts)
+[src/webviews/extension-side/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/extensionRecommendation.node.ts)
 ```typescript
         );
         switch (selection) {
@@ -3074,7 +3074,7 @@ No description provided
 ```
 
 
-[src/platform/common/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/extensionRecommendation.node.ts)
+[src/webviews/extension-side/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/extensionRecommendation.node.ts)
 ```typescript
                 break;
             }
@@ -3086,7 +3086,7 @@ No description provided
 ```
 
 
-[src/platform/common/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/extensionRecommendation.node.ts)
+[src/webviews/extension-side/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/extensionRecommendation.node.ts)
 ```typescript
                 break;
             }
@@ -3098,7 +3098,7 @@ No description provided
 ```
 
 
-[src/platform/common/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/extensionRecommendation.node.ts)
+[src/webviews/extension-side/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/extensionRecommendation.node.ts)
 ```typescript
                 break;
             }

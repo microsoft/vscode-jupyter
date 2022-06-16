@@ -26,8 +26,6 @@ import { ClipboardService } from './application/clipboard';
 import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
 import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
 import { BrowserService } from './net/browser';
-import { ActiveEditorContextService } from './activeEditorContext';
-import { IExtensionSingleActivationService } from '../activation/types';
 import { DebugService } from './application/debugService';
 import { HttpClient } from './net/httpClient';
 
@@ -47,10 +45,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
     serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
     serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        ActiveEditorContextService
-    );
 
     registerPlatformTypes(serviceManager);
 }

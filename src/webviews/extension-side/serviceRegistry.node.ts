@@ -37,6 +37,7 @@ import { DataViewerFactory } from './dataviewer/dataViewerFactory';
 import { NotebookWatcher } from './variablesView/notebookWatcher';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from './renderer';
 import { ExtensionRecommendationService } from './extensionRecommendation.node';
+import { ActiveEditorContextService } from './activeEditorContext';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
@@ -47,6 +48,10 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         ExtensionRecommendationService
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        ActiveEditorContextService
     );
 
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
