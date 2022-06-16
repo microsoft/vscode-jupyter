@@ -4,6 +4,7 @@ import { NotebookCellOutputItem, NotebookDocument } from 'vscode';
 import { traceError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IPlotViewerProvider } from '../plotting/types';
+import { getCellOutputMetadata } from './helpers';
 
 const svgMimeType = 'image/svg+xml';
 const pngMimeType = 'image/png';
@@ -44,7 +45,8 @@ function getOutputItem(
 ): NotebookCellOutputItem | undefined {
     for (const cell of notebook.getCells()) {
         for (const output of cell.outputs) {
-            if (output.id !== outputId) {
+            const metadata = getCellOutputMetadata(output);
+            if (metadata && metadata.id !== outputId) {
                 continue;
             }
             return output.items.find((item) => item.mime === mimeType);
