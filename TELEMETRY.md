@@ -4152,7 +4152,7 @@ No properties for event
 ```
 
 
-[src/platform/errors/errorHandler.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/errors/errorHandler.ts)
+[src/kernels/errors/kernelErrorHandler.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/errors/kernelErrorHandler.ts)
 ```typescript
                             )
                             .catch(noop);
@@ -4216,7 +4216,7 @@ No properties for event
 ```
 
 
-[src/platform/errors/errorHandler.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/errors/errorHandler.ts)
+[src/kernels/errors/kernelErrorHandler.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/errors/kernelErrorHandler.ts)
 ```typescript
                 .showErrorMessage(DataScience.jupyterSelfCertFail().format(err.message), enableOption, closeOption)
                 .then((value) => {

@@ -36,12 +36,17 @@ import { PlotViewerProvider } from './plotting/plotViewerProvider.node';
 import { DataViewerFactory } from './dataviewer/dataViewerFactory';
 import { NotebookWatcher } from './variablesView/notebookWatcher';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from './renderer';
+import { ExtensionRecommendationService } from './extensionRecommendation.node';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSyncActivationService,
         RendererCommunication
+    );
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        ExtensionRecommendationService
     );
 
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
