@@ -63,7 +63,7 @@ import {
 import { createDeferred } from './platform/common/utils/async';
 import { Common, OutputChannelNames } from './platform/common/utils/localize';
 import { IServiceContainer, IServiceManager } from './platform/ioc/types';
-import { sendErrorTelemetry, sendStartupTelemetry } from './platform/startupTelemetry';
+import { sendErrorTelemetry, sendStartupTelemetry } from './telemetry/startupTelemetry';
 import { noop } from './platform/common/utils/misc';
 import { PythonExtension } from './webviews/webview-side/common/constants';
 import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.node';
