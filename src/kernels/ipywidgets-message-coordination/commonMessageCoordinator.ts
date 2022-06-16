@@ -5,16 +5,10 @@
 
 import type { KernelMessage } from '@jupyterlab/services';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../platform/common/application/types';
+import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants';
 import { traceVerbose, traceError, traceInfo, traceInfoIfCI } from '../../platform/logging';
-import {
-    IDisposableRegistry,
-    IOutputChannel,
-    IConfigurationService,
-    IHttpClient,
-    IPersistentStateFactory
-} from '../../platform/common/types';
+import { IDisposableRegistry, IOutputChannel, IConfigurationService, IHttpClient } from '../../platform/common/types';
 import { Common, DataScience } from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { stripAnsi } from '../../platform/common/utils/regexp';
@@ -273,9 +267,6 @@ export class CommonMessageCoordinator {
                 this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry),
                 this.serviceContainer.get<IConfigurationService>(IConfigurationService),
                 this.serviceContainer.get<IHttpClient>(IHttpClient),
-                this.serviceContainer.get<IApplicationShell>(IApplicationShell),
-                this.serviceContainer.get<IWorkspaceService>(IWorkspaceService),
-                this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory),
                 this.serviceContainer.get<IWidgetScriptSourceProviderFactory>(IWidgetScriptSourceProviderFactory),
                 this.serviceContainer.get<ILocalResourceUriConverter>(ILocalResourceUriConverter)
             );

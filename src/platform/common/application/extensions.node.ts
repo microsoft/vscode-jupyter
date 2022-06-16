@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
-import { Event, Extension, extensions, Uri } from 'vscode';
+import { Event, Extension, extensions } from 'vscode';
 import { IExtensions } from '../types';
 import { DataScience } from '../utils/localize';
 import { IFileSystemNode } from '../platform/types.node';
@@ -59,7 +59,7 @@ export class Extensions implements IExtensions {
                 while (dirName && dirName.length < last.length) {
                     const possiblePackageJson = path.join(dirName, 'package.json');
                     if (await this.fs.localFileExists(possiblePackageJson)) {
-                        const text = await this.fs.readFile(Uri.file(possiblePackageJson));
+                        const text = await this.fs.readLocalFile(possiblePackageJson);
                         try {
                             const json = JSON.parse(text);
                             return { extensionId: `${json.publisher}.${json.name}`, displayName: json.displayName };

@@ -72,6 +72,7 @@ export enum InteractiveWindowMessages {
 export enum IPyWidgetMessages {
     IPyWidgets_logMessage = 'IPyWidgets_logMessage',
     IPyWidgets_IsReadyRequest = 'IPyWidgets_IsReadyRequest',
+    IPyWidgets_IsOnline = 'IPyWidgets_IsOnline',
     IPyWidgets_Ready = 'IPyWidgets_Ready',
     IPyWidgets_onRestartKernel = 'IPyWidgets_onRestartKernel',
     IPyWidgets_onKernelChanged = 'IPyWidgets_onKernelChanged',
@@ -84,6 +85,7 @@ export enum IPyWidgetMessages {
      * Extension sends response to the request with yes/no.
      */
     IPyWidgets_WidgetScriptSourceResponse = 'IPyWidgets_WidgetScriptSource_Response',
+    IPyWidgets_BaseUrlResponse = 'IPyWidgets_BaseUrl_Response',
     IPyWidgets_msg = 'IPyWidgets_msg',
     IPyWidgets_binary_msg = 'IPyWidgets_binary_msg',
     // Message was received by the widget kernel and added to the msgChain queue for processing
@@ -303,9 +305,14 @@ export type NotebookModelChange =
 // Map all messages to specific payloads
 export class IInteractiveWindowMapping {
     public [IPyWidgetMessages.IPyWidgets_kernelOptions]: KernelSocketOptions;
-    public [IPyWidgetMessages.IPyWidgets_WidgetScriptSourceRequest]: { moduleName: string; moduleVersion: string };
+    public [IPyWidgetMessages.IPyWidgets_WidgetScriptSourceRequest]: {
+        moduleName: string;
+        moduleVersion: string;
+        requestId: string;
+    };
     public [IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse]: WidgetScriptSource;
     public [IPyWidgetMessages.IPyWidgets_Ready]: never | undefined;
+    public [IPyWidgetMessages.IPyWidgets_IsOnline]: { isOnline: boolean };
     public [IPyWidgetMessages.IPyWidgets_logMessage]: string;
     public [IPyWidgetMessages.IPyWidgets_onRestartKernel]: never | undefined;
     public [IPyWidgetMessages.IPyWidgets_onKernelChanged]: never | undefined;
