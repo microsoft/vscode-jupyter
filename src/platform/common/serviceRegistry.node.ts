@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../activation/types';
 import { IExperimentService, IHttpClient } from '../common/types';
-import { AmlComputeContext } from './amlContext.node';
 import { IServiceManager } from '../ioc/types';
 import { ImportTracker } from './importTracker.node';
 import { IImportTracker } from '../../telemetry/types';
@@ -96,16 +95,10 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         RunInDedicatedExtensionHostCommandHandler
     );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        AmlComputeContext
-    );
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         PortAttributesProviders
     );
-    serviceManager.addSingleton<AmlComputeContext>(AmlComputeContext, AmlComputeContext);
-
     registerPlatformTypes(serviceManager);
     processRegisterTypes(serviceManager);
     variableRegisterTypes(serviceManager);

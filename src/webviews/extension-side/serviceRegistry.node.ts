@@ -38,6 +38,7 @@ import { NotebookWatcher } from './variablesView/notebookWatcher';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from './renderer';
 import { ExtensionRecommendationService } from './extensionRecommendation.node';
 import { ActiveEditorContextService } from './activeEditorContext';
+import { AmlComputeContext } from './amlContext.node';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
@@ -53,7 +54,12 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         IExtensionSingleActivationService,
         ActiveEditorContextService
     );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        AmlComputeContext
+    );
 
+    serviceManager.addSingleton<AmlComputeContext>(AmlComputeContext, AmlComputeContext);
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
     serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
     serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
