@@ -7246,18 +7246,6 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/dataviewer/dataViewerDependencyService.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewerDependencyService.node.ts)
-```typescript
-        interpreter: PythonEnvironment,
-        tokenSource: CancellationTokenSource
-    ): Promise<void> {
-        sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
-            action: 'displayed',
-            moduleName: ProductNames.get(Product.pandas)!,
-            pythonEnvType: interpreter?.envType
-```
-
-
 [src/kernels/installer/productInstaller.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/installer/productInstaller.node.ts)
 ```typescript
             action = 'failed';
@@ -7375,6 +7363,18 @@ No description provided
                 action: 'error',
                 moduleName: productNameForTelemetry,
                 resourceType,
+```
+
+
+[src/webviews/extension-side/dataviewer/dataViewerDependencyService.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewerDependencyService.node.ts)
+```typescript
+        interpreter: PythonEnvironment,
+        tokenSource: CancellationTokenSource
+    ): Promise<void> {
+        sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+            action: 'displayed',
+            moduleName: ProductNames.get(Product.pandas)!,
+            pythonEnvType: interpreter?.envType
 ```
 
 </details>

@@ -9,7 +9,6 @@ import { registerTypes as registerTerminalTypes } from './terminals/serviceRegis
 import { registerTypes as registerActivationTypes } from './activation/serviceRegistry.node';
 import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
 import { DataScienceStartupTime } from './common/constants';
-import { LogReplayService } from '../intellisense/logReplayService.node';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from './activation/types';
 import { ExtensionRecommendationService } from './common/extensionRecommendation.node';
 import { GlobalActivation } from './common/globalActivation';
@@ -40,7 +39,6 @@ import { IFileSystem } from './common/platform/types';
 import { IFileSystemNode } from './common/platform/types.node';
 import { FileSystem } from './common/platform/fileSystem.node';
 import { WorkspaceService } from './common/application/workspace.node';
-import { ExtensionSideRenderer, IExtensionSideRenderer } from '../webviews/extension-side/renderer';
 import { OutputCommandListener } from './logging/outputCommandListener';
 import { ExportUtilBase } from './export/exportUtil';
 
@@ -61,16 +59,9 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
 
     // Root platform types
     serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
-    serviceManager.addSingletonInstance<IExtensionSideRenderer>(IExtensionSideRenderer, new ExtensionSideRenderer());
     serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
 
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
-    if (isDevMode) {
-        serviceManager.addSingleton<IExtensionSingleActivationService>(
-            IExtensionSingleActivationService,
-            LogReplayService
-        );
-    }
     serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
     serviceManager.addSingleton<ProgressReporter>(ProgressReporter, ProgressReporter);
     serviceManager.addSingleton<IFileConverter>(IFileConverter, FileConverter);

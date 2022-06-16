@@ -35,6 +35,7 @@ import { DataViewerDependencyService } from './dataviewer/dataViewerDependencySe
 import { PlotViewerProvider } from './plotting/plotViewerProvider.node';
 import { DataViewerFactory } from './dataviewer/dataViewerFactory';
 import { NotebookWatcher } from './variablesView/notebookWatcher';
+import { ExtensionSideRenderer, IExtensionSideRenderer } from './renderer';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
@@ -82,4 +83,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         IExtensionSingleActivationService,
         ExportCommandRegistry
     );
+
+    serviceManager.addSingletonInstance<IExtensionSideRenderer>(IExtensionSideRenderer, new ExtensionSideRenderer());
 }

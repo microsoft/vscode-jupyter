@@ -7,11 +7,19 @@ import { IExtensionSingleActivationService, IExtensionSyncActivationService } fr
 import { IServiceManager } from '../platform/ioc/types';
 import { NotebookCellBangInstallDiagnosticsProvider } from './diagnosticsProvider';
 import { IntellisenseProvider } from './intellisenseProvider.node';
+import { LogReplayService } from './logReplayService.node';
 import { NotebookPythonPathService } from './notebookPythonPathService.node';
 import { PythonKernelCompletionProvider } from './pythonKernelCompletionProvider';
 import { PythonKernelCompletionProviderRegistration } from './pythonKernelCompletionProviderRegistration';
 
-export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
+export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
+    if (isDevMode) {
+        serviceManager.addSingleton<IExtensionSingleActivationService>(
+            IExtensionSingleActivationService,
+            LogReplayService
+        );
+    }
+
     serviceManager.addSingleton<PythonKernelCompletionProvider>(
         PythonKernelCompletionProvider,
         PythonKernelCompletionProvider
