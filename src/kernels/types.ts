@@ -123,6 +123,10 @@ export function isLocalConnection(
 }
 
 export interface IKernel extends IAsyncDisposable {
+    /**
+     * Total execution count on this kernel
+     */
+    readonly executionCount: number;
     readonly uri: Uri;
     /**
      * In the case of Notebooks, this is the same as the Notebook Uri.

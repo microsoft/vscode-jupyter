@@ -71,7 +71,10 @@
         "onCommand:jupyter.runInDedicatedExtensionHost",
         "onWalkthrough:jupyterWelcome",
         "onNotebook:jupyter-notebook",
-        "onNotebook:interactive"
+        "onNotebook:interactive",
+        "onView:jupyterViewVariables",
+        "onWebviewPanel:jupyter-variables",
+        "onWebviewPanel:jupyter"
     ],
     "main": "./out/extension.node.js",
     "browser": "./out/extension.web.bundle.js",

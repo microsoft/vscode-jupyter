@@ -76,7 +76,7 @@ export class DebuggerVariables
         }
 
         const result: IJupyterVariablesResponse = {
-            executionCount: request.executionCount,
+            executionCount: kernel ? kernel.executionCount : request.executionCount,
             pageStartIndex: 0,
             pageResponse: [],
             totalCount: 0,
