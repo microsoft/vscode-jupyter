@@ -23,8 +23,10 @@ import { NotebookWatcher } from './variablesView/notebookWatcher';
 import { DataViewerFactory } from './dataviewer/dataViewerFactory';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from './renderer';
 import { ActiveEditorContextService } from './activeEditorContext';
+import { GlobalActivation } from './globalActivation';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         ActiveEditorContextService

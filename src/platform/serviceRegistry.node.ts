@@ -10,7 +10,6 @@ import { registerTypes as registerActivationTypes } from './activation/serviceRe
 import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
 import { DataScienceStartupTime } from './common/constants';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from './activation/types';
-import { GlobalActivation } from './common/globalActivation';
 import { PreReleaseChecker } from './common/prereleaseChecker.node';
 import { IConfigurationService, IDataScienceCommandListener, IExtensionContext } from './common/types';
 import { ExportBase } from './export/exportBase.node';
@@ -57,7 +56,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     // Root platform types
     serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());
 
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
     serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
     serviceManager.addSingleton<ProgressReporter>(ProgressReporter, ProgressReporter);
     serviceManager.addSingleton<IFileConverter>(IFileConverter, FileConverter);

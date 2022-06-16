@@ -40,8 +40,10 @@ import { ExtensionRecommendationService } from './extensionRecommendation.node';
 import { ActiveEditorContextService } from './activeEditorContext';
 import { AmlComputeContext } from './amlContext.node';
 import { IImportTracker, ImportTracker } from './importTracker.node';
+import { GlobalActivation } from './globalActivation';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSyncActivationService,

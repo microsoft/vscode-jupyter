@@ -8185,7 +8185,7 @@ No properties for event
 
 ## Locations Used
 
-[src/platform/common/globalActivation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/globalActivation.ts)
+[src/webviews/extension-side/globalActivation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/globalActivation.ts)
 ```typescript
                     resultSettings[k] = currentValue;
                 }
@@ -8990,7 +8990,7 @@ No properties for event
 
 ## Locations Used
 
-[src/platform/common/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/importTracker.node.ts)
+[src/webviews/extension-side/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/importTracker.node.ts)
 ```typescript
         // Hash the package name so that we will never accidentally see a
         // user's private package name.
@@ -9030,7 +9030,7 @@ No properties for event
 
 ## Locations Used
 
-[src/platform/common/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/importTracker.node.ts)
+[src/webviews/extension-side/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/importTracker.node.ts)
 ```typescript
         }
     }
@@ -9042,7 +9042,7 @@ No properties for event
 ```
 
 
-[src/platform/common/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/importTracker.node.ts)
+[src/webviews/extension-side/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/importTracker.node.ts)
 ```typescript
         this.lookForImports(lines);
     }
@@ -9054,7 +9054,7 @@ No properties for event
 ```
 
 
-[src/platform/common/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/importTracker.node.ts)
+[src/webviews/extension-side/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/importTracker.node.ts)
 ```typescript
         this.lookForImports(result);
     }
