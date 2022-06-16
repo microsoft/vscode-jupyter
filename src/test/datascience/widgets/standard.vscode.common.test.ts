@@ -350,7 +350,7 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
             await assertOutputContainsHtml(cell2, comms, ['>Figure 1<', '<canvas', 'Download plot']);
             await assertOutputContainsHtml(cell3, comms, ['>Figure 2<', '<canvas', 'Download plot']);
         });
-        test.only('Widget renders after executing a notebook which was saved after previous execution', async () => {
+        test.skip('Widget renders after executing a notebook which was saved after previous execution', async () => {
             // https://github.com/microsoft/vscode-jupyter/issues/8748
             let comms = await initializeNotebook({ templateFile: 'standard_widgets.ipynb' });
             const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
@@ -371,7 +371,7 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
             await executeCellAndWaitForOutput(cell, comms);
             await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
         });
-        test.only('Widget renders after restarting kernel', async () => {
+        test.skip('Widget renders after restarting kernel', async () => {
             const comms = await initializeNotebook({ templateFile: 'standard_widgets.ipynb' });
             const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
             await executeCellAndWaitForOutput(cell, comms);
@@ -391,7 +391,7 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
             await executeCellAndWaitForOutput(cell, comms);
             await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
         });
-        test.only('Widget renders after interrupting kernel', async () => {
+        test.skip('Widget renders after interrupting kernel', async () => {
             // https://github.com/microsoft/vscode-jupyter/issues/8749
             const comms = await initializeNotebook({ templateFile: 'standard_widgets.ipynb' });
             const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
