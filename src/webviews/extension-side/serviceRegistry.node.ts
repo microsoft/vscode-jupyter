@@ -41,10 +41,15 @@ import { ActiveEditorContextService } from './activeEditorContext';
 import { AmlComputeContext } from './amlContext.node';
 import { IImportTracker, ImportTracker } from './importTracker.node';
 import { GlobalActivation } from './globalActivation';
+import { WorkspaceActivation } from './workspaceActivation.node';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        WorkspaceActivation
+    );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSyncActivationService,
         RendererCommunication

@@ -7,15 +7,10 @@ import { IServiceManager } from '../ioc/types';
 import { ExtensionActivationManager } from './activationManager';
 
 import { IExtensionActivationManager, IExtensionSingleActivationService } from './types';
-import { WorkspaceActivation } from './workspaceActivation.node';
 
 // eslint-disable-next-line
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
     serviceManager.addSingleton<ISurveyBanner>(ISurveyBanner, DataScienceSurveyBanner);
     serviceManager.addBinding(ISurveyBanner, IExtensionSingleActivationService);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        WorkspaceActivation
-    );
 }
