@@ -249,9 +249,6 @@ export interface IJupyterExtensionBanner {
     showBanner(type: BannerType): Promise<void>;
 }
 
-export const ISurveyBanner = Symbol('ISurveyBanner');
-export interface ISurveyBanner extends IExtensionSingleActivationService, IJupyterExtensionBanner {}
-
 export type DeprecatedSettingAndValue = {
     setting: string;
     values?: {}[];

@@ -6,7 +6,7 @@ import { IWebviewViewProvider, IWebviewPanelProvider } from '../../platform/comm
 import { IServiceManager } from '../../platform/ioc/types';
 import { WebviewViewProvider } from './webviewViews/webviewViewProvider';
 import { WebviewPanelProvider } from './webviewPanels/webviewPanelProvider';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionActivationManager, IExtensionSingleActivationService } from '../../platform/activation/types';
 import { VariableViewActivationService } from './variablesView/variableViewActivationService';
 import { INotebookWatcher, IVariableViewProvider } from './variablesView/types';
 import { VariableViewProvider } from './variablesView/variableViewProvider';
@@ -24,6 +24,7 @@ import { DataViewerFactory } from './dataviewer/dataViewerFactory';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from './renderer';
 import { ActiveEditorContextService } from './activeEditorContext';
 import { GlobalActivation } from './globalActivation';
+import { ExtensionActivationManager } from './activationManager';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
@@ -61,4 +62,7 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     );
 
     serviceManager.addSingletonInstance<IExtensionSideRenderer>(IExtensionSideRenderer, new ExtensionSideRenderer());
+
+    // Activation Manager
+    serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
 }

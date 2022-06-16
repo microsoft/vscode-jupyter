@@ -14,7 +14,6 @@ import {
 import { ConfigurationService } from './common/configuration/service.web';
 import { registerTypes as registerApiTypes } from './api/serviceRegistry.web';
 import { registerTypes as registerCommonTypes } from './common/serviceRegistry.web';
-import { registerTypes as registerActivationTypes } from './activation/serviceRegistry.web';
 import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
 import { IConfigurationService, IDataScienceCommandListener, IExtensionContext } from './common/types';
 import { IServiceManager } from './ioc/types';
@@ -60,7 +59,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
 
     registerCommonTypes(serviceManager);
     registerApiTypes(serviceManager);
-    registerActivationTypes(serviceManager);
     registerDevToolTypes(context, serviceManager, isDevMode);
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(

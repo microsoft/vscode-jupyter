@@ -5,10 +5,14 @@
 
 import { inject, injectable } from 'inversify';
 import { NotebookCellExecutionState, NotebookCellExecutionStateChangeEvent, UIKind } from 'vscode';
-import { IExtensionSingleActivationService } from '../activation/types';
-import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from './application/types';
-import './extensions';
-import { traceError } from '../logging';
+import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import {
+    IApplicationEnvironment,
+    IApplicationShell,
+    IVSCodeNotebook
+} from '../../../platform/common/application/types';
+import '../../../platform/common/extensions';
+import { traceError } from '../../../platform/logging';
 import {
     BannerType,
     IBrowserService,
@@ -17,11 +21,14 @@ import {
     IPersistentState,
     IPersistentStateFactory,
     IsCodeSpace
-} from './types';
-import * as localize from './utils/localize';
-import { MillisecondsInADay } from '../constants.node';
-import { isJupyterNotebook } from './utils';
-import { noop } from './utils/misc';
+} from '../../../platform/common/types';
+import * as localize from '../../../platform/common/utils/localize';
+import { MillisecondsInADay } from '../../../platform/constants.node';
+import { isJupyterNotebook } from '../../../platform/common/utils';
+import { noop } from '../../../platform/common/utils/misc';
+
+export const ISurveyBanner = Symbol('ISurveyBanner');
+export interface ISurveyBanner extends IExtensionSingleActivationService, IJupyterExtensionBanner {}
 
 export enum InsidersNotebookSurveyStateKeys {
     ShowBanner = 'ShowInsidersNotebookSurveyBanner',

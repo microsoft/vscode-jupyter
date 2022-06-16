@@ -6,7 +6,6 @@ import { IServiceManager } from '../platform/ioc/types';
 import { registerTypes as registerApiTypes } from './api/serviceRegistry.node';
 import { registerTypes as registerCommonTypes } from './common/serviceRegistry.node';
 import { registerTypes as registerTerminalTypes } from './terminals/serviceRegistry.node';
-import { registerTypes as registerActivationTypes } from './activation/serviceRegistry.node';
 import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
 import { DataScienceStartupTime } from './common/constants';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from './activation/types';
@@ -47,7 +46,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     serviceManager.addSingleton<IApplicationShell>(IApplicationShell, ApplicationShell);
     serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
 
-    registerActivationTypes(serviceManager);
     registerApiTypes(serviceManager);
     registerCommonTypes(serviceManager);
     registerTerminalTypes(serviceManager);
