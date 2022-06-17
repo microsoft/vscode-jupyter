@@ -808,6 +808,7 @@
     "DataScience.enableCDNForWidgetsSetting": "Widgets require us to download supporting files from a 3rd party website. (Error loading {0}:{1}).",
     "DataScience.enableCDNForWidgetsButton": "Enable Downloads",
     "DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork": "Unable to find widget '{0}' version '{1}' from configured widget sources {2}. Expected behavior may be affected. Click [here](https://aka.ms/PVSCIPyWidgets) for more information.",
+    "DataScience.cdnWidgetScriptNotAccessibleWarningMessage": "Unable to download widget '{0}' from 3rd party website {1}, due to network access. Expected behavior may be affected. Click [here](https://aka.ms/PVSCIPyWidgets) for more information.",
     "DataScience.unhandledMessage": {
         "message": "Unhandled kernel message from a widget: {0} : {1}",
         "comment": ["{Locked='kernel'}"]

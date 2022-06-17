@@ -13,7 +13,7 @@ import * as uuid from 'uuid/v4';
 import { isFileNotFoundError } from './errors';
 import { traceError } from '../../logging';
 
-const ENCODING = 'utf8';
+export const ENCODING = 'utf8';
 
 /**
  * File system abstraction which wraps the VS Code API.

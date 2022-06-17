@@ -14,7 +14,11 @@ export const IFileSystemNode = Symbol('IFileSystemNode');
 export interface IFileSystemNode extends IFileSystem {
     areLocalPathsSame(path1: string, path2: string): boolean;
     createLocalDirectory(path: string): Promise<void>;
-    copyLocal(source: string, destination: string): Promise<void>;
+    /**
+     * Copies a local file/directory.
+     * @param {{ overwrite: boolean }} [options] Defaults to overwriting existing files/directories.
+     */
+    copyLocal(source: string, destination: string, options?: { overwrite: boolean }): Promise<void>;
     deleteLocalFile(path: string): Promise<void>;
     readLocalData(path: string): Promise<Buffer>;
     readLocalFile(path: string): Promise<string>;

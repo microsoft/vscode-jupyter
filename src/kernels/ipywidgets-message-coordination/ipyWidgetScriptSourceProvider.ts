@@ -3,20 +3,9 @@
 
 'use strict';
 
-import { ConfigurationChangeEvent, ConfigurationTarget } from 'vscode';
-import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
 import '../../platform/common/extensions';
 import { traceError, traceInfo } from '../../platform/logging';
-import {
-    WidgetCDNs,
-    IPersistentState,
-    IConfigurationService,
-    IPersistentStateFactory,
-    IHttpClient
-} from '../../platform/common/types';
-import { Deferred, createDeferred } from '../../platform/common/utils/async';
-import { DataScience, Common } from '../../platform/common/utils/localize';
-import { noop } from '../../platform/common/utils/misc';
+import { WidgetCDNs, IConfigurationService, IHttpClient } from '../../platform/common/types';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { IKernel } from '../types';
@@ -27,9 +16,6 @@ import {
     WidgetScriptSource
 } from './types';
 
-const GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce = 'IPYWidgetCDNConfigured';
-const GlobalStateKeyToNeverWarnAboutScriptsNotFoundOnCDN = 'IPYWidgetNotFoundOnCDN';
-
 /**
  * This class decides where to get widget scripts from.
  * Whether its cdn or local or other, and also controls the order/priority.
@@ -37,45 +23,37 @@ const GlobalStateKeyToNeverWarnAboutScriptsNotFoundOnCDN = 'IPYWidgetNotFoundOnC
  * If user has not configured antying, user will be presented with a prompt.
  */
 export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvider {
-    private readonly notifiedUserAboutWidgetScriptNotFound = new Set<string>();
-    private scriptProviders?: IWidgetScriptSourceProvider[];
-    private configurationPromise?: Deferred<void>;
+    private readonly scriptProviders: IWidgetScriptSourceProvider[];
     private get configuredScriptSources(): readonly WidgetCDNs[] {
         const settings = this.configurationSettings.getSettings(undefined);
         return settings.widgetScriptSources;
     }
-    private readonly userConfiguredCDNAtLeastOnce: IPersistentState<boolean>;
-    private readonly neverWarnAboutScriptsNotFoundOnCDN: IPersistentState<boolean>;
     constructor(
         private readonly kernel: IKernel,
         private readonly localResourceUriConverter: ILocalResourceUriConverter,
-        private readonly appShell: IApplicationShell,
         private readonly configurationSettings: IConfigurationService,
-        private readonly workspaceService: IWorkspaceService,
-        private readonly stateFactory: IPersistentStateFactory,
         private readonly httpClient: IHttpClient,
-        private readonly sourceProviderFactory: IWidgetScriptSourceProviderFactory
+        private readonly sourceProviderFactory: IWidgetScriptSourceProviderFactory,
+        private readonly isWebViewOnline: Promise<boolean>
     ) {
-        this.userConfiguredCDNAtLeastOnce = this.stateFactory.createGlobalPersistentState<boolean>(
-            GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce,
-            false
+        this.scriptProviders = this.sourceProviderFactory.getProviders(
+            this.kernel,
+            this.localResourceUriConverter,
+            this.httpClient
         );
-        this.neverWarnAboutScriptsNotFoundOnCDN = this.stateFactory.createGlobalPersistentState<boolean>(
-            GlobalStateKeyToNeverWarnAboutScriptsNotFoundOnCDN,
-            false
-        );
-    }
-    public initialize() {
-        this.workspaceService.onDidChangeConfiguration(this.onSettingsChagned.bind(this));
     }
     public dispose() {
         this.disposeScriptProviders();
     }
-    public async getWidgetScriptSources() {
-        await this.configureWidgets();
-        if (!this.scriptProviders) {
-            this.rebuildProviders();
+    public async getBaseUrl() {
+        const provider = this.scriptProviders!.find((item) => item.getBaseUrl);
+        if (!provider) {
+            return;
         }
+
+        return provider.getBaseUrl!();
+    }
+    public async getWidgetScriptSources() {
         const sources: WidgetScriptSource[] = [];
         await Promise.all(
             this.scriptProviders!.filter((item) => item.getWidgetScriptSources).map(async (item) => {
@@ -93,10 +71,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         moduleName: string,
         moduleVersion: string
     ): Promise<Readonly<WidgetScriptSource>> {
-        await this.configureWidgets();
-        if (!this.scriptProviders) {
-            this.rebuildProviders();
-        }
+        const isWebViewOnline = await this.isWebViewOnline;
 
         // Get script sources in order, if one works, then get out.
         const scriptSourceProviders = (this.scriptProviders || []).slice();
@@ -106,7 +81,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             if (!scriptProvider) {
                 continue;
             }
-            const source = await scriptProvider.getWidgetScriptSource(moduleName, moduleVersion);
+            const source = await scriptProvider.getWidgetScriptSource(moduleName, moduleVersion, isWebViewOnline);
             // If we found the script source, then use that.
             if (source.scriptUri) {
                 found = source;
@@ -125,45 +100,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         } else {
             traceInfo(`Script source for Widget ${moduleName}@${moduleVersion} was found from source ${found.source}`);
         }
-        this.handleWidgetSourceNotFoundOnCDN(found, moduleVersion).ignoreErrors();
         return found;
-    }
-    private async handleWidgetSourceNotFoundOnCDN(widgetSource: WidgetScriptSource, version: string) {
-        // if widget exists nothing to do.
-        if (widgetSource.source === 'cdn' || this.neverWarnAboutScriptsNotFoundOnCDN.value === true) {
-            return;
-        }
-        if (
-            this.notifiedUserAboutWidgetScriptNotFound.has(widgetSource.moduleName) ||
-            this.configuredScriptSources.length === 0
-        ) {
-            return;
-        }
-        this.notifiedUserAboutWidgetScriptNotFound.add(widgetSource.moduleName);
-        const selection = await this.appShell.showWarningMessage(
-            DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork().format(
-                widgetSource.moduleName,
-                version,
-                JSON.stringify(this.configuredScriptSources)
-            ),
-            Common.ok(),
-            Common.doNotShowAgain(),
-            Common.reportThisIssue()
-        );
-        switch (selection) {
-            case Common.doNotShowAgain():
-                return this.neverWarnAboutScriptsNotFoundOnCDN.updateValue(true);
-            case Common.reportThisIssue():
-                return this.appShell.openUrl('https://aka.ms/CreatePVSCDataScienceIssue');
-            default:
-                noop();
-        }
-    }
-
-    private onSettingsChagned(e: ConfigurationChangeEvent) {
-        if (e.affectsConfiguration('jupyter.widgetScriptSources')) {
-            this.rebuildProviders();
-        }
     }
     private disposeScriptProviders() {
         while (this.scriptProviders && this.scriptProviders.length) {
@@ -172,77 +109,5 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
                 item.dispose();
             }
         }
-    }
-    private rebuildProviders() {
-        this.disposeScriptProviders();
-
-        // Use the platform specific factory to get our providers
-        this.scriptProviders = this.sourceProviderFactory.getProviders(
-            this.kernel,
-            this.localResourceUriConverter,
-            this.httpClient
-        );
-    }
-
-    private async configureWidgets(): Promise<void> {
-        if (this.configuredScriptSources.length !== 0) {
-            return;
-        }
-
-        if (this.userConfiguredCDNAtLeastOnce.value) {
-            return;
-        }
-
-        if (this.configurationPromise) {
-            return this.configurationPromise.promise;
-        }
-        this.configurationPromise = createDeferred();
-        sendTelemetryEvent(Telemetry.IPyWidgetPromptToUseCDN);
-        const selection = await this.appShell.showInformationMessage(
-            DataScience.useCDNForWidgetsNoInformation(),
-            { modal: true },
-            Common.ok(),
-            Common.doNotShowAgain(),
-            Common.moreInfo()
-        );
-
-        let selectionForTelemetry: 'ok' | 'cancel' | 'dismissed' | 'doNotShowAgain' = 'dismissed';
-        switch (selection) {
-            case Common.ok(): {
-                selectionForTelemetry = 'ok';
-                // always search local interpreter or attempt to fetch scripts from remote jupyter server as backups.
-                await Promise.all([
-                    this.updateScriptSources(['jsdelivr.com', 'unpkg.com']),
-                    this.userConfiguredCDNAtLeastOnce.updateValue(true)
-                ]);
-                break;
-            }
-            case Common.doNotShowAgain(): {
-                selectionForTelemetry = 'doNotShowAgain';
-                // At a minimum search local interpreter or attempt to fetch scripts from remote jupyter server.
-                await Promise.all([this.updateScriptSources([]), this.userConfiguredCDNAtLeastOnce.updateValue(true)]);
-                break;
-            }
-
-            case Common.moreInfo(): {
-                this.appShell.openUrl('https://aka.ms/PVSCIPyWidgets');
-                break;
-            }
-            default:
-                selectionForTelemetry = selection === Common.cancel() ? 'cancel' : 'dismissed';
-                break;
-        }
-
-        sendTelemetryEvent(Telemetry.IPyWidgetPromptToUseCDNSelection, undefined, { selection: selectionForTelemetry });
-        this.configurationPromise.resolve();
-    }
-    private async updateScriptSources(scriptSources: WidgetCDNs[]) {
-        const targetSetting = 'widgetScriptSources';
-        await this.configurationSettings.updateSetting(
-            targetSetting,
-            scriptSources,
-            undefined,
-            ConfigurationTarget.Global
-        );
     }
 }

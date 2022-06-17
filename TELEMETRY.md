@@ -5844,6 +5844,37 @@ No properties for event
 
 </details>
 <details>
+  <summary>DS_INTERNAL.IPYWIDGET_DISCOVER_WIDGETS_NB_EXTENSIONS</summary>
+
+## Description
+
+
+
+
+ Total time taken to discover all IPyWidgets.
+ This is how long it takes to discover all widgets on disc (from python environment).
+
+## Properties
+
+
+No properties for event
+
+
+## Locations Used
+
+[src/kernels/ipywidgets-message-coordination/baseIPyWidgetScriptManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/baseIPyWidgetScriptManager.ts)
+```typescript
+            delete config['@jupyter-widgets/controls'];
+            delete config['@jupyter-widgets/output'];
+        }
+        sendTelemetryEvent(Telemetry.DiscoverIPyWidgetNamesPerf, stopWatch.elapsedTime, {
+            type: isLocalConnection(this.kernel.kernelConnectionMetadata) ? 'local' : 'remote'
+        });
+        return config && Object.keys(config).length ? config : undefined;
+```
+
+</details>
+<details>
   <summary>DS_INTERNAL.IPYWIDGET_DISCOVERED</summary>
 
 ## Description
@@ -5884,13 +5915,80 @@ No properties for event
 
 [src/kernels/ipywidgets-message-coordination/ipyWidgetScriptSource.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/ipyWidgetScriptSource.ts)
 ```typescript
-            widgetSource = await this.scriptProvider.getWidgetScriptSource(moduleName, moduleVersion);
+            }
         } catch (ex) {
             traceError('Failed to get widget source due to an error', ex);
             sendTelemetryEvent(Telemetry.HashedIPyWidgetScriptDiscoveryError);
         } finally {
             traceInfo(
                 `${ConsoleForegroundColors.Green}Script for ${moduleName}, is ${widgetSource.scriptUri} from ${widgetSource.source}`
+```
+
+</details>
+<details>
+  <summary>DS_INTERNAL.IPYWIDGET_EXTENSIONJS_INFO</summary>
+
+## Description
+
+
+
+
+ Telemetry event sent once we've successfully or unsuccessfully parsed the extension.js file in the widget folder.
+ E.g. if we have a widget named ipyvolume, we attempt to parse the nbextensions/ipyvolume/extension.js file to get some info out of it.
+
+## Properties
+
+
+No properties for event
+
+
+## Locations Used
+
+[src/kernels/ipywidgets-message-coordination/baseIPyWidgetScriptManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/baseIPyWidgetScriptManager.ts)
+```typescript
+    }
+
+    if (indexOfRequireConfig < 0) {
+        sendTelemetryEvent(Telemetry.IPyWidgetExtensionJsInfo, undefined, {
+            widgetFolderNameHash,
+            failed: true,
+            patternUsedToRegisterRequireConfig,
+```
+
+
+[src/kernels/ipywidgets-message-coordination/baseIPyWidgetScriptManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/baseIPyWidgetScriptManager.ts)
+```typescript
+    // Find the end bracket for the require config call.
+    const endBracket = contents.indexOf(')', indexOfRequireConfig);
+    if (endBracket <= 0 || !patternUsedToRegisterRequireConfig) {
+        sendTelemetryEvent(Telemetry.IPyWidgetExtensionJsInfo, undefined, {
+            widgetFolderNameHash,
+            failed: true,
+            patternUsedToRegisterRequireConfig,
+```
+
+
+[src/kernels/ipywidgets-message-coordination/baseIPyWidgetScriptManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/baseIPyWidgetScriptManager.ts)
+```typescript
+    });
+
+    if (!requireConfig || !Object.keys(requireConfig).length) {
+        sendTelemetryEvent(Telemetry.IPyWidgetExtensionJsInfo, undefined, {
+            widgetFolderNameHash,
+            failed: true,
+            patternUsedToRegisterRequireConfig,
+```
+
+
+[src/kernels/ipywidgets-message-coordination/baseIPyWidgetScriptManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/baseIPyWidgetScriptManager.ts)
+```typescript
+        });
+        return;
+    }
+    sendTelemetryEvent(Telemetry.IPyWidgetExtensionJsInfo, undefined, {
+        widgetFolderNameHash,
+        patternUsedToRegisterRequireConfig,
+        requireEntryPointCount: Object.keys(requireConfig).length
 ```
 
 </details>
@@ -6024,7 +6122,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets-message-coordination/ipyWidgetScriptSourceProvider.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/ipyWidgetScriptSourceProvider.ts)
+[src/kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider.ts)
 ```typescript
             return this.configurationPromise.promise;
         }
@@ -6054,7 +6152,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets-message-coordination/ipyWidgetScriptSourceProvider.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/ipyWidgetScriptSourceProvider.ts)
+[src/kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider.ts)
 ```typescript
                 break;
         }
@@ -6118,15 +6216,14 @@ Event can be removed. Not referenced anywhere
 
 </details>
 <details>
-  <summary>DS_INTERNAL.IPYWIDGET_TEST_AVAILABILITY_ON_LOCAL</summary>
+  <summary>DS_INTERNAL.IPYWIDGET_TIME_TO_COPY_NBEXTENSIONS_DIR</summary>
 
 ## Description
 
 
 
 
- Total time taken to discover all IPyWidgets on disc.
- This is how long it takes to discover a single widget on disc (from python environment).
+ Total time take to copy the nb extensions folder.
 
 ## Properties
 
@@ -6136,15 +6233,27 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets-message-coordination/localWidgetScriptSourceProvider.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/localWidgetScriptSourceProvider.node.ts)
+[src/kernels/ipywidgets-message-coordination/localIPyWidgetScriptManager.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/localIPyWidgetScriptManager.node.ts)
 ```typescript
+            LocalIPyWidgetScriptManager.nbExtensionsCopiedKernelConnectionList.add(
+                this.kernel.kernelConnectionMetadata.id
+            );
+            sendTelemetryEvent(Telemetry.IPyWidgetNbExtensionCopyTime, stopWatch.elapsedTime);
+            return baseUrl;
+        } catch (ex) {
+            sendTelemetryEvent(Telemetry.IPyWidgetNbExtensionCopyTime, undefined, undefined, ex);
+```
+
+
+[src/kernels/ipywidgets-message-coordination/localIPyWidgetScriptManager.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/localIPyWidgetScriptManager.node.ts)
+```typescript
+            sendTelemetryEvent(Telemetry.IPyWidgetNbExtensionCopyTime, stopWatch.elapsedTime);
+            return baseUrl;
+        } catch (ex) {
+            sendTelemetryEvent(Telemetry.IPyWidgetNbExtensionCopyTime, undefined, undefined, ex);
+            throw ex;
         }
-        return (this.cachedWidgetScripts = this.getWidgetScriptSourcesWithoutCache());
     }
-    @captureTelemetry(Telemetry.DiscoverIPyWidgetNamesLocalPerf)
-    private async getWidgetScriptSourcesWithoutCache(): Promise<WidgetScriptSource[]> {
-        const sysPrefix = await this.getSysPrefixOfKernel();
-        if (!sysPrefix) {
 ```
 
 </details>

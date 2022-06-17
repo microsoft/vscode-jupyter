@@ -22,6 +22,7 @@ import {
     defaultNotebookTestTimeout,
     prewarmNotebooks,
     runCell,
+    waitForCellExecutionToComplete,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected,
     waitForTextOutput,
@@ -29,6 +30,7 @@ import {
 } from '../notebook/helper';
 import { initializeWidgetComms, Utils } from './commUtils';
 import { WidgetRenderingTimeoutForTests } from './constants';
+import { getTextOutputValue } from '../../../kernels/execution/helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('IPyWisdget Tests', function () {
@@ -73,6 +75,7 @@ suite('IPyWisdget Tests', function () {
         await startJupyterServer();
         await closeNotebooks();
         traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+        // With less realestate, the outputs might not get rendered (VS Code optimization to avoid rendering if not in viewport).
         await commands.executeCommand('workbench.action.closePanel');
     });
     teardown(async function () {
@@ -394,5 +397,124 @@ suite('IPyWisdget Tests', function () {
 
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['66'], '.widget-readout');
+    });
+    test('Nested Output Widgets', async () => {
+        const comms = await initializeNotebook({ templateFile: 'nested_output_widget.ipynb' });
+        const [cell1, cell2, cell3, cell4] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+        await executeCellAndWaitForOutput(cell1, comms);
+
+        // Run the second cell & verify we have output in the first cell.
+        await Promise.all([runCell(cell2), waitForCellExecutionToComplete(cell1)]);
+        await assertOutputContainsHtml(cell1, comms, ['First output widget'], '.widget-output');
+
+        // Run the 3rd cell to add a nested output.
+        // Also display the same nested output and the widget in the 3rd cell.
+        await Promise.all([runCell(cell3), waitForCellExecutionToComplete(cell3)]);
+        await assertOutputContainsHtml(cell1, comms, ['<input type="text', 'Label Widget'], '.widget-output');
+        assert.strictEqual(cell3.outputs.length, 0, 'Cell 3 should not have any output');
+
+        // Run the 4th cell & verify we have output in the first nested output & second output.
+        await Promise.all([runCell(cell4), waitForCellExecutionToComplete(cell2)]);
+        await assertOutputContainsHtml(cell1, comms, ['First output widget', 'Second output widget'], '.widget-output');
+        assert.strictEqual(cell3.outputs.length, 0, 'Cell 3 should not have any output');
+
+        // Verify both textbox widgets are linked.
+        // I.e. updating one textbox will result in the other getting updated with the same value.
+        await comms.setValue(cell1, '.widget-text input', 'Widgets are linked an get updated');
+        await assertOutputContainsHtml(cell1, comms, ['>Widgets are linked an get updated<'], '.widget-output');
+        assert.strictEqual(cell3.outputs.length, 0, 'Cell 3 should not have any output');
+    });
+    test('Interactive Button', async () => {
+        const comms = await initializeNotebook({ templateFile: 'interactive_button.ipynb' });
+        const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0);
+
+        await executeCellAndWaitForOutput(cell, comms);
+        await assertOutputContainsHtml(cell, comms, ['Click Me!', '<button']);
+
+        // Click the button and verify we have output in other cells
+        await click(comms, cell, 'button');
+        await waitForCondition(
+            () => {
+                assert.strictEqual(getTextOutputValue(cell.outputs[1]).trim(), 'Button clicked');
+                return true;
+            },
+            5_000,
+            `Expected 'Button clicked' to exist in ${getTextOutputValue(cell.outputs[1])}`
+        );
+    });
+    test('Interactive Function', async () => {
+        const comms = await initializeNotebook({ templateFile: 'interactive_function.ipynb' });
+        const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0);
+
+        await executeCellAndWaitForOutput(cell, comms);
+        await assertOutputContainsHtml(cell, comms, [
+            '<input type="text',
+            ">Executing do_something with 'Foo'",
+            ">'Foo'"
+        ]);
+        await waitForCondition(() => cell.outputs.length >= 3, 5_000, 'Cell must have 3 outputs');
+        assert.strictEqual(getTextOutputValue(cell.outputs[1]).trim(), `Executing do_something with 'Hello World'`);
+        assert.strictEqual(getTextOutputValue(cell.outputs[2]).trim(), `'Hello World'`);
+
+        // Update the textbox and confirm the output is updated accordingly.
+        await comms.setValue(cell, '.widget-text input', 'Bar');
+        await assertOutputContainsHtml(cell, comms, [
+            '<input type="text',
+            ">Executing do_something with 'Bar'",
+            ">'Bar'"
+        ]);
+        assert.strictEqual(getTextOutputValue(cell.outputs[1]).trim(), `Executing do_something with 'Hello World'`);
+        assert.strictEqual(getTextOutputValue(cell.outputs[2]).trim(), `'Hello World'`);
+    });
+    test('Interactive Plot', async () => {
+        const comms = await initializeNotebook({ templateFile: 'interactive_plot.ipynb' });
+        const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0);
+
+        await executeCellAndWaitForOutput(cell, comms);
+        await assertOutputContainsHtml(cell, comms, ['Text Value is Foo']);
+        assert.strictEqual(cell.outputs.length, 4, 'Cell should have 4 outputs');
+
+        // This cannot be displayed by output widget, hence we need to handle this.
+        assert.strictEqual(cell.outputs[1].items[0].mime, 'application/vnd.custom');
+        assert.strictEqual(Buffer.from(cell.outputs[1].items[0].data).toString(), 'Text Value is Foo');
+
+        assert.strictEqual(getTextOutputValue(cell.outputs[2]).trim(), 'Text Value is Hello World');
+
+        // This cannot be displayed by output widget, hence we need to handle this.
+        assert.strictEqual(cell.outputs[3].items[0].mime, 'application/vnd.custom');
+        assert.strictEqual(Buffer.from(cell.outputs[3].items[0].data).toString().trim(), 'Text Value is Hello World');
+
+        // Wait for the second output to get updated.
+        const outputUpdated = new Promise<boolean>((resolve) => {
+            workspace.onDidChangeNotebookDocument(
+                (e) => {
+                    const currentCellChange = e.cellChanges.find((item) => item.cell === cell);
+                    if (!currentCellChange || !currentCellChange.outputs || currentCellChange.outputs.length < 4) {
+                        return;
+                    }
+                    const secondOutput = currentCellChange.outputs[1];
+                    if (Buffer.from(secondOutput.items[0].data).toString() === 'Text Value is Bar') {
+                        resolve(true);
+                    }
+                },
+                undefined,
+                disposables
+            );
+        });
+        // Update the textbox and confirm the output is updated accordingly.
+        await comms.setValue(cell, '.widget-text input', 'Bar');
+
+        // Wait for the output to get updated.
+        await waitForCondition(() => outputUpdated, 5_000, 'Second output not updated');
+
+        // The first & second outputs should have been updated
+        await assertOutputContainsHtml(cell, comms, ['Text Value is Bar']);
+        assert.strictEqual(cell.outputs[1].items[0].mime, 'application/vnd.custom');
+        assert.strictEqual(Buffer.from(cell.outputs[1].items[0].data).toString().trim(), 'Text Value is Bar');
+
+        // The last two should not have changed.
+        assert.strictEqual(getTextOutputValue(cell.outputs[2]).trim(), 'Text Value is Hello World');
+        assert.strictEqual(cell.outputs[3].items[0].mime, 'application/vnd.custom');
+        assert.strictEqual(Buffer.from(cell.outputs[3].items[0].data).toString().trim(), 'Text Value is Hello World');
     });
 });
