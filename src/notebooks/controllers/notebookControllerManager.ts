@@ -78,6 +78,7 @@ import { isCancellationError } from '../../platform/common/cancellation';
 import { createDeferred } from '../../platform/common/utils/async';
 import { ProgressReporter } from '../../platform/progress/progressReporter';
 import { ContextKey } from '../../platform/common/contextKey';
+import { Common, DataScience } from '../../platform/common/utils/localize';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -402,11 +403,30 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         }
     }
 
+    // Called when we select the command to install the python extension via the kernel picker
+    // If new controllers are added before this fully resolves and in progress executions will be
+    // passed on, so we can trigger with the run button, install, get a controller and not have to
+    // click run again
     private async installPythonExtensionViaKernelPicker(): Promise<void> {
         if (!this.extensionChecker.isPythonExtensionInstalled) {
-            const reporter = this.progressReporter.createProgressIndicator(
-                'Installing Python Extension And Locating Kernels.'
+            sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
+
+            // First present a simple modal dialog to indicate what we are about to do
+            const selection = await this.appShell.showInformationMessage(
+                DataScience.pythonExtensionRequiredToRunNotebook(),
+                { modal: true },
+                Common.install()
             );
+            if (selection === Common.install()) {
+                sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
+            } else {
+                // If they don't want to install, just bail out at this point
+                sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
+                return;
+            }
+
+            // Now start to indicate that we are performing the install and locating kernels
+            const reporter = this.progressReporter.createProgressIndicator(DataScience.installingPythonExtension());
             try {
                 const extensionHooked = createDeferred<void>();
 
@@ -434,18 +454,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 reporter.dispose();
             }
         }
-        // sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
-        // const selection = await this.appShell.showInformationMessage(
-        // DataScience.pythonExtensionRequiredToRunNotebook(),
-        // { modal: true },
-        // Common.install()
-        // );
-        // if (selection === Common.install()) {
-        // sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
-        // this.commandManager.executeCommand('extension.open', PythonExtension).then(noop, noop);
-        // } else {
-        // sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
-        // }
     }
 
     private listKernels(
