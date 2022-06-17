@@ -109,14 +109,12 @@ export function renderOutput(outputItem: OutputItem, element: HTMLElement, logge
 }
 export function disposeOutput(outputId?: string) {
     if (outputId) {
-        const widget = renderedWidgets.get(outputId)?.widget;
-        renderedWidgets.delete(outputId);
+        // We can't delete the widgets because they may be rerendered when we scroll them into view.
+        // See issue: https://github.com/microsoft/vscode-jupyter/issues/10485
+        // However we can mark them as not being currently rendered.
         stackOfWidgetsRenderStatusByOutputId = stackOfWidgetsRenderStatusByOutputId.filter(
             (item) => !(outputId in item)
         );
-        if (widget) {
-            widget.dispose();
-        }
     }
 }
 function renderIPyWidget(
