@@ -21,7 +21,7 @@ import { InterruptResult, KernelConnectionMetadata, KernelInterpreterDependencyR
 import { IExportedKernelService } from '../platform/api/extension';
 import { PreferredKernelExactMatchReason } from '../notebooks/controllers/notebookControllerManager';
 import { SelectJupyterUriCommandSource } from '../kernels/jupyter/serverSelector';
-import { ShellIdentificationTelemetry, TerminalShellType } from '../platform/terminals/types';
+import { TerminalShellType } from '../platform/terminals/types';
 
 export type ResourceSpecificTelemetryProperties = Partial<{
     resourceType: 'notebook' | 'interactive';
