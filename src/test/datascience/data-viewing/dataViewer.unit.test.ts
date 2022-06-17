@@ -4,7 +4,7 @@
 'use strict';
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { ConfigurationChangeEvent, EventEmitter } from 'vscode';
+import { ConfigurationChangeEvent, EventEmitter, Uri } from 'vscode';
 import { ApplicationShell } from '../../../platform/common/application/applicationShell';
 import {
     IApplicationShell,
@@ -39,14 +39,16 @@ suite('DataScience - DataViewer', () => {
         dataProvider = mock(JupyterVariableDataProvider);
         const settings = mock(JupyterSettings);
         const settingsChangedEvent = new EventEmitter<void>();
+        const context: IExtensionContext = mock<IExtensionContext>();
 
         when(settings.onDidChange).thenReturn(settingsChangedEvent.event);
         when(configService.getSettings(anything())).thenReturn(instance(settings));
 
         const configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
-        when(workspaceService.onDidChangeConfiguration).thenReturn(configChangeEvent.event);
 
+        when(workspaceService.onDidChangeConfiguration).thenReturn(configChangeEvent.event);
         when(dataProvider.getDataFrameInfo(anything(), anything())).thenResolve({});
+        when(context.extensionUri).thenReturn(Uri.parse('/'));
 
         dataViewer = new DataViewer(
             instance(webPanelProvider),
@@ -55,7 +57,7 @@ suite('DataScience - DataViewer', () => {
             instance(applicationShell),
             new MockMemento(),
             instance(mock<IDataScienceErrorHandler>()),
-            instance(mock<IExtensionContext>())
+            instance(context)
         );
     });
     test('Data viewer showData calls gets dataFrame info from data provider', async () => {
