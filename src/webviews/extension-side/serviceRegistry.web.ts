@@ -26,6 +26,8 @@ import { ExtensionSideRenderer, IExtensionSideRenderer } from './renderer';
 import { ActiveEditorContextService } from './activeEditorContext';
 import { GlobalActivation } from './globalActivation';
 import { DataViewer } from './dataviewer/dataViewer';
+import { INotebookExporter } from '../../kernels/jupyter/types';
+import { JupyterExporter } from './import-export/jupyterExporter';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
@@ -64,4 +66,5 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     );
 
     serviceManager.addSingletonInstance<IExtensionSideRenderer>(IExtensionSideRenderer, new ExtensionSideRenderer());
+    serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
 }

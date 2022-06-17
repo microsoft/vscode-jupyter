@@ -8,7 +8,7 @@ import { Uri } from 'vscode';
 import { CellMatcher } from '../../../interactive-window/editor-integration/cellMatcher';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { traceError } from '../../../platform/logging';
-import { IFileSystemNode } from '../../../platform/common/platform/types.node';
+import { IFileSystem } from '../../../platform/common/platform/types';
 import { ICell, IConfigurationService } from '../../../platform/common/types';
 import { pruneCell } from '../../../platform/common/utils';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -23,7 +23,7 @@ export class JupyterExporter implements INotebookExporter {
     constructor(
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IFileSystemNode) private fileSystem: IFileSystemNode,
+        @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IDataScienceErrorHandler) protected errorHandler: IDataScienceErrorHandler
     ) {}

@@ -20,7 +20,7 @@ import {
     IJupyterVariableDataProviderFactory
 } from './dataviewer/types';
 import { INotebookExporter, INotebookImporter } from '../../kernels/jupyter/types';
-import { JupyterExporter } from './import-export/jupyterExporter.node';
+import { JupyterExporter } from './import-export/jupyterExporter';
 import { JupyterImporter } from './import-export/jupyterImporter.node';
 import { CommandRegistry as ExportCommandRegistry } from './import-export/commandRegistry';
 import { ServerPreload } from './serverPreload/serverPreload.node';
