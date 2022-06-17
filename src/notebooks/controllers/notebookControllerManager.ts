@@ -57,7 +57,6 @@ import {
 } from '../../kernels/types';
 import { INotebookControllerManager } from '../types';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
-import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IVSCodeNotebookController } from './types';
@@ -78,6 +77,7 @@ import { ILocalResourceUriConverter } from '../../kernels/ipywidgets-message-coo
 import { isCancellationError } from '../../platform/common/cancellation';
 import { createDeferred } from '../../platform/common/utils/async';
 import { ProgressReporter } from '../../platform/progress/progressReporter';
+import { ContextKey } from '../../platform/common/contextKey';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -117,6 +117,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         return Array.from(this.registeredControllers.values()).map((item) => item.connection);
     }
     private _controllersLoaded?: boolean;
+    private showInstallPythonExtensionContext: ContextKey;
     public get onNotebookControllerSelectionChanged() {
         return this._onNotebookControllerSelectionChanged.event;
     }
@@ -135,8 +136,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         return this.serverConnectionType.isLocalLaunch;
     }
     private wasPythonInstalledWhenFetchingControllers?: boolean;
-    private interactiveNoPythonController?: NoPythonKernelsNotebookController;
-    private notebookNoPythonController?: NoPythonKernelsNotebookController;
     private remoteRefreshedEmitter = new EventEmitter<LiveRemoteKernelConnectionMetadata[]>();
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
@@ -226,13 +225,19 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             this.disposables
         );
 
-        // IANHU
+        // Register our command that will handle installing the python extension via the kernel picker
         this.disposables.push(
             this.commandManager.registerCommand(
                 Commands.InstallPythonExtensionViaKernelPicker,
                 this.installPythonExtensionViaKernelPicker,
                 this
             )
+        );
+
+        // This context key controls if the command to install python extension should be shown
+        this.showInstallPythonExtensionContext = new ContextKey(
+            'jupyter.showInstallPythonExtensionCommand',
+            this.commandManager
         );
     }
     public async getActiveInterpreterOrDefaultController(
@@ -343,10 +348,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // we don't end up with a kernel that asks to install python)
         if (!this.isWeb) {
             if ([...this.registeredControllers.values()].some((item) => isPythonKernelConnection(item.connection))) {
-                this.removeNoPythonControllers();
+                await this.showInstallPythonExtensionContext.set(false);
             } else {
-                // IANHU
-                //this.registerNoPythonControllers();
+                await this.showInstallPythonExtensionContext.set(true);
             }
         }
 
@@ -415,19 +419,8 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                     this.disposables
                 );
 
-                // IANHU: Progress bar here
                 await this.commandManager.executeCommand('workbench.extensions.installExtension', PythonExtension);
                 await extensionHooked.promise;
-
-                // const pyExt = this.extensions.getExtension(PythonExtension);
-                // traceInfo('log here');
-
-                // IANHU: This plus the install above should probably be installed into the python API or
-                // the python extensionChecker?
-                // await this.pythonApi.getApi();
-
-                // Wait until the python extension is installed and hooked
-                // IANHU: Error handling for the install?
 
                 if (this.extensionChecker.isPythonExtensionInstalled) {
                     traceInfo('Installed');
@@ -582,36 +575,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             return matchingKernelNameController || matchingKernelLanguageController || defaultController;
         }
     }
-    private removeNoPythonControllers() {
-        this.notebookNoPythonController?.dispose();
-        this.interactiveNoPythonController?.dispose();
 
-        this.notebookNoPythonController = undefined;
-        this.interactiveNoPythonController = undefined;
-    }
-    private registerNoPythonControllers() {
-        if (this.notebookNoPythonController) {
-            return;
-        }
-        this.notebookNoPythonController = new NoPythonKernelsNotebookController(
-            JupyterNotebookView,
-            this.notebook,
-            this.commandManager,
-            this.disposables,
-            this.extensionChecker,
-            this.appShell
-        );
-        this.interactiveNoPythonController = new NoPythonKernelsNotebookController(
-            InteractiveWindowView,
-            this.notebook,
-            this.commandManager,
-            this.disposables,
-            this.extensionChecker,
-            this.appShell
-        );
-        this.disposables.push(this.interactiveNoPythonController);
-        this.disposables.push(this.notebookNoPythonController);
-    }
     private async onDidChangeExtensions() {
         if (!this.isLocalLaunch || !this.controllersPromise) {
             return;
