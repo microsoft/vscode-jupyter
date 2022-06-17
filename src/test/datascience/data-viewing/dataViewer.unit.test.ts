@@ -15,7 +15,7 @@ import { WebviewPanelProvider } from '../../../webviews/extension-side/webviewPa
 import { WorkspaceService } from '../../../platform/common/application/workspace.node';
 import { JupyterSettings } from '../../../platform/common/configSettings';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
-import { IConfigurationService } from '../../../platform/common/types';
+import { IConfigurationService, IExtensionContext } from '../../../platform/common/types';
 import { IDataScienceErrorHandler } from '../../../platform/errors/types';
 import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataViewer';
 import { JupyterVariableDataProvider } from '../../../webviews/extension-side/dataviewer/jupyterVariableDataProvider';
@@ -54,7 +54,8 @@ suite('DataScience - DataViewer', () => {
             instance(workspaceService),
             instance(applicationShell),
             new MockMemento(),
-            instance(mock<IDataScienceErrorHandler>())
+            instance(mock<IDataScienceErrorHandler>()),
+            instance(mock<IExtensionContext>())
         );
     });
     test('Data viewer showData calls gets dataFrame info from data provider', async () => {
