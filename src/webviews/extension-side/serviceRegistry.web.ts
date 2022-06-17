@@ -24,6 +24,9 @@ import { DataViewerFactory } from './dataviewer/dataViewerFactory';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from './renderer';
 import { ActiveEditorContextService } from './activeEditorContext';
 import { GlobalActivation } from './globalActivation';
+import { JupyterKernelServiceFactory } from './api/kernelApi';
+import { IExportedKernelServiceFactory } from './api/api';
+import { ApiAccessService } from './api/apiAccessService';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
@@ -61,4 +64,11 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     );
 
     serviceManager.addSingletonInstance<IExtensionSideRenderer>(IExtensionSideRenderer, new ExtensionSideRenderer());
+
+    // API
+    serviceManager.addSingleton<IExportedKernelServiceFactory>(
+        IExportedKernelServiceFactory,
+        JupyterKernelServiceFactory
+    );
+    serviceManager.addSingleton<ApiAccessService>(ApiAccessService, ApiAccessService);
 }

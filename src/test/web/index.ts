@@ -3,7 +3,7 @@
 // The same objects/types will be used as the module is only ever loaded once by nodejs.
 import * as extension from '../../extension.web';
 import * as vscode from 'vscode';
-import type { IExtensionApi } from '../../platform/api';
+import type { IExtensionApi } from '../../webviews/extension-side/api/api';
 import type { IExtensionContext } from '../../platform/common/types';
 import { IExtensionTestApi } from '../common';
 import { JVSC_EXTENSION_ID, setCI, setTestExecution } from '../../platform/common/constants';

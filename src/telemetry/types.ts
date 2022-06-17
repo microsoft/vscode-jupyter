@@ -18,7 +18,7 @@ import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironmen
 import { TelemetryErrorProperties, ErrorCategory } from '../platform/errors/types';
 import { ExportFormat } from '../notebooks/export/types';
 import { InterruptResult, KernelConnectionMetadata, KernelInterpreterDependencyResponse } from '../kernels/types';
-import { IExportedKernelService } from '../platform/api/extension';
+import { IExportedKernelService } from '../webviews/extension-side/api/extension';
 import { PreferredKernelExactMatchReason } from '../notebooks/controllers/notebookControllerManager';
 import { SelectJupyterUriCommandSource } from '../kernels/jupyter/serverSelector';
 import { TerminalShellType } from '../platform/terminals/types';
