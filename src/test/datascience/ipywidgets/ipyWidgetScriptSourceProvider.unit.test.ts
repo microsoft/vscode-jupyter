@@ -17,17 +17,14 @@ import {
     LocalKernelSpecConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../../../platform/../kernels/types';
-import { IPyWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/ipyWidgetScriptSourceProvider';
-import { LocalWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/localWidgetScriptSourceProvider.node';
-import { RemoteWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/remoteWidgetScriptSourceProvider';
-import {
-    ILocalResourceUriConverter,
-    IWidgetScriptSourceProviderFactory
-} from '../../../kernels/ipywidgets-message-coordination/types';
-import { ScriptSourceProviderFactory } from '../../../kernels/ipywidgets-message-coordination/scriptSourceProviderFactory.node';
-import { CDNWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider';
-import { IPyWidgetScriptManagerFactory } from '../../../kernels/ipywidgets-message-coordination/ipyWidgetScriptManagerFactory.node';
-import { NbExtensionsPathProvider } from '../../../kernels/ipywidgets-message-coordination/nbExtensionsPathProvider.node';
+import { IPyWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/ipyWidgetScriptSourceProvider';
+import { LocalWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/localWidgetScriptSourceProvider.node';
+import { RemoteWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/remoteWidgetScriptSourceProvider';
+import { ILocalResourceUriConverter, IWidgetScriptSourceProviderFactory } from '../../../kernels/ipywidgets/types';
+import { ScriptSourceProviderFactory } from '../../../kernels/ipywidgets/scriptSourceProviderFactory.node';
+import { CDNWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/cdnWidgetScriptSourceProvider';
+import { IPyWidgetScriptManagerFactory } from '../../../kernels/ipywidgets/ipyWidgetScriptManagerFactory.node';
+import { NbExtensionsPathProvider } from '../../../kernels/ipywidgets/nbExtensionsPathProvider.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 

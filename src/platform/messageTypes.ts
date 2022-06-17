@@ -8,7 +8,7 @@ import {
     IVariableExplorerHeight,
     CommonActionType
 } from '../webviews/webview-side/interactive-common/redux/reducers/types';
-import { WidgetScriptSource } from '../kernels/ipywidgets-message-coordination/types';
+import { WidgetScriptSource } from '../kernels/ipywidgets/types';
 import { KernelConnectionMetadata, KernelSocketOptions } from '../kernels/types';
 import { BaseReduxActionPayload } from '../webviews/types';
 import { ICell } from './common/types';

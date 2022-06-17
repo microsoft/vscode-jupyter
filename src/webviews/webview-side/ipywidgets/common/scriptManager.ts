@@ -10,7 +10,7 @@ import { warnAboutWidgetVersionsThatAreNotSupported } from '../common/incompatib
 import { registerScripts } from '../common/requirejsRegistry';
 import { ScriptLoader } from './types';
 import { logMessage } from '../../react-common/logger';
-import { WidgetScriptSource } from '../../../../kernels/ipywidgets-message-coordination/types';
+import { WidgetScriptSource } from '../../../../kernels/ipywidgets/types';
 import { Deferred, createDeferred } from '../../../../platform/common/utils/async';
 import { SharedMessages, IPyWidgetMessages, IInteractiveWindowMapping } from '../../../../platform/messageTypes';
 import { IJupyterExtraSettings } from '../../../extension-side/types';
