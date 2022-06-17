@@ -69,7 +69,7 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
             await hijackPrompt(
                 'showErrorMessage',
                 { endsWith: expectedPromptMessageSuffix },
-                { text: Common.install(), clickImmediately: true },
+                { result: Common.install(), clickImmediately: true },
                 disposables
             );
 

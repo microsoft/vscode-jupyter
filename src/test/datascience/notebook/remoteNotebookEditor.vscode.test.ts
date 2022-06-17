@@ -279,7 +279,7 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
         const prompt = await hijackPrompt(
             'showErrorMessage',
             { contains: 'certificate' },
-            { text: DataScience.jupyterSelfCertEnable(), clickImmediately: true }
+            { result: DataScience.jupyterSelfCertEnable(), clickImmediately: true }
         );
         await startJupyterServer(undefined, true);
         await openNotebook(ipynbFile);
