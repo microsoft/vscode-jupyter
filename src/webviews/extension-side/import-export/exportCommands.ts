@@ -15,7 +15,7 @@ import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { INotebookControllerManager } from '../../../notebooks/types';
 import { Commands, Telemetry } from '../../../platform/common/constants';
-import { IFileConverter, ExportFormat } from '../../../platform/export/types';
+import { IFileConverter, ExportFormat } from '../../../notebooks/export/types';
 import { IInteractiveWindowProvider } from '../../../interactive-window/types';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { isPythonNotebook, getNotebookMetadata } from '../../../platform/common/utils';

@@ -55,7 +55,7 @@ import { createDeferred } from '../platform/common/utils/async';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { INotebookExporter } from '../kernels/jupyter/types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
-import { IExportDialog } from '../platform/export/types';
+import { IExportDialog } from '../notebooks/export/types';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { ICodeGeneratorFactory, IGeneratedCodeStorageFactory } from './editor-integration/types';
 import { getResourceType } from '../platform/common/utils';

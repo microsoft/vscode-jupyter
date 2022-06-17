@@ -8,7 +8,7 @@ import * as fs from 'fs-extra';
 import * as path from '../../../platform/vscode-path/path';
 import { Uri } from 'vscode';
 import { IDisposable } from '../../../platform/common/types';
-import { ExportUtil } from '../../../platform/export/exportUtil.node';
+import { ExportUtil } from '../../../notebooks/export/exportUtil.node';
 import { IExtensionTestApi } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants.node';
 import { closeActiveWindows, initialize } from '../../initialize.node';

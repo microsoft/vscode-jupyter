@@ -53,7 +53,7 @@ import { SysInfoReason } from '../platform/messageTypes';
 import { createOutputWithErrorMessageForDisplay } from '../platform/errors/errorUtils';
 import { INotebookExporter } from '../kernels/jupyter/types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
-import { IExportDialog, ExportFormat } from '../platform/export/types';
+import { IExportDialog, ExportFormat } from '../notebooks/export/types';
 import { generateCellsFromNotebookDocument } from './editor-integration/cellFactory';
 import { CellMatcher } from './editor-integration/cellMatcher';
 import { IInteractiveWindowLoadable, IInteractiveWindowDebugger, IInteractiveWindowDebuggingManager } from './types';

@@ -41,7 +41,7 @@ import { INotebookControllerManager, INotebookEditorProvider } from '../notebook
 import { KernelConnectionMetadata } from '../kernels/types';
 import { INotebookExporter, IJupyterExecution } from '../kernels/jupyter/types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
-import { IFileConverter, IExportDialog, ExportFormat } from '../platform/export/types';
+import { IFileConverter, IExportDialog, ExportFormat } from '../notebooks/export/types';
 import { IStatusProvider } from '../platform/progress/types';
 import { generateCellsFromDocument } from './editor-integration/cellFactory';
 import { IInteractiveWindowProvider } from './types';

@@ -1,5 +1,5 @@
 import { CancellationToken, NotebookDocument, Uri } from 'vscode';
-import { PythonEnvironment } from '../pythonEnvironments/info';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 
 export enum ExportFormat {
     pdf = 'pdf',

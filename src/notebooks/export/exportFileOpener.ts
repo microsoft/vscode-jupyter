@@ -6,12 +6,12 @@
 import { inject, injectable } from 'inversify';
 import { Position, TextEditor, Uri } from 'vscode';
 import { sendTelemetryEvent } from '../../telemetry';
-import { IDocumentManager, IApplicationShell } from '../common/application/types';
-import { Telemetry, PYTHON_LANGUAGE } from '../common/constants';
-import { IFileSystem } from '../common/platform/types';
-import { IBrowserService } from '../common/types';
-import * as localize from '../common/utils/localize';
-import { noop } from '../common/utils/misc';
+import { IDocumentManager, IApplicationShell } from '../../platform/common/application/types';
+import { Telemetry, PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { IFileSystem } from '../../platform/common/platform/types';
+import { IBrowserService } from '../../platform/common/types';
+import * as localize from '../../platform/common/utils/localize';
+import { noop } from '../../platform/common/utils/misc';
 import { ExportFormat } from './types';
 
 @injectable()
