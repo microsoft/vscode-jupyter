@@ -367,6 +367,9 @@ export function initializeCommonNodeApi() {
         },
         async initialize() {
             return initialize();
+        },
+        async captureScreenShot(fileNamePrefix: string) {
+            return captureScreenShot(fileNamePrefix);
         }
     });
 }
