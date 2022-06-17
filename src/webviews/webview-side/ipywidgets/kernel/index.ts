@@ -81,7 +81,7 @@ class WidgetManagerComponent {
 
 const outputDisposables = new Map<string, { dispose(): void }>();
 const htmlDisposables = new WeakMap<HTMLElement, { dispose(): void }>();
-const renderedWidgets = new Map<string, { widget?: { dispose: Function } }>();
+const renderedWidgets = new Set<string>();
 /**
  * Called from renderer to render output.
  * This will be exposed as a public method on window for renderer to render output.
@@ -109,14 +109,9 @@ export function renderOutput(outputItem: OutputItem, element: HTMLElement, logge
 }
 export function disposeOutput(outputId?: string) {
     if (outputId) {
-        const widget = renderedWidgets.get(outputId)?.widget;
-        renderedWidgets.delete(outputId);
         stackOfWidgetsRenderStatusByOutputId = stackOfWidgetsRenderStatusByOutputId.filter(
             (item) => !(outputId in item)
         );
-        if (widget) {
-            widget.dispose();
-        }
     }
 }
 function renderIPyWidget(
@@ -145,12 +140,9 @@ function renderIPyWidget(
     ele.className = 'cell-output-ipywidget-background';
     container.appendChild(ele);
     ele.appendChild(output);
-    renderedWidgets.set(outputId, {});
+    renderedWidgets.add(outputId);
     createWidgetView(model, ele)
         .then((w) => {
-            if (renderedWidgets.has(outputId)) {
-                renderedWidgets.get(outputId)!.widget = w;
-            }
             const disposable = {
                 dispose: () => {
                     // What if we render the same model in two cells.
