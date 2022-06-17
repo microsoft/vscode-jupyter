@@ -1594,7 +1594,7 @@ No description provided
 
 ## Locations Used
 
-[src/platform/api/apiAccessService.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/apiAccessService.ts)
+[src/webviews/extension-side/api/apiAccessService.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/apiAccessService.ts)
 ```typescript
         const extensionPermissions = this.globalState.get<ApiExtensionInfo | undefined>(API_ACCESS_GLOBAL_KEY);
         const extensionPermission = extensionPermissions?.find((item) => item.extensionId === info.extensionId);
@@ -1606,7 +1606,7 @@ No description provided
 ```
 
 
-[src/platform/api/apiAccessService.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/apiAccessService.ts)
+[src/webviews/extension-side/api/apiAccessService.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/apiAccessService.ts)
 ```typescript
                     return this.globalState.update(API_ACCESS_GLOBAL_KEY, extensionPermissions);
                 })
@@ -1635,7 +1635,7 @@ No description provided
 
 ## Locations Used
 
-[src/platform/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/kernelApi.ts)
+[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
 ```typescript
         KernelConnectionMetadata
     >();
@@ -1647,7 +1647,7 @@ No description provided
 ```
 
 
-[src/platform/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/kernelApi.ts)
+[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
 ```typescript
         return this._onDidChangeKernelSpecifications.event;
     }
@@ -1659,7 +1659,7 @@ No description provided
 ```
 
 
-[src/platform/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/kernelApi.ts)
+[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
 ```typescript
         );
     }
@@ -1671,7 +1671,7 @@ No description provided
 ```
 
 
-[src/platform/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/kernelApi.ts)
+[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
 ```typescript
         return items.map((item) => this.translateKernelConnectionMetadataToExportedType(item));
     }
@@ -1683,7 +1683,7 @@ No description provided
 ```
 
 
-[src/platform/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/kernelApi.ts)
+[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
 ```typescript
         return kernels;
     }
@@ -1695,7 +1695,7 @@ No description provided
 ```
 
 
-[src/platform/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/kernelApi.ts)
+[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
 ```typescript
         }
     }
@@ -1707,7 +1707,7 @@ No description provided
 ```
 
 
-[src/platform/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/kernelApi.ts)
+[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
 ```typescript
         return this.startOrConnect(spec, uri);
     }
