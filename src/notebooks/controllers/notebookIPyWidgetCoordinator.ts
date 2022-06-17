@@ -22,7 +22,7 @@ import { INotebookControllerManager } from '../../notebooks/types';
 import { IVSCodeNotebookController } from '../../notebooks/controllers/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IWebviewCommunication } from '../../platform/webviews/types';
-import { CommonMessageCoordinator } from '../../kernels/ipywidgets-message-coordination/commonMessageCoordinator';
+import { CommonMessageCoordinator } from '../../kernels/ipywidgets/commonMessageCoordinator';
 
 class NotebookCommunication implements IWebviewCommunication, IDisposable {
     private eventHandlerListening?: boolean;

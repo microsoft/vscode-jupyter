@@ -5,9 +5,9 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken, NotebookCell, NotebookCellKind, NotebookDocument, Uri } from 'vscode';
-import { IFileSystem, IPlatformService } from '../common/platform/types';
-import { IConfigurationService } from '../common/types';
-import { appendLineFeed } from '../common/utils';
+import { IFileSystem, IPlatformService } from '../../platform/common/platform/types';
+import { IConfigurationService } from '../../platform/common/types';
+import { appendLineFeed } from '../../platform/common/utils';
 import { IExport } from './types';
 
 // Handles exporting a NotebookDocument to python

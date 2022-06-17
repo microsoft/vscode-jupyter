@@ -1,14 +1,14 @@
 import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
-import { IApplicationShell } from '../common/application/types';
-import { IConfigurationService } from '../common/types';
-import { ProgressReporter } from '../progress/progressReporter';
+import { IApplicationShell } from '../../platform/common/application/types';
+import { IConfigurationService } from '../../platform/common/types';
+import { ProgressReporter } from '../../platform/progress/progressReporter';
 import { ExportFileOpener } from './exportFileOpener';
 import { ExportFormat, INbConvertExport, IExportDialog, IFileConverter, IExport } from './types';
-import { IFileSystemNode } from '../common/platform/types.node';
+import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { FileConverter as FileConverterBase } from './fileConverter';
 import { ExportUtil } from './exportUtil.node';
-import { noop } from '../common/utils/misc';
+import { noop } from '../../platform/common/utils/misc';
 
 // Class is responsible for file conversions (ipynb, py, pdf, html) and managing nb convert for some of those conversions
 @injectable()

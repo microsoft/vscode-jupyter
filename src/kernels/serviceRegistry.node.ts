@@ -34,7 +34,7 @@ import { IKernelDependencyService, IKernelFinder, IKernelProvider } from './type
 import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
 import { KernelCrashMonitor } from './kernelCrashMonitor';
 import { KernelAutoRestartMonitor } from './kernelAutoRestartMonitor.node';
-import { registerTypes as registerWidgetTypes } from './ipywidgets-message-coordination/serviceRegistry.node';
+import { registerTypes as registerWidgetTypes } from './ipywidgets/serviceRegistry.node';
 import { registerTypes as registerJupyterTypes } from './jupyter/serviceRegistry.node';
 import { KernelProvider } from './kernelProvider.node';
 import { KernelFinder } from './kernelFinder.node';

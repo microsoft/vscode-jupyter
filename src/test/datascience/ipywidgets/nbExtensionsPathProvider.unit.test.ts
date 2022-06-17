@@ -6,9 +6,9 @@ import * as path from '../../../platform/vscode-path/path';
 import { assert } from 'chai';
 import { when, mock, instance } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { NbExtensionsPathProvider } from '../../../kernels/ipywidgets-message-coordination/nbExtensionsPathProvider.node';
-import { NbExtensionsPathProvider as WebNbExtensionsPathProvider } from '../../../kernels/ipywidgets-message-coordination/nbExtensionsPathProvider.web';
-import { INbExtensionsPathProvider } from '../../../kernels/ipywidgets-message-coordination/types';
+import { NbExtensionsPathProvider } from '../../../kernels/ipywidgets/nbExtensionsPathProvider.node';
+import { NbExtensionsPathProvider as WebNbExtensionsPathProvider } from '../../../kernels/ipywidgets/nbExtensionsPathProvider.web';
+import { INbExtensionsPathProvider } from '../../../kernels/ipywidgets/types';
 import {
     IJupyterKernelSpec,
     IKernel,

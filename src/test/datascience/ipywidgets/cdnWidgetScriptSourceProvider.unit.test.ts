@@ -17,8 +17,8 @@ import {
     CDNWidgetScriptSourceProvider,
     GlobalStateKeyToNeverWarnAboutNoNetworkAccess,
     GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce
-} from '../../../kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider';
-import { IWidgetScriptSourceProvider } from '../../../kernels/ipywidgets-message-coordination/types';
+} from '../../../kernels/ipywidgets/cdnWidgetScriptSourceProvider';
+import { IWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/types';
 import { HttpClient } from '../../../platform/common/net/httpClient';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
