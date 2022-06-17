@@ -538,8 +538,6 @@ ${actualCode}
         await vscodeNotebook.openNotebookDocument(notebookFile);
         let editor = await vscodeNotebook.showNotebookDocument(notebookFile, { preserveFocus: false });
 
-        await sleep(5000);
-
         const cells = editor.notebook.getCells();
         assert.strictEqual(cells?.length, 3);
         await waitForTextOutput(cells[0], 'first');
