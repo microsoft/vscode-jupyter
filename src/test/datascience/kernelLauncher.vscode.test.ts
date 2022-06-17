@@ -200,10 +200,13 @@ suite('DataScience - Kernel Launcher', () => {
 
         try {
             const zmq = await import('zeromq');
-            const sock = new zmq.Pull();
+            const sock = new zmq.Socket('pull');
 
             sock.connect(`tcp://${kernel.connection!.ip}:${kernel.connection!.stdin_port}`);
-            sock.receive().ignoreErrors(); // This will never return unless the kenrel process sends something. Just used for testing the API is available
+            // This will never return unless the kenrel process sends something. Just used for testing the API is available
+            sock.on('message', () => {
+                // Do nothing
+            });
             await sleep(50);
             sock.close();
         } finally {
