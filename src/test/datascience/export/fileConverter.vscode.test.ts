@@ -10,11 +10,11 @@ import { Uri } from 'vscode';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IConfigurationService, IDisposable, IWatchableJupyterSettings } from '../../../platform/common/types';
-import { ExportFileOpener } from '../../../platform/export/exportFileOpener';
-import { ExportInterpreterFinder } from '../../../platform/export/exportInterpreterFinder.node';
-import { ExportUtil } from '../../../platform/export/exportUtil.node';
-import { FileConverter } from '../../../platform/export/fileConverter.node';
-import { INbConvertExport, IExport, IExportDialog, ExportFormat } from '../../../platform/export/types';
+import { ExportFileOpener } from '../../../notebooks/export/exportFileOpener';
+import { ExportInterpreterFinder } from '../../../notebooks/export/exportInterpreterFinder.node';
+import { ExportUtil } from '../../../notebooks/export/exportUtil.node';
+import { FileConverter } from '../../../notebooks/export/fileConverter.node';
+import { INbConvertExport, IExport, IExportDialog, ExportFormat } from '../../../notebooks/export/types';
 import { ProgressReporter } from '../../../platform/progress/progressReporter';
 
 suite('DataScience - File Converter', () => {

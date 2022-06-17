@@ -27,6 +27,16 @@ import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellL
 import { IDebuggingManager } from '../kernels/debugger/types';
 import { DebuggingManager } from './debugger/debuggingManager';
 import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms';
+import { ExportDialog } from './export/exportDialog';
+import { ExportFormat, IExport, IExportBase, IExportDialog, IFileConverter, INbConvertExport } from './export/types';
+import { FileConverter } from './export/fileConverter';
+import { ExportFileOpener } from './export/exportFileOpener';
+import { ExportToPythonPlain } from './export/exportToPythonPlain';
+import { ExportBase } from './export/exportBase.web';
+import { ExportUtilBase } from './export/exportUtil';
+import { ExportToHTML } from './export/exportToHTML';
+import { ExportToPDF } from './export/exportToPDF';
+import { ExportToPython } from './export/exportToPython';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
@@ -81,4 +91,14 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSyncActivationService,
         ErrorRendererCommunicationHandler
     );
+
+    serviceManager.addSingleton<ExportFileOpener>(ExportFileOpener, ExportFileOpener);
+    serviceManager.addSingleton<IExportBase>(IExportBase, ExportBase);
+    serviceManager.addSingleton<IExportDialog>(IExportDialog, ExportDialog);
+    serviceManager.addSingleton<IFileConverter>(IFileConverter, FileConverter);
+    serviceManager.addSingleton<IExport>(IExport, ExportToPythonPlain, ExportFormat.python);
+    serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToHTML, ExportFormat.html);
+    serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToPDF, ExportFormat.pdf);
+    serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToPython, ExportFormat.python);
+    serviceManager.addSingleton<ExportUtilBase>(ExportUtilBase, ExportUtilBase);
 }

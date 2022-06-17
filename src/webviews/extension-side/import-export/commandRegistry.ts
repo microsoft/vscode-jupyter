@@ -10,7 +10,7 @@ import {
 } from '../../../platform/common/application/types';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { IDisposableRegistry } from '../../../platform/common/types';
-import { IFileConverter } from '../../../platform/export/types';
+import { IFileConverter } from '../../../notebooks/export/types';
 import { ExportCommands } from './exportCommands';
 
 @injectable()

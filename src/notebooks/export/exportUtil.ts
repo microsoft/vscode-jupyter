@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { NotebookCellData, NotebookData, NotebookDocument, Uri } from 'vscode';
-import { IExtensions } from '../common/types';
+import { IExtensions } from '../../platform/common/types';
 import { ExportFormat, IExportDialog } from './types';
 
 @injectable()

@@ -1,10 +1,10 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, NotebookDocument, Uri } from 'vscode';
-import { PythonEnvironment } from '../pythonEnvironments/info';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { ExportFormat, IExportBase, INbConvertExport } from './types';
 
 @injectable()
-export class ExportToPDF implements INbConvertExport {
+export class ExportToPython implements INbConvertExport {
     constructor(@inject(IExportBase) protected readonly exportBase: IExportBase) {}
 
     public async export(
@@ -13,6 +13,6 @@ export class ExportToPDF implements INbConvertExport {
         interpreter: PythonEnvironment,
         token: CancellationToken
     ): Promise<void> {
-        await this.exportBase.executeCommand(sourceDocument, target, ExportFormat.pdf, interpreter, token);
+        await this.exportBase.executeCommand(sourceDocument, target, ExportFormat.python, interpreter, token);
     }
 }

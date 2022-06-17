@@ -1059,7 +1059,7 @@ No description provided
 
 ## Locations Used
 
-[src/platform/export/exportFileOpener.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/export/exportFileOpener.ts)
+[src/notebooks/export/exportFileOpener.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/export/exportFileOpener.ts)
 ```typescript
     public async openFile(format: ExportFormat, uri: Uri, openDirectly: boolean = false) {
         if (format === ExportFormat.python) {
@@ -1071,7 +1071,7 @@ No description provided
 ```
 
 
-[src/platform/export/exportFileOpener.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/export/exportFileOpener.ts)
+[src/notebooks/export/exportFileOpener.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/export/exportFileOpener.ts)
 ```typescript
             });
         } else {
@@ -1083,7 +1083,7 @@ No description provided
 ```
 
 
-[src/platform/export/fileConverter.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/export/fileConverter.ts)
+[src/notebooks/export/fileConverter.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/export/fileConverter.ts)
 ```typescript
         }
 
@@ -1135,7 +1135,7 @@ No description provided
 
 ## Locations Used
 
-[src/platform/export/fileConverter.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/export/fileConverter.ts)
+[src/notebooks/export/fileConverter.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/export/fileConverter.ts)
 ```typescript
             await this.performExport(format, sourceDocument, target, token, candidateInterpreter);
         } catch (e) {
@@ -7343,18 +7343,6 @@ No description provided
 
 ## Locations Used
 
-[src/kernels/jupyter/interpreter/jupyterInterpreterDependencyService.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/interpreter/jupyterInterpreterDependencyService.node.ts)
-```typescript
-                pipInstalledInNonCondaEnv === false ? [Product.pip].concat(missingProducts) : missingProducts,
-                interpreter.displayName
-            );
-            sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
-                action: 'displayed',
-                moduleName: ProductNames.get(Product.jupyter)!,
-                pythonEnvType: interpreter.envType
-```
-
-
 [src/kernels/installer/productInstaller.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/installer/productInstaller.node.ts)
 ```typescript
             action = 'failed';
@@ -7472,6 +7460,18 @@ No description provided
                 action: 'error',
                 moduleName: productNameForTelemetry,
                 resourceType,
+```
+
+
+[src/kernels/jupyter/interpreter/jupyterInterpreterDependencyService.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/interpreter/jupyterInterpreterDependencyService.node.ts)
+```typescript
+                pipInstalledInNonCondaEnv === false ? [Product.pip].concat(missingProducts) : missingProducts,
+                interpreter.displayName
+            );
+            sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+                action: 'displayed',
+                moduleName: ProductNames.get(Product.jupyter)!,
+                pythonEnvType: interpreter.envType
 ```
 
 

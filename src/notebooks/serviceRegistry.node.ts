@@ -30,6 +30,18 @@ import { InterpreterPackageTracker } from './telemetry/interpreterPackageTracker
 import { NotebookCellLanguageService } from './languages/cellLanguageService';
 import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellLanguageService';
 import { DebuggingManager } from './debugger/debuggingManager';
+import { ExportBase } from './export/exportBase.node';
+import { ExportDialog } from './export/exportDialog';
+import { ExportFileOpener } from './export/exportFileOpener';
+import { ExportInterpreterFinder } from './export/exportInterpreterFinder.node';
+import { ExportToHTML } from './export/exportToHTML';
+import { ExportToPDF } from './export/exportToPDF';
+import { ExportToPython } from './export/exportToPython';
+import { ExportToPythonPlain } from './export/exportToPythonPlain';
+import { ExportUtil } from './export/exportUtil.node';
+import { FileConverter } from './export/fileConverter.node';
+import { IFileConverter, INbConvertExport, ExportFormat, IExport, IExportDialog, IExportBase } from './export/types';
+import { ExportUtilBase } from './export/exportUtil';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
@@ -94,4 +106,19 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDebuggingManager>(IDebuggingManager, DebuggingManager, undefined, [
         IExtensionSingleActivationService
     ]);
+
+    // File export/import
+    serviceManager.addSingleton<IFileConverter>(IFileConverter, FileConverter);
+    serviceManager.addSingleton<ExportInterpreterFinder>(ExportInterpreterFinder, ExportInterpreterFinder);
+    serviceManager.addSingleton<ExportFileOpener>(ExportFileOpener, ExportFileOpener);
+
+    serviceManager.addSingleton<IExportBase>(IExportBase, ExportBase);
+    serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToPDF, ExportFormat.pdf);
+    serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToHTML, ExportFormat.html);
+    serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToPython, ExportFormat.python);
+    serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportBase, 'Export Base');
+    serviceManager.addSingleton<IExport>(IExport, ExportToPythonPlain, ExportFormat.python);
+    serviceManager.addSingleton<ExportUtilBase>(ExportUtilBase, ExportUtilBase);
+    serviceManager.addSingleton<ExportUtil>(ExportUtil, ExportUtil);
+    serviceManager.addSingleton<IExportDialog>(IExportDialog, ExportDialog);
 }

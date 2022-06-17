@@ -8,8 +8,8 @@ import { TextEditor, Uri } from 'vscode';
 import { IApplicationShell, IDocumentManager } from '../../../platform/common/application/types';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { IBrowserService, IDisposable } from '../../../platform/common/types';
-import { ExportFileOpener } from '../../../platform/export/exportFileOpener';
-import { ExportFormat } from '../../../platform/export/types';
+import { ExportFileOpener } from '../../../notebooks/export/exportFileOpener';
+import { ExportFormat } from '../../../notebooks/export/types';
 import { ProgressReporter } from '../../../platform/progress/progressReporter';
 import { getLocString } from '../../../webviews/webview-side/react-common/locReactSide';
 

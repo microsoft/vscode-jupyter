@@ -3,15 +3,15 @@ import * as path from '../../platform/vscode-path/path';
 import { CancellationToken, NotebookDocument, Uri } from 'vscode';
 import { INotebookImporter } from '../../kernels/jupyter/types';
 import { IJupyterSubCommandExecutionService } from '../../kernels/jupyter/types.node';
-import { IFileSystemNode } from '../common/platform/types.node';
-import { IPythonExecutionFactory, IPythonExecutionService } from '../common/process/types.node';
+import { IFileSystemNode } from '../../platform/common/platform/types.node';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../platform/common/process/types.node';
 
-import { reportAction } from '../progress/decorator';
-import { ReportableAction } from '../progress/types';
-import { PythonEnvironment } from '../pythonEnvironments/info';
+import { reportAction } from '../../platform/progress/decorator';
+import { ReportableAction } from '../../platform/progress/types';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { ExportFormat, IExportBase, IExportDialog, INbConvertExport } from './types';
 import { ExportUtil } from './exportUtil.node';
-import { TemporaryDirectory } from '../common/platform/types';
+import { TemporaryDirectory } from '../../platform/common/platform/types';
 import { ExportInterpreterFinder } from './exportInterpreterFinder.node';
 
 @injectable()
