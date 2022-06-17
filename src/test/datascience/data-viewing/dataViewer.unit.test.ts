@@ -17,7 +17,7 @@ import { JupyterSettings } from '../../../platform/common/configSettings';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { IConfigurationService } from '../../../platform/common/types';
 import { IDataScienceErrorHandler } from '../../../platform/errors/types';
-import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataViewer.node';
+import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataViewer';
 import { JupyterVariableDataProvider } from '../../../webviews/extension-side/dataviewer/jupyterVariableDataProvider';
 import { IDataViewer, IDataViewerDataProvider } from '../../../webviews/extension-side/dataviewer/types';
 import { MockMemento } from '../../mocks/mementos';

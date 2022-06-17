@@ -8,7 +8,7 @@ import { EventEmitter, Memento, Uri, ViewColumn } from 'vscode';
 
 import { sendTelemetryEvent } from '../../../telemetry';
 import { JupyterDataRateLimitError } from '../../../platform/errors/jupyterDataRateLimitError';
-import { DataViewerMessageListener } from './dataViewerMessageListener.node';
+import { DataViewerMessageListener } from './dataViewerMessageListener';
 import {
     DataViewerMessages,
     IDataFrameInfo,
@@ -19,10 +19,7 @@ import {
     IGetSliceRequest,
     IJupyterVariableDataProvider
 } from './types';
-import {
-    isValidSliceExpression,
-    preselectedSliceExpression
-} from '../../../webviews/webview-side/data-explorer/helpers';
+import { isValidSliceExpression, preselectedSliceExpression } from '../../webview-side/data-explorer/helpers';
 import { CheckboxState } from '../../../telemetry/constants';
 import { IKernel } from '../../../kernels/types';
 import {
@@ -32,19 +29,24 @@ import {
 } from '../../../platform/common/application/types';
 import { HelpLinks } from '../../../platform/common/constants';
 import { traceError, traceInfo } from '../../../platform/logging';
-import { IConfigurationService, IMemento, GLOBAL_MEMENTO, Resource, IDisposable } from '../../../platform/common/types';
+import {
+    IConfigurationService,
+    IMemento,
+    GLOBAL_MEMENTO,
+    Resource,
+    IDisposable,
+    IExtensionContext
+} from '../../../platform/common/types';
 import * as localize from '../../../platform/common/utils/localize';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
-import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { IDataScienceErrorHandler } from '../../../platform/errors/types';
 import { Telemetry } from '../../webview-side/common/constants';
 import { WebViewViewChangeEventArgs } from '../types';
-import { WebviewPanelHost } from '../webviewPanelHost.node';
+import { WebviewPanelHost } from '../webviewPanelHost';
 import { noop } from '../../../platform/common/utils/misc';
 import { joinPath } from '../../../platform/vscode-path/resources';
 
 const PREFERRED_VIEWGROUP = 'JupyterDataViewerPreferredViewColumn';
-const dataExplorerDir = joinPath(Uri.file(EXTENSION_ROOT_DIR), 'out', 'webviews', 'webview-side', 'viewers');
 @injectable()
 export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements IDataViewer, IDisposable {
     private dataProvider: IDataViewerDataProvider | IJupyterVariableDataProvider | undefined;
@@ -79,8 +81,10 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IMemento) @named(GLOBAL_MEMENTO) readonly globalMemento: Memento,
-        @inject(IDataScienceErrorHandler) readonly errorHandler: IDataScienceErrorHandler
+        @inject(IDataScienceErrorHandler) readonly errorHandler: IDataScienceErrorHandler,
+        @inject(IExtensionContext) readonly context: IExtensionContext
     ) {
+        const dataExplorerDir = joinPath(context.extensionUri, 'out', 'webviews', 'webview-side', 'viewers');
         super(
             configuration,
             provider,

@@ -28,7 +28,7 @@ import { RendererCommunication } from './plotView/rendererCommunication.node';
 import { PlotSaveHandler } from './plotView/plotSaveHandler.node';
 import { PlotViewHandler } from './plotView/plotViewHandler.node';
 import { DataViewerCommandRegistry } from './dataviewer/dataViewerCommandRegistry';
-import { DataViewer } from './dataviewer/dataViewer.node';
+import { DataViewer } from './dataviewer/dataViewer';
 import { IPlotViewer, IPlotViewerProvider } from './plotting/types';
 import { PlotViewer } from './plotting/plotViewer.node';
 import { DataViewerDependencyService } from './dataviewer/dataViewerDependencyService.node';

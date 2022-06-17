@@ -13,6 +13,7 @@ import { VariableViewProvider } from './variablesView/variableViewProvider';
 import { JupyterVariableDataProvider } from './dataviewer/jupyterVariableDataProvider';
 import { JupyterVariableDataProviderFactory } from './dataviewer/jupyterVariableDataProviderFactory';
 import {
+    IDataViewer,
     IDataViewerFactory,
     IJupyterVariableDataProvider,
     IJupyterVariableDataProviderFactory
@@ -24,6 +25,7 @@ import { DataViewerFactory } from './dataviewer/dataViewerFactory';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from './renderer';
 import { ActiveEditorContextService } from './activeEditorContext';
 import { GlobalActivation } from './globalActivation';
+import { DataViewer } from './dataviewer/dataViewer';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
@@ -36,6 +38,7 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.add<IWebviewPanelProvider>(IWebviewPanelProvider, WebviewPanelProvider);
 
     // Data viewer
+    serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
     serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
