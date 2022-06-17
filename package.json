@@ -996,7 +996,8 @@
             ],
             "notebook/kernelSource": [
                 {
-                    "command": "jupyter.installPythonExtensionViaKernelPicker"
+                    "command": "jupyter.installPythonExtensionViaKernelPicker",
+                    "when": "jupyter.showInstallPythonExtensionCommand"
                 }
             ],
             "interactive/toolbar": [
