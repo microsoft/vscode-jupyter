@@ -499,7 +499,7 @@ ${actualCode}
         await waitForTextOutput(lastCell, '1');
     });
 
-    test.only('Export Interactive window to Notebook', async () => {
+    test('Export Interactive window to Notebook', async () => {
         const activeInteractiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
         await waitForInteractiveWindow(activeInteractiveWindow);
 
