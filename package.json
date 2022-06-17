@@ -2205,7 +2205,7 @@
         "vscode-nls": "^5.0.1",
         "vscode-tas-client": "^0.1.27",
         "ws": "^6.2.2",
-        "zeromq": "^6.0.0-beta.6"
+        "zeromq": "^5.2.8"
     },
     "devDependencies": {
         "@actions/core": "^1.2.6",
@@ -2277,6 +2277,7 @@
         "@types/webpack-env": "^1.16.3",
         "@types/ws": "^6.0.1",
         "@types/xml2js": "^0.4.2",
+        "@types/zeromq": "^5.2.1",
         "@typescript-eslint/eslint-plugin": "^5.13.0",
         "@typescript-eslint/eslint-plugin-tslint": "^5.13.0",
         "@typescript-eslint/parser": "^5.13.0",
