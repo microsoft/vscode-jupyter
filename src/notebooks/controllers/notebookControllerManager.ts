@@ -404,7 +404,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
 
     // Called when we select the command to install the python extension via the kernel picker
-    // If new controllers are added before this fully resolves and in progress executions will be
+    // If new controllers are added before this fully resolves any in progress executions will be
     // passed on, so we can trigger with the run button, install, get a controller and not have to
     // click run again
     private async installPythonExtensionViaKernelPicker(): Promise<void> {
@@ -428,29 +428,32 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             // Now start to indicate that we are performing the install and locating kernels
             const reporter = this.progressReporter.createProgressIndicator(DataScience.installingPythonExtension());
             try {
-                const extensionHooked = createDeferred<void>();
-
-                // Allow forward movement when the extension is installed, active, and hooked
-                this.pythonApi.onPythonExtensionHooked(
-                    () => {
-                        extensionHooked.resolve();
-                    },
-                    this,
-                    this.disposables
-                );
-
+                // Directly install the python extension
                 await this.commandManager.executeCommand('workbench.extensions.installExtension', PythonExtension);
-                await extensionHooked.promise;
+
+                // Don't move forward until we have hooked the API
+                // Note extensions.installExtension seems to return "mostly" after the install is done, but at that
+                // point we don't see it installed via the checker and don't have the API so wait for it here
+                await this.pythonApi.pythonExtensionHooked;
 
                 if (this.extensionChecker.isPythonExtensionInstalled) {
-                    traceInfo('Installed');
+                    traceInfo('Python Extension installed via Kernel Picker command');
+                    sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {
+                        action: 'success'
+                    });
+
+                    // Trigger a load of our notebook controllers, we want to await it here so that any in
+                    // progress executions get passed to the suggested controller
                     await this.loadNotebookControllers(true);
                 } else {
-                    traceInfo('Not Installed');
+                    traceError('Failed to install Python Extension via Kernel Picker command');
+                    sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {
+                        action: 'failed'
+                    });
+                    throw new Error('Failed to install Python Extension via Kernel Picker command');
                 }
-
-                traceInfo('Done');
             } finally {
+                // Always clean up our progress reported
                 reporter.dispose();
             }
         }

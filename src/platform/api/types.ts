@@ -19,7 +19,7 @@ export interface ILanguageServer extends Disposable {
 export const IPythonApiProvider = Symbol('IPythonApi');
 export interface IPythonApiProvider {
     onDidActivatePythonExtension: Event<void>;
-    onPythonExtensionHooked: Event<void>;
+    pythonExtensionHooked: Promise<void>;
     getApi(): Promise<PythonApi>;
     setApi(api: PythonApi): void;
 }
@@ -28,6 +28,7 @@ export interface IPythonExtensionChecker {
     readonly isPythonExtensionInstalled: boolean;
     readonly isPythonExtensionActive: boolean;
     showPythonExtensionInstallRequiredPrompt(): Promise<void>;
+    directlyInstallPythonExtension(): Promise<void>;
 }
 
 /**
