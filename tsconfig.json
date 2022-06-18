@@ -23,6 +23,7 @@
         "resolveJsonModule": true,
         "removeComments": true,
         "useUnknownInCatchVariables": false,
+        "strictPropertyInitialization": false,
         "types": ["@types/vscode-notebook-renderer/preload", "webpack-env"]
     },
     "exclude": [

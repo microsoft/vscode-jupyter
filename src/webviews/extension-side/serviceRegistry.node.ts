@@ -20,7 +20,7 @@ import {
     IJupyterVariableDataProviderFactory
 } from './dataviewer/types';
 import { INotebookExporter, INotebookImporter } from '../../kernels/jupyter/types';
-import { JupyterExporter } from './import-export/jupyterExporter.node';
+import { JupyterExporter } from './import-export/jupyterExporter';
 import { JupyterImporter } from './import-export/jupyterImporter.node';
 import { CommandRegistry as ExportCommandRegistry } from './import-export/commandRegistry';
 import { ServerPreload } from './serverPreload/serverPreload.node';
@@ -28,7 +28,7 @@ import { RendererCommunication } from './plotView/rendererCommunication.node';
 import { PlotSaveHandler } from './plotView/plotSaveHandler.node';
 import { PlotViewHandler } from './plotView/plotViewHandler.node';
 import { DataViewerCommandRegistry } from './dataviewer/dataViewerCommandRegistry';
-import { DataViewer } from './dataviewer/dataViewer.node';
+import { DataViewer } from './dataviewer/dataViewer';
 import { IPlotViewer, IPlotViewerProvider } from './plotting/types';
 import { PlotViewer } from './plotting/plotViewer.node';
 import { DataViewerDependencyService } from './dataviewer/dataViewerDependencyService.node';

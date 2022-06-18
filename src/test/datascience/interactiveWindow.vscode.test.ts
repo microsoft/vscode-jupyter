@@ -8,18 +8,30 @@ import { traceInfo } from '../../platform/logging';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../platform/common/types';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
-import { captureScreenShot, IExtensionTestApi } from '../common.node';
+import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common.node';
 import { initialize, IS_REMOTE_NATIVE_TEST, IS_CONDA_TEST } from '../initialize.node';
 import {
     closeInteractiveWindow,
+    createStandaloneInteractiveWindow,
+    insertIntoInputEditor,
     installIPyKernel,
     runCurrentFile,
     runNewPythonFile,
     setActiveInterpreter,
     uninstallIPyKernel,
+    waitForInteractiveWindow,
     waitForLastCellToComplete
 } from './helpers.node';
-import { closeNotebooksAndCleanUpAfterTests, startJupyterServer } from './notebook/helper.node';
+import {
+    closeNotebooksAndCleanUpAfterTests,
+    defaultNotebookTestTimeout,
+    generateTemporaryFilePath,
+    hijackPrompt,
+    hijackSavePrompt,
+    startJupyterServer,
+    waitForTextOutput,
+    WindowPromptStubButtonClickOptions
+} from './notebook/helper.node';
 import { INotebookControllerManager } from '../../notebooks/types';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
@@ -27,6 +39,8 @@ import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/
 import { IPythonApiProvider } from '../../platform/api/types';
 import { isEqual } from '../../platform/vscode-path/resources';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
+import { IVSCodeNotebook } from '../../platform/common/application/types';
+import { Commands } from '../../platform/common/constants';
 
 suite(`Interactive window`, async function () {
     this.timeout(120_000);
@@ -151,6 +165,50 @@ suite(`Interactive window`, async function () {
         } finally {
             await postSwitch();
         }
+    });
+
+    test('Export Interactive window to Notebook', async () => {
+        const activeInteractiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
+        await waitForInteractiveWindow(activeInteractiveWindow);
+
+        // Add a few cells from the input box
+        await insertIntoInputEditor('print("first")');
+        await vscode.commands.executeCommand('interactive.execute');
+        await insertIntoInputEditor('print("second")');
+        await vscode.commands.executeCommand('interactive.execute');
+        await insertIntoInputEditor('print("third")');
+        await vscode.commands.executeCommand('interactive.execute');
+
+        await waitForLastCellToComplete(activeInteractiveWindow, 3, false);
+        let notebookFile = await generateTemporaryFilePath('ipynb', disposables);
+        const promptOptions: WindowPromptStubButtonClickOptions = {
+            result: notebookFile,
+            clickImmediately: true
+        };
+        let savePrompt = await hijackSavePrompt('Export', promptOptions, disposables);
+        let openFilePrompt = await hijackPrompt(
+            'showInformationMessage',
+            { contains: 'Notebook written to' },
+            { dismissPrompt: false },
+            disposables
+        );
+
+        await vscode.commands.executeCommand(Commands.InteractiveExportAsNotebook, activeInteractiveWindow.notebookUri);
+
+        await waitForCondition(() => savePrompt.displayed, defaultNotebookTestTimeout, 'save Prompt not displayed');
+        await waitForCondition(
+            () => openFilePrompt.displayed,
+            defaultNotebookTestTimeout,
+            'open file Prompt not displayed'
+        );
+
+        const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+        await vscodeNotebook.openNotebookDocument(notebookFile);
+        let editor = await vscodeNotebook.showNotebookDocument(notebookFile, { preserveFocus: false });
+
+        const cells = editor.notebook.getCells();
+        assert.strictEqual(cells?.length, 3);
+        await waitForTextOutput(cells[0], 'first');
     });
 
     // todo@joyceerhl
