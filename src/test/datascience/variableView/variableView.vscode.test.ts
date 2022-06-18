@@ -24,7 +24,7 @@ import { traceInfo } from '../../../platform/logging';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { Commands } from '../../../platform/common/constants';
-import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataViewer.node';
+import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataViewer';
 import { IVariableViewProvider } from '../../../webviews/extension-side/variablesView/types';
 
 suite('DataScience - VariableView', function () {
