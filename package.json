@@ -841,6 +841,10 @@
             {
                 "command": "jupyter.installPythonExtensionViaKernelPicker",
                 "title": "Install Python Extension"
+            },
+            {
+                "command": "jupyter.installPythonViaKernelPicker",
+                "title": "Install Python"
             }
         ],
         "menus": {
@@ -998,6 +1002,10 @@
                 {
                     "command": "jupyter.installPythonExtensionViaKernelPicker",
                     "when": "jupyter.showInstallPythonExtensionCommand"
+                },
+                {
+                    "command": "jupyter.installPythonViaKernelPicker",
+                    "when": "jupyter.showInstallPythonCommand"
                 }
             ],
             "interactive/toolbar": [
@@ -1074,6 +1082,10 @@
             "commandPalette": [
                 {
                     "command": "jupyter.installPythonExtensionViaKernelPicker",
+                    "when": "false"
+                },
+                {
+                    "command": "jupyter.installPythonViaKernelPicker",
                     "when": "false"
                 },
                 {

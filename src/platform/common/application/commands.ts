@@ -193,4 +193,5 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.ReplayPylanceLog]: [Uri];
     [DSCommands.ReplayPylanceLogStep]: [];
     [DSCommands.InstallPythonExtensionViaKernelPicker]: [];
+    [DSCommands.InstallPythonViaKernelPicker]: [];
 }

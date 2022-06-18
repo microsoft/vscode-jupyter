@@ -75,7 +75,6 @@ import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConne
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
 import { ILocalResourceUriConverter } from '../../kernels/ipywidgets-message-coordination/types';
 import { isCancellationError } from '../../platform/common/cancellation';
-import { createDeferred } from '../../platform/common/utils/async';
 import { ProgressReporter } from '../../platform/progress/progressReporter';
 import { ContextKey } from '../../platform/common/contextKey';
 import { Common, DataScience } from '../../platform/common/utils/localize';
@@ -119,6 +118,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     }
     private _controllersLoaded?: boolean;
     private showInstallPythonExtensionContext: ContextKey;
+    private showInstallPythonContext: ContextKey;
     public get onNotebookControllerSelectionChanged() {
         return this._onNotebookControllerSelectionChanged.event;
     }
@@ -234,12 +234,20 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
                 this
             )
         );
+        this.disposables.push(
+            this.commandManager.registerCommand(
+                Commands.InstallPythonViaKernelPicker,
+                this.installPythonViaKernelPicker,
+                this
+            )
+        );
 
         // This context key controls if the command to install python extension should be shown
         this.showInstallPythonExtensionContext = new ContextKey(
             'jupyter.showInstallPythonExtensionCommand',
             this.commandManager
         );
+        this.showInstallPythonContext = new ContextKey('jupyter.showInstallPythonCommand', this.commandManager);
     }
     public async getActiveInterpreterOrDefaultController(
         notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView,
@@ -349,9 +357,19 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         // we don't end up with a kernel that asks to install python)
         if (!this.isWeb) {
             if ([...this.registeredControllers.values()].some((item) => isPythonKernelConnection(item.connection))) {
+                // We have some type of python kernel, turn off both install helper commands
                 await this.showInstallPythonExtensionContext.set(false);
+                await this.showInstallPythonContext.set(false);
             } else {
-                await this.showInstallPythonExtensionContext.set(true);
+                if (!this.extensionChecker.isPythonExtensionInstalled) {
+                    // If we don't have the extension installed, show extension install command
+                    await this.showInstallPythonExtensionContext.set(true);
+                    await this.showInstallPythonContext.set(false);
+                } else {
+                    // If we do have the extension installed, show python install command
+                    await this.showInstallPythonExtensionContext.set(false);
+                    await this.showInstallPythonContext.set(true);
+                }
             }
         }
 
@@ -400,6 +418,28 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         ) as LiveRemoteKernelConnectionMetadata[];
         if (liveConnections.length > 0) {
             this.remoteRefreshedEmitter.fire(liveConnections);
+        }
+    }
+
+    // This is called via the "install python" command in the kernel picker in the case where
+    // we have the python extension installed, but 0 valid python kernels / interpreters found
+    // just pop up a dialog box to prompt the user on how to install python
+    // Unlike installing the python extension we don't expect in progress executions to be handled
+    // when this command is installed, user will have to manually install python and rerun the cell
+    private async installPythonViaKernelPicker(): Promise<void> {
+        sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'displayed' });
+        const selection = await this.appShell.showErrorMessage(
+            DataScience.pythonNotInstalledNonMarkdown(),
+            { modal: true },
+            Common.install()
+        );
+
+        if (selection === Common.install()) {
+            sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'download' });
+            // Direct the user to download from python.org
+            this.appShell.openUrl('https://www.python.org/downloads');
+        } else {
+            sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'dismissed' });
         }
     }
 

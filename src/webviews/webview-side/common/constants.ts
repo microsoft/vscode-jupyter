@@ -157,6 +157,7 @@ export namespace Commands {
     export const ReplayPylanceLog = 'jupyter.replayPylanceLog';
     export const ReplayPylanceLogStep = 'jupyter.replayPylanceLogStep';
     export const InstallPythonExtensionViaKernelPicker = 'jupyter.installPythonExtensionViaKernelPicker';
+    export const InstallPythonViaKernelPicker = 'jupyter.installPythonViaKernelPicker';
 }
 
 export namespace CodeLensCommands {
