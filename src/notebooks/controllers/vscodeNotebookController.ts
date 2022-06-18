@@ -54,7 +54,7 @@ import { IServiceContainer } from '../../platform/ioc/types';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { Commands } from '../../platform/common/constants';
 import { Telemetry } from '../../telemetry';
-import { IDataScienceErrorHandler, WrappedError } from '../../platform/errors/types';
+import { WrappedError } from '../../platform/errors/types';
 import { IPyWidgetMessages } from '../../platform/messageTypes';
 import {
     getKernelConnectionPath,
@@ -94,6 +94,7 @@ import {
 import { KernelMessage } from '@jupyterlab/services';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../../kernels/telemetry/helper';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
+import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 
 export class VSCodeNotebookController implements Disposable, IVSCodeNotebookController {
     private readonly _onNotebookControllerSelected: EventEmitter<{

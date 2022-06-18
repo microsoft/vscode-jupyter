@@ -51,7 +51,6 @@ import { IServiceContainer } from '../platform/ioc/types';
 import { SysInfoReason } from '../platform/messageTypes';
 import { createOutputWithErrorMessageForDisplay } from '../platform/errors/errorUtils';
 import { INotebookExporter } from '../kernels/jupyter/types';
-import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { IExportDialog, ExportFormat } from '../notebooks/export/types';
 import { generateCellsFromNotebookDocument } from './editor-integration/cellFactory';
 import { CellMatcher } from './editor-integration/cellMatcher';
@@ -67,6 +66,7 @@ import {
     IGeneratedCodeStorageFactory,
     InteractiveCellMetadata
 } from './editor-integration/types';
+import { IDataScienceErrorHandler } from '../kernels/errors/types';
 import { CellExecutionCreator } from '../kernels/execution/cellExecutionCreator';
 import { updateNotebookMetadata } from '../kernels/execution/helpers';
 import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';

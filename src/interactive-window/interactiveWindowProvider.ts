@@ -53,7 +53,7 @@ import { getInteractiveWindowTitle } from './identity';
 import { createDeferred } from '../platform/common/utils/async';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { INotebookExporter } from '../kernels/jupyter/types';
-import { IDataScienceErrorHandler } from '../platform/errors/types';
+import { IDataScienceErrorHandler } from '../kernels/errors/types';
 import { IExportDialog } from '../notebooks/export/types';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { ICodeGeneratorFactory, IGeneratedCodeStorageFactory } from './editor-integration/types';

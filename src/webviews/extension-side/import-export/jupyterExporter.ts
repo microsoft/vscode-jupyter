@@ -12,11 +12,11 @@ import { IFileSystem } from '../../../platform/common/platform/types';
 import { ICell, IConfigurationService } from '../../../platform/common/types';
 import { pruneCell } from '../../../platform/common/utils';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { IDataScienceErrorHandler } from '../../../platform/errors/types';
 import { defaultNotebookFormat } from '../../../platform/common/constants';
 import { INotebookExporter, IJupyterExecution } from '../../../kernels/jupyter/types';
 import { openAndShowNotebook } from '../../../platform/common/utils/notebooks';
 import { noop } from '../../../platform/common/utils/misc';
+import { IDataScienceErrorHandler } from '../../../kernels/errors/types';
 
 @injectable()
 export class JupyterExporter implements INotebookExporter {

@@ -4,7 +4,7 @@
 import { DataScience } from '../../platform/common/utils/localize';
 import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
 import { KernelConnectionMetadata } from '../types';
-import { BaseKernelError } from '../../platform/errors/types';
+import { BaseKernelError } from './types';
 
 export class KernelConnectionTimeoutError extends BaseKernelError {
     constructor(kernelConnection: KernelConnectionMetadata) {

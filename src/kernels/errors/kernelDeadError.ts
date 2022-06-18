@@ -4,7 +4,7 @@
 import { DataScience } from '../../platform/common/utils/localize';
 import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
 import { KernelConnectionMetadata } from '../types';
-import { WrappedKernelError } from '../../platform/errors/types';
+import { WrappedKernelError } from './types';
 
 export class KernelDeadError extends WrappedKernelError {
     constructor(kernelConnectionMetadata: KernelConnectionMetadata) {

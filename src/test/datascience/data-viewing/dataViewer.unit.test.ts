@@ -16,7 +16,7 @@ import { WorkspaceService } from '../../../platform/common/application/workspace
 import { JupyterSettings } from '../../../platform/common/configSettings';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { IConfigurationService, IExtensionContext } from '../../../platform/common/types';
-import { IDataScienceErrorHandler } from '../../../platform/errors/types';
+import { IDataScienceErrorHandler } from '../../../kernels/errors/types';
 import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataViewer';
 import { JupyterVariableDataProvider } from '../../../webviews/extension-side/dataviewer/jupyterVariableDataProvider';
 import { IDataViewer, IDataViewerDataProvider } from '../../../webviews/extension-side/dataviewer/types';

@@ -38,13 +38,7 @@ import {
 } from '../../platform/errors/errorUtils';
 import { JupyterConnectError } from '../../platform/errors/jupyterConnectError';
 import { JupyterKernelDependencyError } from './jupyterKernelDependencyError';
-import {
-    WrappedError,
-    BaseKernelError,
-    WrappedKernelError,
-    BaseError,
-    IDataScienceErrorHandler
-} from '../../platform/errors/types';
+import { WrappedError, BaseError } from '../../platform/errors/types';
 import { noop } from '../../platform/common/utils/misc';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { KernelDeadError } from './kernelDeadError';
@@ -62,6 +56,7 @@ import { computeServerId } from '../jupyter/jupyterUtils';
 import { RemoteJupyterServerConnectionError } from '../../platform/errors/remoteJupyterServerConnectionError';
 import { RemoteJupyterServerUriProviderError } from './remoteJupyterServerUriProviderError';
 import { InvalidRemoteJupyterServerUriHandleError } from './invalidRemoteJupyterServerUriHandleError';
+import { BaseKernelError, IDataScienceErrorHandler, WrappedKernelError } from './types';
 
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {
