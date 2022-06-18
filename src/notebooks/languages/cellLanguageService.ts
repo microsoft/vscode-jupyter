@@ -7,7 +7,6 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable, named } from 'inversify';
 import { Memento, NotebookCellKind, NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
-import { IJupyterKernelSpec } from '../../platform/api/extension';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import {
@@ -24,7 +23,7 @@ import {
     isPythonKernelConnection
 } from '../../kernels/helpers';
 import { getNotebookMetadata, isJupyterNotebook, translateKernelLanguageToMonaco } from '../../platform/common/utils';
-import { KernelConnectionMetadata } from '../../kernels/types';
+import { IJupyterKernelSpec, KernelConnectionMetadata } from '../../kernels/types';
 
 export const LastSavedNotebookCellLanguage = 'DATASCIENCE.LAST_SAVED_CELL_LANGUAGE';
 /**

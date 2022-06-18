@@ -19,7 +19,7 @@ import { traceError, traceInfo } from '../logging';
 
 import { ICell } from './types';
 import { DataScience } from './utils/localize';
-import { IJupyterKernelSpec } from '../api/extension';
+import { IJupyterKernelSpec } from '../../webviews/extension-side/api/extension';
 
 // Can't figure out a better way to do this. Enumerate
 // the allowed keys of different output formats.
