@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 import { IDisposable } from '@fluentui/react';
 import type { KernelMessage } from '@jupyterlab/services';
-import * as wireProtocol from '@nteract/messaging/lib/wire-protocol';
 import * as uuid from 'uuid/v4';
 import * as WebSocketWS from 'ws';
 import { createSockets } from 'enchannel-zmq-backend';
@@ -135,7 +134,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     private async generateChannels(connection: IKernelConnection) {
         // Need a routing id for them to share.
         const routingId = uuid();
-        const result = await createSockets({ ...connection, version: 1 }, routingId);
+        const result = await createSockets({ ...connection, version: 1 }, undefined, routingId);
 
         // What about hb port? Enchannel didn't use this one.
 
@@ -150,9 +149,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
 
     private onIncomingMessage(channel: Channel, data: any) {
         // Decode the message if still possible.
-        const message: KernelMessage.IMessage = this.closed
-            ? {}
-            : (wireProtocol.decode(data, this.connection.key, this.connection.signature_scheme) as any);
+        const message: KernelMessage.IMessage = this.closed ? {} : data;
 
         // Make sure it has a channel on it
         message.channel = channel as any;
@@ -188,9 +185,6 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     }
 
     private sendMessage(msg: KernelMessage.IMessage, bypassHooking: boolean) {
-        // First encode the message.
-        const data = wireProtocol.encode(msg as any, this.connection.key, this.connection.signature_scheme);
-
         // Then send through our hooks, and then post to the real zmq socket
         if (!bypassHooking && this.sendHooks.length) {
             // Separate encoding for ipywidgets. It expects the same result a WebSocket would generate.
@@ -198,10 +192,10 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
 
             this.sendChain = this.sendChain
                 .then(() => Promise.all(this.sendHooks.map((s) => s(hookData, noop))))
-                .then(() => this.postToSocket(msg.channel, data));
+                .then(() => this.postToSocket(msg.channel, msg));
         } else {
             this.sendChain = this.sendChain.then(() => {
-                return this.postToSocket(msg.channel, data);
+                return this.postToSocket(msg.channel, msg);
             });
         }
         // Ensure we don't have any unhandled exceptions (swallow exceptions as we're not awaiting on this promise).
@@ -212,8 +206,11 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         const channels = await this.channelsPromise;
         const socket = (channels as any)[channel] as JMP.Socket;
         if (socket) {
+            data.type = channel;
             socket.send(data, undefined, (err) => {
-                traceError(`Error communicating with the kernel`, err);
+                if (err) {
+                    traceError(`Error communicating with the kernel`, err);
+                }
             });
         } else {
             traceError(`Attempting to send message on invalid channel: ${channel}`);
