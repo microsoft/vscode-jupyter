@@ -21,7 +21,7 @@ const testEntry = {
 
 const isProdBuild = process.argv.includes('--mode');
 // When running web tests, the entry point for the tests and extension are the same.
-// Also, when building the production VSIX there's no need to compile the tests.
+// Also, when building the production VSIX there's no need to compile the tests (faster build pipline).
 const entry = process.env.VSC_TEST_BUNDLE === 'true' ? testEntry : isProdBuild ? prodEntry : devEntry;
 
 // tslint:disable-next-line:no-var-requires no-require-imports
