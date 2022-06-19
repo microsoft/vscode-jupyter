@@ -10,8 +10,9 @@ const settingsFile = path.join(__dirname, '..', 'src', 'test', 'datascience', '.
 async function go() {
     let url = process.env.EXISTING_JUPYTER_URI;
     if (!url) {
-        const { server, url } = await startJupyter(true);
-        fs.writeFileSync(path.join(__dirname, '..', 'temp', 'jupyter.pid'), server.pid.toString());
+        const info = await startJupyter(true);
+        url = info.url;
+        fs.writeFileSync(path.join(__dirname, '..', 'temp', 'jupyter.pid'), info.server.pid.toString());
     } else {
         console.log('Jupyter server URL provided in env args, no need to start one');
     }
