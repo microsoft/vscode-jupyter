@@ -43,7 +43,7 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
      * - Desktop + Local Kernel + CDN
      * - Desktop + Local Kernel + No CDN
      */
-    suite.only(`IPyWidget Tests ${useCDN ? 'with CDN' : 'without CDN'}`, function () {
+    suite(`IPyWidget Tests ${useCDN ? 'with CDN' : 'without CDN'}`, function () {
         const templateRootPath: Uri =
             workspace.workspaceFolders && workspace.workspaceFolders.length > 0
                 ? urlPath.joinPath(workspace.workspaceFolders[0].uri, 'widgets', 'notebooks')
