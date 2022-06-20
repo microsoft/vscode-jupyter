@@ -5,13 +5,15 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import * as sinon from 'sinon';
-import { commands, ConfigurationTarget, workspace } from 'vscode';
+import { commands, ConfigurationTarget, Memento, workspace } from 'vscode';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
 import {
+    GLOBAL_MEMENTO,
     IConfigurationService,
     IDisposable,
     IJupyterSettings,
+    IMemento,
     ReadWrite,
     WidgetCDNs
 } from '../../../platform/common/types';
@@ -32,6 +34,7 @@ import {
     executeCellAndWaitForOutput,
     initializeNotebookForWidgetTest
 } from './standardWidgets.vscode.common.test';
+import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../kernels/ipywidgets/cdnWidgetScriptSourceProvider';
 
 [true, false].forEach((useCDN) => {
     /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
@@ -56,6 +59,9 @@ import {
             const configService = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
             const settings = configService.getSettings(undefined) as ReadWrite<IJupyterSettings>;
             settings.widgetScriptSources = widgetScriptSourcesValue;
+            // Don't want any prompts on CI.
+            const memento = api.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
+            await memento.update(GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce, true);
 
             await workAroundVSCodeNotebookStartPages();
             await startJupyterServer();

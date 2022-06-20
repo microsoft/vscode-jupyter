@@ -97,6 +97,7 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
         // we sent another request, that will get queued.
         // On CI & dev, lets wait, but in production, lets not break user code, worst case widget might not work.
         // Thats fine as up until this fix widget would never have worked without CDN.
+        // See here for issue details https://github.com/microsoft/vscode-jupyter/issues/10510
         if (!isCI && this.context.extensionMode === ExtensionMode.Production) {
             // If we're on CI or in dev mode/testing, we'll block indefinitely so that we see these deadlocks
             // 10s is enough as this shouldn't take more than 10 seconds in the real world.
