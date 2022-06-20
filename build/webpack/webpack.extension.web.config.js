@@ -12,8 +12,7 @@ const prodEntry = {
     extension: './src/extension.web.ts'
 };
 const devEntry = {
-    extension: './src/extension.web.ts',
-    'test/index': './src/test/web/index.ts' // source of the web extension test runner
+    extension: './src/extension.web.ts'
 };
 const testEntry = {
     extension: './src/test/web/index.ts' // source of the web extension test runner
