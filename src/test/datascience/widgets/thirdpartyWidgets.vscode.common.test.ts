@@ -38,7 +38,7 @@ import {
      * - Desktop + Local Kernel + CDN
      * - Desktop + Local Kernel + No CDN
      */
-    suite(`Thirdparty IPyWidget Tests ${useCDN ? 'with CDN' : 'without CDN'}`, function () {
+    suite(`Third party IPyWidget Tests ${useCDN ? 'with CDN' : 'without CDN'}`, function () {
         let api: IExtensionTestApi;
         const disposables: IDisposable[] = [];
         let vscodeNotebook: IVSCodeNotebook;
