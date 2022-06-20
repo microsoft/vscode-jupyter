@@ -37,6 +37,7 @@ const handlers = new Map<string, (data: any) => void>();
 handlers.set('queryInnerHTML', queryInnerHTMLHandler);
 handlers.set('clickElement', clickHandler);
 handlers.set('setElementValue', setElementValueHandler);
+handlers.set('hijackLogging', hijackLogging);
 
 function initializeComms() {
     if (!rendererContext.onDidReceiveMessage || !rendererContext.postMessage) {
@@ -159,4 +160,47 @@ function getOutputCellIndex(outputItem: OutputItem): number | undefined {
     if (model && '_vsc_test_cellIndex' in model) {
         return parseInt(model._vsc_test_cellIndex);
     }
+}
+
+let consoleLoggersHijacked = false;
+/**
+ * Highjack the console log messages & send them to the extension host.
+ * On CI we cannot see the console log messages of the webview, so we need to hijack them.
+ * Sometimes when widgets fail this is very useful in diagnosing what went wrong on the webview side of things.
+ */
+function hijackLogging() {
+    if (consoleLoggersHijacked) {
+        return;
+    }
+    consoleLoggersHijacked = true;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const logMessage = (channel: 'log' | 'warn' | 'error', args: any[]) => {
+        let message = `WebView ${channel} Console:`;
+        (args || []).forEach((arg) => {
+            try {
+                // This could fail if we have cyclic objects.
+                message += ` ${JSON.stringify(arg)},`;
+            } catch {
+                try {
+                    message += ` ${(arg || '').toString()},`;
+                } catch {
+                    message += ` <Failed to serialize an argument>,`;
+                }
+            }
+        });
+        rendererContext.postMessage!({
+            command: 'log',
+            message: `Handled message in Widget renderer ${message}`
+        });
+    };
+    ['log', 'error', 'warn'].forEach((channel) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const originalConsoleLogger = (console as any)[channel] as unknown as Function;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (console as any)[channel] = (...args: any[]) => {
+            logMessage('log', args);
+            originalConsoleLogger(...args);
+        };
+    });
 }

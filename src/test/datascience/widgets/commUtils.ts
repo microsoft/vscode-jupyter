@@ -22,8 +22,10 @@ export function initializeWidgetComms(serviceContainer: IServiceContainer): Util
     const disposable = messageChannel.onDidReceiveMessage(async ({ editor, message }) => {
         traceInfo(`Received message from Widget renderer ${JSON.stringify(message)}`);
         if (message && message.command === 'INIT') {
-            // disposable.dispose();
             deferred.resolve(editor);
+            // Redirect all of console.log, console.warn & console.error messages from
+            // renderer to the extension host.
+            messageChannel.postMessage({ command: 'hijackLogging' }, editor).then(noop, noop);
         }
     });
     disposables.push(disposable);
