@@ -293,6 +293,17 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
         test.skip('Render ipyvolume (slider, color picker, figure)', async function () {
             const comms = await initializeNotebook({ templateFile: 'ipyvolume_widgets.ipynb' });
             const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
+            // ipyvolume fails in Python 3.10 due to a known issue.
+            const kernel = kernelProvider.get(cell.notebook.uri);
+            if (
+                kernel &&
+                kernel.kernelConnectionMetadata.interpreter &&
+                kernel.kernelConnectionMetadata.interpreter.version &&
+                kernel.kernelConnectionMetadata.interpreter.version.major === 3 &&
+                kernel.kernelConnectionMetadata.interpreter.version.minor === 10
+            ) {
+                return this.skip();
+            }
 
             await executeCellAndWaitForOutput(cell, comms);
             await assertOutputContainsHtml(cell, comms, ['<input type="color"', '>Slider1<', '>Slider2<', '<canvas']);
