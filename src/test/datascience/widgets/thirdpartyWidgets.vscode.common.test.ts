@@ -76,9 +76,6 @@ import {
             traceInfo(`Ended Test ${this.currentTest?.title}`);
             if (this.currentTest?.isFailed()) {
                 await captureScreenShot(this.currentTest.title);
-                await commands.executeCommand('workbench.action.toggleDevTools');
-                await captureScreenShot(this.currentTest.title + '-DevTools');
-                await commands.executeCommand('workbench.action.toggleDevTools');
             }
             await closeNotebooksAndCleanUpAfterTests(disposables);
             traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
