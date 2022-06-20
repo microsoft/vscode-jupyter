@@ -33,7 +33,7 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
         // Noop.
     }
     public async getWidgetScriptSources(): Promise<Readonly<WidgetScriptSource[]>> {
-        const scriptManager = this.scriptManagerFactory.create(this.kernel);
+        const scriptManager = this.scriptManagerFactory.getOrCreate(this.kernel);
         const widgetModuleMappings = await scriptManager.getWidgetModuleMappings();
         if (widgetModuleMappings && Object.keys(widgetModuleMappings).length) {
             const sources = await Promise.all(
@@ -49,7 +49,7 @@ export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvi
         return [];
     }
     public async getBaseUrl() {
-        const scriptManager = this.scriptManagerFactory.create(this.kernel);
+        const scriptManager = this.scriptManagerFactory.getOrCreate(this.kernel);
         if (!scriptManager.getBaseUrl) {
             return;
         }

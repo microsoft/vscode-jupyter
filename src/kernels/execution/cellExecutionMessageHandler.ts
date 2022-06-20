@@ -401,9 +401,8 @@ export class CellExecutionMessageHandler implements IDisposable {
     private handleCommOpen(msg: KernelMessage.ICommOpenMsg) {
         this.ownedCommIds.add(msg.content.comm_id);
         // Check if this is a message for an Output Widget,
-        const state: { _model_module: string } | undefined =
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            typeof msg.content.data === 'object' && msg.content.data ? (msg.content.data['state'] as any) : undefined;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const state: { _model_module: string } | undefined = (msg.content.data?.state as any) || undefined;
         if (
             msg.content.target_name === Identifiers.DefaultCommTarget &&
             state &&

@@ -19,13 +19,13 @@ export class IPyWidgetScriptManagerFactory implements IIPyWidgetScriptManagerFac
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IHttpClient) private readonly httpClient: IHttpClient
     ) {}
-    create(kernel: IKernel): IIPyWidgetScriptManager {
+    getOrCreate(kernel: IKernel): IIPyWidgetScriptManager {
         if (!this.managers.has(kernel)) {
             if (
                 kernel.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel' ||
                 kernel.kernelConnectionMetadata.kind === 'startUsingRemoteKernelSpec'
             ) {
-                this.managers.set(kernel, new RemoteIPyWidgetScriptManager(kernel, this.httpClient));
+                this.managers.set(kernel, new RemoteIPyWidgetScriptManager(kernel, this.httpClient, this.context));
             } else {
                 this.managers.set(
                     kernel,

@@ -64,7 +64,7 @@ export class IPyWidgetScriptSource {
         this.kernelProvider.onDidStartKernel(
             (e) => {
                 if (getAssociatedNotebookDocument(e) === this.document) {
-                    this.initialize().catch(traceError.bind('Failed to initialize'));
+                    this.initialize();
                 }
             },
             this,
@@ -108,7 +108,7 @@ export class IPyWidgetScriptSource {
             }
         }
     }
-    public async initialize() {
+    public initialize() {
         if (!this.jupyterLab) {
             // Lazy load jupyter lab for faster extension loading.
             // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -118,7 +118,7 @@ export class IPyWidgetScriptSource {
         if (!this.kernel) {
             this.kernel = this.kernelProvider.get(this.document.uri);
         }
-        if (!this.kernel) {
+        if (!this.kernel?.session) {
             return;
         }
         if (this.scriptProvider) {
@@ -132,7 +132,8 @@ export class IPyWidgetScriptSource {
             this.sourceProviderFactory,
             this.isWebViewOnline.promise
         );
-        this.initializeNotebook();
+        this.kernel.onDisposed(() => this.dispose());
+        this.handlePendingRequests();
         traceVerbose('IPyWidgetScriptSource.initialize');
     }
     private async onRequestWidgetScript(payload: { moduleName: string; moduleVersion: string; requestId: string }) {
@@ -203,13 +204,6 @@ export class IPyWidgetScriptSource {
                 payload: widgetSource
             });
         }
-    }
-    private initializeNotebook() {
-        if (!this.kernel) {
-            return;
-        }
-        this.kernel.onDisposed(() => this.dispose());
-        this.handlePendingRequests();
     }
     private handlePendingRequests() {
         const pendingModuleNames = Array.from(this.pendingModuleRequests.keys());

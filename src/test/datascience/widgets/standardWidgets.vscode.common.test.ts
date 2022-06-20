@@ -85,7 +85,8 @@ export async function assertOutputContainsHtml(
             return true;
         },
         WidgetRenderingTimeoutForTests,
-        () => `Widget did not render or ${htmlFragmentsToLookFor.join(', ')} not in html = ${html}`
+        () => `Widget did not render or ${htmlFragmentsToLookFor.join(', ')} not in html = ${html}`,
+        250 // Default 10ms results in too much logging when tests fail.
     );
 }
 export async function clickWidget(comms: Utils, cell: NotebookCell, selector: string) {

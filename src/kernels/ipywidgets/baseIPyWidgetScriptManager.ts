@@ -122,13 +122,7 @@ export abstract class BaseIPyWidgetScriptManager implements IIPyWidgetScriptMana
         // If user installs new python packages, & they restart the kernel, then look for changes to nbextensions folder once again.
         // No need to look for changes in nbextensions folder if its not restarted.
         // This is expected, jupyter nb/lab and other parts of Jupyter recommend users to restart kernels after installing python packages.
-        kernel.onRestarted(
-            () => {
-                this.widgetModuleMappings = undefined;
-            },
-            this,
-            this.disposables
-        );
+        kernel.onRestarted(this.onKernelRestarted, this, this.disposables);
     }
     public dispose() {
         disposeAllDisposables(this.disposables);
@@ -139,6 +133,9 @@ export abstract class BaseIPyWidgetScriptManager implements IIPyWidgetScriptMana
             this.widgetModuleMappings = this.getWidgetModuleMappingsImpl();
         }
         return this.widgetModuleMappings;
+    }
+    protected onKernelRestarted() {
+        this.widgetModuleMappings = undefined;
     }
     /**
      * Extracts the require.config configuration entry from the JS file.
