@@ -66,21 +66,24 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
                                 import glob
                                 import os
                                 __vsc_nbextension_Folder = sys.prefix + os.path.sep + 'share' + os.path.sep + 'jupyter' + os.path.sep + 'nbextensions' + os.path.sep
-                                for file in glob.glob(__vsc_nbextension_Folder + '*' +  os.path.sep + 'extension.js'):
+                                __vsc_file = ''
+                                for __vsc_file in glob.glob(__vsc_nbextension_Folder + '*' +  os.path.sep + 'extension.js'):
                                     __vsc_nbextension_widgets.append(file.replace(__vsc_nbextension_Folder, ""))
 
-                                print(__vsc_nbextension_widgets)
+                                    print(__vsc_nbextension_widgets)
                             except:
                                 pass
 
                             try:
                                 if not __vsc_glob_was_imported:
-                                    del sys.modules['glob']
+                                del sys.modules['glob']
                                 if not __vsc_os_was_imported:
                                     del sys.modules['os']
                             except:
                                 pass
 
+                            # We need to ensure these variables don't interfere with the variable viewer, hence delete them after use.
+                            del __vsc_file
                             del __vsc_glob_was_imported
                             del __vsc_os_was_imported
                             del __vsc_nbextension_Folder
