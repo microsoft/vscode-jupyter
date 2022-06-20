@@ -59,7 +59,7 @@ suite('DataScience - VSCode Notebook - (DataViewer)', function () {
         await vscode.commands.executeCommand('workbench.debug.viewlet.action.removeAllBreakpoints');
     });
     // Start debugging using the python extension
-    test.only('Open from Python debug variables', async () => {
+    test('Open from Python debug variables', async () => {
         // First off, open up our python test file and make sure editor and groups are how we want them
         const textDocument = await openFile(testPythonFile);
 
@@ -100,11 +100,17 @@ suite('DataScience - VSCode Notebook - (DataViewer)', function () {
             })
         );
 
+        await captureScreenShot('Shot1');
+        traceInfo('IANHUZ Starting debugger');
         // Now start the debugger
         await vscode.commands.executeCommand('python.debugInTerminal');
 
         // Wait until we stop
         await stoppedDef.promise;
+
+        await captureScreenShot('Shot2');
+
+        traceInfo('IANHUZ Stopped at BP');
 
         // Properties that we want to show the data viewer with
         const props: IShowDataViewerFromVariablePanel = {
@@ -117,6 +123,9 @@ suite('DataScience - VSCode Notebook - (DataViewer)', function () {
             }
         };
 
+        await captureScreenShot('Shot3');
+        traceInfo('IANHUZ Running showDataViewer');
+
         // Run our command to actually open the variable view
         await vscode.commands.executeCommand('jupyter.showDataViewer', props);
 
@@ -128,5 +137,9 @@ suite('DataScience - VSCode Notebook - (DataViewer)', function () {
             10_000,
             'Failed to open the data viewer from python variables'
         );
+
+        await captureScreenShot('Shot4');
+
+        traceInfo('IANHUZ Data Viewer found');
     });
 });
