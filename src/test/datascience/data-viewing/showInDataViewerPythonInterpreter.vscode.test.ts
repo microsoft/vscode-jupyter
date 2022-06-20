@@ -46,13 +46,22 @@ suite('DataScience - VSCode Notebook - (DataViewer)', function () {
     suiteTeardown(() => {
         disposeAllDisposables(disposables);
     });
-    // Start debugging using the python extension
-    test('Open from Python debug variables', async () => {
-        // First off, open up our python test file and make sure editor and groups are how we want them
+    setup(async () => {
+        // Close documents and stop debugging
         await vscode.commands.executeCommand('workbench.action.closeAllEditors');
         await vscode.commands.executeCommand('workbench.action.closeAllGroups');
-        const textDocument = await openFile(testPythonFile);
         await vscode.commands.executeCommand('workbench.debug.viewlet.action.removeAllBreakpoints');
+    });
+    teardown(async () => {
+        // Close documents and stop debugging
+        await vscode.commands.executeCommand('workbench.action.closeAllEditors');
+        await vscode.commands.executeCommand('workbench.action.closeAllGroups');
+        await vscode.commands.executeCommand('workbench.debug.viewlet.action.removeAllBreakpoints');
+    });
+    // Start debugging using the python extension
+    test.only('Open from Python debug variables', async () => {
+        // First off, open up our python test file and make sure editor and groups are how we want them
+        const textDocument = await openFile(testPythonFile);
 
         // Wait for it to be opened and active, then get the editor
         await waitForCondition(
