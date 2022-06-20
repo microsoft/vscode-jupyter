@@ -5,7 +5,7 @@ import { DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { getDisplayNameOrNameOfKernelConnection } from '../helpers';
 import { KernelConnectionMetadata } from '../types';
-import { BaseKernelError } from '../../platform/errors/types';
+import { BaseKernelError } from './types';
 
 export class JupyterInvalidKernelError extends BaseKernelError {
     constructor(kernelConnectionMetadata: KernelConnectionMetadata) {

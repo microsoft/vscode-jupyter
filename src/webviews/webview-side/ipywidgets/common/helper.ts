@@ -4,12 +4,16 @@
 import { logMessage } from '../../react-common/logger';
 
 const unpgkUrl = 'https://unpkg.com/';
-const jsdelivrUrl = 'https://www.jsdelivr.com/';
+const jsdelivrUrl = 'https://cdn.jsdelivr.net/npm/requirejs@2.3.6/bin/r.min.js';
 const networkAccessTimeoutMs = 1_000;
+let isOnlineOnceBefore = false;
 /**
  * Checks whether we can access one of the CDN sites.
  */
 export async function isCDNReachable() {
+    if (isOnlineOnceBefore) {
+        return true;
+    }
     const abort = new AbortController();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let timeout: any;
@@ -23,11 +27,12 @@ export async function isCDNReachable() {
         /**/
     });
     try {
-        return await Promise.race([
+        isOnlineOnceBefore = await Promise.race([
             isWebSiteReachable(unpgkUrl, abort.signal),
             isWebSiteReachable(jsdelivrUrl, abort.signal),
             promise
         ]);
+        return isOnlineOnceBefore;
     } finally {
         if (timeout) {
             clearInterval(timeout);
@@ -36,11 +41,17 @@ export async function isCDNReachable() {
 }
 
 async function isWebSiteReachable(url: string, signal: AbortSignal) {
+    let retries = 0;
     try {
-        const response = await fetch(url, { signal });
-        return response.ok;
+        for (retries = 0; retries < 5; retries++) {
+            const response = await fetch(url, { signal });
+            if (response.ok) {
+                return true;
+            }
+        }
+        return false;
     } catch (ex) {
-        logMessage(`Failed to access CDN ${url}, ${(ex || '').toString()}`);
+        logMessage(`Failed to access CDN ${url} after ${retries} attempts, ${(ex || '').toString()}`);
         return false;
     }
 }

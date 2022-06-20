@@ -5,7 +5,12 @@
 
 import { Uri } from 'vscode';
 import { IKernel, RemoteKernelConnectionMetadata } from '../types';
-import { IIPyWidgetScriptManagerFactory, IWidgetScriptSourceProvider, WidgetScriptSource } from './types';
+import {
+    IIPyWidgetScriptManager,
+    IIPyWidgetScriptManagerFactory,
+    IWidgetScriptSourceProvider,
+    WidgetScriptSource
+} from './types';
 
 /**
  * When using a remote jupyter connection the widget scripts are accessible over
@@ -14,10 +19,8 @@ import { IIPyWidgetScriptManagerFactory, IWidgetScriptSourceProvider, WidgetScri
 export class RemoteWidgetScriptSourceProvider implements IWidgetScriptSourceProvider {
     public static validUrls = new Map<string, boolean>();
     private readonly kernelConnection: RemoteKernelConnectionMetadata;
-    constructor(
-        private readonly kernel: IKernel,
-        private readonly scriptManagerFactory: IIPyWidgetScriptManagerFactory
-    ) {
+    private readonly scriptManager: IIPyWidgetScriptManager;
+    constructor(kernel: IKernel, scriptManagerFactory: IIPyWidgetScriptManagerFactory) {
         if (
             kernel.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel' &&
             kernel.kernelConnectionMetadata.kind !== 'startUsingRemoteKernelSpec'
@@ -25,6 +28,7 @@ export class RemoteWidgetScriptSourceProvider implements IWidgetScriptSourceProv
             throw new Error('Invalid usage of this class, can only be used with remtoe kernels');
         }
         this.kernelConnection = kernel.kernelConnectionMetadata;
+        this.scriptManager = scriptManagerFactory.getOrCreate(kernel);
     }
     public dispose() {
         // Noop.
@@ -39,8 +43,7 @@ export class RemoteWidgetScriptSourceProvider implements IWidgetScriptSourceProv
         return found || { moduleName };
     }
     public async getWidgetScriptSources(): Promise<Readonly<WidgetScriptSource[]>> {
-        const scriptManager = this.scriptManagerFactory.create(this.kernel);
-        const widgetModuleMappings = await scriptManager.getWidgetModuleMappings();
+        const widgetModuleMappings = await this.scriptManager.getWidgetModuleMappings();
         if (widgetModuleMappings && Object.keys(widgetModuleMappings).length) {
             const sources = await Promise.all(
                 Object.keys(widgetModuleMappings).map(async (moduleName) => {

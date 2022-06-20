@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { KernelConnectionMetadata } from '../types';
-import { WrappedKernelError } from '../../platform/errors/types';
+import { WrappedKernelError } from './types';
 
 export class KernelDiedError extends WrappedKernelError {
     constructor(

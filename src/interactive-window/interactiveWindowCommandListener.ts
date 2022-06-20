@@ -40,7 +40,7 @@ import { JupyterInstallError } from '../platform/errors/jupyterInstallError';
 import { INotebookControllerManager, INotebookEditorProvider } from '../notebooks/types';
 import { KernelConnectionMetadata } from '../kernels/types';
 import { INotebookExporter, IJupyterExecution } from '../kernels/jupyter/types';
-import { IDataScienceErrorHandler } from '../platform/errors/types';
+import { IDataScienceErrorHandler } from '../kernels/errors/types';
 import { IFileConverter, IExportDialog, ExportFormat } from '../notebooks/export/types';
 import { IStatusProvider } from '../platform/progress/types';
 import { generateCellsFromDocument } from './editor-integration/cellFactory';

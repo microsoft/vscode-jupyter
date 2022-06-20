@@ -39,7 +39,7 @@ import {
     uninstallIPyKernel
 } from '../../helpers.node';
 import { INotebookControllerManager } from '../../../../notebooks/types';
-import { BaseKernelError, WrappedError } from '../../../../platform/errors/types';
+import { WrappedError } from '../../../../platform/errors/types';
 import { clearInstalledIntoInterpreterMemento } from '../../../../kernels/installer/productInstaller';
 import { ProductNames } from '../../../../kernels/installer/productNames';
 import { Product, IInstaller, InstallerResponse } from '../../../../kernels/installer/types';
@@ -68,6 +68,7 @@ import { getDisplayPathFromLocalFile } from '../../../../platform/common/platfor
 import { getOSType, OSType } from '../../../../platform/common/utils/platform';
 import { isUri } from '../../../../platform/common/utils/misc';
 import { hasErrorOutput, translateCellErrorOutput } from '../../../../kernels/execution/helpers';
+import { BaseKernelError } from '../../../../kernels/errors/types';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience Install IPyKernel (slow) (install)', function () {

@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../platform/activation/types';
-import { IDataScienceErrorHandler } from '../../platform/errors/types';
 import { IServiceManager } from '../../platform/ioc/types';
 import { DataScienceErrorHandler } from '../errors/kernelErrorHandler';
+import { IDataScienceErrorHandler } from '../errors/types';
 import { IRemoteKernelFinder } from '../raw/types';
 import { INotebookProvider } from '../types';
 import { JupyterCommandLineSelectorCommand } from './commands/commandLineSelector';

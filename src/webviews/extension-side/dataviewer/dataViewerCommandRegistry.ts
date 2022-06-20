@@ -22,13 +22,13 @@ import { IConfigurationService, IDisposableRegistry } from '../../../platform/co
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { untildify } from '../../../platform/common/utils/platform';
-import { IDataScienceErrorHandler } from '../../../platform/errors/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { traceError, traceInfo } from '../../../platform/logging';
 import { IShowDataViewerFromVariablePanel } from '../../../platform/messageTypes';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { PythonEnvironment } from '../api/extension';
+import { IDataScienceErrorHandler } from '../../../kernels/errors/types';
 import { DataViewerChecker } from './dataViewerChecker';
 import { IDataViewerDependencyService, IDataViewerFactory, IJupyterVariableDataProviderFactory } from './types';
 

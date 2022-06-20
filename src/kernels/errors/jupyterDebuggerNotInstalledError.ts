@@ -4,7 +4,7 @@
 
 import { DataScience } from '../../platform/common/utils/localize';
 import { KernelConnectionMetadata } from '../types';
-import { BaseKernelError } from '../../platform/errors/types';
+import { BaseKernelError } from './types';
 
 export class JupyterDebuggerNotInstalledError extends BaseKernelError {
     constructor(debuggerPkg: string, message: string | undefined, kernelConnectionMetadata: KernelConnectionMetadata) {

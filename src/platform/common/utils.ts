@@ -5,21 +5,17 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import * as uriPath from '../../platform/vscode-path/resources';
 import { NotebookData, NotebookDocument, TextDocument, Uri, workspace } from 'vscode';
-import { sendTelemetryEvent } from '../../telemetry';
-import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
-
 import {
     InteractiveWindowView,
     jupyterLanguageToMonacoLanguageMapping,
     JupyterNotebookView,
-    PYTHON_LANGUAGE,
-    Telemetry
+    PYTHON_LANGUAGE
 } from './constants';
 import { traceError, traceInfo } from '../logging';
 
 import { ICell } from './types';
 import { DataScience } from './utils/localize';
-import { IJupyterKernelSpec } from '../../webviews/extension-side/api/extension';
+import { IJupyterKernelSpec } from '../../kernels/types';
 
 // Can't figure out a better way to do this. Enumerate
 // the allowed keys of different output formats.
@@ -152,14 +148,6 @@ export function generateNewNotebookUri(
             scheme: 'untitled'
         });
     }
-}
-
-export function sendNotebookOrKernelLanguageTelemetry(
-    telemetryEvent: Telemetry.SwitchToExistingKernel | Telemetry.NotebookLanguage,
-    language?: string
-) {
-    language = getTelemetrySafeLanguage(language);
-    sendTelemetryEvent(telemetryEvent, undefined, { language });
 }
 
 /**

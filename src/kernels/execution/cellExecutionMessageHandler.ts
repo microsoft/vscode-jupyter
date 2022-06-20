@@ -21,7 +21,8 @@ import {
     CancellationTokenSource,
     EventEmitter,
     ExtensionMode,
-    NotebookEdit
+    NotebookEdit,
+    NotebookCellOutputItem
 } from 'vscode';
 
 import { Kernel } from '@jupyterlab/services';
@@ -44,6 +45,7 @@ import { ITracebackFormatter } from '../../kernels/types';
 import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
 import { WIDGET_MIMETYPE } from '../ipywidgets/constants';
 import isObject = require('lodash/isObject');
+import { Identifiers } from '../../platform/common/constants';
 
 // Helper interface for the set_next_input execute reply payload
 interface ISetNextInputPayload {
@@ -57,6 +59,11 @@ type ExecuteResult = nbformat.IExecuteResult & {
 };
 type DisplayData = nbformat.IDisplayData & {
     transient?: { display_id?: string };
+};
+type WidgetData = {
+    version_major: number;
+    version_minor: number;
+    model_id: string;
 };
 
 /**
@@ -73,32 +80,12 @@ function getParentHeaderMsgId(msg: KernelMessage.IMessage): string | undefined {
 }
 
 /**
- * The Output Widget in Jupyter can render multiple outputs. However some of them
- * like vendored mimetypes cannot be handled by it.
- */
-function canMimeTypeBeRenderedByWidgetManager(mime: string) {
-    if (mime == CellOutputMimeTypes.stderr || mime == CellOutputMimeTypes.stdout || mime == CellOutputMimeTypes.error) {
-        // These are plain text mimetypes that can be rendered by the Jupyter Lab widget manager.
-        return true;
-    }
-    if (mime === WIDGET_MIMETYPE) {
-        return true;
-    }
-    if (mime.startsWith('application/vnd')) {
-        // Custom vendored mimetypes cannot be rendered by the widget manager, it relies on the output renderers.
-        return false;
-    }
-    // Everything else can be rendered by the Jupyter Lab widget manager.
-    return true;
-}
-
-/**
  * Responsible for handling of jupyter messages as a result of execution of individual cells.
  */
 export class CellExecutionMessageHandler implements IDisposable {
     /**
      * Keeps track of the Models Ids (model_id) that is displayed in the output of a specific cell.
-     * model_id's maps to widget outputs.
+     * model_id's maps to Output Widgets.
      * Hence here we're keeping track of the widgets displayed in outputs of specific cells.
      */
     private static modelIdsOwnedByCells = new WeakMap<NotebookCell, Set<string>>();
@@ -138,7 +125,19 @@ export class CellExecutionMessageHandler implements IDisposable {
      * Because if after the stream we have an image, then the stream is not the last output item, hence its cleared.
      */
     private lastUsedStreamOutput?: { stream: 'stdout' | 'stderr'; text: string; output: NotebookCellOutput };
-    private outputsAreSpecificToAWidget?: {
+    /**
+     * When we have nested Output Widgets, we get comm messages one for each output widget.
+     * The way it works is:
+     * - Jupyter sends a comm open message indicating there's an output widget
+     * - Jupyter sends a comm message indicating all messages from now on belong to the output widget.
+     *      - Now if we have another output widget thats nested in the previous, then we get another comm open message.
+     *      - Jupyter sends a comm message indicating all messages from now on belong to the second output widget.
+     *      - Jupyter sends a comm message indicating all messages from now on don't belong to the second the output widget is done (comm message with msg_id = '').
+     * - Jupyter sends a comm message indicating all messages from now on don't belong to the first the output widget is done (comm message with msg_id = '').
+     *
+     * Basically its a stack, as we create new outputs nested within another we get comm messages and we need to keep track of the stack.
+     */
+    private outputsAreSpecificToAWidget: {
         /**
          * Comm Id (or model_id) of widget that will handle all messages and render them via the widget manager.
          * This could be a widget in another cell.
@@ -152,10 +151,10 @@ export class CellExecutionMessageHandler implements IDisposable {
         msgIdsToSwallow: string;
         /**
          * If true, then we should clear all of the output owned by the widget defined by the commId.
-         * By owned, we mean the output added after the widget widget output and not the widget itself.
+         * By owned, we mean the output added after the Output Widget and not the widget itself.
          */
         clearOutputOnNextUpdateToOutput?: boolean;
-    };
+    }[] = [];
     private commIdsMappedToParentWidgetModel = new Map<string, string>();
     private readonly disposables: IDisposable[] = [];
     private readonly prompts = new Set<CancellationTokenSource>();
@@ -164,6 +163,7 @@ export class CellExecutionMessageHandler implements IDisposable {
      * or for any subsequent requests as a result of outputs sending custom messages.
      */
     private readonly ownedCommIds = new Set<string>();
+    private readonly commIdsMappedToWidgetOutputModels = new Set<string>();
     private static readonly outputsOwnedByWidgetModel = new Map<string, Set<string>>();
     /**
      * List of msg_ids of requests sent either as part of request_execute
@@ -363,7 +363,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
         if (jupyterLab.KernelMessage.isCommOpenMsg(msg)) {
-            this.ownedCommIds.add(msg.content.comm_id);
+            this.handleCommOpen(msg);
         } else if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
             this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg);
         } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
@@ -398,6 +398,19 @@ export class CellExecutionMessageHandler implements IDisposable {
             this.execution.executionOrder = msg.content.execution_count;
         }
     }
+    private handleCommOpen(msg: KernelMessage.ICommOpenMsg) {
+        this.ownedCommIds.add(msg.content.comm_id);
+        // Check if this is a message for an Output Widget,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const state: { _model_module: string } | undefined = (msg.content.data?.state as any) || undefined;
+        if (
+            msg.content.target_name === Identifiers.DefaultCommTarget &&
+            state &&
+            state._model_module === '@jupyter-widgets/output'
+        ) {
+            this.commIdsMappedToWidgetOutputModels.add(msg.content.comm_id);
+        }
+    }
     private handleCommMsg(msg: KernelMessage.ICommMsgMsg) {
         const data = msg.content.data as Partial<{
             method: 'update';
@@ -418,13 +431,17 @@ export class CellExecutionMessageHandler implements IDisposable {
             ) {
                 if (data.state.msg_id) {
                     // Any future messages sent from `parent_header.msg_id = msg_id` must be handled by the widget with the `mode_id = msg.content.comm_id`.
-                    this.outputsAreSpecificToAWidget = {
+                    this.outputsAreSpecificToAWidget.push({
                         handlingCommId: msg.content.comm_id,
                         msgIdsToSwallow: data.state.msg_id
-                    };
-                } else if (this.outputsAreSpecificToAWidget?.handlingCommId === msg.content.comm_id) {
+                    });
+                } else if (
+                    this.outputsAreSpecificToAWidget.length &&
+                    this.outputsAreSpecificToAWidget[this.outputsAreSpecificToAWidget.length - 1].handlingCommId ===
+                        msg.content.comm_id
+                ) {
                     // Handle all messages the normal way.
-                    this.outputsAreSpecificToAWidget = undefined;
+                    this.outputsAreSpecificToAWidget.pop();
                 }
             }
         } else if (
@@ -469,11 +486,7 @@ export class CellExecutionMessageHandler implements IDisposable {
         originalMessage: KernelMessage.IMessage
     ) {
         if (output.data && typeof output.data === 'object' && WIDGET_MIMETYPE in output.data) {
-            const widgetData = output.data[WIDGET_MIMETYPE] as {
-                version_major: number;
-                version_minor: number;
-                model_id: string;
-            };
+            const widgetData = output.data[WIDGET_MIMETYPE] as WidgetData;
             if (widgetData && this.context.extensionMode === ExtensionMode.Test) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (widgetData as any)['_vsc_test_cellIndex'] = this.cell.index;
@@ -515,18 +528,27 @@ export class CellExecutionMessageHandler implements IDisposable {
         let outputShouldBeAppended = true;
         const parentHeaderMsgId = getParentHeaderMsgId(originalMessage);
         if (
-            this.outputsAreSpecificToAWidget &&
-            this.outputsAreSpecificToAWidget?.msgIdsToSwallow === parentHeaderMsgId &&
-            cellOutput.items.every((item) => canMimeTypeBeRenderedByWidgetManager(item.mime))
+            this.outputsAreSpecificToAWidget.length &&
+            this.outputsAreSpecificToAWidget[this.outputsAreSpecificToAWidget.length - 1].msgIdsToSwallow ===
+                parentHeaderMsgId &&
+            cellOutput.items.every((item) =>
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                this.canMimeTypeBeRenderedByWidgetManager(item)
+            )
         ) {
             // Plain text outputs will be displayed by the widget.
             outputShouldBeAppended = false;
         } else if (
-            this.outputsAreSpecificToAWidget &&
-            this.outputsAreSpecificToAWidget?.msgIdsToSwallow === parentHeaderMsgId
+            this.outputsAreSpecificToAWidget.length &&
+            this.outputsAreSpecificToAWidget[this.outputsAreSpecificToAWidget.length - 1].msgIdsToSwallow ===
+                parentHeaderMsgId
         ) {
             const result = this.updateJupyterOutputWidgetWithOutput(
-                { commId: this.outputsAreSpecificToAWidget.handlingCommId, outputToAppend: cellOutput },
+                {
+                    commId: this.outputsAreSpecificToAWidget[this.outputsAreSpecificToAWidget.length - 1]
+                        .handlingCommId,
+                    outputToAppend: cellOutput
+                },
                 task
             );
 
@@ -538,6 +560,37 @@ export class CellExecutionMessageHandler implements IDisposable {
             task?.appendOutput([cellOutput]).then(noop, noop);
         }
         this.endTemporaryTask();
+    }
+
+    /**
+     * The Output Widget in Jupyter can render multiple outputs.
+     * However some of them like the Output Widget & vendored mimetypes cannot be handled by it.
+     */
+    private canMimeTypeBeRenderedByWidgetManager(outputItem: NotebookCellOutputItem) {
+        const mime = outputItem.mime;
+        if (
+            mime == CellOutputMimeTypes.stderr ||
+            mime == CellOutputMimeTypes.stdout ||
+            mime == CellOutputMimeTypes.error
+        ) {
+            // These are plain text mimetypes that can be rendered by the Jupyter Lab widget manager.
+            return true;
+        }
+        if (mime === WIDGET_MIMETYPE) {
+            const data: WidgetData = JSON.parse(Buffer.from(outputItem.data).toString());
+            // Jupyter Output widgets cannot be rendered properly by the widget manager,
+            // We need to render that.
+            if (typeof data.model_id === 'string' && this.commIdsMappedToWidgetOutputModels.has(data.model_id)) {
+                return false;
+            }
+            return true;
+        }
+        if (mime.startsWith('application/vnd')) {
+            // Custom vendored mimetypes cannot be rendered by the widget manager, it relies on the output renderers.
+            return false;
+        }
+        // Everything else can be rendered by the Jupyter Lab widget manager.
+        return true;
     }
     /**
      * Assume we have a Jupyter Output Widget, and we render that in Cell1.
@@ -557,7 +610,10 @@ export class CellExecutionMessageHandler implements IDisposable {
         options: { outputToAppend: NotebookCellOutput; commId: string } | { clearOutput: true },
         task?: NotebookCellExecution
     ): { outputAdded: true } | undefined {
-        const commId = 'commId' in options ? options.commId : this.outputsAreSpecificToAWidget?.handlingCommId;
+        const outputAreSpecificToAWidgetHandlingCommId = this.outputsAreSpecificToAWidget.length
+            ? this.outputsAreSpecificToAWidget[this.outputsAreSpecificToAWidget.length - 1].handlingCommId
+            : undefined;
+        const commId = 'commId' in options ? options.commId : outputAreSpecificToAWidgetHandlingCommId;
         if (!commId) {
             return;
         }
@@ -594,9 +650,17 @@ export class CellExecutionMessageHandler implements IDisposable {
 
         // We have some new outputs, that need to be placed immediately after the widget and before any other output
         // that doesn't belong to the widget.
-        const clearWidgetOutput = this.outputsAreSpecificToAWidget?.clearOutputOnNextUpdateToOutput === true;
-        if (this.outputsAreSpecificToAWidget) {
-            this.outputsAreSpecificToAWidget.clearOutputOnNextUpdateToOutput = false;
+        const clearOption = 'clearOutput' in options ? options.clearOutput : false;
+        const clearWidgetOutput =
+            clearOption ||
+            (this.outputsAreSpecificToAWidget.length
+                ? this.outputsAreSpecificToAWidget[this.outputsAreSpecificToAWidget.length - 1]
+                      .clearOutputOnNextUpdateToOutput === true
+                : false);
+        if (this.outputsAreSpecificToAWidget.length) {
+            this.outputsAreSpecificToAWidget[
+                this.outputsAreSpecificToAWidget.length - 1
+            ].clearOutputOnNextUpdateToOutput = false;
         }
         const newOutputs = cell.outputs.slice().filter((item) => {
             if (clearWidgetOutput) {
@@ -627,6 +691,9 @@ export class CellExecutionMessageHandler implements IDisposable {
         if (outputsAfterWidget.length === 0 && outputToAppend) {
             // No need to replace everything, just append what we need.
             task?.appendOutput(outputToAppend, cell).then(noop, noop);
+        } else if (clearWidgetOutput && !outputToAppend && outputsAfterWidget.length === 0) {
+            // We're supposed to clear the output after a specific widget, but there are no other outputs after the widget.
+            // As there's nothing to clear, hence no changes to be made.
         } else {
             task?.replaceOutput(newOutput, cell).then(noop, noop);
         }
@@ -738,9 +805,11 @@ export class CellExecutionMessageHandler implements IDisposable {
     private handleStreamMessage(msg: KernelMessage.IStreamMsg) {
         if (
             getParentHeaderMsgId(msg) &&
-            this.outputsAreSpecificToAWidget?.msgIdsToSwallow == getParentHeaderMsgId(msg)
+            this.outputsAreSpecificToAWidget.length &&
+            this.outputsAreSpecificToAWidget[this.outputsAreSpecificToAWidget.length - 1].msgIdsToSwallow ==
+                getParentHeaderMsgId(msg)
         ) {
-            // Stream messages will be handled by the widget output.
+            // Stream messages will be handled by the Output Widget.
             return;
         }
 
@@ -823,13 +892,18 @@ export class CellExecutionMessageHandler implements IDisposable {
     }
 
     private handleClearOutput(msg: KernelMessage.IClearOutputMsg) {
-        // Check if this message should be handled by a specific Widget output.
+        // Check if this message should be handled by a specific Output Widget.
         if (
-            this.outputsAreSpecificToAWidget &&
-            this.outputsAreSpecificToAWidget.msgIdsToSwallow === getParentHeaderMsgId(msg)
+            this.outputsAreSpecificToAWidget.length &&
+            this.outputsAreSpecificToAWidget[this.outputsAreSpecificToAWidget.length - 1].msgIdsToSwallow ===
+                getParentHeaderMsgId(msg)
         ) {
             if (msg.content.wait) {
-                this.outputsAreSpecificToAWidget.clearOutputOnNextUpdateToOutput = true;
+                if (this.outputsAreSpecificToAWidget.length) {
+                    this.outputsAreSpecificToAWidget[
+                        this.outputsAreSpecificToAWidget.length - 1
+                    ].clearOutputOnNextUpdateToOutput = true;
+                }
             } else {
                 const task = this.execution || this.createTemporaryTask();
                 this.updateJupyterOutputWidgetWithOutput({ clearOutput: true }, task);
