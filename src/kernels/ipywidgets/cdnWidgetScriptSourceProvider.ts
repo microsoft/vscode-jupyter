@@ -68,13 +68,9 @@ function getCDNPrefix(cdn?: WidgetCDNs): string | undefined {
  * We'll need to stick to the order of preference prescribed by the user.
  */
 export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvider {
-    protected get cdnProviders(): readonly WidgetCDNs[] {
-        const settings = this.configurationSettings.getSettings(undefined);
-        return settings.widgetScriptSources;
-    }
     private cache = new Map<string, Promise<WidgetScriptSource>>();
     private readonly notifiedUserAboutWidgetScriptNotFound = new Set<string>();
-    private get configuredScriptSources(): readonly WidgetCDNs[] {
+    private get cdnProviders(): readonly WidgetCDNs[] {
         const settings = this.configurationSettings.getSettings(undefined);
         return settings.widgetScriptSources;
     }
@@ -101,7 +97,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             };
         }
         if (
-            this.configuredScriptSources.length === 0 &&
+            this.cdnProviders.length === 0 &&
             this.globalMemento.get<boolean>(GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce, false)
         ) {
             return {
@@ -177,14 +173,14 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         if (this.globalMemento.get<boolean>(GlobalStateKeyToNeverWarnAboutNoNetworkAccess, false)) {
             return;
         }
-        if (this.notifiedUserAboutWidgetScriptNotFound.has(moduleName) || this.configuredScriptSources.length === 0) {
+        if (this.notifiedUserAboutWidgetScriptNotFound.has(moduleName) || this.cdnProviders.length === 0) {
             return;
         }
         this.notifiedUserAboutWidgetScriptNotFound.add(moduleName);
         const selection = await this.appShell.showWarningMessage(
             DataScience.cdnWidgetScriptNotAccessibleWarningMessage().format(
                 moduleName,
-                JSON.stringify(this.configuredScriptSources)
+                JSON.stringify(this.cdnProviders)
             ),
             Common.ok(),
             Common.doNotShowAgain(),
@@ -201,7 +197,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     }
 
     private async configureWidgets(): Promise<void> {
-        if (this.configuredScriptSources.length !== 0) {
+        if (this.cdnProviders.length !== 0) {
             return;
         }
 
@@ -268,7 +264,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         if (this.globalMemento.get<boolean>(GlobalStateKeyToNeverWarnAboutScriptsNotFoundOnCDN, false)) {
             return;
         }
-        if (this.notifiedUserAboutWidgetScriptNotFound.has(moduleName) || this.configuredScriptSources.length === 0) {
+        if (this.notifiedUserAboutWidgetScriptNotFound.has(moduleName) || this.cdnProviders.length === 0) {
             return;
         }
         this.notifiedUserAboutWidgetScriptNotFound.add(moduleName);
@@ -276,7 +272,7 @@ export class CDNWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
             DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork().format(
                 moduleName,
                 version,
-                JSON.stringify(this.configuredScriptSources)
+                JSON.stringify(this.cdnProviders)
             ),
             Common.ok(),
             Common.doNotShowAgain(),

@@ -8,7 +8,13 @@ import * as sinon from 'sinon';
 import { commands, ConfigurationTarget, workspace } from 'vscode';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo } from '../../../platform/logging';
-import { IDisposable } from '../../../platform/common/types';
+import {
+    IConfigurationService,
+    IDisposable,
+    IJupyterSettings,
+    ReadWrite,
+    WidgetCDNs
+} from '../../../platform/common/types';
 import { IKernelProvider } from '../../../kernels/types';
 import { captureScreenShot, IExtensionTestApi, startJupyterServer, waitForCondition } from '../../common';
 import { initialize } from '../../initialize';
@@ -45,7 +51,7 @@ import {
         let kernelProvider: IKernelProvider;
 
         this.timeout(120_000);
-        const widgetScriptSourcesValue = useCDN ? ['jsdelivr.com', 'unpkg.com'] : [];
+        const widgetScriptSourcesValue: WidgetCDNs[] = useCDN ? ['jsdelivr.com', 'unpkg.com'] : [];
         // Retry at least once, because ipywidgets can be flaky (network, comms, etc).
         this.retries(1);
         suiteSetup(async function () {
@@ -60,6 +66,10 @@ import {
             sinon.restore();
             vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
             kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
+            const configService = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
+            const settings = configService.getSettings(undefined) as ReadWrite<IJupyterSettings>;
+            settings.widgetScriptSources = widgetScriptSourcesValue;
+
             traceInfo('Suite Setup (completed)');
         });
         // Use same notebook without starting kernel in every single test (use one for whole suite).
