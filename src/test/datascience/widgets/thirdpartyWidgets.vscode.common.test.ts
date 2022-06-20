@@ -33,198 +33,201 @@ import {
     initializeNotebookForWidgetTest
 } from './standardWidgets.vscode.common.test';
 
-/* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('Third party IPyWidget Tests', function () {
-    let api: IExtensionTestApi;
-    const disposables: IDisposable[] = [];
-    let vscodeNotebook: IVSCodeNotebook;
-    let kernelProvider: IKernelProvider;
+[true, false].forEach((useCDN) => {
+    /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
+    suite(`Third party IPyWidget Tests ${useCDN ? 'with CDN' : 'without CDN'}`, function () {
+        let api: IExtensionTestApi;
+        const disposables: IDisposable[] = [];
+        let vscodeNotebook: IVSCodeNotebook;
+        let kernelProvider: IKernelProvider;
 
-    this.timeout(120_000);
-    const widgetScriptSourcesValue: WidgetCDNs[] = ['jsdelivr.com', 'unpkg.com'];
-    // Retry at least once, because ipywidgets can be flaky (network, comms, etc).
-    this.retries(1);
-    suiteSetup(async function () {
-        traceInfo('Suite Setup VS Code Notebook - Execution');
         this.timeout(120_000);
-        api = await initialize();
-        const config = workspace.getConfiguration('jupyter', undefined);
-        await config.update('widgetScriptSources', widgetScriptSourcesValue, ConfigurationTarget.Global);
-        vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
-        const configService = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        const settings = configService.getSettings(undefined) as ReadWrite<IJupyterSettings>;
-        settings.widgetScriptSources = widgetScriptSourcesValue;
+        const widgetScriptSourcesValue: WidgetCDNs[] = useCDN ? ['jsdelivr.com', 'unpkg.com'] : [];
+        // Retry at least once, because ipywidgets can be flaky (network, comms, etc).
+        this.retries(1);
+        suiteSetup(async function () {
+            traceInfo('Suite Setup VS Code Notebook - Execution');
+            this.timeout(120_000);
+            api = await initialize();
+            const config = workspace.getConfiguration('jupyter', undefined);
+            await config.update('widgetScriptSources', widgetScriptSourcesValue, ConfigurationTarget.Global);
+            vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+            kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
+            const configService = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
+            const settings = configService.getSettings(undefined) as ReadWrite<IJupyterSettings>;
+            settings.widgetScriptSources = widgetScriptSourcesValue;
 
-        await workAroundVSCodeNotebookStartPages();
-        await startJupyterServer();
-        await prewarmNotebooks();
-        sinon.restore();
-        traceInfo('Suite Setup (completed)');
-    });
-    // Use same notebook without starting kernel in every single test (use one for whole suite).
-    setup(async function () {
-        traceInfo(`Start Test ${this.currentTest?.title}`);
-        sinon.restore();
-        await startJupyterServer();
-        await closeNotebooks();
-        traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
-        // With less real estate, the outputs might not get rendered (VS Code optimization to avoid rendering if not in viewport).
-        await commands.executeCommand('workbench.action.closePanel');
-    });
-    teardown(async function () {
-        traceInfo(`Ended Test ${this.currentTest?.title}`);
-        if (this.currentTest?.isFailed()) {
-            await captureScreenShot(this.currentTest.title);
-        }
-        await closeNotebooksAndCleanUpAfterTests(disposables);
-        traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
-    });
-    suiteTeardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
-
-    test('Button Widget with custom comm message rendering a matplotlib widget', async () => {
-        const comms = await initializeNotebookForWidgetTest(api, disposables, {
-            templateFile: 'button_widget_comm_msg_matplotlib.ipynb'
+            await workAroundVSCodeNotebookStartPages();
+            await startJupyterServer();
+            await prewarmNotebooks();
+            sinon.restore();
+            traceInfo('Suite Setup (completed)');
         });
-        const [cell0, cell1] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
-
-        await executeCellAndWaitForOutput(cell0, comms);
-        await executeCellAndWaitForOutput(cell1, comms);
-        await assertOutputContainsHtml(cell0, comms, ['Click Me!', '<button']);
-
-        // Click the button and verify we have output in the same cell.
-        await clickWidget(comms, cell0, 'button');
-        await assertOutputContainsHtml(cell0, comms, ['>Figure 1<', '<canvas', 'Download plot']);
-    });
-    test('Render IPySheets', async function () {
-        // https://github.com/microsoft/vscode-jupyter/issues/10506
-        return this.skip();
-        const comms = await initializeNotebookForWidgetTest(api, disposables, {
-            templateFile: 'ipySheet_widgets.ipynb'
+        // Use same notebook without starting kernel in every single test (use one for whole suite).
+        setup(async function () {
+            traceInfo(`Start Test ${this.currentTest?.title}`);
+            sinon.restore();
+            await startJupyterServer();
+            await closeNotebooks();
+            traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
+            // With less real estate, the outputs might not get rendered (VS Code optimization to avoid rendering if not in viewport).
+            await commands.executeCommand('workbench.action.closePanel');
         });
-        const [, cell1] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
-
-        await executeCellAndWaitForOutput(cell1, comms);
-        await assertOutputContainsHtml(cell1, comms, ['Hello', 'World', '42.000']);
-    });
-    test('Render IPySheets & search', async function () {
-        // https://github.com/microsoft/vscode-jupyter/issues/10506
-        return this.skip();
-        const comms = await initializeNotebookForWidgetTest(api, disposables, {
-            templateFile: 'ipySheet_widgets_search.ipynb'
+        teardown(async function () {
+            traceInfo(`Ended Test ${this.currentTest?.title}`);
+            if (this.currentTest?.isFailed()) {
+                await captureScreenShot(this.currentTest.title);
+            }
+            await closeNotebooksAndCleanUpAfterTests(disposables);
+            traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
         });
-        const [, cell1, cell2] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+        suiteTeardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
 
-        await executeCellAndWaitForOutput(cell1, comms);
-        await executeCellAndWaitForOutput(cell2, comms);
-        await assertOutputContainsHtml(cell1, comms, ['title="Search:"', '<input type="text']);
-        await assertOutputContainsHtml(cell2, comms, ['>train<', '>foo<']);
+        test('Button Widget with custom comm message rendering a matplotlib widget', async () => {
+            const comms = await initializeNotebookForWidgetTest(api, disposables, {
+                templateFile: 'button_widget_comm_msg_matplotlib.ipynb'
+            });
+            const [cell0, cell1] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
 
-        // Update the textbox widget.
-        await comms.setValue(cell1, '.widget-text input', 'train');
-        await assertOutputContainsHtml(cell2, comms, ['class="htSearchResult">train<']);
-    });
-    test('Render IPySheets & slider', async function () {
-        // https://github.com/microsoft/vscode-jupyter/issues/10506
-        return this.skip();
-        const comms = await initializeNotebookForWidgetTest(api, disposables, {
-            templateFile: 'ipySheet_widgets_slider.ipynb'
+            await executeCellAndWaitForOutput(cell0, comms);
+            await executeCellAndWaitForOutput(cell1, comms);
+            await assertOutputContainsHtml(cell0, comms, ['Click Me!', '<button']);
+
+            // Click the button and verify we have output in the same cell.
+            await clickWidget(comms, cell0, 'button');
+            await assertOutputContainsHtml(cell0, comms, ['>Figure 1<', '<canvas', 'Download plot']);
         });
-        const [, cell1, cell2, cell3] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
-
-        await executeCellAndWaitForOutput(cell1, comms);
-        await executeCellAndWaitForOutput(cell2, comms);
-        await executeCellAndWaitForOutput(cell3, comms);
-        await assertOutputContainsHtml(cell1, comms, ['Continuous Slider']);
-        await assertOutputContainsHtml(cell2, comms, ['Continuous Text', '<input type="number']);
-        await assertOutputContainsHtml(cell3, comms, ['Continuous Slider', '>0<', '>123.00']);
-
-        // Update the textbox widget (for slider).
-        await comms.setValue(cell2, '.widget-text input', '5255');
-        await assertOutputContainsHtml(cell3, comms, ['>5255<', '>5378.0']);
-    });
-    test.skip('Render ipyvolume (slider, color picker, figure)', async function () {
-        const comms = await initializeNotebookForWidgetTest(api, disposables, {
-            templateFile: 'ipyvolume_widgets.ipynb'
-        });
-        const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
-        // ipyvolume fails in Python 3.10 due to a known issue.
-        const kernel = kernelProvider.get(cell.notebook.uri);
-        if (
-            kernel &&
-            kernel.kernelConnectionMetadata.interpreter &&
-            kernel.kernelConnectionMetadata.interpreter.version &&
-            kernel.kernelConnectionMetadata.interpreter.version.major === 3 &&
-            kernel.kernelConnectionMetadata.interpreter.version.minor === 10
-        ) {
+        test('Render IPySheets', async function () {
+            // https://github.com/microsoft/vscode-jupyter/issues/10506
             return this.skip();
-        }
+            const comms = await initializeNotebookForWidgetTest(api, disposables, {
+                templateFile: 'ipySheet_widgets.ipynb'
+            });
+            const [, cell1] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
 
-        await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(cell, comms, ['<input type="color"', '>Slider1<', '>Slider2<', '<canvas']);
-    });
-    test('Render pythreejs', async function () {
-        const comms = await initializeNotebookForWidgetTest(api, disposables, {
-            templateFile: 'pythreejs_widgets.ipynb'
+            await executeCellAndWaitForOutput(cell1, comms);
+            await assertOutputContainsHtml(cell1, comms, ['Hello', 'World', '42.000']);
         });
-        const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
+        test('Render IPySheets & search', async function () {
+            // https://github.com/microsoft/vscode-jupyter/issues/10506
+            return this.skip();
+            const comms = await initializeNotebookForWidgetTest(api, disposables, {
+                templateFile: 'ipySheet_widgets_search.ipynb'
+            });
+            const [, cell1, cell2] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
 
-        await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(cell, comms, ['<canvas']);
-    });
-    test('Render pythreejs, 2', async function () {
-        const comms = await initializeNotebookForWidgetTest(api, disposables, {
-            templateFile: 'pythreejs_widgets2.ipynb'
+            await executeCellAndWaitForOutput(cell1, comms);
+            await executeCellAndWaitForOutput(cell2, comms);
+            await assertOutputContainsHtml(cell1, comms, ['title="Search:"', '<input type="text']);
+            await assertOutputContainsHtml(cell2, comms, ['>train<', '>foo<']);
+
+            // Update the textbox widget.
+            await comms.setValue(cell1, '.widget-text input', 'train');
+            await assertOutputContainsHtml(cell2, comms, ['class="htSearchResult">train<']);
         });
-        const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
+        test('Render IPySheets & slider', async function () {
+            // https://github.com/microsoft/vscode-jupyter/issues/10506
+            return this.skip();
+            const comms = await initializeNotebookForWidgetTest(api, disposables, {
+                templateFile: 'ipySheet_widgets_slider.ipynb'
+            });
+            const [, cell1, cell2, cell3] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
 
-        await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(cell, comms, ['<canvas']);
-    });
-    test('Render matplotlib, interactive inline', async function () {
-        const comms = await initializeNotebookForWidgetTest(api, disposables, {
-            templateFile: 'matplotlib_widgets_interactive.ipynb'
+            await executeCellAndWaitForOutput(cell1, comms);
+            await executeCellAndWaitForOutput(cell2, comms);
+            await executeCellAndWaitForOutput(cell3, comms);
+            await assertOutputContainsHtml(cell1, comms, ['Continuous Slider']);
+            await assertOutputContainsHtml(cell2, comms, ['Continuous Text', '<input type="number']);
+            await assertOutputContainsHtml(cell3, comms, ['Continuous Slider', '>0<', '>123.00']);
+
+            // Update the textbox widget (for slider).
+            await comms.setValue(cell2, '.widget-text input', '5255');
+            await assertOutputContainsHtml(cell3, comms, ['>5255<', '>5378.0']);
         });
-        const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
+        test.skip('Render ipyvolume (slider, color picker, figure)', async function () {
+            const comms = await initializeNotebookForWidgetTest(api, disposables, {
+                templateFile: 'ipyvolume_widgets.ipynb'
+            });
+            const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
+            // ipyvolume fails in Python 3.10 due to a known issue.
+            const kernel = kernelProvider.get(cell.notebook.uri);
+            if (
+                kernel &&
+                kernel.kernelConnectionMetadata.interpreter &&
+                kernel.kernelConnectionMetadata.interpreter.version &&
+                kernel.kernelConnectionMetadata.interpreter.version.major === 3 &&
+                kernel.kernelConnectionMetadata.interpreter.version.minor === 10
+            ) {
+                return this.skip();
+            }
 
-        await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(cell, comms, ['>m<', '>b<', '<img src="data:image']);
-    });
-    test('Render matplotlib, non-interactive inline', async function () {
-        // Skipping this test as the renderer is not a widget renderer, its an html renderer.
-        // Need to modify that code too to add the classes so we can query the html rendered.
-        await initializeNotebookForWidgetTest(api, disposables, {
-            templateFile: 'matplotlib_widgets_inline.ipynb'
+            await executeCellAndWaitForOutput(cell, comms);
+            await assertOutputContainsHtml(cell, comms, ['<input type="color"', '>Slider1<', '>Slider2<', '<canvas']);
         });
-        const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(2);
+        test('Render pythreejs', async function () {
+            const comms = await initializeNotebookForWidgetTest(api, disposables, {
+                templateFile: 'pythreejs_widgets.ipynb'
+            });
+            const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
 
-        const mimTypes = () => cell.outputs.map((output) => output.items.map((item) => item.mime).join(',')).join(',');
-        await executeCellAndDontWaitForOutput(cell);
-        await waitForCondition(
-            () => mimTypes().toLowerCase().includes('image/'),
-            defaultNotebookTestTimeout,
-            () => `Timeout waiting for matplotlib inline image, got ${mimTypes()}`
-        );
-    });
-    test('Render matplotlib, widget', async function () {
-        const comms = await initializeNotebookForWidgetTest(api, disposables, {
-            templateFile: 'matplotlib_widgets_widget.ipynb'
+            await executeCellAndWaitForOutput(cell, comms);
+            await assertOutputContainsHtml(cell, comms, ['<canvas']);
         });
-        const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(3);
+        test('Render pythreejs, 2', async function () {
+            const comms = await initializeNotebookForWidgetTest(api, disposables, {
+                templateFile: 'pythreejs_widgets2.ipynb'
+            });
+            const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
 
-        await executeCellAndWaitForOutput(cell, comms);
-        await assertOutputContainsHtml(cell, comms, ['>Figure 1<', '<canvas', 'Download plot']);
-    });
-    test('Render matplotlib, widget in multiple cells', async function () {
-        const comms = await initializeNotebookForWidgetTest(api, disposables, {
-            templateFile: 'matplotlib_multiple_cells_widgets.ipynb'
+            await executeCellAndWaitForOutput(cell, comms);
+            await assertOutputContainsHtml(cell, comms, ['<canvas']);
         });
-        const [, cell1, cell2, cell3] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+        test('Render matplotlib, interactive inline', async function () {
+            const comms = await initializeNotebookForWidgetTest(api, disposables, {
+                templateFile: 'matplotlib_widgets_interactive.ipynb'
+            });
+            const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
 
-        await executeCellAndDontWaitForOutput(cell1);
-        await executeCellAndWaitForOutput(cell2, comms);
-        await executeCellAndWaitForOutput(cell3, comms);
-        await assertOutputContainsHtml(cell2, comms, ['>Figure 1<', '<canvas', 'Download plot']);
-        await assertOutputContainsHtml(cell3, comms, ['>Figure 2<', '<canvas', 'Download plot']);
+            await executeCellAndWaitForOutput(cell, comms);
+            await assertOutputContainsHtml(cell, comms, ['>m<', '>b<', '<img src="data:image']);
+        });
+        test('Render matplotlib, non-interactive inline', async function () {
+            // Skipping this test as the renderer is not a widget renderer, its an html renderer.
+            // Need to modify that code too to add the classes so we can query the html rendered.
+            await initializeNotebookForWidgetTest(api, disposables, {
+                templateFile: 'matplotlib_widgets_inline.ipynb'
+            });
+            const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(2);
+
+            const mimTypes = () =>
+                cell.outputs.map((output) => output.items.map((item) => item.mime).join(',')).join(',');
+            await executeCellAndDontWaitForOutput(cell);
+            await waitForCondition(
+                () => mimTypes().toLowerCase().includes('image/'),
+                defaultNotebookTestTimeout,
+                () => `Timeout waiting for matplotlib inline image, got ${mimTypes()}`
+            );
+        });
+        test('Render matplotlib, widget', async function () {
+            const comms = await initializeNotebookForWidgetTest(api, disposables, {
+                templateFile: 'matplotlib_widgets_widget.ipynb'
+            });
+            const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(3);
+
+            await executeCellAndWaitForOutput(cell, comms);
+            await assertOutputContainsHtml(cell, comms, ['>Figure 1<', '<canvas', 'Download plot']);
+        });
+        test('Render matplotlib, widget in multiple cells', async function () {
+            const comms = await initializeNotebookForWidgetTest(api, disposables, {
+                templateFile: 'matplotlib_multiple_cells_widgets.ipynb'
+            });
+            const [, cell1, cell2, cell3] = vscodeNotebook.activeNotebookEditor!.notebook.getCells();
+
+            await executeCellAndDontWaitForOutput(cell1);
+            await executeCellAndWaitForOutput(cell2, comms);
+            await executeCellAndWaitForOutput(cell3, comms);
+            await assertOutputContainsHtml(cell2, comms, ['>Figure 1<', '<canvas', 'Download plot']);
+            await assertOutputContainsHtml(cell3, comms, ['>Figure 2<', '<canvas', 'Download plot']);
+        });
     });
 });

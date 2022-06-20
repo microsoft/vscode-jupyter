@@ -18,7 +18,7 @@ suite('DataScience - ipywidget - Remote Widget Script Source', () => {
     setup(() => {
         scriptManagerFactory = mock<IIPyWidgetScriptManagerFactory>();
         scriptManager = mock<IIPyWidgetScriptManager>();
-        when(scriptManagerFactory.create(anything())).thenReturn(instance(scriptManager));
+        when(scriptManagerFactory.getOrCreate(anything())).thenReturn(instance(scriptManager));
         kernel = mock<IKernel>();
         const kernelConnection: RemoteKernelConnectionMetadata = {
             baseUrl,

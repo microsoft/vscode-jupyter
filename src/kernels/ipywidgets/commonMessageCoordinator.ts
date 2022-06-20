@@ -150,8 +150,8 @@ export class CommonMessageCoordinator {
     private async initialize(): Promise<void> {
         traceVerbose('initialize CommonMessageCoordinator');
         // First hook up the widget script source that will listen to messages even before we start sending messages.
-        const promise = this.getIPyWidgetScriptSource().initialize();
-        await promise.then(() => this.getIPyWidgetMessageDispatcher().initialize());
+        this.getIPyWidgetScriptSource().initialize();
+        this.getIPyWidgetMessageDispatcher().initialize();
     }
 
     private sendLoadSucceededTelemetry(payload: LoadIPyWidgetClassLoadAction) {

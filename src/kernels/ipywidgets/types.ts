@@ -120,7 +120,7 @@ export interface INbExtensionsPathProvider {
 
 export const IIPyWidgetScriptManagerFactory = Symbol('IIPyWidgetScriptManagerFactory');
 export interface IIPyWidgetScriptManagerFactory {
-    create(kernel: IKernel): IIPyWidgetScriptManager;
+    getOrCreate(kernel: IKernel): IIPyWidgetScriptManager;
 }
 export const IIPyWidgetScriptManager = Symbol('IIPyWidgetScriptManager');
 export interface IIPyWidgetScriptManager {

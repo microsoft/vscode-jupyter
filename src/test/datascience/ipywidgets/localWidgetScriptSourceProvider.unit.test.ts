@@ -26,7 +26,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
         resourceConverter = mock<ILocalResourceUriConverter>();
         scriptManagerFactory = mock<IIPyWidgetScriptManagerFactory>();
         scriptManager = mock<IIPyWidgetScriptManager>();
-        when(scriptManagerFactory.create(anything())).thenReturn(instance(scriptManager));
+        when(scriptManagerFactory.getOrCreate(anything())).thenReturn(instance(scriptManager));
         kernel = mock<IKernel>();
         when(resourceConverter.asWebviewUri(anything())).thenCall((uri) => Promise.resolve(asVSCodeUri(uri)));
         scriptSourceProvider = new LocalWidgetScriptSourceProvider(

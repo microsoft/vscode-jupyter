@@ -70,7 +70,7 @@ suite('IPyWidget Script Manager', function () {
         await waitForCellExecutionToComplete(cell);
 
         kernel = kernelProvider.get(notebook.uri)!;
-        scriptManager = widgetScriptManagerFactory.create(kernel);
+        scriptManager = widgetScriptManagerFactory.getOrCreate(kernel);
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);

@@ -46,7 +46,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         this.disposeScriptProviders();
     }
     public async getBaseUrl() {
-        const provider = this.scriptProviders!.find((item) => item.getBaseUrl);
+        const provider = this.scriptProviders.find((item) => item.getBaseUrl);
         if (!provider) {
             return;
         }
@@ -56,7 +56,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
     public async getWidgetScriptSources() {
         const sources: WidgetScriptSource[] = [];
         await Promise.all(
-            this.scriptProviders!.filter((item) => item.getWidgetScriptSources).map(async (item) => {
+            this.scriptProviders.map(async (item) => {
                 if (item.getWidgetScriptSources) {
                     sources.push(...(await item.getWidgetScriptSources()));
                 }
