@@ -27,11 +27,11 @@ import { traceInfoIfCI, traceInfo } from '../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../telemetry';
 import { trackKernelResourceInformation } from '../kernels/telemetry/helper';
 import { INotebookControllerManager, INotebookEditorProvider } from './types';
-import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { IServiceContainer } from '../platform/ioc/types';
 import { endCellAndDisplayErrorsInCell } from '../kernels/execution/helpers';
 import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
 import { getAssociatedNotebookDocument } from '../kernels/helpers';
+import { IDataScienceErrorHandler } from '../kernels/errors/types';
 import { getNotebookMetadata } from '../platform/common/utils';
 import { KernelConnector } from './controllers/kernelConnector';
 

@@ -3,7 +3,7 @@
 
 import { KernelConnectionMetadata } from '../types';
 import { DataScience } from '../../platform/common/utils/localize';
-import { BaseKernelError } from '../../platform/errors/types';
+import { BaseKernelError } from './types';
 
 export class KernelProcessExitedError extends BaseKernelError {
     constructor(

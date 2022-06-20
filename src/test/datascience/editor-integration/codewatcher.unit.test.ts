@@ -42,10 +42,10 @@ import { InteractiveCellResultError } from '../../../platform/errors/interactive
 import { ICodeWatcher, IGeneratedCodeStorageFactory } from '../../../interactive-window/editor-integration/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../../interactive-window/types';
 import { Commands, EditorContexts } from '../../../platform/common/constants';
-import { IDataScienceErrorHandler } from '../../../platform/errors/types';
 import { SystemVariables } from '../../../platform/common/variables/systemVariables.node';
 import { IDebugLocationTracker } from '../../../kernels/debugger/types';
 import { noop } from '../../core';
+import { IDataScienceErrorHandler } from '../../../kernels/errors/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
