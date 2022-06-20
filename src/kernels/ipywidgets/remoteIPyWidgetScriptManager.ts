@@ -68,15 +68,15 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
                                 __vsc_nbextension_Folder = sys.prefix + os.path.sep + 'share' + os.path.sep + 'jupyter' + os.path.sep + 'nbextensions' + os.path.sep
                                 __vsc_file = ''
                                 for __vsc_file in glob.glob(__vsc_nbextension_Folder + '*' +  os.path.sep + 'extension.js'):
-                                    __vsc_nbextension_widgets.append(file.replace(__vsc_nbextension_Folder, ""))
+                                    __vsc_nbextension_widgets.append(__vsc_file.replace(__vsc_nbextension_Folder, ""))
 
-                                    print(__vsc_nbextension_widgets)
+                                print(__vsc_nbextension_widgets)
                             except:
                                 pass
 
                             try:
                                 if not __vsc_glob_was_imported:
-                                del sys.modules['glob']
+                                    del sys.modules['glob']
                                 if not __vsc_os_was_imported:
                                     del sys.modules['os']
                             except:
