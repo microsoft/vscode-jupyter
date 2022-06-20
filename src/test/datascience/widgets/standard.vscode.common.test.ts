@@ -33,7 +33,7 @@ import { WidgetRenderingTimeoutForTests } from './constants';
 import { getTextOutputValue } from '../../../kernels/execution/helpers';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-[false].forEach((useCDN) => {
+[true, false].forEach((useCDN) => {
     /**
      * Testing the following permutations:
      * - VSCode Web + Remote Jupyter + CDN
@@ -290,7 +290,7 @@ import { getTextOutputValue } from '../../../kernels/execution/helpers';
             await comms.setValue(cell2, '.widget-text input', '5255');
             await assertOutputContainsHtml(cell3, comms, ['>5255<', '>5378.0']);
         });
-        test('Render ipyvolume (slider, color picker, figure)', async function () {
+        test.skip('Render ipyvolume (slider, color picker, figure)', async function () {
             const comms = await initializeNotebook({ templateFile: 'ipyvolume_widgets.ipynb' });
             const cell = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(1);
 
