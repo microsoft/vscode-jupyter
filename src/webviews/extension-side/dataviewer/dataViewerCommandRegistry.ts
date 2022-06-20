@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable, named, optional } from 'inversify';
-import { Uri } from 'vscode';
+import { DebugConfiguration } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { convertDebugProtocolVariableToIJupyterVariable } from '../../../kernels/variables/helpers';
 import { IJupyterVariables } from '../../../kernels/variables/types';
@@ -17,17 +17,16 @@ import {
     IWorkspaceService
 } from '../../../platform/common/application/types';
 import { Commands, Identifiers } from '../../../platform/common/constants';
-import { IPlatformService } from '../../../platform/common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
-import { untildify } from '../../../platform/common/utils/platform';
 import { IDataScienceErrorHandler } from '../../../platform/errors/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { traceError } from '../../../platform/logging';
+import { traceError, traceInfo } from '../../../platform/logging';
 import { IShowDataViewerFromVariablePanel } from '../../../platform/messageTypes';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
+import { PythonEnvironment } from '../api/extension';
 import { DataViewerChecker } from './dataViewerChecker';
 import { IDataViewerDependencyService, IDataViewerFactory, IJupyterVariableDataProviderFactory } from './types';
 
@@ -53,8 +52,7 @@ export class DataViewerCommandRegistry implements IExtensionSingleActivationServ
         @inject(IDataViewerDependencyService)
         @optional()
         private readonly dataViewerDependencyService: IDataViewerDependencyService | undefined,
-        @inject(IInterpreterService) @optional() private readonly interpreterService: IInterpreterService | undefined,
-        @inject(IPlatformService) private readonly platformService: IPlatformService
+        @inject(IInterpreterService) @optional() private readonly interpreterService: IInterpreterService | undefined
     ) {
         this.dataViewerChecker = new DataViewerChecker(configService, appShell);
         if (!this.workspace.isTrusted) {
@@ -89,29 +87,15 @@ export class DataViewerCommandRegistry implements IExtensionSingleActivationServ
             try {
                 // First find out the current python environment that we are working with
                 if (
-                    this.debugService.activeDebugSession.configuration.python &&
+                    this.debugService.activeDebugSession.configuration &&
                     this.dataViewerDependencyService &&
                     this.interpreterService
                 ) {
-                    // Check to see that we are actually getting a string here as it looks like one customer was not
-                    if (typeof this.debugService.activeDebugSession.configuration.python !== 'string') {
-                        // https://github.com/microsoft/vscode-jupyter/issues/10007
-                        // Error thrown here will be caught and logged by the catch below to send
-                        throw new Error(
-                            `active.DebugSession.configuration.python is not a string: ${JSON.stringify(
-                                this.debugService.activeDebugSession.configuration.python
-                            )}`
-                        );
-                    }
+                    // Check the debug adapter session to get the python env that launched it
+                    const pythonEnv = await this.getDebugAdapterPython(
+                        this.debugService.activeDebugSession.configuration
+                    );
 
-                    // Uri won't work with ~ so untildify first
-                    let untildePath = this.debugService.activeDebugSession.configuration.python;
-                    if (untildePath.startsWith('~') && this.platformService.homeDir) {
-                        untildePath = untildify(untildePath, this.platformService.homeDir.path);
-                    }
-
-                    const pythonEnv = await this.interpreterService.getInterpreterDetails(Uri.file(untildePath));
-                    // Check that we have dependencies installed for data viewer
                     pythonEnv && (await this.dataViewerDependencyService.checkAndInstallMissingDependencies(pythonEnv));
                 }
 
@@ -135,5 +119,30 @@ export class DataViewerCommandRegistry implements IExtensionSingleActivationServ
                 this.errorHandler.handleError(e).then(noop, noop);
             }
         }
+    }
+
+    // For the given debug adapter, return the PythonEnvironment used to launch it
+    // Mirrors the logic from Python extension here:
+    // https://github.com/microsoft/vscode-python/blob/35b813f37d1ceec547277180e3aa07bd24d86f89/src/client/debugger/extension/adapter/factory.ts#L116
+    private async getDebugAdapterPython(
+        debugConfiguration: DebugConfiguration
+    ): Promise<PythonEnvironment | undefined> {
+        if (!this.interpreterService) {
+            // Interpreter service is optional
+            traceInfo('Interpreter Service missing when trying getDebugAdapterPython');
+            return;
+        }
+
+        // Check debugAdapterPython and pythonPath
+        if (debugConfiguration.debugAdapterPython !== undefined) {
+            traceInfo('Found debugAdapterPython on Debug Configuration to use');
+            return this.interpreterService.getInterpreterDetails(debugConfiguration.debugAdapterPython);
+        } else if (debugConfiguration.pythonPath) {
+            traceInfo('Found pythonPath on Debug Configuration to use');
+            return this.interpreterService.getInterpreterDetails(debugConfiguration.pythonPath);
+        }
+
+        // Failed to find the expected configuration items, use active interpreter (might be attach scenario)
+        return this.interpreterService.getActiveInterpreter();
     }
 }
