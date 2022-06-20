@@ -79,7 +79,7 @@ import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/ut
 import { ConsoleForegroundColors, TraceOptions } from '../../platform/logging/types';
 import { KernelConnector } from './kernelConnector';
 import { IVSCodeNotebookController } from './types';
-import { ILocalResourceUriConverter } from '../../kernels/ipywidgets-message-coordination/types';
+import { ILocalResourceUriConverter } from '../../kernels/ipywidgets/types';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { CellExecutionCreator } from '../../kernels/execution/cellExecutionCreator';
 import {

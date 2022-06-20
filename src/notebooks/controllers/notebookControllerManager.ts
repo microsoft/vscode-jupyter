@@ -67,7 +67,7 @@ import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
 import { INotebookMetadata } from '@jupyterlab/nbformat';
 import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConnectionType';
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
-import { ILocalResourceUriConverter } from '../../kernels/ipywidgets-message-coordination/types';
+import { ILocalResourceUriConverter } from '../../kernels/ipywidgets/types';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 

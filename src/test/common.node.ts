@@ -367,6 +367,7 @@ export function initializeCommonNodeApi() {
         },
         async initialize() {
             return initialize();
-        }
+        },
+        captureScreenShot
     });
 }

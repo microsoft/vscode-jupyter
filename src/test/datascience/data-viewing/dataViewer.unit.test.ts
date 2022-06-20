@@ -4,7 +4,7 @@
 'use strict';
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { ConfigurationChangeEvent, EventEmitter } from 'vscode';
+import { ConfigurationChangeEvent, EventEmitter, Uri } from 'vscode';
 import { ApplicationShell } from '../../../platform/common/application/applicationShell';
 import {
     IApplicationShell,
@@ -15,9 +15,9 @@ import { WebviewPanelProvider } from '../../../webviews/extension-side/webviewPa
 import { WorkspaceService } from '../../../platform/common/application/workspace.node';
 import { JupyterSettings } from '../../../platform/common/configSettings';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
-import { IConfigurationService } from '../../../platform/common/types';
+import { IConfigurationService, IExtensionContext } from '../../../platform/common/types';
 import { IDataScienceErrorHandler } from '../../../platform/errors/types';
-import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataViewer.node';
+import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataViewer';
 import { JupyterVariableDataProvider } from '../../../webviews/extension-side/dataviewer/jupyterVariableDataProvider';
 import { IDataViewer, IDataViewerDataProvider } from '../../../webviews/extension-side/dataviewer/types';
 import { MockMemento } from '../../mocks/mementos';
@@ -39,14 +39,16 @@ suite('DataScience - DataViewer', () => {
         dataProvider = mock(JupyterVariableDataProvider);
         const settings = mock(JupyterSettings);
         const settingsChangedEvent = new EventEmitter<void>();
+        const context: IExtensionContext = mock<IExtensionContext>();
 
         when(settings.onDidChange).thenReturn(settingsChangedEvent.event);
         when(configService.getSettings(anything())).thenReturn(instance(settings));
 
         const configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
-        when(workspaceService.onDidChangeConfiguration).thenReturn(configChangeEvent.event);
 
+        when(workspaceService.onDidChangeConfiguration).thenReturn(configChangeEvent.event);
         when(dataProvider.getDataFrameInfo(anything(), anything())).thenResolve({});
+        when(context.extensionUri).thenReturn(Uri.parse('/'));
 
         dataViewer = new DataViewer(
             instance(webPanelProvider),
@@ -54,7 +56,8 @@ suite('DataScience - DataViewer', () => {
             instance(workspaceService),
             instance(applicationShell),
             new MockMemento(),
-            instance(mock<IDataScienceErrorHandler>())
+            instance(mock<IDataScienceErrorHandler>()),
+            instance(context)
         );
     });
     test('Data viewer showData calls gets dataFrame info from data provider', async () => {

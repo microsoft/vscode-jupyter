@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { clearPendingChainedUpdatesForTests } from '../kernels/execution/notebookUpdater';
-import { IExtensionApi } from '../platform/api';
+import { IExtensionApi } from '../webviews/extension-side/api/api';
 import { disposeAllDisposables } from '../platform/common/helpers';
 import { IDisposable } from '../platform/common/types';
 import { sleep } from '../platform/common/utils/async';

@@ -159,6 +159,18 @@ async function createTemporaryNotebookFromNotebook(
     rootFolder?: Uri,
     prefix?: string
 ) {
+    const uri = await generateTemporaryFilePath('.ipynb', disposables, rootFolder, prefix);
+    await workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(notebook)));
+
+    return uri;
+}
+
+export async function generateTemporaryFilePath(
+    extension: string,
+    disposables: IDisposable[],
+    rootFolder?: Uri,
+    prefix?: string
+) {
     const services = await getServices();
     const platformService = services.serviceContainer.get<IPlatformService>(IPlatformService);
     const workspaceService = services.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
@@ -167,14 +179,14 @@ async function createTemporaryNotebookFromNotebook(
         platformService.tempDir ||
         workspaceService.rootFolder ||
         Uri.file('./').with({ scheme: 'vscode-test-web' });
-    const uri = urlPath.joinPath(rootUrl, `${prefix || ''}${uuid()}.ipynb`);
-    await workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(notebook)));
 
+    const uri = urlPath.joinPath(rootUrl, `${prefix || ''}${uuid()}.${extension}`);
     disposables.push({
         dispose: () => {
             void workspace.fs.delete(uri).then(noop, noop);
         }
     });
+
     return uri;
 }
 
@@ -959,7 +971,7 @@ export type WindowPromptStub = {
     getDisplayCount(): number;
 };
 export type WindowPromptStubButtonClickOptions = {
-    text?: string;
+    result?: string | Uri;
     clickImmediately?: boolean;
     dismissPrompt?: boolean;
 };
@@ -976,7 +988,7 @@ export async function hijackPrompt(
     const api = await initialize();
     const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
     let displayed = createDeferred<boolean>();
-    let clickButton = createDeferred<string>();
+    let clickButton = createDeferred<string | Uri>();
     const messageDisplayed: string[] = [];
     let displayCount = 0;
     // eslint-disable-next-line
@@ -992,11 +1004,11 @@ export async function hijackPrompt(
             displayCount += 1;
             displayed.resolve(true);
             if (buttonToClick) {
-                if (!buttonToClick.dismissPrompt && buttonToClick?.clickImmediately === true && buttonToClick.text) {
+                if (!buttonToClick.dismissPrompt && buttonToClick?.clickImmediately === true && buttonToClick.result) {
                     if (clickButton.completed) {
                         clickButton = createDeferred<string>();
                     }
-                    clickButton.resolve(buttonToClick.text);
+                    clickButton.resolve(buttonToClick.result);
                 }
                 return buttonToClick.dismissPrompt ? Promise.resolve(undefined) : clickButton.promise;
             }
@@ -1022,7 +1034,61 @@ export async function hijackPrompt(
             displayCount = 0;
             displayed = createDeferred<boolean>();
         },
-        clickButton: (text?: string) => clickButton.resolve(text || buttonToClick?.text)
+        clickButton: (text?: string) => clickButton.resolve(text || buttonToClick?.result)
+    };
+}
+
+export async function hijackSavePrompt(
+    saveLabel: string,
+    buttonToClick?: WindowPromptStubButtonClickOptions,
+    disposables: IDisposable[] = []
+): Promise<WindowPromptStub> {
+    const api = await initialize();
+    const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
+    let displayed = createDeferred<boolean>();
+    let clickButton = createDeferred<string | Uri>();
+    const messageDisplayed: string[] = [];
+    let displayCount = 0;
+    // eslint-disable-next-line
+    const stub = sinon.stub(appShell, 'showSaveDialog').callsFake(function (msg: { saveLabel: string }) {
+        traceInfo(`Message displayed to user '${JSON.stringify(msg)}', checking for '${saveLabel}'`);
+        if (msg.saveLabel === saveLabel) {
+            messageDisplayed.push(msg.saveLabel);
+            traceInfo(`Exact Message found '${msg}'`);
+            displayCount += 1;
+            displayed.resolve(true);
+            if (buttonToClick) {
+                if (!buttonToClick.dismissPrompt && buttonToClick?.clickImmediately === true && buttonToClick.result) {
+                    if (clickButton.completed) {
+                        clickButton = createDeferred<string>();
+                    }
+                    clickButton.resolve(buttonToClick.result);
+                }
+                return buttonToClick.dismissPrompt ? Promise.resolve(undefined) : clickButton.promise;
+            }
+        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return (appShell.showSaveDialog as any).wrappedMethod.apply(appShell, arguments);
+    } as any);
+    const disposable = { dispose: () => stub.restore() };
+    if (disposables) {
+        disposables.push(disposable);
+    }
+    return {
+        dispose: () => stub.restore(),
+        getDisplayCount: () => displayCount,
+        get displayed() {
+            return displayed.promise;
+        },
+        get messages() {
+            return messageDisplayed;
+        },
+        reset: () => {
+            messageDisplayed.splice(0, messageDisplayed.length);
+            displayCount = 0;
+            displayed = createDeferred<boolean>();
+        },
+        clickButton: (text?: string) => clickButton.resolve(text || buttonToClick?.result)
     };
 }
 

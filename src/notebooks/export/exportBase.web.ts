@@ -9,14 +9,14 @@ import * as path from '../../platform/vscode-path/path';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import { executeSilently } from '../../kernels/helpers';
 import { IKernel, IKernelProvider } from '../../kernels/types';
-import { concatMultilineString } from '../common/utils';
-import { IFileSystem } from '../common/platform/types';
-import { PythonEnvironment } from '../pythonEnvironments/info';
+import { concatMultilineString } from '../../platform/common/utils';
+import { IFileSystem } from '../../platform/common/platform/types';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { ExportUtilBase } from './exportUtil';
 import { ExportFormat, IExportBase, IExportDialog, INbConvertExport } from './types';
-import { traceLog } from '../logging';
-import { reportAction } from '../progress/decorator';
-import { ReportableAction } from '../progress/types';
+import { traceLog } from '../../platform/logging';
+import { reportAction } from '../../platform/progress/decorator';
+import { ReportableAction } from '../../platform/progress/types';
 
 @injectable()
 export class ExportBase implements INbConvertExport, IExportBase {

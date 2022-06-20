@@ -41,7 +41,7 @@ import {
 } from 'vscode';
 import * as fsExtra from 'fs-extra';
 import * as path from './platform/vscode-path/path';
-import { buildApi, IExtensionApi } from './platform/api';
+import { buildApi, IExtensionApi } from './webviews/extension-side/api/api';
 import { IApplicationEnvironment, ICommandManager } from './platform/common/application/types';
 import { setHomeDirectory, traceError } from './platform/logging';
 import {

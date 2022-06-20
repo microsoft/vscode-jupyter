@@ -11,7 +11,7 @@ import { IServiceManager } from '../platform/ioc/types';
 import { setSharedProperty } from '../telemetry';
 import { IRawNotebookSupportedService } from './raw/types';
 import { KernelCrashMonitor } from './kernelCrashMonitor';
-import { registerTypes as registerWidgetTypes } from './ipywidgets-message-coordination/serviceRegistry.web';
+import { registerTypes as registerWidgetTypes } from './ipywidgets/serviceRegistry.web';
 import { registerTypes as registerJupyterTypes } from './jupyter/serviceRegistry.web';
 import { injectable } from 'inversify';
 import { IKernelFinder, IKernelProvider } from './types';

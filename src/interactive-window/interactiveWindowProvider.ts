@@ -13,7 +13,6 @@ import {
     ViewColumn,
     window
 } from 'vscode';
-import { IPythonExtensionChecker } from '../platform/api/types';
 
 import {
     IApplicationShell,
@@ -55,7 +54,7 @@ import { createDeferred } from '../platform/common/utils/async';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { INotebookExporter } from '../kernels/jupyter/types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
-import { IExportDialog } from '../platform/export/types';
+import { IExportDialog } from '../notebooks/export/types';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { ICodeGeneratorFactory, IGeneratedCodeStorageFactory } from './editor-integration/types';
 import { getResourceType } from '../platform/common/utils';
@@ -174,11 +173,10 @@ export class InteractiveWindowProvider
                 this.serviceContainer.get<IFileSystem>(IFileSystem),
                 this.serviceContainer.get<IConfigurationService>(IConfigurationService),
                 commandManager,
-                this.serviceContainer.tryGet<INotebookExporter>(INotebookExporter),
+                this.serviceContainer.get<INotebookExporter>(INotebookExporter),
                 this.serviceContainer.get<IWorkspaceService>(IWorkspaceService),
                 resource,
                 mode,
-                this.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker),
                 this.serviceContainer.get<IExportDialog>(IExportDialog),
                 this.notebookControllerManager,
                 this.serviceContainer,

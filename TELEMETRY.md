@@ -178,7 +178,7 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/dataviewer/dataViewer.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewer.node.ts)
+[src/webviews/extension-side/dataviewer/dataViewer.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewer.ts)
 ```typescript
 
     private maybeSendSliceDataDimensionalityTelemetry(numberOfDimensions: number) {
@@ -210,7 +210,7 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/dataviewer/dataViewer.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewer.node.ts)
+[src/webviews/extension-side/dataviewer/dataViewer.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewer.ts)
 ```typescript
                 break;
 
@@ -241,7 +241,7 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/dataviewer/dataViewer.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewer.node.ts)
+[src/webviews/extension-side/dataviewer/dataViewer.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewer.ts)
 ```typescript
                 if (payload.shape?.length) {
                     this.maybeSendSliceDataDimensionalityTelemetry(payload.shape.length);
@@ -1059,7 +1059,7 @@ No description provided
 
 ## Locations Used
 
-[src/platform/export/exportFileOpener.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/export/exportFileOpener.ts)
+[src/notebooks/export/exportFileOpener.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/export/exportFileOpener.ts)
 ```typescript
     public async openFile(format: ExportFormat, uri: Uri, openDirectly: boolean = false) {
         if (format === ExportFormat.python) {
@@ -1071,7 +1071,7 @@ No description provided
 ```
 
 
-[src/platform/export/exportFileOpener.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/export/exportFileOpener.ts)
+[src/notebooks/export/exportFileOpener.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/export/exportFileOpener.ts)
 ```typescript
             });
         } else {
@@ -1083,7 +1083,7 @@ No description provided
 ```
 
 
-[src/platform/export/fileConverter.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/export/fileConverter.ts)
+[src/notebooks/export/fileConverter.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/export/fileConverter.ts)
 ```typescript
         }
 
@@ -1135,7 +1135,7 @@ No description provided
 
 ## Locations Used
 
-[src/platform/export/fileConverter.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/export/fileConverter.ts)
+[src/notebooks/export/fileConverter.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/export/fileConverter.ts)
 ```typescript
             await this.performExport(format, sourceDocument, target, token, candidateInterpreter);
         } catch (e) {
@@ -1594,7 +1594,7 @@ No description provided
 
 ## Locations Used
 
-[src/platform/api/apiAccessService.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/apiAccessService.ts)
+[src/webviews/extension-side/api/apiAccessService.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/apiAccessService.ts)
 ```typescript
         const extensionPermissions = this.globalState.get<ApiExtensionInfo | undefined>(API_ACCESS_GLOBAL_KEY);
         const extensionPermission = extensionPermissions?.find((item) => item.extensionId === info.extensionId);
@@ -1606,7 +1606,7 @@ No description provided
 ```
 
 
-[src/platform/api/apiAccessService.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/apiAccessService.ts)
+[src/webviews/extension-side/api/apiAccessService.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/apiAccessService.ts)
 ```typescript
                     return this.globalState.update(API_ACCESS_GLOBAL_KEY, extensionPermissions);
                 })
@@ -1635,7 +1635,7 @@ No description provided
 
 ## Locations Used
 
-[src/platform/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/kernelApi.ts)
+[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
 ```typescript
         KernelConnectionMetadata
     >();
@@ -1647,7 +1647,7 @@ No description provided
 ```
 
 
-[src/platform/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/kernelApi.ts)
+[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
 ```typescript
         return this._onDidChangeKernelSpecifications.event;
     }
@@ -1659,7 +1659,7 @@ No description provided
 ```
 
 
-[src/platform/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/kernelApi.ts)
+[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
 ```typescript
         );
     }
@@ -1671,7 +1671,7 @@ No description provided
 ```
 
 
-[src/platform/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/kernelApi.ts)
+[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
 ```typescript
         return items.map((item) => this.translateKernelConnectionMetadataToExportedType(item));
     }
@@ -1683,7 +1683,7 @@ No description provided
 ```
 
 
-[src/platform/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/kernelApi.ts)
+[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
 ```typescript
         return kernels;
     }
@@ -1695,7 +1695,7 @@ No description provided
 ```
 
 
-[src/platform/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/kernelApi.ts)
+[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
 ```typescript
         }
     }
@@ -1707,7 +1707,7 @@ No description provided
 ```
 
 
-[src/platform/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/kernelApi.ts)
+[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
 ```typescript
         return this.startOrConnect(spec, uri);
     }
@@ -3147,7 +3147,7 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/dataviewer/dataViewer.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewer.node.ts)
+[src/webviews/extension-side/dataviewer/dataViewer.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewer.ts)
 ```typescript
 
             case DataViewerMessages.RefreshDataViewer:
@@ -4340,7 +4340,7 @@ No description provided
 
 ## Locations Used
 
-[src/webviews/extension-side/dataviewer/dataViewer.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewer.node.ts)
+[src/webviews/extension-side/dataviewer/dataViewer.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewer.ts)
 ```typescript
 
         // Log telemetry about number of rows
@@ -4352,7 +4352,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/dataviewer/dataViewer.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewer.node.ts)
+[src/webviews/extension-side/dataviewer/dataViewer.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewer.ts)
 ```typescript
 
     private sendElapsedTimeTelemetry() {
@@ -5862,7 +5862,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets-message-coordination/baseIPyWidgetScriptManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/baseIPyWidgetScriptManager.ts)
+[src/kernels/ipywidgets/baseIPyWidgetScriptManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/baseIPyWidgetScriptManager.ts)
 ```typescript
             delete config['@jupyter-widgets/controls'];
             delete config['@jupyter-widgets/output'];
@@ -5913,7 +5913,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets-message-coordination/ipyWidgetScriptSource.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/ipyWidgetScriptSource.ts)
+[src/kernels/ipywidgets/ipyWidgetScriptSource.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/ipyWidgetScriptSource.ts)
 ```typescript
             }
         } catch (ex) {
@@ -5944,7 +5944,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets-message-coordination/baseIPyWidgetScriptManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/baseIPyWidgetScriptManager.ts)
+[src/kernels/ipywidgets/baseIPyWidgetScriptManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/baseIPyWidgetScriptManager.ts)
 ```typescript
     }
 
@@ -5956,7 +5956,7 @@ No properties for event
 ```
 
 
-[src/kernels/ipywidgets-message-coordination/baseIPyWidgetScriptManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/baseIPyWidgetScriptManager.ts)
+[src/kernels/ipywidgets/baseIPyWidgetScriptManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/baseIPyWidgetScriptManager.ts)
 ```typescript
     // Find the end bracket for the require config call.
     const endBracket = contents.indexOf(')', indexOfRequireConfig);
@@ -5968,7 +5968,7 @@ No properties for event
 ```
 
 
-[src/kernels/ipywidgets-message-coordination/baseIPyWidgetScriptManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/baseIPyWidgetScriptManager.ts)
+[src/kernels/ipywidgets/baseIPyWidgetScriptManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/baseIPyWidgetScriptManager.ts)
 ```typescript
     });
 
@@ -5980,7 +5980,7 @@ No properties for event
 ```
 
 
-[src/kernels/ipywidgets-message-coordination/baseIPyWidgetScriptManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/baseIPyWidgetScriptManager.ts)
+[src/kernels/ipywidgets/baseIPyWidgetScriptManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/baseIPyWidgetScriptManager.ts)
 ```typescript
         });
         return;
@@ -6031,7 +6031,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets-message-coordination/commonMessageCoordinator.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/commonMessageCoordinator.ts)
+[src/kernels/ipywidgets/commonMessageCoordinator.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/commonMessageCoordinator.ts)
 ```typescript
             }
             traceError(`Widget load failure ${errorMessage}`, payload);
@@ -6061,7 +6061,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets-message-coordination/commonMessageCoordinator.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/commonMessageCoordinator.ts)
+[src/kernels/ipywidgets/commonMessageCoordinator.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/commonMessageCoordinator.ts)
 ```typescript
 
     private sendLoadSucceededTelemetry(payload: LoadIPyWidgetClassLoadAction) {
@@ -6091,7 +6091,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets-message-coordination/ipyWidgetMessageDispatcher.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/ipyWidgetMessageDispatcher.ts)
+[src/kernels/ipywidgets/ipyWidgetMessageDispatcher.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/ipyWidgetMessageDispatcher.ts)
 ```typescript
     }
 
@@ -6122,7 +6122,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider.ts)
+[src/kernels/ipywidgets/cdnWidgetScriptSourceProvider.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/cdnWidgetScriptSourceProvider.ts)
 ```typescript
             return this.configurationPromise.promise;
         }
@@ -6152,7 +6152,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/cdnWidgetScriptSourceProvider.ts)
+[src/kernels/ipywidgets/cdnWidgetScriptSourceProvider.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/cdnWidgetScriptSourceProvider.ts)
 ```typescript
                 break;
         }
@@ -6182,7 +6182,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets-message-coordination/commonMessageCoordinator.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/commonMessageCoordinator.ts)
+[src/kernels/ipywidgets/commonMessageCoordinator.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/commonMessageCoordinator.ts)
 ```typescript
     private sendRenderFailureTelemetry(payload: Error) {
         try {
@@ -6233,7 +6233,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets-message-coordination/localIPyWidgetScriptManager.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/localIPyWidgetScriptManager.node.ts)
+[src/kernels/ipywidgets/localIPyWidgetScriptManager.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/localIPyWidgetScriptManager.node.ts)
 ```typescript
             LocalIPyWidgetScriptManager.nbExtensionsCopiedKernelConnectionList.add(
                 this.kernel.kernelConnectionMetadata.id
@@ -6245,7 +6245,7 @@ No properties for event
 ```
 
 
-[src/kernels/ipywidgets-message-coordination/localIPyWidgetScriptManager.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/localIPyWidgetScriptManager.node.ts)
+[src/kernels/ipywidgets/localIPyWidgetScriptManager.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/localIPyWidgetScriptManager.node.ts)
 ```typescript
             sendTelemetryEvent(Telemetry.IPyWidgetNbExtensionCopyTime, stopWatch.elapsedTime);
             return baseUrl;
@@ -6275,7 +6275,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets-message-coordination/commonMessageCoordinator.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/commonMessageCoordinator.ts)
+[src/kernels/ipywidgets/commonMessageCoordinator.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/commonMessageCoordinator.ts)
 ```typescript
                 this.jupyterOutput.appendLine(
                     DataScience.unhandledMessage().format(msg.header.msg_type, JSON.stringify(msg.content))
@@ -6305,7 +6305,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets-message-coordination/ipyWidgetScriptSourceProvider.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/ipyWidgetScriptSourceProvider.ts)
+[src/kernels/ipywidgets/ipyWidgetScriptSourceProvider.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/ipyWidgetScriptSourceProvider.ts)
 ```typescript
             }
         }
@@ -6335,7 +6335,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/ipywidgets-message-coordination/commonMessageCoordinator.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets-message-coordination/commonMessageCoordinator.ts)
+[src/kernels/ipywidgets/commonMessageCoordinator.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/commonMessageCoordinator.ts)
 ```typescript
     }
     private sendUnsupportedWidgetVersionFailureTelemetry(payload: NotifyIPyWidgetWidgetVersionNotSupportedAction) {
@@ -7343,18 +7343,6 @@ No description provided
 
 ## Locations Used
 
-[src/kernels/jupyter/interpreter/jupyterInterpreterDependencyService.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/interpreter/jupyterInterpreterDependencyService.node.ts)
-```typescript
-                pipInstalledInNonCondaEnv === false ? [Product.pip].concat(missingProducts) : missingProducts,
-                interpreter.displayName
-            );
-            sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
-                action: 'displayed',
-                moduleName: ProductNames.get(Product.jupyter)!,
-                pythonEnvType: interpreter.envType
-```
-
-
 [src/kernels/installer/productInstaller.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/installer/productInstaller.node.ts)
 ```typescript
             action = 'failed';
@@ -7472,6 +7460,18 @@ No description provided
                 action: 'error',
                 moduleName: productNameForTelemetry,
                 resourceType,
+```
+
+
+[src/kernels/jupyter/interpreter/jupyterInterpreterDependencyService.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/interpreter/jupyterInterpreterDependencyService.node.ts)
+```typescript
+                pipInstalledInNonCondaEnv === false ? [Product.pip].concat(missingProducts) : missingProducts,
+                interpreter.displayName
+            );
+            sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
+                action: 'displayed',
+                moduleName: ProductNames.get(Product.jupyter)!,
+                pythonEnvType: interpreter.envType
 ```
 
 

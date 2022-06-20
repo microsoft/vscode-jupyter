@@ -4,7 +4,7 @@
 'use strict';
 
 import * as semver from 'semver';
-import { WidgetScriptSource } from '../../../../kernels/ipywidgets-message-coordination/types';
+import { WidgetScriptSource } from '../../../../kernels/ipywidgets/types';
 const supportedVersionOfQgrid = '1.1.1';
 const qgridModuleName = 'qgrid';
 

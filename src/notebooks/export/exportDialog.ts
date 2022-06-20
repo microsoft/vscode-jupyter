@@ -4,12 +4,12 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import * as path from '../vscode-path/path';
+import * as path from '../../platform/vscode-path/path';
 import { SaveDialogOptions, Uri } from 'vscode';
-import { IApplicationShell, IWorkspaceService } from '../common/application/types';
-import * as localize from '../common/utils/localize';
+import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
+import * as localize from '../../platform/common/utils/localize';
 import { ExportFormat, IExportDialog } from './types';
-import { IsWebExtension } from '../common/types';
+import { IsWebExtension } from '../../platform/common/types';
 
 // File extensions for each export method
 export const PDFExtensions = { PDF: ['pdf'] };

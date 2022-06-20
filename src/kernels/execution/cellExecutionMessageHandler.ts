@@ -42,7 +42,7 @@ import { swallowExceptions } from '../../platform/common/utils/decorators';
 import { noop } from '../../platform/common/utils/misc';
 import { ITracebackFormatter } from '../../kernels/types';
 import { handleTensorBoardDisplayDataOutput } from './executionHelpers';
-import { WIDGET_MIMETYPE } from '../../kernels/ipywidgets-message-coordination/constants';
+import { WIDGET_MIMETYPE } from '../ipywidgets/constants';
 import isObject = require('lodash/isObject');
 
 // Helper interface for the set_next_input execute reply payload

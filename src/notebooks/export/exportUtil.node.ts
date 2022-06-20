@@ -3,11 +3,11 @@ import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from '../../platform/vscode-path/path';
 import * as uuid from 'uuid/v4';
-import { TemporaryDirectory } from '../common/platform/types';
-import { IFileSystemNode } from '../common/platform/types.node';
-import { sleep } from '../common/utils/async';
+import { TemporaryDirectory } from '../../platform/common/platform/types';
+import { IFileSystemNode } from '../../platform/common/platform/types.node';
+import { sleep } from '../../platform/common/utils/async';
 import { ExportUtilBase } from './exportUtil';
-import { IExtensions } from '../common/types';
+import { IExtensions } from '../../platform/common/types';
 import { ExportFormat, IExportDialog } from './types';
 import { Uri } from 'vscode';
 

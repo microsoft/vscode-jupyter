@@ -24,7 +24,7 @@ import {
     IJupyterVariableDataProviderFactory
 } from './dataviewer/types';
 import { INotebookExporter, INotebookImporter } from '../../kernels/jupyter/types';
-import { JupyterExporter } from './import-export/jupyterExporter.node';
+import { JupyterExporter } from './import-export/jupyterExporter';
 import { JupyterImporter } from './import-export/jupyterImporter.node';
 import { CommandRegistry as ExportCommandRegistry } from './import-export/commandRegistry';
 import { ServerPreload } from './serverPreload/serverPreload.node';
@@ -32,7 +32,7 @@ import { RendererCommunication } from './plotView/rendererCommunication.node';
 import { PlotSaveHandler } from './plotView/plotSaveHandler.node';
 import { PlotViewHandler } from './plotView/plotViewHandler.node';
 import { DataViewerCommandRegistry } from './dataviewer/dataViewerCommandRegistry';
-import { DataViewer } from './dataviewer/dataViewer.node';
+import { DataViewer } from './dataviewer/dataViewer';
 import { IPlotViewer, IPlotViewerProvider } from './plotting/types';
 import { PlotViewer } from './plotting/plotViewer.node';
 import { DataViewerDependencyService } from './dataviewer/dataViewerDependencyService.node';
@@ -45,6 +45,9 @@ import { ActiveEditorContextService } from './activeEditorContext';
 import { AmlComputeContext } from './amlContext.node';
 import { IImportTracker, ImportTracker } from './importTracker.node';
 import { GlobalActivation } from './globalActivation';
+import { JupyterKernelServiceFactory } from './api/kernelApi';
+import { IExportedKernelServiceFactory } from './api/api';
+import { ApiAccessService } from './api/apiAccessService';
 import { WorkspaceActivation } from './workspaceActivation.node';
 import { ExtensionActivationManager } from './activationManager';
 import { DataScienceSurveyBanner, ISurveyBanner } from './survey/dataScienceSurveyBanner.node';
@@ -121,4 +124,11 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addBinding(ISurveyBanner, IExtensionSingleActivationService);
     // Activation Manager
     serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
+
+    // API
+    serviceManager.addSingleton<IExportedKernelServiceFactory>(
+        IExportedKernelServiceFactory,
+        JupyterKernelServiceFactory
+    );
+    serviceManager.addSingleton<ApiAccessService>(ApiAccessService, ApiAccessService);
 }

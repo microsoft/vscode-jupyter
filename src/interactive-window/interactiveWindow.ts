@@ -21,7 +21,6 @@ import {
     NotebookController,
     NotebookEdit
 } from 'vscode';
-import { IPythonExtensionChecker } from '../platform/api/types';
 import {
     IApplicationShell,
     ICommandManager,
@@ -53,7 +52,7 @@ import { SysInfoReason } from '../platform/messageTypes';
 import { createOutputWithErrorMessageForDisplay } from '../platform/errors/errorUtils';
 import { INotebookExporter } from '../kernels/jupyter/types';
 import { IDataScienceErrorHandler } from '../platform/errors/types';
-import { IExportDialog, ExportFormat } from '../platform/export/types';
+import { IExportDialog, ExportFormat } from '../notebooks/export/types';
 import { generateCellsFromNotebookDocument } from './editor-integration/cellFactory';
 import { CellMatcher } from './editor-integration/cellMatcher';
 import { IInteractiveWindowLoadable, IInteractiveWindowDebugger, IInteractiveWindowDebuggingManager } from './types';
@@ -117,11 +116,10 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         private readonly fs: IFileSystem,
         private readonly configuration: IConfigurationService,
         private readonly commandManager: ICommandManager,
-        private readonly jupyterExporter: INotebookExporter | undefined,
+        private readonly jupyterExporter: INotebookExporter,
         private readonly workspaceService: IWorkspaceService,
         private _owner: Resource,
         private mode: InteractiveWindowMode,
-        private readonly extensionChecker: IPythonExtensionChecker,
         private readonly exportDialog: IExportDialog,
         private readonly notebookControllerManager: INotebookControllerManager,
         private readonly serviceContainer: IServiceContainer,
@@ -777,13 +775,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         await workspace.applyEdit(edit);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, no-empty,@typescript-eslint/no-empty-function
     public async export() {
-        // Export requires the python extension
-        if (!this.extensionChecker.isPythonExtensionInstalled) {
-            return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
-        }
-
         const { magicCommandsAsComments } = this.configuration.getSettings(this.owningResource);
         const cells = generateCellsFromNotebookDocument(this.notebookEditor.notebook, magicCommandsAsComments);
 
@@ -799,10 +791,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
     public async exportAs() {
         const kernel = await this.startKernel();
-        // Export requires the python extension
-        if (!this.extensionChecker.isPythonExtensionInstalled) {
-            return this.extensionChecker.showPythonExtensionInstallRequiredPrompt();
-        }
 
         // Pull out the metadata from our active notebook
         const metadata: nbformat.INotebookMetadata = { orig_nbformat: defaultNotebookFormat.major };
@@ -818,13 +806,24 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
 
         // Then run the export command with these contents
-        this.commandManager
-            .executeCommand(
-                Commands.Export,
-                this.notebookDocument,
-                defaultFileName,
-                kernel?.kernelConnectionMetadata.interpreter
-            )
-            .then(noop, noop);
+        if (this.isWebExtension) {
+            // In web, we currently only support exporting as python script
+            this.commandManager
+                .executeCommand(
+                    Commands.ExportAsPythonScript,
+                    this.notebookDocument,
+                    kernel?.kernelConnectionMetadata.interpreter
+                )
+                .then(noop, noop);
+        } else {
+            this.commandManager
+                .executeCommand(
+                    Commands.Export,
+                    this.notebookDocument,
+                    defaultFileName,
+                    kernel?.kernelConnectionMetadata.interpreter
+                )
+                .then(noop, noop);
+        }
     }
 }
