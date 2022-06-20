@@ -61,7 +61,6 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
         });
     });
 
-    // Can't tell if on CI or not, so assume not.
     activatedResponse = await extension.activate(context);
     return activatedResponse;
 }
