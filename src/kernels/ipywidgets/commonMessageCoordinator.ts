@@ -78,7 +78,7 @@ export class CommonMessageCoordinator {
     public async attach(webview: IWebviewCommunication) {
         if (this.webview !== webview) {
             // New webview, make sure to initialize.
-            await this.initialize();
+            this.initialize();
 
             // Save the webview
             this.webview = webview;
@@ -147,7 +147,7 @@ export class CommonMessageCoordinator {
         this.getIPyWidgetScriptSource().onMessage(message, payload);
     }
 
-    private async initialize(): Promise<void> {
+    private initialize() {
         traceVerbose('initialize CommonMessageCoordinator');
         // First hook up the widget script source that will listen to messages even before we start sending messages.
         this.getIPyWidgetScriptSource().initialize();
