@@ -28,7 +28,7 @@ import {
 } from './standardWidgets.vscode.common.test';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-[true, false].forEach((useCDN) => {
+[false, true].forEach((useCDN) => {
     /**
      * Testing the following permutations:
      * - VSCode Web + Remote Jupyter + CDN
@@ -69,7 +69,7 @@ import {
             await startJupyterServer();
             await closeNotebooks();
             traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
-            // With less realestate, the outputs might not get rendered (VS Code optimization to avoid rendering if not in viewport).
+            // With less real estate, the outputs might not get rendered (VS Code optimization to avoid rendering if not in viewport).
             await commands.executeCommand('workbench.action.closePanel');
         });
         teardown(async function () {
@@ -96,7 +96,10 @@ import {
             await clickWidget(comms, cell0, 'button');
             await assertOutputContainsHtml(cell0, comms, ['>Figure 1<', '<canvas', 'Download plot']);
         });
-        test('Render IPySheets', async () => {
+        test('Render IPySheets', async function () {
+            if (useCDN) {
+                return this.skip();
+            }
             const comms = await initializeNotebookForWidgetTest(api, disposables, {
                 templateFile: 'ipySheet_widgets.ipynb'
             });
@@ -105,7 +108,10 @@ import {
             await executeCellAndWaitForOutput(cell1, comms);
             await assertOutputContainsHtml(cell1, comms, ['Hello', 'World', '42.000']);
         });
-        test('Render IPySheets & search', async () => {
+        test('Render IPySheets & search', async function () {
+            if (useCDN) {
+                return this.skip();
+            }
             const comms = await initializeNotebookForWidgetTest(api, disposables, {
                 templateFile: 'ipySheet_widgets_search.ipynb'
             });
@@ -120,7 +126,10 @@ import {
             await comms.setValue(cell1, '.widget-text input', 'train');
             await assertOutputContainsHtml(cell2, comms, ['class="htSearchResult">train<']);
         });
-        test('Render IPySheets & slider', async () => {
+        test('Render IPySheets & slider', async function () {
+            if (useCDN) {
+                return this.skip();
+            }
             const comms = await initializeNotebookForWidgetTest(api, disposables, {
                 templateFile: 'ipySheet_widgets_slider.ipynb'
             });
