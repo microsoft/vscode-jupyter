@@ -2,7 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../platform/activation/types';
+import {
+    IExtensionActivationManager,
+    IExtensionSingleActivationService,
+    IExtensionSyncActivationService
+} from '../../platform/activation/types';
 import { IWebviewViewProvider, IWebviewPanelProvider } from '../../platform/common/application/types';
 import { IServiceManager } from '../../platform/ioc/types';
 import { INotebookWatcher, IVariableViewProvider } from './variablesView/types';
@@ -44,10 +48,17 @@ import { GlobalActivation } from './globalActivation';
 import { JupyterKernelServiceFactory } from './api/kernelApi';
 import { IExportedKernelServiceFactory } from './api/api';
 import { ApiAccessService } from './api/apiAccessService';
+import { WorkspaceActivation } from './workspaceActivation.node';
+import { ExtensionActivationManager } from './activationManager';
+import { DataScienceSurveyBanner, ISurveyBanner } from './survey/dataScienceSurveyBanner.node';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        WorkspaceActivation
+    );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSyncActivationService,
         RendererCommunication
@@ -108,6 +119,11 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     );
 
     serviceManager.addSingletonInstance<IExtensionSideRenderer>(IExtensionSideRenderer, new ExtensionSideRenderer());
+
+    serviceManager.addSingleton<ISurveyBanner>(ISurveyBanner, DataScienceSurveyBanner);
+    serviceManager.addBinding(ISurveyBanner, IExtensionSingleActivationService);
+    // Activation Manager
+    serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
 
     // API
     serviceManager.addSingleton<IExportedKernelServiceFactory>(

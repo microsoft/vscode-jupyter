@@ -4,7 +4,6 @@
 
 import type * as nbformat from '@jupyterlab/nbformat';
 import { ConfigurationTarget, Disposable, Event, Extension, ExtensionContext, OutputChannel, Uri, Range } from 'vscode';
-import { IExtensionSingleActivationService } from '../activation/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { CommandsWithoutArgs } from './application/commands';
 import { ICommandManager } from './application/types';
@@ -248,9 +247,6 @@ export interface IJupyterExtensionBanner {
     isEnabled(type: BannerType): boolean;
     showBanner(type: BannerType): Promise<void>;
 }
-
-export const ISurveyBanner = Symbol('ISurveyBanner');
-export interface ISurveyBanner extends IExtensionSingleActivationService, IJupyterExtensionBanner {}
 
 export type DeprecatedSettingAndValue = {
     setting: string;

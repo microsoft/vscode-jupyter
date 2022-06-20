@@ -75,11 +75,7 @@ import {
 } from '../../kernels/types';
 import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
 import { DisplayOptions } from '../../kernels/displayOptions';
-import {
-    getNotebookMetadata,
-    isJupyterNotebook,
-    sendNotebookOrKernelLanguageTelemetry
-} from '../../platform/common/utils';
+import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
 import { ConsoleForegroundColors, TraceOptions } from '../../platform/logging/types';
 import { KernelConnector } from './kernelConnector';
 import { IVSCodeNotebookController } from './types';
@@ -94,6 +90,7 @@ import {
 import { KernelMessage } from '@jupyterlab/services';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../../kernels/telemetry/helper';
 import { NotebookCellLanguageService } from '../languages/cellLanguageService';
+import { sendNotebookOrKernelLanguageTelemetry } from '../telemetry/notebookOrKernelLanguageTelemetry';
 
 export class VSCodeNotebookController implements Disposable, IVSCodeNotebookController {
     private readonly _onNotebookControllerSelected: EventEmitter<{
