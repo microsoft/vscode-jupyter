@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable, named, optional } from 'inversify';
-import { DebugConfiguration } from 'vscode';
+import { DebugConfiguration, Uri } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { convertDebugProtocolVariableToIJupyterVariable } from '../../../kernels/variables/helpers';
 import { IJupyterVariables } from '../../../kernels/variables/types';
@@ -17,9 +17,11 @@ import {
     IWorkspaceService
 } from '../../../platform/common/application/types';
 import { Commands, Identifiers } from '../../../platform/common/constants';
+import { IPlatformService } from '../../../platform/common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
+import { untildify } from '../../../platform/common/utils/platform';
 import { IDataScienceErrorHandler } from '../../../platform/errors/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { traceError, traceInfo } from '../../../platform/logging';
@@ -52,7 +54,8 @@ export class DataViewerCommandRegistry implements IExtensionSingleActivationServ
         @inject(IDataViewerDependencyService)
         @optional()
         private readonly dataViewerDependencyService: IDataViewerDependencyService | undefined,
-        @inject(IInterpreterService) @optional() private readonly interpreterService: IInterpreterService | undefined
+        @inject(IInterpreterService) @optional() private readonly interpreterService: IInterpreterService | undefined,
+        @inject(IPlatformService) private readonly platformService: IPlatformService
     ) {
         this.dataViewerChecker = new DataViewerChecker(configService, appShell);
         if (!this.workspace.isTrusted) {
@@ -134,15 +137,25 @@ export class DataViewerCommandRegistry implements IExtensionSingleActivationServ
         }
 
         // Check debugAdapterPython and pythonPath
+        let pythonPath: string = '';
         if (debugConfiguration.debugAdapterPython !== undefined) {
             traceInfo('Found debugAdapterPython on Debug Configuration to use');
-            return this.interpreterService.getInterpreterDetails(debugConfiguration.debugAdapterPython);
+            pythonPath = debugConfiguration.debugAdapterPython;
         } else if (debugConfiguration.pythonPath) {
             traceInfo('Found pythonPath on Debug Configuration to use');
-            return this.interpreterService.getInterpreterDetails(debugConfiguration.pythonPath);
+            pythonPath = debugConfiguration.pythonPath;
         }
 
-        // Failed to find the expected configuration items, use active interpreter (might be attach scenario)
-        return this.interpreterService.getActiveInterpreter();
+        if (pythonPath) {
+            let untildePath = debugConfiguration.python;
+            if (untildePath.startsWith('~') && this.platformService.homeDir) {
+                untildePath = untildify(untildePath, this.platformService.homeDir.path);
+            }
+
+            return this.interpreterService.getInterpreterDetails(Uri.file(untildePath));
+        } else {
+            // Failed to find the expected configuration items, use active interpreter (might be attach scenario)
+            return this.interpreterService.getActiveInterpreter();
+        }
     }
 }
