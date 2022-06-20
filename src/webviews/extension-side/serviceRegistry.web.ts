@@ -6,7 +6,7 @@ import { IWebviewViewProvider, IWebviewPanelProvider } from '../../platform/comm
 import { IServiceManager } from '../../platform/ioc/types';
 import { WebviewViewProvider } from './webviewViews/webviewViewProvider';
 import { WebviewPanelProvider } from './webviewPanels/webviewPanelProvider';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionActivationManager, IExtensionSingleActivationService } from '../../platform/activation/types';
 import { VariableViewActivationService } from './variablesView/variableViewActivationService';
 import { INotebookWatcher, IVariableViewProvider } from './variablesView/types';
 import { VariableViewProvider } from './variablesView/variableViewProvider';
@@ -31,6 +31,7 @@ import { JupyterExporter } from './import-export/jupyterExporter';
 import { JupyterKernelServiceFactory } from './api/kernelApi';
 import { IExportedKernelServiceFactory } from './api/api';
 import { ApiAccessService } from './api/apiAccessService';
+import { ExtensionActivationManager } from './activationManager';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
@@ -69,6 +70,9 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     );
 
     serviceManager.addSingletonInstance<IExtensionSideRenderer>(IExtensionSideRenderer, new ExtensionSideRenderer());
+
+    // Activation Manager
+    serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
     serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
 
     // API

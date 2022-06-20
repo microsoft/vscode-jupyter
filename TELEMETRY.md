@@ -2734,9 +2734,9 @@ No properties for event
 
 ## Locations Used
 
-[src/platform/common/utils.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/utils.ts)
+[src/notebooks/telemetry/notebookOrKernelLanguageTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/telemetry/notebookOrKernelLanguageTelemetry.ts)
 ```typescript
-}
+import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
 
 export function sendNotebookOrKernelLanguageTelemetry(
     telemetryEvent: Telemetry.SwitchToExistingKernel | Telemetry.NotebookLanguage,
@@ -8579,9 +8579,9 @@ No description provided
 
 ## Locations Used
 
-[src/platform/common/utils.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/common/utils.ts)
+[src/notebooks/telemetry/notebookOrKernelLanguageTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/telemetry/notebookOrKernelLanguageTelemetry.ts)
 ```typescript
-}
+import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
 
 export function sendNotebookOrKernelLanguageTelemetry(
     telemetryEvent: Telemetry.SwitchToExistingKernel | Telemetry.NotebookLanguage,
