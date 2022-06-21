@@ -8,7 +8,7 @@ import {
 } from '../../../platform/messageTypes';
 import { IKernel } from '../../../kernels/types';
 import { IJupyterVariablesRequest, IJupyterVariablesResponse } from '../../../kernels/variables/types';
-import { IVSCWebviewViewProvider } from '../../../platform/webviewHost/types';
+import { IVSCWebviewViewProvider } from '../../../platform/webviews/types';
 
 // Mapping of Message to payload that our VariableViewPanel needs to support
 export class IVariableViewPanelMapping {
