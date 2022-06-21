@@ -136,7 +136,7 @@ suite('DataScience - VSCode Notebook - (DataViewer)', function () {
             async () => {
                 return vscode.window.tabGroups.all[1].activeTab?.label === 'Data Viewer - my_list';
             },
-            10_000,
+            60_000,
             'Failed to open the data viewer from python variables'
         );
 

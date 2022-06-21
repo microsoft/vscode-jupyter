@@ -113,10 +113,12 @@ export class DataViewerCommandRegistry implements IExtensionSingleActivationServ
                 const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
                     jupyterVariable
                 );
+                traceInfo('IANHUZ got variable');
                 const dataFrameInfo = await jupyterVariableDataProvider.getDataFrameInfo();
                 const columnSize = dataFrameInfo?.columns?.length;
                 if (columnSize && (await this.dataViewerChecker.isRequestedColumnSizeAllowed(columnSize))) {
                     const title: string = `${DataScience.dataExplorerTitle()} - ${jupyterVariable.name}`;
+                    traceInfo('IANHUZ create on data viewer factory');
                     await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
                     sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS);
                 }
