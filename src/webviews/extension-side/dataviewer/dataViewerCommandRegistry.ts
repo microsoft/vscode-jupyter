@@ -99,26 +99,20 @@ export class DataViewerCommandRegistry implements IExtensionSingleActivationServ
                         this.debugService.activeDebugSession.configuration
                     );
 
-                    traceInfo('IANHUZ About to check for dependencies');
                     pythonEnv && (await this.dataViewerDependencyService.checkAndInstallMissingDependencies(pythonEnv));
                 }
-
-                traceInfo('IANHUZ got dependencies');
 
                 const variable = convertDebugProtocolVariableToIJupyterVariable(
                     request.variable as DebugProtocol.Variable
                 );
-                traceInfo('IANHUZ converted variable');
                 const jupyterVariable = await this.variableProvider.getFullVariable(variable);
                 const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
                     jupyterVariable
                 );
-                traceInfo('IANHUZ got variable');
                 const dataFrameInfo = await jupyterVariableDataProvider.getDataFrameInfo();
                 const columnSize = dataFrameInfo?.columns?.length;
                 if (columnSize && (await this.dataViewerChecker.isRequestedColumnSizeAllowed(columnSize))) {
                     const title: string = `${DataScience.dataExplorerTitle()} - ${jupyterVariable.name}`;
-                    traceInfo('IANHUZ create on data viewer factory');
                     await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
                     sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS);
                 }
