@@ -151,34 +151,6 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         await shell.withProgress(options, async (progress, token: CancellationToken) => install(progress, token));
     }
     public abstract isSupported(interpreter: PythonEnvironment): Promise<boolean>;
-
-    // TODO: Figure out when to elevate
-    protected elevatedInstall(execPath: string, args: string[]) {
-        const options = {
-            name: 'VS Code Jupyter'
-        };
-        const outputChannel = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        const command = `"${execPath.replace(/\\/g, '/')}" ${args.join(' ')}`;
-
-        traceInfo(`[Elevated] ${command}`);
-
-        const sudo = require('sudo-prompt');
-
-        sudo.exec(command, options, async (error: string, stdout: string, stderr: string) => {
-            if (error) {
-                const shell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-                await shell.showErrorMessage(error);
-            } else {
-                outputChannel.show();
-                if (stdout) {
-                    traceInfo(stdout);
-                }
-                if (stderr) {
-                    traceError(`Warning: ${stderr}`);
-                }
-            }
-        });
-    }
     protected abstract getExecutionArgs(
         moduleName: string,
         interpreter: PythonEnvironment,

@@ -63,12 +63,6 @@ export abstract class WebviewPanelHost<IMapping> extends WebviewHost<IMapping> i
         }
     }
 
-    public updateCwd(cwd: string): void {
-        if (this.webPanel) {
-            this.webPanel.updateCwd(cwd);
-        }
-    }
-
     public override dispose() {
         if (!this.isDisposed) {
             if (this.webPanel) {

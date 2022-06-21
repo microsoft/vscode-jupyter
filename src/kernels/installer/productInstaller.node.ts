@@ -1,7 +1,6 @@
 /* eslint-disable max-classes-per-file */
 
 import { inject, injectable, named } from 'inversify';
-import * as semver from 'semver';
 import { CancellationTokenSource, Event, EventEmitter, Memento, Uri } from 'vscode';
 import { ProductNames } from './productNames';
 import {
@@ -12,7 +11,6 @@ import {
     IProductService,
     ModuleInstallFlags,
     Product,
-    ProductInstallStatus,
     ProductType
 } from './types';
 import { logValue, traceDecoratorVerbose } from '../../platform/logging';
@@ -110,62 +108,6 @@ abstract class BaseInstaller {
         return this.isInstalled(product, interpreter).then((isInstalled) => {
             return isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore;
         });
-    }
-
-    /**
-     *
-     * @param product A product which supports SemVer versioning.
-     * @param semVerRequirement A SemVer version requirement.
-     * @param resource A URI or a PythonEnvironment.
-     */
-    public async isProductVersionCompatible(
-        product: Product,
-        semVerRequirement: string,
-        interpreter: PythonEnvironment
-    ): Promise<ProductInstallStatus> {
-        const version = await this.getProductSemVer(product, interpreter);
-        if (!version) {
-            return ProductInstallStatus.NotInstalled;
-        }
-        if (semver.satisfies(version, semVerRequirement)) {
-            return ProductInstallStatus.Installed;
-        }
-        return ProductInstallStatus.NeedsUpgrade;
-    }
-
-    /**
-     *
-     * @param product A product which supports SemVer versioning.
-     * @param resource A URI or a PythonEnvironment.
-     */
-    private async getProductSemVer(product: Product, interpreter: PythonEnvironment): Promise<semver.SemVer | null> {
-        const executableName = this.getExecutableNameFromSettings(product, undefined);
-        const isModule = this.isExecutableAModule(product, undefined);
-
-        let version;
-        if (isModule) {
-            const pythonProcess = await this.serviceContainer
-                .get<IPythonExecutionFactory>(IPythonExecutionFactory)
-                .createActivatedEnvironment({ interpreter, allowEnvironmentFetchExceptions: true });
-            const args = ['-c', `import ${executableName}; print(${executableName}.__version__)`];
-            const result = await pythonProcess.exec(args, { mergeStdOutErr: true });
-            version = result.stdout.trim();
-        } else {
-            const process = await this.serviceContainer
-                .get<IProcessServiceFactory>(IProcessServiceFactory)
-                .create(undefined);
-            const result = await process.exec(executableName, ['--version'], { mergeStdOutErr: true });
-            version = result.stdout.trim();
-        }
-        if (!version) {
-            return null;
-        }
-        try {
-            return semver.coerce(version);
-        } catch (e) {
-            traceError(`Unable to parse version ${version} for product ${product}: `, e);
-            return null;
-        }
     }
 
     @traceDecoratorVerbose('Checking if product is installed')

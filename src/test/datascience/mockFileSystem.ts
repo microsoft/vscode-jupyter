@@ -6,8 +6,20 @@
 import * as fsextra from 'fs-extra';
 import * as path from '../../platform/vscode-path/path';
 import { FileStat, FileType, Uri } from 'vscode';
-import { convertStat } from '../../platform/common/platform/fileSystemUtils.node';
 import { createDeferred } from '../../platform/common/utils/async';
+
+export function convertStat(old: fsextra.Stats, filetype: FileType): FileStat {
+    return {
+        type: filetype,
+        size: old.size,
+        // FileStat.ctime and FileStat.mtime only have 1-millisecond
+        // resolution, while node provides nanosecond resolution.  So
+        // for now we round to the nearest integer.
+        // See: https://github.com/microsoft/vscode/issues/84526
+        ctime: Math.round(old.ctimeMs),
+        mtime: Math.round(old.mtimeMs)
+    };
+}
 
 // This is necessary for unit tests and functional tests, since they
 // do not run under VS Code so they do not have access to the actual
