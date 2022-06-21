@@ -121,7 +121,8 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
             traceWarning(DataScience.failedToGetVersionOfPandas(), error.text);
             return;
         } else {
-            return outputs.map(({ text }) => (text ? parseSemVer(text?.toString()) : undefined)).find((item) => item);
+            // TODO: Is "data" the right property?
+            return outputs.map(({ data }) => (data ? parseSemVer(data.toString()) : undefined)).find((item) => item);
         }
     }
 }
