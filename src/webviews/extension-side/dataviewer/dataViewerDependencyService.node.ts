@@ -44,6 +44,7 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
         const tokenSource = new CancellationTokenSource();
         try {
             const pandasVersion = await this.getVersionOfPandas(interpreter, tokenSource.token);
+
             if (Cancellation.isCanceled(tokenSource.token)) {
                 return;
             }

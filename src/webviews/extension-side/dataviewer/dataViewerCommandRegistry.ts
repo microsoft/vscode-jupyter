@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable, named, optional } from 'inversify';
-import { Uri } from 'vscode';
+import { DebugConfiguration, Uri } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { convertDebugProtocolVariableToIJupyterVariable } from '../../../kernels/variables/helpers';
 import { IJupyterVariables } from '../../../kernels/variables/types';
@@ -23,10 +23,11 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { noop } from '../../../platform/common/utils/misc';
 import { untildify } from '../../../platform/common/utils/platform';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { traceError } from '../../../platform/logging';
+import { traceError, traceInfo } from '../../../platform/logging';
 import { IShowDataViewerFromVariablePanel } from '../../../platform/messageTypes';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
+import { PythonEnvironment } from '../api/extension';
 import { IDataScienceErrorHandler } from '../../../kernels/errors/types';
 import { DataViewerChecker } from './dataViewerChecker';
 import { IDataViewerDependencyService, IDataViewerFactory, IJupyterVariableDataProviderFactory } from './types';
@@ -89,29 +90,15 @@ export class DataViewerCommandRegistry implements IExtensionSingleActivationServ
             try {
                 // First find out the current python environment that we are working with
                 if (
-                    this.debugService.activeDebugSession.configuration.python &&
+                    this.debugService.activeDebugSession.configuration &&
                     this.dataViewerDependencyService &&
                     this.interpreterService
                 ) {
-                    // Check to see that we are actually getting a string here as it looks like one customer was not
-                    if (typeof this.debugService.activeDebugSession.configuration.python !== 'string') {
-                        // https://github.com/microsoft/vscode-jupyter/issues/10007
-                        // Error thrown here will be caught and logged by the catch below to send
-                        throw new Error(
-                            `active.DebugSession.configuration.python is not a string: ${JSON.stringify(
-                                this.debugService.activeDebugSession.configuration.python
-                            )}`
-                        );
-                    }
+                    // Check the debug adapter session to get the python env that launched it
+                    const pythonEnv = await this.getDebugAdapterPython(
+                        this.debugService.activeDebugSession.configuration
+                    );
 
-                    // Uri won't work with ~ so untildify first
-                    let untildePath = this.debugService.activeDebugSession.configuration.python;
-                    if (untildePath.startsWith('~') && this.platformService.homeDir) {
-                        untildePath = untildify(untildePath, this.platformService.homeDir.path);
-                    }
-
-                    const pythonEnv = await this.interpreterService.getInterpreterDetails(Uri.file(untildePath));
-                    // Check that we have dependencies installed for data viewer
                     pythonEnv && (await this.dataViewerDependencyService.checkAndInstallMissingDependencies(pythonEnv));
                 }
 
@@ -134,6 +121,41 @@ export class DataViewerCommandRegistry implements IExtensionSingleActivationServ
                 traceError(e);
                 this.errorHandler.handleError(e).then(noop, noop);
             }
+        }
+    }
+
+    // For the given debug adapter, return the PythonEnvironment used to launch it
+    // Mirrors the logic from Python extension here:
+    // https://github.com/microsoft/vscode-python/blob/35b813f37d1ceec547277180e3aa07bd24d86f89/src/client/debugger/extension/adapter/factory.ts#L116
+    private async getDebugAdapterPython(
+        debugConfiguration: DebugConfiguration
+    ): Promise<PythonEnvironment | undefined> {
+        if (!this.interpreterService) {
+            // Interpreter service is optional
+            traceInfo('Interpreter Service missing when trying getDebugAdapterPython');
+            return;
+        }
+
+        // Check debugAdapterPython and pythonPath
+        let pythonPath: string = '';
+        if (debugConfiguration.debugAdapterPython !== undefined) {
+            traceInfo('Found debugAdapterPython on Debug Configuration to use');
+            pythonPath = debugConfiguration.debugAdapterPython;
+        } else if (debugConfiguration.pythonPath) {
+            traceInfo('Found pythonPath on Debug Configuration to use');
+            pythonPath = debugConfiguration.pythonPath;
+        }
+
+        if (pythonPath) {
+            let untildePath = debugConfiguration.python;
+            if (untildePath.startsWith('~') && this.platformService.homeDir) {
+                untildePath = untildify(untildePath, this.platformService.homeDir.path);
+            }
+
+            return this.interpreterService.getInterpreterDetails(Uri.file(untildePath));
+        } else {
+            // Failed to find the expected configuration items, use active interpreter (might be attach scenario)
+            return this.interpreterService.getActiveInterpreter();
         }
     }
 }
