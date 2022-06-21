@@ -8917,7 +8917,7 @@ No description provided
 
 ## Locations Used
 
-[src/platform/webviewHost/webviewHost.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/webviewHost/webviewHost.ts)
+[src/platform/webviews/webviewHost.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/webviews/webviewHost.ts)
 ```typescript
     protected webViewRendered() {
         if (this.webviewInit && !this.webviewInit.resolved) {
