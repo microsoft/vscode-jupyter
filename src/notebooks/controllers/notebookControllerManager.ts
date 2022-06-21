@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken, NotebookControllerAffinity, Uri } from 'vscode';
 import { CancellationTokenSource, EventEmitter, NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
-import { IPythonApiProvider, IPythonExtensionChecker } from '../../platform/api/types';
+import { IPythonExtensionChecker } from '../../platform/api/types';
 import {
     IVSCodeNotebook,
     ICommandManager,
@@ -13,13 +13,7 @@ import {
     IDocumentManager,
     IApplicationShell
 } from '../../platform/common/application/types';
-import {
-    Commands,
-    InteractiveWindowView,
-    JupyterNotebookView,
-    PythonExtension,
-    PYTHON_LANGUAGE
-} from '../../platform/common/constants';
+import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import {
     traceInfoIfCI,
     traceError,
@@ -75,9 +69,6 @@ import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConne
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
 import { ILocalResourceUriConverter } from '../../kernels/ipywidgets-message-coordination/types';
 import { isCancellationError } from '../../platform/common/cancellation';
-import { ProgressReporter } from '../../platform/progress/progressReporter';
-import { ContextKey } from '../../platform/common/contextKey';
-import { Common, DataScience } from '../../platform/common/utils/localize';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.
@@ -107,6 +98,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         controller: IVSCodeNotebookController;
         selected: boolean;
     }>();
+    private readonly _onNotebookControllersLoaded = new EventEmitter<Readonly<IVSCodeNotebookController[]>>();
 
     // Promise to resolve when we have loaded our controllers
     private controllersPromise?: Promise<void>;
@@ -117,10 +109,11 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         return Array.from(this.registeredControllers.values()).map((item) => item.connection);
     }
     private _controllersLoaded?: boolean;
-    private showInstallPythonExtensionContext: ContextKey;
-    private showInstallPythonContext: ContextKey;
     public get onNotebookControllerSelectionChanged() {
         return this._onNotebookControllerSelectionChanged.event;
+    }
+    public get onNotebookControllersLoaded() {
+        return this._onNotebookControllersLoaded.event;
     }
     public get kernelConnections() {
         return this.loadNotebookControllers().then(() => this.allKernelConnections);
@@ -159,9 +152,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IsWebExtension) private readonly isWeb: boolean,
         @inject(ServerConnectionType) private readonly serverConnectionType: ServerConnectionType,
-        @inject(ILocalResourceUriConverter) private readonly resourceConverter: ILocalResourceUriConverter,
-        @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
-        @inject(ProgressReporter) private readonly progressReporter: ProgressReporter
+        @inject(ILocalResourceUriConverter) private readonly resourceConverter: ILocalResourceUriConverter
     ) {
         this._onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
@@ -225,29 +216,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             this,
             this.disposables
         );
-
-        // Register our command that will handle installing the python extension via the kernel picker
-        this.disposables.push(
-            this.commandManager.registerCommand(
-                Commands.InstallPythonExtensionViaKernelPicker,
-                this.installPythonExtensionViaKernelPicker,
-                this
-            )
-        );
-        this.disposables.push(
-            this.commandManager.registerCommand(
-                Commands.InstallPythonViaKernelPicker,
-                this.installPythonViaKernelPicker,
-                this
-            )
-        );
-
-        // This context key controls if the command to install python extension should be shown
-        this.showInstallPythonExtensionContext = new ContextKey(
-            'jupyter.showInstallPythonExtensionCommand',
-            this.commandManager
-        );
-        this.showInstallPythonContext = new ContextKey('jupyter.showInstallPythonCommand', this.commandManager);
     }
     public async getActiveInterpreterOrDefaultController(
         notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView,
@@ -353,26 +321,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         traceVerbose(`Found ${cachedConnections.length} non-cached controllers`);
         this.createNotebookControllers(nonCachedConnections);
 
-        // If there aren't any Python kernels, then add a placeholder for `Python` which will prompt users to install python (only do this in the node version so
-        // we don't end up with a kernel that asks to install python)
-        if (!this.isWeb) {
-            if ([...this.registeredControllers.values()].some((item) => isPythonKernelConnection(item.connection))) {
-                // We have some type of python kernel, turn off both install helper commands
-                await this.showInstallPythonExtensionContext.set(false);
-                await this.showInstallPythonContext.set(false);
-            } else {
-                if (!this.extensionChecker.isPythonExtensionInstalled) {
-                    // If we don't have the extension installed, show extension install command
-                    await this.showInstallPythonExtensionContext.set(true);
-                    await this.showInstallPythonContext.set(false);
-                } else {
-                    // If we do have the extension installed, show python install command
-                    await this.showInstallPythonExtensionContext.set(false);
-                    await this.showInstallPythonContext.set(true);
-                }
-            }
-        }
-
         // Update total number of connection & the like for existing remote controllers.
         nonCachedConnections.forEach((connection) => {
             const controller = this.registeredControllers.get(connection.id);
@@ -419,84 +367,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         if (liveConnections.length > 0) {
             this.remoteRefreshedEmitter.fire(liveConnections);
         }
-    }
 
-    // This is called via the "install python" command in the kernel picker in the case where
-    // we have the python extension installed, but 0 valid python kernels / interpreters found
-    // just pop up a dialog box to prompt the user on how to install python
-    // Unlike installing the python extension we don't expect in progress executions to be handled
-    // when this command is installed, user will have to manually install python and rerun the cell
-    private async installPythonViaKernelPicker(): Promise<void> {
-        sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'displayed' });
-        const selection = await this.appShell.showErrorMessage(
-            DataScience.pythonNotInstalledNonMarkdown(),
-            { modal: true },
-            Common.install()
-        );
-
-        if (selection === Common.install()) {
-            sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'download' });
-            // Direct the user to download from python.org
-            this.appShell.openUrl('https://www.python.org/downloads');
-        } else {
-            sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'dismissed' });
-        }
-    }
-
-    // Called when we select the command to install the python extension via the kernel picker
-    // If new controllers are added before this fully resolves any in progress executions will be
-    // passed on, so we can trigger with the run button, install, get a controller and not have to
-    // click run again
-    private async installPythonExtensionViaKernelPicker(): Promise<void> {
-        if (!this.extensionChecker.isPythonExtensionInstalled) {
-            sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
-
-            // First present a simple modal dialog to indicate what we are about to do
-            const selection = await this.appShell.showInformationMessage(
-                DataScience.pythonExtensionRequiredToRunNotebook(),
-                { modal: true },
-                Common.install()
-            );
-            if (selection === Common.install()) {
-                sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
-            } else {
-                // If they don't want to install, just bail out at this point
-                sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
-                return;
-            }
-
-            // Now start to indicate that we are performing the install and locating kernels
-            const reporter = this.progressReporter.createProgressIndicator(DataScience.installingPythonExtension());
-            try {
-                // Directly install the python extension
-                await this.commandManager.executeCommand('workbench.extensions.installExtension', PythonExtension);
-
-                // Don't move forward until we have hooked the API
-                // Note extensions.installExtension seems to return "mostly" after the install is done, but at that
-                // point we don't see it installed via the checker and don't have the API so wait for it here
-                await this.pythonApi.pythonExtensionHooked;
-
-                if (this.extensionChecker.isPythonExtensionInstalled) {
-                    traceInfo('Python Extension installed via Kernel Picker command');
-                    sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {
-                        action: 'success'
-                    });
-
-                    // Trigger a load of our notebook controllers, we want to await it here so that any in
-                    // progress executions get passed to the suggested controller
-                    await this.loadNotebookControllers(true);
-                } else {
-                    traceError('Failed to install Python Extension via Kernel Picker command');
-                    sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {
-                        action: 'failed'
-                    });
-                    throw new Error('Failed to install Python Extension via Kernel Picker command');
-                }
-            } finally {
-                // Always clean up our progress reported
-                reporter.dispose();
-            }
-        }
+        // Signal that we have loaded controllers
+        this._onNotebookControllersLoaded.fire(Array.from(this.registeredControllers.values()));
     }
 
     private listKernels(

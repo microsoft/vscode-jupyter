@@ -225,7 +225,7 @@ export namespace DataScience {
             'Python Extension required to run Python notebooks.'
         );
     export const installingPythonExtension = () =>
-        localize('DataScience.installingPythonExtension', 'Installing Python extension and locating Python kernels.');
+        localize('DataScience.installingPythonExtension', 'Installing Python extension and locating kernels.');
     export const customizeLayout = () => localize('DataScience.customizeLayout', 'Customize Layout');
     export const pythonExtensionRequired = () =>
         localize(

@@ -31,6 +31,7 @@ import { NotebookIPyWidgetCoordinator } from './controllers/notebookIPyWidgetCoo
 import { RemoteKernelConnectionHandler } from './controllers/remoteKernelConnectionHandler';
 import { JupyterServerSelectorCommand } from './serverSelector';
 import { InterpreterPackageTracker } from './telemetry/interpreterPackageTracker';
+import { InstallPythonControllerCommands } from './controllers/installPythonControllerCommands';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
@@ -91,5 +92,9 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         InterpreterPackageTracker
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        InstallPythonControllerCommands
     );
 }
