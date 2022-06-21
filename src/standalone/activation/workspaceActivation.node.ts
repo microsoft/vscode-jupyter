@@ -2,11 +2,7 @@ import { inject, injectable } from 'inversify';
 import { TextDocument } from 'vscode';
 import { sendActivationTelemetry } from '../../telemetry/envFileTelemetry.node';
 import { IPythonExtensionChecker } from '../../platform/api/types';
-import {
-    IWorkspaceService,
-    IActiveResourceService,
-    IDocumentManager
-} from '../../platform/common/application/types';
+import { IWorkspaceService, IActiveResourceService, IDocumentManager } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { IDisposable, Resource } from '../../platform/common/types';

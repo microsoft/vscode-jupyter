@@ -7,12 +7,7 @@ import { IExtensionSingleActivationService } from '../../platform/activation/typ
 import { IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { traceInfo, traceError } from '../../platform/logging';
-import {
-    IConfigurationService,
-    IDisposableRegistry,
-    IMemento,
-    WORKSPACE_MEMENTO
-} from '../../platform/common/types';
+import { IConfigurationService, IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../platform/common/types';
 import { getKernelConnectionLanguage } from '../../kernels/helpers';
 import { IKernel, IKernelProvider, INotebookProvider } from '../../kernels/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../interactive-window/types';

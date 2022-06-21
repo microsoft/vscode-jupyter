@@ -6,11 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { NotebookCellExecutionState, NotebookCellExecutionStateChangeEvent, UIKind } from 'vscode';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
-import {
-    IApplicationEnvironment,
-    IApplicationShell,
-    IVSCodeNotebook
-} from '../../platform/common/application/types';
+import { IApplicationEnvironment, IApplicationShell, IVSCodeNotebook } from '../../platform/common/application/types';
 import '../../platform/common/extensions';
 import { traceError } from '../../platform/logging';
 import {
