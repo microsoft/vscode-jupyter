@@ -41,7 +41,7 @@ import * as localize from '../../../platform/common/utils/localize';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
 import { Telemetry } from '../../webview-side/common/constants';
 import { WebViewViewChangeEventArgs } from '../types';
-import { WebviewPanelHost } from '../webviewPanelHost';
+import { WebviewPanelHost } from '../webviewHost/webviewPanelHost';
 import { noop } from '../../../platform/common/utils/misc';
 import { joinPath } from '../../../platform/vscode-path/resources';
 import { IDataScienceErrorHandler } from '../../../kernels/errors/types';

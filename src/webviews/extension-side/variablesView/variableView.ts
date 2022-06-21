@@ -33,7 +33,7 @@ import * as localize from '../../../platform/common/utils/localize';
 import { Telemetry } from '../../webview-side/common/constants';
 import { DataViewerChecker } from '../dataviewer/dataViewerChecker';
 import { IJupyterVariableDataProviderFactory, IDataViewerFactory, IDataViewer } from '../dataviewer/types';
-import { WebviewViewHost } from '../webviewViewHost';
+import { WebviewViewHost } from '../webviewHost/webviewViewHost';
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import { noop } from '../../../platform/common/utils/misc';
 

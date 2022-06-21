@@ -3,7 +3,7 @@
 
 'use strict';
 
-import '../../platform/common/extensions';
+import '../../../platform/common/extensions';
 
 import {
     ConfigurationChangeEvent,
@@ -14,19 +14,19 @@ import {
     WebviewView as vscodeWebviewView,
     WorkspaceConfiguration
 } from 'vscode';
-import { IWebview, IWorkspaceService } from '../../platform/common/application/types';
-import { isTestExecution } from '../../platform/common/constants';
-import { traceInfo } from '../../platform/logging';
-import { Resource, IConfigurationService, IDisposable } from '../../platform/common/types';
-import { Deferred, createDeferred } from '../../platform/common/utils/async';
-import { testOnlyMethod } from '../../platform/common/utils/decorators';
-import * as localize from '../../platform/common/utils/localize';
-import { StopWatch } from '../../platform/common/utils/stopWatch';
-import { InteractiveWindowMessages, SharedMessages } from '../../platform/messageTypes';
-import { sendTelemetryEvent } from '../../telemetry';
-import { DefaultTheme, PythonExtension, Telemetry } from '../webview-side/common/constants';
-import { IJupyterExtraSettings } from './types';
-import { getOSType, OSType } from '../../platform/common/utils/platform';
+import { IWebview, IWorkspaceService } from '../../../platform/common/application/types';
+import { isTestExecution } from '../../../platform/common/constants';
+import { traceInfo } from '../../../platform/logging';
+import { Resource, IConfigurationService, IDisposable } from '../../../platform/common/types';
+import { Deferred, createDeferred } from '../../../platform/common/utils/async';
+import { testOnlyMethod } from '../../../platform/common/utils/decorators';
+import * as localize from '../../../platform/common/utils/localize';
+import { StopWatch } from '../../../platform/common/utils/stopWatch';
+import { InteractiveWindowMessages, SharedMessages } from '../../../platform/messageTypes';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { DefaultTheme, PythonExtension, Telemetry } from '../../webview-side/common/constants';
+import { IJupyterExtraSettings } from '../types';
+import { getOSType, OSType } from '../../../platform/common/utils/platform';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
