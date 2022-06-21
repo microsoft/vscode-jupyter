@@ -5,7 +5,7 @@ import type { KernelMessage } from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
 import * as WebSocketWS from 'ws';
 import { createSockets } from 'enchannel-zmq-backend';
-import type * as JMP from 'jmp';
+import * as JMP from 'jmp';
 import { traceError } from '../../../platform/logging';
 import { noop } from '../../../platform/common/utils/misc';
 import { IWebSocketLike } from '../../common/kernelSocketWrapper';
@@ -42,7 +42,7 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
     private closed = false;
 
     constructor(
-        private connection: IKernelConnection,
+        connection: IKernelConnection,
         private serialize: (msg: KernelMessage.IMessage) => string | ArrayBuffer,
         private deserialize: (data: ArrayBuffer | string) => KernelMessage.IMessage
     ) {
@@ -202,12 +202,12 @@ export class RawSocket implements IWebSocketLike, IKernelSocket, IDisposable {
         this.sendChain.catch(noop);
     }
 
-    private async postToSocket(channel: string, data: any) {
+    private async postToSocket(channel: Channel, message: KernelMessage.IMessage) {
         const channels = await this.channelsPromise;
         const socket = (channels as any)[channel] as JMP.Socket;
         if (socket) {
-            data.type = channel;
-            socket.send(data, undefined, (err) => {
+            const jmpMessage = new JMP.Message({ ...message, buffers: undefined });
+            socket.send(jmpMessage, undefined, (err) => {
                 if (err) {
                     traceError(`Error communicating with the kernel`, err);
                 }
