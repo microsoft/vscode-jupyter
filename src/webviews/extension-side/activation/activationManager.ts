@@ -8,7 +8,7 @@ import {
     IExtensionActivationManager,
     IExtensionSingleActivationService,
     IExtensionSyncActivationService
-} from '../../platform/activation/types';
+} from '../../../platform/activation/types';
 
 @injectable()
 export class ExtensionActivationManager implements IExtensionActivationManager {

@@ -8335,7 +8335,7 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/globalActivation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/globalActivation.ts)
+[src/webviews/extension-side/activation/globalActivation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/activation/globalActivation.ts)
 ```typescript
                     resultSettings[k] = currentValue;
                 }

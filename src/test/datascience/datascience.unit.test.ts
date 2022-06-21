@@ -13,7 +13,7 @@ import { WorkspaceService } from '../../platform/common/application/workspace.no
 import { JupyterSettings } from '../../platform/common/configSettings';
 import { ConfigurationService } from '../../platform/common/configuration/service.node';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../platform/common/types';
-import { GlobalActivation } from '../../webviews/extension-side/globalActivation';
+import { GlobalActivation } from '../../webviews/extension-side/activation/globalActivation';
 import { DataScienceCodeLensProvider } from '../../interactive-window/editor-integration/codelensprovider';
 import { RawNotebookSupportedService } from '../../kernels/raw/session/rawNotebookSupportedService.node';
 import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
