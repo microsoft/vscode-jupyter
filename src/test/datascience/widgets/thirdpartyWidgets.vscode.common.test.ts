@@ -150,7 +150,7 @@ import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../ke
             await comms.setValue(cell2, '.widget-text input', '5255');
             await assertOutputContainsHtml(cell3, comms, ['>5255<', '>5378.0']);
         });
-        test.skip('Render ipyvolume (slider, color picker, figure)', async function () {
+        test('Render ipyvolume (slider, color picker, figure)', async function () {
             const comms = await initializeNotebookForWidgetTest(api, disposables, {
                 templateFile: 'ipyvolume_widgets.ipynb'
             });
