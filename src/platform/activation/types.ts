@@ -27,20 +27,6 @@ export interface IExtensionActivationManager extends IDisposable {
     activate(): Promise<void>;
 }
 
-export const IDownloadChannelRule = Symbol('IDownloadChannelRule');
-export enum PlatformName {
-    Windows32Bit = 'win-x86',
-    Windows64Bit = 'win-x64',
-    Mac64Bit = 'osx-x64',
-    Linux64Bit = 'linux-x64'
-}
-export const IPlatformData = Symbol('IPlatformData');
-export interface IPlatformData {
-    readonly platformName: PlatformName;
-    readonly engineDllName: string;
-    readonly engineExecutableName: string;
-}
-
 export const IExtensionSingleActivationService = Symbol('IExtensionSingleActivationService');
 /**
  * Classes implementing this interface will have their `activate` methods
