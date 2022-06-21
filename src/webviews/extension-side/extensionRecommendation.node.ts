@@ -39,15 +39,6 @@ const extensionsThatSupportJupyterKernelLanguages = new Map<string, string>([
     ['powershell', 'ms-dotnettools.dotnet-interactive-vscode']
 ]);
 
-export function canOtherExtensionsRunCellsInNotebook(document: NotebookDocument) {
-    const language = getLanguageInNotebookMetadata(getNotebookMetadata(document));
-    const languages = language ? [language] : document.getCells().map((item) => item.document.languageId);
-    if (languages.length === 0) {
-        return false;
-    }
-    return languages.some((item) => extensionsThatSupportJupyterKernelLanguages.has(item));
-}
-
 @injectable()
 export class ExtensionRecommendationService implements IExtensionSyncActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];

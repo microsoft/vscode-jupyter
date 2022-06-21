@@ -45,10 +45,6 @@ export class WebviewPanel extends Webview implements IWebviewPanel {
         }
     }
 
-    public updateCwd(_cwd: string) {
-        // See issue https://github.com/microsoft/vscode-python/issues/8933 for implementing this.
-    }
-
     public close() {
         if (this.panel) {
             this.panel.dispose();

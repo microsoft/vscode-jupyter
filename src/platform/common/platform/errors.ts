@@ -30,7 +30,7 @@ interface INodeJSError extends IError {
 //================================
 // "system" errors
 
-namespace vscErrors {
+export namespace vscErrors {
     const FILE_NOT_FOUND = vscode.FileSystemError.FileNotFound().name;
     const FILE_EXISTS = vscode.FileSystemError.FileExists().name;
     const IS_DIR = vscode.FileSystemError.FileIsADirectory().name;
@@ -78,7 +78,7 @@ interface ISystemError extends INodeJSError {
     port?: string;
 }
 
-function isSystemError(err: Error, expectedCode: string): boolean | undefined {
+export function isSystemError(err: Error, expectedCode: string): boolean | undefined {
     const code = (err as ISystemError).code;
     if (!code) {
         return undefined;
@@ -93,40 +93,4 @@ export function isFileNotFoundError(err: Error): boolean | undefined {
         return matched;
     }
     return isSystemError(err, 'ENOENT');
-}
-
-// Return true if the given error is EEXIST.
-export function isFileExistsError(err: Error): boolean | undefined {
-    const matched = vscErrors.isFileExists(err);
-    if (matched !== undefined) {
-        return matched;
-    }
-    return isSystemError(err, 'EEXIST');
-}
-
-// Return true if the given error is EISDIR.
-export function isFileIsDirError(err: Error): boolean | undefined {
-    const matched = vscErrors.isFileIsDir(err);
-    if (matched !== undefined) {
-        return matched;
-    }
-    return isSystemError(err, 'EISDIR');
-}
-
-// Return true if the given error is ENOTDIR.
-export function isNotDirError(err: Error): boolean | undefined {
-    const matched = vscErrors.isNotDir(err);
-    if (matched !== undefined) {
-        return matched;
-    }
-    return isSystemError(err, 'ENOTDIR');
-}
-
-// Return true if the given error is EACCES.
-export function isNoPermissionsError(err: Error): boolean | undefined {
-    const matched = vscErrors.isNoPermissions(err);
-    if (matched !== undefined) {
-        return matched;
-    }
-    return isSystemError(err, 'EACCES');
 }

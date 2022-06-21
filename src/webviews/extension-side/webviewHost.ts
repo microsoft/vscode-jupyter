@@ -76,21 +76,11 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
     public dispose() {
         if (!this.disposed) {
             this.disposed = true;
-            this.themeIsDarkPromise = undefined;
             this._disposables.forEach((item) => item.dispose());
         }
 
         this.webviewInit = undefined;
         this._onDidDisposeWebviewPanel.fire();
-    }
-
-    public setTheme(isDark: boolean) {
-        if (this.themeIsDarkPromise && !this.themeIsDarkPromise.resolved) {
-            this.themeIsDarkPromise.resolve(isDark);
-        } else {
-            this.themeIsDarkPromise = createDeferred<boolean>();
-            this.themeIsDarkPromise.resolve(isDark);
-        }
     }
 
     // This function is used for testing webview by fetching HTML from the webview via a message
@@ -186,10 +176,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
         // react control.
         this.webviewInit = this.webviewInit || createDeferred();
 
-        // Setup a promise that will wait until the webview passes back
-        // a message telling us what them is in use
-        this.themeIsDarkPromise = this.themeIsDarkPromise ? this.themeIsDarkPromise : createDeferred<boolean>();
-
         traceInfo(`Loading webview. View is ${this.webview ? 'set' : 'notset'}`);
 
         // Create our web panel (it's the UI that shows up for the history)
@@ -263,10 +249,6 @@ export abstract class WebviewHost<IMapping> implements IDisposable {
             // Then send it the message
             this.webview?.postMessage({ type: type.toString(), payload });
         }
-    }
-
-    protected isDark(): Promise<boolean> {
-        return this.themeIsDarkPromise ? this.themeIsDarkPromise.promise : Promise.resolve(false);
     }
 
     // When the webview has been rendered send telemetry and initial strings + settings

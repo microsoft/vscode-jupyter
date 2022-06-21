@@ -1,7 +1,6 @@
 /* eslint-disable max-classes-per-file */
 
 import { inject, injectable, named } from 'inversify';
-
 import { CancellationTokenSource, Event, EventEmitter, Memento, Uri } from 'vscode';
 import { ProductNames } from './productNames';
 import {
