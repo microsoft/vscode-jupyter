@@ -3,23 +3,18 @@
 'use strict';
 import { inject, injectable, named } from 'inversify';
 import { CancellationTokenSource, Memento, NotebookDocument } from 'vscode';
-import { IExtensionSingleActivationService } from '../../../platform/activation/types';
-import { IVSCodeNotebook, IWorkspaceService } from '../../../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { traceInfo, traceError } from '../../../platform/logging';
-import {
-    IConfigurationService,
-    IDisposableRegistry,
-    IMemento,
-    WORKSPACE_MEMENTO
-} from '../../../platform/common/types';
-import { getKernelConnectionLanguage } from '../../../kernels/helpers';
-import { IKernel, IKernelProvider, INotebookProvider } from '../../../kernels/types';
-import { IInteractiveWindowProvider, IInteractiveWindow } from '../../../interactive-window/types';
-import { DisplayOptions } from '../../../kernels/displayOptions';
-import { IRawNotebookProvider } from '../../../kernels/raw/types';
-import { isJupyterNotebook } from '../../../platform/common/utils';
-import { noop } from '../../../platform/common/utils/misc';
+import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
+import { PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { traceInfo, traceError } from '../../platform/logging';
+import { IConfigurationService, IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../platform/common/types';
+import { getKernelConnectionLanguage } from '../../kernels/helpers';
+import { IKernel, IKernelProvider, INotebookProvider } from '../../kernels/types';
+import { IInteractiveWindowProvider, IInteractiveWindow } from '../../interactive-window/types';
+import { DisplayOptions } from '../../kernels/displayOptions';
+import { IRawNotebookProvider } from '../../kernels/raw/types';
+import { isJupyterNotebook } from '../../platform/common/utils';
+import { noop } from '../../platform/common/utils/misc';
 
 const LastPythonNotebookCreatedKey = 'last-python-notebook-created';
 const LastNotebookCreatedKey = 'last-notebook-created';

@@ -1,9 +1,9 @@
 import { injectable } from 'inversify';
 import * as vscode from 'vscode';
-import { isTestExecution } from '../../../platform/common/constants';
-import { IDisposable } from '../../../platform/common/types';
-import { getCollectionJSON } from '../../../platform/common/utils/localize';
-import { noop } from '../../../platform/common/utils/misc';
+import { isTestExecution } from '../../platform/common/constants';
+import { IDisposable } from '../../platform/common/types';
+import { getCollectionJSON } from '../../platform/common/utils/localize';
+import { noop } from '../../platform/common/utils/misc';
 
 const enum MessageType {
     ExtensionInit = 1,

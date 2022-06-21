@@ -5,18 +5,18 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 
 import { Uri } from 'vscode';
-import { CellMatcher } from '../../../interactive-window/editor-integration/cellMatcher';
-import { IApplicationShell } from '../../../platform/common/application/types';
-import { traceError } from '../../../platform/logging';
-import { IFileSystem } from '../../../platform/common/platform/types';
-import { ICell, IConfigurationService } from '../../../platform/common/types';
-import { pruneCell } from '../../../platform/common/utils';
-import { DataScience } from '../../../platform/common/utils/localize';
-import { defaultNotebookFormat } from '../../../platform/common/constants';
-import { INotebookExporter, IJupyterExecution } from '../../../kernels/jupyter/types';
-import { openAndShowNotebook } from '../../../platform/common/utils/notebooks';
-import { noop } from '../../../platform/common/utils/misc';
-import { IDataScienceErrorHandler } from '../../../kernels/errors/types';
+import { CellMatcher } from '../../interactive-window/editor-integration/cellMatcher';
+import { IApplicationShell } from '../../platform/common/application/types';
+import { traceError } from '../../platform/logging';
+import { IFileSystem } from '../../platform/common/platform/types';
+import { ICell, IConfigurationService } from '../../platform/common/types';
+import { pruneCell } from '../../platform/common/utils';
+import { DataScience } from '../../platform/common/utils/localize';
+import { defaultNotebookFormat } from '../../platform/common/constants';
+import { INotebookExporter, IJupyterExecution } from '../../kernels/jupyter/types';
+import { openAndShowNotebook } from '../../platform/common/utils/notebooks';
+import { noop } from '../../platform/common/utils/misc';
+import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 
 @injectable()
 export class JupyterExporter implements INotebookExporter {
