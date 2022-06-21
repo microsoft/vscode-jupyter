@@ -73,7 +73,7 @@ import { registerTypes as registerTerminalTypes } from './platform/terminals/ser
 import { registerTypes as registerWebviewTypes } from './webviews/extension-side/serviceRegistry.web';
 import { IExtensionActivationManager } from './platform/activation/types';
 import { isCI, isTestExecution, JUPYTER_OUTPUT_CHANNEL, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants';
-import { getJupyterOutputChannel } from './platform/devTools/jupyterOutputChannel';
+import { getJupyterOutputChannel } from './webviews/extension-side/devTools/jupyterOutputChannel';
 import { registerLogger, setLoggingLevel } from './platform/logging';
 import { Container } from 'inversify/lib/container/container';
 import { ServiceContainer } from './platform/ioc/container';
@@ -283,14 +283,14 @@ async function activateLegacy(
     addConsoleLogger();
 
     // Register the rest of the types (platform is first because it's needed by others)
-    registerPlatformTypes(context, serviceManager, isDevMode);
+    registerPlatformTypes(serviceManager);
     registerTelemetryTypes(serviceManager);
     registerNotebookTypes(serviceManager);
     registerKernelTypes(serviceManager, isDevMode);
     registerInteractiveTypes(serviceManager);
     registerIntellisenseTypes(serviceManager, isDevMode);
     registerTerminalTypes(serviceManager);
-    registerWebviewTypes(serviceManager, isDevMode);
+    registerWebviewTypes(context, serviceManager, isDevMode);
 
     // Load the two data science experiments that we need to register types
     // Await here to keep the register method sync

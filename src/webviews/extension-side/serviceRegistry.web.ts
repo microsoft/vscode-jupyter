@@ -32,8 +32,10 @@ import { JupyterKernelServiceFactory } from './api/kernelApi';
 import { IExportedKernelServiceFactory } from './api/api';
 import { ApiAccessService } from './api/apiAccessService';
 import { ExtensionActivationManager } from './activation/activationManager';
+import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
+import { IExtensionContext } from '../../platform/common/types';
 
-export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
+export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
@@ -81,4 +83,7 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         JupyterKernelServiceFactory
     );
     serviceManager.addSingleton<ApiAccessService>(ApiAccessService, ApiAccessService);
+
+    // Dev Tools
+    registerDevToolTypes(context, serviceManager, isDevMode);
 }

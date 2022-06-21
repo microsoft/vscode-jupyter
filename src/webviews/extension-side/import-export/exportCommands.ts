@@ -18,7 +18,8 @@ import { Commands, Telemetry } from '../../../platform/common/constants';
 import { IFileConverter, ExportFormat } from '../../../notebooks/export/types';
 import { IInteractiveWindowProvider } from '../../../interactive-window/types';
 import { IFileSystem } from '../../../platform/common/platform/types';
-import { isPythonNotebook, getNotebookMetadata } from '../../../platform/common/utils';
+import { getNotebookMetadata } from '../../../platform/common/utils';
+import { isPythonNotebook } from '../../../kernels/helpers';
 
 interface IExportQuickPickItem extends QuickPickItem {
     handler(): void;

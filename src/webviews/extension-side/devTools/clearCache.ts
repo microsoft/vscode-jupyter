@@ -1,6 +1,6 @@
 import { commands } from 'vscode';
-import { IExtensionContext } from '../common/types';
-import { noop } from '../common/utils/misc';
+import { IExtensionContext } from '../../../platform/common/types';
+import { noop } from '../../../platform/common/utils/misc';
 
 export function addClearCacheCommand(context: IExtensionContext, isDevMode: boolean) {
     if (!isDevMode) {

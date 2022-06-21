@@ -14,8 +14,8 @@ import { isNotebookCell, noop } from '../../../platform/common/utils/misc';
 import { InteractiveWindowView, JupyterNotebookView } from '../../../platform/common/constants';
 import { INotebookControllerManager } from '../../../notebooks/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../../interactive-window/types';
-import { getNotebookMetadata, isJupyterNotebook, isPythonNotebook } from '../../../platform/common/utils';
-import { getAssociatedNotebookDocument } from '../../../kernels/helpers';
+import { getNotebookMetadata, isJupyterNotebook } from '../../../platform/common/utils';
+import { getAssociatedNotebookDocument, isPythonNotebook } from '../../../kernels/helpers';
 
 @injectable()
 export class ActiveEditorContextService implements IExtensionSingleActivationService, IDisposable {
