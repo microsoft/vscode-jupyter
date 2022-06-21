@@ -14,8 +14,7 @@ import {
 import { ConfigurationService } from './common/configuration/service.web';
 import { registerTypes as registerApiTypes } from './api/serviceRegistry.web';
 import { registerTypes as registerCommonTypes } from './common/serviceRegistry.web';
-import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
-import { IConfigurationService, IDataScienceCommandListener, IExtensionContext } from './common/types';
+import { IConfigurationService, IDataScienceCommandListener } from './common/types';
 import { IServiceManager } from './ioc/types';
 import { ProgressReporter } from './progress/progressReporter';
 import { StatusProvider } from './progress/statusProvider';
@@ -28,7 +27,7 @@ import { IFileSystem } from './common/platform/types';
 import { FileSystem } from './common/platform/fileSystem';
 import { KernelProgressReporter } from './progress/kernelProgressReporter';
 
-export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
+export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
     serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
     serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
@@ -41,7 +40,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
 
     registerCommonTypes(serviceManager);
     registerApiTypes(serviceManager);
-    registerDevToolTypes(context, serviceManager, isDevMode);
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,

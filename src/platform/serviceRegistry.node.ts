@@ -6,11 +6,10 @@ import { IServiceManager } from '../platform/ioc/types';
 import { registerTypes as registerApiTypes } from './api/serviceRegistry.node';
 import { registerTypes as registerCommonTypes } from './common/serviceRegistry.node';
 import { registerTypes as registerTerminalTypes } from './terminals/serviceRegistry.node';
-import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
 import { DataScienceStartupTime } from './common/constants';
 import { IExtensionSingleActivationService, IExtensionSyncActivationService } from './activation/types';
 import { PreReleaseChecker } from './common/prereleaseChecker.node';
-import { IConfigurationService, IDataScienceCommandListener, IExtensionContext } from './common/types';
+import { IConfigurationService, IDataScienceCommandListener } from './common/types';
 import { KernelProgressReporter } from './progress/kernelProgressReporter';
 import { ProgressReporter } from './progress/progressReporter';
 import { StatusProvider } from './progress/statusProvider';
@@ -25,7 +24,7 @@ import { FileSystem } from './common/platform/fileSystem.node';
 import { WorkspaceService } from './common/application/workspace.node';
 import { OutputCommandListener } from './logging/outputCommandListener';
 
-export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
+export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<FileSystem>(FileSystem, FileSystem);
     serviceManager.addBinding(FileSystem, IFileSystemNode);
     serviceManager.addBinding(FileSystem, IFileSystem);
@@ -37,7 +36,6 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
     registerApiTypes(serviceManager);
     registerCommonTypes(serviceManager);
     registerTerminalTypes(serviceManager);
-    registerDevToolTypes(context, serviceManager, isDevMode);
 
     // Root platform types
     serviceManager.addSingletonInstance<number>(DataScienceStartupTime, Date.now());

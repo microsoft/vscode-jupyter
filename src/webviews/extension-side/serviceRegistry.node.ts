@@ -51,8 +51,10 @@ import { ApiAccessService } from './api/apiAccessService';
 import { WorkspaceActivation } from './activation/workspaceActivation.node';
 import { ExtensionActivationManager } from './activation/activationManager';
 import { DataScienceSurveyBanner, ISurveyBanner } from './survey/dataScienceSurveyBanner.node';
+import { IExtensionContext } from '../../platform/common/types';
+import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
 
-export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
+export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
@@ -131,4 +133,7 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         JupyterKernelServiceFactory
     );
     serviceManager.addSingleton<ApiAccessService>(ApiAccessService, ApiAccessService);
+
+    // Dev Tools
+    registerDevToolTypes(context, serviceManager, isDevMode);
 }

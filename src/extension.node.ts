@@ -77,7 +77,7 @@ import { IExtensionActivationManager } from './platform/activation/types';
 import { isCI, isTestExecution, JUPYTER_OUTPUT_CHANNEL, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants';
 import { getDisplayPath } from './platform/common/platform/fs-paths';
 import { IFileSystemNode } from './platform/common/platform/types.node';
-import { getJupyterOutputChannel } from './platform/devTools/jupyterOutputChannel';
+import { getJupyterOutputChannel } from './webviews/extension-side/devTools/jupyterOutputChannel';
 import { registerLogger, setLoggingLevel } from './platform/logging';
 import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry.node';
 import { Container } from 'inversify/lib/container/container';
@@ -313,12 +313,12 @@ async function activateLegacy(
     addOutputChannel(context, serviceManager, isDevMode);
 
     // Register the rest of the types (platform is first because it's needed by others)
-    registerPlatformTypes(context, serviceManager, isDevMode);
+    registerPlatformTypes(serviceManager);
     registerTelemetryTypes(serviceManager);
     registerKernelTypes(serviceManager, isDevMode);
     registerNotebookTypes(serviceManager);
     registerInteractiveTypes(serviceManager);
-    registerWebviewTypes(serviceManager, isDevMode);
+    registerWebviewTypes(context, serviceManager, isDevMode);
     registerIntellisenseTypes(serviceManager, isDevMode);
 
     // We need to setup this property before any telemetry is sent

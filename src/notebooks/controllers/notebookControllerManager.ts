@@ -59,9 +59,10 @@ import {
     getDisplayNameOrNameOfKernelConnection,
     getKernelId,
     getLanguageInNotebookMetadata,
-    isPythonKernelConnection
+    isPythonKernelConnection,
+    isPythonNotebook
 } from '../../kernels/helpers';
-import { getNotebookMetadata, getResourceType, isPythonNotebook } from '../../platform/common/utils';
+import { getNotebookMetadata, getResourceType } from '../../platform/common/utils';
 import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
 import { INotebookMetadata } from '@jupyterlab/nbformat';
 import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConnectionType';
