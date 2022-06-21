@@ -23,15 +23,15 @@ import { CommandRegistry as ExportCommandRegistry } from './import-export/comman
 import { NotebookWatcher } from './variablesView/notebookWatcher';
 import { DataViewerFactory } from './dataviewer/dataViewerFactory';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from './renderer';
-import { ActiveEditorContextService } from './activeEditorContext';
-import { GlobalActivation } from './globalActivation';
+import { ActiveEditorContextService } from './context/activeEditorContext';
+import { GlobalActivation } from './activation/globalActivation';
 import { DataViewer } from './dataviewer/dataViewer';
 import { INotebookExporter } from '../../kernels/jupyter/types';
 import { JupyterExporter } from './import-export/jupyterExporter';
 import { JupyterKernelServiceFactory } from './api/kernelApi';
 import { IExportedKernelServiceFactory } from './api/api';
 import { ApiAccessService } from './api/apiAccessService';
-import { ExtensionActivationManager } from './activationManager';
+import { ExtensionActivationManager } from './activation/activationManager';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);

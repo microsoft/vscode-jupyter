@@ -4,18 +4,18 @@
 'use strict';
 import { inject, injectable, optional } from 'inversify';
 import { NotebookEditor, TextEditor } from 'vscode';
-import { IKernel, IKernelProvider } from '../../kernels/types';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
-import { ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
-import { EditorContexts, PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { ContextKey } from '../../platform/common/contextKey';
-import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
-import { isNotebookCell, noop } from '../../platform/common/utils/misc';
-import { InteractiveWindowView, JupyterNotebookView } from '../../platform/common/constants';
-import { INotebookControllerManager } from '../../notebooks/types';
-import { IInteractiveWindowProvider, IInteractiveWindow } from '../../interactive-window/types';
-import { getNotebookMetadata, isJupyterNotebook, isPythonNotebook } from '../../platform/common/utils';
-import { getAssociatedNotebookDocument } from '../../kernels/helpers';
+import { IKernel, IKernelProvider } from '../../../kernels/types';
+import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../../platform/common/application/types';
+import { EditorContexts, PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { ContextKey } from '../../../platform/common/contextKey';
+import { IDisposable, IDisposableRegistry } from '../../../platform/common/types';
+import { isNotebookCell, noop } from '../../../platform/common/utils/misc';
+import { InteractiveWindowView, JupyterNotebookView } from '../../../platform/common/constants';
+import { INotebookControllerManager } from '../../../notebooks/types';
+import { IInteractiveWindowProvider, IInteractiveWindow } from '../../../interactive-window/types';
+import { getNotebookMetadata, isJupyterNotebook, isPythonNotebook } from '../../../platform/common/utils';
+import { getAssociatedNotebookDocument } from '../../../kernels/helpers';
 
 @injectable()
 export class ActiveEditorContextService implements IExtensionSingleActivationService, IDisposable {
