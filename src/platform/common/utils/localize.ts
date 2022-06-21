@@ -1362,6 +1362,13 @@ export namespace DataScience {
         localize('DataScience.webNotSupported', `Operation not supported in web version of Jupyter Extension.`);
     export const validationErrorMessageForRemoteUrlProtocolNeedsToBeHttpOrHttps = () =>
         localize('DataScience.validationErrorMessageForRemoteUrlProtocolNeedsToBeHttpOrHttps', 'Has to be http(s)');
+    export const noActiveEditor = () => localize('DataScience.noActiveEditor', 'No active editor');
+    export const noActiveKernel = () => localize('DataScience.noActiveKernel', 'No active kernel');
+    export const failedToGetVersionOfPandas = () =>
+        localize(
+            { key: 'DataScience.failedToGetVersionOfPandas', comment: ['{Locked="Pandas"}'] },
+            'Failed to get version of Pandas to use Data Viewer'
+        );
 }
 
 export namespace Installer {

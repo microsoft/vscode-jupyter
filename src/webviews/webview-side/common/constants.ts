@@ -395,6 +395,7 @@ export enum Telemetry {
     UserInstalledPandas = 'DATASCIENCE.USER_INSTALLED_PANDAS',
     UserDidNotInstallJupyter = 'DATASCIENCE.USER_DID_NOT_INSTALL_JUPYTER',
     UserDidNotInstallPandas = 'DATASCIENCE.USER_DID_NOT_INSTALL_PANDAS',
+    FailedToInstallPandas = 'DATASCIENCE.FAILED_TO_INSTALL_PANDAS',
     OpenedInteractiveWindow = 'DATASCIENCE.OPENED_INTERACTIVE',
     OpenNotebookFailure = 'DS_INTERNAL.NATIVE.OPEN_NOTEBOOK_FAILURE',
     FindKernelForLocalConnection = 'DS_INTERNAL.FIND_KERNEL_FOR_LOCAL_CONNECTION',
@@ -515,7 +516,10 @@ export enum Telemetry {
     FetchError = 'DS_INTERNAL.WEB_FETCH_ERROR',
     TerminalShellIdentification = 'TERMINAL_SHELL_IDENTIFICATION',
     TerminalEnvVariableExtraction = 'TERMINAL_ENV_VAR_EXTRACTION',
-    JupyterInstalled = 'JUPYTER_IS_INSTALLED'
+    JupyterInstalled = 'JUPYTER_IS_INSTALLED',
+    NoActiveEditor = 'DATASCIENCE.NO_ACTIVE_EDITOR',
+    NoActiveKernel = 'DATASCIENCE.NO_ACTIVE_KERNEL',
+    NoActiveKernelSession = 'DATASCIENCE.NO_ACTIVE_KERNEL_SESSION'
 }
 
 export enum NativeKeyboardCommandTelemetry {

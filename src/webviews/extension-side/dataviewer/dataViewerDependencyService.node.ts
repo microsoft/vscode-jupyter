@@ -5,21 +5,21 @@
 
 import { inject, injectable } from 'inversify';
 import { SemVer } from 'semver';
-import { CancellationToken, CancellationTokenSource } from 'vscode';
+import { Uri } from 'vscode';
 import { ProductNames } from '../../../kernels/installer/productNames';
-import { IInstaller, Product, InstallerResponse } from '../../../kernels/installer/types';
+import { Product } from '../../../kernels/installer/types';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
 import { traceWarning } from '../../../platform/logging';
-import { IPythonExecutionFactory } from '../../../platform/common/process/types.node';
 import { IsCodeSpace } from '../../../platform/common/types';
-import { parseSemVer } from '../../../platform/common/utils.node';
+import { parseSemVer } from '../../../platform/common/utils';
 import { DataScience, Common } from '../../../platform/common/utils/localize';
-import { IInterpreterService } from '../../../platform/interpreter/contracts';
-import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../webview-side/common/constants';
 import { IDataViewerDependencyService } from './types';
+import { executeSilently } from '../../../kernels/helpers';
+import { IJupyterSession, IKernel, IKernelProvider } from '../../../kernels/types';
+import { INotebookEditorProvider } from '../../../notebooks/types';
 
 const minimumSupportedPandaVersion = '0.20.0';
 
@@ -32,44 +32,60 @@ function isVersionOfPandasSupported(version: SemVer) {
  */
 @injectable()
 export class DataViewerDependencyService implements IDataViewerDependencyService {
+    private get activeNotebookEditorUri(): Uri {
+        const activeNotebookEditorUri = this.notebookEditorProvider.activeNotebookEditor?.notebook.uri;
+        if (!activeNotebookEditorUri) {
+            sendTelemetryEvent(Telemetry.NoActiveEditor);
+            throw new Error(DataScience.noActiveEditor());
+        }
+        return activeNotebookEditorUri;
+    }
+    private get kernel(): IKernel {
+        const kernel = this.kernelProvider.get(this.activeNotebookEditorUri);
+        if (!kernel) {
+            sendTelemetryEvent(Telemetry.NoActiveKernel);
+            throw new Error(DataScience.noActiveKernel());
+        }
+        return kernel;
+    }
+    private get kernelSession(): IJupyterSession {
+        if (!this.kernel.session) {
+            sendTelemetryEvent(Telemetry.NoActiveKernelSession);
+            throw new Error(DataScience.noActiveKernel());
+        }
+        return this.kernel.session;
+    }
+    private get packaging(): string {
+        const envType = this.kernel.kernelConnectionMetadata.interpreter?.envType;
+        const isConda = envType === EnvironmentType.Conda;
+        return isConda ? 'conda' : 'pip';
+    }
+
     constructor(
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(IInstaller) private readonly installer: IInstaller,
-        @inject(IPythonExecutionFactory) private pythonFactory: IPythonExecutionFactory,
-        @inject(IInterpreterService) private interpreterService: IInterpreterService,
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
+        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(IsCodeSpace) private isCodeSpace: boolean
     ) {}
 
     public async checkAndInstallMissingDependencies(interpreter: PythonEnvironment): Promise<void> {
-        const tokenSource = new CancellationTokenSource();
-        try {
-            const pandasVersion = await this.getVersionOfPandas(interpreter, tokenSource.token);
+        const pandasVersion = await this.getVersionOfPandas();
 
-            if (Cancellation.isCanceled(tokenSource.token)) {
+        if (pandasVersion) {
+            if (isVersionOfPandasSupported(pandasVersion)) {
                 return;
             }
-
-            if (pandasVersion) {
-                if (isVersionOfPandasSupported(pandasVersion)) {
-                    return;
-                }
-                sendTelemetryEvent(Telemetry.PandasTooOld);
-                // Warn user that we cannot start because pandas is too old.
-                const versionStr = `${pandasVersion.major}.${pandasVersion.minor}.${pandasVersion.build}`;
-                throw new Error(DataScience.pandasTooOldForViewingFormat().format(versionStr));
-            }
-
-            sendTelemetryEvent(Telemetry.PandasNotInstalled);
-            await this.installMissingDependencies(interpreter, tokenSource);
-        } finally {
-            tokenSource.dispose();
+            sendTelemetryEvent(Telemetry.PandasTooOld);
+            // Warn user that we cannot start because pandas is too old.
+            const versionStr = `${pandasVersion.major}.${pandasVersion.minor}.${pandasVersion.build}`;
+            throw new Error(DataScience.pandasTooOldForViewingFormat().format(versionStr));
         }
+
+        sendTelemetryEvent(Telemetry.PandasNotInstalled);
+        await this.installMissingDependencies(interpreter);
     }
 
-    private async installMissingDependencies(
-        interpreter: PythonEnvironment,
-        tokenSource: CancellationTokenSource
-    ): Promise<void> {
+    private async installMissingDependencies(interpreter: PythonEnvironment): Promise<void> {
         sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
             action: 'displayed',
             moduleName: ProductNames.get(Product.pandas)!,
@@ -83,27 +99,12 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
                   Common.install()
               );
 
-        // All data science dependencies require an interpreter to be passed in
-        // Default to the active interpreter if no interpreter is available
-        const interpreterToInstallDependenciesInto =
-            interpreter || (await this.interpreterService.getActiveInterpreter());
-
-        if (Cancellation.isCanceled(tokenSource.token)) {
-            return;
-        }
-
         if (selection === Common.install()) {
-            const cancellationPromise = createPromiseFromCancellation({
-                cancelAction: 'resolve',
-                defaultValue: InstallerResponse.Ignore,
-                token: tokenSource.token
-            });
-            // Always pass a cancellation token to `install`, to ensure it waits until the module is installed.
-            const response = await Promise.race([
-                this.installer.install(Product.pandas, interpreterToInstallDependenciesInto, tokenSource),
-                cancellationPromise
-            ]);
-            if (response === InstallerResponse.Installed) {
+            const outputs = await executeSilently(this.kernelSession, `${this.packaging} install pandas`);
+
+            if (outputs.some((item) => item.output_type === 'error')) {
+                sendTelemetryEvent(Telemetry.FailedToInstallPandas);
+            } else {
                 sendTelemetryEvent(Telemetry.UserInstalledPandas);
             }
         } else {
@@ -112,25 +113,15 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
         }
     }
 
-    private async getVersionOfPandas(
-        interpreter: PythonEnvironment,
-        token?: CancellationToken
-    ): Promise<SemVer | undefined> {
-        const launcher = await this.pythonFactory.createActivatedEnvironment({
-            resource: undefined,
-            interpreter,
-            allowEnvironmentFetchExceptions: true
-        });
-        try {
-            const result = await launcher.exec(['-c', 'import pandas;print(pandas.__version__)'], {
-                throwOnStdErr: true,
-                token
-            });
+    private async getVersionOfPandas(): Promise<SemVer | undefined> {
+        const outputs = await executeSilently(this.kernelSession, `${this.packaging} install pandas`);
 
-            return parseSemVer(result.stdout);
-        } catch (ex) {
-            traceWarning('Failed to get version of Pandas to use Data Viewer', ex);
+        const error = outputs.find((item) => item.output_type === 'error');
+        if (error) {
+            traceWarning(DataScience.failedToGetVersionOfPandas(), error.text);
             return;
+        } else {
+            return outputs.map(({ text }) => (text ? parseSemVer(text?.toString()) : undefined)).find((item) => item);
         }
     }
 }

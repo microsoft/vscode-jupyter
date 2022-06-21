@@ -4,6 +4,7 @@
 
 import type * as nbformat from '@jupyterlab/nbformat';
 import * as uriPath from '../../platform/vscode-path/resources';
+import { SemVer, parse } from 'semver';
 import { NotebookData, NotebookDocument, TextDocument, Uri, workspace } from 'vscode';
 import {
     InteractiveWindowView,
@@ -386,4 +387,15 @@ export function removeLinesFromFrontAndBackNoConcat(lines: string[]): string[] {
 export function removeLinesFromFrontAndBack(code: string | string[]): string {
     const lines = Array.isArray(code) ? code : code.splitLines({ trim: false, removeEmptyEntries: false });
     return removeLinesFromFrontAndBackNoConcat(lines).join('\n');
+}
+
+// For the given string parse it out to a SemVer or return undefined
+export function parseSemVer(versionString: string): SemVer | undefined {
+    const versionMatch = /^\s*(\d+)\.(\d+)\.(.+)\s*$/.exec(versionString);
+    if (versionMatch && versionMatch.length > 2) {
+        const major = parseInt(versionMatch[1], 10);
+        const minor = parseInt(versionMatch[2], 10);
+        const build = parseInt(versionMatch[3], 10);
+        return parse(`${major}.${minor}.${build}`, true) ?? undefined;
+    }
 }

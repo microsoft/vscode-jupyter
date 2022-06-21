@@ -499,6 +499,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.UserInstalledPandas]: never | undefined;
     [Telemetry.UserDidNotInstallJupyter]: never | undefined;
     [Telemetry.UserDidNotInstallPandas]: never | undefined;
+    [Telemetry.FailedToInstallPandas]: never | undefined;
     [Telemetry.PythonNotInstalled]: {
         action:
             | 'displayed' // Message displayed.
@@ -1374,4 +1375,19 @@ export interface IEventNamePropertyMapping {
      * Total time take to copy the nb extensions folder.
      */
     [Telemetry.IPyWidgetNbExtensionCopyTime]: never | undefined;
+    /**
+     * Useful when we need an active editor in order to determine which kernel to run.
+     * Used by the data frame when attempting to install Pandas.
+     */
+    [Telemetry.NoActiveEditor]: never | undefined;
+    /**
+     * Useful when we need an active kernel in order to execute commands silently.
+     * Used by the data frame when attempting to install Pandas.
+     */
+    [Telemetry.NoActiveKernel]: never | undefined;
+    /**
+     * Useful when we need an active kernel session in order to execute commands silently.
+     * Used by the data frame when attempting to install Pandas.
+     */
+    [Telemetry.NoActiveKernelSession]: never | undefined;
 }
