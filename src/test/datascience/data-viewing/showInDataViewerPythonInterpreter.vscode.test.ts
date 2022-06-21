@@ -56,6 +56,7 @@ suite('DataScience - VSCode Notebook - (DataViewer)', function () {
         // Close documents and stop debugging
         await vscode.commands.executeCommand('workbench.action.closeAllEditors');
         await vscode.commands.executeCommand('workbench.action.closeAllGroups');
+        await vscode.commands.executeCommand('workbench.action.debug.stop');
         await vscode.commands.executeCommand('workbench.debug.viewlet.action.removeAllBreakpoints');
     });
     // Start debugging using the python extension
