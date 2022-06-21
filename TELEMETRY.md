@@ -9391,8 +9391,8 @@ No properties for event
 
 [src/webviews/extension-side/dataviewer/dataViewerCommandRegistry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/dataViewerCommandRegistry.ts)
 ```typescript
-                if (columnSize && (await this.dataViewerChecker.isRequestedColumnSizeAllowed(columnSize))) {
                     const title: string = `${DataScience.dataExplorerTitle()} - ${jupyterVariable.name}`;
+                    traceInfo('IANHUZ create on data viewer factory');
                     await this.dataViewerFactory.create(jupyterVariableDataProvider, title);
                     sendTelemetryEvent(EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS);
                 }

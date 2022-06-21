@@ -132,13 +132,17 @@ suite('DataScience - VSCode Notebook - (DataViewer)', function () {
         await vscode.commands.executeCommand('jupyter.showDataViewer', props);
 
         // Wait until a new tab group opens with the right name
-        await waitForCondition(
-            async () => {
-                return vscode.window.tabGroups.all[1].activeTab?.label === 'Data Viewer - my_list';
-            },
-            60_000,
-            'Failed to open the data viewer from python variables'
-        );
+        try {
+            await waitForCondition(
+                async () => {
+                    return vscode.window.tabGroups.all[1].activeTab?.label === 'Data Viewer - my_list';
+                },
+                40_000,
+                'Failed to open the data viewer from python variables'
+            );
+        } catch {
+            await captureScreenShot('Failed');
+        }
 
         await captureScreenShot('Shot4');
 
