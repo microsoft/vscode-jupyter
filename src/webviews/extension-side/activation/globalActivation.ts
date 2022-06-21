@@ -4,25 +4,25 @@
 import type { JSONObject } from '@lumino/coreutils';
 import { inject, injectable, multiInject, optional } from 'inversify';
 import * as vscode from 'vscode';
-import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../platform/common/application/types';
-import { PYTHON_FILE_ANY_SCHEME, PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { ContextKey } from '../../platform/common/contextKey';
-import '../../platform/common/extensions';
+import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../platform/common/application/types';
+import { PYTHON_FILE_ANY_SCHEME, PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { ContextKey } from '../../../platform/common/contextKey';
+import '../../../platform/common/extensions';
 import {
     IConfigurationService,
     IDataScienceCommandListener,
     IDisposable,
     IDisposableRegistry,
     IExtensionContext
-} from '../../platform/common/types';
-import { debounceAsync, swallowExceptions } from '../../platform/common/utils/decorators';
-import { noop } from '../../platform/common/utils/misc';
-import { sendTelemetryEvent } from '../../telemetry';
-import { EditorContexts, Telemetry } from '../../platform/common/constants';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
-import { IDataScienceCodeLensProvider } from '../../interactive-window/editor-integration/types';
-import { IRawNotebookSupportedService } from '../../kernels/raw/types';
-import { hasCells } from '../../interactive-window/editor-integration/cellFactory';
+} from '../../../platform/common/types';
+import { debounceAsync, swallowExceptions } from '../../../platform/common/utils/decorators';
+import { noop } from '../../../platform/common/utils/misc';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { EditorContexts, Telemetry } from '../../../platform/common/constants';
+import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { IDataScienceCodeLensProvider } from '../../../interactive-window/editor-integration/types';
+import { IRawNotebookSupportedService } from '../../../kernels/raw/types';
+import { hasCells } from '../../../interactive-window/editor-integration/cellFactory';
 
 @injectable()
 export class GlobalActivation implements IExtensionSingleActivationService {

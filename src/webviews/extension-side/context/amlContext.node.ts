@@ -3,8 +3,8 @@
 
 import { injectable } from 'inversify';
 import { env } from 'vscode';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
-import { setSharedProperty } from '../../telemetry';
+import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { setSharedProperty } from '../../../telemetry';
 
 const amlComputeRemoteName = 'amlext';
 

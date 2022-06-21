@@ -1,15 +1,19 @@
 import { inject, injectable } from 'inversify';
 import { TextDocument } from 'vscode';
-import { sendActivationTelemetry } from '../../telemetry/envFileTelemetry.node';
-import { IPythonExtensionChecker } from '../../platform/api/types';
-import { IWorkspaceService, IActiveResourceService, IDocumentManager } from '../../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { IFileSystemNode } from '../../platform/common/platform/types.node';
-import { IDisposable, Resource } from '../../platform/common/types';
-import { Deferred } from '../../platform/common/utils/async';
-import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { traceDecoratorError } from '../../platform/logging';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { sendActivationTelemetry } from '../../../telemetry/envFileTelemetry.node';
+import { IPythonExtensionChecker } from '../../../platform/api/types';
+import {
+    IWorkspaceService,
+    IActiveResourceService,
+    IDocumentManager
+} from '../../../platform/common/application/types';
+import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
+import { IFileSystemNode } from '../../../platform/common/platform/types.node';
+import { IDisposable, Resource } from '../../../platform/common/types';
+import { Deferred } from '../../../platform/common/utils/async';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { traceDecoratorError } from '../../../platform/logging';
+import { IExtensionSingleActivationService } from '../../../platform/activation/types';
 
 @injectable()
 export class WorkspaceActivation implements IExtensionSingleActivationService {

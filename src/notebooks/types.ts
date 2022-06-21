@@ -26,6 +26,7 @@ export interface INotebookControllerManager {
         controller: IVSCodeNotebookController;
         selected: boolean;
     }>;
+    readonly onNotebookControllersLoaded: Event<Readonly<IVSCodeNotebookController[]>>;
     readonly kernelConnections: Promise<Readonly<KernelConnectionMetadata>[]>;
     readonly remoteRefreshed: Event<LiveRemoteKernelConnectionMetadata[]>;
     /**
@@ -33,7 +34,6 @@ export interface INotebookControllerManager {
      */
     loadNotebookControllers(refresh?: boolean): Promise<void>;
     getSelectedNotebookController(document: NotebookDocument): IVSCodeNotebookController | undefined;
-    // Marked test only, just for tests to access registered controllers
     getRegisteredNotebookControllers(): IVSCodeNotebookController[];
     getActiveInterpreterOrDefaultController(
         notebookType: typeof JupyterNotebookView | typeof InteractiveWindowView,

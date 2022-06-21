@@ -27,6 +27,7 @@ import { NotebookIPyWidgetCoordinator } from './controllers/notebookIPyWidgetCoo
 import { RemoteKernelConnectionHandler } from './controllers/remoteKernelConnectionHandler';
 import { JupyterServerSelectorCommand } from './serverSelector';
 import { InterpreterPackageTracker } from './telemetry/interpreterPackageTracker';
+import { InstallPythonControllerCommands } from './controllers/installPythonControllerCommands';
 import { NotebookCellLanguageService } from './languages/cellLanguageService';
 import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellLanguageService';
 import { DebuggingManager } from './debugger/debuggingManager';
@@ -95,6 +96,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         InterpreterPackageTracker
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        InstallPythonControllerCommands
     );
     serviceManager.addSingleton<NotebookCellLanguageService>(NotebookCellLanguageService, NotebookCellLanguageService);
     serviceManager.addBinding(NotebookCellLanguageService, IExtensionSingleActivationService);
