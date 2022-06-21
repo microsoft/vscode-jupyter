@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { IJupyterExtraSettings } from '../../extension-side/types';
+import { IJupyterExtraSettings } from '../../../platform/webviewHost/types';
 
 export function getDefaultSettings(): IJupyterExtraSettings {
     // Default settings for tests

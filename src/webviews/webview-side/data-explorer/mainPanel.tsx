@@ -32,7 +32,7 @@ import {
     ColumnType,
     IGetSliceRequest
 } from '../../extension-side/dataviewer/types';
-import { IJupyterExtraSettings } from '../../extension-side/types';
+import { IJupyterExtraSettings } from '../../../platform/webviewHost/types';
 initializeIcons(); // Register all FluentUI icons being used to prevent developer console errors
 
 const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor', 'DataArray']);

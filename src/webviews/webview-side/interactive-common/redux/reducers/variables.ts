@@ -13,7 +13,7 @@ import {
     IInteractiveWindowMapping,
     SharedMessages
 } from '../../../../../platform/messageTypes';
-import { IJupyterExtraSettings } from '../../../../extension-side/types';
+import { IJupyterExtraSettings } from '../../../../../platform/webviewHost/types';
 import { BaseReduxActionPayload } from '../../../../types';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../../react-common/reduxUtils';
 import { postActionToExtension } from '../helpers';

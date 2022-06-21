@@ -12,8 +12,8 @@ import { IServiceManager } from '../platform/ioc/types';
 import { INotebookWatcher, IVariableViewProvider } from '../webviews/extension-side/variablesView/types';
 import { VariableViewActivationService } from '../webviews/extension-side/variablesView/variableViewActivationService';
 import { VariableViewProvider } from '../webviews/extension-side/variablesView/variableViewProvider';
-import { WebviewPanelProvider } from '../webviews/extension-side/webviewHost/webviewPanelProvider';
-import { WebviewViewProvider } from '../webviews/extension-side/webviewHost/webviewViewProvider';
+import { WebviewPanelProvider } from '../platform/webviewHost/webviewPanelProvider';
+import { WebviewViewProvider } from '../platform/webviewHost/webviewViewProvider';
 import { JupyterVariableDataProvider } from '../webviews/extension-side/dataviewer/jupyterVariableDataProvider';
 import { JupyterVariableDataProviderFactory } from '../webviews/extension-side/dataviewer/jupyterVariableDataProviderFactory';
 import {

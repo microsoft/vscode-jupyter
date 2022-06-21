@@ -17,7 +17,7 @@ import { Toolbar } from './toolbar';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { SharedMessages } from '../../../platform/messageTypes';
 import { IPlotViewerMapping, PlotViewerMessages } from '../../extension-side/plotting/types';
-import { IJupyterExtraSettings } from '../../extension-side/types';
+import { IJupyterExtraSettings } from '../../../platform/webviewHost/types';
 import { RegExpValues } from '../common/constants';
 
 // Our css has to come after in order to override body styles

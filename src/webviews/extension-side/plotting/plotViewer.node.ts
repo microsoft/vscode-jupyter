@@ -20,7 +20,7 @@ import { IConfigurationService, IDisposable } from '../../../platform/common/typ
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import * as localize from '../../../platform/common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
-import { WebviewPanelHost } from '../webviewHost/webviewPanelHost';
+import { WebviewPanelHost } from '../../../platform/webviewHost/webviewPanelHost';
 import { joinPath } from '../../../platform/vscode-path/resources';
 import { noop } from '../../../platform/common/utils/misc';
 

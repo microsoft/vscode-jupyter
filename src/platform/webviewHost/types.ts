@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { WebviewViewProvider } from 'vscode';
-import { IJupyterSettings } from '../../platform/common/types';
+import { IJupyterSettings } from '../common/types';
 
 export interface IJupyterExtraSettings extends IJupyterSettings {
     extraSettings: {
