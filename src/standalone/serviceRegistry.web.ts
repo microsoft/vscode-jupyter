@@ -2,38 +2,38 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { IWebviewViewProvider, IWebviewPanelProvider } from '../../platform/common/application/types';
-import { IServiceManager } from '../../platform/ioc/types';
-import { WebviewViewProvider } from './webviewViews/webviewViewProvider';
-import { WebviewPanelProvider } from './webviewPanels/webviewPanelProvider';
-import { IExtensionActivationManager, IExtensionSingleActivationService } from '../../platform/activation/types';
-import { VariableViewActivationService } from './variablesView/variableViewActivationService';
-import { INotebookWatcher, IVariableViewProvider } from './variablesView/types';
-import { VariableViewProvider } from './variablesView/variableViewProvider';
-import { JupyterVariableDataProvider } from './dataviewer/jupyterVariableDataProvider';
-import { JupyterVariableDataProviderFactory } from './dataviewer/jupyterVariableDataProviderFactory';
+import { IWebviewViewProvider, IWebviewPanelProvider } from '../platform/common/application/types';
+import { IServiceManager } from '../platform/ioc/types';
+import { WebviewViewProvider } from '../webviews/extension-side/webviewViews/webviewViewProvider';
+import { WebviewPanelProvider } from '../webviews/extension-side/webviewPanels/webviewPanelProvider';
+import { IExtensionActivationManager, IExtensionSingleActivationService } from '../platform/activation/types';
+import { VariableViewActivationService } from '../webviews/extension-side/variablesView/variableViewActivationService';
+import { INotebookWatcher, IVariableViewProvider } from '../webviews/extension-side/variablesView/types';
+import { VariableViewProvider } from '../webviews/extension-side/variablesView/variableViewProvider';
+import { JupyterVariableDataProvider } from '../webviews/extension-side/dataviewer/jupyterVariableDataProvider';
+import { JupyterVariableDataProviderFactory } from '../webviews/extension-side/dataviewer/jupyterVariableDataProviderFactory';
 import {
     IDataViewer,
     IDataViewerFactory,
     IJupyterVariableDataProvider,
     IJupyterVariableDataProviderFactory
-} from './dataviewer/types';
-import { DataViewerCommandRegistry } from './dataviewer/dataViewerCommandRegistry';
+} from '../webviews/extension-side/dataviewer/types';
+import { DataViewerCommandRegistry } from '../webviews/extension-side/dataviewer/dataViewerCommandRegistry';
 import { CommandRegistry as ExportCommandRegistry } from './import-export/commandRegistry';
-import { NotebookWatcher } from './variablesView/notebookWatcher';
-import { DataViewerFactory } from './dataviewer/dataViewerFactory';
+import { NotebookWatcher } from '../webviews/extension-side/variablesView/notebookWatcher';
+import { DataViewerFactory } from '../webviews/extension-side/dataviewer/dataViewerFactory';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from './renderer';
 import { ActiveEditorContextService } from './context/activeEditorContext';
 import { GlobalActivation } from './activation/globalActivation';
-import { DataViewer } from './dataviewer/dataViewer';
-import { INotebookExporter } from '../../kernels/jupyter/types';
+import { DataViewer } from '../webviews/extension-side/dataviewer/dataViewer';
+import { INotebookExporter } from '../kernels/jupyter/types';
 import { JupyterExporter } from './import-export/jupyterExporter';
 import { JupyterKernelServiceFactory } from './api/kernelApi';
 import { IExportedKernelServiceFactory } from './api/api';
 import { ApiAccessService } from './api/apiAccessService';
 import { ExtensionActivationManager } from './activation/activationManager';
 import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
-import { IExtensionContext } from '../../platform/common/types';
+import { IExtensionContext } from '../platform/common/types';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);

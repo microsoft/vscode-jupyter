@@ -6,44 +6,44 @@ import {
     IExtensionActivationManager,
     IExtensionSingleActivationService,
     IExtensionSyncActivationService
-} from '../../platform/activation/types';
-import { IWebviewViewProvider, IWebviewPanelProvider } from '../../platform/common/application/types';
-import { IServiceManager } from '../../platform/ioc/types';
-import { INotebookWatcher, IVariableViewProvider } from './variablesView/types';
-import { VariableViewActivationService } from './variablesView/variableViewActivationService';
-import { VariableViewProvider } from './variablesView/variableViewProvider';
-import { WebviewPanelProvider } from './webviewPanels/webviewPanelProvider';
-import { WebviewViewProvider } from './webviewViews/webviewViewProvider';
-import { JupyterVariableDataProvider } from './dataviewer/jupyterVariableDataProvider';
-import { JupyterVariableDataProviderFactory } from './dataviewer/jupyterVariableDataProviderFactory';
+} from '../platform/activation/types';
+import { IWebviewViewProvider, IWebviewPanelProvider } from '../platform/common/application/types';
+import { IServiceManager } from '../platform/ioc/types';
+import { INotebookWatcher, IVariableViewProvider } from '../webviews/extension-side/variablesView/types';
+import { VariableViewActivationService } from '../webviews/extension-side/variablesView/variableViewActivationService';
+import { VariableViewProvider } from '../webviews/extension-side/variablesView/variableViewProvider';
+import { WebviewPanelProvider } from '../webviews/extension-side/webviewPanels/webviewPanelProvider';
+import { WebviewViewProvider } from '../webviews/extension-side/webviewViews/webviewViewProvider';
+import { JupyterVariableDataProvider } from '../webviews/extension-side/dataviewer/jupyterVariableDataProvider';
+import { JupyterVariableDataProviderFactory } from '../webviews/extension-side/dataviewer/jupyterVariableDataProviderFactory';
 import {
     IDataViewer,
     IDataViewerDependencyService,
     IDataViewerFactory,
     IJupyterVariableDataProvider,
     IJupyterVariableDataProviderFactory
-} from './dataviewer/types';
-import { INotebookExporter, INotebookImporter } from '../../kernels/jupyter/types';
+} from '../webviews/extension-side/dataviewer/types';
+import { INotebookExporter, INotebookImporter } from '../kernels/jupyter/types';
 import { JupyterExporter } from './import-export/jupyterExporter';
 import { JupyterImporter } from './import-export/jupyterImporter.node';
 import { CommandRegistry as ExportCommandRegistry } from './import-export/commandRegistry';
 import { ServerPreload } from './serverPreload/serverPreload.node';
-import { RendererCommunication } from './plotView/rendererCommunication.node';
-import { PlotSaveHandler } from './plotView/plotSaveHandler.node';
-import { PlotViewHandler } from './plotView/plotViewHandler.node';
-import { DataViewerCommandRegistry } from './dataviewer/dataViewerCommandRegistry';
-import { DataViewer } from './dataviewer/dataViewer';
-import { IPlotViewer, IPlotViewerProvider } from './plotting/types';
-import { PlotViewer } from './plotting/plotViewer.node';
-import { DataViewerDependencyService } from './dataviewer/dataViewerDependencyService.node';
-import { PlotViewerProvider } from './plotting/plotViewerProvider.node';
-import { DataViewerFactory } from './dataviewer/dataViewerFactory';
-import { NotebookWatcher } from './variablesView/notebookWatcher';
+import { RendererCommunication } from '../webviews/extension-side/plotView/rendererCommunication.node';
+import { PlotSaveHandler } from '../webviews/extension-side/plotView/plotSaveHandler.node';
+import { PlotViewHandler } from '../webviews/extension-side/plotView/plotViewHandler.node';
+import { DataViewerCommandRegistry } from '../webviews/extension-side/dataviewer/dataViewerCommandRegistry';
+import { DataViewer } from '../webviews/extension-side/dataviewer/dataViewer';
+import { IPlotViewer, IPlotViewerProvider } from '../webviews/extension-side/plotting/types';
+import { PlotViewer } from '../webviews/extension-side/plotting/plotViewer.node';
+import { DataViewerDependencyService } from '../webviews/extension-side/dataviewer/dataViewerDependencyService.node';
+import { PlotViewerProvider } from '../webviews/extension-side/plotting/plotViewerProvider.node';
+import { DataViewerFactory } from '../webviews/extension-side/dataviewer/dataViewerFactory';
+import { NotebookWatcher } from '../webviews/extension-side/variablesView/notebookWatcher';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from './renderer';
-import { ExtensionRecommendationService } from './extensionRecommendation.node';
+import { ExtensionRecommendationService } from './recommendation/extensionRecommendation.node';
 import { ActiveEditorContextService } from './context/activeEditorContext';
 import { AmlComputeContext } from './context/amlContext.node';
-import { IImportTracker, ImportTracker } from './importTracker.node';
+import { IImportTracker, ImportTracker } from './import-export/importTracker.node';
 import { GlobalActivation } from './activation/globalActivation';
 import { JupyterKernelServiceFactory } from './api/kernelApi';
 import { IExportedKernelServiceFactory } from './api/api';
@@ -51,7 +51,7 @@ import { ApiAccessService } from './api/apiAccessService';
 import { WorkspaceActivation } from './activation/workspaceActivation.node';
 import { ExtensionActivationManager } from './activation/activationManager';
 import { DataScienceSurveyBanner, ISurveyBanner } from './survey/dataScienceSurveyBanner.node';
-import { IExtensionContext } from '../../platform/common/types';
+import { IExtensionContext } from '../platform/common/types';
 import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {

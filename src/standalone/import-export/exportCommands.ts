@@ -4,22 +4,22 @@
 'use strict';
 
 import { NotebookDocument, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
-import { getLocString } from '../../webview-side/react-common/locReactSide';
-import { ICommandNameArgumentTypeMapping } from '../../../platform/common/application/commands';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../../platform/common/application/types';
-import { traceInfo } from '../../../platform/logging';
-import { IDisposable } from '../../../platform/common/types';
-import { DataScience } from '../../../platform/common/utils/localize';
-import { isUri, noop } from '../../../platform/common/utils/misc';
-import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { INotebookControllerManager } from '../../../notebooks/types';
-import { Commands, Telemetry } from '../../../platform/common/constants';
-import { IFileConverter, ExportFormat } from '../../../notebooks/export/types';
-import { IInteractiveWindowProvider } from '../../../interactive-window/types';
-import { IFileSystem } from '../../../platform/common/platform/types';
-import { getNotebookMetadata } from '../../../platform/common/utils';
-import { isPythonNotebook } from '../../../kernels/helpers';
+import { getLocString } from '../../webviews/webview-side/react-common/locReactSide';
+import { ICommandNameArgumentTypeMapping } from '../../platform/common/application/commands';
+import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import { traceInfo } from '../../platform/logging';
+import { IDisposable } from '../../platform/common/types';
+import { DataScience } from '../../platform/common/utils/localize';
+import { isUri, noop } from '../../platform/common/utils/misc';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
+import { sendTelemetryEvent } from '../../telemetry';
+import { INotebookControllerManager } from '../../notebooks/types';
+import { Commands, Telemetry } from '../../platform/common/constants';
+import { IFileConverter, ExportFormat } from '../../notebooks/export/types';
+import { IInteractiveWindowProvider } from '../../interactive-window/types';
+import { IFileSystem } from '../../platform/common/platform/types';
+import { getNotebookMetadata } from '../../platform/common/utils';
+import { isPythonNotebook } from '../../kernels/helpers';
 
 interface IExportQuickPickItem extends QuickPickItem {
     handler(): void;

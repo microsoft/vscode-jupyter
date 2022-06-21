@@ -4,22 +4,22 @@
 'use strict';
 
 import { ExtensionMode, NotebookController, NotebookDocument } from 'vscode';
-import { JupyterConnection } from '../../../kernels/jupyter/jupyterConnection';
-import { computeServerId, generateUriFromRemoteProvider } from '../../../kernels/jupyter/jupyterUtils';
-import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
+import { JupyterConnection } from '../../kernels/jupyter/jupyterConnection';
+import { computeServerId, generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
+import { JupyterServerSelector } from '../../kernels/jupyter/serverSelector';
 import {
     IJupyterUriProvider,
     IJupyterUriProviderRegistration,
     JupyterServerUriHandle
-} from '../../../kernels/jupyter/types';
-import { INotebookControllerManager, INotebookEditorProvider } from '../../../notebooks/types';
-import { IDataViewerDataProvider, IDataViewerFactory } from '../dataviewer/types';
+} from '../../kernels/jupyter/types';
+import { INotebookControllerManager, INotebookEditorProvider } from '../../notebooks/types';
+import { IDataViewerDataProvider, IDataViewerFactory } from '../../webviews/extension-side/dataviewer/types';
 import { IExportedKernelService } from './extension';
-import { IPythonApiProvider, PythonApi } from '../../../platform/api/types';
-import { isTestExecution } from '../../../platform/common/constants';
-import { IExtensionContext } from '../../../platform/common/types';
-import { IServiceContainer, IServiceManager } from '../../../platform/ioc/types';
-import { traceError } from '../../../platform/logging';
+import { IPythonApiProvider, PythonApi } from '../../platform/api/types';
+import { isTestExecution } from '../../platform/common/constants';
+import { IExtensionContext } from '../../platform/common/types';
+import { IServiceContainer, IServiceManager } from '../../platform/ioc/types';
+import { traceError } from '../../platform/logging';
 
 export const IExportedKernelServiceFactory = Symbol('IExportedKernelServiceFactory');
 export interface IExportedKernelServiceFactory {

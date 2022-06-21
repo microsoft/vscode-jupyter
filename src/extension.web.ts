@@ -39,7 +39,7 @@ import {
     window,
     workspace
 } from 'vscode';
-import { buildApi, IExtensionApi } from './webviews/extension-side/api/api';
+import { buildApi, IExtensionApi } from './standalone/api/api';
 import { IApplicationEnvironment, ICommandManager } from './platform/common/application/types';
 import { traceError } from './platform/logging';
 import {
@@ -70,10 +70,10 @@ import { registerTypes as registerNotebookTypes } from './notebooks/serviceRegis
 import { registerTypes as registerInteractiveTypes } from './interactive-window/serviceRegistry.web';
 import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry.web';
 import { registerTypes as registerTerminalTypes } from './platform/terminals/serviceRegistry.web';
-import { registerTypes as registerWebviewTypes } from './webviews/extension-side/serviceRegistry.web';
+import { registerTypes as registerStandaloneTypes } from './standalone/serviceRegistry.web';
 import { IExtensionActivationManager } from './platform/activation/types';
 import { isCI, isTestExecution, JUPYTER_OUTPUT_CHANNEL, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants';
-import { getJupyterOutputChannel } from './webviews/extension-side/devTools/jupyterOutputChannel';
+import { getJupyterOutputChannel } from './standalone/devTools/jupyterOutputChannel';
 import { registerLogger, setLoggingLevel } from './platform/logging';
 import { Container } from 'inversify/lib/container/container';
 import { ServiceContainer } from './platform/ioc/container';
@@ -290,7 +290,7 @@ async function activateLegacy(
     registerInteractiveTypes(serviceManager);
     registerIntellisenseTypes(serviceManager, isDevMode);
     registerTerminalTypes(serviceManager);
-    registerWebviewTypes(context, serviceManager, isDevMode);
+    registerStandaloneTypes(context, serviceManager, isDevMode);
 
     // Load the two data science experiments that we need to register types
     // Await here to keep the register method sync

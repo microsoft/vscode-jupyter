@@ -45,7 +45,7 @@ No description provided
 
 ## Locations Used
 
-[src/webviews/extension-side/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/import-export/exportCommands.ts)
+[src/standalone/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/import-export/exportCommands.ts)
 ```typescript
             if (pickedItem !== undefined) {
                 pickedItem.handler();
@@ -57,7 +57,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/import-export/exportCommands.ts)
+[src/standalone/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/import-export/exportCommands.ts)
 ```typescript
                 label: DataScience.exportPythonQuickPickLabel(),
                 picked: true,
@@ -69,7 +69,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/import-export/exportCommands.ts)
+[src/standalone/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/import-export/exportCommands.ts)
 ```typescript
                     label: DataScience.exportHTMLQuickPickLabel(),
                     picked: false,
@@ -81,7 +81,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/import-export/exportCommands.ts)
+[src/standalone/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/import-export/exportCommands.ts)
 ```typescript
                     label: DataScience.exportPDFQuickPickLabel(),
                     picked: false,
@@ -1109,7 +1109,7 @@ No description provided
 
 ## Locations Used
 
-[src/webviews/extension-side/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/import-export/exportCommands.ts)
+[src/standalone/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/import-export/exportCommands.ts)
 ```typescript
                 this.controllers.getSelectedNotebookController(sourceDocument)?.connection.interpreter ||
                 this.controllers.getPreferredNotebookController(sourceDocument)?.connection.interpreter;
@@ -1594,7 +1594,7 @@ No description provided
 
 ## Locations Used
 
-[src/webviews/extension-side/api/apiAccessService.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/apiAccessService.ts)
+[src/standalone/api/apiAccessService.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/api/apiAccessService.ts)
 ```typescript
         const extensionPermissions = this.globalState.get<ApiExtensionInfo | undefined>(API_ACCESS_GLOBAL_KEY);
         const extensionPermission = extensionPermissions?.find((item) => item.extensionId === info.extensionId);
@@ -1606,7 +1606,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/api/apiAccessService.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/apiAccessService.ts)
+[src/standalone/api/apiAccessService.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/api/apiAccessService.ts)
 ```typescript
                     return this.globalState.update(API_ACCESS_GLOBAL_KEY, extensionPermissions);
                 })
@@ -1635,7 +1635,7 @@ No description provided
 
 ## Locations Used
 
-[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
+[src/standalone/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/api/kernelApi.ts)
 ```typescript
         KernelConnectionMetadata
     >();
@@ -1647,7 +1647,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
+[src/standalone/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/api/kernelApi.ts)
 ```typescript
         return this._onDidChangeKernelSpecifications.event;
     }
@@ -1659,7 +1659,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
+[src/standalone/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/api/kernelApi.ts)
 ```typescript
         );
     }
@@ -1671,7 +1671,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
+[src/standalone/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/api/kernelApi.ts)
 ```typescript
         return items.map((item) => this.translateKernelConnectionMetadataToExportedType(item));
     }
@@ -1683,7 +1683,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
+[src/standalone/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/api/kernelApi.ts)
 ```typescript
         return kernels;
     }
@@ -1695,7 +1695,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
+[src/standalone/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/api/kernelApi.ts)
 ```typescript
         }
     }
@@ -1707,7 +1707,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
+[src/standalone/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/api/kernelApi.ts)
 ```typescript
         return this.startOrConnect(spec, uri);
     }
@@ -3050,7 +3050,7 @@ No description provided
 
 ## Locations Used
 
-[src/webviews/extension-side/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/extensionRecommendation.node.ts)
+[src/standalone/recommendation/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/recommendation/extensionRecommendation.node.ts)
 ```typescript
             `[${extensionInfo.displayName}](${extensionInfo.extensionLink})`,
             language
@@ -3062,7 +3062,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/extensionRecommendation.node.ts)
+[src/standalone/recommendation/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/recommendation/extensionRecommendation.node.ts)
 ```typescript
         );
         switch (selection) {
@@ -3074,7 +3074,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/extensionRecommendation.node.ts)
+[src/standalone/recommendation/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/recommendation/extensionRecommendation.node.ts)
 ```typescript
                 break;
             }
@@ -3086,7 +3086,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/extensionRecommendation.node.ts)
+[src/standalone/recommendation/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/recommendation/extensionRecommendation.node.ts)
 ```typescript
                 break;
             }
@@ -3098,7 +3098,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/extensionRecommendation.node.ts)
+[src/standalone/recommendation/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/recommendation/extensionRecommendation.node.ts)
 ```typescript
                 break;
             }
@@ -8335,7 +8335,7 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/activation/globalActivation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/activation/globalActivation.ts)
+[src/standalone/activation/globalActivation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/activation/globalActivation.ts)
 ```typescript
                     resultSettings[k] = currentValue;
                 }
@@ -9140,7 +9140,7 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/importTracker.node.ts)
+[src/standalone/import-export/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/import-export/importTracker.node.ts)
 ```typescript
         // Hash the package name so that we will never accidentally see a
         // user's private package name.
@@ -9180,7 +9180,7 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/importTracker.node.ts)
+[src/standalone/import-export/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/import-export/importTracker.node.ts)
 ```typescript
         }
     }
@@ -9192,7 +9192,7 @@ No properties for event
 ```
 
 
-[src/webviews/extension-side/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/importTracker.node.ts)
+[src/standalone/import-export/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/import-export/importTracker.node.ts)
 ```typescript
         this.lookForImports(lines);
     }
@@ -9204,7 +9204,7 @@ No properties for event
 ```
 
 
-[src/webviews/extension-side/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/importTracker.node.ts)
+[src/standalone/import-export/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/import-export/importTracker.node.ts)
 ```typescript
         this.lookForImports(result);
     }

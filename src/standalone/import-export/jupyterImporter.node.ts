@@ -1,22 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../platform/common/extensions';
+import '../../platform/common/extensions';
 
 import { inject, injectable } from 'inversify';
 
 import { Uri } from 'vscode';
-import { Identifiers, CodeSnippets } from '../../../platform/common/constants';
-import { IDisposableRegistry, IConfigurationService } from '../../../platform/common/types';
-import { DataScience } from '../../../platform/common/utils/localize';
-import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { noop } from '../../../platform/common/utils/misc';
+import { Identifiers, CodeSnippets } from '../../platform/common/constants';
+import { IDisposableRegistry, IConfigurationService } from '../../platform/common/types';
+import { DataScience } from '../../platform/common/utils/localize';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
+import { noop } from '../../platform/common/utils/misc';
 import {
     INotebookImporter,
     INbConvertInterpreterDependencyChecker,
     INbConvertExportToPythonService
-} from '../../../kernels/jupyter/types';
-import { IFileSystemNode } from '../../../platform/common/platform/types.node';
+} from '../../kernels/jupyter/types';
+import { IFileSystemNode } from '../../platform/common/platform/types.node';
 
 @injectable()
 export class JupyterImporter implements INotebookImporter {

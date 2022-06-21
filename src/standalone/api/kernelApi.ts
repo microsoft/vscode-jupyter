@@ -8,14 +8,14 @@ import {
     IKernelProvider,
     IKernel,
     KernelConnectionMetadata as IKernelKernelConnectionMetadata
-} from '../../../kernels/types';
-import { INotebookControllerManager } from '../../../notebooks/types';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { traceInfo } from '../../../platform/logging';
-import { IDisposable, IDisposableRegistry, IExtensions } from '../../../platform/common/types';
-import { PromiseChain } from '../../../platform/common/utils/async';
-import { IKernelSocket as ExtensionKernelSocket } from '../../../kernels/types';
-import { sendTelemetryEvent } from '../../../telemetry';
+} from '../../kernels/types';
+import { INotebookControllerManager } from '../../notebooks/types';
+import { disposeAllDisposables } from '../../platform/common/helpers';
+import { traceInfo } from '../../platform/logging';
+import { IDisposable, IDisposableRegistry, IExtensions } from '../../platform/common/types';
+import { PromiseChain } from '../../platform/common/utils/async';
+import { IKernelSocket as ExtensionKernelSocket } from '../../kernels/types';
+import { sendTelemetryEvent } from '../../telemetry';
 import { ApiAccessService } from './apiAccessService';
 import {
     ActiveKernel,
@@ -25,10 +25,10 @@ import {
     KernelConnectionMetadata,
     WebSocketData
 } from './extension';
-import { JupyterNotebookView, Telemetry } from '../../../platform/common/constants';
-import { KernelConnector } from '../../../notebooks/controllers/kernelConnector';
-import { DisplayOptions } from '../../../kernels/displayOptions';
-import { IServiceContainer } from '../../../platform/ioc/types';
+import { JupyterNotebookView, Telemetry } from '../../platform/common/constants';
+import { KernelConnector } from '../../notebooks/controllers/kernelConnector';
+import { DisplayOptions } from '../../kernels/displayOptions';
+import { IServiceContainer } from '../../platform/ioc/types';
 import { IExportedKernelServiceFactory } from './api';
 
 @injectable()

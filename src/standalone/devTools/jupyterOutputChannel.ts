@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { window, workspace } from 'vscode';
-import { IDisposableRegistry, IOutputChannel } from '../../../platform/common/types';
-import * as localize from '../../../platform/common/utils/localize';
+import { IDisposableRegistry, IOutputChannel } from '../../platform/common/types';
+import * as localize from '../../platform/common/utils/localize';
 
 /**
  * Returns the output panel for output related to Jupyter Server.

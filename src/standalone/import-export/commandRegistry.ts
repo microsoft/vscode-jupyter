@@ -1,16 +1,16 @@
 import { inject, injectable, optional } from 'inversify';
-import { IInteractiveWindowProvider } from '../../../interactive-window/types';
-import { INotebookControllerManager } from '../../../notebooks/types';
-import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { IInteractiveWindowProvider } from '../../interactive-window/types';
+import { INotebookControllerManager } from '../../notebooks/types';
+import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import {
     IApplicationShell,
     ICommandManager,
     IVSCodeNotebook,
     IWorkspaceService
-} from '../../../platform/common/application/types';
-import { IFileSystem } from '../../../platform/common/platform/types';
-import { IDisposableRegistry } from '../../../platform/common/types';
-import { IFileConverter } from '../../../notebooks/export/types';
+} from '../../platform/common/application/types';
+import { IFileSystem } from '../../platform/common/platform/types';
+import { IDisposableRegistry } from '../../platform/common/types';
+import { IFileConverter } from '../../notebooks/export/types';
 import { ExportCommands } from './exportCommands';
 
 @injectable()
