@@ -301,15 +301,19 @@ module.exports = {
                         message: 'Importing node modules into extension.web.ts is not allowed.'
                     },
                     {
-                        target: './src/notebooks/**/*.ts',
-                        from: './src/interactive-window/**/*.ts',
-                        message:
-                            'Importing modules from ./src/interactive-window into ./src/notebooks code is not allowed.'
+                        target: './src/kernels/**/*.ts',
+                        from: './src/**[!platform,telemetry,kernels]**/**/*.ts',
+                        message: 'Only modules from ./src/platform and ./src/telemetry can be imported into ./src/kernels.'
                     },
                     {
-                        target: './src/kernels/**/*.ts',
-                        from: './src/notebooks/**/*.ts',
-                        message: 'Importing modules from ./src/notebooks into ./src/kernels code is not allowed.'
+                        target: './src/notebooks/**/*.ts',
+                        from: './src/**[!platform,telemetry,kernels,notebooks]**/**/*.ts',
+                        message: 'Only modules from ./src/platform, ./src/telemetry and ./src/kernels can be imported into ./src/notebooks.'
+                    },
+                    {
+                        target: './src/interactive-window/**/*.ts',
+                        from: './src/**webview**/**/*.ts',
+                        message: 'Only modules from ./src/platform, ./src/telemetry, ./src/kernels and ./src/notebooks can be imported into ./src/interactive-window.'
                     },
                     {
                         target: './src/telemetry/**/**[!types]**.ts',

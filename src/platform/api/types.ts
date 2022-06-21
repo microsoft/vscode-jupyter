@@ -5,7 +5,9 @@ import { Disposable, Event, QuickPickItem, Uri } from 'vscode';
 import * as lsp from 'vscode-languageserver-protocol';
 import { InterpreterUri, Resource } from '../common/types';
 import type { SemVer } from 'semver';
-import { EnvironmentType, IExportedKernelService, PythonVersion } from './extension';
+import { PythonVersion } from '../pythonEnvironments/info/pythonVersion';
+import { EnvironmentType } from '../pythonEnvironments/info';
+
 export type ILanguageServerConnection = Pick<
     lsp.ProtocolConnection,
     'sendRequest' | 'sendNotification' | 'onProgress' | 'sendProgress' | 'onNotification' | 'onRequest'
@@ -181,9 +183,4 @@ export interface IPythonDebuggerPathProvider {
 export const ILanguageServerProvider = Symbol('ILanguageServerProvider');
 export interface ILanguageServerProvider {
     getLanguageServer(resource?: InterpreterUri): Promise<ILanguageServer | undefined>;
-}
-
-export const IExportedKernelServiceFactory = Symbol('IExportedKernelServiceFactory');
-export interface IExportedKernelServiceFactory {
-    getService(): Promise<IExportedKernelService | undefined>;
 }

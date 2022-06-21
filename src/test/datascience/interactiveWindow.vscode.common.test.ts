@@ -268,6 +268,7 @@ for i in range(10):
         const interactiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
         await insertIntoInputEditor('dh = display(display_id=True)');
         await vscode.commands.executeCommand('interactive.execute');
+        await waitForLastCellToComplete(interactiveWindow);
 
         // Create cell 2
         await insertIntoInputEditor('dh.display("Hello")');

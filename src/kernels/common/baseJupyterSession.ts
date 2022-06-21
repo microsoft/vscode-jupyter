@@ -15,9 +15,9 @@ import { createDeferred, sleep, waitForPromise } from '../../platform/common/uti
 import * as localize from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { JupyterInvalidKernelError } from '../../platform/errors/jupyterInvalidKernelError';
-import { JupyterWaitForIdleError } from '../../platform/errors/jupyterWaitForIdleError';
-import { KernelInterruptTimeoutError } from '../../platform/errors/kernelInterruptTimeoutError';
+import { JupyterInvalidKernelError } from '../errors/jupyterInvalidKernelError';
+import { JupyterWaitForIdleError } from '../errors/jupyterWaitForIdleError';
+import { KernelInterruptTimeoutError } from '../errors/kernelInterruptTimeoutError';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
 import {
     IJupyterServerSession,
@@ -379,7 +379,9 @@ export abstract class BaseJupyterSession implements IJupyterSession {
                             const jupyterLabSerialize =
                                 require('@jupyterlab/services/lib/kernel/serialize') as typeof import('@jupyterlab/services/lib/kernel/serialize'); // NOSONAR
                             const message =
-                                typeof msg.msg === 'string' ? jupyterLabSerialize.deserialize(msg.msg) : msg.msg;
+                                typeof msg.msg === 'string' || msg.msg instanceof ArrayBuffer
+                                    ? jupyterLabSerialize.deserialize(msg.msg)
+                                    : msg.msg;
                             this._wrappedKernel.anyMessage.emit({ direction: msg.direction, msg: message });
                         }
                     } catch (ex) {

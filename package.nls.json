@@ -480,14 +480,6 @@
     "Common.canceled": "Canceled",
     "Common.cancel": "Cancel",
     "Common.yesPlease": "Yes, please",
-    "DataScience.importChangeDirectoryComment": {
-        "message": "{0} Change working directory from the workspace root to the ipynb file location. Turn this addition off with the DataScience.changeDirOnImportExport setting",
-        "comment": ["{Locked='DataScience.changeDirOnImportExport'}"]
-    },
-    "DataScience.exportChangeDirectoryComment": {
-        "message": "# Change directory to VS Code workspace root so that relative path loads work correctly. Turn this addition off with the DataScience.changeDirOnImportExport setting",
-        "comment": ["{Locked='DataScience.changeDirOnImportExport'}"]
-    },
     "DataScience.interruptKernelStatus": {
         "message": "Interrupting Jupyter Kernel",
         "comment": ["{Locked='Kernel'}"]
@@ -816,6 +808,7 @@
     "DataScience.enableCDNForWidgetsSetting": "Widgets require us to download supporting files from a 3rd party website. (Error loading {0}:{1}).",
     "DataScience.enableCDNForWidgetsButton": "Enable Downloads",
     "DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork": "Unable to find widget '{0}' version '{1}' from configured widget sources {2}. Expected behavior may be affected. Click [here](https://aka.ms/PVSCIPyWidgets) for more information.",
+    "DataScience.cdnWidgetScriptNotAccessibleWarningMessage": "Unable to download widget '{0}' from 3rd party website {1}, due to network access. Expected behavior may be affected. Click [here](https://aka.ms/PVSCIPyWidgets) for more information.",
     "DataScience.unhandledMessage": {
         "message": "Unhandled kernel message from a widget: {0} : {1}",
         "comment": ["{Locked='kernel'}"]

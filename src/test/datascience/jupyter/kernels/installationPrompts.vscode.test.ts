@@ -39,7 +39,7 @@ import {
     uninstallIPyKernel
 } from '../../helpers.node';
 import { INotebookControllerManager } from '../../../../notebooks/types';
-import { BaseKernelError, WrappedError } from '../../../../platform/errors/types';
+import { WrappedError } from '../../../../platform/errors/types';
 import { clearInstalledIntoInterpreterMemento } from '../../../../kernels/installer/productInstaller';
 import { ProductNames } from '../../../../kernels/installer/productNames';
 import { Product, IInstaller, InstallerResponse } from '../../../../kernels/installer/types';
@@ -68,6 +68,7 @@ import { getDisplayPathFromLocalFile } from '../../../../platform/common/platfor
 import { getOSType, OSType } from '../../../../platform/common/utils/platform';
 import { isUri } from '../../../../platform/common/utils/misc';
 import { hasErrorOutput, translateCellErrorOutput } from '../../../../kernels/execution/helpers';
+import { BaseKernelError } from '../../../../kernels/errors/types';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience Install IPyKernel (slow) (install)', function () {
@@ -331,7 +332,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         // Next, lets try to run again, but select a kernel that doesn't have ipykernel.
         // At this point we should get the prompt again for this new kernel.
         const promptOptions: WindowPromptStubButtonClickOptions = {
-            text: DataScience.selectKernel(),
+            result: DataScience.selectKernel(),
             clickImmediately: true
         };
         prompt = await hijackPrompt(
@@ -345,7 +346,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         const stub = sinon.stub(kernelSelector, 'selectKernel').callsFake(async function () {
             // Now that we have selected a kernel, next time we get the prompt again, just dismiss the prompt.
             promptOptions.dismissPrompt = true;
-            delete promptOptions.text;
+            delete promptOptions.result;
             // In tests, things hang as the IW isn't focused.
             activeInteractiveWindow.show(false).then(noop, noop);
             await waitForKernelToChange({ interpreterPath: venvNoRegPath, isInteractiveController: true });
@@ -403,7 +404,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         // Now install ipykernel and ensure we can run a cell & that it runs against the right environment.
         prompt.reset();
         promptOptions.dismissPrompt = false;
-        promptOptions.text = Common.install();
+        promptOptions.result = Common.install();
 
         await activeInteractiveWindow
             .addCode(`import sys${EOL}print(sys.executable)`, untitledPythonFile.uri, 0)
@@ -636,7 +637,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         const prompt = await hijackPrompt(
             'showInformationMessage',
             { contains: expectedPromptMessageSuffix },
-            { text: DataScience.selectKernel(), clickImmediately: true },
+            { result: DataScience.selectKernel(), clickImmediately: true },
             disposables
         );
 
@@ -750,7 +751,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         return hijackPrompt(
             'showInformationMessage',
             { contains: expectedPromptMessageSuffix },
-            { text: DataScience.selectKernel(), clickImmediately: true },
+            { result: DataScience.selectKernel(), clickImmediately: true },
             disposables
         );
     }
@@ -758,7 +759,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         return hijackPrompt(
             'showInformationMessage',
             { contains: expectedPromptMessageSuffix },
-            { text: Common.install(), clickImmediately: true },
+            { result: Common.install(), clickImmediately: true },
             disposables
         );
     }

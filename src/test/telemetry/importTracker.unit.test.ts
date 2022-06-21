@@ -19,7 +19,7 @@ import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable } from '../../platform/common/types';
 import { EventName } from '../../telemetry/constants';
 import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
-import { ImportTracker } from '../../platform/common/importTracker.node';
+import { ImportTracker } from '../../webviews/extension-side/importTracker.node';
 import { createDocument } from '../datascience/editor-integration/helpers';
 
 suite('Import Tracker', () => {

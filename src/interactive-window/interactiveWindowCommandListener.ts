@@ -40,8 +40,8 @@ import { JupyterInstallError } from '../platform/errors/jupyterInstallError';
 import { INotebookControllerManager, INotebookEditorProvider } from '../notebooks/types';
 import { KernelConnectionMetadata } from '../kernels/types';
 import { INotebookExporter, IJupyterExecution } from '../kernels/jupyter/types';
-import { IDataScienceErrorHandler } from '../platform/errors/types';
-import { IFileConverter, IExportDialog, ExportFormat } from '../platform/export/types';
+import { IDataScienceErrorHandler } from '../kernels/errors/types';
+import { IFileConverter, IExportDialog, ExportFormat } from '../notebooks/export/types';
 import { IStatusProvider } from '../platform/progress/types';
 import { generateCellsFromDocument } from './editor-integration/cellFactory';
 import { IInteractiveWindowProvider } from './types';
@@ -219,16 +219,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                     await this.waitForStatus(
                         async () => {
                             if (uri) {
-                                let directoryChange;
-                                const settings = this.configuration.getSettings(activeEditor.document.uri);
-                                if (settings.changeDirOnImportExport) {
-                                    directoryChange = uri;
-                                }
-
-                                const notebook = await this.jupyterExporter?.translateToNotebook(
-                                    cells,
-                                    getFilePath(directoryChange)
-                                );
+                                const notebook = await this.jupyterExporter?.translateToNotebook(cells);
                                 await this.fileSystem.writeFile(uri, JSON.stringify(notebook));
                             }
                         },
@@ -280,16 +271,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                     await this.waitForStatus(
                         async () => {
                             if (uri) {
-                                let directoryChange;
-                                const settings = this.configuration.getSettings(activeEditor.document.uri);
-                                if (settings.changeDirOnImportExport) {
-                                    directoryChange = uri;
-                                }
-
-                                const notebook = await this.jupyterExporter?.translateToNotebook(
-                                    cells,
-                                    getFilePath(directoryChange)
-                                );
+                                const notebook = await this.jupyterExporter?.translateToNotebook(cells);
                                 await this.fileSystem.writeFile(uri, JSON.stringify(notebook));
                             }
                         },

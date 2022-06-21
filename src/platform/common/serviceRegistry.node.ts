@@ -1,11 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../activation/types';
+import { IExtensionSingleActivationService } from '../activation/types';
 import { IExperimentService, IHttpClient } from '../common/types';
-import { AmlComputeContext } from './amlContext.node';
 import { IServiceManager } from '../ioc/types';
-import { ImportTracker } from './importTracker.node';
-import { IImportTracker } from '../../telemetry/types';
 import { ActiveResourceService } from './application/activeResource.node';
 import { ApplicationEnvironment } from './application/applicationEnvironment.node';
 import { ClipboardService } from './application/clipboard';
@@ -48,13 +45,11 @@ import {
     IsWindows
 } from './types';
 import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
-import { PortAttributesProviders } from './net/portAttributeProvider.node';
 import { LanguageInitializer } from '../../telemetry/languageInitializer';
 import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.node';
 import { registerTypes as processRegisterTypes } from './process/serviceRegistry.node';
 import { registerTypes as variableRegisterTypes } from './variables/serviceRegistry.node';
 import { RunInDedicatedExtensionHostCommandHandler } from './application/commands/runInDedicatedExtensionHost.node';
-import { ActiveEditorContextService } from './activeEditorContext';
 import { TerminalManager } from './application/terminalManager.node';
 
 // eslint-disable-next-line
@@ -83,8 +78,6 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
-    serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ImportTracker);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         LanguageInitializer
@@ -97,20 +90,6 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         RunInDedicatedExtensionHostCommandHandler
     );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        AmlComputeContext
-    );
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        PortAttributesProviders
-    );
-    serviceManager.addSingleton<AmlComputeContext>(AmlComputeContext, AmlComputeContext);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        ActiveEditorContextService
-    );
-
     registerPlatformTypes(serviceManager);
     processRegisterTypes(serviceManager);
     variableRegisterTypes(serviceManager);

@@ -20,15 +20,15 @@ import { createDeferred, createDeferredFromPromise, Deferred } from '../../platf
 import { DataScience } from '../../platform/common/utils/localize';
 import { sendKernelTelemetryEvent } from '../../kernels/telemetry/sendKernelTelemetryEvent';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { Commands } from '../../webviews/webview-side/common/constants';
+import { Commands } from '../../platform/common/constants';
 import { Telemetry } from '../../telemetry';
 import { clearInstalledIntoInterpreterMemento } from '../../kernels/installer/productInstaller';
 import { Product } from '../../kernels/installer/types';
 import { INotebookControllerManager, INotebookEditorProvider } from '../types';
 import { selectKernel } from './kernelSelector';
-import { KernelDeadError } from '../../platform/errors/kernelDeadError';
+import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
+import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { noop } from '../../platform/common/utils/misc';
-import { IDataScienceErrorHandler } from '../../platform/errors/types';
 import { IStatusProvider } from '../../platform/progress/types';
 import { IRawNotebookProvider } from '../../kernels/raw/types';
 import { IVSCodeNotebookController } from './types';

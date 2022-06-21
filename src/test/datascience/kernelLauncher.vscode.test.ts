@@ -15,7 +15,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import { traceInfo } from '../../platform/logging';
 import { IS_REMOTE_NATIVE_TEST } from '../constants.node';
 import { initialize } from '../initialize.node';
-import { PortAttributesProviders } from '../../platform/common/net/portAttributeProvider.node';
+import { PortAttributesProviders } from '../../kernels/port/portAttributeProvider.node';
 import { IDisposable } from '../../platform/common/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { CancellationTokenSource, PortAutoForwardAction } from 'vscode';

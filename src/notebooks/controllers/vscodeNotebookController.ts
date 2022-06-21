@@ -52,11 +52,10 @@ import { noop } from '../../platform/common/utils/misc';
 import { sendKernelTelemetryEvent } from '../../kernels/telemetry/sendKernelTelemetryEvent';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
-import { Commands } from '../../webviews/webview-side/common/constants';
+import { Commands } from '../../platform/common/constants';
 import { Telemetry } from '../../telemetry';
-import { IDataScienceErrorHandler, WrappedError } from '../../platform/errors/types';
+import { WrappedError } from '../../platform/errors/types';
 import { IPyWidgetMessages } from '../../platform/messageTypes';
-import { NotebookCellLanguageService } from '../../intellisense/cellLanguageService';
 import {
     getKernelConnectionPath,
     getRemoteKernelSessionInformation,
@@ -74,17 +73,13 @@ import {
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata
 } from '../../kernels/types';
-import { KernelDeadError } from '../../platform/errors/kernelDeadError';
+import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
 import { DisplayOptions } from '../../kernels/displayOptions';
-import {
-    getNotebookMetadata,
-    isJupyterNotebook,
-    sendNotebookOrKernelLanguageTelemetry
-} from '../../platform/common/utils';
+import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
 import { ConsoleForegroundColors, TraceOptions } from '../../platform/logging/types';
 import { KernelConnector } from './kernelConnector';
 import { IVSCodeNotebookController } from './types';
-import { ILocalResourceUriConverter } from '../../kernels/ipywidgets-message-coordination/types';
+import { ILocalResourceUriConverter } from '../../kernels/ipywidgets/types';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { CellExecutionCreator } from '../../kernels/execution/cellExecutionCreator';
 import {
@@ -94,6 +89,9 @@ import {
 } from '../../kernels/execution/helpers';
 import { KernelMessage } from '@jupyterlab/services';
 import { initializeInteractiveOrNotebookTelemetryBasedOnUserAction } from '../../kernels/telemetry/helper';
+import { NotebookCellLanguageService } from '../languages/cellLanguageService';
+import { IDataScienceErrorHandler } from '../../kernels/errors/types';
+import { sendNotebookOrKernelLanguageTelemetry } from '../telemetry/notebookOrKernelLanguageTelemetry';
 
 export class VSCodeNotebookController implements Disposable, IVSCodeNotebookController {
     private readonly _onNotebookControllerSelected: EventEmitter<{

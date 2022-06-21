@@ -5,27 +5,38 @@
 
 import * as fastDeepEqual from 'fast-deep-equal';
 import { EventEmitter } from 'events';
-import * as isonline from 'is-online';
 import { PostOffice } from '../../react-common/postOffice';
 import { warnAboutWidgetVersionsThatAreNotSupported } from '../common/incompatibleWidgetHandler';
 import { registerScripts } from '../common/requirejsRegistry';
 import { ScriptLoader } from './types';
 import { logMessage } from '../../react-common/logger';
-import { WidgetScriptSource } from '../../../../kernels/ipywidgets-message-coordination/types';
+import { WidgetScriptSource } from '../../../../kernels/ipywidgets/types';
 import { Deferred, createDeferred } from '../../../../platform/common/utils/async';
 import { SharedMessages, IPyWidgetMessages, IInteractiveWindowMapping } from '../../../../platform/messageTypes';
 import { IJupyterExtraSettings } from '../../../extension-side/types';
+import { isCDNReachable } from './helper';
+import { noop } from '../../../../platform/common/utils/misc';
+import { IDisposable } from '../../../../platform/common/types';
+import { disposeAllDisposables } from '../../../../platform/common/helpers';
 
 export class ScriptManager extends EventEmitter {
     public readonly widgetsRegisteredInRequireJs = new Set<string>();
+    private readonly disposables: IDisposable[] = [];
     private readonly widgetSourceRequests = new Map<
         string,
-        { deferred: Deferred<void>; timer: NodeJS.Timeout | number | undefined }
+        {
+            deferred: Deferred<void>;
+            timer: NodeJS.Timeout | number | undefined;
+            explicitlyRequested: boolean;
+            source?: 'cdn' | 'local' | 'remote';
+            requestId: string;
+        }
     >();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private previousKernelOptions?: any;
     private readonly registeredWidgetSources = new Map<string, WidgetScriptSource>();
     private timedoutWaitingForWidgetsToGetLoaded?: boolean;
+    private readonly isOnline = createDeferred<boolean>();
     private widgetsCanLoadFromCDN: boolean = false;
     // Total time to wait for a script to load. This includes ipywidgets making a request to extension for a Uri of a widget,
     // then extension replying back with the Uri (max 5 seconds round trip time).
@@ -34,8 +45,18 @@ export class ScriptManager extends EventEmitter {
     // Hence use 60 seconds.
     private readonly timeoutWaitingForScriptToLoad = 60_000;
     // List of widgets that must always be loaded using requirejs instead of using a CDN or the like.
-    constructor(private readonly postOffice: PostOffice) {
+    constructor(private readonly postOffice: PostOffice, cdnIsReachable = isCDNReachable()) {
         super();
+        this.isOnline.promise.catch(noop);
+        cdnIsReachable
+            .then((isOnline) => {
+                this.isOnline.resolve(isOnline);
+                this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_IsOnline, {
+                    isOnline
+                });
+            })
+            .catch((ex) => logMessage(`Failed to check if online ${ex.toString()}`));
+
         postOffice.addHandler({
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             handleMessage: (type: string, payload?: any) => {
@@ -44,6 +65,14 @@ export class ScriptManager extends EventEmitter {
                     this.widgetsCanLoadFromCDN = settings.widgetScriptSources.length > 0;
                 } else if (type === IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse) {
                     this.registerScriptSourceInRequirejs(payload as WidgetScriptSource);
+                } else if (type === IPyWidgetMessages.IPyWidgets_BaseUrlResponse) {
+                    const baseUrl = payload as string;
+                    if (baseUrl) {
+                        // Required by Jupyter Notebook widgets.
+                        // This base url is used to load additional resources.
+                        document.body.dataset.baseUrl = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+                        logMessage(`data-base-url set to ${baseUrl}`);
+                    }
                 } else if (type === IPyWidgetMessages.IPyWidgets_kernelOptions) {
                     logMessage(`Received IPyWidgets_kernelOptions in ScriptManager`);
                     if (this.previousKernelOptions && !fastDeepEqual(this.previousKernelOptions, payload)) {
@@ -58,6 +87,9 @@ export class ScriptManager extends EventEmitter {
                 return true;
             }
         });
+    }
+    public dispose() {
+        disposeAllDisposables(this.disposables);
     }
     public getScriptLoader(): ScriptLoader {
         return {
@@ -101,17 +133,29 @@ export class ScriptManager extends EventEmitter {
      * We need to check if it is available on CDN, if not then fallback to local FS.
      * Or check local FS then fall back to CDN (depending on the order defined by the user).
      */
-    public loadWidgetScript(moduleName: string, moduleVersion: string): Promise<void> {
+    public async loadWidgetScript(moduleName: string, moduleVersion: string): Promise<void> {
         // eslint-disable-next-line no-console
         logMessage(`Fetch IPyWidget source for ${moduleName}`);
+        const isOnline = await this.isOnline.promise;
         let request = this.widgetSourceRequests.get(moduleName);
+        const requestId = `${moduleName}:${moduleVersion}:${Date.now().toString()}`;
+
+        if (isOnline && request && !request.explicitlyRequested && request.source !== 'cdn') {
+            // If we're online and the widget was sourced from local/remote, try to fetch from CDN.
+            // Sometimes what can happen is the script sources are sourced from local, even if CDN is available.
+            // These scripts are sent from extension host as part of the startup.
+            // In such cases we should make an explicit request for the source.
+            request = undefined;
+        }
+
         if (!request) {
             request = {
                 deferred: createDeferred<void>(),
-                timer: undefined
+                timer: undefined,
+                explicitlyRequested: true,
+                requestId
             };
 
-            // If we timeout, then resolve this promise.
             // We don't want the calling code to unnecessary wait for too long.
             // Else UI will not get rendered due to blocking ipywidgets (at the end of the day ipywidgets gets loaded via kernel)
             // And kernel blocks the UI from getting processed.
@@ -137,36 +181,47 @@ export class ScriptManager extends EventEmitter {
                     this.timedoutWaitingForWidgetsToGetLoaded = true;
                 }
             }, timeoutTime);
-
+            this.disposables.push({
+                dispose() {
+                    try {
+                        if (request?.timer) {
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            clearTimeout(request.timer as any);
+                        }
+                    } catch {
+                        //
+                    }
+                }
+            });
             this.widgetSourceRequests.set(moduleName, request);
         }
         // Whether we have the scripts or not, send message to extension.
         // Useful telemetry and also we know it was explicity requested by ipywidgets.
         this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_WidgetScriptSourceRequest, {
             moduleName,
-            moduleVersion
+            moduleVersion,
+            requestId
         });
 
-        return request.deferred.promise
-            .then(() => {
-                const widgetSource = this.registeredWidgetSources.get(moduleName);
-                if (widgetSource) {
-                    warnAboutWidgetVersionsThatAreNotSupported(
-                        widgetSource,
-                        moduleVersion,
-                        this.widgetsCanLoadFromCDN,
-                        (info) =>
-                            this.emit('onWidgetVersionNotSupported', {
-                                moduleName: info.moduleName,
-                                moduleVersion: info.moduleVersion
-                            })
-                    );
-                }
-            })
-            .catch((ex) =>
-                // eslint-disable-next-line no-console
-                console.error(`Failed to load Widget Script from Extension for ${moduleName}, ${moduleVersion}`, ex)
-            );
+        try {
+            await request.deferred.promise;
+            const widgetSource = this.registeredWidgetSources.get(moduleName);
+            if (widgetSource) {
+                warnAboutWidgetVersionsThatAreNotSupported(
+                    widgetSource,
+                    moduleVersion,
+                    this.widgetsCanLoadFromCDN,
+                    (info) =>
+                        this.emit('onWidgetVersionNotSupported', {
+                            moduleName: info.moduleName,
+                            moduleVersion: info.moduleVersion
+                        })
+                );
+            }
+        } catch (ex) {
+            // eslint-disable-next-line no-console
+            console.error(`Failed to load Widget Script from Extension for ${moduleName}, ${moduleVersion}`, ex);
+        }
     }
 
     public handleLoadSuccess(className: string, moduleName: string, moduleVersion: string) {
@@ -196,24 +251,38 @@ export class ScriptManager extends EventEmitter {
             return;
         }
 
-        registerScripts(sources);
-
         // Now resolve promises (anything that was waiting for modules to get registered can carry on).
         sources.forEach((source) => {
-            this.registeredWidgetSources.set(source.moduleName, source);
-            this.widgetsRegisteredInRequireJs.add(source.moduleName);
+            // If we have a script from CDN, then don't overwrite that.
+            // We want to always give preference to the widgets from CDN.
+            const currentRegistration = this.registeredWidgetSources.get(source.moduleName);
+            if (!currentRegistration || (currentRegistration.source && currentRegistration.source !== 'cdn')) {
+                registerScripts([source]);
+                this.registeredWidgetSources.set(source.moduleName, source);
+                this.widgetsRegisteredInRequireJs.add(source.moduleName);
+            }
+
             // We have fetched the script sources for all of these modules.
             // In some cases we might not have the source, meaning we don't have it or couldn't find it.
             let request = this.widgetSourceRequests.get(source.moduleName);
             if (!request) {
                 request = {
                     deferred: createDeferred(),
-                    timer: undefined
+                    timer: undefined,
+                    source: source.source,
+                    requestId: source.requestId || '',
+                    explicitlyRequested: false
                 };
                 this.widgetSourceRequests.set(source.moduleName, request);
             }
-            request.deferred.resolve();
-            if (request.timer !== undefined) {
+            if (source.requestId && source.requestId === request!.requestId) {
+                request.source = source.source;
+                request.deferred.resolve();
+            } else if (!source.requestId) {
+                request.source = source.source;
+                request.deferred.resolve();
+            }
+            if (request.deferred.completed && request.timer !== undefined) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 clearTimeout(request.timer as any); // This is to make this work on Node and Browser
             }
@@ -234,7 +303,7 @@ export class ScriptManager extends EventEmitter {
         error: any,
         timedout: boolean = false
     ) {
-        const isOnline = await isonline({ timeout: 1000 });
+        const isOnline = await isCDNReachable();
         this.emit('onWidgetLoadError', { className, moduleName, moduleVersion, error, timedout, isOnline });
     }
 }

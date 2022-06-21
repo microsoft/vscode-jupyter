@@ -12,19 +12,15 @@ import { NotebookControllerManager } from './controllers/notebookControllerManag
 import { RemoteSwitcher } from './controllers/remoteSwitcher';
 import { NotebookCommandListener } from './notebookCommandListener';
 import { NotebookEditorProvider } from './notebookEditorProvider';
-import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms.node';
-import { PlotSaveHandler } from './outputs/plotSaveHandler.node';
-import { PlotViewHandler } from './outputs/plotViewHandler.node';
-import { RendererCommunication } from './outputs/rendererCommunication.node';
+import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms';
 import { INotebookCompletionProvider, INotebookControllerManager, INotebookEditorProvider } from './types';
 import { NotebookUsageTracker } from './notebookUsageTracker';
 import { IDataScienceCommandListener } from '../platform/common/types';
 import { CondaControllerRefresher } from './controllers/condaControllerRefresher.node';
-import { IntellisenseProvider } from '../intellisense/intellisenseProvider.node';
 import { RemoteKernelControllerWatcher } from './controllers/remoteKernelControllerWatcher';
 import { ITracebackFormatter } from '../kernels/types';
 import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
-import { IJupyterDebugService } from '../kernels/debugger/types';
+import { IDebuggingManager, IJupyterDebugService } from '../kernels/debugger/types';
 import { Identifiers } from '../platform/common/constants';
 import { JupyterDebugService } from './debugger/jupyterDebugService.node';
 import { NotebookIPyWidgetCoordinator } from './controllers/notebookIPyWidgetCoordinator';
@@ -32,16 +28,25 @@ import { RemoteKernelConnectionHandler } from './controllers/remoteKernelConnect
 import { JupyterServerSelectorCommand } from './serverSelector';
 import { InterpreterPackageTracker } from './telemetry/interpreterPackageTracker';
 import { InstallPythonControllerCommands } from './controllers/installPythonControllerCommands';
+import { NotebookCellLanguageService } from './languages/cellLanguageService';
+import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellLanguageService';
+import { DebuggingManager } from './debugger/debuggingManager';
+import { ExportBase } from './export/exportBase.node';
+import { ExportDialog } from './export/exportDialog';
+import { ExportFileOpener } from './export/exportFileOpener';
+import { ExportInterpreterFinder } from './export/exportInterpreterFinder.node';
+import { ExportToHTML } from './export/exportToHTML';
+import { ExportToPDF } from './export/exportToPDF';
+import { ExportToPython } from './export/exportToPython';
+import { ExportToPythonPlain } from './export/exportToPythonPlain';
+import { ExportUtil } from './export/exportUtil.node';
+import { FileConverter } from './export/fileConverter.node';
+import { IFileConverter, INbConvertExport, ExportFormat, IExport, IExportDialog, IExportBase } from './export/types';
+import { ExportUtilBase } from './export/exportUtil';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
     serviceManager.addSingleton<INotebookControllerManager>(INotebookControllerManager, NotebookControllerManager);
-    serviceManager.addSingleton<PlotSaveHandler>(PlotSaveHandler, PlotSaveHandler);
-    serviceManager.addSingleton<PlotViewHandler>(PlotViewHandler, PlotViewHandler);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSyncActivationService,
-        RendererCommunication
-    );
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelFilterUI);
     serviceManager.addBinding(INotebookControllerManager, IExtensionSyncActivationService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
@@ -64,7 +69,6 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         NotebookUsageTracker
     );
-    serviceManager.addSingleton<INotebookCompletionProvider>(INotebookCompletionProvider, IntellisenseProvider);
     serviceManager.addBinding(INotebookCompletionProvider, IExtensionSyncActivationService);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
@@ -97,4 +101,29 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         InstallPythonControllerCommands
     );
+    serviceManager.addSingleton<NotebookCellLanguageService>(NotebookCellLanguageService, NotebookCellLanguageService);
+    serviceManager.addBinding(NotebookCellLanguageService, IExtensionSingleActivationService);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        EmptyNotebookCellLanguageService
+    );
+
+    serviceManager.addSingleton<IDebuggingManager>(IDebuggingManager, DebuggingManager, undefined, [
+        IExtensionSingleActivationService
+    ]);
+
+    // File export/import
+    serviceManager.addSingleton<IFileConverter>(IFileConverter, FileConverter);
+    serviceManager.addSingleton<ExportInterpreterFinder>(ExportInterpreterFinder, ExportInterpreterFinder);
+    serviceManager.addSingleton<ExportFileOpener>(ExportFileOpener, ExportFileOpener);
+
+    serviceManager.addSingleton<IExportBase>(IExportBase, ExportBase);
+    serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToPDF, ExportFormat.pdf);
+    serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToHTML, ExportFormat.html);
+    serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToPython, ExportFormat.python);
+    serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportBase, 'Export Base');
+    serviceManager.addSingleton<IExport>(IExport, ExportToPythonPlain, ExportFormat.python);
+    serviceManager.addSingleton<ExportUtilBase>(ExportUtilBase, ExportUtilBase);
+    serviceManager.addSingleton<ExportUtil>(ExportUtil, ExportUtil);
+    serviceManager.addSingleton<IExportDialog>(IExportDialog, ExportDialog);
 }

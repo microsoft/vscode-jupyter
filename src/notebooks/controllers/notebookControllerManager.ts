@@ -40,7 +40,6 @@ import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { NotebookCellLanguageService } from '../../intellisense/cellLanguageService';
 import {
     LiveRemoteKernelConnectionMetadata,
     IKernelProvider,
@@ -67,8 +66,9 @@ import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
 import { INotebookMetadata } from '@jupyterlab/nbformat';
 import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConnectionType';
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
-import { ILocalResourceUriConverter } from '../../kernels/ipywidgets-message-coordination/types';
+import { ILocalResourceUriConverter } from '../../kernels/ipywidgets/types';
 import { isCancellationError } from '../../platform/common/cancellation';
+import { NotebookCellLanguageService } from '../languages/cellLanguageService';
 
 // Even after shutting down a kernel, the server API still returns the old information.
 // Re-query after 2 seconds to ensure we don't get stale information.

@@ -16,9 +16,9 @@ import {
 } from 'vscode';
 import { IVSCodeNotebook, ICommandManager, IApplicationShell } from '../platform/common/application/types';
 import { IConfigurationService, IDataScienceCommandListener, IDisposableRegistry } from '../platform/common/types';
-import { Commands } from '../webviews/webview-side/common/constants';
+import { Commands } from '../platform/common/constants';
 import { noop } from '../platform/common/utils/misc';
-import { NotebookCellLanguageService } from '../intellisense/cellLanguageService';
+import { NotebookCellLanguageService } from './languages/cellLanguageService';
 import { DisplayOptions } from '../kernels/displayOptions';
 import { IKernel, IKernelProvider } from '../kernels/types';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
@@ -27,11 +27,11 @@ import { traceInfoIfCI, traceInfo } from '../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../telemetry';
 import { trackKernelResourceInformation } from '../kernels/telemetry/helper';
 import { INotebookControllerManager, INotebookEditorProvider } from './types';
-import { IDataScienceErrorHandler } from '../platform/errors/types';
 import { IServiceContainer } from '../platform/ioc/types';
 import { endCellAndDisplayErrorsInCell } from '../kernels/execution/helpers';
 import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
 import { getAssociatedNotebookDocument } from '../kernels/helpers';
+import { IDataScienceErrorHandler } from '../kernels/errors/types';
 import { getNotebookMetadata } from '../platform/common/utils';
 import { KernelConnector } from './controllers/kernelConnector';
 

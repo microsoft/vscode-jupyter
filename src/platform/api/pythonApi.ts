@@ -7,7 +7,6 @@
 
 import { Disposable, EventEmitter, Event, Uri, workspace, ExtensionMode } from 'vscode';
 import { fsPathToUri } from '../vscode-path/utils';
-import { PythonEnvironment } from './extension';
 import {
     IPythonApiProvider,
     IPythonExtensionChecker,
@@ -28,6 +27,7 @@ import { getDisplayPath, getFilePath } from '../common/platform/fs-paths';
 import { IInterpreterSelector, IInterpreterQuickPickItem } from '../interpreter/configuration/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { areInterpreterPathsSame } from '../pythonEnvironments/info/interpreter';
+import { PythonEnvironment } from '../pythonEnvironments/info';
 import { TraceOptions } from '../logging/types';
 import { noop } from '../common/utils/misc';
 

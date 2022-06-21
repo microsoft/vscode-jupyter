@@ -50,7 +50,6 @@ export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
             this.knownViewers.add(dataExplorer);
             dataExplorer.onDidDisposeDataViewer(this.updateOpenDataViewers, this, this.disposables);
             dataExplorer.onDidChangeDataViewerViewState(this.updateViewStateContext, this, this.disposables);
-
             // Show the window and the data
             await dataExplorer.showData(dataProvider, title);
             result = dataExplorer;

@@ -87,7 +87,8 @@
             "problemMatcher": [],
             "options": {
                 "env": {
-                    "CI_PYTHON_PATH": "" // Update with path to real python interpereter used for testing.
+                    "CI_PYTHON_PATH": "", // Update with path to real python interpereter used for testing.
+                    "EXISTING_JUPYTER_URI": "", // Update with a server that you started yourself to avoid this script doing it
                 }
             }
         },

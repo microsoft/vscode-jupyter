@@ -451,22 +451,6 @@ export namespace DataScience {
         localize('jupyter.command.jupyter.runallcellsabove.title', 'Run Above');
     export const runCellAndAllBelowLensCommandTitle = () =>
         localize('jupyter.command.jupyter.runcellandallbelow.title', 'Run Below');
-    export const importChangeDirectoryComment = () =>
-        localize(
-            {
-                key: 'DataScience.importChangeDirectoryComment',
-                comment: ['{Locked="DataScience.changeDirOnImportExport"}']
-            },
-            '{0} Change working directory from the workspace root to the ipynb file location. Turn this addition off with the DataScience.changeDirOnImportExport setting'
-        );
-    export const exportChangeDirectoryComment = () =>
-        localize(
-            {
-                key: 'DataScience.exportChangeDirectoryComment',
-                comment: ['{Locked="DataScience.changeDirOnImportExport"}']
-            },
-            '# Change directory to VS Code workspace root so that relative path loads work correctly. Turn this addition off with the DataScience.changeDirOnImportExport setting'
-        );
 
     export const restartKernelMessage = () =>
         localize(
@@ -1172,6 +1156,11 @@ export namespace DataScience {
             'Unhandled kernel message from a widget: {0} : {1}'
         );
 
+    export const cdnWidgetScriptNotAccessibleWarningMessage = () =>
+        localize(
+            'DataScience.cdnWidgetScriptNotAccessibleWarningMessage',
+            "Unable to download widget '{0}' from 3rd party website {1}, due to network access. Expected behavior may be affected. Click [here](https://aka.ms/PVSCIPyWidgets) for more information."
+        );
     export const widgetScriptNotFoundOnCDNWidgetMightNotWork = () =>
         localize(
             'DataScience.widgetScriptNotFoundOnCDNWidgetMightNotWork',

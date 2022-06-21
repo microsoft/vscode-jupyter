@@ -227,7 +227,7 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
                 {
                     exactMatch: expectedErrorMessage
                 },
-                { text: DataScience.restartKernel(), clickImmediately: true },
+                { result: DataScience.restartKernel(), clickImmediately: true },
                 disposables
             );
             // Confirm we get a prompt to restart the kernel, and it gets restarted.
@@ -268,7 +268,7 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
                 {
                     exactMatch: expectedErrorMessage
                 },
-                { text: DataScience.restartKernel(), clickImmediately: true },
+                { result: DataScience.restartKernel(), clickImmediately: true },
                 disposables
             );
             // Confirm we get a prompt to restart the kernel, and it gets restarted.
@@ -291,7 +291,7 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
                 {
                     exactMatch: expectedErrorMessage
                 },
-                { text: DataScience.restartKernel(), clickImmediately: true },
+                { result: DataScience.restartKernel(), clickImmediately: true },
                 disposables
             );
             // Confirm we get a prompt to restart the kernel, and it gets restarted.

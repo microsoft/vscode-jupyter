@@ -24,7 +24,7 @@ import {
     IJupyterServerUriStorage,
     JupyterServerUriHandle
 } from './types';
-import { IDataScienceErrorHandler } from '../../platform/errors/types';
+import { IDataScienceErrorHandler } from '../errors/types';
 import { IConfigurationService, IsWebExtension } from '../../platform/common/types';
 import {
     handleExpiredCertsError,

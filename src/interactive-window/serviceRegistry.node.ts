@@ -4,10 +4,9 @@
 
 import { ITracebackFormatter } from '../kernels/types';
 import { IExtensionSyncActivationService, IExtensionSingleActivationService } from '../platform/activation/types';
-import { IDataScienceCommandListener } from '../platform/common/types';
+import { IDataScienceCommandListener, IJupyterExtensionBanner } from '../platform/common/types';
 import { IServiceManager } from '../platform/ioc/types';
 import { CommandRegistry } from './commands/commandRegistry';
-import { ExportCommands } from './commands/exportCommands';
 import { CodeGeneratorFactory } from './editor-integration/codeGeneratorFactory';
 import { CodeLensFactory } from './editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
@@ -26,7 +25,10 @@ import {
 } from './editor-integration/types';
 import { GeneratedCodeStorageManager } from './generatedCodeStoreManager';
 import { InteractiveWindowTracebackFormatter } from './outputs/tracebackFormatter';
-import { IExportCommands, IInteractiveWindowProvider } from './types';
+import { IInteractiveWindowDebugger, IInteractiveWindowDebuggingManager, IInteractiveWindowProvider } from './types';
+import { InteractiveWindowDebugger } from './debugger/interactiveWindowDebugger.node';
+import { InteractiveWindowDebuggingManager } from './debugger/jupyter/debuggingManager';
+import { BANNER_NAME_INTERACTIVE_SHIFTENTER, InteractiveShiftEnterBanner } from './shiftEnterBanner';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
@@ -43,7 +45,6 @@ export function registerTypes(serviceManager: IServiceManager) {
         DataScienceCodeLensProvider
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Decorator);
-    serviceManager.addSingleton<IExportCommands>(IExportCommands, ExportCommands);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         GeneratedCodeStorageManager
@@ -56,4 +57,16 @@ export function registerTypes(serviceManager: IServiceManager) {
         GeneratedCodeStorageFactory
     );
     serviceManager.addSingleton<ITracebackFormatter>(ITracebackFormatter, InteractiveWindowTracebackFormatter);
+    serviceManager.addSingleton<IInteractiveWindowDebugger>(IInteractiveWindowDebugger, InteractiveWindowDebugger);
+    serviceManager.addSingleton<IInteractiveWindowDebuggingManager>(
+        IInteractiveWindowDebuggingManager,
+        InteractiveWindowDebuggingManager,
+        undefined,
+        [IExtensionSingleActivationService]
+    );
+    serviceManager.addSingleton<IJupyterExtensionBanner>(
+        IJupyterExtensionBanner,
+        InteractiveShiftEnterBanner,
+        BANNER_NAME_INTERACTIVE_SHIFTENTER
+    );
 }

@@ -9,7 +9,15 @@ import * as fs from 'fs';
 import * as path from '../../../platform/vscode-path/path';
 import * as dedent from 'dedent';
 import * as sinon from 'sinon';
-import { commands, NotebookCell, NotebookCellExecutionState, NotebookCellKind, NotebookCellOutput, Uri } from 'vscode';
+import {
+    commands,
+    NotebookCell,
+    NotebookCellExecutionState,
+    NotebookCellKind,
+    NotebookCellOutput,
+    Uri,
+    window
+} from 'vscode';
 import { Common } from '../../../platform/common/utils/localize';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { traceInfo, traceInfoIfCI } from '../../../platform/logging';
@@ -53,6 +61,9 @@ import { IPYTHON_VERSION_CODE, IS_REMOTE_NATIVE_TEST } from '../../constants.nod
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 import { getOSType, OSType } from '../../../platform/common/utils/platform';
 import { getTextOutputValue, translateCellErrorOutput, hasErrorOutput } from '../../../kernels/execution/helpers';
+import { IExtensionSyncActivationService } from '../../../platform/activation/types';
+import { ErrorRendererCommunicationHandler } from '../../../notebooks/outputs/errorRendererComms';
+import { InteractiveWindowMessages } from '../../../platform/messageTypes';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
@@ -76,7 +87,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             await hijackPrompt(
                 'showErrorMessage',
                 { endsWith: expectedPromptMessageSuffix },
-                { text: Common.install(), clickImmediately: true },
+                { result: Common.install(), clickImmediately: true },
                 disposables
             );
 
@@ -99,6 +110,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             await startJupyterServer();
             await createEmptyPythonNotebook(disposables);
             assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
+            // With less realestate, the outputs might not get rendered (VS Code optimization to avoid rendering if not in viewport).
+            await commands.executeCommand('workbench.action.closePanel');
             traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
         } catch (e) {
             await captureScreenShot(this.currentTest?.title || 'unknown');
@@ -151,8 +164,29 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
             // Should be more than 3 hrefs if ipython 8
             if (ipythonVersion >= 8) {
-                const hrefs = html.match(/<a\s+href='.*\?line=(\d+)'/gm);
-                assert.ok(hrefs?.length >= 1, 'Hrefs not found in traceback');
+                const hrefs = /<a\s+href='(.*\?line=\d+)'/gm.exec(html);
+                assert.ok(hrefs, 'Hrefs not found in traceback');
+                const errorComm = api.serviceContainer
+                    .getAll<ErrorRendererCommunicationHandler>(IExtensionSyncActivationService)
+                    .find((s) => s.onDidReceiveMessage);
+                assert.ok(errorComm, 'Error comm handler not found');
+                const editor = vscodeNotebook.activeNotebookEditor;
+                const href = hrefs![1].toString();
+
+                // Act like the user clicked the link
+                await errorComm?.onDidReceiveMessage({
+                    editor: editor!,
+                    message: { message: InteractiveWindowMessages.OpenLink, payload: href }
+                });
+
+                // This should eventually give focus to the code cell
+                await waitForCondition(
+                    async () => {
+                        return window.activeTextEditor?.document === codeCell.document;
+                    },
+                    defaultNotebookTestTimeout,
+                    `HREF click did not move into the cell`
+                );
             }
         }
     });
@@ -370,6 +404,66 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await Promise.all([waitForTextOutput(cell, 'bar', 0, false), waitForTextOutput(cell, 'bar', 1, false)]);
 
         await waitForExecutionCompletedSuccessfully(cell);
+    });
+    test('Clearing output immediately via code', async function () {
+        // Assume you are executing a cell that prints numbers 1-100.
+        // When printing number 50, you click clear.
+        // Cell output should now start printing output from 51 onwards, & not 1.
+        await insertCodeCell(
+            dedent`
+            from ipywidgets import widgets
+            from IPython.display import display, clear_output
+            import time
+
+            display(widgets.Button(description="First Button"))
+
+            time.sleep(2)
+            clear_output()
+
+            display(widgets.Button(description="Second Button"))`,
+            { index: 0 }
+        );
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+
+        await runAllCellsInActiveNotebook();
+
+        await Promise.all([
+            waitForExecutionCompletedSuccessfully(cell),
+            waitForTextOutput(cell, 'Second Button', 0, false)
+        ]);
+    });
+    test('Clearing output via code only when receiving new output', async function () {
+        // Assume you are executing a cell that prints numbers 1-100.
+        // When printing number 50, you click clear.
+        // Cell output should now start printing output from 51 onwards, & not 1.
+        await insertCodeCell(
+            dedent`
+            from ipywidgets import widgets
+            from IPython.display import display, clear_output
+            import time
+
+            display(widgets.Button(description="First Button"))
+
+            time.sleep(2)
+            clear_output(True)
+
+            display(widgets.Button(description="Second Button"))`,
+            { index: 0 }
+        );
+        const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
+
+        await runAllCellsInActiveNotebook();
+
+        // Wait for first button to appear then second.
+        await Promise.all([
+            waitForExecutionCompletedSuccessfully(cell),
+            waitForTextOutput(cell, 'First Button', 0, false),
+            waitForTextOutput(cell, 'Second Button', 0, false)
+        ]);
+
+        // Verify first is no longer visible and second is visible.
+        assert.notInclude(getCellOutputs(cell), 'First Button');
+        assert.include(getCellOutputs(cell), 'Second Button');
     });
     test('Shell commands should give preference to executables in Python Environment', async function () {
         if (IS_REMOTE_NATIVE_TEST()) {

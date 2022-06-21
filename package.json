@@ -71,7 +71,10 @@
         "onCommand:jupyter.runInDedicatedExtensionHost",
         "onWalkthrough:jupyterWelcome",
         "onNotebook:jupyter-notebook",
-        "onNotebook:interactive"
+        "onNotebook:interactive",
+        "onView:jupyterViewVariables",
+        "onWebviewPanel:jupyter-variables",
+        "onWebviewPanel:jupyter"
     ],
     "main": "./out/extension.node.js",
     "browser": "./out/extension.web.bundle.js",
@@ -813,7 +816,7 @@
                 "title": "%DataScience.exportDialogTitle%",
                 "shortTitle": "%DataScience.exportAsNotebook.shorttitle%",
                 "icon": "$(save-as)",
-                "enablement": "notebookType == interactive && !jupyter.webExtension",
+                "enablement": "notebookType == interactive",
                 "category": "Jupyter"
             },
             {
@@ -823,7 +826,7 @@
                     "light": "resources/light/export_to_python.svg",
                     "dark": "resources/dark/export_to_python.svg"
                 },
-                "enablement": "notebookType == interactive && !jupyter.webExtension",
+                "enablement": "notebookType == interactive",
                 "category": "Jupyter"
             },
             {
@@ -1658,13 +1661,6 @@
                     "description": "Search all installed Python interpreters for a Jupyter installation when starting the Interactive window",
                     "scope": "resource"
                 },
-                "jupyter.changeDirOnImportExport": {
-                    "type": "boolean",
-                    "default": false,
-                    "deprecationMessage": "This setting is deprecated and will be removed in the next release.",
-                    "description": "When importing or exporting a Jupyter Notebook add a directory change command to allow relative path loading to work.",
-                    "scope": "resource"
-                },
                 "jupyter.useDefaultConfigForJupyter": {
                     "type": "boolean",
                     "default": true,
@@ -2089,7 +2085,6 @@
         "notebookDebugOptions",
         "notebookDeprecated",
         "notebookEditor",
-        "notebookEditorDecorationType",
         "notebookMessaging",
         "notebookMime",
         "notebookCellExecutionState",
@@ -2110,8 +2105,8 @@
         "compiled": "deemon npm run compile",
         "kill-compiled": "deemon --kill npm run compile",
         "compile-webviews-watch": "webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
-        "compile-web-watch": "webpack --config ./build/webpack/webpack.extension.web.config.js --stats-error-details --watch --progress",
-        "compile-web": "webpack --config ./build/webpack/webpack.extension.web.config.js",
+        "compile-web-watch": "webpack --mode development --config ./build/webpack/webpack.extension.web.config.js --stats-error-details --watch --progress",
+        "compile-web": "webpack --mode development --config ./build/webpack/webpack.extension.web.config.js",
         "compile-web-test": "cross-env VSC_TEST_BUNDLE=true npm run compile-web",
         "compile-web-test-watch": "cross-env VSC_TEST_BUNDLE=true npm run compile-web-watch",
         "compile-webviews-watchd": "deemon npm run compile-webviews-watch",
@@ -2185,7 +2180,6 @@
         "iconv-lite": "^0.4.21",
         "image-size": "^1.0.0",
         "inversify": "^5.0.1",
-        "is-online": "^9.0.0",
         "isomorphic-ws": "^4.0.1",
         "jquery": "^3.6.0",
         "jsonc-parser": "^2.0.3",
@@ -2217,6 +2211,7 @@
         "source-map": "^0.7.3",
         "stack-trace": "0.0.10",
         "string-argv": "^0.3.1",
+        "strip-comments": "^2.0.1",
         "styled-components": "^5.2.1",
         "sudo-prompt": "^9.2.1",
         "svg-inline-react": "^3.1.0",
@@ -2227,13 +2222,13 @@
         "underscore": "^1.12.1",
         "unicode": "^10.0.0",
         "untildify": "^3.0.2",
-        "url-parse": "1.5.8",
+        "url-parse": "^1.5.10",
         "uuid": "^3.3.2",
         "vscode-debugprotocol": "^1.41.0",
         "vscode-jsonrpc": "8.0.2-next.1",
-        "vscode-languageclient": "8.0.2-next.4",
-        "vscode-languageserver": "8.0.2-next.4",
-        "vscode-languageserver-protocol": "3.17.2-next.5",
+        "vscode-languageclient": "8.0.2-next.5",
+        "vscode-languageserver": "8.0.2-next.5",
+        "vscode-languageserver-protocol": "3.17.2-next.6",
         "vscode-nls": "^5.0.1",
         "vscode-tas-client": "^0.1.27",
         "ws": "^6.2.2",
@@ -2296,6 +2291,7 @@
         "@types/sinon": "^7.5.1",
         "@types/sinonjs__fake-timers": "^6.0.1",
         "@types/stack-trace": "0.0.29",
+        "@types/strip-comments": "^2.0.1",
         "@types/tcp-port-used": "^1.0.0",
         "@types/temp": "^0.8.32",
         "@types/tmp": "0.0.33",
@@ -2371,7 +2367,7 @@
         "lru-cache": "^6.0.0",
         "md5": "^2.3.0",
         "mimic-response": "^4.0.0",
-        "mocha": "9.1.1",
+        "mocha": "^9.2.2",
         "mocha-junit-reporter": "^2.0.2",
         "mocha-multi-reporters": "^1.1.7",
         "nocache": "^2.1.0",
@@ -2429,7 +2425,9 @@
     },
     "overrides": {
         "simple-get": "3.1.1",
-        "url-parse": "1.5.8",
-        "fs-path": "0.0.25"
+        "fs-path": "0.0.25",
+        "@jupyterlab/coreutils": {
+            "url-parse": "$url-parse"
+        }
     }
 }

@@ -4,7 +4,6 @@
 import * as path from '../../platform/vscode-path/path';
 import { DebugProtocolMessage, NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { parseForComments } from '../../webviews/webview-side/common';
 import { ICommandManager } from '../../platform/common/application/types';
 import { IKernel } from '../../kernels/types';
 import { IConfigurationService } from '../../platform/common/types';
@@ -15,6 +14,7 @@ import { noop } from '../../platform/common/utils/misc';
 import { Commands } from '../../platform/common/constants';
 import { cellDebugSetup } from '../../kernels/debugger/helper';
 import { IDebuggingDelegate, IKernelDebugAdapter, KernelDebugMode } from '../../kernels/debugger/types';
+import { parseForComments } from '../../platform/common/utils';
 
 export class RunByLineController implements IDebuggingDelegate {
     private lastPausedThreadId: number | undefined;

@@ -2,15 +2,31 @@
 // Licensed under the MIT License.
 
 const path = require('path');
+const fs = require('fs-extra');
 const test_web = require('@vscode/test-web');
 const { startJupyter } = require('./preLaunchWebTest');
+const jsonc = require('jsonc-parser');
+const extensionDevelopmentPath = path.resolve(__dirname, '../');
+const packageJsonFile = path.join(extensionDevelopmentPath, 'package.json');
+
 async function go() {
     let exitCode = 0;
     let server;
     try {
         server = (await startJupyter()).server;
-        const extensionDevelopmentPath = path.resolve(__dirname, '../');
         const bundlePath = path.join(extensionDevelopmentPath, 'out', 'extension.web.bundle');
+
+        // Changing the logging level to be read from workspace settings file.
+        // This way we can enable verbose logging and get the logs for web tests.
+        const settingsJson = fs.readFileSync(packageJsonFile).toString();
+        const edits = jsonc.modify(
+            settingsJson,
+            ['contributes', 'configuration', 'properties', 'jupyter.logging.level', 'scope'],
+            'resource',
+            {}
+        );
+        const updatedSettingsJson = jsonc.applyEdits(settingsJson, edits);
+        fs.writeFileSync(packageJsonFile, updatedSettingsJson);
 
         // Now run the test
         await test_web.runTests({

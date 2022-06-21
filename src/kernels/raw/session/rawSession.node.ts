@@ -8,7 +8,7 @@ import '../../../platform/common/extensions';
 import { traceVerbose, traceInfoIfCI, traceError, traceWarning } from '../../../platform/logging';
 import { IDisposable, Resource } from '../../../platform/common/types';
 import { createDeferred, sleep } from '../../../platform/common/utils/async';
-import { KernelConnectionTimeoutError } from '../../../platform/errors/kernelConnectionTimeoutError';
+import { KernelConnectionTimeoutError } from '../../errors/kernelConnectionTimeoutError';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { ISessionWithSocket, KernelConnectionMetadata, KernelSocketInformation } from '../../types';
 import { IKernelProcess } from '../types';

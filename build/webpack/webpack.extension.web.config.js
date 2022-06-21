@@ -8,16 +8,16 @@ const webpack = require('webpack');
 const constants = require('../constants');
 const CleanTerminalPlugin = require('clean-terminal-webpack-plugin');
 
-const prodEntry = {
-    extension: './src/extension.web.ts',
-    'test/index': './src/test/web/index.ts' // source of the web extension test runner
+const devEntry = {
+    extension: './src/extension.web.ts'
 };
 const testEntry = {
     extension: './src/test/web/index.ts' // source of the web extension test runner
 };
 
 // When running web tests, the entry point for the tests and extension are the same.
-const entry = process.env.VSC_TEST_BUNDLE ? testEntry : prodEntry;
+// Also, when building the production VSIX there's no need to compile the tests (faster build pipline).
+const entry = process.env.VSC_TEST_BUNDLE === 'true' ? testEntry : devEntry;
 
 // tslint:disable-next-line:no-var-requires no-require-imports
 const configFileName = path.join(constants.ExtensionRootDir, 'tsconfig.extension.web.json');

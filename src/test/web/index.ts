@@ -1,13 +1,27 @@
 // Re-export extension entry point, so that the output from this file
 // when bundled can be used as entry point for extension as well as tests.
 // The same objects/types will be used as the module is only ever loaded once by nodejs.
+
+// First initialize the extension state.
+import { setCI, setTestExecution } from '../../platform/common/constants';
+import { setTestSettings } from '../constants';
+
+setCI(true);
+setTestExecution(true);
+setTestSettings({
+    isRemoteNativeTest: true,
+    isNonRawNativeTest: true
+});
+
+// Now import & load the rest of the extension code.
+// At this point, the necessary variables would have been initialized.
+// E.g. when extension activates, the isCI would have been set and necessary loggers setup & the like.
 import * as extension from '../../extension.web';
 import * as vscode from 'vscode';
-import type { IExtensionApi } from '../../platform/api';
+import type { IExtensionApi } from '../../webviews/extension-side/api/api';
 import type { IExtensionContext } from '../../platform/common/types';
 import { IExtensionTestApi } from '../common';
-import { JVSC_EXTENSION_ID, setCI, setTestExecution } from '../../platform/common/constants';
-import { setTestSettings } from '../constants';
+import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
 
 let activatedResponse: undefined | IExtensionApi;
 
@@ -24,14 +38,6 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
             mocha.setup({
                 ui: 'tdd',
                 reporter: undefined
-            });
-
-            // Can't tell if on CI or not, so assume not.
-            setCI(true);
-            setTestExecution(true);
-            setTestSettings({
-                isRemoteNativeTest: true,
-                isNonRawNativeTest: true
             });
 
             // bundles all files in the current directory matching `*.web.test` & `*.common.test`
@@ -54,6 +60,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
             }
         });
     });
+
     activatedResponse = await extension.activate(context);
     return activatedResponse;
 }

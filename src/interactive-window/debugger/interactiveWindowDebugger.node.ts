@@ -11,7 +11,7 @@ import { IConfigurationService } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { Identifiers } from '../../platform/common/constants';
 import { Telemetry } from '../../telemetry';
-import { JupyterDebuggerNotInstalledError } from '../../platform/errors/jupyterDebuggerNotInstalledError';
+import { JupyterDebuggerNotInstalledError } from '../../kernels/errors/jupyterDebuggerNotInstalledError';
 import { getPlainTextOrStreamOutput } from '../../kernels/kernel.base';
 import { IKernel, isLocalConnection } from '../../kernels/types';
 import { IInteractiveWindowDebugger } from '../types';

@@ -81,7 +81,7 @@ class WidgetManagerComponent {
 
 const outputDisposables = new Map<string, { dispose(): void }>();
 const htmlDisposables = new WeakMap<HTMLElement, { dispose(): void }>();
-const renderedWidgets = new Set<string>();
+const renderedWidgets = new Map<string, { widget?: { dispose: Function } }>();
 /**
  * Called from renderer to render output.
  * This will be exposed as a public method on window for renderer to render output.
@@ -109,6 +109,9 @@ export function renderOutput(outputItem: OutputItem, element: HTMLElement, logge
 }
 export function disposeOutput(outputId?: string) {
     if (outputId) {
+        // We can't delete the widgets because they may be rerendered when we scroll them into view.
+        // See issue: https://github.com/microsoft/vscode-jupyter/issues/10485
+        // However we can mark them as not being currently rendered.
         stackOfWidgetsRenderStatusByOutputId = stackOfWidgetsRenderStatusByOutputId.filter(
             (item) => !(outputId in item)
         );
@@ -140,9 +143,12 @@ function renderIPyWidget(
     ele.className = 'cell-output-ipywidget-background';
     container.appendChild(ele);
     ele.appendChild(output);
-    renderedWidgets.add(outputId);
+    renderedWidgets.set(outputId, {});
     createWidgetView(model, ele)
         .then((w) => {
+            if (renderedWidgets.has(outputId)) {
+                renderedWidgets.get(outputId)!.widget = w;
+            }
             const disposable = {
                 dispose: () => {
                     // What if we render the same model in two cells.

@@ -12,7 +12,7 @@ import { Common } from '../../platform/common/utils/localize';
 import { VSCodeNotebookController } from '../../notebooks/controllers/vscodeNotebookController';
 import { INotebookControllerManager } from '../../notebooks/types';
 import { IJupyterKernelSpec } from '../../kernels/types';
-import { ExtensionRecommendationService } from '../../platform/common/extensionRecommendation.node';
+import { ExtensionRecommendationService } from '../../webviews/extension-side/extensionRecommendation.node';
 import { JupyterNotebookView } from '../../platform/common/constants';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */

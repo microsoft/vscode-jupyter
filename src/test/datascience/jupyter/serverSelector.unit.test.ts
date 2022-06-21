@@ -23,7 +23,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { JupyterUriProviderRegistration } from '../../../kernels/jupyter/jupyterUriProviderRegistration';
 import { Settings } from '../../../platform/common/constants';
-import { DataScienceErrorHandler } from '../../../platform/errors/errorHandler';
+import { DataScienceErrorHandler } from '../../../kernels/errors/kernelErrorHandler';
 import { IDisposable } from '../../../platform/common/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverConnectionType';

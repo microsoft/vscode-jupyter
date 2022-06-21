@@ -16,15 +16,12 @@ import { CheckboxState, EventName, PlatformErrors, SliceOperationSource } from '
 import { DebuggingTelemetry } from '../kernels/debugger/constants';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { TelemetryErrorProperties, ErrorCategory } from '../platform/errors/types';
-import { ExportFormat } from '../platform/export/types';
+import { ExportFormat } from '../notebooks/export/types';
 import { InterruptResult, KernelConnectionMetadata, KernelInterpreterDependencyResponse } from '../kernels/types';
-import { IExportedKernelService } from '../platform/api/extension';
+import { IExportedKernelService } from '../webviews/extension-side/api/extension';
 import { PreferredKernelExactMatchReason } from '../notebooks/controllers/notebookControllerManager';
 import { SelectJupyterUriCommandSource } from '../kernels/jupyter/serverSelector';
 import { TerminalShellType } from '../platform/terminals/types';
-
-export const IImportTracker = Symbol('IImportTracker');
-export interface IImportTracker {}
 
 export type ResourceSpecificTelemetryProperties = Partial<{
     resourceType: 'notebook' | 'interactive';
@@ -877,10 +874,15 @@ export interface IEventNamePropertyMapping {
         source?: 'cdn' | 'local' | 'remote';
     };
     /**
-     * Total time taken to discover all IPyWidgets on disc.
-     * This is how long it takes to discover a single widget on disc (from python environment).
+     * Total time taken to discover all IPyWidgets.
+     * This is how long it takes to discover all widgets on disc (from python environment).
      */
-    [Telemetry.DiscoverIPyWidgetNamesLocalPerf]: never | undefined;
+    [Telemetry.DiscoverIPyWidgetNamesPerf]: {
+        /**
+         * Whether we're looking for widgets on local Jupyter environment (local connections) or remote.
+         */
+        type: 'local' | 'remote';
+    };
     /**
      * Something went wrong in looking for a widget.
      */
@@ -1342,4 +1344,39 @@ export interface IEventNamePropertyMapping {
                */
               frontEndVersion: number;
           };
+    /**
+     * Telemetry event sent once we've successfully or unsuccessfully parsed the extension.js file in the widget folder.
+     * E.g. if we have a widget named ipyvolume, we attempt to parse the nbextensions/ipyvolume/extension.js file to get some info out of it.
+     */
+    [Telemetry.IPyWidgetExtensionJsInfo]:
+        | {
+              /**
+               * Hash of the widget folder name.
+               */
+              widgetFolderNameHash: string;
+              /**
+               * Total number of entries in the require config.
+               */
+              requireEntryPointCount: number;
+              /**
+               * Pattern (code style) used to register require.config enties.
+               */
+              patternUsedToRegisterRequireConfig: string;
+          }
+        | {
+              /**
+               * Hash of the widget folder name.
+               */
+              widgetFolderNameHash: string;
+              failed: true;
+              failure: 'couldNotLocateRequireConfigStart' | 'couldNotLocateRequireConfigEnd' | 'noRequireConfigEntries';
+              /**
+               * Pattern (code style) used to register require.config enties.
+               */
+              patternUsedToRegisterRequireConfig: string | undefined;
+          };
+    /**
+     * Total time take to copy the nb extensions folder.
+     */
+    [Telemetry.IPyWidgetNbExtensionCopyTime]: never | undefined;
 }

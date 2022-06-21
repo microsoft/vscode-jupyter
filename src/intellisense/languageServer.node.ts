@@ -129,6 +129,7 @@ export class LanguageServer implements Disposable {
         this.middleware.dispose();
 
         await client.stop();
+        await client.dispose();
     }
 
     public get client(): LanguageClient | undefined {

@@ -18,9 +18,10 @@ import type {
 import type * as nbformat from '@jupyterlab/nbformat';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { IAsyncDisposable, IDisplayOptions, Resource } from '../platform/common/types';
-import { WebSocketData } from '../platform/api/extension';
 import { IBackupFile, IJupyterKernel } from './jupyter/types';
 import { PythonEnvironment_PythonApi } from '../platform/api/types';
+
+export type WebSocketData = string | Buffer | ArrayBuffer | Buffer[];
 
 export type LiveKernelModel = IJupyterKernel &
     Partial<IJupyterKernelSpec> & { model: Session.IModel | undefined; notebook?: { path?: string } };
@@ -123,6 +124,10 @@ export function isLocalConnection(
 }
 
 export interface IKernel extends IAsyncDisposable {
+    /**
+     * Total execution count on this kernel
+     */
+    readonly executionCount: number;
     readonly uri: Uri;
     /**
      * In the case of Notebooks, this is the same as the Notebook Uri.

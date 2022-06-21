@@ -11,7 +11,7 @@ import { IServiceManager } from '../platform/ioc/types';
 import { setSharedProperty } from '../telemetry';
 import { IRawNotebookSupportedService } from './raw/types';
 import { KernelCrashMonitor } from './kernelCrashMonitor';
-import { registerTypes as registerWidgetTypes } from './ipywidgets-message-coordination/serviceRegistry.web';
+import { registerTypes as registerWidgetTypes } from './ipywidgets/serviceRegistry.web';
 import { registerTypes as registerJupyterTypes } from './jupyter/serviceRegistry.web';
 import { injectable } from 'inversify';
 import { IKernelFinder, IKernelProvider } from './types';
@@ -19,19 +19,14 @@ import { KernelProvider } from './kernelProvider.web';
 import { KernelFinder } from './kernelFinder.web';
 import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
 import { MultiplexingDebugService } from './debugger/multiplexingDebugService';
-import { IJupyterDebugService } from './debugger/types';
-import { JupyterVariableDataProviderFactory } from '../webviews/extension-side/dataviewer/jupyterVariableDataProviderFactory';
-import {
-    IJupyterVariableDataProvider,
-    IJupyterVariableDataProviderFactory
-} from '../webviews/extension-side/dataviewer/types';
-import { JupyterVariableDataProvider } from '../webviews/extension-side/dataviewer/jupyterVariableDataProvider';
+import { IDebugLocationTracker, IDebugLocationTrackerFactory, IJupyterDebugService } from './debugger/types';
 import { DebuggerVariables } from './variables/debuggerVariables';
 import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
 import { KernelVariables } from './variables/kernelVariables';
 import { JupyterVariables } from './variables/jupyterVariables';
 import { PythonVariablesRequester } from './variables/pythonVariableRequester';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
+import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFactory';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
@@ -78,11 +73,6 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         DebuggerVariables,
         Identifiers.DEBUGGER_VARIABLES
     );
-    serviceManager.add<IJupyterVariableDataProvider>(IJupyterVariableDataProvider, JupyterVariableDataProvider);
-    serviceManager.addSingleton<IJupyterVariableDataProviderFactory>(
-        IJupyterVariableDataProviderFactory,
-        JupyterVariableDataProviderFactory
-    );
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelCrashMonitor);
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
@@ -97,4 +87,9 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     registerJupyterTypes(serviceManager, isDevMode);
 
     serviceManager.addSingleton<CellOutputDisplayIdTracker>(CellOutputDisplayIdTracker, CellOutputDisplayIdTracker);
+
+    // debugging
+    serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory, undefined, [
+        IDebugLocationTrackerFactory
+    ]);
 }

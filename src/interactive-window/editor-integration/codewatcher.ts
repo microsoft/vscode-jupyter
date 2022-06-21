@@ -26,13 +26,13 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../platform/terminals/types';
 import { InteractiveCellResultError } from '../../platform/errors/interactiveCellResultError';
 import { Telemetry, Commands, Identifiers } from '../../platform/common/constants';
-import { IDataScienceErrorHandler } from '../../platform/errors/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../types';
 import { CellMatcher } from './cellMatcher';
 import { ICodeWatcher, ICodeLensFactory } from './types';
 import { traceDecoratorVerbose } from '../../platform/logging';
 import { TraceOptions } from '../../platform/logging/types';
 import * as urlPath from '../../platform/vscode-path/resources';
+import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 
 function getIndex(index: number, length: number): number {
     // return index within the length range with negative indexing

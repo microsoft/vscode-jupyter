@@ -41,7 +41,7 @@ import {
 } from 'vscode';
 import * as fsExtra from 'fs-extra';
 import * as path from './platform/vscode-path/path';
-import { buildApi, IExtensionApi } from './platform/api';
+import { buildApi, IExtensionApi } from './webviews/extension-side/api/api';
 import { IApplicationEnvironment, ICommandManager } from './platform/common/application/types';
 import { setHomeDirectory, traceError } from './platform/logging';
 import {
@@ -63,7 +63,7 @@ import {
 import { createDeferred } from './platform/common/utils/async';
 import { Common, OutputChannelNames } from './platform/common/utils/localize';
 import { IServiceContainer, IServiceManager } from './platform/ioc/types';
-import { sendErrorTelemetry, sendStartupTelemetry } from './platform/startupTelemetry';
+import { sendErrorTelemetry, sendStartupTelemetry } from './telemetry/startupTelemetry';
 import { noop } from './platform/common/utils/misc';
 import { PythonExtension } from './webviews/webview-side/common/constants';
 import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.node';

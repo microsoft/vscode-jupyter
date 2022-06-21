@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { Disposable, Event, NotebookCell, NotebookDocument, NotebookEditor, Uri } from 'vscode';
+import { IDebuggingManager } from '../kernels/debugger/types';
 import { IKernel, KernelConnectionMetadata } from '../kernels/types';
 import { Resource, InteractiveWindowMode, ICell } from '../platform/common/types';
 import { IFileGeneratedCodes } from './editor-integration/types';
@@ -79,7 +80,8 @@ export interface IInteractiveWindowLoadable extends IInteractiveWindow {
     changeMode(newMode: InteractiveWindowMode): void;
 }
 
-export const IExportCommands = Symbol('IExportCommands');
-export interface IExportCommands {
-    register(): void;
+export const IInteractiveWindowDebuggingManager = Symbol('IInteractiveWindowDebuggingManager');
+export interface IInteractiveWindowDebuggingManager extends IDebuggingManager {
+    start(editor: NotebookEditor, cell: NotebookCell): Promise<void>;
+    updateSourceMaps(editor: NotebookEditor, generatedCodes: IFileGeneratedCodes[]): Promise<void>;
 }

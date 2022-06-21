@@ -52,9 +52,9 @@ import { Resource, IOutputChannel, IJupyterSettings } from '../../../platform/co
 import { createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
-import { KernelDiedError } from '../../../platform/errors/kernelDiedError';
-import { KernelPortNotUsedTimeoutError } from '../../../platform/errors/kernelPortNotUsedTimeoutError';
-import { KernelProcessExitedError } from '../../../platform/errors/kernelProcessExitedError';
+import { KernelDiedError } from '../../errors/kernelDiedError';
+import { KernelPortNotUsedTimeoutError } from '../../errors/kernelPortNotUsedTimeoutError';
+import { KernelProcessExitedError } from '../../errors/kernelProcessExitedError';
 import { captureTelemetry, Telemetry } from '../../../telemetry';
 import { PythonKernelInterruptDaemon } from '../finder/pythonKernelInterruptDaemon.node';
 import { TraceOptions } from '../../../platform/logging/types';
