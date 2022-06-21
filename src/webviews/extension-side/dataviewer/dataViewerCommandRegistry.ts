@@ -99,12 +99,16 @@ export class DataViewerCommandRegistry implements IExtensionSingleActivationServ
                         this.debugService.activeDebugSession.configuration
                     );
 
+                    traceInfo('IANHUZ About to check for dependencies');
                     pythonEnv && (await this.dataViewerDependencyService.checkAndInstallMissingDependencies(pythonEnv));
                 }
+
+                traceInfo('IANHUZ got dependencies');
 
                 const variable = convertDebugProtocolVariableToIJupyterVariable(
                     request.variable as DebugProtocol.Variable
                 );
+                traceInfo('IANHUZ converted variable');
                 const jupyterVariable = await this.variableProvider.getFullVariable(variable);
                 const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
                     jupyterVariable

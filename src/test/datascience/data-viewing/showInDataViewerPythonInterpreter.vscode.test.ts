@@ -123,6 +123,8 @@ suite('DataScience - VSCode Notebook - (DataViewer)', function () {
             }
         };
 
+        traceInfo(`IANHUZ props: ${JSON.stringify(props)}`);
+
         await captureScreenShot('Shot3');
         traceInfo('IANHUZ Running showDataViewer');
 

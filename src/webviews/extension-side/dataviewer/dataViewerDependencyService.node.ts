@@ -10,7 +10,7 @@ import { ProductNames } from '../../../kernels/installer/productNames';
 import { IInstaller, Product, InstallerResponse } from '../../../kernels/installer/types';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';
-import { traceWarning } from '../../../platform/logging';
+import { traceInfo, traceWarning } from '../../../platform/logging';
 import { IPythonExecutionFactory } from '../../../platform/common/process/types.node';
 import { IsCodeSpace } from '../../../platform/common/types';
 import { parseSemVer } from '../../../platform/common/utils.node';
@@ -41,9 +41,12 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
     ) {}
 
     public async checkAndInstallMissingDependencies(interpreter: PythonEnvironment): Promise<void> {
+        traceInfo(`IANHUZ Checking interpreter ${interpreter.envPath}`);
         const tokenSource = new CancellationTokenSource();
         try {
             const pandasVersion = await this.getVersionOfPandas(interpreter, tokenSource.token);
+
+            traceInfo(`IANHUZ pandas version ${JSON.stringify(pandasVersion)}`);
             if (Cancellation.isCanceled(tokenSource.token)) {
                 return;
             }
