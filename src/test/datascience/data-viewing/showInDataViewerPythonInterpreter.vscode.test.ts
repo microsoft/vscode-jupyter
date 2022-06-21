@@ -135,13 +135,25 @@ suite('DataScience - VSCode Notebook - (DataViewer)', function () {
         try {
             await waitForCondition(
                 async () => {
-                    return vscode.window.tabGroups.all[1].activeTab?.label === 'Data Viewer - my_list';
+                    // return vscode.window.tabGroups.all[1].activeTab?.label === 'Data Viewer - my_list';
+                    let tabFound = false;
+                    vscode.window.tabGroups.all.forEach((tg) => {
+                        if (
+                            tg.tabs.some((tab) => {
+                                return tab.label === 'Data Viewer - my_list';
+                            })
+                        ) {
+                            tabFound = true;
+                        }
+                    });
+                    return tabFound;
                 },
                 40_000,
                 'Failed to open the data viewer from python variables'
             );
-        } catch {
+        } catch (error) {
             await captureScreenShot('Failed');
+            throw error;
         }
 
         await captureScreenShot('Shot4');
