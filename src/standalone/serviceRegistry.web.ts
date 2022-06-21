@@ -4,8 +4,8 @@
 
 import { IWebviewViewProvider, IWebviewPanelProvider } from '../platform/common/application/types';
 import { IServiceManager } from '../platform/ioc/types';
-import { WebviewViewProvider } from '../webviews/extension-side/webviewViews/webviewViewProvider';
-import { WebviewPanelProvider } from '../webviews/extension-side/webviewPanels/webviewPanelProvider';
+import { WebviewViewProvider } from '../webviews/extension-side/webviews/webviewViewProvider';
+import { WebviewPanelProvider } from '../webviews/extension-side/webviews/webviewPanelProvider';
 import { IExtensionActivationManager, IExtensionSingleActivationService } from '../platform/activation/types';
 import { VariableViewActivationService } from '../webviews/extension-side/variablesView/variableViewActivationService';
 import { INotebookWatcher, IVariableViewProvider } from '../webviews/extension-side/variablesView/types';

@@ -11,7 +11,7 @@ import {
     IWebviewPanelProvider,
     IWorkspaceService
 } from '../../../platform/common/application/types';
-import { WebviewPanelProvider } from '../../../webviews/extension-side/webviewPanels/webviewPanelProvider';
+import { WebviewPanelProvider } from '../../../webviews/extension-side/webviews/webviewPanelProvider';
 import { WorkspaceService } from '../../../platform/common/application/workspace.node';
 import { JupyterSettings } from '../../../platform/common/configSettings';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';

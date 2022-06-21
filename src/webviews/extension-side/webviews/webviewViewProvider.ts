@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 'use strict';
 
+import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri, WebviewOptions, WebviewView as vscodeWebviewView } from 'vscode';
-import { IWebviewView, IWebviewViewOptions } from '../../../platform/common/application/types';
+import { IWebviewView, IWebviewViewOptions, IWebviewViewProvider } from '../../../platform/common/application/types';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { IDisposableRegistry, IExtensionContext } from '../../../platform/common/types';
-import { Webview } from '../webviews/webview';
+import { Webview } from './webview';
 
-export class WebviewView extends Webview implements IWebviewView {
+class WebviewView extends Webview implements IWebviewView {
     public get visible(): boolean {
         if (!this.webviewHost) {
             return false;
@@ -58,5 +59,18 @@ export class WebviewView extends Webview implements IWebviewView {
 
         // Fire one inital visibility change once now as we have loaded
         this._onDidChangeVisibility.fire();
+    }
+}
+
+@injectable()
+export class WebviewViewProvider implements IWebviewViewProvider {
+    constructor(
+        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IExtensionContext) private readonly context: IExtensionContext
+    ) {}
+
+    public async create(options: IWebviewViewOptions): Promise<IWebviewView> {
+        return new WebviewView(this.fs, this.disposableRegistry, this.context, options);
     }
 }
