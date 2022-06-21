@@ -511,6 +511,11 @@ export interface IEventNamePropertyMapping {
             | 'dismissed' // user dismissed the message.
             | 'download'; // User chose click the download link.
     };
+    [Telemetry.PythonExtensionInstalledViaKernelPicker]: {
+        action:
+            | 'success' // Correctly installed and hooked the API
+            | 'failed'; // Failed to install correctly
+    };
     [Telemetry.KernelNotInstalled]: {
         action: 'displayed'; // Message displayed.
         /**

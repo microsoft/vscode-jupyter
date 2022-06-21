@@ -840,6 +840,14 @@
                 "title": "%DataScience.runInDedicatedExtensionHost%",
                 "enablement": "!jupyter.webExtension",
                 "category": "Jupyter"
+            },
+            {
+                "command": "jupyter.installPythonExtensionViaKernelPicker",
+                "title": "Install Python Extension"
+            },
+            {
+                "command": "jupyter.installPythonViaKernelPicker",
+                "title": "Install Python"
             }
         ],
         "menus": {
@@ -993,6 +1001,16 @@
                     "when": "notebookType == jupyter-notebook && jupyter.ispythonnotebook && notebookCellType == code && isWorkspaceTrusted && !jupyter.notebookeditor.runByLineInProgress"
                 }
             ],
+            "notebook/kernelSource": [
+                {
+                    "command": "jupyter.installPythonExtensionViaKernelPicker",
+                    "when": "jupyter.showInstallPythonExtensionCommand"
+                },
+                {
+                    "command": "jupyter.installPythonViaKernelPicker",
+                    "when": "jupyter.showInstallPythonCommand"
+                }
+            ],
             "interactive/toolbar": [
                 {
                     "command": "jupyter.interactive.clearAllCells",
@@ -1065,6 +1083,14 @@
                 }
             ],
             "commandPalette": [
+                {
+                    "command": "jupyter.installPythonExtensionViaKernelPicker",
+                    "when": "false"
+                },
+                {
+                    "command": "jupyter.installPythonViaKernelPicker",
+                    "when": "false"
+                },
                 {
                     "command": "jupyter.replayPylanceLog",
                     "title": "Replay Pylance Log",
@@ -2063,7 +2089,8 @@
         "notebookMime",
         "notebookCellExecutionState",
         "portsAttributes",
-        "quickPickSortByLabel"
+        "quickPickSortByLabel",
+        "notebookKernelSource"
     ],
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",

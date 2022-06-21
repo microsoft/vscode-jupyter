@@ -7163,6 +7163,47 @@ No description provided
 
 </details>
 <details>
+  <summary>DS_INTERNAL.PYTHON_EXTENSION_INSTALLED_VIA_KERNEL_PICKER</summary>
+
+## Description
+
+
+No description provided
+
+## Properties
+
+- 
+        action:
+            | 'success' // Correctly installed and hooked the API
+            | 'failed';
+
+## Locations Used
+
+[src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
+```typescript
+
+                if (this.extensionChecker.isPythonExtensionInstalled) {
+                    traceInfo('Python Extension installed via Kernel Picker command');
+                    sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {
+                        action: 'success'
+                    });
+
+```
+
+
+[src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
+```typescript
+                    await this.controllerManager.loadNotebookControllers(true);
+                } else {
+                    traceError('Failed to install Python Extension via Kernel Picker command');
+                    sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {
+                        action: 'failed'
+                    });
+                    throw new Error('Failed to install Python Extension via Kernel Picker command');
+```
+
+</details>
+<details>
   <summary>DS_INTERNAL.PYTHON_EXTENSION_NOT_INSTALLED</summary>
 
 ## Description
@@ -7179,42 +7220,6 @@ No description provided
             | 'download';
 
 ## Locations Used
-
-[src/notebooks/controllers/noPythonKernelsNotebookController.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/noPythonKernelsNotebookController.ts)
-```typescript
-        }
-    }
-    private async handleExecutionWithoutPythonExtension() {
-        sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
-        const selection = await this.appShell.showInformationMessage(
-            DataScience.pythonExtensionRequiredToRunNotebook(),
-            { modal: true },
-```
-
-
-[src/notebooks/controllers/noPythonKernelsNotebookController.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/noPythonKernelsNotebookController.ts)
-```typescript
-            Common.install()
-        );
-        if (selection === Common.install()) {
-            sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
-            this.commandManager.executeCommand('extension.open', PythonExtension).then(noop, noop);
-        } else {
-            sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
-```
-
-
-[src/notebooks/controllers/noPythonKernelsNotebookController.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/noPythonKernelsNotebookController.ts)
-```typescript
-            sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
-            this.commandManager.executeCommand('extension.open', PythonExtension).then(noop, noop);
-        } else {
-            sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
-        }
-    }
-    private async handleExecutionWithoutPython() {
-```
-
 
 [src/platform/api/pythonApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/pythonApi.ts)
 ```typescript
@@ -7249,6 +7254,42 @@ No description provided
         }
     }
     private async installPythonExtension() {
+```
+
+
+[src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
+```typescript
+    // click run again
+    private async installPythonExtensionViaKernelPicker(): Promise<void> {
+        if (!this.extensionChecker.isPythonExtensionInstalled) {
+            sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
+
+            // First present a simple modal dialog to indicate what we are about to do
+            const selection = await this.appShell.showInformationMessage(
+```
+
+
+[src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
+```typescript
+                Common.install()
+            );
+            if (selection === Common.install()) {
+                sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
+            } else {
+                // If they don't want to install, just bail out at this point
+                sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
+```
+
+
+[src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
+```typescript
+                sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
+            } else {
+                // If they don't want to install, just bail out at this point
+                sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
+                return;
+            }
+
 ```
 
 </details>
@@ -7505,11 +7546,11 @@ No description provided
 
 ## Locations Used
 
-[src/notebooks/controllers/noPythonKernelsNotebookController.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/noPythonKernelsNotebookController.ts)
+[src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
 ```typescript
-        }
-    }
-    private async handleExecutionWithoutPython() {
+    // Unlike installing the python extension we don't expect in progress executions to be handled
+    // when this command is installed, user will have to manually install python and rerun the cell
+    private async installPythonViaKernelPicker(): Promise<void> {
         sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'displayed' });
         const selection = await this.appShell.showErrorMessage(
             DataScience.pythonNotInstalledNonMarkdown(),
@@ -7517,27 +7558,27 @@ No description provided
 ```
 
 
-[src/notebooks/controllers/noPythonKernelsNotebookController.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/noPythonKernelsNotebookController.ts)
+[src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
 ```typescript
-            Common.install()
         );
+
         if (selection === Common.install()) {
             sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'download' });
+            // Direct the user to download from python.org
             this.appShell.openUrl('https://www.python.org/downloads');
         } else {
-            sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'dismissed' });
 ```
 
 
-[src/notebooks/controllers/noPythonKernelsNotebookController.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/noPythonKernelsNotebookController.ts)
+[src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
 ```typescript
-            sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'download' });
+            // Direct the user to download from python.org
             this.appShell.openUrl('https://www.python.org/downloads');
         } else {
             sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'dismissed' });
         }
     }
-}
+
 ```
 
 </details>

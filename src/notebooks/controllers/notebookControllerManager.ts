@@ -50,7 +50,6 @@ import {
 } from '../../kernels/types';
 import { INotebookControllerManager } from '../types';
 import { KernelFilterService } from './kernelFilter/kernelFilterService';
-import { NoPythonKernelsNotebookController } from './noPythonKernelsNotebookController';
 import { VSCodeNotebookController } from './vscodeNotebookController';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IVSCodeNotebookController } from './types';
@@ -99,6 +98,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         controller: IVSCodeNotebookController;
         selected: boolean;
     }>();
+    private readonly _onNotebookControllersLoaded = new EventEmitter<Readonly<IVSCodeNotebookController[]>>();
 
     // Promise to resolve when we have loaded our controllers
     private controllersPromise?: Promise<void>;
@@ -111,6 +111,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
     private _controllersLoaded?: boolean;
     public get onNotebookControllerSelectionChanged() {
         return this._onNotebookControllerSelectionChanged.event;
+    }
+    public get onNotebookControllersLoaded() {
+        return this._onNotebookControllersLoaded.event;
     }
     public get kernelConnections() {
         return this.loadNotebookControllers().then(() => this.allKernelConnections);
@@ -127,8 +130,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         return this.serverConnectionType.isLocalLaunch;
     }
     private wasPythonInstalledWhenFetchingControllers?: boolean;
-    private interactiveNoPythonController?: NoPythonKernelsNotebookController;
-    private notebookNoPythonController?: NoPythonKernelsNotebookController;
     private remoteRefreshedEmitter = new EventEmitter<LiveRemoteKernelConnectionMetadata[]>();
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
@@ -320,16 +321,6 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         traceVerbose(`Found ${cachedConnections.length} non-cached controllers`);
         this.createNotebookControllers(nonCachedConnections);
 
-        // If there aren't any Python kernels, then add a placeholder for `Python` which will prompt users to install python (only do this in the node version so
-        // we don't end up with a kernel that asks to install python)
-        if (!this.isWeb) {
-            if ([...this.registeredControllers.values()].some((item) => isPythonKernelConnection(item.connection))) {
-                this.removeNoPythonControllers();
-            } else {
-                this.registerNoPythonControllers();
-            }
-        }
-
         // Update total number of connection & the like for existing remote controllers.
         nonCachedConnections.forEach((connection) => {
             const controller = this.registeredControllers.get(connection.id);
@@ -376,6 +367,9 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
         if (liveConnections.length > 0) {
             this.remoteRefreshedEmitter.fire(liveConnections);
         }
+
+        // Signal that we have loaded controllers
+        this._onNotebookControllersLoaded.fire(Array.from(this.registeredControllers.values()));
     }
 
     private listKernels(
@@ -500,36 +494,7 @@ export class NotebookControllerManager implements INotebookControllerManager, IE
             return matchingKernelNameController || matchingKernelLanguageController || defaultController;
         }
     }
-    private removeNoPythonControllers() {
-        this.notebookNoPythonController?.dispose();
-        this.interactiveNoPythonController?.dispose();
 
-        this.notebookNoPythonController = undefined;
-        this.interactiveNoPythonController = undefined;
-    }
-    private registerNoPythonControllers() {
-        if (this.notebookNoPythonController) {
-            return;
-        }
-        this.notebookNoPythonController = new NoPythonKernelsNotebookController(
-            JupyterNotebookView,
-            this.notebook,
-            this.commandManager,
-            this.disposables,
-            this.extensionChecker,
-            this.appShell
-        );
-        this.interactiveNoPythonController = new NoPythonKernelsNotebookController(
-            InteractiveWindowView,
-            this.notebook,
-            this.commandManager,
-            this.disposables,
-            this.extensionChecker,
-            this.appShell
-        );
-        this.disposables.push(this.interactiveNoPythonController);
-        this.disposables.push(this.notebookNoPythonController);
-    }
     private async onDidChangeExtensions() {
         if (!this.isLocalLaunch || !this.controllersPromise) {
             return;
