@@ -6,7 +6,7 @@
 import { inject, injectable, optional } from 'inversify';
 import { CodeLens, ConfigurationTarget, env, Range, Uri, commands } from 'vscode';
 import { IKernelProvider } from '../../kernels/types';
-import { ICommandNameArgumentTypeMapping } from '../../platform/common/application/commands';
+import { ICommandNameArgumentTypeMapping } from '../../commands';
 import {
     IApplicationShell,
     ICommandManager,

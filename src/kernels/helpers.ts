@@ -27,7 +27,7 @@ import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-path
 import { DataScience } from '../platform/common/utils/localize';
 import { SysInfoReason } from '../platform/messageTypes';
 import { getNormalizedInterpreterPath, getInterpreterHash } from '../platform/pythonEnvironments/info/interpreter';
-import { getTelemetrySafeVersion } from '../telemetry/helpers';
+import { getTelemetrySafeVersion } from '../platform/telemetry/helpers';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { fsPathToUri } from '../platform/vscode-path/utils';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';

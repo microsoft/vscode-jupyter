@@ -2736,7 +2736,7 @@ No properties for event
 
 [src/notebooks/telemetry/notebookOrKernelLanguageTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/telemetry/notebookOrKernelLanguageTelemetry.ts)
 ```typescript
-import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
+import { getTelemetrySafeLanguage } from '../../platform/telemetry/helpers';
 
 export function sendNotebookOrKernelLanguageTelemetry(
     telemetryEvent: Telemetry.SwitchToExistingKernel | Telemetry.NotebookLanguage,
@@ -8622,7 +8622,7 @@ No description provided
 
 [src/notebooks/telemetry/notebookOrKernelLanguageTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/telemetry/notebookOrKernelLanguageTelemetry.ts)
 ```typescript
-import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
+import { getTelemetrySafeLanguage } from '../../platform/telemetry/helpers';
 
 export function sendNotebookOrKernelLanguageTelemetry(
     telemetryEvent: Telemetry.SwitchToExistingKernel | Telemetry.NotebookLanguage,
@@ -9056,7 +9056,7 @@ No properties for event
 
 ## Locations Used
 
-[src/telemetry/envFileTelemetry.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/envFileTelemetry.node.ts)
+[src/platform/telemetry/envFileTelemetry.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/telemetry/envFileTelemetry.node.ts)
 ```typescript
 }
 
@@ -9086,7 +9086,7 @@ No properties for event
 
 ## Locations Used
 
-[src/telemetry/startupTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/startupTelemetry.ts)
+[src/platform/telemetry/startupTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/telemetry/startupTelemetry.ts)
 ```typescript
         await activatedPromise;
         durations.totalActivateTime = stopWatch.elapsedTime;
@@ -9098,7 +9098,7 @@ No properties for event
 ```
 
 
-[src/telemetry/startupTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/startupTelemetry.ts)
+[src/platform/telemetry/startupTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/telemetry/startupTelemetry.ts)
 ```typescript
                 traceError('getActivationTelemetryProps() failed.', ex);
             }
@@ -9110,7 +9110,7 @@ No properties for event
 ```
 
 
-[src/telemetry/startupTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/startupTelemetry.ts)
+[src/platform/telemetry/startupTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/telemetry/startupTelemetry.ts)
 ```typescript
 
 async function getActivationTelemetryProps(

@@ -7,7 +7,7 @@ import * as os from 'os';
 import { coerce, SemVer } from 'semver';
 import { Uri } from 'vscode';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { EventName, PlatformErrors } from '../../../telemetry/constants';
+import { EventName, PlatformErrors } from '../../telemetry/constants';
 import { getOSType, OSType } from '../utils/platform';
 import { parseVersion } from '../utils/version.node';
 import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from './constants.node';

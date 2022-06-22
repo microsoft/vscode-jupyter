@@ -29,12 +29,12 @@ import {
 import { noop } from '../../platform/common/utils/misc';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { InterpreterPackages } from '../../telemetry/interpreterPackages.node';
+import { InterpreterPackages } from '../../platform/telemetry/interpreterPackages.node';
 import { getInterpreterHash } from '../../platform/pythonEnvironments/info/interpreter';
 import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants';
 import { sleep } from '../../platform/common/utils/async';
 import { trackPackageInstalledIntoInterpreter } from './productInstaller';
-import { IInterpreterPackages } from '../../telemetry/types';
+import { IInterpreterPackages } from '../../telemetry';
 import { translateProductToModule } from './utils';
 
 export async function isModulePresentInEnvironment(memento: Memento, product: Product, interpreter: PythonEnvironment) {

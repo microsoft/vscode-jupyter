@@ -14,8 +14,8 @@ import '../../platform/common/extensions';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
-import { EventName } from '../../telemetry/constants';
-import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
+import { EventName } from '../../platform/telemetry/constants';
+import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { getAssociatedJupyterNotebook, isJupyterNotebook, splitMultilineString } from '../../platform/common/utils';
 
 /*

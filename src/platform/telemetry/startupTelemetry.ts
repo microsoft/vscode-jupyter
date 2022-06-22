@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IWorkspaceService } from '../platform/common/application/types';
-import { isTestExecution } from '../platform/common/constants';
-import { traceError } from '../platform/logging';
-import { IServiceContainer } from '../platform/ioc/types';
+import { IWorkspaceService } from '../common/application/types';
+import { isTestExecution } from '../common/constants';
+import { traceError } from '../logging';
+import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '.';
 import { EventName } from './constants';
-import { IEventNamePropertyMapping } from './types';
+import { IEventNamePropertyMapping } from '../../telemetry';
 
 interface IStopWatch {
     elapsedTime: number;
