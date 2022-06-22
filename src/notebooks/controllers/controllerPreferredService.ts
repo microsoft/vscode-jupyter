@@ -11,7 +11,11 @@ import {
     Uri,
     workspace
 } from 'vscode';
-import { findKernelSpecMatchingInterpreter, getLanguageInNotebookMetadata } from '../../kernels/helpers';
+import {
+    findKernelSpecMatchingInterpreter,
+    getLanguageInNotebookMetadata,
+    isPythonNotebook
+} from '../../kernels/helpers';
 import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConnectionType';
 import { trackKernelResourceInformation } from '../../kernels/telemetry/helper';
 import { IKernelFinder, KernelConnectionMetadata } from '../../kernels/types';
@@ -26,7 +30,7 @@ import {
 } from '../../platform/common/constants';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IDisposableRegistry, Resource } from '../../platform/common/types';
-import { getNotebookMetadata, getResourceType, isPythonNotebook } from '../../platform/common/utils';
+import { getNotebookMetadata, getResourceType } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../platform/logging';

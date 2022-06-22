@@ -1,10 +1,11 @@
 import { inject } from 'inversify';
 import { NotebookDocument } from 'vscode';
+import { isPythonNotebook } from '../../kernels/helpers';
 import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConnectionType';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { IDisposableRegistry, IsWebExtension, Resource } from '../../platform/common/types';
-import { getNotebookMetadata, isPythonNotebook } from '../../platform/common/utils';
+import { getNotebookMetadata } from '../../platform/common/utils';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { traceInfoIfCI, traceVerbose, traceDecoratorVerbose, traceError } from '../../platform/logging';
 import { createActiveInterpreterController } from './helpers';

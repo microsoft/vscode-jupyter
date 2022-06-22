@@ -3,6 +3,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
+import { isPythonNotebook } from '../../kernels/helpers';
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
 import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConnectionType';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
@@ -13,7 +14,7 @@ import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { InteractiveWindowView, JupyterNotebookView } from '../../platform/common/constants';
 import { IDisposableRegistry, IExtensions } from '../../platform/common/types';
-import { isPythonNotebook, getNotebookMetadata } from '../../platform/common/utils';
+import { getNotebookMetadata } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
