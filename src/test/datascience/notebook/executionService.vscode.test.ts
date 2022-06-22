@@ -50,7 +50,8 @@ import {
     getCellOutputs,
     waitForCellHavingOutput,
     waitForCellExecutionToComplete,
-    createTemporaryNotebookFromFile
+    createTemporaryNotebookFromFile,
+    deleteAllCellsAndWait
 } from './helper.node';
 import { openNotebook } from '../helpers.node';
 import { noop, swallowExceptions } from '../../../platform/common/utils/misc';
@@ -94,6 +95,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             await startJupyterServer();
             await prewarmNotebooks();
             sinon.restore();
+            await createEmptyPythonNotebook(disposables);
             vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
             traceInfo('Suite Setup (completed)');
         } catch (e) {
@@ -107,8 +109,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         try {
             traceInfo(`Start Test ${this.currentTest?.title}`);
             sinon.restore();
-            await startJupyterServer();
-            await createEmptyPythonNotebook(disposables);
             assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
             // With less realestate, the outputs might not get rendered (VS Code optimization to avoid rendering if not in viewport).
             await commands.executeCommand('workbench.action.closePanel');
@@ -123,7 +123,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this.currentTest?.title);
         }
-        await closeNotebooksAndCleanUpAfterTests(disposables);
+        await deleteAllCellsAndWait();
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
