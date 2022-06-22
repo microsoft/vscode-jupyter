@@ -11,7 +11,7 @@ import { sleep } from '../../platform/common/utils/async';
 import { Common } from '../../platform/common/utils/localize';
 import { VSCodeNotebookController } from '../../notebooks/controllers/vscodeNotebookController';
 import { IJupyterKernelSpec } from '../../kernels/types';
-import { ExtensionRecommendationService } from '../../webviews/extension-side/extensionRecommendation.node';
+import { ExtensionRecommendationService } from '../../standalone/recommendation/extensionRecommendation.node';
 import { JupyterNotebookView } from '../../platform/common/constants';
 import { IControllerSelection } from '../../notebooks/controllers/types';
 

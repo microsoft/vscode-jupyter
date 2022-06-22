@@ -156,6 +156,8 @@ export namespace Commands {
     export const RunByLineStop = 'jupyter.runByLineStop';
     export const ReplayPylanceLog = 'jupyter.replayPylanceLog';
     export const ReplayPylanceLogStep = 'jupyter.replayPylanceLogStep';
+    export const InstallPythonExtensionViaKernelPicker = 'jupyter.installPythonExtensionViaKernelPicker';
+    export const InstallPythonViaKernelPicker = 'jupyter.installPythonViaKernelPicker';
 }
 
 export namespace CodeLensCommands {
@@ -420,6 +422,7 @@ export enum Telemetry {
     PythonModuleInstall = 'DS_INTERNAL.PYTHON_MODULE_INSTALL',
     PythonNotInstalled = 'DS_INTERNAL.PYTHON_NOT_INSTALLED',
     PythonExtensionNotInstalled = 'DS_INTERNAL.PYTHON_EXTENSION_NOT_INSTALLED',
+    PythonExtensionInstalledViaKernelPicker = 'DS_INTERNAL.PYTHON_EXTENSION_INSTALLED_VIA_KERNEL_PICKER',
     KernelNotInstalled = 'DS_INTERNAL.KERNEL_NOT_INSTALLED',
     JupyterCommandLineNonDefault = 'DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE',
     NewFileForInteractiveWindow = 'DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE',

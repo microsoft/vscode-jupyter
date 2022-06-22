@@ -18,7 +18,7 @@ import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironmen
 import { TelemetryErrorProperties, ErrorCategory } from '../platform/errors/types';
 import { ExportFormat } from '../notebooks/export/types';
 import { InterruptResult, KernelConnectionMetadata, KernelInterpreterDependencyResponse } from '../kernels/types';
-import { IExportedKernelService } from '../webviews/extension-side/api/extension';
+import { IExportedKernelService } from '../standalone/api/extension';
 import { SelectJupyterUriCommandSource } from '../kernels/jupyter/serverSelector';
 import { TerminalShellType } from '../platform/terminals/types';
 import { PreferredKernelExactMatchReason } from '../notebooks/controllers/types';
@@ -510,6 +510,11 @@ export interface IEventNamePropertyMapping {
             | 'displayed' // Message displayed.
             | 'dismissed' // user dismissed the message.
             | 'download'; // User chose click the download link.
+    };
+    [Telemetry.PythonExtensionInstalledViaKernelPicker]: {
+        action:
+            | 'success' // Correctly installed and hooked the API
+            | 'failed'; // Failed to install correctly
     };
     [Telemetry.KernelNotInstalled]: {
         action: 'displayed'; // Message displayed.

@@ -33,7 +33,7 @@ import { fsPathToUri } from '../platform/vscode-path/utils';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
 import { JupyterKernelSpec } from './jupyter/jupyterKernelSpec';
 import { Resource } from '../platform/common/types';
-import { getResourceType, isPythonNotebook } from '../platform/common/utils';
+import { getResourceType } from '../platform/common/utils';
 import { sendTelemetryEvent } from '../telemetry';
 
 // https://jupyter-client.readthedocs.io/en/stable/kernels.html
@@ -127,6 +127,22 @@ export function getInterpreterHashInMetadata(
             : undefined;
     return metadataInterpreter?.hash;
 }
+
+export function isPythonNotebook(metadata?: nbformat.INotebookMetadata) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const kernelSpec = metadata?.kernelspec as any as Partial<IJupyterKernelSpec> | undefined;
+    if (metadata?.language_info?.name && metadata.language_info.name !== PYTHON_LANGUAGE) {
+        return false;
+    }
+
+    if (kernelSpec?.name?.includes(PYTHON_LANGUAGE)) {
+        return true;
+    }
+
+    // Valid notebooks will have a language information in the metadata.
+    return kernelSpec?.language === PYTHON_LANGUAGE || metadata?.language_info?.name === PYTHON_LANGUAGE;
+}
+
 export function rankKernels(
     kernels: KernelConnectionMetadata[],
     resource: Resource,

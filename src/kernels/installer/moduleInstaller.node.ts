@@ -2,14 +2,12 @@
 // Licensed under the MIT License.
 import { CancellationToken, CancellationTokenSource, Progress, ProgressLocation, ProgressOptions } from 'vscode';
 import { IApplicationShell } from '../../platform/common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants';
-import { traceError, traceInfo } from '../../platform/logging';
+import { traceInfo } from '../../platform/logging';
 import {
     IProcessServiceFactory,
     IPythonExecutionFactory,
     ObservableExecutionResult
 } from '../../platform/common/process/types.node';
-import { IOutputChannel } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { Products } from '../../platform/common/utils/localize';
 import { IEnvironmentVariablesService } from '../../platform/common/variables/types';
@@ -151,34 +149,6 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         await shell.withProgress(options, async (progress, token: CancellationToken) => install(progress, token));
     }
     public abstract isSupported(interpreter: PythonEnvironment): Promise<boolean>;
-
-    // TODO: Figure out when to elevate
-    protected elevatedInstall(execPath: string, args: string[]) {
-        const options = {
-            name: 'VS Code Jupyter'
-        };
-        const outputChannel = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        const command = `"${execPath.replace(/\\/g, '/')}" ${args.join(' ')}`;
-
-        traceInfo(`[Elevated] ${command}`);
-
-        const sudo = require('sudo-prompt');
-
-        sudo.exec(command, options, async (error: string, stdout: string, stderr: string) => {
-            if (error) {
-                const shell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-                await shell.showErrorMessage(error);
-            } else {
-                outputChannel.show();
-                if (stdout) {
-                    traceInfo(stdout);
-                }
-                if (stderr) {
-                    traceError(`Warning: ${stderr}`);
-                }
-            }
-        });
-    }
     protected abstract getExecutionArgs(
         moduleName: string,
         interpreter: PythonEnvironment,

@@ -4,11 +4,10 @@
 import '../../platform/common/extensions';
 
 import type * as nbformat from '@jupyterlab/nbformat';
-import { NotebookCell, NotebookCellKind, NotebookDocument, Range, TextDocument, Uri } from 'vscode';
+import { NotebookCellKind, NotebookDocument, Range, TextDocument, Uri } from 'vscode';
 import { CellMatcher } from './cellMatcher';
-import { ICell, ICellRange, IJupyterSettings, Resource } from '../../platform/common/types';
+import { ICell, ICellRange, IJupyterSettings } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
-import { getInteractiveCellMetadata } from '../helpers';
 import { createJupyterCellFromVSCNotebookCell } from '../../kernels/execution/helpers';
 import { appendLineFeed, parseForComments, generateMarkdownFromCodeLines } from '../../platform/common/utils';
 
@@ -76,13 +75,6 @@ function generateMarkdownCell(code: string[], uri: Uri | undefined, useSourceAsI
         uri,
         data: createMarkdownCell(code, useSourceAsIs)
     };
-}
-
-export function getCellResource(cell: NotebookCell): Resource {
-    if (getInteractiveCellMetadata(cell)?.interactive.uristring) {
-        return Uri.parse(cell.metadata.interactive.uristring);
-    }
-    return undefined;
 }
 
 export function generateCells(

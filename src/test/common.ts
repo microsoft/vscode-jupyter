@@ -4,7 +4,7 @@
 'use strict';
 
 import { NotebookDocument, Uri, Event } from 'vscode';
-import { IExtensionApi } from '../webviews/extension-side/api/api';
+import { IExtensionApi } from '../standalone/api/api';
 import { IDisposable } from '../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../platform/ioc/types';
 
