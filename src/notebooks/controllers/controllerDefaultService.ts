@@ -1,4 +1,4 @@
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
 import { isPythonNotebook } from '../../kernels/helpers';
 import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConnectionType';
@@ -16,6 +16,7 @@ import {
     IVSCodeNotebookController
 } from './types';
 
+@injectable()
 export class ControllerDefaultService implements IControllerDefaultService {
     private get isLocalLaunch(): boolean {
         return this.serverConnectionType.isLocalLaunch;
