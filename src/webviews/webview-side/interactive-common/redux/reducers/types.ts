@@ -11,8 +11,8 @@ import {
     ILoadIPyWidgetClassFailureAction,
     NotifyIPyWidgetWidgetVersionNotSupportedAction
 } from '../../../../../platform/messageTypes';
+import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../../../../../telemetry';
 import { BaseReduxActionPayload } from '../../../../types';
-import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../../../common/constants';
 import { ActionWithPayload, ReducerArg } from '../../../react-common/reduxUtils';
 import { CursorPos, IMainState } from '../../mainState';
 

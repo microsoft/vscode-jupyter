@@ -65,7 +65,6 @@ import { Common, OutputChannelNames } from './platform/common/utils/localize';
 import { IServiceContainer, IServiceManager } from './platform/ioc/types';
 import { sendErrorTelemetry, sendStartupTelemetry } from './platform/telemetry/startupTelemetry';
 import { noop } from './platform/common/utils/misc';
-import { PythonExtension } from './webviews/webview-side/common/constants';
 import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.node';
 import { registerTypes as registerKernelTypes } from './kernels/serviceRegistry.node';
 import { registerTypes as registerNotebookTypes } from './notebooks/serviceRegistry.node';
@@ -75,7 +74,13 @@ import { registerTypes as registerTelemetryTypes } from './platform/telemetry/se
 import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry.node';
 import { registerTypes as registerWebviewTypes } from './webviews/extension-side/serviceRegistry.node';
 import { IExtensionActivationManager } from './platform/activation/types';
-import { isCI, isTestExecution, JUPYTER_OUTPUT_CHANNEL, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants';
+import {
+    isCI,
+    isTestExecution,
+    JUPYTER_OUTPUT_CHANNEL,
+    PythonExtension,
+    STANDARD_OUTPUT_CHANNEL
+} from './platform/common/constants';
 import { getDisplayPath } from './platform/common/platform/fs-paths';
 import { IFileSystemNode } from './platform/common/platform/types.node';
 import { getJupyterOutputChannel } from './standalone/devTools/jupyterOutputChannel';
