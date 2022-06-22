@@ -122,7 +122,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                     <VariableExplorerButtonCellFormatter
                         showDataExplorer={this.props.showDataExplorer}
                         baseTheme={this.props.baseTheme}
-                        isWeb={() => this.props.isWeb}
                     />
                 )
             },
@@ -315,7 +314,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             return baseHeight;
         }
 
-        // Subtract another 10px to take into acount the 5px margin in .variable-explorer
+        // Subtract another 10px to take into account the 5px margin in .variable-explorer
         // src\webviews/webview-side\interactive-common\variableExplorer.css
         return baseHeight - variableExplorerMenuBar.clientHeight - 10;
     }

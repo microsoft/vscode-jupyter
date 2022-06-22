@@ -14,6 +14,7 @@ import { JupyterVariableDataProvider } from './dataviewer/jupyterVariableDataPro
 import { JupyterVariableDataProviderFactory } from './dataviewer/jupyterVariableDataProviderFactory';
 import {
     IDataViewer,
+    IDataViewerDependencyService,
     IDataViewerFactory,
     IJupyterVariableDataProvider,
     IJupyterVariableDataProviderFactory
@@ -32,6 +33,7 @@ import { JupyterKernelServiceFactory } from './api/kernelApi';
 import { IExportedKernelServiceFactory } from './api/api';
 import { ApiAccessService } from './api/apiAccessService';
 import { ExtensionActivationManager } from './activationManager';
+import { DataViewerDependencyService } from './dataviewer/dataViewerDependencyService';
 
 export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
@@ -49,6 +51,10 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         DataViewerCommandRegistry
+    );
+    serviceManager.addSingleton<IDataViewerDependencyService>(
+        IDataViewerDependencyService,
+        DataViewerDependencyService
     );
 
     // Variables view

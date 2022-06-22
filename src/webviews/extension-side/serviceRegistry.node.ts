@@ -35,7 +35,7 @@ import { DataViewerCommandRegistry } from './dataviewer/dataViewerCommandRegistr
 import { DataViewer } from './dataviewer/dataViewer';
 import { IPlotViewer, IPlotViewerProvider } from './plotting/types';
 import { PlotViewer } from './plotting/plotViewer.node';
-import { DataViewerDependencyService } from './dataviewer/dataViewerDependencyService.node';
+import { DataViewerDependencyService } from './dataviewer/dataViewerDependencyService';
 import { PlotViewerProvider } from './plotting/plotViewerProvider.node';
 import { DataViewerFactory } from './dataviewer/dataViewerFactory';
 import { NotebookWatcher } from './variablesView/notebookWatcher';
