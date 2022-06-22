@@ -45,7 +45,7 @@ export class ControllerRegistration implements IControllerRegistration {
     public get values(): IVSCodeNotebookController[] {
         return [...this.registeredControllers.values()];
     }
-    public get connections(): KernelConnectionMetadata[] {
+    private get connections(): KernelConnectionMetadata[] {
         return [...this.registeredConnections.values()];
     }
     constructor(
