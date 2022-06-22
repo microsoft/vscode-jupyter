@@ -211,16 +211,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         disposeAllDisposables(this.disposables);
     }
 
-    public updateMetadata(kernelConnectionMetadata: KernelConnectionMetadata) {
-        if (kernelConnectionMetadata.id === this.kernelConnection.id) {
-            this.kernelConnection = kernelConnectionMetadata;
-            this.controller.detail =
-                this.kernelConnection.kind === 'connectToLiveRemoteKernel'
-                    ? getRemoteKernelSessionInformation(this.kernelConnection)
-                    : '';
-        }
-    }
-
     public async updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {
         traceVerbose(`Setting controller affinity for ${getDisplayPath(notebook.uri)} ${this.id}`);
         this.controller.updateNotebookAffinity(notebook, affinity);

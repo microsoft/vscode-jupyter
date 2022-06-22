@@ -79,8 +79,7 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
             (uris) =>
                 uris.forEach((uri) => {
                     // Remove controllers associated with remote connections that are no longer available.
-                    const controllers = [...this.registration.values];
-                    controllers.forEach((item) => {
+                    this.registration.values.forEach((item) => {
                         if (
                             item.connection.kind !== 'connectToLiveRemoteKernel' &&
                             item.connection.kind !== 'startUsingRemoteKernelSpec'
