@@ -9,7 +9,7 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { convertDebugProtocolVariableToIJupyterVariable } from '../../../kernels/variables/helpers';
 import { IJupyterVariables } from '../../../kernels/variables/types';
 import { IExtensionSingleActivationService } from '../../../platform/activation/types';
-import { ICommandNameArgumentTypeMapping } from '../../../platform/common/application/commands';
+import { ICommandNameArgumentTypeMapping } from '../../../commands';
 import {
     IApplicationShell,
     ICommandManager,

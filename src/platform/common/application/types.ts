@@ -72,7 +72,7 @@ import {
 } from 'vscode';
 
 import { IAsyncDisposable, Resource } from '../types';
-import { ICommandNameArgumentTypeMapping } from './commands';
+import { ICommandNameArgumentTypeMapping } from '../../../commands';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/unified-signatures */
 

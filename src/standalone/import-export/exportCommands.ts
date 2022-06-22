@@ -5,7 +5,7 @@
 
 import { NotebookDocument, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
 import { getLocString } from '../../webviews/webview-side/react-common/locReactSide';
-import { ICommandNameArgumentTypeMapping } from '../../platform/common/application/commands';
+import { ICommandNameArgumentTypeMapping } from '../../commands';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { traceInfo } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';

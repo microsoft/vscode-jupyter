@@ -13,12 +13,12 @@ import {
     Uri,
     ViewColumn
 } from 'vscode';
-import { IShowDataViewerFromVariablePanel } from '../../messageTypes';
-import { Commands as DSCommands } from '../../../platform/common/constants';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { CommandSource } from '../../testing/common/constants';
-import { Channel } from './types';
-import { SelectJupyterUriCommandSource } from '../../../kernels/jupyter/serverSelector';
+import { IShowDataViewerFromVariablePanel } from './platform/messageTypes';
+import { Commands as DSCommands } from './platform/common/constants';
+import { PythonEnvironment } from './platform/pythonEnvironments/info';
+import { CommandSource } from './platform/testing/common/constants';
+import { Channel } from './platform/common/application/types';
+import { SelectJupyterUriCommandSource } from './kernels/jupyter/serverSelector';
 
 export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
 
