@@ -64,15 +64,7 @@ import {
     areKernelConnectionsEqual,
     getKernelRegistrationInfo
 } from '../../kernels/helpers';
-import {
-    IKernel,
-    IKernelProvider,
-    isLocalConnection,
-    KernelConnectionMetadata,
-    LiveRemoteKernelConnectionMetadata,
-    LocalKernelSpecConnectionMetadata,
-    PythonKernelConnectionMetadata
-} from '../../kernels/types';
+import { IKernel, IKernelProvider, isLocalConnection, KernelConnectionMetadata } from '../../kernels/types';
 import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
@@ -190,13 +182,12 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         // Hook up to see when this NotebookController is selected by the UI
         this.controller.onDidChangeSelectedNotebooks(this.onDidChangeSelectedNotebooks, this, this.disposables);
     }
-    public updateRemoteKernelDetails(kernelConnection: LiveRemoteKernelConnectionMetadata) {
-        this.controller.detail = getRemoteKernelSessionInformation(kernelConnection);
-    }
-    public updateInterpreterDetails(
-        kernelConnection: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
-    ) {
-        this.controller.label = getDisplayNameOrNameOfKernelConnection(kernelConnection);
+    public updateConnection(kernelConnection: KernelConnectionMetadata) {
+        if (kernelConnection.kind === 'connectToLiveRemoteKernel') {
+            this.controller.detail = getRemoteKernelSessionInformation(kernelConnection);
+        } else {
+            this.controller.label = getDisplayNameOrNameOfKernelConnection(kernelConnection);
+        }
     }
     public asWebviewUri(localResource: Uri): Uri {
         return this.controller.asWebviewUri(localResource);

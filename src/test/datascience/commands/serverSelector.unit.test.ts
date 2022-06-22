@@ -6,7 +6,6 @@ import { CommandManager } from '../../../platform/common/application/commandMana
 import { ICommandManager } from '../../../platform/common/application/types';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { Commands } from '../../../platform/common/constants';
-import { INotebookControllerManager } from '../../../notebooks/types';
 import { JupyterServerSelectorCommand } from '../../../notebooks/serverSelector';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 

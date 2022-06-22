@@ -10,12 +10,12 @@ import { waitForCondition } from '../../platform/common/utils/async';
 import { debounceAsync } from '../../platform/common/utils/decorators';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { EnvironmentType } from '../../platform/pythonEnvironments/info';
-import { INotebookControllerManager } from '../types';
+import { IControllerLoader } from './types';
 
 @injectable()
 export class CondaControllerRefresher implements IExtensionSingleActivationService {
     constructor(
-        @inject(INotebookControllerManager) private readonly controllerManager: INotebookControllerManager,
+        @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
 
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
@@ -40,7 +40,7 @@ export class CondaControllerRefresher implements IExtensionSingleActivationServi
 
         await this.interpreters.refreshInterpreters();
         // Possible discovering interpreters is very quick and we've already discovered it, hence refresh kernels immediately.
-        await this.controllerManager.loadNotebookControllers(true);
+        await this.controllerLoader.loadControllers(true);
 
         // Possible discovering interpreters is slow, hence try for around 10s.
         // I.e. just because we know a conda env was created doesn't necessarily mean its immediately discoverable and usable.
@@ -61,6 +61,6 @@ export class CondaControllerRefresher implements IExtensionSingleActivationServi
             5000
         );
 
-        await this.controllerManager.loadNotebookControllers(true);
+        await this.controllerLoader.loadControllers(true);
     }
 }

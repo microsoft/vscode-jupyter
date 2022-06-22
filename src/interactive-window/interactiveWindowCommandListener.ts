@@ -23,13 +23,7 @@ import {
     IDocumentManager,
     IVSCodeNotebook
 } from '../platform/common/application/types';
-import {
-    Commands,
-    JupyterNotebookView,
-    JVSC_EXTENSION_ID,
-    PYTHON_LANGUAGE,
-    Telemetry
-} from '../platform/common/constants';
+import { Commands, JVSC_EXTENSION_ID, PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
 import { traceError, traceInfo } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
 import { IConfigurationService, IDataScienceCommandListener, IDisposableRegistry } from '../platform/common/types';
@@ -37,7 +31,7 @@ import * as localize from '../platform/common/utils/localize';
 import { captureTelemetry } from '../telemetry';
 import { CommandSource } from '../platform/testing/common/constants';
 import { JupyterInstallError } from '../platform/errors/jupyterInstallError';
-import { INotebookControllerManager, INotebookEditorProvider } from '../notebooks/types';
+import { INotebookEditorProvider } from '../notebooks/types';
 import { KernelConnectionMetadata } from '../kernels/types';
 import { INotebookExporter, IJupyterExecution } from '../kernels/jupyter/types';
 import { IDataScienceErrorHandler } from '../kernels/errors/types';
@@ -49,6 +43,7 @@ import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-path
 import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
 import { openAndShowNotebook } from '../platform/common/utils/notebooks';
 import { noop } from '../platform/common/utils/misc';
+import { IControllerPreferredService } from '../notebooks/controllers/types';
 
 @injectable()
 export class InteractiveWindowCommandListener implements IDataScienceCommandListener {
@@ -69,7 +64,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         @inject(IClipboard) private clipboard: IClipboard,
         @inject(IVSCodeNotebook) private notebook: IVSCodeNotebook,
         @inject(ICommandManager) private commandManager: ICommandManager,
-        @inject(INotebookControllerManager) private controllerManager: INotebookControllerManager
+        @inject(IControllerPreferredService) private controllerPreferredService: IControllerPreferredService
     ) {}
 
     public register(commandManager: ICommandManager): void {
@@ -279,17 +274,16 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                         getDisplayPath(file)
                     );
                     // Next open this notebook & execute it.
-                    await this.notebook.showNotebookDocument(uri, {
+                    const editor = await this.notebook.showNotebookDocument(uri, {
                         preserveFocus: false,
                         viewColumn: ViewColumn.Beside
                     });
-                    const preferredController = await this.controllerManager.getActiveInterpreterOrDefaultController(
-                        JupyterNotebookView,
-                        file
+                    const { controller } = await this.controllerPreferredService.computePreferredNotebookController(
+                        editor.notebook
                     );
-                    if (preferredController) {
+                    if (controller) {
                         await this.commandManager.executeCommand('notebook.selectKernel', {
-                            id: preferredController.id,
+                            id: controller.id,
                             extension: JVSC_EXTENSION_ID
                         });
                     }

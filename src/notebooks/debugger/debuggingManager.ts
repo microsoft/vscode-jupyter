@@ -21,7 +21,6 @@ import { Commands as DSCommands, EditorContexts } from '../../platform/common/co
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { ContextKey } from '../../platform/common/contextKey';
 import { RunByLineController } from './runByLineController';
-import { INotebookControllerManager } from '../types';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { DebuggingTelemetry, pythonKernelDebugAdapter } from '../../kernels/debugger/constants';
@@ -34,6 +33,7 @@ import { assertIsDebugConfig, IpykernelCheckResult } from '../../kernels/debugge
 import { IDebuggingManager, IKernelDebugAdapterConfig, KernelDebugMode } from '../../kernels/debugger/types';
 import { DebuggingManagerBase } from './debuggingManagerBase';
 import { noop } from '../../platform/common/utils/misc';
+import { IControllerLoader, IControllerSelection } from '../controllers/types';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
@@ -49,14 +49,15 @@ export class DebuggingManager
 
     public constructor(
         @inject(IKernelProvider) kernelProvider: IKernelProvider,
-        @inject(INotebookControllerManager) notebookControllerManager: INotebookControllerManager,
+        @inject(IControllerLoader) controllerLoader: IControllerLoader,
+        @inject(IControllerSelection) controllerSelection: IControllerSelection,
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(IApplicationShell) appShell: IApplicationShell,
         @inject(IVSCodeNotebook) vscNotebook: IVSCodeNotebook,
         @inject(IConfigurationService) private readonly settings: IConfigurationService,
         @inject(IPlatformService) private readonly platform: IPlatformService
     ) {
-        super(kernelProvider, notebookControllerManager, commandManager, appShell, vscNotebook);
+        super(kernelProvider, controllerLoader, controllerSelection, commandManager, appShell, vscNotebook);
         this.debuggingInProgress = new ContextKey(EditorContexts.DebuggingInProgress, commandManager);
         this.runByLineInProgress = new ContextKey(EditorContexts.RunByLineInProgress, commandManager);
         this.updateToolbar(false);

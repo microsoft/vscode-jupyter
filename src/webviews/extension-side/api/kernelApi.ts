@@ -9,7 +9,6 @@ import {
     IKernel,
     KernelConnectionMetadata as IKernelKernelConnectionMetadata
 } from '../../../kernels/types';
-import { INotebookControllerManager } from '../../../notebooks/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposable, IDisposableRegistry, IExtensions } from '../../../platform/common/types';
@@ -30,6 +29,7 @@ import { KernelConnector } from '../../../notebooks/controllers/kernelConnector'
 import { DisplayOptions } from '../../../kernels/displayOptions';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { IExportedKernelServiceFactory } from './api';
+import { IControllerLoader, IControllerRegistration } from '../../../notebooks/controllers/types';
 
 @injectable()
 export class JupyterKernelServiceFactory implements IExportedKernelServiceFactory {
@@ -92,25 +92,22 @@ class JupyterKernelService implements IExportedKernelService {
         private readonly callingExtensionId: string,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
+        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
+        @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer
     ) {
         this.kernelProvider.onDidDisposeKernel(() => this._onDidChangeKernels.fire(), this, disposables);
         this.kernelProvider.onDidStartKernel(() => this._onDidChangeKernels.fire(), this, disposables);
-        this.notebookControllerManager.remoteRefreshed(
-            () => this._onDidChangeKernelSpecifications.fire(),
-            this,
-            disposables
-        );
+        this.controllerLoader.refreshed(() => this._onDidChangeKernelSpecifications.fire(), this, disposables);
     }
     async getKernelSpecifications(refresh?: boolean): Promise<KernelConnectionMetadata[]> {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
             extensionId: this.callingExtensionId,
             pemUsed: 'getKernelSpecifications'
         });
-        await this.notebookControllerManager.loadNotebookControllers(refresh);
-        const items = await this.notebookControllerManager.kernelConnections;
-        return items.map((item) => this.translateKernelConnectionMetadataToExportedType(item));
+        await this.controllerLoader.loadControllers(refresh);
+        const items = this.controllerRegistration.values;
+        return items.map((item) => this.translateKernelConnectionMetadataToExportedType(item.connection));
     }
     getActiveKernels(): { metadata: KernelConnectionMetadata; uri: Uri | undefined }[] {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
@@ -137,7 +134,7 @@ class JupyterKernelService implements IExportedKernelService {
                     uri: item.uri
                 });
             });
-        this.notebookControllerManager.getRegisteredNotebookControllers().forEach((item) => {
+        this.controllerRegistration.values.forEach((item) => {
             if (item.controller.notebookType !== JupyterNotebookView) {
                 return;
             }
@@ -183,20 +180,15 @@ class JupyterKernelService implements IExportedKernelService {
         spec: KernelConnectionMetadata | ActiveKernel,
         uri: Uri
     ): Promise<IKernelConnectionInfo> {
-        await this.notebookControllerManager.loadNotebookControllers();
-        const items = await this.notebookControllerManager.kernelConnections;
-        const metadata = items.find((item) => item.id === spec.id);
-        if (!metadata) {
-            throw new Error('Not found');
-        }
-        const controllers = this.notebookControllerManager.getRegisteredNotebookControllers();
-        const controller = controllers.find((item) => item.connection.id === metadata.id);
+        await this.controllerLoader.loadControllers();
+        const controllers = this.controllerRegistration.values;
+        const controller = controllers.find((item) => item.connection.id === spec.id);
         if (!controller) {
             throw new Error('Not found');
         }
         const kernel = await KernelConnector.connectToKernel(
             controller.controller,
-            metadata,
+            controller.connection,
             this.serviceContainer,
             { resource: uri, notebook: undefined },
             new DisplayOptions(false),

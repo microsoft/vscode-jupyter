@@ -19,9 +19,9 @@ import { TelemetryErrorProperties, ErrorCategory } from '../platform/errors/type
 import { ExportFormat } from '../notebooks/export/types';
 import { InterruptResult, KernelConnectionMetadata, KernelInterpreterDependencyResponse } from '../kernels/types';
 import { IExportedKernelService } from '../webviews/extension-side/api/extension';
-import { PreferredKernelExactMatchReason } from '../notebooks/controllers/notebookControllerManager';
 import { SelectJupyterUriCommandSource } from '../kernels/jupyter/serverSelector';
 import { TerminalShellType } from '../platform/terminals/types';
+import { PreferredKernelExactMatchReason } from '../notebooks/controllers/types';
 
 export type ResourceSpecificTelemetryProperties = Partial<{
     resourceType: 'notebook' | 'interactive';
