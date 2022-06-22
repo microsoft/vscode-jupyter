@@ -73,6 +73,7 @@ import { registerTypes as registerInteractiveTypes } from './interactive-window/
 import { registerTypes as registerStandaloneTypes } from './standalone/serviceRegistry.node';
 import { registerTypes as registerTelemetryTypes } from './platform/telemetry/serviceRegistry.node';
 import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry.node';
+import { registerTypes as registerWebviewTypes } from './webviews/extension-side/serviceRegistry.node';
 import { IExtensionActivationManager } from './platform/activation/types';
 import { isCI, isTestExecution, JUPYTER_OUTPUT_CHANNEL, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants';
 import { getDisplayPath } from './platform/common/platform/fs-paths';
@@ -320,6 +321,7 @@ async function activateLegacy(
     registerInteractiveTypes(serviceManager);
     registerStandaloneTypes(context, serviceManager, isDevMode);
     registerIntellisenseTypes(serviceManager, isDevMode);
+    registerWebviewTypes(serviceManager);
 
     // We need to setup this property before any telemetry is sent
     const fs = serviceManager.get<IFileSystemNode>(IFileSystemNode);
