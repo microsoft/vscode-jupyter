@@ -52,6 +52,7 @@ import {
 @injectable()
 export class ControllerPreferredService implements IControllerPreferredService, IExtensionSingleActivationService {
     private preferredControllers = new Map<NotebookDocument, IVSCodeNotebookController>();
+    private preferredCancelTokens = new Map<NotebookDocument, CancellationTokenSource>();
     private get isLocalLaunch(): boolean {
         return this.serverConnectionType.isLocalLaunch;
     }
@@ -71,6 +72,13 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
         // If the extension activates after installing Jupyter extension, then ensure we load controllers right now.
         this.notebook.notebookDocuments.forEach((notebook) => this.onDidOpenNotebookDocument(notebook));
+        this.notebook.onDidCloseNotebookDocument((document) => {
+            const token = this.preferredCancelTokens.get(document);
+            if (token) {
+                this.preferredCancelTokens.delete(document);
+                token.cancel();
+            }
+        });
     }
     public async computePreferred(
         document: NotebookDocument,
@@ -83,12 +91,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         const loadControllersPromise = this.loader.loaded;
         // Keep track of a token per document so that we can cancel the search if the doc is closed
         const preferredSearchToken = new CancellationTokenSource();
-        const disposable = this.notebook.onDidCloseNotebookDocument(
-            (e) => (e === document ? preferredSearchToken.cancel() : undefined),
-            this,
-            this.disposables
-        );
-
+        this.preferredCancelTokens.set(document, preferredSearchToken);
         try {
             let preferredConnection: KernelConnectionMetadata | undefined;
             // Don't attempt preferred kernel search for interactive window, but do make sure we
@@ -161,6 +164,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                     )}`
                 );
 
+                await loadControllersPromise;
                 const targetController = this.registration.values.find(
                     (value) => preferredConnection?.id === value.connection.id
                 );
@@ -219,8 +223,6 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         } catch (ex) {
             traceError('Failed to find & set preferred controllers', ex);
             return {};
-        } finally {
-            disposable.dispose();
         }
     }
 

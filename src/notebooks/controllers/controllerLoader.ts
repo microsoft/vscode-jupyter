@@ -51,6 +51,10 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         @inject(ServerConnectionType) private readonly serverConnectionType: ServerConnectionType,
         @inject(IControllerRegistration) private readonly registration: IControllerRegistration
     ) {
+        this.loadControllers(true).ignoreErrors();
+    }
+
+    public activate(): void {
         let timer: NodeJS.Timeout | number | undefined;
         this.interpreters.onDidChangeInterpreters(
             () => {
@@ -104,9 +108,7 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
             this,
             this.disposables
         );
-    }
 
-    public activate(): void {
         // Sign up for document either opening or closing
         this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
         // If the extension activates after installing Jupyter extension, then ensure we load controllers right now.
