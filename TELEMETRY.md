@@ -7193,7 +7193,7 @@ No description provided
 
 [src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
 ```typescript
-                    await this.controllerManager.loadNotebookControllers(true);
+                    await this.controllerLoader.loadControllers(true);
                 } else {
                     traceError('Failed to install Python Extension via Kernel Picker command');
                     sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {
