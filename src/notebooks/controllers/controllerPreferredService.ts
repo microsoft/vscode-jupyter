@@ -88,7 +88,6 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         controller?: IVSCodeNotebookController | undefined;
     }> {
         traceInfoIfCI(`Clear controller mapping for ${getDisplayPath(document.uri)}`);
-        const loadControllersPromise = this.loader.loaded;
         // Keep track of a token per document so that we can cancel the search if the doc is closed
         const preferredSearchToken = new CancellationTokenSource();
         this.preferredCancelTokens.set(document, preferredSearchToken);
@@ -164,7 +163,6 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                     )}`
                 );
 
-                await loadControllersPromise;
                 const targetController = this.registration.values.find(
                     (value) => preferredConnection?.id === value.connection.id
                 );
@@ -178,7 +176,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             } else if (document.notebookType === InteractiveWindowView) {
                 // Wait for our controllers to be loaded before we try to set a preferred on
                 // can happen if a document is opened quick and we have not yet loaded our controllers
-                await loadControllersPromise;
+                await this.loader.loaded;
 
                 // For interactive set the preferred controller as the interpreter or default
                 const defaultInteractiveController = await this.defaultService.computeDefaultController(
