@@ -21,10 +21,10 @@ import { KernelInterruptTimeoutError } from '../errors/kernelInterruptTimeoutErr
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
 import {
     IJupyterServerSession,
-    IJupyterSession,
     ISessionWithSocket,
     KernelConnectionMetadata,
-    KernelSocketInformation
+    KernelSocketInformation,
+    IBaseKernelConnectionSession
 } from '../types';
 import { ChainingExecuteRequester } from './chainingExecuteRequester';
 import { getResourceType } from '../../platform/common/utils';
@@ -70,7 +70,7 @@ export class JupyterSessionStartError extends WrappedError {
     }
 }
 
-export abstract class BaseJupyterSession implements IJupyterSession {
+export abstract class BaseJupyterSession implements IBaseKernelConnectionSession {
     /**
      * Keep a single instance of KernelConnectionWrapper.
      * This way when sessions change, we still have a single Kernel.IKernelConnection proxy (wrapper),
@@ -129,7 +129,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     private previousAnyMessageHandler?: IDisposable;
 
     constructor(
-        public readonly kind: 'localRaw' | 'remoteJupyter' | 'localJupyter',
         protected resource: Resource,
         protected readonly kernelConnectionMetadata: KernelConnectionMetadata,
         public workingDirectory: Uri,

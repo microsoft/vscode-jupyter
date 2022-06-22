@@ -6,7 +6,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter } from 'vscode';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { KernelAutoRestartMonitor } from '../../kernels/kernelAutoRestartMonitor.node';
-import { IJupyterSession, IKernel, IKernelProvider, KernelConnectionMetadata } from '../../kernels/types';
+import { IKernel, IKernelConnectionSession, IKernelProvider, KernelConnectionMetadata } from '../../kernels/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
@@ -66,7 +66,7 @@ suite('Jupyter Execution', async () => {
         );
 
         const kernel = mock<IKernel>();
-        const session = mock<IJupyterSession>();
+        const session = mock<IKernelConnectionSession>();
         const disposable = mock<IDisposable>();
         when(kernel.kernelConnectionMetadata).thenReturn(connectionMetadata);
         when(kernel.session).thenReturn(instance(session));

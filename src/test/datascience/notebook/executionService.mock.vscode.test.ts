@@ -27,7 +27,7 @@
 // import { INotebookControllerManager } from '../../../notebooks/types';
 // import { IKernelProvider } from '../../../platform/../kernels/types';
 // import {
-//     IJupyterSession,
+//     IJupyterKernelConnectionSession,
 //     INotebook,
 //     INotebookProvider,
 //     KernelSocketInformation
@@ -101,7 +101,7 @@
 //         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
 //     });
 //     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
-//     function createKernelWithMockJupyterSession(notebook: NotebookDocument, session: IJupyterSession) {
+//     function createKernelWithMockJupyterSession(notebook: NotebookDocument, session: IJupyterKernelConnectionSession) {
 //         const controller = controllerManager.getSelectedNotebookController(notebook);
 //         if (!controller) {
 //             return;

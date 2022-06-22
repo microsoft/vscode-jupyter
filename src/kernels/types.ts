@@ -171,7 +171,7 @@ export interface IKernel extends IAsyncDisposable {
      * Provides access to the underlying kernel.
      * The Jupyter kernel can be directly access via the `session.kernel` property.
      */
-    readonly session?: IJupyterSession;
+    readonly session?: IKernelConnectionSession;
     /**
      * We create IKernels early on to ensure they are mapped with the notebook documents.
      * I.e. created even before they are used.
@@ -261,12 +261,10 @@ export enum InterruptResult {
     Restarted = 'restart'
 }
 
-export const IJupyterSession = Symbol('IJupyterSession');
 /**
  * Closely represents Jupyter Labs Kernel.IKernelConnection.
  */
-export interface IJupyterSession extends IAsyncDisposable {
-    readonly kind: 'localRaw' | 'remoteJupyter' | 'localJupyter';
+export interface IBaseKernelConnectionSession extends IAsyncDisposable {
     readonly disposed: boolean;
     readonly kernel?: Kernel.IKernelConnection;
     readonly status: KernelMessage.Status;
@@ -303,7 +301,15 @@ export interface IJupyterSession extends IAsyncDisposable {
     shutdown(): Promise<void>;
 }
 
-export interface IJupyterServerSession extends IJupyterSession {
+export interface IJupyterKernelConnectionSession extends IBaseKernelConnectionSession {
+    readonly kind: 'remoteJupyter' | 'localJupyter';
+}
+export interface IRawKernelConnectionSession extends IBaseKernelConnectionSession {
+    readonly kind: 'localRaw';
+}
+export type IKernelConnectionSession = IJupyterKernelConnectionSession | IRawKernelConnectionSession;
+
+export interface IJupyterServerSession extends IJupyterKernelConnectionSession {
     readonly kind: 'remoteJupyter' | 'localJupyter';
     invokeWithFileSynced(contents: string, handler: (file: IBackupFile) => Promise<void>): Promise<void>;
     createTempfile(ext: string): Promise<string>;
@@ -429,7 +435,7 @@ export interface INotebookProvider {
     /**
      * Creates a notebook.
      */
-    create(options: NotebookCreationOptions): Promise<IJupyterSession>;
+    create(options: NotebookCreationOptions): Promise<IKernelConnectionSession>;
     /**
      * Connect to a notebook provider to prepare its connection and to get connection information
      */

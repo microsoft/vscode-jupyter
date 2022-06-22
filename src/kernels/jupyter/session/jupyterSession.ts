@@ -31,7 +31,7 @@ import { noop } from '../../../platform/common/utils/misc';
 
 // function is
 export class JupyterSession extends BaseJupyterSession implements IJupyterServerSession {
-    public override readonly kind: 'remoteJupyter' | 'localJupyter';
+    public readonly kind: 'remoteJupyter' | 'localJupyter';
 
     constructor(
         resource: Resource,
@@ -49,14 +49,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
         private readonly requestCreator: IJupyterRequestCreator,
         private readonly sessionCreator: KernelActionSource
     ) {
-        super(
-            connInfo.localLaunch ? 'localJupyter' : 'remoteJupyter',
-            resource,
-            kernelConnectionMetadata,
-            workingDirectory,
-            interruptTimeout
-        );
-
+        super(resource, kernelConnectionMetadata, workingDirectory, interruptTimeout);
         this.kind = connInfo.localLaunch ? 'localJupyter' : 'remoteJupyter';
     }
 
