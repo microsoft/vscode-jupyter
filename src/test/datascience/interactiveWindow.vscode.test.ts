@@ -13,14 +13,14 @@ import { initialize, IS_REMOTE_NATIVE_TEST, IS_CONDA_TEST } from '../initialize.
 import {
     closeInteractiveWindow,
     createStandaloneInteractiveWindow,
-    insertIntoInputEditor,
     installIPyKernel,
     runCurrentFile,
     runNewPythonFile,
     setActiveInterpreter,
     uninstallIPyKernel,
     waitForInteractiveWindow,
-    waitForLastCellToComplete
+    waitForLastCellToComplete,
+    runInteractiveWindowInput
 } from './helpers.node';
 import {
     closeNotebooksAndCleanUpAfterTests,
@@ -172,12 +172,9 @@ suite(`Interactive window`, async function () {
         await waitForInteractiveWindow(activeInteractiveWindow);
 
         // Add a few cells from the input box
-        await insertIntoInputEditor('print("first")');
-        await vscode.commands.executeCommand('interactive.execute');
-        await insertIntoInputEditor('print("second")');
-        await vscode.commands.executeCommand('interactive.execute');
-        await insertIntoInputEditor('print("third")');
-        await vscode.commands.executeCommand('interactive.execute');
+        await runInteractiveWindowInput('print("first")', activeInteractiveWindow, 1);
+        await runInteractiveWindowInput('print("second")', activeInteractiveWindow, 2);
+        await runInteractiveWindowInput('print("third")', activeInteractiveWindow, 3);
 
         await waitForLastCellToComplete(activeInteractiveWindow, 3, false);
         let notebookFile = await generateTemporaryFilePath('ipynb', disposables);

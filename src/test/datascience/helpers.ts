@@ -219,6 +219,16 @@ export async function waitForInteractiveWindow(
     return notebookDocument!;
 }
 
+export async function runInteractiveWindowInput(
+    code: string,
+    interactiveWindow: InteractiveWindow,
+    newCellCount: number
+) {
+    await insertIntoInputEditor(code);
+    await vscode.commands.executeCommand('interactive.execute');
+    await waitForLastCellToComplete(interactiveWindow, newCellCount, false);
+}
+
 export async function waitForLastCellToComplete(
     interactiveWindow: InteractiveWindow,
     numberOfCells: number = -1,
