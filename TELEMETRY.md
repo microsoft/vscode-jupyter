@@ -1111,8 +1111,8 @@ No description provided
 
 [src/webviews/extension-side/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/import-export/exportCommands.ts)
 ```typescript
-                this.controllers.getSelectedNotebookController(sourceDocument)?.connection.interpreter ||
-                this.controllers.getPreferredNotebookController(sourceDocument)?.connection.interpreter;
+                this.controllerSelection.getSelected(sourceDocument)?.connection.interpreter ||
+                this.controllerPreferred.getPreferred(sourceDocument)?.connection.interpreter;
             if (exportMethod) {
                 sendTelemetryEvent(Telemetry.ExportNotebookAsCommand, undefined, { format: exportMethod });
             }
