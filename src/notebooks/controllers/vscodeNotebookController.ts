@@ -55,7 +55,7 @@ import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { Commands } from '../../platform/common/constants';
 import { Telemetry } from '../../telemetry';
 import { WrappedError } from '../../platform/errors/types';
-import { IPyWidgetMessages } from '../../platform/messageTypes';
+import { IPyWidgetMessages } from '../../messageTypes';
 import {
     getKernelConnectionPath,
     getRemoteKernelSessionInformation,

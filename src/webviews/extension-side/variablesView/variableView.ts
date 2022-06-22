@@ -7,7 +7,7 @@ import { joinPath } from '../../../platform/vscode-path/resources';
 import { captureTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { INotebookWatcher, IVariableViewPanelMapping } from './types';
 import { VariableViewMessageListener } from './variableViewMessageListener';
-import { InteractiveWindowMessages, IShowDataViewer } from '../../../platform/messageTypes';
+import { InteractiveWindowMessages, IShowDataViewer } from '../../../messageTypes';
 import {
     IJupyterVariables,
     IJupyterVariablesRequest,

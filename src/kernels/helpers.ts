@@ -25,7 +25,7 @@ import { isCI, PYTHON_LANGUAGE, Telemetry } from '../platform/common/constants';
 import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../platform/logging';
 import { getDisplayPath, getFilePath } from '../platform/common/platform/fs-paths';
 import { DataScience } from '../platform/common/utils/localize';
-import { SysInfoReason } from '../platform/messageTypes';
+import { SysInfoReason } from '../messageTypes';
 import { getNormalizedInterpreterPath, getInterpreterHash } from '../platform/pythonEnvironments/info/interpreter';
 import { getTelemetrySafeVersion } from '../platform/telemetry/helpers';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';

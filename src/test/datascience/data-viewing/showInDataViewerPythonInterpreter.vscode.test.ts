@@ -16,7 +16,7 @@ import { waitForCondition } from '../../common.node';
 import { defaultNotebookTestTimeout } from '../notebook/helper';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { IShowDataViewerFromVariablePanel } from '../../../platform/messageTypes';
+import { IShowDataViewerFromVariablePanel } from '../../../messageTypes';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (DataViewer)', function () {

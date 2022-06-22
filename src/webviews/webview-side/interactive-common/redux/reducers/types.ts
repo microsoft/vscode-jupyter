@@ -10,7 +10,7 @@ import {
     LoadIPyWidgetClassLoadAction,
     ILoadIPyWidgetClassFailureAction,
     NotifyIPyWidgetWidgetVersionNotSupportedAction
-} from '../../../../../platform/messageTypes';
+} from '../../../../../messageTypes';
 import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../../../../../telemetry';
 import { BaseReduxActionPayload } from '../../../../types';
 import { ActionWithPayload, ReducerArg } from '../../../react-common/reduxUtils';

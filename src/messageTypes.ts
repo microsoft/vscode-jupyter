@@ -3,18 +3,18 @@
 'use strict';
 import { Uri } from 'vscode';
 import type { KernelMessage } from '@jupyterlab/services';
-import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../platform/common/constants';
+import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from './platform/common/constants';
 import {
     IVariableExplorerHeight,
     CommonActionType
     // eslint-disable-next-line
-} from '../webviews/webview-side/interactive-common/redux/reducers/types';
+} from './webviews/webview-side/interactive-common/redux/reducers/types';
 // eslint-disable-next-line
-import { BaseReduxActionPayload } from '../webviews/types';
-import { WidgetScriptSource } from '../kernels/ipywidgets/types';
-import { KernelConnectionMetadata, KernelSocketOptions } from '../kernels/types';
-import { ICell } from './common/types';
-import { IJupyterVariable, IJupyterVariablesRequest, IJupyterVariablesResponse } from '../kernels/variables/types';
+import { BaseReduxActionPayload } from './webviews/types';
+import { WidgetScriptSource } from './kernels/ipywidgets/types';
+import { KernelConnectionMetadata, KernelSocketOptions } from './kernels/types';
+import { ICell } from './platform/common/types';
+import { IJupyterVariable, IJupyterVariablesRequest, IJupyterVariablesResponse } from './kernels/variables/types';
 
 export type NotifyIPyWidgetWidgetVersionNotSupportedAction = {
     moduleName: 'qgrid';

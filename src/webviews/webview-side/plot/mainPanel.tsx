@@ -15,7 +15,7 @@ import { SvgViewer } from '../react-common/svgViewer';
 import { TestSvg } from './testSvg';
 import { Toolbar } from './toolbar';
 import { createDeferred } from '../../../platform/common/utils/async';
-import { SharedMessages } from '../../../platform/messageTypes';
+import { SharedMessages } from '../../../messageTypes';
 import { IPlotViewerMapping, PlotViewerMessages } from '../../extension-side/plotting/types';
 import { IJupyterExtraSettings } from '../../../platform/webviews/types';
 import { RegExpValues } from '../../../platform/common/constants';
