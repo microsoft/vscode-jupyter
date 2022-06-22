@@ -4,7 +4,7 @@
 'use strict';
 
 import { NotebookDocument, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
-import { getLocString } from '../../webviews/webview-side/react-common/locReactSide';
+import * as localize from '../../platform/common/utils/localize';
 import { ICommandNameArgumentTypeMapping } from '../../platform/common/application/commands';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { traceInfo } from '../../platform/logging';
@@ -188,7 +188,7 @@ export class ExportCommands implements IDisposable {
             ignoreFocusOut: false,
             matchOnDescription: true,
             matchOnDetail: true,
-            placeHolder: getLocString('DataScience.exportAsQuickPickPlaceholder', 'Export As...')
+            placeHolder: localize.DataScience.exportAsQuickPickPlaceholder()
         };
 
         return this.applicationShell.showQuickPick(items, options);
