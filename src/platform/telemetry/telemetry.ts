@@ -4,14 +4,14 @@
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { Uri } from 'vscode';
-import { Resource } from '../platform/common/types';
-import { IInterpreterPackages, ResourceSpecificTelemetryProperties } from './types';
+import { Resource } from '../common/types';
+import { IInterpreterPackages, ResourceSpecificTelemetryProperties } from '../../telemetry';
 import { getTelemetrySafeHashedString } from './helpers';
-import { PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { createDeferred } from '../platform/common/utils/async';
-import { getResourceType } from '../platform/common/utils';
-import { IServiceContainer } from '../platform/ioc/types';
-import { getComparisonKey } from '../platform/vscode-path/resources';
+import { PythonEnvironment } from '../pythonEnvironments/info';
+import { createDeferred } from '../common/utils/async';
+import { getResourceType } from '../common/utils';
+import { IServiceContainer } from '../ioc/types';
+import { getComparisonKey } from '../vscode-path/resources';
 
 type Context = {
     previouslySelectedKernelConnectionId: string;

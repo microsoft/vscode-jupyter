@@ -7,7 +7,7 @@ import '../../platform/common/extensions';
 import { traceError, traceInfo } from '../../platform/logging';
 import { WidgetCDNs, IConfigurationService, IHttpClient } from '../../platform/common/types';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
+import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { IKernel } from '../types';
 import {
     ILocalResourceUriConverter,

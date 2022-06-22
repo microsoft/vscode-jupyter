@@ -21,7 +21,7 @@ import { DataScience, Common } from '../platform/common/utils/localize';
 import { IServiceContainer } from '../platform/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, Telemetry } from '../telemetry';
-import { getTelemetrySafeHashedString } from '../telemetry/helpers';
+import { getTelemetrySafeHashedString } from '../platform/telemetry/helpers';
 import { isModulePresentInEnvironmentCache, trackPackageInstalledIntoInterpreter } from './installer/productInstaller';
 import { ProductNames } from './installer/productNames';
 import { IInstaller, Product, InstallerResponse } from './installer/types';

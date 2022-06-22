@@ -5,7 +5,7 @@
 
 import { NotebookDocument, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
 import * as localize from '../../platform/common/utils/localize';
-import { ICommandNameArgumentTypeMapping } from '../../platform/common/application/commands';
+import { ICommandNameArgumentTypeMapping } from '../../commands';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { traceInfo } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';

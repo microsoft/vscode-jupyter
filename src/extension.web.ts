@@ -60,11 +60,11 @@ import {
 import { createDeferred } from './platform/common/utils/async';
 import { Common, OutputChannelNames } from './platform/common/utils/localize';
 import { IServiceContainer, IServiceManager } from './platform/ioc/types';
-import { sendErrorTelemetry, sendStartupTelemetry } from './telemetry/startupTelemetry';
+import { sendErrorTelemetry, sendStartupTelemetry } from './platform/telemetry/startupTelemetry';
 import { noop } from './platform/common/utils/misc';
 import { PythonExtension } from './webviews/webview-side/common/constants';
 import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.web';
-import { registerTypes as registerTelemetryTypes } from './telemetry/serviceRegistry.web';
+import { registerTypes as registerTelemetryTypes } from './platform/telemetry/serviceRegistry.web';
 import { registerTypes as registerKernelTypes } from './kernels/serviceRegistry.web';
 import { registerTypes as registerNotebookTypes } from './notebooks/serviceRegistry.web';
 import { registerTypes as registerInteractiveTypes } from './interactive-window/serviceRegistry.web';
@@ -81,7 +81,7 @@ import { ServiceContainer } from './platform/ioc/container';
 import { ServiceManager } from './platform/ioc/serviceManager';
 import { OutputChannelLogger } from './platform/logging/outputChannelLogger';
 import { ConsoleLogger } from './platform/logging/consoleLogger';
-import { initializeGlobals as initializeTelemetryGlobals } from './telemetry/telemetry';
+import { initializeGlobals as initializeTelemetryGlobals } from './platform/telemetry/telemetry';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 

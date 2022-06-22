@@ -3,14 +3,14 @@
 
 // eslint-disable-next-line
 import TelemetryReporter from '@vscode/extension-telemetry/lib/telemetryReporter';
-import { IWorkspaceService } from '../platform/common/application/types';
-import { AppinsightsKey, isTestExecution, isUnitTestExecution, JVSC_EXTENSION_ID } from '../platform/common/constants';
-import { traceError, traceEverything } from '../platform/logging';
-import { StopWatch } from '../platform/common/utils/stopWatch';
-import { noop } from '../platform/common/utils/misc';
+import { IWorkspaceService } from '../common/application/types';
+import { AppinsightsKey, isTestExecution, isUnitTestExecution, JVSC_EXTENSION_ID } from '../common/constants';
+import { traceError, traceEverything } from '../logging';
+import { StopWatch } from '../common/utils/stopWatch';
+import { noop } from '../common/utils/misc';
 import { isPromise } from 'rxjs/internal-compatibility';
-import { populateTelemetryWithErrorInfo } from '../platform/errors';
-import { IEventNamePropertyMapping } from './types';
+import { populateTelemetryWithErrorInfo } from '../errors';
+import { IEventNamePropertyMapping } from '../../telemetry';
 
 /**
  * TODO@rebornix
@@ -22,7 +22,7 @@ export {
     NativeMouseCommandTelemetry,
     Telemetry,
     VSCodeNativeTelemetry
-} from '../platform/common/constants';
+} from '../common/constants';
 
 export const waitBeforeSending = 'waitBeforeSending';
 /* eslint-disable @typescript-eslint/no-explicit-any */

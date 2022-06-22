@@ -7,7 +7,7 @@ import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { IExtensionContext } from '../../platform/common/types';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
+import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { IKernel } from '../types';
 import { BaseIPyWidgetScriptManager } from './baseIPyWidgetScriptManager';
 import { IIPyWidgetScriptManager, INbExtensionsPathProvider } from './types';

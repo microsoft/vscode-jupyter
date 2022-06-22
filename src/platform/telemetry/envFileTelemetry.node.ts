@@ -3,12 +3,12 @@
 
 'use strict';
 
-import { IWorkspaceService } from '../platform/common/application/types';
-import { Resource } from '../platform/common/types';
-import { SystemVariables } from '../platform/common/variables/systemVariables.node';
+import { IWorkspaceService } from '../common/application/types';
+import { Resource } from '../common/types';
+import { SystemVariables } from '../common/variables/systemVariables.node';
 
 import { sendTelemetryEvent } from '.';
-import { IFileSystemNode } from '../platform/common/platform/types.node';
+import { IFileSystemNode } from '../common/platform/types.node';
 import { EventName } from './constants';
 
 let _defaultEnvFileSetting: string | undefined;

@@ -71,7 +71,7 @@ import { hasErrorOutput, translateCellErrorOutput } from '../../../../kernels/ex
 import { BaseKernelError } from '../../../../kernels/errors/types';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
-suite('DataScience Install IPyKernel (slow) (install)', function () {
+suite.skip('DataScience Install IPyKernel (slow) (install)', function () {
     const disposables: IDisposable[] = [];
     let nbFile: Uri;
     const templateIPynbFile = Uri.file(
