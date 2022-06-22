@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { IJupyterExtraSettings } from '../../../../extension-side/types';
+import { IJupyterExtraSettings } from '../../../../../platform/webviews/types';
 import { detectBaseTheme } from '../../../react-common/themeDetector';
 
 export namespace Helpers {

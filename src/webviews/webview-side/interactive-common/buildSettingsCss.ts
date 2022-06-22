@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { IJupyterExtraSettings } from '../../extension-side/types';
+import { IJupyterExtraSettings } from '../../../platform/webviews/types';
 
 // From a set of data science settings build up any settings that need to be
 // inserted into our StyleSetter divs some things like pseudo elements

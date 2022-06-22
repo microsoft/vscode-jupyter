@@ -11,7 +11,7 @@ import {
     NotifyIPyWidgetWidgetVersionNotSupportedAction,
     SharedMessages
 } from '../../../../platform/messageTypes';
-import { IJupyterExtraSettings } from '../../../extension-side/types';
+import { IJupyterExtraSettings } from '../../../../platform/webviews/types';
 import { CommonAction, CommonActionType } from '../../interactive-common/redux/reducers/types';
 import { IStore } from '../../interactive-common/redux/store';
 import { PostOffice } from '../../react-common/postOffice';

@@ -1,15 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../../platform/common/extensions';
 
+import { inject, injectable } from 'inversify';
 import { Uri, ViewColumn, WebviewOptions, WebviewPanel as vscodeWebviewPanel, window } from 'vscode';
-import { IFileSystem } from '../../../platform/common/platform/types';
-import { IDisposableRegistry, IExtensionContext } from '../../../platform/common/types';
-import { IWebviewPanel, IWebviewPanelOptions } from '../../../platform/common/application/types';
-import { Webview } from '../webviews/webview';
+import { IWebviewPanel, IWebviewPanelOptions, IWebviewPanelProvider } from '../common/application/types';
+import { IFileSystem } from '../common/platform/types';
+import { IDisposableRegistry, IExtensionContext } from '../common/types';
+import * as path from '../vscode-path/path';
+import { Webview } from './webview';
 
-export class WebviewPanel extends Webview implements IWebviewPanel {
+class WebviewPanel extends Webview implements IWebviewPanel {
     private get panel(): vscodeWebviewPanel | undefined {
         return this.webviewHost as vscodeWebviewPanel;
     }
@@ -108,5 +109,25 @@ export class WebviewPanel extends Webview implements IWebviewPanel {
 
         // Set initial state
         this.panelOptions.listener.onChangeViewState(this);
+    }
+}
+
+@injectable()
+export class WebviewPanelProvider implements IWebviewPanelProvider {
+    constructor(
+        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IExtensionContext) private readonly context: IExtensionContext
+    ) {}
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public async create(options: IWebviewPanelOptions): Promise<IWebviewPanel> {
+        // Allow loading resources from the `<extension folder>/tmp` folder when in webiviews.
+        // Used by widgets to place files that are not otherwise accessible.
+        const additionalRootPaths = [Uri.file(path.join(this.context.extensionPath, 'tmp'))];
+        if (Array.isArray(options.additionalPaths)) {
+            additionalRootPaths.push(...options.additionalPaths);
+        }
+        return new WebviewPanel(this.fs, this.disposableRegistry, this.context, options, additionalRootPaths);
     }
 }
