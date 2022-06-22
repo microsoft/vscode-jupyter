@@ -14,19 +14,16 @@ suite('DataScience - Server Selector Command', () => {
     let serverSelectorCommand: JupyterServerSelectorCommand;
     let commandManager: ICommandManager;
     let serverSelector: JupyterServerSelector;
-    let controllerManager: INotebookControllerManager;
 
     setup(() => {
         commandManager = mock(CommandManager);
         serverSelector = mock(JupyterServerSelector);
-        controllerManager = mock(controllerManager);
         const uriStorage = mock(JupyterServerUriStorage);
 
         serverSelectorCommand = new JupyterServerSelectorCommand(
             instance(commandManager),
             instance(serverSelector),
-            instance(uriStorage),
-            instance(controllerManager)
+            instance(uriStorage)
         );
     });
 

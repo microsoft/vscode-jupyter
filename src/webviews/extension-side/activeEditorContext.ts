@@ -12,10 +12,10 @@ import { ContextKey } from '../../platform/common/contextKey';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { isNotebookCell, noop } from '../../platform/common/utils/misc';
 import { InteractiveWindowView, JupyterNotebookView } from '../../platform/common/constants';
-import { INotebookControllerManager } from '../../notebooks/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../interactive-window/types';
 import { getNotebookMetadata, isJupyterNotebook, isPythonNotebook } from '../../platform/common/utils';
 import { getAssociatedNotebookDocument } from '../../kernels/helpers';
+import { IControllerSelection } from '../../notebooks/controllers/types';
 
 @injectable()
 export class ActiveEditorContextService implements IExtensionSingleActivationService, IDisposable {
@@ -44,7 +44,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(INotebookControllerManager) private readonly controllers: INotebookControllerManager
+        @inject(IControllerSelection) private readonly controllers: IControllerSelection
     ) {
         disposables.push(this);
         this.nativeContext = new ContextKey(EditorContexts.IsNativeActive, this.commandManager);
@@ -128,11 +128,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             this,
             this.disposables
         );
-        this.controllers.onNotebookControllerSelectionChanged(
-            () => this.updateSelectedKernelContext(),
-            this,
-            this.disposables
-        );
+        this.controllers.onControllerSelectionChanged(() => this.updateSelectedKernelContext(), this, this.disposables);
         this.updateSelectedKernelContext();
     }
 
@@ -189,7 +185,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         const document =
             this.vscNotebook.activeNotebookEditor?.notebook ||
             this.interactiveProvider?.getActiveOrAssociatedInteractiveWindow()?.notebookEditor?.notebook;
-        if (document && isJupyterNotebook(document) && this.controllers.getSelectedNotebookController(document)) {
+        if (document && isJupyterNotebook(document) && this.controllers.getSelected(document)) {
             this.isJupyterKernelSelected.set(true).catch(noop);
         } else {
             this.isJupyterKernelSelected.set(false).catch(noop);

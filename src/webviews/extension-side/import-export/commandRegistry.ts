@@ -1,6 +1,5 @@
 import { inject, injectable, optional } from 'inversify';
 import { IInteractiveWindowProvider } from '../../../interactive-window/types';
-import { INotebookControllerManager } from '../../../notebooks/types';
 import { IExtensionSingleActivationService } from '../../../platform/activation/types';
 import {
     IApplicationShell,
@@ -12,6 +11,7 @@ import { IFileSystem } from '../../../platform/common/platform/types';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import { IFileConverter } from '../../../notebooks/export/types';
 import { ExportCommands } from './exportCommands';
+import { IControllerPreferredService, IControllerSelection } from '../../../notebooks/controllers/types';
 
 @injectable()
 export class CommandRegistry implements IExtensionSingleActivationService {
@@ -27,7 +27,8 @@ export class CommandRegistry implements IExtensionSingleActivationService {
         @inject(IInteractiveWindowProvider)
         @optional()
         private readonly interactiveProvider: IInteractiveWindowProvider | undefined,
-        @inject(INotebookControllerManager) private readonly controllers: INotebookControllerManager
+        @inject(IControllerSelection) readonly controllerSelection: IControllerSelection,
+        @inject(IControllerPreferredService) readonly controllerPreferred: IControllerPreferredService
     ) {
         this.exportCommand = new ExportCommands(
             this.commandManager,
@@ -36,7 +37,8 @@ export class CommandRegistry implements IExtensionSingleActivationService {
             this.fs,
             this.notebooks,
             this.interactiveProvider,
-            this.controllers
+            controllerSelection,
+            controllerPreferred
         );
         if (!this.workspace.isTrusted) {
             this.workspace.onDidGrantWorkspaceTrust(this.registerCommandsIfTrusted, this, this.disposables);

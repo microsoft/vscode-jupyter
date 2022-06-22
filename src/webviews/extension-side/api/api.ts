@@ -126,7 +126,7 @@ export function buildApi(
             const uri = generateUriFromRemoteProvider(providerId, handle);
             await connection.updateServerUri(uri);
             const serverId = computeServerId(uri);
-            const { controller } = await controllers.computePreferredNotebookController(notebook, serverId);
+            const { controller } = await controllers.computePreferred(notebook, serverId);
             return controller?.controller;
         },
         addRemoteJupyterServer: async (providerId: string, handle: JupyterServerUriHandle) => {

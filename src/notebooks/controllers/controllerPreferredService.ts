@@ -68,7 +68,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         // If the extension activates after installing Jupyter extension, then ensure we load controllers right now.
         this.notebook.notebookDocuments.forEach((notebook) => this.onDidOpenNotebookDocument(notebook));
     }
-    public async computePreferredNotebookController(
+    public async computePreferred(
         document: NotebookDocument,
         serverId?: string | undefined
     ): Promise<{
@@ -220,7 +220,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         }
     }
 
-    public getPreferredNotebookController(notebook: NotebookDocument) {
+    public getPreferred(notebook: NotebookDocument) {
         return this.preferredControllers.get(notebook);
     }
 
@@ -234,7 +234,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
             return;
         }
 
-        this.computePreferredNotebookController(document).catch(noop);
+        this.computePreferred(document).catch(noop);
     }
 
     // Use our kernel finder to rank our kernels, and see if we have an exact match

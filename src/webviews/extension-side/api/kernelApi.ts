@@ -38,7 +38,8 @@ export class JupyterKernelServiceFactory implements IExportedKernelServiceFactor
     constructor(
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
+        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
+        @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
         @inject(ApiAccessService) private readonly apiAccess: ApiAccessService,
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
@@ -57,7 +58,8 @@ export class JupyterKernelServiceFactory implements IExportedKernelServiceFactor
             accessInfo.extensionId,
             this.kernelProvider,
             this.disposables,
-            this.notebookControllerManager,
+            this.controllerRegistration,
+            this.controllerLoader,
             this.serviceContainer
         );
         this.extensionApi.set(accessInfo.extensionId, service);

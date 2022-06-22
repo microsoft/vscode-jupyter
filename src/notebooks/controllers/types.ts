@@ -82,7 +82,7 @@ export interface IControllerPreferredService {
      * @param document
      * @param serverId
      */
-    computePreferredNotebookController(
+    computePreferred(
         document: vscode.NotebookDocument,
         serverId?: string
     ): Promise<{ preferredConnection?: KernelConnectionMetadata; controller?: IVSCodeNotebookController }>;
@@ -91,7 +91,7 @@ export interface IControllerPreferredService {
      * Returns the preferred controller if already computed
      * @param notebook
      */
-    getPreferredNotebookController(notebook: vscode.NotebookDocument): IVSCodeNotebookController | undefined;
+    getPreferred(notebook: vscode.NotebookDocument): IVSCodeNotebookController | undefined;
 }
 
 export const IControllerDefaultService = Symbol('IControllerDefaultService');

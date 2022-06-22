@@ -11,8 +11,7 @@ import {
 } from '../../interactive-window/editor-integration/types';
 import { GeneratedCodeStorageManager } from '../../interactive-window/generatedCodeStoreManager';
 import { IKernel, IKernelProvider } from '../../kernels/types';
-import { IVSCodeNotebookController } from '../../notebooks/controllers/types';
-import { INotebookControllerManager } from '../../notebooks/types';
+import { IControllerSelection, IVSCodeNotebookController } from '../../notebooks/controllers/types';
 import { InteractiveWindowView } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable } from '../../platform/common/types';
@@ -24,7 +23,7 @@ suite('GeneratedCodeStorageManager', () => {
     let kernelProvider: IKernelProvider;
     let storageFactory: IGeneratedCodeStorageFactory;
     let codeGeneratorFactory: ICodeGeneratorFactory;
-    let controllers: INotebookControllerManager;
+    let controllers: IControllerSelection;
     let onDidCreateKernel: EventEmitter<IKernel>;
     let onNotebookControllerSelected: EventEmitter<{
         notebook: NotebookDocument;
@@ -41,9 +40,9 @@ suite('GeneratedCodeStorageManager', () => {
         kernelProvider = mock<IKernelProvider>();
         storageFactory = mock<IGeneratedCodeStorageFactory>();
         codeGeneratorFactory = mock<ICodeGeneratorFactory>();
-        controllers = mock<INotebookControllerManager>();
+        controllers = mock<IControllerSelection>();
         when(kernelProvider.onDidCreateKernel).thenReturn(onDidCreateKernel.event);
-        when(controllers.onNotebookControllerSelected).thenReturn(onNotebookControllerSelected.event);
+        when(controllers.onControllerSelected).thenReturn(onNotebookControllerSelected.event);
         storageManager = new GeneratedCodeStorageManager(
             instance(kernelProvider),
             disposables,

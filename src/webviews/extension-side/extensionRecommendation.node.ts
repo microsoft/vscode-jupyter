@@ -16,8 +16,7 @@ import {
     getLanguageInNotebookMetadata,
     isPythonKernelConnection
 } from '../../kernels/helpers';
-import { INotebookControllerManager } from '../../notebooks/types';
-import { IVSCodeNotebookController } from '../../notebooks/controllers/types';
+import { IControllerSelection, IVSCodeNotebookController } from '../../notebooks/controllers/types';
 import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
 
 const mementoKeyToNeverPromptExtensionAgain = 'JVSC_NEVER_PROMPT_EXTENSIONS_LIST';
@@ -54,7 +53,7 @@ export class ExtensionRecommendationService implements IExtensionSyncActivationS
     private recommendedInSession = new Set<string>();
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
-        @inject(INotebookControllerManager) private readonly controllerManager: INotebookControllerManager,
+        @inject(IControllerSelection) private readonly controllerManager: IControllerSelection,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
@@ -69,7 +68,7 @@ export class ExtensionRecommendationService implements IExtensionSyncActivationS
 
     public activate() {
         this.notebook.onDidOpenNotebookDocument(this.onDidOpenNotebookDocument, this, this.disposables);
-        this.controllerManager.onNotebookControllerSelected(this.onNotebookControllerSelected, this, this.disposables);
+        this.controllerManager.onControllerSelected(this.onNotebookControllerSelected, this, this.disposables);
     }
 
     private onDidOpenNotebookDocument(notebook: NotebookDocument) {

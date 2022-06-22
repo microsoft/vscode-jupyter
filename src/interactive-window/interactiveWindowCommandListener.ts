@@ -278,9 +278,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                         preserveFocus: false,
                         viewColumn: ViewColumn.Beside
                     });
-                    const { controller } = await this.controllerPreferredService.computePreferredNotebookController(
-                        editor.notebook
-                    );
+                    const { controller } = await this.controllerPreferredService.computePreferred(editor.notebook);
                     if (controller) {
                         await this.commandManager.executeCommand('notebook.selectKernel', {
                             id: controller.id,
