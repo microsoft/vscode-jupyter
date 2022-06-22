@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
 import { getAssociatedNotebookDocument } from '../kernels/helpers';
 import { IKernel, IKernelProvider } from '../kernels/types';
-import { INotebookControllerManager } from '../notebooks/types';
+import { IControllerSelection } from '../notebooks/controllers/types';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { InteractiveWindowView } from '../platform/common/constants';
 import { disposeAllDisposables } from '../platform/common/helpers';
@@ -20,7 +20,7 @@ export class GeneratedCodeStorageManager implements IExtensionSyncActivationServ
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(ICodeGeneratorFactory) private readonly codeGeneratorFactory: ICodeGeneratorFactory,
         @inject(IGeneratedCodeStorageFactory) private readonly storageFactory: IGeneratedCodeStorageFactory,
-        @inject(INotebookControllerManager) private readonly controllers: INotebookControllerManager
+        @inject(IControllerSelection) private readonly controllers: IControllerSelection
     ) {
         disposables.push(this);
     }
@@ -29,7 +29,7 @@ export class GeneratedCodeStorageManager implements IExtensionSyncActivationServ
     }
     activate(): void {
         this.kernelProvider.onDidCreateKernel(this.onDidCreateKernel, this, this.disposables);
-        this.controllers.onNotebookControllerSelected(this.onNotebookControllerSelected, this, this.disposables);
+        this.controllers.onControllerSelected(this.onNotebookControllerSelected, this, this.disposables);
     }
     private onNotebookControllerSelected({ notebook }: { notebook: NotebookDocument }) {
         this.storageFactory.get({ notebook })?.clear();

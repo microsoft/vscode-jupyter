@@ -14,11 +14,11 @@ import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { Commands } from '../../platform/common/constants';
 import { JupyterServerSelector } from '../../kernels/jupyter/serverSelector';
-import { INotebookControllerManager } from '../types';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { Settings } from '../../platform/common/constants';
 import { isJupyterNotebook } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
+import { IControllerSelection } from './types';
 
 @injectable()
 export class RemoteSwitcher implements IExtensionSingleActivationService {
@@ -31,7 +31,7 @@ export class RemoteSwitcher implements IExtensionSingleActivationService {
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
-        @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager
+        @inject(IControllerSelection) private readonly notebookControllerSelection: IControllerSelection
     ) {
         this.disposableRegistry.push(this);
     }
@@ -48,11 +48,7 @@ export class RemoteSwitcher implements IExtensionSingleActivationService {
         this.notebook.onDidChangeActiveNotebookEditor(this.updateStatusBar.bind(this), this.disposables);
         this.documentManager.onDidChangeActiveTextEditor(this.updateStatusBar.bind(this), this.disposables);
         this.serverUriStorage.onDidChangeUri(this.updateStatusBar.bind(this), this.disposables);
-        this.notebookControllerManager.onNotebookControllerSelected(
-            this.updateStatusBar.bind(this),
-            this,
-            this.disposables
-        );
+        this.notebookControllerSelection.onControllerSelected(this.updateStatusBar.bind(this), this, this.disposables);
         this.disposables.push(this.statusBarItem);
         this.updateStatusBar().catch(noop);
     }

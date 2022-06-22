@@ -4,7 +4,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Disposable, extensions, Uri, workspace } from 'vscode';
-import { INotebookControllerManager, INotebookEditorProvider } from '../notebooks/types';
+import { INotebookEditorProvider } from '../notebooks/types';
 import { IExtensionSingleActivationService } from '../platform/activation/types';
 import { IPythonApiProvider } from '../platform/api/types';
 import { PylanceExtension, PythonExtension } from '../platform/common/constants';
@@ -13,6 +13,7 @@ import { IConfigurationService } from '../platform/common/types';
 import { IInterpreterService } from '../platform/interpreter/contracts';
 import * as semver from 'semver';
 import { traceInfo, traceVerbose } from '../platform/logging';
+import { IControllerSelection } from '../notebooks/controllers/types';
 
 /**
  * Manages use of the Python extension's registerJupyterPythonPathFunction API which
@@ -28,7 +29,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
-        @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
+        @inject(IControllerSelection) private readonly notebookControllerSelection: IControllerSelection,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {
@@ -121,7 +122,7 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
             return undefined;
         }
 
-        const controller = this.notebookControllerManager.getSelectedNotebookController(notebook);
+        const controller = this.notebookControllerSelection.getSelected(notebook);
         const interpreter = controller
             ? controller.connection.interpreter
             : await this.interpreterService.getActiveInterpreter(uri);

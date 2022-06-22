@@ -8,9 +8,8 @@ import { IServiceManager } from '../platform/ioc/types';
 import { KernelFilterService } from './controllers/kernelFilter/kernelFilterService';
 import { KernelFilterUI } from './controllers/kernelFilter/kernelFilterUI';
 import { LiveKernelSwitcher } from './controllers/liveKernelSwitcher';
-import { NotebookControllerManager } from './controllers/notebookControllerManager';
 import { RemoteSwitcher } from './controllers/remoteSwitcher';
-import { INotebookControllerManager, INotebookEditorProvider } from './types';
+import { INotebookEditorProvider } from './types';
 import { NotebookUsageTracker } from './notebookUsageTracker';
 import { NotebookEditorProvider } from './notebookEditorProvider';
 import { RemoteKernelControllerWatcher } from './controllers/remoteKernelControllerWatcher';
@@ -37,12 +36,12 @@ import { ExportUtilBase } from './export/exportUtil';
 import { ExportToHTML } from './export/exportToHTML';
 import { ExportToPDF } from './export/exportToPDF';
 import { ExportToPython } from './export/exportToPython';
+import { registerTypes as registerControllerTypes } from './controllers/serviceRegistry.web';
 
 export function registerTypes(serviceManager: IServiceManager) {
+    registerControllerTypes(serviceManager);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
-    serviceManager.addSingleton<INotebookControllerManager>(INotebookControllerManager, NotebookControllerManager);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelFilterUI);
-    serviceManager.addBinding(INotebookControllerManager, IExtensionSyncActivationService);
 
     serviceManager.addSingleton<KernelFilterService>(KernelFilterService, KernelFilterService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(

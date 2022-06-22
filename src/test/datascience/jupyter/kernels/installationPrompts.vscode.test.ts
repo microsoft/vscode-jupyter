@@ -38,7 +38,6 @@ import {
     submitFromPythonFileUsingCodeWatcher,
     uninstallIPyKernel
 } from '../../helpers.node';
-import { INotebookControllerManager } from '../../../../notebooks/types';
 import { WrappedError } from '../../../../platform/errors/types';
 import { clearInstalledIntoInterpreterMemento } from '../../../../kernels/installer/productInstaller';
 import { ProductNames } from '../../../../kernels/installer/productNames';
@@ -69,6 +68,7 @@ import { getOSType, OSType } from '../../../../platform/common/utils/platform';
 import { isUri } from '../../../../platform/common/utils/misc';
 import { hasErrorOutput, translateCellErrorOutput } from '../../../../kernels/execution/helpers';
 import { BaseKernelError } from '../../../../kernels/errors/types';
+import { IControllerRegistration, IControllerSelection } from '../../../../notebooks/controllers/types';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience Install IPyKernel (slow) (install)', function () {
@@ -95,7 +95,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
     let installerSpy: sinon.SinonSpy;
     let commandManager: ICommandManager;
     let vscodeNotebook: IVSCodeNotebook;
-    let controllerManager: INotebookControllerManager;
+    let controllerSelection: IControllerSelection;
     const delayForUITest = 120_000;
     this.timeout(120_000); // Slow test, we need to uninstall/install ipykernel.
     let configSettings: ReadWrite<IWatchableJupyterSettings>;
@@ -121,7 +121,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         installer = api.serviceContainer.get<IInstaller>(IInstaller);
         memento = api.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        controllerManager = api.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
+        controllerSelection = api.serviceContainer.get<IControllerSelection>(IControllerSelection);
         const configService = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
         configSettings = configService.getSettings(undefined) as any;
         previousDisableJupyterAutoStartValue = configSettings.disableJupyterAutoStart;
@@ -594,9 +594,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
 
         // Now that IPyKernel is missing, if we attempt to restart a kernel, we should get a prompt.
         // Previously things just hang at weird spots, its not a likely scenario, but this test ensures the code works as expected.
-        const startController = controllerManager.getSelectedNotebookController(
-            vscodeNotebook.activeNotebookEditor?.notebook!
-        );
+        const startController = controllerSelection.getSelected(vscodeNotebook.activeNotebookEditor?.notebook!);
         assert.ok(startController);
 
         // Confirm message is displayed.
@@ -617,7 +615,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             // Verify the new kernel associated with this notebook is different.
             waitForCondition(
                 async () => {
-                    const newController = controllerManager.getSelectedNotebookController(
+                    const newController = controllerSelection.getSelected(
                         vscodeNotebook.activeNotebookEditor?.notebook!
                     );
                     assert.ok(newController);
@@ -887,20 +885,15 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         ipykernelInstallRequirement: 'DoNotInstallIPyKernel' | 'ShouldInstallIPYKernel' = 'ShouldInstallIPYKernel'
     ) {
         // Get the controller that should be selected.
-        const controllerManager = api.serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
-        const controller = controllerManager
-            .getRegisteredNotebookControllers()
-            .find(
-                (item) =>
-                    item.controller.notebookType === JupyterNotebookView &&
-                    item.connection.kind === 'startUsingPythonInterpreter' &&
-                    areInterpreterPathsSame(item.connection.interpreter.uri, pythonPathToNewKernel)
-            );
+        const controllerManager = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
+        const controller = controllerManager.values.find(
+            (item) =>
+                item.controller.notebookType === JupyterNotebookView &&
+                item.connection.kind === 'startUsingPythonInterpreter' &&
+                areInterpreterPathsSame(item.connection.interpreter.uri, pythonPathToNewKernel)
+        );
         if (!controller) {
-            const registeredControllers = controllerManager
-                .getRegisteredNotebookControllers()
-                .map((item) => item.id)
-                .join(',');
+            const registeredControllers = controllerManager.values.map((item) => item.id).join(',');
             throw new Error(
                 `Unable to find a controller for ${pythonPathToNewKernel}, registered controllers ids are ${registeredControllers}`
             );

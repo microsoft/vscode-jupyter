@@ -4,8 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { NotebookDocument, Uri } from 'vscode';
-import { INotebookControllerManager } from './types';
+import { Uri } from 'vscode';
 import { ICommandManager } from '../platform/common/application/types';
 import { Commands } from '../platform/common/constants';
 import { IDisposable } from '../platform/common/types';
@@ -20,8 +19,7 @@ export class JupyterServerSelectorCommand implements IExtensionSyncActivationSer
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(INotebookControllerManager) private readonly controllerManager: INotebookControllerManager
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
     ) {}
     public activate() {
         this.disposables.push(
@@ -37,31 +35,20 @@ export class JupyterServerSelectorCommand implements IExtensionSyncActivationSer
 
     private async selectJupyterUri(
         local: boolean = true,
-        source: Uri | SelectJupyterUriCommandSource = 'commandPalette',
-        notebook: NotebookDocument | undefined
-    ): Promise<undefined | string> {
+        source: Uri | SelectJupyterUriCommandSource = 'commandPalette'
+    ): Promise<void> {
         if (source instanceof Uri) {
             traceInfo(`Setting Jupyter Server URI to remote: ${source}`);
 
             // Set the uri directly
             await this.serverSelector.setJupyterURIToRemote(source.toString(true));
-
-            // Find one that is the default for this remote
-            if (notebook) {
-                // Recompute the preferred controller
-                await this.controllerManager.initializePreferredNotebookController(notebook);
-
-                // That should have picked a preferred
-                const preferred = this.controllerManager.getPreferredNotebookController(notebook);
-                if (preferred) {
-                    return preferred.id;
-                }
-            }
-            return undefined;
+        } else {
+            // Activate UI Selector
+            this.serverSelector.selectJupyterURI(local, source).ignoreErrors();
         }
 
-        // Activate UI Selector
-        this.serverSelector.selectJupyterURI(local, source).ignoreErrors();
+        // Picking the 'preferred' kernel for remote should happen in the command handler from the
+        // kernel picker, not from the command palette command
     }
 
     private async clearJupyterUris(): Promise<void> {
