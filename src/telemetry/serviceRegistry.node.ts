@@ -8,7 +8,7 @@ import { IServiceManager } from '../platform/ioc/types';
 import { InterpreterCountTracker } from './interpreterCountTracker';
 import { InterpreterPackages } from './interpreterPackages.node';
 import { WorkspaceInterpreterTracker } from './workspaceInterpreterTracker';
-import { IInterpreterPackages } from './types';
+import { IInterpreterPackages } from '../telemetryTypes';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInterpreterPackages>(IInterpreterPackages, InterpreterPackages);

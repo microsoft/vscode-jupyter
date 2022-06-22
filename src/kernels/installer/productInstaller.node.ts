@@ -34,7 +34,7 @@ import { getInterpreterHash } from '../../platform/pythonEnvironments/info/inter
 import { STANDARD_OUTPUT_CHANNEL } from '../../platform/common/constants';
 import { sleep } from '../../platform/common/utils/async';
 import { trackPackageInstalledIntoInterpreter } from './productInstaller';
-import { IInterpreterPackages } from '../../telemetry/types';
+import { IInterpreterPackages } from '../../telemetryTypes';
 import { translateProductToModule } from './utils';
 
 export async function isModulePresentInEnvironment(memento: Memento, product: Product, interpreter: PythonEnvironment) {

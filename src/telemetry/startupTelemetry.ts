@@ -7,7 +7,7 @@ import { traceError } from '../platform/logging';
 import { IServiceContainer } from '../platform/ioc/types';
 import { sendTelemetryEvent } from '.';
 import { EventName } from './constants';
-import { IEventNamePropertyMapping } from './types';
+import { IEventNamePropertyMapping } from '../telemetryTypes';
 
 interface IStopWatch {
     elapsedTime: number;

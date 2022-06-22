@@ -4,7 +4,7 @@
 import { injectable } from 'inversify';
 import { InterpreterUri } from '../platform/common/types';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { IInterpreterPackages } from './types';
+import { IInterpreterPackages } from '../telemetryTypes';
 
 /**
  * Tracks packages in use for interpreters. In the web version this isn't implemented yet.

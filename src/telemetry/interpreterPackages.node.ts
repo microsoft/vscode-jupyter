@@ -11,7 +11,7 @@ import { IInterpreterService } from '../platform/interpreter/contracts';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { getComparisonKey } from '../platform/vscode-path/resources';
 import { getTelemetrySafeHashedString, getTelemetrySafeVersion } from './helpers';
-import { IInterpreterPackages } from './types';
+import { IInterpreterPackages } from '../telemetryTypes';
 
 const interestedPackages = new Set(
     [

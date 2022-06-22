@@ -10,7 +10,7 @@ import { StopWatch } from '../platform/common/utils/stopWatch';
 import { noop } from '../platform/common/utils/misc';
 import { isPromise } from 'rxjs/internal-compatibility';
 import { populateTelemetryWithErrorInfo } from '../platform/errors';
-import { IEventNamePropertyMapping } from './types';
+import { IEventNamePropertyMapping } from '../telemetryTypes';
 
 /**
  * TODO@rebornix

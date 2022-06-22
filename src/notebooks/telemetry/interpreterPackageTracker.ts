@@ -12,7 +12,7 @@ import { INotebookControllerManager } from '../types';
 import { IInstaller, Product } from '../../kernels/installer/types';
 import { IVSCodeNotebookController } from '../controllers/types';
 import { trackKernelResourceInformation } from '../../kernels/telemetry/helper';
-import { IInterpreterPackages } from '../../telemetry/types';
+import { IInterpreterPackages } from '../../telemetryTypes';
 
 @injectable()
 export class InterpreterPackageTracker implements IExtensionSingleActivationService {

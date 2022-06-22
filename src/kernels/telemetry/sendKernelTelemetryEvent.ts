@@ -1,5 +1,5 @@
 import { Resource } from '../../platform/common/types';
-import { IEventNamePropertyMapping } from '../../telemetry/types';
+import { IEventNamePropertyMapping } from '../../telemetryTypes';
 import { Telemetry } from '../../platform/common/constants';
 import { setSharedProperty, sendTelemetryEvent, waitBeforeSending } from '../../telemetry';
 import { getContextualPropsForTelemetry } from '../../telemetry/telemetry';

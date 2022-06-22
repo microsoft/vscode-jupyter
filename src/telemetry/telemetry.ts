@@ -5,7 +5,7 @@
 import cloneDeep = require('lodash/cloneDeep');
 import { Uri } from 'vscode';
 import { Resource } from '../platform/common/types';
-import { IInterpreterPackages, ResourceSpecificTelemetryProperties } from './types';
+import { IInterpreterPackages, ResourceSpecificTelemetryProperties } from '../telemetryTypes';
 import { getTelemetrySafeHashedString } from './helpers';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { createDeferred } from '../platform/common/utils/async';
