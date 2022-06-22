@@ -9,7 +9,9 @@ import {
     ICommandManager,
     IWorkspaceService,
     IApplicationShell,
-    IApplicationEnvironment
+    IApplicationEnvironment,
+    IWebviewViewProvider,
+    IWebviewPanelProvider
 } from './common/application/types';
 import { ConfigurationService } from './common/configuration/service.web';
 import { registerTypes as registerApiTypes } from './api/serviceRegistry.web';
@@ -26,6 +28,8 @@ import { OutputCommandListener } from './logging/outputCommandListener';
 import { IFileSystem } from './common/platform/types';
 import { FileSystem } from './common/platform/fileSystem';
 import { KernelProgressReporter } from './progress/kernelProgressReporter';
+import { WebviewPanelProvider } from './webviews/webviewPanelProvider';
+import { WebviewViewProvider } from './webviews/webviewViewProvider';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
@@ -45,4 +49,8 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSyncActivationService,
         KernelProgressReporter
     );
+
+    // Webview Provider
+    serviceManager.add<IWebviewViewProvider>(IWebviewViewProvider, WebviewViewProvider);
+    serviceManager.add<IWebviewPanelProvider>(IWebviewPanelProvider, WebviewPanelProvider);
 }
