@@ -24,7 +24,7 @@ import { FileBasedCancellationStrategy } from './fileBasedCancellationStrategy.n
 import { createNotebookMiddleware, createPylanceMiddleware, NotebookMiddleware } from '@vscode/jupyter-lsp-middleware';
 import * as uuid from 'uuid/v4';
 import { NOTEBOOK_SELECTOR, PYTHON_LANGUAGE } from '../platform/common/constants';
-import { traceInfo } from '../platform/logging';
+import { traceInfo, traceInfoIfCI } from '../platform/logging';
 import { getInterpreterId } from '../platform/pythonEnvironments/info/interpreter';
 import { noop } from '../platform/common/utils/misc';
 import { PythonEnvironment } from '../platform/pythonEnvironments/info';
@@ -142,7 +142,11 @@ export class LanguageServer implements Disposable {
 
     public stopWatching(notebook: NotebookDocument) {
         // Tell the middleware to stop watching this document
-        this.middleware.stopWatching(notebook);
+        try {
+            this.middleware.stopWatching(notebook);
+        } catch (ex) {
+            traceInfoIfCI(`Error shutting down the LS.`, ex);
+        }
     }
 
     public startWatching(notebook: NotebookDocument) {
