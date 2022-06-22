@@ -36,7 +36,7 @@ export class JupyterServerSelectorCommand implements IExtensionSyncActivationSer
     }
 
     private async selectJupyterUri(
-        local: boolean = true,
+        _local: boolean = true, // Legacy argument, 3rd party extensions might be sending
         source: Uri | SelectJupyterUriCommandSource = 'commandPalette',
         notebook: NotebookDocument | undefined
     ): Promise<undefined | string> {
@@ -61,7 +61,7 @@ export class JupyterServerSelectorCommand implements IExtensionSyncActivationSer
         }
 
         // Activate UI Selector
-        this.serverSelector.selectJupyterURI(local, source).ignoreErrors();
+        this.serverSelector.selectJupyterURI(source).ignoreErrors();
     }
 
     private async clearJupyterUris(): Promise<void> {

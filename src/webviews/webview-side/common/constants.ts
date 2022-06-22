@@ -158,6 +158,8 @@ export namespace Commands {
     export const ReplayPylanceLogStep = 'jupyter.replayPylanceLogStep';
     export const InstallPythonExtensionViaKernelPicker = 'jupyter.installPythonExtensionViaKernelPicker';
     export const InstallPythonViaKernelPicker = 'jupyter.installPythonViaKernelPicker';
+    export const SwitchToLocalKernels = 'jupyter.switchToLocalKernels';
+    export const SwitchToRemoteKernels = 'jupyter.switchToRemoteKernels';
 }
 
 export namespace CodeLensCommands {

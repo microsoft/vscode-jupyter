@@ -16,6 +16,7 @@ import {
     QuickPickItemButtonEvent
 } from 'vscode';
 import { IApplicationShell } from '../application/types';
+import { noop } from './misc';
 
 // Borrowed from https://github.com/Microsoft/vscode-extension-samples/blob/master/quickinput-sample/src/multiStepInput.ts
 // Why re-invent the wheel :)
@@ -40,6 +41,7 @@ export interface IQuickPickParameters<T extends QuickPickItem> {
     matchOnDescription?: boolean;
     matchOnDetail?: boolean;
     acceptFilterBoxTextAsSelection?: boolean;
+    validateFilterBox(value: string): Promise<string | undefined>;
     shouldResume?(): Promise<boolean>;
     onDidTriggerItemButton?(e: QuickPickItemButtonEvent<T>): void;
     onDidChangeItems?: Event<T[]>;
@@ -104,6 +106,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         matchOnDescription,
         matchOnDetail,
         acceptFilterBoxTextAsSelection,
+        validateFilterBox,
         onDidTriggerItemButton,
         onDidChangeItems
     }: P): Promise<MultiStepInputQuickPicResponseType<T, P>> {
@@ -157,8 +160,18 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                 );
                 if (acceptFilterBoxTextAsSelection) {
                     disposables.push(
-                        input.onDidAccept(() => {
-                            resolve(<any>input.value);
+                        input.onDidAccept(async () => {
+                            input.enabled = false;
+                            input.busy = true;
+                            const validationMessage = validateFilterBox
+                                ? await validateFilterBox(input.value)
+                                : undefined;
+                            if (!validationMessage) {
+                                resolve(<any>input.value);
+                            } else {
+                                // No validation allowed on a quick pick. Have to put up a dialog instead
+                                this.shell.showErrorMessage(validationMessage, { modal: true }).then(noop, noop);
+                            }
                         })
                     );
                 }
