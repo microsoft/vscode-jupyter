@@ -26,7 +26,7 @@ import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { traceError, traceInfo } from '../../../platform/logging';
 import { IShowDataViewerFromVariablePanel } from '../../../platform/messageTypes';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { EventName } from '../../../telemetry/constants';
+import { EventName } from '../../../platform/telemetry/constants';
 import { PythonEnvironment } from '../../../standalone/api/extension';
 import { IDataScienceErrorHandler } from '../../../kernels/errors/types';
 import { DataViewerChecker } from './dataViewerChecker';

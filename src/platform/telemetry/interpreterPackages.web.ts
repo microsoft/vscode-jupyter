@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
-import { InterpreterUri } from '../platform/common/types';
-import { PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { IInterpreterPackages } from '../telemetryTypes';
+import { InterpreterUri } from '../common/types';
+import { PythonEnvironment } from '../pythonEnvironments/info';
+import { IInterpreterPackages } from '../../telemetry';
 
 /**
  * Tracks packages in use for interpreters. In the web version this isn't implemented yet.

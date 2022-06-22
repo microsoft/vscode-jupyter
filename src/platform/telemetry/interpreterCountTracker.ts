@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IExtensionSingleActivationService } from '../platform/activation/types';
+import { IExtensionSingleActivationService } from '../activation/types';
 import { inject, injectable } from 'inversify';
-import { IInterpreterService } from '../platform/interpreter/contracts';
-import { IPythonApiProvider, IPythonExtensionChecker } from '../platform/api/types';
-import { noop } from '../platform/common/utils/misc';
-import { IDisposableRegistry } from '../platform/common/types';
+import { IInterpreterService } from '../interpreter/contracts';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../api/types';
+import { noop } from '../common/utils/misc';
+import { IDisposableRegistry } from '../common/types';
 
 @injectable()
 export class InterpreterCountTracker implements IExtensionSingleActivationService {

@@ -1,8 +1,7 @@
 import { Resource } from '../../platform/common/types';
-import { IEventNamePropertyMapping } from '../../telemetryTypes';
 import { Telemetry } from '../../platform/common/constants';
-import { setSharedProperty, sendTelemetryEvent, waitBeforeSending } from '../../telemetry';
-import { getContextualPropsForTelemetry } from '../../telemetry/telemetry';
+import { setSharedProperty, sendTelemetryEvent, waitBeforeSending, IEventNamePropertyMapping } from '../../telemetry';
+import { getContextualPropsForTelemetry } from '../../platform/telemetry/telemetry';
 import { clearInterruptCounter, trackKernelResourceInformation } from './helper';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { populateTelemetryWithErrorInfo } from '../../platform/errors';

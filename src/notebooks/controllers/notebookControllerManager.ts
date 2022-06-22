@@ -63,7 +63,7 @@ import {
     isPythonNotebook
 } from '../../kernels/helpers';
 import { getNotebookMetadata, getResourceType } from '../../platform/common/utils';
-import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
+import { getTelemetrySafeLanguage } from '../../platform/telemetry/helpers';
 import { INotebookMetadata } from '@jupyterlab/nbformat';
 import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConnectionType';
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';

@@ -20,7 +20,7 @@ import {
     IJupyterVariableDataProvider
 } from './types';
 import { isValidSliceExpression, preselectedSliceExpression } from '../../webview-side/data-explorer/helpers';
-import { CheckboxState } from '../../../telemetry/constants';
+import { CheckboxState } from '../../../platform/telemetry/constants';
 import { IKernel } from '../../../kernels/types';
 import {
     IWebviewPanelProvider,

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Terminal, TextEditor, Uri } from 'vscode';
-import { IEventNamePropertyMapping } from '../../telemetryTypes';
+import { IEventNamePropertyMapping } from '../../telemetry';
 import { Resource } from '../common/types';
 
 export const ICodeExecutionService = Symbol('ICodeExecutionService');

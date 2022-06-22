@@ -12,7 +12,7 @@ import {
     Telemetry,
     VSCodeNativeTelemetry
 } from './platform/common/constants';
-import { CheckboxState, EventName, PlatformErrors, SliceOperationSource } from './telemetry/constants';
+import { CheckboxState, EventName, PlatformErrors, SliceOperationSource } from './platform/telemetry/constants';
 import { DebuggingTelemetry } from './kernels/debugger/constants';
 import { EnvironmentType, PythonEnvironment } from './platform/pythonEnvironments/info';
 import { TelemetryErrorProperties, ErrorCategory } from './platform/errors/types';
@@ -22,6 +22,8 @@ import { IExportedKernelService } from './standalone/api/extension';
 import { PreferredKernelExactMatchReason } from './notebooks/controllers/notebookControllerManager';
 import { SelectJupyterUriCommandSource } from './kernels/jupyter/serverSelector';
 import { TerminalShellType } from './platform/terminals/types';
+
+export * from './platform/telemetry/index';
 
 export type ResourceSpecificTelemetryProperties = Partial<{
     resourceType: 'notebook' | 'interactive';

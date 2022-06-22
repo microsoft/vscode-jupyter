@@ -3,12 +3,12 @@
 
 'use strict';
 
-import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
-import { IServiceManager } from '../platform/ioc/types';
+import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../activation/types';
+import { IServiceManager } from '../ioc/types';
 import { InterpreterCountTracker } from './interpreterCountTracker';
+import { InterpreterPackages } from './interpreterPackages.node';
 import { WorkspaceInterpreterTracker } from './workspaceInterpreterTracker';
-import { IInterpreterPackages } from '../telemetryTypes';
-import { InterpreterPackages } from './interpreterPackages.web';
+import { IInterpreterPackages } from '../../telemetry';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInterpreterPackages>(IInterpreterPackages, InterpreterPackages);

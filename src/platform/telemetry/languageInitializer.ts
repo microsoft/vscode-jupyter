@@ -3,9 +3,9 @@
 
 import { injectable } from 'inversify';
 import { languages } from 'vscode';
-import { IExtensionSingleActivationService } from '../platform/activation/types';
-import { VSCodeKnownNotebookLanguages } from '../platform/common/constants';
-import { noop } from '../platform/common/utils/misc';
+import { IExtensionSingleActivationService } from '../activation/types';
+import { VSCodeKnownNotebookLanguages } from '../common/constants';
+import { noop } from '../common/utils/misc';
 
 /**
  * Initializes the list of known languages with whats registered in VS Code.
