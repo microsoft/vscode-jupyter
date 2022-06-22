@@ -215,14 +215,12 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                 const message = DataScience.restartKernelMessage();
                 const yes = DataScience.restartKernelMessageYes();
                 const dontAskAgain = DataScience.restartKernelMessageDontAskAgain();
-                const no = DataScience.restartKernelMessageNo();
 
                 const response = await this.applicationShell.showInformationMessage(
                     message,
                     { modal: true },
                     yes,
-                    dontAskAgain,
-                    no
+                    dontAskAgain
                 );
                 if (response === dontAskAgain) {
                     await this.disableAskForRestart(document.uri);

@@ -11,7 +11,7 @@ import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { IInstaller, Product } from '../../kernels/installer/types';
 import { IControllerSelection, IVSCodeNotebookController } from '../controllers/types';
 import { trackKernelResourceInformation } from '../../kernels/telemetry/helper';
-import { IInterpreterPackages } from '../../telemetry/types';
+import { IInterpreterPackages } from '../../telemetry';
 
 @injectable()
 export class InterpreterPackageTracker implements IExtensionSingleActivationService {

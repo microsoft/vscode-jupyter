@@ -7,10 +7,12 @@ import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry } from '../
 import {
     IVariableExplorerHeight,
     CommonActionType
+    // eslint-disable-next-line
 } from '../webviews/webview-side/interactive-common/redux/reducers/types';
+// eslint-disable-next-line
+import { BaseReduxActionPayload } from '../webviews/types';
 import { WidgetScriptSource } from '../kernels/ipywidgets/types';
 import { KernelConnectionMetadata, KernelSocketOptions } from '../kernels/types';
-import { BaseReduxActionPayload } from '../webviews/types';
 import { ICell } from './common/types';
 import { IJupyterVariable, IJupyterVariablesRequest, IJupyterVariablesResponse } from '../kernels/variables/types';
 

@@ -21,7 +21,7 @@ import {
 } from '../../platform/messageTypes';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
+import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { Commands } from '../../platform/common/constants';
 import { IKernelProvider } from '../types';
 import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherFactory';

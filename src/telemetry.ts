@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { InterpreterUri } from '../platform/common/types';
+import { InterpreterUri } from './platform/common/types';
 import type { JSONObject } from '@lumino/coreutils';
 // eslint-disable-next-line
 import {
@@ -11,17 +11,20 @@ import {
     NativeMouseCommandTelemetry,
     Telemetry,
     VSCodeNativeTelemetry
-} from '../platform/common/constants';
-import { CheckboxState, EventName, PlatformErrors, SliceOperationSource } from './constants';
-import { DebuggingTelemetry } from '../kernels/debugger/constants';
-import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { TelemetryErrorProperties, ErrorCategory } from '../platform/errors/types';
-import { ExportFormat } from '../notebooks/export/types';
-import { InterruptResult, KernelConnectionMetadata, KernelInterpreterDependencyResponse } from '../kernels/types';
-import { IExportedKernelService } from '../standalone/api/extension';
-import { SelectJupyterUriCommandSource } from '../kernels/jupyter/serverSelector';
-import { TerminalShellType } from '../platform/terminals/types';
-import { PreferredKernelExactMatchReason } from '../notebooks/controllers/types';
+} from './platform/common/constants';
+import { CheckboxState, EventName, PlatformErrors, SliceOperationSource } from './platform/telemetry/constants';
+import { DebuggingTelemetry } from './kernels/debugger/constants';
+import { EnvironmentType, PythonEnvironment } from './platform/pythonEnvironments/info';
+import { TelemetryErrorProperties, ErrorCategory } from './platform/errors/types';
+import { ExportFormat } from './notebooks/export/types';
+import { InterruptResult, KernelConnectionMetadata, KernelInterpreterDependencyResponse } from './kernels/types';
+// eslint-disable-next-line
+import { IExportedKernelService } from './standalone/api/extension';
+import { SelectJupyterUriCommandSource } from './kernels/jupyter/serverSelector';
+import { TerminalShellType } from './platform/terminals/types';
+import { PreferredKernelExactMatchReason } from './notebooks/controllers/types';
+
+export * from './platform/telemetry/index';
 
 export type ResourceSpecificTelemetryProperties = Partial<{
     resourceType: 'notebook' | 'interactive';

@@ -16,13 +16,21 @@ import { StatusProvider } from './progress/statusProvider';
 import { IStatusProvider } from './progress/types';
 import { ApplicationShell } from './common/application/applicationShell';
 import { CommandManager } from './common/application/commandManager';
-import { ICommandManager, IWorkspaceService, IApplicationShell } from './common/application/types';
+import {
+    ICommandManager,
+    IWorkspaceService,
+    IApplicationShell,
+    IWebviewViewProvider,
+    IWebviewPanelProvider
+} from './common/application/types';
 import { ConfigurationService } from './common/configuration/service.node';
 import { IFileSystem } from './common/platform/types';
 import { IFileSystemNode } from './common/platform/types.node';
 import { FileSystem } from './common/platform/fileSystem.node';
 import { WorkspaceService } from './common/application/workspace.node';
 import { OutputCommandListener } from './logging/outputCommandListener';
+import { WebviewViewProvider } from './webviews/webviewViewProvider';
+import { WebviewPanelProvider } from './webviews/webviewPanelProvider';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<FileSystem>(FileSystem, FileSystem);
@@ -51,4 +59,7 @@ export function registerTypes(serviceManager: IServiceManager) {
         PreReleaseChecker
     );
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, OutputCommandListener);
+
+    serviceManager.add<IWebviewViewProvider>(IWebviewViewProvider, WebviewViewProvider);
+    serviceManager.add<IWebviewPanelProvider>(IWebviewPanelProvider, WebviewPanelProvider);
 }
