@@ -35,8 +35,8 @@ import { noop } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { traceError, traceInfo, traceInfoIfCI, traceVerbose } from '../../platform/logging';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
+import { getTelemetrySafeLanguage } from '../../platform/telemetry/helpers';
 import { sendTelemetryEvent } from '../../telemetry';
-import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
 import {
     IControllerDefaultService,
     IControllerLoader,
