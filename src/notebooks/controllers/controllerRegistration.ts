@@ -89,6 +89,9 @@ export class ControllerRegistration implements IControllerRegistration {
                         // E.g. we had a cached kernlespec, and since then the user updated their version of python,
                         // Now we need to update the display name of the kernelspec.
                         controller.updateConnection(metadata);
+
+                        // Add to results so that callers can find
+                        results.push(controller);
                         return false;
                     } else if (this.kernelFilter.isKernelHidden(metadata)) {
                         // Filter out those in our kernel filter
