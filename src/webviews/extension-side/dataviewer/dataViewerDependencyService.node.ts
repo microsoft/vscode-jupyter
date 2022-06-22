@@ -5,7 +5,6 @@
 
 import { inject, injectable } from 'inversify';
 import { SemVer } from 'semver';
-import { Uri } from 'vscode';
 import { ProductNames } from '../../../kernels/installer/productNames';
 import { Product } from '../../../kernels/installer/types';
 import { IApplicationShell } from '../../../platform/common/application/types';
@@ -19,7 +18,6 @@ import { Telemetry } from '../../webview-side/common/constants';
 import { IDataViewerDependencyService } from './types';
 import { executeSilently } from '../../../kernels/helpers';
 import { IJupyterSession, IKernel, IKernelProvider } from '../../../kernels/types';
-import { INotebookEditorProvider } from '../../../notebooks/types';
 
 const minimumSupportedPandaVersion = '0.20.0';
 
@@ -32,16 +30,8 @@ function isVersionOfPandasSupported(version: SemVer) {
  */
 @injectable()
 export class DataViewerDependencyService implements IDataViewerDependencyService {
-    private get activeNotebookEditorUri(): Uri {
-        const activeNotebookEditorUri = this.notebookEditorProvider.activeNotebookEditor?.notebook.uri;
-        if (!activeNotebookEditorUri) {
-            sendTelemetryEvent(Telemetry.NoActiveEditor);
-            throw new Error(DataScience.noActiveEditor());
-        }
-        return activeNotebookEditorUri;
-    }
     private get kernel(): IKernel {
-        const kernel = this.kernelProvider.get(this.activeNotebookEditorUri);
+        const kernel = this.kernelProvider.kernels.find((kernel) => kernel.status === 'idle');
         if (!kernel) {
             sendTelemetryEvent(Telemetry.NoActiveKernel);
             throw new Error(DataScience.noActiveKernel());
@@ -64,12 +54,12 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
     constructor(
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(IsCodeSpace) private isCodeSpace: boolean
     ) {}
 
     public async checkAndInstallMissingDependencies(interpreter: PythonEnvironment): Promise<void> {
         const pandasVersion = await this.getVersionOfPandas();
+        console.log({ pandasVersion });
 
         if (pandasVersion) {
             if (isVersionOfPandasSupported(pandasVersion)) {
@@ -114,15 +104,15 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
     }
 
     private async getVersionOfPandas(): Promise<SemVer | undefined> {
-        const outputs = await executeSilently(this.kernelSession, `${this.packaging} install pandas`);
+        const outputs = await executeSilently(this.kernelSession, `import pandas; print(pandas.__version__)`);
+        console.log({ outputs });
 
         const error = outputs.find((item) => item.output_type === 'error');
         if (error) {
             traceWarning(DataScience.failedToGetVersionOfPandas(), error.text);
             return;
         } else {
-            // TODO: Is "data" the right property?
-            return outputs.map(({ data }) => (data ? parseSemVer(data.toString()) : undefined)).find((item) => item);
+            return outputs.map(({ text }) => (text ? parseSemVer(text.toString()) : undefined)).find((item) => item);
         }
     }
 }
