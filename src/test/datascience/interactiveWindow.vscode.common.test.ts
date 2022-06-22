@@ -43,8 +43,10 @@ import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { sleep } from '../core';
 import { IPYTHON_VERSION_CODE } from '../constants';
 import { translateCellErrorOutput, getTextOutputValue } from '../../kernels/execution/helpers';
-import { IControllerSelection } from '../../notebooks/controllers/types';
 import * as dedent from 'dedent';
+import { generateCellRangesFromDocument } from '../../interactive-window/editor-integration/cellFactory';
+import { Commands } from '../../platform/common/constants';
+import { IControllerSelection } from '../../notebooks/controllers/types';
 
 suite(`Interactive window execution`, async function () {
     this.timeout(120_000);
@@ -515,5 +517,32 @@ ${actualCode}
 
         // Parse the last cell's output
         await waitForTextOutput(lastCell, '1');
+    });
+
+    test.only('Export Interactive window to Python file', async () => {
+        const activeInteractiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
+        await waitForInteractiveWindow(activeInteractiveWindow);
+
+        // Add a few cells from the input box
+        await runInteractiveWindowInput('print("first")', activeInteractiveWindow, 1);
+        await runInteractiveWindowInput('print("second")', activeInteractiveWindow, 2);
+        await runInteractiveWindowInput('print("third")', activeInteractiveWindow, 3);
+
+        await waitForLastCellToComplete(activeInteractiveWindow, 3, false);
+
+        await vscode.commands.executeCommand(Commands.ExportAsPythonScript, activeInteractiveWindow.notebookDocument);
+
+        await waitForCondition(
+            () => {
+                return !!vscode.window.visibleTextEditors.find((editor) => {
+                    const cells = generateCellRangesFromDocument(editor.document);
+                    return cells.length == 3;
+                });
+
+                // open document is python file with 3 '% ##' markers
+            },
+            60_000,
+            'Exported python file was not opened'
+        );
     });
 });
