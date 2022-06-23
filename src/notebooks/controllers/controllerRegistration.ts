@@ -5,7 +5,8 @@ import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { ILocalResourceUriConverter } from '../../kernels/ipywidgets/types';
-import { IKernelProvider, KernelConnectionMetadata } from '../../kernels/types';
+import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConnectionType';
+import { IKernelProvider, isLocalConnection, KernelConnectionMetadata } from '../../kernels/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import {
     IVSCodeNotebook,
@@ -35,6 +36,9 @@ import { VSCodeNotebookController } from './vscodeNotebookController';
  */
 @injectable()
 export class ControllerRegistration implements IControllerRegistration {
+    private get isLocalLaunch(): boolean {
+        return this.serverConnectionType.isLocalLaunch;
+    }
     private registeredControllers = new Map<string, VSCodeNotebookController>();
     private creationEmitter = new EventEmitter<IVSCodeNotebookController>();
     private registeredConnections = new Map<string, KernelConnectionMetadata>();
@@ -63,9 +67,11 @@ export class ControllerRegistration implements IControllerRegistration {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IBrowserService) private readonly browser: IBrowserService,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(ILocalResourceUriConverter) private readonly resourceConverter: ILocalResourceUriConverter
+        @inject(ILocalResourceUriConverter) private readonly resourceConverter: ILocalResourceUriConverter,
+        @inject(ServerConnectionType) private readonly serverConnectionType: ServerConnectionType
     ) {
-        this.kernelFilter.onDidChange(this.onDidChangeKernelFilter, this, this.disposables);
+        this.kernelFilter.onDidChange(this.onDidChangeFilter, this, this.disposables);
+        this.serverConnectionType.onDidChange(this.onDidChangeFilter, this, this.disposables);
     }
     add(
         metadata: KernelConnectionMetadata,
@@ -76,12 +82,15 @@ export class ControllerRegistration implements IControllerRegistration {
             // Create notebook selector
             types
                 .map((t) => {
-                    return [this.getControllerId(metadata, t), t];
-                })
-                .filter(([id]) => {
+                    const id = this.getControllerId(metadata, t);
+
                     // Update our list kernel connections.
                     this.registeredConnections.set(id, metadata);
 
+                    // Return the id and the metadata for use below
+                    return [id, t];
+                })
+                .filter(([id]) => {
                     // See if we already created this controller or not
                     const controller = this.registeredControllers.get(id);
                     if (controller) {
@@ -93,7 +102,7 @@ export class ControllerRegistration implements IControllerRegistration {
                         // Add to results so that callers can find
                         results.push(controller);
                         return false;
-                    } else if (this.kernelFilter.isKernelHidden(metadata)) {
+                    } else if (this.isFiltered(metadata)) {
                         // Filter out those in our kernel filter
                         return false;
                     }
@@ -161,6 +170,12 @@ export class ControllerRegistration implements IControllerRegistration {
         return this.registeredControllers.get(id);
     }
 
+    private isFiltered(metadata: KernelConnectionMetadata): boolean {
+        const userFiltered = this.kernelFilter.isKernelHidden(metadata);
+        const connectionTypeFiltered = isLocalConnection(metadata) !== this.isLocalLaunch;
+        return userFiltered || connectionTypeFiltered;
+    }
+
     private getControllerId(
         metadata: KernelConnectionMetadata,
         viewType: typeof JupyterNotebookView | typeof InteractiveWindowView
@@ -172,9 +187,9 @@ export class ControllerRegistration implements IControllerRegistration {
         return this.notebook.notebookDocuments.some((doc) => controller.isAssociatedWithDocument(doc));
     }
 
-    private onDidChangeKernelFilter() {
+    private onDidChangeFilter() {
         // Filter the connections.
-        const connections = this.connections.filter((item) => !this.kernelFilter.isKernelHidden(item));
+        const connections = this.connections.filter((item) => !this.isFiltered(item));
 
         // Try to re-create the missing controllers.
         connections.forEach((c) => this.add(c, [JupyterNotebookView, InteractiveWindowView]));
@@ -185,7 +200,7 @@ export class ControllerRegistration implements IControllerRegistration {
             // TODO: Don't hide controllers that are already associated with a notebook.
             // If we have a notebook opened and its using a kernel.
             // Else we end up killing the execution as well.
-            if (this.kernelFilter.isKernelHidden(item.connection) && !this.isControllerAttachedToADocument(item)) {
+            if (this.isFiltered(item.connection) && !this.isControllerAttachedToADocument(item)) {
                 item.dispose();
             }
         });
