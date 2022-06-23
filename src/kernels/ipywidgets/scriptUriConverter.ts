@@ -45,7 +45,7 @@ export class ScriptUriConverter implements ILocalResourceUriConverter {
                 this.resourcesMappedToExtensionFolder.set(key, deferred.promise);
                 try {
                     // Create a file name such that it will be unique and consistent across VSC reloads.
-                    // Only if original file has been modified should we create a new copy of the sam file.
+                    // Only if original file has been modified should we create a new copy of the same file.
                     const fileHash: string = await this.fs.getFileHash(localResource);
                     const uniqueFileName = sanitize(
                         sha256()

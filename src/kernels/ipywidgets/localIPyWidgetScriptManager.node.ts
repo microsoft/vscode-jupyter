@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from '../../platform/vscode-path/path';
-import { Uri } from 'vscode';
+import { Memento, Uri } from 'vscode';
 import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { IExtensionContext } from '../../platform/common/types';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
@@ -11,8 +11,9 @@ import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { IKernel } from '../types';
 import { BaseIPyWidgetScriptManager } from './baseIPyWidgetScriptManager';
 import { IIPyWidgetScriptManager, INbExtensionsPathProvider } from './types';
+import { traceError, traceInfo } from '../../platform/logging';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths.node';
 
-type KernelConnectionId = string;
 /**
  * IPyWidgets have a single entry point in requirejs as follows:
  * - beakerx -> nbextensions/beakerx-widget/some-index.js
@@ -25,56 +26,27 @@ type KernelConnectionId = string;
  * in the extension folder so that it can be accessed via the webview.
  */
 export class LocalIPyWidgetScriptManager extends BaseIPyWidgetScriptManager implements IIPyWidgetScriptManager {
-    /**
-     * Copy once per session of VS Code or until user restarts the kernel.
-     */
-    private sourceNbExtensionsPath?: Uri;
-    private overwriteExistingFiles = true;
-    static nbExtensionsCopiedKernelConnectionList = new Set<KernelConnectionId>();
+    private nbExtensionsParentPathPromise?: Promise<Uri | undefined>;
     constructor(
         kernel: IKernel,
         private readonly fs: IFileSystemNode,
         private readonly nbExtensionsPathProvider: INbExtensionsPathProvider,
-        private readonly context: IExtensionContext
+        private readonly context: IExtensionContext,
+        private readonly globalMemento: Memento
     ) {
         super(kernel);
-        // When re-loading VS Code, always overwrite the files.
-        this.overwriteExistingFiles = !LocalIPyWidgetScriptManager.nbExtensionsCopiedKernelConnectionList.has(
-            kernel.kernelConnectionMetadata.id
-        );
     }
     public getBaseUrl() {
         return this.getNbExtensionsParentPath();
     }
+    protected override onKernelRestarted(): void {
+        this.nbExtensionsParentPathPromise = undefined;
+    }
     protected async getNbExtensionsParentPath(): Promise<Uri | undefined> {
-        let overwrite = this.overwriteExistingFiles;
-
-        try {
-            const stopWatch = new StopWatch();
-            this.sourceNbExtensionsPath = await this.nbExtensionsPathProvider.getNbExtensionsParentPath(this.kernel);
-            if (!this.sourceNbExtensionsPath) {
-                return;
-            }
-            const kernelHash = getTelemetrySafeHashedString(this.kernel.kernelConnectionMetadata.id);
-            const baseUrl = Uri.joinPath(this.context.extensionUri, 'tmp', 'scripts', kernelHash, 'jupyter');
-            const targetNbExtensions = Uri.joinPath(baseUrl, 'nbextensions');
-            await this.fs.ensureLocalDir(targetNbExtensions.fsPath);
-            await this.fs.copyLocal(
-                Uri.joinPath(this.sourceNbExtensionsPath, 'nbextensions').fsPath,
-                targetNbExtensions.fsPath,
-                { overwrite }
-            );
-            // If we've copied once, then next time, don't overwrite.
-            this.overwriteExistingFiles = false;
-            LocalIPyWidgetScriptManager.nbExtensionsCopiedKernelConnectionList.add(
-                this.kernel.kernelConnectionMetadata.id
-            );
-            sendTelemetryEvent(Telemetry.IPyWidgetNbExtensionCopyTime, stopWatch.elapsedTime);
-            return baseUrl;
-        } catch (ex) {
-            sendTelemetryEvent(Telemetry.IPyWidgetNbExtensionCopyTime, undefined, undefined, ex);
-            throw ex;
+        if (!this.nbExtensionsParentPathPromise) {
+            this.nbExtensionsParentPathPromise = this.getNbExtensionsParentPathImpl();
         }
+        return this.nbExtensionsParentPathPromise;
     }
     protected async getWidgetEntryPoints(): Promise<{ uri: Uri; widgetFolderName: string }[]> {
         const [sourceNbExtensionsPath] = await Promise.all([
@@ -94,5 +66,60 @@ export class LocalIPyWidgetScriptManager extends BaseIPyWidgetScriptManager impl
     }
     protected getWidgetScriptSource(source: Uri): Promise<string> {
         return this.fs.readLocalFile(source.fsPath);
+    }
+    private async getNbExtensionsParentPathImpl(): Promise<Uri | undefined> {
+        const sourceNbExtensionsParentPath = this.nbExtensionsPathProvider.getNbExtensionsParentPath(this.kernel);
+        if (!sourceNbExtensionsParentPath) {
+            traceError(`Failed to get nbextensions parent path for ${this.kernel.kernelConnectionMetadata.id}`);
+            return;
+        }
+        const nbextensionsPath = path.join(sourceNbExtensionsParentPath.fsPath, 'nbextensions');
+        try {
+            const stopWatch = new StopWatch();
+            const kernelHash = getTelemetrySafeHashedString(this.kernel.kernelConnectionMetadata.id);
+            const baseUrl = Uri.joinPath(this.context.extensionUri, 'tmp', 'scripts', kernelHash, 'jupyter');
+            const filesPromise = this.fs.searchLocal('**/*.*', nbextensionsPath).catch((ex) => {
+                // Handle errors an ensure we don't crash the rest of the code just because we couldn't search for files.
+                traceError(`Failed to search for files in ${nbextensionsPath}`, ex);
+                return [];
+            });
+            // If we have previously copied the files, and the file count is the same, then don't overwrite them.
+            const previouslyCopiedFileCount = this.globalMemento.get<number>(this.getMementoKey(), 0);
+            if (previouslyCopiedFileCount > 0) {
+                const files = await filesPromise;
+                if (files.length === previouslyCopiedFileCount) {
+                    traceInfo(
+                        `Re-using previous nbextension folder ${getDisplayPath(baseUrl)} for kernel ${
+                            this.kernel.kernelConnectionMetadata.id
+                        }, completed in ${stopWatch.elapsedTime}ms.`
+                    );
+                    return baseUrl;
+                }
+            }
+            const targetNbExtensions = Uri.joinPath(baseUrl, 'nbextensions');
+            await this.fs.ensureLocalDir(targetNbExtensions.fsPath);
+            await this.fs.copyLocal(nbextensionsPath, targetNbExtensions.fsPath, { overwrite: true });
+            const files = await filesPromise;
+            await this.globalMemento.update(this.getMementoKey(), files.length);
+            sendTelemetryEvent(Telemetry.IPyWidgetNbExtensionCopyTime, stopWatch.elapsedTime);
+            traceInfo(
+                `Copied ${files.length} nbextension files for kernel ${
+                    this.kernel.kernelConnectionMetadata.id
+                } from ${getDisplayPath(sourceNbExtensionsParentPath)} to ${getDisplayPath(baseUrl)} in ${
+                    stopWatch.elapsedTime
+                }ms.`
+            );
+            return baseUrl;
+        } catch (ex) {
+            traceError(
+                `Failed to copy nbextensions for kernel ${this.kernel.kernelConnectionMetadata.id} from ${nbextensionsPath}`,
+                ex
+            );
+            sendTelemetryEvent(Telemetry.IPyWidgetNbExtensionCopyTime, undefined, undefined, ex);
+            throw ex;
+        }
+    }
+    private getMementoKey() {
+        return `nbExtensions-copy-${this.kernel.kernelConnectionMetadata.id}`;
     }
 }

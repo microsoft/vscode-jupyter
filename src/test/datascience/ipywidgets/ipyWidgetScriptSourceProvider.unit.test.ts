@@ -68,7 +68,8 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
             new NbExtensionsPathProvider(),
             instance(fs),
             instance(context),
-            instance(httpClient)
+            instance(httpClient),
+            instance(memento)
         );
         scriptSourceFactory = new ScriptSourceProviderFactory(
             instance(configService),
