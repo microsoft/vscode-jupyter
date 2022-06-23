@@ -96,7 +96,9 @@ suite(`Interactive window Execution`, async function () {
     async function postSwitch() {
         await uninstallIPyKernel(venNoKernelPath.fsPath);
         await setActiveInterpreter(pythonApiProvider, undefined, originalActiveInterpreter?.uri);
+        await vscode.commands.executeCommand('python.clearWorkspaceInterpreter');
     }
+
     test('Export Interactive window to Notebook', async () => {
         const activeInteractiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
         await waitForInteractiveWindow(activeInteractiveWindow);
@@ -137,6 +139,7 @@ suite(`Interactive window Execution`, async function () {
         assert.strictEqual(cells?.length, 3);
         await waitForTextOutput(cells[0], 'first');
     });
+
     test('Switching active interpreter on a python file changes kernel in use', async function () {
         // Virtual environments are not available in conda
         if (IS_CONDA_TEST() || IS_REMOTE_NATIVE_TEST()) {
