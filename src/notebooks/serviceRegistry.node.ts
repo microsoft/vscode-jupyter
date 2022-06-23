@@ -43,6 +43,7 @@ import { FileConverter } from './export/fileConverter.node';
 import { IFileConverter, INbConvertExport, ExportFormat, IExport, IExportDialog, IExportBase } from './export/types';
 import { ExportUtilBase } from './export/exportUtil';
 import { registerTypes as registerControllerTypes } from './controllers/serviceRegistry.node';
+import { ServerConnectionControllerCommands } from './controllers/commands/serverConnectionControllerCommands';
 
 export function registerTypes(serviceManager: IServiceManager) {
     registerControllerTypes(serviceManager);
@@ -100,6 +101,11 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         InstallPythonControllerCommands
     );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        ServerConnectionControllerCommands
+    );
+
     serviceManager.addSingleton<NotebookCellLanguageService>(NotebookCellLanguageService, NotebookCellLanguageService);
     serviceManager.addBinding(NotebookCellLanguageService, IExtensionSingleActivationService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(

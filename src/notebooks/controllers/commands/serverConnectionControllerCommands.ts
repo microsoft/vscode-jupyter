@@ -56,7 +56,6 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
         // Context keys to control when these commands are shown
         this.showingLocalKernelsContext = new ContextKey('jupyter.showingLocalKenrnels', this.commandManager);
         this.showingRemoteKernelsContext = new ContextKey('jupyter.showingRemoteKernels', this.commandManager);
-        this.onConnectionTypeChanged();
     }
     public async activate(): Promise<void> {
         this.disposables.push(
@@ -65,7 +64,11 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
         this.disposables.push(
             this.commandManager.registerCommand(Commands.SwitchToRemoteKernels, this.switchToRemoteKernels, this)
         );
+        this.disposables.push(
+            this.commandManager.registerCommand(Commands.SwitchToAnotherRemoteKernels, this.switchToRemoteKernels, this)
+        );
         this.disposables.push(this.serverConnectionType.onDidChange(this.onConnectionTypeChanged, this));
+        this.onConnectionTypeChanged();
     }
 
     private onConnectionTypeChanged() {

@@ -196,4 +196,5 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.InstallPythonViaKernelPicker]: [];
     [DSCommands.SwitchToLocalKernels]: [];
     [DSCommands.SwitchToRemoteKernels]: [];
+    [DSCommands.SwitchToAnotherRemoteKernels]: [];
 }
