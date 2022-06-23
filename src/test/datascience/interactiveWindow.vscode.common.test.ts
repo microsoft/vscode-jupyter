@@ -391,9 +391,21 @@ ${actualCode}
             (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
         );
 
-        assert.strictEqual(notebookDocument?.cellAt(0).kind, vscode.NotebookCellKind.Markup);
-        assert.strictEqual(notebookDocument?.cellAt(0).executionSummary?.executionOrder, 1);
-        assert.isTrue(notebookDocument?.cellAt(0).executionSummary?.success);
+        await waitForCondition(
+            () => notebookDocument?.cellAt(0).kind === vscode.NotebookCellKind.Markup,
+            defaultNotebookTestTimeout,
+            'Cell should be a markdown cell'
+        );
+        await waitForCondition(
+            () => notebookDocument?.cellAt(0).executionSummary?.executionOrder === 1,
+            defaultNotebookTestTimeout,
+            'Cell should have an execution order of 1'
+        );
+        await waitForCondition(
+            () => notebookDocument?.cellAt(0).executionSummary?.success === true,
+            defaultNotebookTestTimeout,
+            'Cell should have executed successfully'
+        );
     });
 
     test('Run current file in interactive window (without cells)', async () => {
