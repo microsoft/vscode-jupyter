@@ -59,7 +59,6 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
 
     public async checkAndInstallMissingDependencies(interpreter: PythonEnvironment): Promise<void> {
         const pandasVersion = await this.getVersionOfPandas();
-        console.log({ pandasVersion });
 
         if (pandasVersion) {
             if (isVersionOfPandasSupported(pandasVersion)) {
@@ -105,7 +104,6 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
 
     private async getVersionOfPandas(): Promise<SemVer | undefined> {
         const outputs = await executeSilently(this.kernelSession, `import pandas; print(pandas.__version__)`);
-        console.log({ outputs });
 
         const error = outputs.find((item) => item.output_type === 'error');
         if (error) {
