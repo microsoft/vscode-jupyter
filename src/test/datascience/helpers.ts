@@ -238,7 +238,7 @@ export async function runInteractiveWindowInput(
 ) {
     await insertIntoInputEditor(code, interactiveWindow);
     await vscode.commands.executeCommand('interactive.execute');
-    await waitForLastCellToComplete(interactiveWindow, newCellCount, false);
+    return waitForLastCellToComplete(interactiveWindow, newCellCount, false);
 }
 
 export async function waitForLastCellToComplete(

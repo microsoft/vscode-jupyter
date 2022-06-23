@@ -20,6 +20,7 @@ import {
 import {
     createStandaloneInteractiveWindow,
     insertIntoInputEditor,
+    runInteractiveWindowInput,
     runNewPythonFile,
     submitFromPythonFile,
     submitFromPythonFileUsingCodeWatcher,
@@ -44,7 +45,7 @@ import { sleep } from '../core';
 import { IPYTHON_VERSION_CODE } from '../constants';
 import { translateCellErrorOutput, getTextOutputValue } from '../../kernels/execution/helpers';
 
-suite(`Interactive window`, async function () {
+suite(`Interactive window execution`, async function () {
     this.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
@@ -177,11 +178,7 @@ suite(`Interactive window`, async function () {
         const activeInteractiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
         const notebook = await waitForInteractiveWindow(activeInteractiveWindow);
 
-        // Add code to the input box
-        await insertIntoInputEditor('print("foo")');
-
-        // Run the code in the input box
-        await vscode.commands.executeCommand('interactive.execute');
+        await runInteractiveWindowInput('print("foo")', activeInteractiveWindow, 1);
 
         assert.ok(notebook !== undefined, 'No interactive window found');
         await waitForCondition(
@@ -251,8 +248,8 @@ for i in range(10):
     liveplot.draw()
     sleep(0.1)`;
         const interactiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
-        await insertIntoInputEditor(code);
-        await vscode.commands.executeCommand('interactive.execute');
+        await runInteractiveWindowInput(code, interactiveWindow, 1);
+
         const codeCell = await waitForLastCellToComplete(interactiveWindow);
         const output = codeCell?.outputs[0];
         assert.ok(output?.items[0].mime === 'image/png', 'No png output found');
@@ -264,23 +261,17 @@ for i in range(10):
 
     // Create 3 cells. Last cell should update the second
     test('Update display data', async () => {
-        // Create cell 1
         const interactiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
-        await insertIntoInputEditor('dh = display(display_id=True)');
-        await vscode.commands.executeCommand('interactive.execute');
-        await waitForLastCellToComplete(interactiveWindow);
+
+        // Create cell 1
+        await runInteractiveWindowInput('dh = display(display_id=True)', interactiveWindow, 1);
 
         // Create cell 2
-        await insertIntoInputEditor('dh.display("Hello")');
-        await vscode.commands.executeCommand('interactive.execute');
-        const secondCell = await waitForLastCellToComplete(interactiveWindow);
+        const secondCell = await runInteractiveWindowInput('dh.display("Hello")', interactiveWindow, 2);
         await waitForTextOutput(secondCell!, "'Hello'");
 
         // Create cell 3
-        await insertIntoInputEditor('dh.update("Goodbye")');
-        await vscode.commands.executeCommand('interactive.execute');
-        // Last cell output is empty
-        const thirdCell = await waitForLastCellToComplete(interactiveWindow);
+        const thirdCell = await runInteractiveWindowInput('dh.update("Goodbye")', interactiveWindow, 3);
         assert.equal(thirdCell?.outputs.length, 0, 'Third cell should not have any outputs');
         // Second cell output is updated
         await waitForTextOutput(secondCell!, "'Goodbye'");

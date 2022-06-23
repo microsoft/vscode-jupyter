@@ -42,7 +42,7 @@ import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { Commands } from '../../platform/common/constants';
 
-suite(`Interactive window`, async function () {
+suite(`Interactive window Execution`, async function () {
     this.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
