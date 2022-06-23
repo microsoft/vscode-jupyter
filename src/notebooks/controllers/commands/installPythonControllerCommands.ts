@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { isPythonKernelConnection } from '../../kernels/helpers';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
-import { IPythonApiProvider, IPythonExtensionChecker } from '../../platform/api/types';
-import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
-import { Commands, PythonExtension, Telemetry } from '../../platform/common/constants';
-import { ContextKey } from '../../platform/common/contextKey';
-import { IDisposableRegistry, IsWebExtension } from '../../platform/common/types';
-import { Common, DataScience } from '../../platform/common/utils/localize';
-import { traceError, traceInfo } from '../../platform/logging';
-import { ProgressReporter } from '../../platform/progress/progressReporter';
-import { sendTelemetryEvent } from '../../telemetry';
-import { IControllerLoader, IControllerRegistration } from './types';
+import { isPythonKernelConnection } from '../../../kernels/helpers';
+import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
+import { IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
+import { Commands, PythonExtension, Telemetry } from '../../../platform/common/constants';
+import { ContextKey } from '../../../platform/common/contextKey';
+import { IDisposableRegistry, IsWebExtension } from '../../../platform/common/types';
+import { Common, DataScience } from '../../../platform/common/utils/localize';
+import { traceError, traceInfo } from '../../../platform/logging';
+import { ProgressReporter } from '../../../platform/progress/progressReporter';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { IControllerLoader, IControllerRegistration } from '../types';
 
 // This service owns the commands that show up in the kernel picker to allow for either installing
 // the Python Extension or installing Python

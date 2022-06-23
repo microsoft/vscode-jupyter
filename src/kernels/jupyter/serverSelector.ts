@@ -5,8 +5,8 @@
 
 import { inject, injectable } from 'inversify';
 import isNil = require('lodash/isNil');
-import { EventEmitter, QuickPickItem, ThemeIcon, Uri } from 'vscode';
-import { IApplicationShell, IClipboard } from '../../platform/common/application/types';
+import { EventEmitter, QuickInputButtons, QuickPickItem, ThemeIcon } from 'vscode';
+import { IApplicationShell } from '../../platform/common/application/types';
 import { traceDecoratorError, traceError, traceWarning } from '../../platform/logging';
 import { DataScience } from '../../platform/common/utils/localize';
 import {
@@ -37,8 +37,6 @@ import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsErr
 import { RemoteJupyterServerConnectionError } from '../../platform/errors/remoteJupyterServerConnectionError';
 import { JupyterSelfCertsExpiredError } from '../../platform/errors/jupyterSelfCertsExpiredError';
 
-const defaultUri = 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe';
-
 interface ISelectUriQuickPickItem extends QuickPickItem {
     provider?: IJupyterUriProvider;
     url?: string;
@@ -54,7 +52,6 @@ export type SelectJupyterUriCommandSource =
 @injectable()
 export class JupyterServerSelector {
     constructor(
-        @inject(IClipboard) private readonly clipboard: IClipboard,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
         @inject(IJupyterUriProviderRegistration)
         private extraUriProviders: IJupyterUriProviderRegistration,
@@ -69,44 +66,24 @@ export class JupyterServerSelector {
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
     @traceDecoratorError('Failed to select Jupyter Uri')
-    public selectJupyterURI(commandSource: SelectJupyterUriCommandSource = 'nonUser'): Promise<void> {
+    public selectJupyterURI(
+        commandSource: SelectJupyterUriCommandSource = 'nonUser',
+        showBackButton: boolean = false
+    ): Promise<InputFlowAction | undefined> {
         sendTelemetryEvent(Telemetry.SetJupyterURIUIDisplayed, undefined, {
             commandSource
         });
         const multiStep = this.multiStepFactory.create<{}>();
-        return multiStep.run(this.startSelectingURI.bind(this), {});
+        return multiStep.run(this.startSelectingURI.bind(this, showBackButton), {});
     }
 
-    @captureTelemetry(Telemetry.EnterJupyterURI)
-    @traceDecoratorError('Failed to enter Jupyter Uri')
-    public async enterJupyterURI(): Promise<string | undefined> {
-        let initialValue = defaultUri;
-        try {
-            const text = await this.clipboard.readText().catch(() => '');
-            const parsedUri = Uri.parse(text.trim(), true);
-            // Only display http/https uris.
-            initialValue = text && parsedUri && parsedUri.scheme.toLowerCase().startsWith('http') ? text : defaultUri;
-        } catch {
-            // We can ignore errors.
-        }
-        // Ask the user to enter a URI to connect to.
-        const uri = await this.applicationShell.showInputBox({
-            title: DataScience.jupyterSelectURIPrompt(),
-            value: initialValue || defaultUri,
-            validateInput: this.validateSelectJupyterURI,
-            prompt: ''
-        });
-
-        if (uri) {
-            await this.setJupyterURIToRemote(uri, true);
-            return computeServerId(uri);
-        }
-    }
     @captureTelemetry(Telemetry.SetJupyterURIToLocal)
     public async setJupyterURIToLocal(): Promise<void> {
         await this.serverUriStorage.setUriToLocal();
     }
 
+    @captureTelemetry(Telemetry.EnterJupyterURI)
+    @traceDecoratorError('Failed to enter Jupyter Uri')
     public async setJupyterURIToRemote(userURI: string, ignoreValidation?: boolean): Promise<void> {
         // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
         try {
@@ -147,7 +124,11 @@ export class JupyterServerSelector {
         });
     }
 
-    private async startSelectingURI(input: IMultiStepInput<{}>, _state: {}): Promise<InputStep<{}> | void> {
+    private async startSelectingURI(
+        showBackButton: boolean,
+        input: IMultiStepInput<{}>,
+        _state: {}
+    ): Promise<InputStep<{}> | void> {
         // First step, show a quick pick to choose either the remote or the local.
         // newChoice element will be set if the user picked 'enter a new server'
 
@@ -168,6 +149,7 @@ export class JupyterServerSelector {
             activeItem,
             acceptFilterBoxTextAsSelection: true,
             validateFilterBox: this.validateSelectJupyterURI.bind(this),
+            buttons: showBackButton ? [QuickInputButtons.Back] : [],
             title: DataScience.jupyterSelectURIQuickPickTitle(),
             onDidTriggerItemButton: (e) => {
                 const url = e.item.url;
@@ -177,6 +159,8 @@ export class JupyterServerSelector {
                     );
                     items.splice(items.indexOf(e.item), 1);
                     onDidChangeItems.fire(items.concat([]));
+                } else if (e.button) {
+                    throw InputFlowAction.back;
                 }
             },
             onDidChangeItems: onDidChangeItems.event

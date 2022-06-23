@@ -41,7 +41,7 @@ export interface IQuickPickParameters<T extends QuickPickItem> {
     matchOnDescription?: boolean;
     matchOnDetail?: boolean;
     acceptFilterBoxTextAsSelection?: boolean;
-    validateFilterBox(value: string): Promise<string | undefined>;
+    validateFilterBox?(value: string): Promise<string | undefined>;
     shouldResume?(): Promise<boolean>;
     onDidTriggerItemButton?(e: QuickPickItemButtonEvent<T>): void;
     onDidChangeItems?: Event<T[]>;
@@ -63,7 +63,7 @@ export interface InputBoxParameters {
 type MultiStepInputQuickPicResponseType<T, P> = T | (P extends { buttons: (infer I)[] } ? I : never);
 type MultiStepInputInputBoxResponseType<P> = string | (P extends { buttons: (infer I)[] } ? I : never);
 export interface IMultiStepInput<S> {
-    run(start: InputStep<S>, state: S): Promise<void>;
+    run(start: InputStep<S>, state: S): Promise<InputFlowAction | undefined>;
     showQuickPick<T extends QuickPickItem, P extends IQuickPickParameters<T>>({
         title,
         step,
@@ -260,7 +260,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         }
     }
 
-    private async stepThrough(start: InputStep<S>, state: S) {
+    private async stepThrough(start: InputStep<S>, state: S): Promise<InputFlowAction | undefined> {
         let step: InputStep<S> | void = start;
         while (step) {
             this.steps.push(step);
@@ -280,6 +280,9 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                     step = undefined;
                 } else {
                     throw err;
+                }
+                if (!step) {
+                    return err;
                 }
             }
         }

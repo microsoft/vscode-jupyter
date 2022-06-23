@@ -34,9 +34,9 @@ export class JupyterCommandLineSelector {
     }
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
-    public selectJupyterCommandLine(file: Uri): Promise<void> {
+    public async selectJupyterCommandLine(file: Uri): Promise<void> {
         const multiStep = this.multiStepFactory.create<{}>();
-        return multiStep.run(this.startSelectingCommandLine.bind(this, file), {});
+        await multiStep.run(this.startSelectingCommandLine.bind(this, file), {});
     }
 
     private async onDidChangeConfiguration(e: ConfigurationChangeEvent) {

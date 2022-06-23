@@ -26,7 +26,7 @@ import { NotebookIPyWidgetCoordinator } from './controllers/notebookIPyWidgetCoo
 import { RemoteKernelConnectionHandler } from './controllers/remoteKernelConnectionHandler';
 import { JupyterServerSelectorCommand } from './serverSelector';
 import { InterpreterPackageTracker } from './telemetry/interpreterPackageTracker';
-import { InstallPythonControllerCommands } from './controllers/installPythonControllerCommands';
+import { InstallPythonControllerCommands } from './controllers/commands/installPythonControllerCommands';
 import { NotebookCellLanguageService } from './languages/cellLanguageService';
 import { EmptyNotebookCellLanguageService } from './languages/emptyNotebookCellLanguageService';
 import { DebuggingManager } from './debugger/debuggingManager';

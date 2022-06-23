@@ -42,7 +42,7 @@ suite('DataScience - Server Selector Command', () => {
 
         handler();
 
-        verify(serverSelector.selectJupyterURI(true, 'commandPalette')).once();
+        verify(serverSelector.selectJupyterURI('commandPalette')).once();
     });
 
     test(`Command Handler should set URI`, () => {
