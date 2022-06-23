@@ -24,7 +24,7 @@ import { noop } from '../../../platform/common/utils/misc';
 import { untildify } from '../../../platform/common/utils/platform';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { traceError, traceInfo } from '../../../platform/logging';
-import { IShowDataViewerFromVariablePanel } from '../../../platform/messageTypes';
+import { IShowDataViewerFromVariablePanel } from '../../../messageTypes';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../platform/telemetry/constants';
 import { PythonEnvironment } from '../../../standalone/api/extension';

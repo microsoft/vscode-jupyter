@@ -6,11 +6,7 @@ import { KernelMessagingApi, PostOffice } from '../../react-common/postOffice';
 import { WidgetManager } from '../common/manager';
 import { ScriptManager } from '../common/scriptManager';
 import { OutputItem } from 'vscode-notebook-renderer';
-import {
-    SharedMessages,
-    IInteractiveWindowMapping,
-    InteractiveWindowMessages
-} from '../../../../platform/messageTypes';
+import { SharedMessages, IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../../messageTypes';
 import { logMessage } from '../../react-common/logger';
 
 class WidgetManagerComponent {

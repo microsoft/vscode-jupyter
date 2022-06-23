@@ -13,7 +13,7 @@ import {
     Uri,
     ViewColumn
 } from 'vscode';
-import { IShowDataViewerFromVariablePanel } from './platform/messageTypes';
+import { IShowDataViewerFromVariablePanel } from './messageTypes';
 import { Commands as DSCommands } from './platform/common/constants';
 import { PythonEnvironment } from './platform/pythonEnvironments/info';
 import { CommandSource } from './platform/testing/common/constants';

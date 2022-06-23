@@ -10,7 +10,7 @@ import {
     LoadIPyWidgetClassLoadAction,
     NotifyIPyWidgetWidgetVersionNotSupportedAction,
     SharedMessages
-} from '../../../../platform/messageTypes';
+} from '../../../../messageTypes';
 import { IJupyterExtraSettings } from '../../../../platform/webviews/types';
 import { CommonAction, CommonActionType } from '../../interactive-common/redux/reducers/types';
 import { IStore } from '../../interactive-common/redux/store';

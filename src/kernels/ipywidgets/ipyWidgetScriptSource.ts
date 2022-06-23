@@ -6,7 +6,7 @@ import type * as jupyterlabService from '@jupyterlab/services';
 import { Event, EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { traceError, traceInfo, traceVerbose, traceWarning } from '../../platform/logging';
 import { IDisposableRegistry, IConfigurationService, IHttpClient, IDisposable } from '../../platform/common/types';
-import { InteractiveWindowMessages, IPyWidgetMessages } from '../../platform/messageTypes';
+import { InteractiveWindowMessages, IPyWidgetMessages } from '../../messageTypes';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { IKernel, IKernelProvider } from '../types';
 import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider';

@@ -9,12 +9,11 @@ import * as lspConcat from '@vscode/lsp-notebook-concat';
 import * as protocol from 'vscode-languageserver-protocol';
 import { IExtensionSingleActivationService } from '../platform/activation/types';
 import { ICommandManager, IApplicationShell } from '../platform/common/application/types';
-import { PYTHON_LANGUAGE, NOTEBOOK_SELECTOR } from '../platform/common/constants';
+import { PYTHON_LANGUAGE, NOTEBOOK_SELECTOR, Commands, EditorContexts } from '../platform/common/constants';
 import { ContextKey } from '../platform/common/contextKey';
 import { traceInfo } from '../platform/logging';
 import { IFileSystemNode } from '../platform/common/platform/types.node';
 import { IDisposableRegistry, IConfigurationService } from '../platform/common/types';
-import { Commands, EditorContexts } from '../webviews/webview-side/common/constants';
 import { sleep, waitForCondition } from '../platform/common/utils/async';
 import { noop, swallowExceptions } from '../platform/common/utils/misc';
 

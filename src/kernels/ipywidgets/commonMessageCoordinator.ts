@@ -18,7 +18,7 @@ import {
     IPyWidgetMessages,
     LoadIPyWidgetClassLoadAction,
     NotifyIPyWidgetWidgetVersionNotSupportedAction
-} from '../../platform/messageTypes';
+} from '../../messageTypes';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';

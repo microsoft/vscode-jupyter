@@ -99,9 +99,21 @@ export async function createStandaloneInteractiveWindow(interactiveWindowProvide
     return activeInteractiveWindow;
 }
 
-export async function insertIntoInputEditor(source: string) {
-    // Add code to the input box
-    await vscode.window.activeTextEditor?.edit((editBuilder) => {
+// Add code to the input box
+export async function insertIntoInputEditor(source: string, interactiveWindow?: InteractiveWindow) {
+    let inputBox: vscode.TextEditor | undefined;
+    if (interactiveWindow) {
+        inputBox = vscode.window.visibleTextEditors.find(
+            (e) => e.document.uri.path === interactiveWindow.inputUri.path
+        );
+    }
+    if (!inputBox) {
+        inputBox = vscode.window.activeTextEditor;
+    }
+
+    assert(inputBox, 'No active text editor for IW input');
+
+    await inputBox!.edit((editBuilder) => {
         editBuilder.insert(new vscode.Position(0, 0), source);
     });
     return vscode.window.activeTextEditor;
@@ -217,6 +229,16 @@ export async function waitForInteractiveWindow(
         'Interactive window notebook document not found'
     );
     return notebookDocument!;
+}
+
+export async function runInteractiveWindowInput(
+    code: string,
+    interactiveWindow: InteractiveWindow,
+    newCellCount: number
+) {
+    await insertIntoInputEditor(code, interactiveWindow);
+    await vscode.commands.executeCommand('interactive.execute');
+    return waitForLastCellToComplete(interactiveWindow, newCellCount, false);
 }
 
 export async function waitForLastCellToComplete(

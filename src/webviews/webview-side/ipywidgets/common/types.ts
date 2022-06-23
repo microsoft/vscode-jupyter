@@ -8,7 +8,7 @@ import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { ISignal } from '@lumino/signaling';
 import { Widget } from '@lumino/widgets';
-import { IInteractiveWindowMapping } from '../../../../platform/messageTypes';
+import { IInteractiveWindowMapping } from '../../../../messageTypes';
 
 export interface IMessageSender {
     sendMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]): void;
