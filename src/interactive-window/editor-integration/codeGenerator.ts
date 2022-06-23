@@ -89,7 +89,8 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
         ) {
             const nonEmptyLines = lines.slice(1).filter((line) => line.trim().length > 0);
             if (nonEmptyLines.length > 0 && nonEmptyLines[0].trim().startsWith('%%')) {
-                return { lines: lines.slice(1), executableLines: lines.slice(1) };
+                const executableLines = lines.slice(lines.indexOf(nonEmptyLines[0]));
+                return { lines: executableLines, executableLines };
             }
         }
 
