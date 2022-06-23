@@ -45,7 +45,7 @@ import {
     IsWindows
 } from './types';
 import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
-import { LanguageInitializer } from '../../telemetry/languageInitializer';
+import { LanguageInitializer } from '../telemetry/languageInitializer';
 import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.node';
 import { registerTypes as processRegisterTypes } from './process/serviceRegistry.node';
 import { registerTypes as variableRegisterTypes } from './variables/serviceRegistry.node';

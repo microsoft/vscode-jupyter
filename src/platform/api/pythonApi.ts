@@ -71,8 +71,14 @@ export function serializePythonEnvironment(
 export class PythonApiProvider implements IPythonApiProvider {
     private readonly api = createDeferred<PythonApi>();
     private readonly didActivatePython = new EventEmitter<void>();
+    private readonly _pythonExtensionHooked = createDeferred<void>();
     public get onDidActivatePythonExtension() {
         return this.didActivatePython.event;
+    }
+
+    // This promise will resolve when the python extension is hooked
+    public get pythonExtensionHooked(): Promise<void> {
+        return this._pythonExtensionHooked.promise;
     }
 
     private initialized?: boolean;
@@ -169,13 +175,13 @@ export class PythonApiProvider implements IPythonApiProvider {
             }
         }
         pythonExtension.exports.jupyter.registerHooks();
+        this._pythonExtensionHooked.resolve();
     }
 }
 
 @injectable()
 export class PythonExtensionChecker implements IPythonExtensionChecker {
     private extensionChangeHandler: Disposable | undefined;
-    private waitingOnInstallPrompt?: Promise<void>;
     /**
      * Used only for testsing
      */
@@ -199,14 +205,19 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
         return this.extensions.getExtension(PythonExtension)?.isActive === true;
     }
 
+    // Directly install the python extension instead of just showing the extension open page
+    public async directlyInstallPythonExtension(): Promise<void> {
+        return this.commandManager.executeCommand('workbench.extensions.installExtension', PythonExtension);
+    }
+
+    // Notify the user that Python is require, and open up the Extension installation page to the
+    // python extension
     public async showPythonExtensionInstallRequiredPrompt(): Promise<void> {
         // If workspace is not trusted, then don't show prompt
         if (!this.workspace.isTrusted) {
             return;
         }
-        if (this.waitingOnInstallPrompt) {
-            return this.waitingOnInstallPrompt;
-        }
+
         PythonExtensionChecker.promptDisplayed = true;
         // Ask user if they want to install and then wait for them to actually install it.
         const yes = localize.Common.bannerLabelYes();

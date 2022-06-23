@@ -4,10 +4,10 @@
 import '../../../platform/common/extensions';
 import { Uri, WebviewView as vscodeWebviewView } from 'vscode';
 import { joinPath } from '../../../platform/vscode-path/resources';
-import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
+import { captureTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { INotebookWatcher, IVariableViewPanelMapping } from './types';
 import { VariableViewMessageListener } from './variableViewMessageListener';
-import { InteractiveWindowMessages, IShowDataViewer } from '../../../platform/messageTypes';
+import { InteractiveWindowMessages, IShowDataViewer } from '../../../messageTypes';
 import {
     IJupyterVariables,
     IJupyterVariablesRequest,
@@ -30,10 +30,9 @@ import {
     IExtensionContext
 } from '../../../platform/common/types';
 import * as localize from '../../../platform/common/utils/localize';
-import { Telemetry } from '../../webview-side/common/constants';
 import { DataViewerChecker } from '../dataviewer/dataViewerChecker';
 import { IJupyterVariableDataProviderFactory, IDataViewerFactory, IDataViewer } from '../dataviewer/types';
-import { WebviewViewHost } from '../webviewViewHost';
+import { WebviewViewHost } from '../../../platform/webviews/webviewViewHost';
 import { swallowExceptions } from '../../../platform/common/utils/decorators';
 import { noop } from '../../../platform/common/utils/misc';
 

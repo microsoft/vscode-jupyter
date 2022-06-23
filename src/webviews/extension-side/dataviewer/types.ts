@@ -6,9 +6,9 @@ import { Event } from 'vscode';
 import { IKernel } from '../../../kernels/types';
 import { IJupyterVariable } from '../../../kernels/variables/types';
 import { IDisposable } from '../../../platform/common/types';
-import { SharedMessages } from '../../../platform/messageTypes';
+import { SharedMessages } from '../../../messageTypes';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { SliceOperationSource } from '../../../telemetry/constants';
+import { SliceOperationSource } from '../../../platform/telemetry/constants';
 
 export const CellFetchAllLimit = 100000;
 export const CellFetchSizeFirst = 100000;

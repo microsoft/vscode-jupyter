@@ -4,11 +4,7 @@
 'use strict';
 
 import * as Redux from 'redux';
-import {
-    InteractiveWindowMessages,
-    SharedMessages,
-    IInteractiveWindowMapping
-} from '../../../../platform/messageTypes';
+import { InteractiveWindowMessages, SharedMessages, IInteractiveWindowMapping } from '../../../../messageTypes';
 import { BaseReduxActionPayload } from '../../../types';
 import { QueueAnotherFunc } from '../../react-common/reduxUtils';
 import { CommonActionType, CommonActionTypeMapping } from './reducers/types';

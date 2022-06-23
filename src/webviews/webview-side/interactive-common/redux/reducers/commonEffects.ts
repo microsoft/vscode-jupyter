@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { InteractiveWindowMessages, LoadIPyWidgetClassLoadAction } from '../../../../../platform/messageTypes';
+import { InteractiveWindowMessages, LoadIPyWidgetClassLoadAction } from '../../../../../messageTypes';
 import { IMainState } from '../../../interactive-common/mainState';
 import { storeLocStrings } from '../../../react-common/locReactSide';
 import { postActionToExtension } from '../helpers';

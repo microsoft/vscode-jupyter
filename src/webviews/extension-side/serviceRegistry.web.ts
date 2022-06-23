@@ -1,12 +1,3 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
-'use strict';
-
-import { IWebviewViewProvider, IWebviewPanelProvider } from '../../platform/common/application/types';
-import { IServiceManager } from '../../platform/ioc/types';
-import { WebviewViewProvider } from './webviewViews/webviewViewProvider';
-import { WebviewPanelProvider } from './webviewPanels/webviewPanelProvider';
-import { IExtensionActivationManager, IExtensionSingleActivationService } from '../../platform/activation/types';
 import { VariableViewActivationService } from './variablesView/variableViewActivationService';
 import { INotebookWatcher, IVariableViewProvider } from './variablesView/types';
 import { VariableViewProvider } from './variablesView/variableViewProvider';
@@ -20,38 +11,21 @@ import {
     IJupyterVariableDataProviderFactory
 } from './dataviewer/types';
 import { DataViewerCommandRegistry } from './dataviewer/dataViewerCommandRegistry';
-import { CommandRegistry as ExportCommandRegistry } from './import-export/commandRegistry';
 import { NotebookWatcher } from './variablesView/notebookWatcher';
 import { DataViewerFactory } from './dataviewer/dataViewerFactory';
-import { ExtensionSideRenderer, IExtensionSideRenderer } from './renderer';
-import { ActiveEditorContextService } from './activeEditorContext';
-import { GlobalActivation } from './globalActivation';
 import { DataViewer } from './dataviewer/dataViewer';
-import { INotebookExporter } from '../../kernels/jupyter/types';
-import { JupyterExporter } from './import-export/jupyterExporter';
-import { JupyterKernelServiceFactory } from './api/kernelApi';
-import { IExportedKernelServiceFactory } from './api/api';
-import { ApiAccessService } from './api/apiAccessService';
-import { ExtensionActivationManager } from './activationManager';
+import { IServiceManager } from '../../platform/ioc/types';
+import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { DataViewerDependencyService } from './dataviewer/dataViewerDependencyService';
 
-export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        ActiveEditorContextService
-    );
-
-    serviceManager.add<IWebviewViewProvider>(IWebviewViewProvider, WebviewViewProvider);
-    serviceManager.add<IWebviewPanelProvider>(IWebviewPanelProvider, WebviewPanelProvider);
-
+export function registerTypes(serviceManager: IServiceManager) {
     // Data viewer
-    serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
-    serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         DataViewerCommandRegistry
     );
+    serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
+    serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
     serviceManager.addSingleton<IDataViewerDependencyService>(
         IDataViewerDependencyService,
         DataViewerDependencyService
@@ -69,22 +43,4 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         IJupyterVariableDataProviderFactory,
         JupyterVariableDataProviderFactory
     );
-
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        ExportCommandRegistry
-    );
-
-    serviceManager.addSingletonInstance<IExtensionSideRenderer>(IExtensionSideRenderer, new ExtensionSideRenderer());
-
-    // Activation Manager
-    serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
-    serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
-
-    // API
-    serviceManager.addSingleton<IExportedKernelServiceFactory>(
-        IExportedKernelServiceFactory,
-        JupyterKernelServiceFactory
-    );
-    serviceManager.addSingleton<ApiAccessService>(ApiAccessService, ApiAccessService);
 }

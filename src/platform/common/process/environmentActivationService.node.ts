@@ -24,7 +24,7 @@ import { getDisplayPath } from '../platform/fs-paths';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { CurrentProcess } from './currentProcess.node';
-import { getTelemetrySafeHashedString } from '../../../telemetry/helpers';
+import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
 import { CondaService } from './condaService.node';
 import { condaVersionSupportsLiveStreaming, createCondaEnv } from './pythonEnvironment.node';
 import { printEnvVariablesToFile } from './internal/scripts/index.node';

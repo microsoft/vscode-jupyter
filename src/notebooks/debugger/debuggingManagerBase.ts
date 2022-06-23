@@ -24,9 +24,9 @@ import { DataScience } from '../../platform/common/utils/localize';
 import { IKernelDebugAdapterConfig } from '../../kernels/debugger/types';
 import { Debugger } from '../../platform/debugger/debugger';
 import { KernelDebugAdapterBase } from '../../kernels/debugger/kernelDebugAdapterBase';
-import { INotebookControllerManager } from '../types';
 import { IpykernelCheckResult, isUsingIpykernel6OrLater } from '../../kernels/debugger/helper';
 import { noop } from '../../platform/common/utils/misc';
+import { IControllerLoader, IControllerSelection } from '../controllers/types';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
@@ -40,7 +40,8 @@ export abstract class DebuggingManagerBase implements IDisposable {
 
     public constructor(
         private kernelProvider: IKernelProvider,
-        private readonly notebookControllerManager: INotebookControllerManager,
+        private readonly notebookControllerLoader: IControllerLoader,
+        private readonly notebookControllerSelection: IControllerSelection,
         protected readonly commandManager: ICommandManager,
         protected readonly appShell: IApplicationShell,
         protected readonly vscNotebook: IVSCodeNotebook
@@ -142,8 +143,8 @@ export abstract class DebuggingManagerBase implements IDisposable {
     }
 
     protected async ensureKernelIsRunning(doc: NotebookDocument): Promise<IKernel | undefined> {
-        await this.notebookControllerManager.loadNotebookControllers();
-        const controller = this.notebookControllerManager.getSelectedNotebookController(doc);
+        await this.notebookControllerLoader.loaded;
+        const controller = this.notebookControllerSelection.getSelected(doc);
 
         let kernel = this.kernelProvider.get(doc.uri);
         if (!kernel && controller) {
@@ -165,7 +166,7 @@ export abstract class DebuggingManagerBase implements IDisposable {
         try {
             let kernel = this.kernelProvider.get(doc.uri);
             if (!kernel) {
-                const controller = this.notebookControllerManager.getSelectedNotebookController(doc);
+                const controller = this.notebookControllerSelection.getSelected(doc);
                 if (!controller) {
                     return IpykernelCheckResult.ControllerNotSelected;
                 }

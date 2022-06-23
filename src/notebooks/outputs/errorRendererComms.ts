@@ -23,7 +23,7 @@ import {
 } from '../../platform/common/application/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IDisposableRegistry } from '../../platform/common/types';
-import { InteractiveWindowMessages } from '../../platform/messageTypes';
+import { InteractiveWindowMessages } from '../../messageTypes';
 import { linkCommandAllowList, LineQueryRegex } from './linkProvider';
 
 @injectable()

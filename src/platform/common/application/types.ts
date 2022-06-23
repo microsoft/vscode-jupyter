@@ -72,7 +72,7 @@ import {
 } from 'vscode';
 
 import { IAsyncDisposable, Resource } from '../types';
-import { ICommandNameArgumentTypeMapping } from './commands';
+import { ICommandNameArgumentTypeMapping } from '../../../commands';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/unified-signatures */
 
@@ -1147,11 +1147,6 @@ export interface IWebviewPanel extends IWebview {
      * Indicates if the webview has the focus or not.
      */
     isActive(): boolean;
-    /**
-     * Updates the current working directory for serving up files.
-     * @param cwd
-     */
-    updateCwd(cwd: string): void;
 }
 
 export interface IWebviewPanelOptions extends IWebviewOptions {

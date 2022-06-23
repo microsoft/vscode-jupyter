@@ -32,7 +32,6 @@ import {
     waitForTextOutput,
     WindowPromptStubButtonClickOptions
 } from './notebook/helper.node';
-import { INotebookControllerManager } from '../../notebooks/types';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/interpreter';
@@ -41,6 +40,7 @@ import { isEqual } from '../../platform/vscode-path/resources';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { Commands } from '../../platform/common/constants';
+import { IControllerSelection } from '../../notebooks/controllers/types';
 
 suite(`Interactive window`, async function () {
     this.timeout(120_000);
@@ -116,13 +116,10 @@ suite(`Interactive window`, async function () {
             let notebookDocument = vscode.workspace.notebookDocuments.find(
                 (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
             )!;
-            const notebookControllerManager =
-                api.serviceManager.get<INotebookControllerManager>(INotebookControllerManager);
+            const notebookControllerManager = api.serviceManager.get<IControllerSelection>(IControllerSelection);
             // Ensure we picked up the active interpreter for use as the kernel
 
-            let controller = notebookDocument
-                ? notebookControllerManager.getSelectedNotebookController(notebookDocument)
-                : undefined;
+            let controller = notebookDocument ? notebookControllerManager.getSelected(notebookDocument) : undefined;
             assert.ok(
                 areInterpreterPathsSame(controller?.connection.interpreter?.uri, activeInterpreter?.uri),
                 `Controller does not match active interpreter for ${getDisplayPath(notebookDocument?.uri)} - active: ${
@@ -151,9 +148,7 @@ suite(`Interactive window`, async function () {
             notebookDocument = vscode.workspace.notebookDocuments.find(
                 (doc) => doc.uri.toString() === newIW?.notebookUri?.toString()
             )!;
-            controller = notebookDocument
-                ? notebookControllerManager.getSelectedNotebookController(notebookDocument)
-                : undefined;
+            controller = notebookDocument ? notebookControllerManager.getSelected(notebookDocument) : undefined;
 
             // Controller path should not be the same as the old active interpreter
             assert.isFalse(

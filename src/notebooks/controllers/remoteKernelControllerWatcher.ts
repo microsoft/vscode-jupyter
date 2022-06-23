@@ -12,7 +12,7 @@ import { isLocalConnection } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
-import { INotebookControllerManager } from '../types';
+import { IControllerRegistration } from './types';
 
 @injectable()
 export class RemoteKernelControllerWatcher implements IExtensionSyncActivationService {
@@ -21,7 +21,7 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IJupyterUriProviderRegistration) private readonly providerRegistry: IJupyterUriProviderRegistration,
         @inject(IJupyterServerUriStorage) private readonly uriStorage: IJupyterServerUriStorage,
-        @inject(INotebookControllerManager) private readonly controllers: INotebookControllerManager
+        @inject(IControllerRegistration) private readonly controllers: IControllerRegistration
     ) {}
     activate(): void {
         this.providerRegistry.onDidChangeProviders(this.addProviderHandlers, this, this.disposables);
@@ -62,7 +62,7 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
                 }
             })
         );
-        const controllers = this.controllers.getRegisteredNotebookControllers();
+        const controllers = this.controllers.values;
         controllers.forEach((controller) => {
             const connection = controller.connection;
             if (isLocalConnection(connection)) {

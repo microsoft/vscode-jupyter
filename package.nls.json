@@ -903,6 +903,7 @@
     },
     "DataScience.pythonExtensionRequired": "The Python Extension is required to perform that task. Click Yes to open Python Extension installation page.",
     "DataScience.pythonExtensionRequiredToRunNotebook": "Python Extension required to run Python notebooks.",
+    "DataScience.installingPythonExtension": "Installing Python extension and locating kernels.",
     "DataScience.pythonExtensionInstalled": "Python Extension is now installed. Some features might not be available until a notebook or interactive window session is restarted.",
     "DataScience.showDataViewerFail": "Failed to create the Data Viewer. Check the Jupyter tab of the Output window for more info.",
     "DataScience.notebookCreationPickerPlaceHolder": "Select an option to create a blank notebook",

@@ -13,7 +13,7 @@
 
 ### Prerequisites
 
-1. [Node.js](https://nodejs.org/) 16.14.2
+1. [Node.js](https://nodejs.org/) 16.13.2
 2. [npm](https://www.npmjs.com/) 8.3
 3. [Python](https://www.python.org/) 3.6 or later
 4. Windows, macOS, or Linux
@@ -233,8 +233,8 @@ At a high level we have a bunch of folders. Each high level is described below;
 - src\extension.node.ts = entry point for node extension
 - src\extension.web.ts = entry point for web extension
 - src\kernels = code related to executing jupyter kernels
-- src\notebooks = code related to vscode notebook UI 
-- src\interactive-window = interactive window 
+- src\notebooks = code related to vscode notebook UI
+- src\interactive-window = interactive window
 - src\platform = grab bag of utilities common to rest of code
 - src\web-views = code related to web views we create. Variable view, data viewer, and plot viewer are all here. Both extension and UI side code.
 - src\intellisense = code related to starting pylance and combining pylance completions with kernel completions

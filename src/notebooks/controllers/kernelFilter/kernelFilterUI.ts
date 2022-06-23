@@ -14,16 +14,17 @@ import {
     getRemoteKernelSessionInformation
 } from '../../../kernels/helpers';
 import { KernelConnectionMetadata } from '../../../kernels/types';
-import { INotebookControllerManager } from '../../types';
 import { KernelFilterService } from './kernelFilterService';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../../platform/common/constants';
+import { IControllerLoader, IControllerRegistration } from '../types';
 
 @injectable()
 export class KernelFilterUI implements IExtensionSyncActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];
     constructor(
-        @inject(INotebookControllerManager) private readonly controllers: INotebookControllerManager,
+        @inject(IControllerRegistration) private readonly controllers: IControllerRegistration,
+        @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IDisposableRegistry) disposales: IDisposableRegistry,
@@ -48,12 +49,13 @@ export class KernelFilterUI implements IExtensionSyncActivationService, IDisposa
         quickPick.busy = true;
         quickPick.enabled = false;
 
-        this.controllers.kernelConnections
-            .then((connections) => {
+        this.controllerLoader.loaded
+            .then(() => {
                 if (quickPickHidden) {
                     return;
                 }
-                const items = connections
+                const items = this.controllers.values
+                    .map((c) => c.connection)
                     .filter((item) => {
                         if (duplicates.has(item.id)) {
                             return false;

@@ -8,11 +8,10 @@ import { IPythonExtensionChecker, IPythonApiProvider } from '../../platform/api/
 import { IExtensions, IDisposableRegistry, InterpreterUri } from '../../platform/common/types';
 import { isResource, noop } from '../../platform/common/utils/misc';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
-import { INotebookControllerManager } from '../types';
 import { IInstaller, Product } from '../../kernels/installer/types';
-import { IVSCodeNotebookController } from '../controllers/types';
+import { IControllerSelection, IVSCodeNotebookController } from '../controllers/types';
 import { trackKernelResourceInformation } from '../../kernels/telemetry/helper';
-import { IInterpreterPackages } from '../../telemetry/types';
+import { IInterpreterPackages } from '../../telemetry';
 
 @injectable()
 export class InterpreterPackageTracker implements IExtensionSingleActivationService {
@@ -25,14 +24,10 @@ export class InterpreterPackageTracker implements IExtensionSingleActivationServ
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
-        @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager
+        @inject(IControllerSelection) private readonly notebookControllerManager: IControllerSelection
     ) {}
     public async activate(): Promise<void> {
-        this.notebookControllerManager.onNotebookControllerSelected(
-            this.onNotebookControllerSelected,
-            this,
-            this.disposables
-        );
+        this.notebookControllerManager.onControllerSelected(this.onNotebookControllerSelected, this, this.disposables);
         this.interpreterService.onDidChangeInterpreter(this.trackPackagesOfActiveInterpreter, this, this.disposables);
         this.installer?.onInstalled(this.onDidInstallPackage, this, this.disposables); // Not supported in Web
         this.extensions.onDidChange(this.trackUponActivation, this, this.disposables);

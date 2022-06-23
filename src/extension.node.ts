@@ -41,7 +41,7 @@ import {
 } from 'vscode';
 import * as fsExtra from 'fs-extra';
 import * as path from './platform/vscode-path/path';
-import { buildApi, IExtensionApi } from './webviews/extension-side/api/api';
+import { buildApi, IExtensionApi } from './standalone/api/api';
 import { IApplicationEnvironment, ICommandManager } from './platform/common/application/types';
 import { setHomeDirectory, traceError } from './platform/logging';
 import {
@@ -63,23 +63,29 @@ import {
 import { createDeferred } from './platform/common/utils/async';
 import { Common, OutputChannelNames } from './platform/common/utils/localize';
 import { IServiceContainer, IServiceManager } from './platform/ioc/types';
-import { sendErrorTelemetry, sendStartupTelemetry } from './telemetry/startupTelemetry';
+import { sendErrorTelemetry, sendStartupTelemetry } from './platform/telemetry/startupTelemetry';
 import { noop } from './platform/common/utils/misc';
-import { PythonExtension } from './webviews/webview-side/common/constants';
 import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.node';
 import { registerTypes as registerKernelTypes } from './kernels/serviceRegistry.node';
 import { registerTypes as registerNotebookTypes } from './notebooks/serviceRegistry.node';
 import { registerTypes as registerInteractiveTypes } from './interactive-window/serviceRegistry.node';
-import { registerTypes as registerWebviewTypes } from './webviews/extension-side/serviceRegistry.node';
-import { registerTypes as registerTelemetryTypes } from './telemetry/serviceRegistry.node';
+import { registerTypes as registerStandaloneTypes } from './standalone/serviceRegistry.node';
+import { registerTypes as registerTelemetryTypes } from './platform/telemetry/serviceRegistry.node';
 import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry.node';
+import { registerTypes as registerWebviewTypes } from './webviews/extension-side/serviceRegistry.node';
 import { IExtensionActivationManager } from './platform/activation/types';
-import { isCI, isTestExecution, JUPYTER_OUTPUT_CHANNEL, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants';
+import {
+    isCI,
+    isTestExecution,
+    JUPYTER_OUTPUT_CHANNEL,
+    PythonExtension,
+    STANDARD_OUTPUT_CHANNEL
+} from './platform/common/constants';
 import { getDisplayPath } from './platform/common/platform/fs-paths';
 import { IFileSystemNode } from './platform/common/platform/types.node';
-import { getJupyterOutputChannel } from './platform/devTools/jupyterOutputChannel';
+import { getJupyterOutputChannel } from './standalone/devTools/jupyterOutputChannel';
 import { registerLogger, setLoggingLevel } from './platform/logging';
-import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry.node';
+import { setExtensionInstallTelemetryProperties } from './platform/telemetry/extensionInstallTelemetry.node';
 import { Container } from 'inversify/lib/container/container';
 import { ServiceContainer } from './platform/ioc/container';
 import { ServiceManager } from './platform/ioc/serviceManager';
@@ -87,7 +93,7 @@ import { OutputChannelLogger } from './platform/logging/outputChannelLogger';
 import { ConsoleLogger } from './platform/logging/consoleLogger';
 import { FileLogger } from './platform/logging/fileLogger.node';
 import { createWriteStream } from 'fs-extra';
-import { initializeGlobals as initializeTelemetryGlobals } from './telemetry/telemetry';
+import { initializeGlobals as initializeTelemetryGlobals } from './platform/telemetry/telemetry';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -313,13 +319,14 @@ async function activateLegacy(
     addOutputChannel(context, serviceManager, isDevMode);
 
     // Register the rest of the types (platform is first because it's needed by others)
-    registerPlatformTypes(context, serviceManager, isDevMode);
+    registerPlatformTypes(serviceManager);
     registerTelemetryTypes(serviceManager);
     registerKernelTypes(serviceManager, isDevMode);
     registerNotebookTypes(serviceManager);
     registerInteractiveTypes(serviceManager);
-    registerWebviewTypes(serviceManager, isDevMode);
+    registerStandaloneTypes(context, serviceManager, isDevMode);
     registerIntellisenseTypes(serviceManager, isDevMode);
+    registerWebviewTypes(serviceManager);
 
     // We need to setup this property before any telemetry is sent
     const fs = serviceManager.get<IFileSystemNode>(IFileSystemNode);

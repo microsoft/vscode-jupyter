@@ -316,9 +316,24 @@ module.exports = {
                         message: 'Only modules from ./src/platform, ./src/telemetry, ./src/kernels and ./src/notebooks can be imported into ./src/interactive-window.'
                     },
                     {
+                        target: './src/**[!test,standalone,webviews]**/**/*.ts',
+                        from: './src/webviews/**/*.ts',
+                        message: 'Importing modules from ./src/webviews into core components (platform, kernels, notebooks, interactive-window) is not allowed.'
+                    },
+                    {
+                        target: './src/**[!test,standalone]**/*.ts',
+                        from: './src/standalone/**/*.ts',
+                        message: 'Importing modules from ./src/standalone into other components is not allowed.'
+                    },
+                    {
                         target: './src/telemetry/**/**[!types]**.ts',
                         from: './src/**[!telemetry,platform]**/**/*.ts',
-                        message: 'Importing non-platform modules into telemetry files is not allowed.'
+                        message: 'Importing non-telemetry modules into telemetry files is not allowed.'
+                    },
+                    {
+                        target: './src/platform/**/*.ts',
+                        from: './src/**[!platform]**/**/*.ts',
+                        message: 'Importing non-platform modules into platform files is not allowed.'
                     }
                 ]
             }

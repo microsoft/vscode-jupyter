@@ -19,7 +19,7 @@ import debounce from 'lodash/debounce';
 import * as uuid from 'uuid/v4';
 
 import { initializeIcons } from '@fluentui/react';
-import { SharedMessages } from '../../../platform/messageTypes';
+import { SharedMessages } from '../../../messageTypes';
 import {
     IDataViewerMapping,
     DataViewerMessages,
@@ -32,7 +32,7 @@ import {
     ColumnType,
     IGetSliceRequest
 } from '../../extension-side/dataviewer/types';
-import { IJupyterExtraSettings } from '../../extension-side/types';
+import { IJupyterExtraSettings } from '../../../platform/webviews/types';
 initializeIcons(); // Register all FluentUI icons being used to prevent developer console errors
 
 const SliceableTypes: Set<string> = new Set<string>(['ndarray', 'Tensor', 'EagerTensor', 'DataArray']);

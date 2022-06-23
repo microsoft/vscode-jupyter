@@ -23,9 +23,8 @@ import {
 } from '../../../kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
 import { RemoteKernelConnectionHandler } from '../../../notebooks/controllers/remoteKernelConnectionHandler';
-import { INotebookControllerManager } from '../../../notebooks/types';
 import { Subject } from 'rxjs/Subject';
-import { IVSCodeNotebookController } from '../../../notebooks/controllers/types';
+import { IControllerSelection, IVSCodeNotebookController } from '../../../notebooks/controllers/types';
 
 use(chaiAsPromised);
 suite('Remote kernel connection handler', async () => {
@@ -38,7 +37,7 @@ suite('Remote kernel connection handler', async () => {
         controller: IVSCodeNotebookController;
     }>;
     let remoteConnectionHandler: RemoteKernelConnectionHandler;
-    let controllers: INotebookControllerManager;
+    let controllers: IControllerSelection;
     let kernelProvider: IKernelProvider;
     const disposables: IDisposable[] = [];
     // const server2Uri = 'http://one:1234/hello?token=1234';
@@ -89,7 +88,7 @@ suite('Remote kernel connection handler', async () => {
     setup(() => {
         onDidStartKernel = new EventEmitter<IKernel>();
         kernelProvider = mock<IKernelProvider>();
-        controllers = mock<INotebookControllerManager>();
+        controllers = mock<IControllerSelection>();
         tracker = mock<ILiveRemoteKernelConnectionUsageTracker>();
         preferredRemoteKernelProvider = mock<PreferredRemoteKernelIdProvider>();
         onNotebookControllerSelectionChanged = new EventEmitter<{
@@ -102,7 +101,7 @@ suite('Remote kernel connection handler', async () => {
         disposables.push(onNotebookControllerSelectionChanged);
 
         when(kernelProvider.onDidStartKernel).thenReturn(onDidStartKernel.event);
-        when(controllers.onNotebookControllerSelectionChanged).thenReturn(onNotebookControllerSelectionChanged.event);
+        when(controllers.onControllerSelectionChanged).thenReturn(onNotebookControllerSelectionChanged.event);
         when(preferredRemoteKernelProvider.storePreferredRemoteKernelId(anything(), anything())).thenResolve();
         when(preferredRemoteKernelProvider.clearPreferredRemoteKernelId(anything())).thenResolve();
 

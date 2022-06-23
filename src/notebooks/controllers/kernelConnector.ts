@@ -24,14 +24,14 @@ import { Commands } from '../../platform/common/constants';
 import { Telemetry } from '../../telemetry';
 import { clearInstalledIntoInterpreterMemento } from '../../kernels/installer/productInstaller';
 import { Product } from '../../kernels/installer/types';
-import { INotebookControllerManager, INotebookEditorProvider } from '../types';
+import { INotebookEditorProvider } from '../types';
 import { selectKernel } from './kernelSelector';
 import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
 import { IDataScienceErrorHandler } from '../../kernels/errors/types';
 import { noop } from '../../platform/common/utils/misc';
 import { IStatusProvider } from '../../platform/progress/types';
 import { IRawNotebookProvider } from '../../kernels/raw/types';
-import { IVSCodeNotebookController } from './types';
+import { IControllerSelection, IVSCodeNotebookController } from './types';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { isCancellationError } from '../../platform/common/cancellation';
 
@@ -48,12 +48,10 @@ export class KernelConnector {
         const editor = notebookEditorProvider.findNotebookEditor(resource);
 
         // Listen for selection change events (may not fire if user cancels)
-        const controllerManager = serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
+        const controllerManager = serviceContainer.get<IControllerSelection>(IControllerSelection);
         let controller: IVSCodeNotebookController | undefined;
         const waitForSelection = createDeferred<IVSCodeNotebookController>();
-        const disposable = controllerManager.onNotebookControllerSelected((e) =>
-            waitForSelection.resolve(e.controller)
-        );
+        const disposable = controllerManager.onControllerSelected((e) => waitForSelection.resolve(e.controller));
 
         const selected = await selectKernel(resource, serviceContainer.get(INotebookEditorProvider), commandManager);
         if (selected && editor) {

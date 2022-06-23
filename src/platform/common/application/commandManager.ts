@@ -7,7 +7,7 @@ import { injectable } from 'inversify';
 import { commands, Disposable, TextEditor, TextEditorEdit } from 'vscode';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../constants';
-import { ICommandNameArgumentTypeMapping } from './commands';
+import { ICommandNameArgumentTypeMapping } from '../../../commands';
 import { ICommandManager } from './types';
 
 // This contains a list of commands to be ignored when sending telemetry in the command handler.

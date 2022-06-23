@@ -17,9 +17,9 @@ import {
 } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable } from '../../platform/common/types';
-import { EventName } from '../../telemetry/constants';
-import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
-import { ImportTracker } from '../../webviews/extension-side/importTracker.node';
+import { EventName } from '../../platform/telemetry/constants';
+import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
+import { ImportTracker } from '../../standalone/import-export/importTracker.node';
 import { createDocument } from '../datascience/editor-integration/helpers';
 
 suite('Import Tracker', () => {

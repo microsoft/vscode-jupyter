@@ -3,7 +3,7 @@
 
 import { Telemetry } from '../../../platform/common/constants';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { getTelemetrySafeLanguage } from '../../../telemetry/helpers';
+import { getTelemetrySafeLanguage } from '../../../platform/telemetry/helpers';
 import { IJupyterKernelSpec } from '../../types';
 
 const shellScripts = ['/bin/sh', '/bin/bash', '/bin/zsh'];

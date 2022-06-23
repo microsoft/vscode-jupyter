@@ -45,7 +45,7 @@ No description provided
 
 ## Locations Used
 
-[src/webviews/extension-side/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/import-export/exportCommands.ts)
+[src/standalone/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/import-export/exportCommands.ts)
 ```typescript
             if (pickedItem !== undefined) {
                 pickedItem.handler();
@@ -57,7 +57,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/import-export/exportCommands.ts)
+[src/standalone/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/import-export/exportCommands.ts)
 ```typescript
                 label: DataScience.exportPythonQuickPickLabel(),
                 picked: true,
@@ -69,7 +69,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/import-export/exportCommands.ts)
+[src/standalone/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/import-export/exportCommands.ts)
 ```typescript
                     label: DataScience.exportHTMLQuickPickLabel(),
                     picked: false,
@@ -81,7 +81,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/import-export/exportCommands.ts)
+[src/standalone/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/import-export/exportCommands.ts)
 ```typescript
                     label: DataScience.exportPDFQuickPickLabel(),
                     picked: false,
@@ -949,18 +949,6 @@ No properties for event
 ```
 
 
-[src/notebooks/controllers/vscodeNotebookController.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/vscodeNotebookController.ts)
-```typescript
-            return;
-        }
-        initializeInteractiveOrNotebookTelemetryBasedOnUserAction(notebook.uri, this.connection);
-        sendKernelTelemetryEvent(notebook.uri, Telemetry.ExecuteCell);
-        // Notebook is trusted. Continue to execute cells
-        await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
-    }
-```
-
-
 [src/kernels/kernel.base.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts)
 ```typescript
     }
@@ -970,6 +958,18 @@ No properties for event
         const stopWatch = new StopWatch();
         const sessionPromise = this.startJupyterSession();
         const promise = this.kernelExecution.executeCell(sessionPromise, cell, codeOverride);
+```
+
+
+[src/notebooks/controllers/vscodeNotebookController.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/vscodeNotebookController.ts)
+```typescript
+            return;
+        }
+        initializeInteractiveOrNotebookTelemetryBasedOnUserAction(notebook.uri, this.connection);
+        sendKernelTelemetryEvent(notebook.uri, Telemetry.ExecuteCell);
+        // Notebook is trusted. Continue to execute cells
+        await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
+    }
 ```
 
 
@@ -1109,10 +1109,10 @@ No description provided
 
 ## Locations Used
 
-[src/webviews/extension-side/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/import-export/exportCommands.ts)
+[src/standalone/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/import-export/exportCommands.ts)
 ```typescript
-                this.controllers.getSelectedNotebookController(sourceDocument)?.connection.interpreter ||
-                this.controllers.getPreferredNotebookController(sourceDocument)?.connection.interpreter;
+                this.controllerSelection.getSelected(sourceDocument)?.connection.interpreter ||
+                this.controllerPreferred.getPreferred(sourceDocument)?.connection.interpreter;
             if (exportMethod) {
                 sendTelemetryEvent(Telemetry.ExportNotebookAsCommand, undefined, { format: exportMethod });
             }
@@ -1248,14 +1248,14 @@ No properties for event
 
 ## Locations Used
 
-[src/notebooks/controllers/notebookControllerManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/notebookControllerManager.ts)
+[src/notebooks/controllers/controllerRegistration.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/controllerRegistration.ts)
 ```typescript
             }
             // We know that this fails when we have xeus kernels installed (untill that's resolved thats one instance when we can have duplicates).
             sendTelemetryEvent(
                 Telemetry.FailedToCreateNotebookController,
                 undefined,
-                { kind: kernelConnection.kind },
+                { kind: metadata.kind },
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ```
 
@@ -1594,7 +1594,7 @@ No description provided
 
 ## Locations Used
 
-[src/webviews/extension-side/api/apiAccessService.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/apiAccessService.ts)
+[src/standalone/api/apiAccessService.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/api/apiAccessService.ts)
 ```typescript
         const extensionPermissions = this.globalState.get<ApiExtensionInfo | undefined>(API_ACCESS_GLOBAL_KEY);
         const extensionPermission = extensionPermissions?.find((item) => item.extensionId === info.extensionId);
@@ -1606,7 +1606,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/api/apiAccessService.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/apiAccessService.ts)
+[src/standalone/api/apiAccessService.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/api/apiAccessService.ts)
 ```typescript
                     return this.globalState.update(API_ACCESS_GLOBAL_KEY, extensionPermissions);
                 })
@@ -1635,7 +1635,7 @@ No description provided
 
 ## Locations Used
 
-[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
+[src/standalone/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/api/kernelApi.ts)
 ```typescript
         KernelConnectionMetadata
     >();
@@ -1647,7 +1647,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
+[src/standalone/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/api/kernelApi.ts)
 ```typescript
         return this._onDidChangeKernelSpecifications.event;
     }
@@ -1659,9 +1659,9 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
+[src/standalone/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/api/kernelApi.ts)
 ```typescript
-        );
+        this.controllerLoader.refreshed(() => this._onDidChangeKernelSpecifications.fire(), this, disposables);
     }
     async getKernelSpecifications(refresh?: boolean): Promise<KernelConnectionMetadata[]> {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
@@ -1671,9 +1671,9 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
+[src/standalone/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/api/kernelApi.ts)
 ```typescript
-        return items.map((item) => this.translateKernelConnectionMetadataToExportedType(item));
+        return items.map((item) => this.translateKernelConnectionMetadataToExportedType(item.connection));
     }
     getActiveKernels(): { metadata: KernelConnectionMetadata; uri: Uri | undefined }[] {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
@@ -1683,7 +1683,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
+[src/standalone/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/api/kernelApi.ts)
 ```typescript
         return kernels;
     }
@@ -1695,7 +1695,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
+[src/standalone/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/api/kernelApi.ts)
 ```typescript
         }
     }
@@ -1707,7 +1707,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/api/kernelApi.ts)
+[src/standalone/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/api/kernelApi.ts)
 ```typescript
         return this.startOrConnect(spec, uri);
     }
@@ -2736,7 +2736,7 @@ No properties for event
 
 [src/notebooks/telemetry/notebookOrKernelLanguageTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/telemetry/notebookOrKernelLanguageTelemetry.ts)
 ```typescript
-import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
+import { getTelemetrySafeLanguage } from '../../platform/telemetry/helpers';
 
 export function sendNotebookOrKernelLanguageTelemetry(
     telemetryEvent: Telemetry.SwitchToExistingKernel | Telemetry.NotebookLanguage,
@@ -3050,7 +3050,7 @@ No description provided
 
 ## Locations Used
 
-[src/webviews/extension-side/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/extensionRecommendation.node.ts)
+[src/standalone/recommendation/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/recommendation/extensionRecommendation.node.ts)
 ```typescript
             `[${extensionInfo.displayName}](${extensionInfo.extensionLink})`,
             language
@@ -3062,7 +3062,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/extensionRecommendation.node.ts)
+[src/standalone/recommendation/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/recommendation/extensionRecommendation.node.ts)
 ```typescript
         );
         switch (selection) {
@@ -3074,7 +3074,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/extensionRecommendation.node.ts)
+[src/standalone/recommendation/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/recommendation/extensionRecommendation.node.ts)
 ```typescript
                 break;
             }
@@ -3086,7 +3086,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/extensionRecommendation.node.ts)
+[src/standalone/recommendation/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/recommendation/extensionRecommendation.node.ts)
 ```typescript
                 break;
             }
@@ -3098,7 +3098,7 @@ No description provided
 ```
 
 
-[src/webviews/extension-side/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/extensionRecommendation.node.ts)
+[src/standalone/recommendation/extensionRecommendation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/recommendation/extensionRecommendation.node.ts)
 ```typescript
                 break;
             }
@@ -7123,7 +7123,7 @@ No properties for event
 
 ## Locations Used
 
-[src/notebooks/controllers/notebookControllerManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/notebookControllerManager.ts)
+[src/notebooks/controllers/controllerPreferredService.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/controllerPreferredService.ts)
 ```typescript
                 ? PYTHON_LANGUAGE
                 : getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata) || '');
@@ -7150,7 +7150,7 @@ No description provided
 
 ## Locations Used
 
-[src/notebooks/controllers/notebookControllerManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/notebookControllerManager.ts)
+[src/notebooks/controllers/controllerPreferredService.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/controllerPreferredService.ts)
 ```typescript
             onlyConnection && (matchReason |= PreferredKernelExactMatchReason.OnlyKernel);
             topMatchIsPreferredInterpreter && (matchReason |= PreferredKernelExactMatchReason.WasPreferredInterpreter);
@@ -7159,6 +7159,47 @@ No description provided
                 matchedReason: matchReason
             });
         }
+```
+
+</details>
+<details>
+  <summary>DS_INTERNAL.PYTHON_EXTENSION_INSTALLED_VIA_KERNEL_PICKER</summary>
+
+## Description
+
+
+No description provided
+
+## Properties
+
+- 
+        action:
+            | 'success' // Correctly installed and hooked the API
+            | 'failed';
+
+## Locations Used
+
+[src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
+```typescript
+
+                if (this.extensionChecker.isPythonExtensionInstalled) {
+                    traceInfo('Python Extension installed via Kernel Picker command');
+                    sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {
+                        action: 'success'
+                    });
+
+```
+
+
+[src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
+```typescript
+                    await this.controllerLoader.loadControllers(true);
+                } else {
+                    traceError('Failed to install Python Extension via Kernel Picker command');
+                    sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {
+                        action: 'failed'
+                    });
+                    throw new Error('Failed to install Python Extension via Kernel Picker command');
 ```
 
 </details>
@@ -7179,42 +7220,6 @@ No description provided
             | 'download';
 
 ## Locations Used
-
-[src/notebooks/controllers/noPythonKernelsNotebookController.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/noPythonKernelsNotebookController.ts)
-```typescript
-        }
-    }
-    private async handleExecutionWithoutPythonExtension() {
-        sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
-        const selection = await this.appShell.showInformationMessage(
-            DataScience.pythonExtensionRequiredToRunNotebook(),
-            { modal: true },
-```
-
-
-[src/notebooks/controllers/noPythonKernelsNotebookController.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/noPythonKernelsNotebookController.ts)
-```typescript
-            Common.install()
-        );
-        if (selection === Common.install()) {
-            sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
-            this.commandManager.executeCommand('extension.open', PythonExtension).then(noop, noop);
-        } else {
-            sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
-```
-
-
-[src/notebooks/controllers/noPythonKernelsNotebookController.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/noPythonKernelsNotebookController.ts)
-```typescript
-            sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
-            this.commandManager.executeCommand('extension.open', PythonExtension).then(noop, noop);
-        } else {
-            sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
-        }
-    }
-    private async handleExecutionWithoutPython() {
-```
-
 
 [src/platform/api/pythonApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/api/pythonApi.ts)
 ```typescript
@@ -7249,6 +7254,42 @@ No description provided
         }
     }
     private async installPythonExtension() {
+```
+
+
+[src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
+```typescript
+    // click run again
+    private async installPythonExtensionViaKernelPicker(): Promise<void> {
+        if (!this.extensionChecker.isPythonExtensionInstalled) {
+            sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
+
+            // First present a simple modal dialog to indicate what we are about to do
+            const selection = await this.appShell.showInformationMessage(
+```
+
+
+[src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
+```typescript
+                Common.install()
+            );
+            if (selection === Common.install()) {
+                sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
+            } else {
+                // If they don't want to install, just bail out at this point
+                sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
+```
+
+
+[src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
+```typescript
+                sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
+            } else {
+                // If they don't want to install, just bail out at this point
+                sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
+                return;
+            }
+
 ```
 
 </details>
@@ -7505,11 +7546,11 @@ No description provided
 
 ## Locations Used
 
-[src/notebooks/controllers/noPythonKernelsNotebookController.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/noPythonKernelsNotebookController.ts)
+[src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
 ```typescript
-        }
-    }
-    private async handleExecutionWithoutPython() {
+    // Unlike installing the python extension we don't expect in progress executions to be handled
+    // when this command is installed, user will have to manually install python and rerun the cell
+    private async installPythonViaKernelPicker(): Promise<void> {
         sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'displayed' });
         const selection = await this.appShell.showErrorMessage(
             DataScience.pythonNotInstalledNonMarkdown(),
@@ -7517,27 +7558,27 @@ No description provided
 ```
 
 
-[src/notebooks/controllers/noPythonKernelsNotebookController.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/noPythonKernelsNotebookController.ts)
+[src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
 ```typescript
-            Common.install()
         );
+
         if (selection === Common.install()) {
             sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'download' });
+            // Direct the user to download from python.org
             this.appShell.openUrl('https://www.python.org/downloads');
         } else {
-            sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'dismissed' });
 ```
 
 
-[src/notebooks/controllers/noPythonKernelsNotebookController.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/noPythonKernelsNotebookController.ts)
+[src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
 ```typescript
-            sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'download' });
+            // Direct the user to download from python.org
             this.appShell.openUrl('https://www.python.org/downloads');
         } else {
             sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'dismissed' });
         }
     }
-}
+
 ```
 
 </details>
@@ -8294,7 +8335,7 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/globalActivation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/globalActivation.ts)
+[src/standalone/activation/globalActivation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/activation/globalActivation.ts)
 ```typescript
                     resultSettings[k] = currentValue;
                 }
@@ -8581,7 +8622,7 @@ No description provided
 
 [src/notebooks/telemetry/notebookOrKernelLanguageTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/telemetry/notebookOrKernelLanguageTelemetry.ts)
 ```typescript
-import { getTelemetrySafeLanguage } from '../../telemetry/helpers';
+import { getTelemetrySafeLanguage } from '../../platform/telemetry/helpers';
 
 export function sendNotebookOrKernelLanguageTelemetry(
     telemetryEvent: Telemetry.SwitchToExistingKernel | Telemetry.NotebookLanguage,
@@ -8876,7 +8917,7 @@ No description provided
 
 ## Locations Used
 
-[src/webviews/extension-side/webviewHost.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/webviewHost.ts)
+[src/platform/webviews/webviewHost.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/webviews/webviewHost.ts)
 ```typescript
     protected webViewRendered() {
         if (this.webviewInit && !this.webviewInit.resolved) {
@@ -9015,7 +9056,7 @@ No properties for event
 
 ## Locations Used
 
-[src/telemetry/envFileTelemetry.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/envFileTelemetry.node.ts)
+[src/platform/telemetry/envFileTelemetry.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/telemetry/envFileTelemetry.node.ts)
 ```typescript
 }
 
@@ -9045,7 +9086,7 @@ No properties for event
 
 ## Locations Used
 
-[src/telemetry/startupTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/startupTelemetry.ts)
+[src/platform/telemetry/startupTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/telemetry/startupTelemetry.ts)
 ```typescript
         await activatedPromise;
         durations.totalActivateTime = stopWatch.elapsedTime;
@@ -9057,7 +9098,7 @@ No properties for event
 ```
 
 
-[src/telemetry/startupTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/startupTelemetry.ts)
+[src/platform/telemetry/startupTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/telemetry/startupTelemetry.ts)
 ```typescript
                 traceError('getActivationTelemetryProps() failed.', ex);
             }
@@ -9069,7 +9110,7 @@ No properties for event
 ```
 
 
-[src/telemetry/startupTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/telemetry/startupTelemetry.ts)
+[src/platform/telemetry/startupTelemetry.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/platform/telemetry/startupTelemetry.ts)
 ```typescript
 
 async function getActivationTelemetryProps(
@@ -9099,7 +9140,7 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/importTracker.node.ts)
+[src/standalone/import-export/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/import-export/importTracker.node.ts)
 ```typescript
         // Hash the package name so that we will never accidentally see a
         // user's private package name.
@@ -9139,7 +9180,7 @@ No properties for event
 
 ## Locations Used
 
-[src/webviews/extension-side/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/importTracker.node.ts)
+[src/standalone/import-export/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/import-export/importTracker.node.ts)
 ```typescript
         }
     }
@@ -9151,7 +9192,7 @@ No properties for event
 ```
 
 
-[src/webviews/extension-side/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/importTracker.node.ts)
+[src/standalone/import-export/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/import-export/importTracker.node.ts)
 ```typescript
         this.lookForImports(lines);
     }
@@ -9163,7 +9204,7 @@ No properties for event
 ```
 
 
-[src/webviews/extension-side/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/importTracker.node.ts)
+[src/standalone/import-export/importTracker.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/import-export/importTracker.node.ts)
 ```typescript
         this.lookForImports(result);
     }

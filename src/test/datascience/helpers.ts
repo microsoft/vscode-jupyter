@@ -23,7 +23,7 @@ import { noop, sleep } from '../core';
 import { arePathsSame } from '../../platform/common/platform/fileUtils';
 import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { isWeb } from '../../platform/common/utils/misc';
-import { INotebookControllerManager } from '../../notebooks/types';
+import { IControllerSelection } from '../../notebooks/controllers/types';
 
 export async function openNotebook(ipynbFile: vscode.Uri) {
     traceInfo(`Opening notebook ${getFilePath(ipynbFile)}`);
@@ -284,9 +284,7 @@ export async function verifySelectedControllerIsRemoteForRemoteTests(notebook?: 
     }
     notebook = notebook || vscode.window.activeNotebookEditor!.notebook;
     const api = await initialize();
-    const controller = api.serviceContainer
-        .get<INotebookControllerManager>(INotebookControllerManager)
-        .getSelectedNotebookController(notebook);
+    const controller = api.serviceContainer.get<IControllerSelection>(IControllerSelection).getSelected(notebook);
     if (!controller) {
         return;
     }

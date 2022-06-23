@@ -55,7 +55,7 @@ import { EnvironmentType } from '../../platform/pythonEnvironments/info';
 import { Commands } from '../../platform/common/constants';
 import { Telemetry } from '../../telemetry';
 import { WrappedError } from '../../platform/errors/types';
-import { IPyWidgetMessages } from '../../platform/messageTypes';
+import { IPyWidgetMessages } from '../../messageTypes';
 import {
     getKernelConnectionPath,
     getRemoteKernelSessionInformation,
@@ -64,15 +64,7 @@ import {
     areKernelConnectionsEqual,
     getKernelRegistrationInfo
 } from '../../kernels/helpers';
-import {
-    IKernel,
-    IKernelProvider,
-    isLocalConnection,
-    KernelConnectionMetadata,
-    LiveRemoteKernelConnectionMetadata,
-    LocalKernelSpecConnectionMetadata,
-    PythonKernelConnectionMetadata
-} from '../../kernels/types';
+import { IKernel, IKernelProvider, isLocalConnection, KernelConnectionMetadata } from '../../kernels/types';
 import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
@@ -190,13 +182,12 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         // Hook up to see when this NotebookController is selected by the UI
         this.controller.onDidChangeSelectedNotebooks(this.onDidChangeSelectedNotebooks, this, this.disposables);
     }
-    public updateRemoteKernelDetails(kernelConnection: LiveRemoteKernelConnectionMetadata) {
-        this.controller.detail = getRemoteKernelSessionInformation(kernelConnection);
-    }
-    public updateInterpreterDetails(
-        kernelConnection: LocalKernelSpecConnectionMetadata | PythonKernelConnectionMetadata
-    ) {
-        this.controller.label = getDisplayNameOrNameOfKernelConnection(kernelConnection);
+    public updateConnection(kernelConnection: KernelConnectionMetadata) {
+        if (kernelConnection.kind === 'connectToLiveRemoteKernel') {
+            this.controller.detail = getRemoteKernelSessionInformation(kernelConnection);
+        } else {
+            this.controller.label = getDisplayNameOrNameOfKernelConnection(kernelConnection);
+        }
     }
     public asWebviewUri(localResource: Uri): Uri {
         return this.controller.asWebviewUri(localResource);
@@ -218,16 +209,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         this._onDidDispose.fire();
         this._onDidDispose.dispose();
         disposeAllDisposables(this.disposables);
-    }
-
-    public updateMetadata(kernelConnectionMetadata: KernelConnectionMetadata) {
-        if (kernelConnectionMetadata.id === this.kernelConnection.id) {
-            this.kernelConnection = kernelConnectionMetadata;
-            this.controller.detail =
-                this.kernelConnection.kind === 'connectToLiveRemoteKernel'
-                    ? getRemoteKernelSessionInformation(this.kernelConnection)
-                    : '';
-        }
     }
 
     public async updateNotebookAffinity(notebook: NotebookDocument, affinity: NotebookControllerAffinity) {

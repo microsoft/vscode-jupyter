@@ -13,8 +13,8 @@ import { WorkspaceService } from '../../../platform/common/application/workspace
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { ExperimentService } from '../../../platform/common/experiments/service';
 import { IConfigurationService } from '../../../platform/common/types';
-import * as Telemetry from '../../../telemetry';
-import { EventName } from '../../../telemetry/constants';
+import * as Telemetry from '../../../platform/telemetry/index';
+import { EventName } from '../../../platform/telemetry/constants';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants.node';
 import { MockOutputChannel } from '../../mockClasses';
 import { MockMemento } from '../../mocks/mementos';

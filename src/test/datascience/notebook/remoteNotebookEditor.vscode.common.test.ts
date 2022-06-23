@@ -30,9 +30,13 @@ import { openNotebook } from '../helpers';
 import { PYTHON_LANGUAGE, Settings } from '../../../platform/common/constants';
 import { IS_REMOTE_NATIVE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
-import { INotebookControllerManager } from '../../../notebooks/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { setIntellisenseTimeout } from '../../../intellisense/pythonKernelCompletionProvider';
+import {
+    IControllerDefaultService,
+    IControllerLoader,
+    IControllerRegistration
+} from '../../../notebooks/controllers/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - Remote Execution', function () {
@@ -44,7 +48,9 @@ suite('DataScience - VSCode Notebook - Remote Execution', function () {
     let serviceContainer: IServiceContainer;
     let globalMemento: Memento;
     let encryptedStorage: IEncryptedStorage;
-    let controllerManager: INotebookControllerManager;
+    let controllerLoader: IControllerLoader;
+    let controllerRegistration: IControllerRegistration;
+    let controllerDefault: IControllerDefaultService;
 
     suiteSetup(async function () {
         if (!IS_REMOTE_NATIVE_TEST()) {
@@ -58,10 +64,9 @@ suite('DataScience - VSCode Notebook - Remote Execution', function () {
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         encryptedStorage = api.serviceContainer.get<IEncryptedStorage>(IEncryptedStorage);
         globalMemento = api.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
-        controllerManager = api.serviceContainer.get<INotebookControllerManager>(
-            INotebookControllerManager,
-            INotebookControllerManager
-        );
+        controllerLoader = api.serviceContainer.get<IControllerLoader>(IControllerLoader);
+        controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
+        controllerDefault = api.serviceContainer.get<IControllerDefaultService>(IControllerDefaultService);
     });
     // Use same notebook without starting kernel in every single test (use one for whole suite).
     setup(async function () {
@@ -123,8 +128,8 @@ suite('DataScience - VSCode Notebook - Remote Execution', function () {
     });
 
     test('Can run against a remote kernelspec', async function () {
-        await controllerManager.loadNotebookControllers();
-        const controllers = controllerManager.getRegisteredNotebookControllers();
+        await controllerLoader.loadControllers();
+        const controllers = controllerRegistration.values;
 
         // Verify we have a remote kernel spec.
         assert.ok(
@@ -136,10 +141,7 @@ suite('DataScience - VSCode Notebook - Remote Execution', function () {
         await createEmptyPythonNotebook(disposables, undefined, true);
 
         // Find the default remote Python kernel (we know that will have ipykernel, as we've set up CI as such).
-        const defaultPythonKernel = await controllerManager.getActiveInterpreterOrDefaultController(
-            'jupyter-notebook',
-            undefined
-        );
+        const defaultPythonKernel = await controllerDefault.computeDefaultController(undefined, 'jupyter-notebook');
         assert.ok(defaultPythonKernel, 'No default remote kernel');
 
         assert.strictEqual(

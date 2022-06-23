@@ -6,17 +6,11 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import * as uriPath from '../../platform/vscode-path/resources';
 import { SemVer, parse } from 'semver';
 import { NotebookData, NotebookDocument, TextDocument, Uri, workspace } from 'vscode';
-import {
-    InteractiveWindowView,
-    jupyterLanguageToMonacoLanguageMapping,
-    JupyterNotebookView,
-    PYTHON_LANGUAGE
-} from './constants';
+import { InteractiveWindowView, jupyterLanguageToMonacoLanguageMapping, JupyterNotebookView } from './constants';
 import { traceError, traceInfo } from '../logging';
 
 import { ICell } from './types';
 import { DataScience } from './utils/localize';
-import { IJupyterKernelSpec } from '../../kernels/types';
 
 // Can't figure out a better way to do this. Enumerate
 // the allowed keys of different output formats.
@@ -177,21 +171,6 @@ export function getAssociatedJupyterNotebook(document: TextDocument): NotebookDo
     return workspace.notebookDocuments.find(
         (notebook) => isJupyterNotebook(notebook) && notebook.getCells().some((cell) => cell.document === document)
     );
-}
-
-export function isPythonNotebook(metadata?: nbformat.INotebookMetadata) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const kernelSpec = metadata?.kernelspec as any as Partial<IJupyterKernelSpec> | undefined;
-    if (metadata?.language_info?.name && metadata.language_info.name !== PYTHON_LANGUAGE) {
-        return false;
-    }
-
-    if (kernelSpec?.name?.includes(PYTHON_LANGUAGE)) {
-        return true;
-    }
-
-    // Valid notebooks will have a language information in the metadata.
-    return kernelSpec?.language === PYTHON_LANGUAGE || metadata?.language_info?.name === PYTHON_LANGUAGE;
 }
 
 export function concatMultilineString(str: nbformat.MultilineString): string {

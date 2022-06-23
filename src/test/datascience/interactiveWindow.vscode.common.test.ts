@@ -35,7 +35,6 @@ import {
     waitForExecutionCompletedWithErrors,
     waitForTextOutput
 } from './notebook/helper';
-import { INotebookControllerManager } from '../../notebooks/types';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/interpreter';
@@ -43,6 +42,7 @@ import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { sleep } from '../core';
 import { IPYTHON_VERSION_CODE } from '../constants';
 import { translateCellErrorOutput, getTextOutputValue } from '../../kernels/execution/helpers';
+import { IControllerSelection } from '../../notebooks/controllers/types';
 
 suite(`Interactive window`, async function () {
     this.timeout(120_000);
@@ -74,8 +74,7 @@ suite(`Interactive window`, async function () {
         const notebookDocument = vscode.workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
         );
-        const notebookControllerManager =
-            api.serviceManager.get<INotebookControllerManager>(INotebookControllerManager);
+        const controllerSelection = api.serviceManager.get<IControllerSelection>(IControllerSelection);
 
         // Ensure we picked up the active interpreter for use as the kernel
         const interpreterService = await api.serviceManager.get<IInterpreterService>(IInterpreterService);
@@ -83,9 +82,7 @@ suite(`Interactive window`, async function () {
         // Give it a bit to warm up
         await sleep(500);
 
-        const controller = notebookDocument
-            ? notebookControllerManager.getSelectedNotebookController(notebookDocument)
-            : undefined;
+        const controller = notebookDocument ? controllerSelection.getSelected(notebookDocument) : undefined;
         if (!IS_REMOTE_NATIVE_TEST()) {
             const activeInterpreter = await interpreterService.getActiveInterpreter();
             assert.ok(
@@ -119,17 +116,14 @@ suite(`Interactive window`, async function () {
         const notebookDocument = vscode.workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
         )!;
-        const notebookControllerManager =
-            api.serviceManager.get<INotebookControllerManager>(INotebookControllerManager);
+        const controllerSelection = api.serviceManager.get<IControllerSelection>(IControllerSelection);
         // Ensure we picked up the active interpreter for use as the kernel
         const interpreterService = await api.serviceManager.get<IInterpreterService>(IInterpreterService);
 
         // Give it a bit to warm up
         await sleep(500);
 
-        const controller = notebookDocument
-            ? notebookControllerManager.getSelectedNotebookController(notebookDocument)
-            : undefined;
+        const controller = notebookDocument ? controllerSelection.getSelected(notebookDocument) : undefined;
         if (!IS_REMOTE_NATIVE_TEST()) {
             const activeInterpreter = await interpreterService.getActiveInterpreter();
             assert.ok(

@@ -7,11 +7,11 @@ import { IExtensionSingleActivationService } from '../../platform/activation/typ
 import { IVSCodeNotebook, ICommandManager } from '../../platform/common/application/types';
 import { traceError, traceInfo } from '../../platform/logging';
 import { IDisposableRegistry } from '../../platform/common/types';
-import { INotebookControllerManager } from '../types';
 import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/preferredRemoteKernelIdProvider';
 import { KernelConnectionMetadata } from '../../kernels/types';
 import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
 import { waitForCondition } from '../../platform/common/utils/async';
+import { IControllerLoader, IControllerRegistration, IControllerSelection } from './types';
 
 /**
  * This class listens tracks notebook controller selection. When a notebook runs
@@ -23,7 +23,9 @@ export class LiveKernelSwitcher implements IExtensionSingleActivationService {
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(INotebookControllerManager) private readonly controllerManager: INotebookControllerManager,
+        @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
+        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
+        @inject(IControllerSelection) private readonly controllerSelection: IControllerSelection,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(PreferredRemoteKernelIdProvider)
         private readonly preferredRemoteKernelIdProvider: PreferredRemoteKernelIdProvider
@@ -38,15 +40,17 @@ export class LiveKernelSwitcher implements IExtensionSingleActivationService {
 
     private onDidOpenNotebook(n: NotebookDocument) {
         // When all controllers are loaded, see if one matches
-        this.controllerManager.kernelConnections
-            .then(async (list) => {
-                const active = this.controllerManager.getSelectedNotebookController(n);
+        this.controllerLoader.loaded
+            .then(async () => {
+                const active = this.controllerSelection.getSelected(n);
                 const preferredRemote = this.preferredRemoteKernelIdProvider.getPreferredRemoteKernelId(n.uri);
-                const matching = preferredRemote && list.find((l) => l.id === preferredRemote);
+                const matching = preferredRemote
+                    ? this.controllerRegistration.values.find((l) => l.id === preferredRemote)
+                    : undefined;
                 if (matching && active?.id !== matching.id) {
                     traceInfo(`Switching remote kernel to ${preferredRemote} for ${n.uri}`);
                     // This controller is the one we want, but it's not currently set.
-                    await this.switchKernel(n, matching);
+                    await this.switchKernel(n, matching.connection);
                 }
             })
             .catch((e) => traceError(e));
@@ -62,7 +66,7 @@ export class LiveKernelSwitcher implements IExtensionSingleActivationService {
                         id: kernel.id,
                         extension: JVSC_EXTENSION_ID
                     });
-                    const selected = this.controllerManager.getSelectedNotebookController(n);
+                    const selected = this.controllerSelection.getSelected(n);
                     return selected?.connection.id === kernel.id;
                 }
                 return false;

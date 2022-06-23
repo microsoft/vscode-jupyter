@@ -3,7 +3,7 @@
 'use strict';
 import { Disposable, TextEditor, TextEditorEdit } from 'vscode';
 
-import { ICommandNameArgumentTypeMapping } from '../../platform/common/application/commands';
+import { ICommandNameArgumentTypeMapping } from '../../commands';
 import { ICommandManager } from '../../platform/common/application/types';
 import { noop } from '../core';
 

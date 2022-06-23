@@ -19,11 +19,7 @@ import { IIPyWidgetManager, IJupyterLabWidgetManager, IJupyterLabWidgetManagerCt
 import { WIDGET_MIMETYPE } from '../../../../kernels/ipywidgets/constants';
 import { KernelSocketOptions } from '../../../../kernels/types';
 import { Deferred, createDeferred } from '../../../../platform/common/utils/async';
-import {
-    IInteractiveWindowMapping,
-    IPyWidgetMessages,
-    InteractiveWindowMessages
-} from '../../../../platform/messageTypes';
+import { IInteractiveWindowMapping, IPyWidgetMessages, InteractiveWindowMessages } from '../../../../messageTypes';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

@@ -12,8 +12,8 @@ import {
     IFinishCell,
     IInteractiveWindowMapping,
     SharedMessages
-} from '../../../../../platform/messageTypes';
-import { IJupyterExtraSettings } from '../../../../extension-side/types';
+} from '../../../../../messageTypes';
+import { IJupyterExtraSettings } from '../../../../../platform/webviews/types';
 import { BaseReduxActionPayload } from '../../../../types';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../../react-common/reduxUtils';
 import { postActionToExtension } from '../helpers';

@@ -2,18 +2,12 @@
 // Licensed under the MIT License.
 'use strict';
 
-import {
-    IExtensionActivationManager,
-    IExtensionSingleActivationService,
-    IExtensionSyncActivationService
-} from '../../platform/activation/types';
-import { IWebviewViewProvider, IWebviewPanelProvider } from '../../platform/common/application/types';
+import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IServiceManager } from '../../platform/ioc/types';
-import { INotebookWatcher, IVariableViewProvider } from './variablesView/types';
-import { VariableViewActivationService } from './variablesView/variableViewActivationService';
-import { VariableViewProvider } from './variablesView/variableViewProvider';
-import { WebviewPanelProvider } from './webviewPanels/webviewPanelProvider';
-import { WebviewViewProvider } from './webviewViews/webviewViewProvider';
+import { DataViewer } from './dataviewer/dataViewer';
+import { DataViewerCommandRegistry } from './dataviewer/dataViewerCommandRegistry';
+import { DataViewerDependencyService } from './dataviewer/dataViewerDependencyService';
+import { DataViewerFactory } from './dataviewer/dataViewerFactory';
 import { JupyterVariableDataProvider } from './dataviewer/jupyterVariableDataProvider';
 import { JupyterVariableDataProviderFactory } from './dataviewer/jupyterVariableDataProviderFactory';
 import {
@@ -23,68 +17,26 @@ import {
     IJupyterVariableDataProvider,
     IJupyterVariableDataProviderFactory
 } from './dataviewer/types';
-import { INotebookExporter, INotebookImporter } from '../../kernels/jupyter/types';
-import { JupyterExporter } from './import-export/jupyterExporter';
-import { JupyterImporter } from './import-export/jupyterImporter.node';
-import { CommandRegistry as ExportCommandRegistry } from './import-export/commandRegistry';
-import { ServerPreload } from './serverPreload/serverPreload.node';
-import { RendererCommunication } from './plotView/rendererCommunication.node';
+import { PlotViewer } from './plotting/plotViewer.node';
+import { PlotViewerProvider } from './plotting/plotViewerProvider.node';
+import { IPlotViewer, IPlotViewerProvider } from './plotting/types';
 import { PlotSaveHandler } from './plotView/plotSaveHandler.node';
 import { PlotViewHandler } from './plotView/plotViewHandler.node';
-import { DataViewerCommandRegistry } from './dataviewer/dataViewerCommandRegistry';
-import { DataViewer } from './dataviewer/dataViewer';
-import { IPlotViewer, IPlotViewerProvider } from './plotting/types';
-import { PlotViewer } from './plotting/plotViewer.node';
-import { DataViewerDependencyService } from './dataviewer/dataViewerDependencyService';
-import { PlotViewerProvider } from './plotting/plotViewerProvider.node';
-import { DataViewerFactory } from './dataviewer/dataViewerFactory';
+import { RendererCommunication } from './plotView/rendererCommunication.node';
 import { NotebookWatcher } from './variablesView/notebookWatcher';
-import { ExtensionSideRenderer, IExtensionSideRenderer } from './renderer';
-import { ExtensionRecommendationService } from './extensionRecommendation.node';
-import { ActiveEditorContextService } from './activeEditorContext';
-import { AmlComputeContext } from './amlContext.node';
-import { IImportTracker, ImportTracker } from './importTracker.node';
-import { GlobalActivation } from './globalActivation';
-import { JupyterKernelServiceFactory } from './api/kernelApi';
-import { IExportedKernelServiceFactory } from './api/api';
-import { ApiAccessService } from './api/apiAccessService';
-import { WorkspaceActivation } from './workspaceActivation.node';
-import { ExtensionActivationManager } from './activationManager';
-import { DataScienceSurveyBanner, ISurveyBanner } from './survey/dataScienceSurveyBanner.node';
+import { INotebookWatcher, IVariableViewProvider } from './variablesView/types';
+import { VariableViewActivationService } from './variablesView/variableViewActivationService';
+import { VariableViewProvider } from './variablesView/variableViewProvider';
 
-export function registerTypes(serviceManager: IServiceManager, _isDevMode: boolean) {
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        WorkspaceActivation
-    );
+export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSyncActivationService,
         RendererCommunication
     );
-    serviceManager.addSingleton<IExtensionSyncActivationService>(
-        IExtensionSyncActivationService,
-        ExtensionRecommendationService
-    );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        ActiveEditorContextService
-    );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        AmlComputeContext
-    );
-    serviceManager.addSingleton<AmlComputeContext>(AmlComputeContext, AmlComputeContext);
-    serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ImportTracker);
+
+    // Data Viewer
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
     serviceManager.addSingleton<IDataViewerFactory>(IDataViewerFactory, DataViewerFactory);
-    serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
-    serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);
-    serviceManager.addSingleton<PlotSaveHandler>(PlotSaveHandler, PlotSaveHandler);
-    serviceManager.addSingleton<PlotViewHandler>(PlotViewHandler, PlotViewHandler);
-
     serviceManager.addSingleton<IDataViewerDependencyService>(
         IDataViewerDependencyService,
         DataViewerDependencyService
@@ -94,8 +46,11 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         DataViewerCommandRegistry
     );
 
-    serviceManager.add<IWebviewViewProvider>(IWebviewViewProvider, WebviewViewProvider);
-    serviceManager.add<IWebviewPanelProvider>(IWebviewPanelProvider, WebviewPanelProvider);
+    // Plot Viewer
+    serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
+    serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);
+    serviceManager.addSingleton<PlotSaveHandler>(PlotSaveHandler, PlotSaveHandler);
+    serviceManager.addSingleton<PlotViewHandler>(PlotViewHandler, PlotViewHandler);
 
     // Variable View
     serviceManager.addSingleton<INotebookWatcher>(INotebookWatcher, NotebookWatcher);
@@ -109,26 +64,4 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         IJupyterVariableDataProviderFactory,
         JupyterVariableDataProviderFactory
     );
-
-    // Import/Export
-    serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
-    serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        ExportCommandRegistry
-    );
-
-    serviceManager.addSingletonInstance<IExtensionSideRenderer>(IExtensionSideRenderer, new ExtensionSideRenderer());
-
-    serviceManager.addSingleton<ISurveyBanner>(ISurveyBanner, DataScienceSurveyBanner);
-    serviceManager.addBinding(ISurveyBanner, IExtensionSingleActivationService);
-    // Activation Manager
-    serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
-
-    // API
-    serviceManager.addSingleton<IExportedKernelServiceFactory>(
-        IExportedKernelServiceFactory,
-        JupyterKernelServiceFactory
-    );
-    serviceManager.addSingleton<ApiAccessService>(ApiAccessService, ApiAccessService);
 }

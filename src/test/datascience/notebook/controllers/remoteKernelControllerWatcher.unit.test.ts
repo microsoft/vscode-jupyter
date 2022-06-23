@@ -16,8 +16,7 @@ import {
 } from '../../../../kernels/jupyter/types';
 import { IJupyterKernelSpec, LiveKernelModel } from '../../../../kernels/types';
 import { RemoteKernelControllerWatcher } from '../../../../notebooks/controllers/remoteKernelControllerWatcher';
-import { IVSCodeNotebookController } from '../../../../notebooks/controllers/types';
-import { INotebookControllerManager } from '../../../../notebooks/types';
+import { IControllerRegistration, IVSCodeNotebookController } from '../../../../notebooks/controllers/types';
 import { disposeAllDisposables } from '../../../../platform/common/helpers';
 import { IDisposable } from '../../../../platform/common/types';
 import { waitForCondition } from '../../../common';
@@ -27,12 +26,12 @@ suite('RemoteKernelControllerWatcher', () => {
     const disposables: IDisposable[] = [];
     let uriProviderRegistration: IJupyterUriProviderRegistration;
     let uriStorage: IJupyterServerUriStorage;
-    let controllers: INotebookControllerManager;
+    let controllers: IControllerRegistration;
     let onDidChangeProviders: EventEmitter<void>;
     setup(() => {
         uriProviderRegistration = mock<IJupyterUriProviderRegistration>();
         uriStorage = mock<IJupyterServerUriStorage>();
-        controllers = mock<INotebookControllerManager>();
+        controllers = mock<IControllerRegistration>();
         onDidChangeProviders = new EventEmitter<void>();
         disposables.push(onDidChangeProviders);
         when(uriProviderRegistration.onDidChangeProviders).thenReturn(onDidChangeProviders.event);
@@ -106,7 +105,7 @@ suite('RemoteKernelControllerWatcher', () => {
             kernelModel: mock<LiveKernelModel>(),
             serverId
         });
-        when(controllers.getRegisteredNotebookControllers()).thenReturn([
+        when(controllers.values).thenReturn([
             instance(localKernel),
             instance(remoteKernelSpec),
             instance(remoteLiveKernel)

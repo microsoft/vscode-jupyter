@@ -21,7 +21,7 @@ import {
     waitForKernelToGetAutoSelected
 } from './helper';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
-import { InteractiveWindowMessages } from '../../../platform/messageTypes';
+import { InteractiveWindowMessages } from '../../../messageTypes';
 import { initialize } from '../../initialize';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfo } from '../../../platform/logging';
