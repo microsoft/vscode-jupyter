@@ -21,7 +21,7 @@ import { IJupyterSession, IKernel, IKernelProvider } from '../../../kernels/type
 
 const minimumSupportedPandaVersion = '0.20.0';
 
-function isVersionOfPandasSupported(version: SemVer) {
+function isVersionOfPandasupported(version: SemVer) {
     return version.compare(minimumSupportedPandaVersion) > 0;
 }
 
@@ -33,15 +33,15 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
     private get kernel(): IKernel {
         const kernel = this.kernelProvider.kernels.find((kernel) => kernel.status === 'idle');
         if (!kernel) {
-            sendTelemetryEvent(Telemetry.NoActiveKernel);
-            throw new Error(DataScience.noActiveKernel());
+            sendTelemetryEvent(Telemetry.NoIdleKernel);
+            throw new Error(DataScience.noIdleKernel());
         }
         return kernel;
     }
     private get kernelSession(): IJupyterSession {
         if (!this.kernel.session) {
             sendTelemetryEvent(Telemetry.NoActiveKernelSession);
-            throw new Error(DataScience.noActiveKernel());
+            throw new Error(DataScience.noActiveKernelSession());
         }
         return this.kernel.session;
     }
@@ -61,7 +61,7 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
         const pandasVersion = await this.getVersionOfPandas();
 
         if (pandasVersion) {
-            if (isVersionOfPandasSupported(pandasVersion)) {
+            if (isVersionOfPandasupported(pandasVersion)) {
                 return;
             }
             sendTelemetryEvent(Telemetry.PandasTooOld);
@@ -107,7 +107,7 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
 
         const error = outputs.find((item) => item.output_type === 'error');
         if (error) {
-            traceWarning(DataScience.failedToGetVersionOfPandas(), error.text);
+            traceWarning(DataScience.failedToGetVersionOfPandas(), error.evalue);
             return;
         } else {
             return outputs.map(({ text }) => (text ? parseSemVer(text.toString()) : undefined)).find((item) => item);

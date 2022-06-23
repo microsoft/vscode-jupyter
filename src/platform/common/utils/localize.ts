@@ -1362,8 +1362,9 @@ export namespace DataScience {
         localize('DataScience.webNotSupported', `Operation not supported in web version of Jupyter Extension.`);
     export const validationErrorMessageForRemoteUrlProtocolNeedsToBeHttpOrHttps = () =>
         localize('DataScience.validationErrorMessageForRemoteUrlProtocolNeedsToBeHttpOrHttps', 'Has to be http(s)');
-    export const noActiveEditor = () => localize('DataScience.noActiveEditor', 'No active editor');
-    export const noActiveKernel = () => localize('DataScience.noActiveKernel', 'No active kernel');
+    export const noIdleKernel = () => localize('DataScience.noIdleKernel', 'No idle kernel');
+    export const noActiveKernelSession = () =>
+        localize('DataScience.noActiveKernelSession', 'No active kernel session');
     export const failedToGetVersionOfPandas = () =>
         localize(
             { key: 'DataScience.failedToGetVersionOfPandas', comment: ['{Locked="Pandas"}'] },

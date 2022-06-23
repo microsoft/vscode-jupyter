@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import * as path from '../../../platform/vscode-path/path';
 import { SemVer } from 'semver';
-import { instance, mock } from 'ts-mockito';
+import { anything, instance, mock, when } from 'ts-mockito';
 import { ApplicationShell } from '../../../platform/common/application/applicationShell';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
@@ -17,6 +17,7 @@ import { IShellFuture } from '@jupyterlab/services/lib/kernel/kernel';
 import { IExecuteReplyMsg, IExecuteRequestMsg } from '@jupyterlab/services/lib/kernel/messages';
 import { waitForCondition } from '../../common';
 import { KernelMessage } from '@jupyterlab/services';
+import { Common, DataScience } from '../../../platform/common/utils/localize';
 
 suite('DataScience - DataViewerDependencyService', () => {
     let interpreter: PythonEnvironment;
@@ -35,6 +36,21 @@ suite('DataScience - DataViewerDependencyService', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any as IJupyterSession;
 
+    const expectedPandasVersionExecutionContext = {
+        code: `import pandas; print(pandas.__version__)`,
+        silent: false,
+        stop_on_error: false,
+        allow_stdin: true,
+        store_history: false
+    };
+    const expectedInstallPandasExecutionContext = {
+        code: `pip install pandas`,
+        silent: false,
+        stop_on_error: false,
+        allow_stdin: true,
+        store_history: false
+    };
+
     setup(async () => {
         interpreter = {
             displayName: '',
@@ -51,11 +67,51 @@ suite('DataScience - DataViewerDependencyService', () => {
         dependencyService = new DataViewerDependencyService(instance(appShell), kernelProvider, false);
     });
 
-    // TODO: Test if there are no idle kernels
-    // TODO: Test if there's no kernel session
+    test('What happens if there are no idle kernels?', async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (kernel.session as any) = jupyterSession;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (kernel.status as any) = 'busy';
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (kernelProvider.kernels as any) = [kernel];
+
+        shellFuture = {
+            done: () => Promise.resolve()
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any as IShellFuture<IExecuteRequestMsg, IExecuteReplyMsg>;
+
+        const resultPromise = dependencyService.checkAndInstallMissingDependencies(interpreter);
+
+        await assert.isRejected(
+            resultPromise,
+            DataScience.noIdleKernel(),
+            'Failed to determine if there was an idle kernel'
+        );
+    });
+
+    test('What if there are no kernel sessions?', async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (kernel.session as any) = undefined;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (kernel.status as any) = 'idle';
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (kernelProvider.kernels as any) = [kernel];
+
+        shellFuture = {
+            done: () => Promise.resolve()
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any as IShellFuture<IExecuteRequestMsg, IExecuteReplyMsg>;
+
+        const resultPromise = dependencyService.checkAndInstallMissingDependencies(interpreter);
+
+        await assert.isRejected(
+            resultPromise,
+            DataScience.noActiveKernelSession(),
+            'Failed to determine if there was an active kernel session'
+        );
+    });
 
     test('All ok, if pandas is installed and version is > 1.20', async () => {
-        // The output of the version, defined in this test, must be 3.3.3
         const version = '3.3.3';
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -65,7 +121,7 @@ suite('DataScience - DataViewerDependencyService', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (kernelProvider.kernels as any) = [kernel];
 
-        // Flow:
+        // Execution flow:
         //   checkAndInstallMissingDependencies ->
         //   private getVersionOfPandas -> executeSilently ->
         //   session.requestExecute -> request.onIOPub ->
@@ -73,7 +129,7 @@ suite('DataScience - DataViewerDependencyService', () => {
 
         const onIOPubPromise = waitForCondition(
             () => Boolean(shellFuture.onIOPub),
-            10000,
+            1000,
             'Timeout waiting for shellFuture.onIOPub'
         );
         shellFuture = {
@@ -83,6 +139,7 @@ suite('DataScience - DataViewerDependencyService', () => {
 
         const resultPromise = dependencyService.checkAndInstallMissingDependencies(interpreter);
 
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
         shellFuture.onIOPub(
             KernelMessage.createMessage<KernelMessage.IStreamMsg>({
                 msgType: 'stream',
@@ -99,81 +156,250 @@ suite('DataScience - DataViewerDependencyService', () => {
 
         assert.deepEqual(
             sessionExecutionContext.slice(-1)[0],
-            {
-                code: `import pandas; print(pandas.__version__)`,
-                silent: false,
-                stop_on_error: false,
-                allow_stdin: true,
-                store_history: false
-            },
+            expectedPandasVersionExecutionContext,
             'The kernel session did not receive a request to execute the code that prints the version of pandas'
         );
     });
 
-    // test('Throw exception if pandas is installed and version is = 0.20', async () => {
-    //     // Wait until onIOPub exists, send the message through.
-    //     // The output of the version, defined in this test, must be 0.20
-    //     // Must satisfy: {
-    //     //     data: msg.content.data,
-    //     //     execution_count: msg.content.execution_count,
-    //     //     metadata: msg.content.metadata,
-    //     //     output_type: 'execute_result'
-    //     // };
-    //     // Is there no `text`? We might need to change our code.
-    //     const promise = dependencyService.checkAndInstallMissingDependencies(interpreter);
-    //
-    //     await assert.isRejected(promise, DataScience.pandasTooOldForViewingFormat().format('0.20.'));
-    // });
-    // test('Throw exception if pandas is installed and version is < 0.20', async () => {
-    //     // Wait until onIOPub exists, send the message through.
-    //     // The output of the version, defined in this test, must be 0.10
-    //     // Must satisfy: {
-    //     //     data: msg.content.data,
-    //     //     execution_count: msg.content.execution_count,
-    //     //     metadata: msg.content.metadata,
-    //     //     output_type: 'execute_result'
-    //     // };
-    //     // Is there no `text`? We might need to change our code.
-    //
-    //     const promise = dependencyService.checkAndInstallMissingDependencies(interpreter);
-    //
-    //     await assert.isRejected(promise, DataScience.pandasTooOldForViewingFormat().format('0.10.'));
-    // });
-    // test('Prompt to install pandas and install pandas', async () => {
-    //     when(
-    //         pythonExecService.exec(deepEqual(['-c', 'import pandas;print(pandas.__version__)']), anything())
-    //     ).thenReject(new Error('Not Found'));
-    //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    //     when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(Common.install() as any);
-    //     when(installer.install(Product.pandas, interpreter, anything())).thenResolve();
-    //
-    //     await dependencyService.checkAndInstallMissingDependencies(interpreter);
-    //
-    //     verify(
-    //         appShell.showErrorMessage(
-    //             DataScience.pandasRequiredForViewing(),
-    //             deepEqual({ modal: true }),
-    //             Common.install()
-    //         )
-    //     ).once();
-    //     verify(installer.install(Product.pandas, interpreter, anything())).once();
-    // });
-    // test('Prompt to install pandas and throw error if user does not install pandas', async () => {
-    //     when(
-    //         pythonExecService.exec(deepEqual(['-c', 'import pandas;print(pandas.__version__)']), anything())
-    //     ).thenReject(new Error('Not Found'));
-    //     when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve();
-    //
-    //     const promise = dependencyService.checkAndInstallMissingDependencies(interpreter);
-    //
-    //     await assert.isRejected(promise, DataScience.pandasRequiredForViewing());
-    //     verify(
-    //         appShell.showErrorMessage(
-    //             DataScience.pandasRequiredForViewing(),
-    //             deepEqual({ modal: true }),
-    //             Common.install()
-    //         )
-    //     ).once();
-    //     verify(installer.install(anything(), anything(), anything())).never();
-    // });
+    test('Throw exception if pandas is installed and version is = 0.20', async () => {
+        const version = '0.20.0';
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (kernel.session as any) = jupyterSession;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (kernel.status as any) = 'idle';
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (kernelProvider.kernels as any) = [kernel];
+
+        // Execution flow:
+        //   checkAndInstallMissingDependencies ->
+        //   private getVersionOfPandas -> executeSilently ->
+        //   session.requestExecute -> request.onIOPub ->
+        //   onIOPub(message) -> message.msgType === "stream"
+
+        const onIOPubPromise = waitForCondition(
+            () => Boolean(shellFuture.onIOPub),
+            1000,
+            'Timeout waiting for shellFuture.onIOPub'
+        );
+
+        shellFuture = {
+            done: () => onIOPubPromise
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any as IShellFuture<IExecuteRequestMsg, IExecuteReplyMsg>;
+
+        const resultPromise = dependencyService.checkAndInstallMissingDependencies(interpreter);
+
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        shellFuture.onIOPub(
+            KernelMessage.createMessage<KernelMessage.IStreamMsg>({
+                msgType: 'stream',
+                channel: 'iopub',
+                session: 'baz',
+                content: {
+                    name: 'stdout',
+                    text: version
+                }
+            })
+        );
+
+        await onIOPubPromise;
+
+        await assert.isRejected(
+            resultPromise,
+            DataScience.pandasTooOldForViewingFormat().format('0.20.'),
+            'Failed to identify too old pandas'
+        );
+
+        assert.deepEqual(
+            sessionExecutionContext.slice(-1)[0],
+            expectedPandasVersionExecutionContext,
+            'The kernel session did not receive a request to execute the code that prints the version of pandas'
+        );
+    });
+
+    test('Throw exception if pandas is installed and version is < 0.20', async () => {
+        const version = '0.10.0';
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (kernel.session as any) = jupyterSession;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (kernel.status as any) = 'idle';
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (kernelProvider.kernels as any) = [kernel];
+
+        // Execution flow:
+        //   checkAndInstallMissingDependencies ->
+        //   private getVersionOfPandas -> executeSilently ->
+        //   session.requestExecute -> request.onIOPub ->
+        //   onIOPub(message) -> message.msgType === "stream"
+
+        const onIOPubPromise = waitForCondition(
+            () => Boolean(shellFuture.onIOPub),
+            1000,
+            'Timeout waiting for shellFuture.onIOPub'
+        );
+
+        shellFuture = {
+            done: () => onIOPubPromise
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any as IShellFuture<IExecuteRequestMsg, IExecuteReplyMsg>;
+
+        const resultPromise = dependencyService.checkAndInstallMissingDependencies(interpreter);
+
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        shellFuture.onIOPub(
+            KernelMessage.createMessage<KernelMessage.IStreamMsg>({
+                msgType: 'stream',
+                channel: 'iopub',
+                session: 'baz',
+                content: {
+                    name: 'stdout',
+                    text: version
+                }
+            })
+        );
+
+        await onIOPubPromise;
+
+        await assert.isRejected(
+            resultPromise,
+            DataScience.pandasTooOldForViewingFormat().format('0.10.'),
+            'Failed to identify too old pandas'
+        );
+
+        assert.deepEqual(
+            sessionExecutionContext.slice(-1)[0],
+            expectedPandasVersionExecutionContext,
+            'The kernel session did not receive a request to execute the code that prints the version of pandas'
+        );
+    });
+
+    test('Prompt to install pandas and install pandas', async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (kernel.session as any) = jupyterSession;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (kernel.status as any) = 'idle';
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (kernelProvider.kernels as any) = [kernel];
+
+        const onIOPubPromise = waitForCondition(
+            () => Boolean(shellFuture.onIOPub),
+            1000,
+            'Timeout waiting for shellFuture.onIOPub'
+        );
+        shellFuture = {
+            done: () => onIOPubPromise
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any as IShellFuture<IExecuteRequestMsg, IExecuteReplyMsg>;
+
+        const resultPromise = dependencyService.checkAndInstallMissingDependencies(interpreter);
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(Common.install() as any);
+
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        shellFuture.onIOPub(
+            KernelMessage.createMessage<KernelMessage.IErrorMsg>({
+                msgType: 'error',
+                channel: 'iopub',
+                session: 'baz',
+                content: {
+                    ename: 'ModuleNotFoundError',
+                    evalue: `No module named 'pandas'`,
+                    traceback: [
+                        `[0;31m---------------------------------------------------------------------------[0m`,
+                        `[0;31mModuleNotFoundError[0m                       Traceback (most recent call last)`,
+                        `[0;32mUntitled-2[0m in [0;36m<module>[0;34m[0m\n[0;32m----> 1[0;31m [0;32mimport[0m [0mpandas[0m[0;34m;[0m [0mprint[0m[0;34m([0m[0mpandas[0m[0;34m.[0m[0m__version__[0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m\n[0m`,
+                        `[0;31mModuleNotFoundError[0m: No module named 'pandas`
+                    ]
+                }
+            })
+        );
+
+        await onIOPubPromise;
+
+        assert.deepEqual(
+            sessionExecutionContext,
+            [expectedPandasVersionExecutionContext, expectedInstallPandasExecutionContext],
+            'The kernel session did not receive a request to execute the code that prints the version of pandas'
+        );
+
+        await waitForCondition(
+            async () => sessionExecutionContext.slice(-1)[0].code.indexOf('install pandas') > -1,
+            1000,
+            'Timeout waiting for install pandas'
+        );
+
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        shellFuture.onIOPub(
+            // IMPORTANT: This is not the real output of the installation of Pandas.
+            // Pandas' installation occurs in a larger number of outputs.
+            // checkAndInstallMissingDependencies only looks for errors to determine it failed or not, not for the actual output.
+            KernelMessage.createMessage<KernelMessage.IStreamMsg>({
+                msgType: 'stream',
+                channel: 'iopub',
+                session: 'baz',
+                content: {
+                    name: 'stdout',
+                    text: 'Fake installation output'
+                }
+            })
+        );
+
+        assert.equal(await resultPromise, undefined);
+    });
+
+    test('Prompt to install pandas and throw error if user does not install pandas', async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (kernel.session as any) = jupyterSession;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (kernel.status as any) = 'idle';
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (kernelProvider.kernels as any) = [kernel];
+
+        const onIOPubPromise = waitForCondition(
+            () => Boolean(shellFuture.onIOPub),
+            1000,
+            'Timeout waiting for shellFuture.onIOPub'
+        );
+        shellFuture = {
+            done: () => onIOPubPromise
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any as IShellFuture<IExecuteRequestMsg, IExecuteReplyMsg>;
+
+        const resultPromise = dependencyService.checkAndInstallMissingDependencies(interpreter);
+
+        when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve();
+
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        shellFuture.onIOPub(
+            KernelMessage.createMessage<KernelMessage.IErrorMsg>({
+                msgType: 'error',
+                channel: 'iopub',
+                session: 'baz',
+                content: {
+                    ename: 'ModuleNotFoundError',
+                    evalue: `No module named 'pandas'`,
+                    traceback: [
+                        // NOTE: This is not the real output of the installation of Pandas. The real output has some extra characters that look pretty bad here.
+                        `[0;31m---------------------------------------------------------------------------[0m`,
+                        `[0;31mModuleNotFoundError[0m                       Traceback (most recent call last)`,
+                        `[0;32mUntitled-2[0m in [0;36m<module>[0;34m[0m\n[0;32m----> 1[0;31m [0;32mimport[0m [0mpandas[0m[0;34m;[0m [0mprint[0m[0;34m([0m[0mpandas[0m[0;34m.[0m[0m__version__[0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m\n[0m`,
+                        `[0;31mModuleNotFoundError[0m: No module named 'pandas`
+                    ]
+                }
+            })
+        );
+
+        await onIOPubPromise;
+
+        assert.deepEqual(
+            sessionExecutionContext,
+            [expectedPandasVersionExecutionContext],
+            'The kernel session did not receive a request to execute the code that prints the version of pandas'
+        );
+
+        await assert.isRejected(resultPromise, DataScience.pandasRequiredForViewing());
+    });
 });

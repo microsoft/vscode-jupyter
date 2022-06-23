@@ -1376,15 +1376,10 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.IPyWidgetNbExtensionCopyTime]: never | undefined;
     /**
-     * Useful when we need an active editor in order to determine which kernel to run.
-     * Used by the data frame when attempting to install Pandas.
-     */
-    [Telemetry.NoActiveEditor]: never | undefined;
-    /**
      * Useful when we need an active kernel in order to execute commands silently.
      * Used by the data frame when attempting to install Pandas.
      */
-    [Telemetry.NoActiveKernel]: never | undefined;
+    [Telemetry.NoIdleKernel]: never | undefined;
     /**
      * Useful when we need an active kernel session in order to execute commands silently.
      * Used by the data frame when attempting to install Pandas.

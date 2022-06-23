@@ -517,8 +517,7 @@ export enum Telemetry {
     TerminalShellIdentification = 'TERMINAL_SHELL_IDENTIFICATION',
     TerminalEnvVariableExtraction = 'TERMINAL_ENV_VAR_EXTRACTION',
     JupyterInstalled = 'JUPYTER_IS_INSTALLED',
-    NoActiveEditor = 'DATASCIENCE.NO_ACTIVE_EDITOR',
-    NoActiveKernel = 'DATASCIENCE.NO_ACTIVE_KERNEL',
+    NoIdleKernel = 'DATASCIENCE.NO_IDLE_KERNEL',
     NoActiveKernelSession = 'DATASCIENCE.NO_ACTIVE_KERNEL_SESSION'
 }
 
