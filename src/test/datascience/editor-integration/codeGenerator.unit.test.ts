@@ -84,7 +84,6 @@ suite('Code Generator Unit Tests', () => {
         assert.equal(generatedCodes[0].generatedCodes[0].executionCount, 1, 'Wrong execution count');
     });
 
-
     test('Execute %%latex magic in a cell with a cell marker', async () => {
         const file = '# %%\r\n%%latex\r\n$e^2$';
         const code = '# %%\r\n%%latex\r\n$e^2$';
