@@ -4,7 +4,7 @@
 
 import { IDisposable } from '../../../platform/common/types';
 import { Event } from 'vscode';
-import { SharedMessages } from '../../../platform/messageTypes';
+import { SharedMessages } from '../../../messageTypes';
 
 export namespace PlotViewerMessages {
     export const Started = SharedMessages.Started;

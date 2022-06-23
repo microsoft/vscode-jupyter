@@ -27,7 +27,7 @@ import {
     IWorkspaceService,
     IApplicationShell
 } from '../../../platform/common/application/types';
-import { HelpLinks } from '../../../platform/common/constants';
+import { HelpLinks, Telemetry } from '../../../platform/common/constants';
 import { traceError, traceInfo } from '../../../platform/logging';
 import {
     IConfigurationService,
@@ -39,7 +39,6 @@ import {
 } from '../../../platform/common/types';
 import * as localize from '../../../platform/common/utils/localize';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
-import { Telemetry } from '../../webview-side/common/constants';
 import { WebViewViewChangeEventArgs } from '../../../platform/webviews/types';
 import { WebviewPanelHost } from '../../../platform/webviews/webviewPanelHost';
 import { noop } from '../../../platform/common/utils/misc';

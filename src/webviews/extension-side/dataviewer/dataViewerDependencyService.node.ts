@@ -17,8 +17,7 @@ import { parseSemVer } from '../../../platform/common/utils.node';
 import { DataScience, Common } from '../../../platform/common/utils/localize';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../webview-side/common/constants';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { IDataViewerDependencyService } from './types';
 
 const minimumSupportedPandaVersion = '0.20.0';

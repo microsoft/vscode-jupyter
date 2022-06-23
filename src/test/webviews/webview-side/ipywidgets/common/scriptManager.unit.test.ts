@@ -7,7 +7,7 @@ import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { Disposable } from 'vscode';
 import { disposeAllDisposables } from '../../../../../platform/common/helpers';
 import { IDisposable } from '../../../../../platform/common/types';
-import { IInteractiveWindowMapping, IPyWidgetMessages } from '../../../../../platform/messageTypes';
+import { IInteractiveWindowMapping, IPyWidgetMessages } from '../../../../../messageTypes';
 import { scriptsAlreadyRegisteredInRequireJs } from '../../../../../webviews/webview-side/ipywidgets/common/requirejsRegistry';
 import { ScriptManager } from '../../../../../webviews/webview-side/ipywidgets/common/scriptManager';
 import { IMessageHandler, PostOffice } from '../../../../../webviews/webview-side/react-common/postOffice';

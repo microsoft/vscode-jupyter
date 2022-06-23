@@ -318,10 +318,6 @@ module.exports = {
                     {
                         target: './src/**[!test,standalone,webviews]**/**/*.ts',
                         from: './src/webviews/**/*.ts',
-                        except: [
-                            '**/src/webviews/webview-side/common/constants.ts',
-                            '**/src/webviews/types',
-                        ],
                         message: 'Importing modules from ./src/webviews into core components (platform, kernels, notebooks, interactive-window) is not allowed.'
                     },
                     {
@@ -332,7 +328,12 @@ module.exports = {
                     {
                         target: './src/telemetry/**/**[!types]**.ts',
                         from: './src/**[!telemetry,platform]**/**/*.ts',
-                        message: 'Importing non-platform modules into telemetry files is not allowed.'
+                        message: 'Importing non-telemetry modules into telemetry files is not allowed.'
+                    },
+                    {
+                        target: './src/platform/**/*.ts',
+                        from: './src/**[!platform]**/**/*.ts',
+                        message: 'Importing non-platform modules into platform files is not allowed.'
                     }
                 ]
             }

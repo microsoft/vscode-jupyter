@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { InteractiveWindowMessages } from '../../../../../platform/messageTypes';
+import { InteractiveWindowMessages } from '../../../../../messageTypes';
 import { IMainState } from '../../mainState';
 import { postActionToExtension } from '../helpers';
 import { CommonActionType, CommonReducerArg, ILinkClickAction, IShowDataViewerAction } from './types';

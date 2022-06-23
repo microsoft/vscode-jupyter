@@ -47,7 +47,7 @@ import { InteractiveCellResultError } from '../platform/errors/interactiveCellRe
 import { DataScience } from '../platform/common/utils/localize';
 import { createDeferred, Deferred } from '../platform/common/utils/async';
 import { IServiceContainer } from '../platform/ioc/types';
-import { SysInfoReason } from '../platform/messageTypes';
+import { SysInfoReason } from '../messageTypes';
 import { createOutputWithErrorMessageForDisplay } from '../platform/errors/errorUtils';
 import { INotebookExporter } from '../kernels/jupyter/types';
 import { IExportDialog, ExportFormat } from '../notebooks/export/types';

@@ -12,7 +12,7 @@ import {
     IFinishCell,
     IInteractiveWindowMapping,
     SharedMessages
-} from '../../../../../platform/messageTypes';
+} from '../../../../../messageTypes';
 import { IJupyterExtraSettings } from '../../../../../platform/webviews/types';
 import { BaseReduxActionPayload } from '../../../../types';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../../react-common/reduxUtils';

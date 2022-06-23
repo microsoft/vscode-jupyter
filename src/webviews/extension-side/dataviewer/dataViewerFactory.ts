@@ -12,8 +12,8 @@ import { ICommandManager } from '../../../platform/common/application/types';
 import { ContextKey } from '../../../platform/common/contextKey';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from '../../../platform/common/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
-import { EditorContexts, Commands, Telemetry } from '../../webview-side/common/constants';
 import { noop } from '../../../platform/common/utils/misc';
+import { Commands, EditorContexts, Telemetry } from '../../../platform/common/constants';
 
 @injectable()
 export class DataViewerFactory implements IDataViewerFactory, IAsyncDisposable {
