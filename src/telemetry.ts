@@ -20,9 +20,9 @@ import { ExportFormat } from './notebooks/export/types';
 import { InterruptResult, KernelConnectionMetadata, KernelInterpreterDependencyResponse } from './kernels/types';
 // eslint-disable-next-line
 import { IExportedKernelService } from './standalone/api/extension';
-import { PreferredKernelExactMatchReason } from './notebooks/controllers/notebookControllerManager';
 import { SelectJupyterUriCommandSource } from './kernels/jupyter/serverSelector';
 import { TerminalShellType } from './platform/terminals/types';
+import { PreferredKernelExactMatchReason } from './notebooks/controllers/types';
 
 export * from './platform/telemetry/index';
 

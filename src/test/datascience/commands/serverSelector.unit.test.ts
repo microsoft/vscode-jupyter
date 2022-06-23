@@ -6,7 +6,6 @@ import { CommandManager } from '../../../platform/common/application/commandMana
 import { ICommandManager } from '../../../platform/common/application/types';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { Commands } from '../../../platform/common/constants';
-import { INotebookControllerManager } from '../../../notebooks/types';
 import { JupyterServerSelectorCommand } from '../../../notebooks/serverSelector';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 
@@ -15,19 +14,16 @@ suite('DataScience - Server Selector Command', () => {
     let serverSelectorCommand: JupyterServerSelectorCommand;
     let commandManager: ICommandManager;
     let serverSelector: JupyterServerSelector;
-    let controllerManager: INotebookControllerManager;
 
     setup(() => {
         commandManager = mock(CommandManager);
         serverSelector = mock(JupyterServerSelector);
-        controllerManager = mock(controllerManager);
         const uriStorage = mock(JupyterServerUriStorage);
 
         serverSelectorCommand = new JupyterServerSelectorCommand(
             instance(commandManager),
             instance(serverSelector),
-            instance(uriStorage),
-            instance(controllerManager)
+            instance(uriStorage)
         );
     });
 

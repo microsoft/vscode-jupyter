@@ -949,18 +949,6 @@ No properties for event
 ```
 
 
-[src/notebooks/controllers/vscodeNotebookController.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/vscodeNotebookController.ts)
-```typescript
-            return;
-        }
-        initializeInteractiveOrNotebookTelemetryBasedOnUserAction(notebook.uri, this.connection);
-        sendKernelTelemetryEvent(notebook.uri, Telemetry.ExecuteCell);
-        // Notebook is trusted. Continue to execute cells
-        await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
-    }
-```
-
-
 [src/kernels/kernel.base.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernel.base.ts)
 ```typescript
     }
@@ -970,6 +958,18 @@ No properties for event
         const stopWatch = new StopWatch();
         const sessionPromise = this.startJupyterSession();
         const promise = this.kernelExecution.executeCell(sessionPromise, cell, codeOverride);
+```
+
+
+[src/notebooks/controllers/vscodeNotebookController.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/vscodeNotebookController.ts)
+```typescript
+            return;
+        }
+        initializeInteractiveOrNotebookTelemetryBasedOnUserAction(notebook.uri, this.connection);
+        sendKernelTelemetryEvent(notebook.uri, Telemetry.ExecuteCell);
+        // Notebook is trusted. Continue to execute cells
+        await Promise.all(cells.map((cell) => this.executeCell(notebook, cell)));
+    }
 ```
 
 
@@ -1111,8 +1111,8 @@ No description provided
 
 [src/standalone/import-export/exportCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/import-export/exportCommands.ts)
 ```typescript
-                this.controllers.getSelectedNotebookController(sourceDocument)?.connection.interpreter ||
-                this.controllers.getPreferredNotebookController(sourceDocument)?.connection.interpreter;
+                this.controllerSelection.getSelected(sourceDocument)?.connection.interpreter ||
+                this.controllerPreferred.getPreferred(sourceDocument)?.connection.interpreter;
             if (exportMethod) {
                 sendTelemetryEvent(Telemetry.ExportNotebookAsCommand, undefined, { format: exportMethod });
             }
@@ -1248,14 +1248,14 @@ No properties for event
 
 ## Locations Used
 
-[src/notebooks/controllers/notebookControllerManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/notebookControllerManager.ts)
+[src/notebooks/controllers/controllerRegistration.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/controllerRegistration.ts)
 ```typescript
             }
             // We know that this fails when we have xeus kernels installed (untill that's resolved thats one instance when we can have duplicates).
             sendTelemetryEvent(
                 Telemetry.FailedToCreateNotebookController,
                 undefined,
-                { kind: kernelConnection.kind },
+                { kind: metadata.kind },
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ```
 
@@ -1661,7 +1661,7 @@ No description provided
 
 [src/standalone/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/api/kernelApi.ts)
 ```typescript
-        );
+        this.controllerLoader.refreshed(() => this._onDidChangeKernelSpecifications.fire(), this, disposables);
     }
     async getKernelSpecifications(refresh?: boolean): Promise<KernelConnectionMetadata[]> {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
@@ -1673,7 +1673,7 @@ No description provided
 
 [src/standalone/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/api/kernelApi.ts)
 ```typescript
-        return items.map((item) => this.translateKernelConnectionMetadataToExportedType(item));
+        return items.map((item) => this.translateKernelConnectionMetadataToExportedType(item.connection));
     }
     getActiveKernels(): { metadata: KernelConnectionMetadata; uri: Uri | undefined }[] {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
@@ -7123,7 +7123,7 @@ No properties for event
 
 ## Locations Used
 
-[src/notebooks/controllers/notebookControllerManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/notebookControllerManager.ts)
+[src/notebooks/controllers/controllerPreferredService.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/controllerPreferredService.ts)
 ```typescript
                 ? PYTHON_LANGUAGE
                 : getTelemetrySafeLanguage(getLanguageInNotebookMetadata(notebookMetadata) || '');
@@ -7150,7 +7150,7 @@ No description provided
 
 ## Locations Used
 
-[src/notebooks/controllers/notebookControllerManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/notebookControllerManager.ts)
+[src/notebooks/controllers/controllerPreferredService.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/controllerPreferredService.ts)
 ```typescript
             onlyConnection && (matchReason |= PreferredKernelExactMatchReason.OnlyKernel);
             topMatchIsPreferredInterpreter && (matchReason |= PreferredKernelExactMatchReason.WasPreferredInterpreter);
@@ -7193,7 +7193,7 @@ No description provided
 
 [src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
 ```typescript
-                    await this.controllerManager.loadNotebookControllers(true);
+                    await this.controllerLoader.loadControllers(true);
                 } else {
                     traceError('Failed to install Python Extension via Kernel Picker command');
                     sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {

@@ -10,10 +10,10 @@ import { IDisposable, IExtensions } from '../../platform/common/types';
 import { sleep } from '../../platform/common/utils/async';
 import { Common } from '../../platform/common/utils/localize';
 import { VSCodeNotebookController } from '../../notebooks/controllers/vscodeNotebookController';
-import { INotebookControllerManager } from '../../notebooks/types';
 import { IJupyterKernelSpec } from '../../kernels/types';
 import { ExtensionRecommendationService } from '../../standalone/recommendation/extensionRecommendation.node';
 import { JupyterNotebookView } from '../../platform/common/constants';
+import { IControllerSelection } from '../../notebooks/controllers/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 suite('DataScience Extension Recommendation', () => {
@@ -23,11 +23,11 @@ suite('DataScience Extension Recommendation', () => {
                 const disposables: IDisposable[] = [];
                 let recommendation: ExtensionRecommendationService;
                 let vscNotebook: IVSCodeNotebook;
-                let controllerManager: INotebookControllerManager;
                 let memento: Memento;
                 let appShell: IApplicationShell;
                 let extensions: IExtensions;
                 let commandManager: ICommandManager;
+                let controllerSelection: IControllerSelection;
                 let onDidOpenNotebookDocument: EventEmitter<NotebookDocument>;
                 let onNotebookControllerSelected: EventEmitter<{
                     notebook: NotebookDocument;
@@ -44,15 +44,15 @@ suite('DataScience Extension Recommendation', () => {
                     }>();
                     vscNotebook = mock<IVSCodeNotebook>();
                     when(vscNotebook.onDidOpenNotebookDocument).thenReturn(onDidOpenNotebookDocument.event);
-                    controllerManager = mock<INotebookControllerManager>();
-                    when(controllerManager.onNotebookControllerSelected).thenReturn(onNotebookControllerSelected.event);
+                    controllerSelection = mock<IControllerSelection>();
+                    when(controllerSelection.onControllerSelected).thenReturn(onNotebookControllerSelected.event);
                     memento = mock<Memento>();
                     appShell = mock<IApplicationShell>();
                     extensions = mock<IExtensions>();
                     commandManager = mock<ICommandManager>();
                     recommendation = new ExtensionRecommendationService(
                         instance(vscNotebook),
-                        instance(controllerManager),
+                        instance(controllerSelection),
                         disposables,
                         instance(memento),
                         instance(appShell),

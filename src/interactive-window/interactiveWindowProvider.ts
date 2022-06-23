@@ -39,7 +39,7 @@ import * as localize from '../platform/common/utils/localize';
 import { noop } from '../platform/common/utils/misc';
 import { IServiceContainer } from '../platform/ioc/types';
 import { KernelConnectionMetadata } from '../kernels/types';
-import { IEmbedNotebookEditorProvider, INotebookControllerManager, INotebookEditorProvider } from '../notebooks/types';
+import { IEmbedNotebookEditorProvider, INotebookEditorProvider } from '../notebooks/types';
 import { InteractiveWindow } from './interactiveWindow';
 import { InteractiveWindowView, JVSC_EXTENSION_ID, NotebookCellScheme } from '../platform/common/constants';
 import {
@@ -55,7 +55,12 @@ import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { INotebookExporter } from '../kernels/jupyter/types';
 import { IDataScienceErrorHandler } from '../kernels/errors/types';
 import { IExportDialog } from '../notebooks/export/types';
-import { IVSCodeNotebookController } from '../notebooks/controllers/types';
+import {
+    IControllerDefaultService,
+    IControllerRegistration,
+    IControllerSelection,
+    IVSCodeNotebookController
+} from '../notebooks/controllers/types';
 import { ICodeGeneratorFactory, IGeneratedCodeStorageFactory } from './editor-integration/types';
 import { getResourceType } from '../platform/common/utils';
 
@@ -97,7 +102,8 @@ export class InteractiveWindowProvider
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(INotebookControllerManager) private readonly notebookControllerManager: INotebookControllerManager,
+        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
+        @inject(IControllerDefaultService) private readonly controllerDefaultService: IControllerDefaultService,
         @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider
     ) {
         asyncRegistry.push(this);
@@ -159,11 +165,8 @@ export class InteractiveWindowProvider
             // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
             // Find our preferred controller
             const preferredController = connection
-                ? this.notebookControllerManager.getControllerForConnection(connection, InteractiveWindowView)
-                : await this.notebookControllerManager.getActiveInterpreterOrDefaultController(
-                      InteractiveWindowView,
-                      resource
-                  );
+                ? this.controllerRegistration.get(connection, InteractiveWindowView)
+                : await this.controllerDefaultService.computeDefaultController(resource, InteractiveWindowView);
 
             const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
 
@@ -178,7 +181,7 @@ export class InteractiveWindowProvider
                 resource,
                 mode,
                 this.serviceContainer.get<IExportDialog>(IExportDialog),
-                this.notebookControllerManager,
+                this.serviceContainer.get<IControllerSelection>(IControllerSelection),
                 this.serviceContainer,
                 this.serviceContainer.tryGet<IInteractiveWindowDebugger>(IInteractiveWindowDebugger),
                 this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler),
