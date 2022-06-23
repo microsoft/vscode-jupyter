@@ -18,17 +18,17 @@ import {
     StaticFeature,
     TransportKind
 } from 'vscode-languageclient/node';
-import * as path from '../platform/vscode-path/path';
+import * as path from '../../platform/vscode-path/path';
 import * as fs from 'fs-extra';
 import { FileBasedCancellationStrategy } from './fileBasedCancellationStrategy.node';
 import { createNotebookMiddleware, createPylanceMiddleware, NotebookMiddleware } from '@vscode/jupyter-lsp-middleware';
 import * as uuid from 'uuid/v4';
-import { NOTEBOOK_SELECTOR, PYTHON_LANGUAGE } from '../platform/common/constants';
-import { traceInfo, traceInfoIfCI } from '../platform/logging';
-import { getInterpreterId } from '../platform/pythonEnvironments/info/interpreter';
-import { noop } from '../platform/common/utils/misc';
-import { PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { getFilePath } from '../platform/common/platform/fs-paths';
+import { NOTEBOOK_SELECTOR, PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { traceInfo, traceInfoIfCI } from '../../platform/logging';
+import { getInterpreterId } from '../../platform/pythonEnvironments/info/interpreter';
+import { noop } from '../../platform/common/utils/misc';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
+import { getFilePath } from '../../platform/common/platform/fs-paths';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ensure(target: any, key: string) {

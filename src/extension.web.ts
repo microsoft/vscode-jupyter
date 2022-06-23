@@ -67,7 +67,6 @@ import { registerTypes as registerTelemetryTypes } from './platform/telemetry/se
 import { registerTypes as registerKernelTypes } from './kernels/serviceRegistry.web';
 import { registerTypes as registerNotebookTypes } from './notebooks/serviceRegistry.web';
 import { registerTypes as registerInteractiveTypes } from './interactive-window/serviceRegistry.web';
-import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry.web';
 import { registerTypes as registerTerminalTypes } from './platform/terminals/serviceRegistry.web';
 import { registerTypes as registerStandaloneTypes } from './standalone/serviceRegistry.web';
 import { registerTypes as registerWebviewTypes } from './webviews/extension-side/serviceRegistry.web';
@@ -294,7 +293,6 @@ async function activateLegacy(
     registerNotebookTypes(serviceManager);
     registerKernelTypes(serviceManager, isDevMode);
     registerInteractiveTypes(serviceManager);
-    registerIntellisenseTypes(serviceManager, isDevMode);
     registerTerminalTypes(serviceManager);
     registerStandaloneTypes(context, serviceManager, isDevMode);
     registerWebviewTypes(serviceManager);
