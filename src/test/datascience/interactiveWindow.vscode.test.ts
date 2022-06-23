@@ -172,8 +172,8 @@ suite(`Interactive window`, async function () {
         await waitForInteractiveWindow(activeInteractiveWindow);
 
         // Add a few cells from the input box
-        await runInteractiveWindowInput('print("first")', activeInteractiveWindow, 2);
-        await runInteractiveWindowInput('print("second")', activeInteractiveWindow, 3);
+        await runInteractiveWindowInput('print("first")', activeInteractiveWindow, 1);
+        await runInteractiveWindowInput('print("second")', activeInteractiveWindow, 2);
         await runInteractiveWindowInput('print("third")', activeInteractiveWindow, 3);
 
         await waitForLastCellToComplete(activeInteractiveWindow, 3, false);

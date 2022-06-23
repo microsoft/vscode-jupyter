@@ -231,12 +231,6 @@ export async function waitForInteractiveWindow(
     return notebookDocument!;
 }
 
-/**
- *
- * @param code
- * @param interactiveWindow
- * @param newCellCount the number of cells expected in the IW, including any sys info cells
- */
 export async function runInteractiveWindowInput(
     code: string,
     interactiveWindow: InteractiveWindow,
