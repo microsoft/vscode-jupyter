@@ -1,9 +1,7 @@
-import { IDisposable } from '@fluentui/react';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
-import { CancellationToken, NotebookDocument, Uri } from 'vscode';
+import { CancellationToken } from 'vscode';
 import { traceError } from '../../platform/logging';
-import { IFileSystem } from '../../platform/common/platform/types';
 import { DataScience } from '../../platform/common/utils/localize';
 import { stripAnsi } from '../../platform/common/utils/regexp';
 import { JupyterDataRateLimitError } from '../../platform/errors/jupyterDataRateLimitError';
@@ -11,8 +9,7 @@ import { Telemetry } from '../../telemetry';
 import { executeSilently, getAssociatedNotebookDocument, SilentExecutionErrorOptions } from '../helpers';
 import { IKernel } from '../types';
 import { IKernelVariableRequester, IJupyterVariable } from './types';
-import { DataFrameLoading, GetVariableInfo } from '../../platform/common/scriptConstants';
-import { IExtensionContext } from '../../platform/common/types';
+import { IDataFrameScriptGenerator, IVariableScriptGenerator } from '../../platform/common/types';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
 
 type DataFrameSplitFormat = {
@@ -57,12 +54,9 @@ export async function safeExecuteSilently(
 
 @injectable()
 export class PythonVariablesRequester implements IKernelVariableRequester {
-    private importedDataFrameScripts = new WeakMap<NotebookDocument, boolean>();
-    private importedGetVariableInfoScripts = new WeakMap<NotebookDocument, boolean>();
-
     constructor(
-        @inject(IFileSystem) private fs: IFileSystem,
-        @inject(IExtensionContext) private readonly context: IExtensionContext
+        @inject(IVariableScriptGenerator) private readonly varScriptGenerator: IVariableScriptGenerator,
+        @inject(IDataFrameScriptGenerator) private readonly dfScriptGenerator: IDataFrameScriptGenerator
     ) {}
 
     public async getDataFrameInfo(
@@ -70,19 +64,16 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         kernel: IKernel,
         expression: string
     ): Promise<IJupyterVariable> {
-        // Import the data frame script directory if we haven't already
-        await this.importDataFrameScripts(kernel);
-
         // Then execute a call to get the info and turn it into JSON
-        const results = await safeExecuteSilently(
-            kernel,
-            `import builtins\nbuiltins.print(${DataFrameLoading.DataFrameInfoFunc}(${expression}))`,
-            {
-                traceErrors: true,
-                traceErrorsMessage: 'Failure in execute_request for getDataFrameInfo',
-                telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-            }
-        );
+        const code = await this.dfScriptGenerator.generateCodeToGetDataFrameInfo({
+            isDebugging: false,
+            variableName: expression
+        });
+        const results = await safeExecuteSilently(kernel, code, {
+            traceErrors: true,
+            traceErrorsMessage: 'Failure in execute_request for getDataFrameInfo',
+            telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+        });
 
         const fileName = getAssociatedNotebookDocument(kernel)?.uri || kernel.resourceUri || kernel.uri;
 
@@ -100,18 +91,18 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         kernel: IKernel,
         expression: string
     ): Promise<{ data: Record<string, unknown>[] }> {
-        await this.importDataFrameScripts(kernel);
-
         // Then execute a call to get the rows and turn it into JSON
-        const results = await safeExecuteSilently(
-            kernel,
-            `import builtins\nbuiltins.print(${DataFrameLoading.DataFrameRowFunc}(${expression}, ${start}, ${end}))`,
-            {
-                traceErrors: true,
-                traceErrorsMessage: 'Failure in execute_request for getDataFrameRows',
-                telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-            }
-        );
+        const code = await this.dfScriptGenerator.generateCodeToGetDataFrameRows({
+            isDebugging: false,
+            variableName: expression,
+            startIndex: start,
+            endIndex: end
+        });
+        const results = await safeExecuteSilently(kernel, code, {
+            traceErrors: true,
+            traceErrorsMessage: 'Failure in execute_request for getDataFrameRows',
+            telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+        });
 
         return parseDataFrame(this.deserializeJupyterResult<DataFrameSplitFormat>(results));
     }
@@ -124,9 +115,6 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         languageSettings: { [typeNameKey: string]: string[] },
         inEnhancedTooltipsExperiment: boolean
     ): Promise<{ [attributeName: string]: string }> {
-        // Import the variable info script directory if we haven't already
-        await this.importGetVariableInfoScripts(kernel);
-
         let result: { [attributeName: string]: string } = {};
         if (matchingVariable && matchingVariable.value) {
             const type = matchingVariable?.type;
@@ -134,15 +122,15 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
                 const attributeNames = languageSettings[type];
                 const stringifiedAttributeNameList =
                     '[' + attributeNames.reduce((accumulator, currVal) => accumulator + `"${currVal}", `, '') + ']';
-                const attributes = await safeExecuteSilently(
-                    kernel,
-                    `import builtins\nbuiltins.print(${GetVariableInfo.VariablePropertiesFunc}(${matchingVariable.name}, ${stringifiedAttributeNameList}))`,
-                    {
-                        traceErrors: true,
-                        traceErrorsMessage: 'Failure in execute_request for getVariableProperties',
-                        telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-                    }
-                );
+                const code = await this.varScriptGenerator.generateCodeToGetVariableProperties({
+                    variableName: matchingVariable.name,
+                    stringifiedAttributeNameList
+                });
+                const attributes = await safeExecuteSilently(kernel, code, {
+                    traceErrors: true,
+                    traceErrorsMessage: 'Failure in execute_request for getVariableProperties',
+                    telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+                });
                 result = { ...result, ...this.deserializeJupyterResult(attributes) };
             } else {
                 result[`${word}`] = matchingVariable.value;
@@ -156,19 +144,13 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         _token?: CancellationToken
     ): Promise<IJupyterVariable[]> {
         if (kernel.session) {
-            // Add in our get variable info script to get types
-            await this.importGetVariableInfoScripts(kernel);
-
             // VariableTypesFunc takes in list of vars and the corresponding var names
-            const results = await safeExecuteSilently(
-                kernel,
-                `import builtins\n_rwho_ls = %who_ls\nbuiltins.print(${GetVariableInfo.VariableTypesFunc}(_rwho_ls))`,
-                {
-                    traceErrors: true,
-                    traceErrorsMessage: 'Failure in execute_request for getVariableNamesAndTypesFromKernel',
-                    telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-                }
-            );
+            const code = await this.varScriptGenerator.generateCodeToGetVariableTypes();
+            const results = await safeExecuteSilently(kernel, code, {
+                traceErrors: true,
+                traceErrorsMessage: 'Failure in execute_request for getVariableNamesAndTypesFromKernel',
+                telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+            });
 
             if (kernel.disposed || kernel.disposing) {
                 return [];
@@ -200,19 +182,16 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         kernel: IKernel,
         _token?: CancellationToken
     ): Promise<IJupyterVariable> {
-        // Import the variable info script directory if we haven't already
-        await this.importGetVariableInfoScripts(kernel);
-
         // Then execute a call to get the info and turn it into JSON
-        const results = await safeExecuteSilently(
-            kernel,
-            `import builtins\nbuiltins.print(${GetVariableInfo.VariableInfoFunc}(${targetVariable.name}))`,
-            {
-                traceErrors: true,
-                traceErrorsMessage: 'Failure in execute_request for getFullVariable',
-                telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-            }
-        );
+        const code = await this.varScriptGenerator.generateCodeToGetVariableInfo({
+            isDebugging: false,
+            variableName: targetVariable.name
+        });
+        const results = await safeExecuteSilently(kernel, code, {
+            traceErrors: true,
+            traceErrorsMessage: 'Failure in execute_request for getFullVariable',
+            telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+        });
 
         // Combine with the original result (the call only returns the new fields)
         return {
@@ -220,53 +199,6 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             ...this.deserializeJupyterResult(results)
         };
     }
-
-    private async importDataFrameScripts(kernel: IKernel): Promise<void> {
-        const key = getAssociatedNotebookDocument(kernel);
-        if (key && !this.importedDataFrameScripts.get(key)) {
-            // Clear our flag if the notebook disposes or restarts
-            const disposables: IDisposable[] = [];
-            const handler = () => {
-                this.importedDataFrameScripts.delete(key);
-                disposables.forEach((d) => d.dispose());
-            };
-            disposables.push(kernel.onDisposed(handler));
-            disposables.push(kernel.onRestarted(handler));
-
-            // First put the code from our helper files into the notebook
-            await this.runScriptFile(kernel, DataFrameLoading.getScriptPath(this.context));
-
-            this.importedDataFrameScripts.set(key, true);
-        }
-    }
-
-    private async importGetVariableInfoScripts(kernel: IKernel): Promise<void> {
-        const key = getAssociatedNotebookDocument(kernel);
-        if (key && !this.importedGetVariableInfoScripts.get(key)) {
-            // Clear our flag if the notebook disposes or restarts
-            const disposables: IDisposable[] = [];
-            const handler = () => {
-                this.importedGetVariableInfoScripts.delete(key);
-                disposables.forEach((d) => d.dispose());
-            };
-            disposables.push(kernel.onDisposed(handler));
-            disposables.push(kernel.onRestarted(handler));
-
-            await this.runScriptFile(kernel, GetVariableInfo.getScriptPath(this.context));
-
-            this.importedGetVariableInfoScripts.set(key, true);
-        }
-    }
-
-    // Read in a .py file and execute it silently in the given notebook
-    private async runScriptFile(kernel: IKernel, scriptFile: Uri) {
-        if (await this.fs.exists(scriptFile)) {
-            const fileContents = await this.fs.readFile(scriptFile);
-            return safeExecuteSilently(kernel, fileContents);
-        }
-        traceError('Cannot run non-existent script file');
-    }
-
     private extractJupyterResultText(outputs: nbformat.IOutput[]): string {
         // Verify that we have the correct cell type and outputs
         if (outputs.length > 0) {

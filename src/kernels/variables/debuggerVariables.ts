@@ -9,9 +9,13 @@ import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { Identifiers } from '../../platform/common/constants';
 import { IDebugService, IVSCodeNotebook } from '../../platform/common/application/types';
-import { DataFrameLoading, GetVariableInfo } from '../../platform/common/scriptConstants';
 import { traceError, traceVerbose } from '../../platform/logging';
-import { IConfigurationService, IExtensionContext, Resource } from '../../platform/common/types';
+import {
+    IConfigurationService,
+    IDataFrameScriptGenerator,
+    IVariableScriptGenerator,
+    Resource
+} from '../../platform/common/types';
 import { DebugLocationTracker } from '../debugger/debugLocationTracker';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { IDebuggingManager, IJupyterDebugService, KernelDebugMode } from '../debugger/types';
@@ -24,7 +28,6 @@ import {
     IJupyterVariablesResponse
 } from './types';
 import { convertDebugProtocolVariableToIJupyterVariable, DataViewableTypes } from './helpers';
-import { IFileSystem } from '../../platform/common/platform/types';
 import { noop } from '../../platform/common/utils/misc';
 import { getAssociatedNotebookDocument } from '../helpers';
 
@@ -36,9 +39,9 @@ export class DebuggerVariables
     extends DebugLocationTracker
     implements IConditionalJupyterVariables, DebugAdapterTracker
 {
+    static dataFrameScriptContents?: string;
     private refreshEventEmitter = new EventEmitter<void>();
     private lastKnownVariables: IJupyterVariable[] = [];
-    private importedDataFrameScriptsIntoKernel = new Set<string>();
     private importedGetVariableInfoScriptsIntoKernel = new Set<string>();
     private watchedNotebooks = new Map<string, Disposable[]>();
     private debuggingStarted = false;
@@ -50,8 +53,8 @@ export class DebuggerVariables
         @inject(IDebuggingManager) private readonly debuggingManager: IDebuggingManager,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IExtensionContext) private readonly context: IExtensionContext
+        @inject(IVariableScriptGenerator) private readonly varScriptGenerator: IVariableScriptGenerator,
+        @inject(IDataFrameScriptGenerator) private readonly dfScriptGenerator: IDataFrameScriptGenerator
     ) {
         super(undefined);
         this.debuggingManager.onDoneDebugging(() => this.refreshEventEmitter.fire(), this);
@@ -146,17 +149,18 @@ export class DebuggerVariables
             this.watchKernel(kernel);
         }
 
-        // See if we imported or not into the kernel our special function
-        await this.importDataFrameScripts();
-
         let expression = targetVariable.name;
         if (sliceExpression) {
             expression = `${targetVariable.name}${sliceExpression}`;
         }
 
         // Then eval calling the main function with our target variable
+        const code = await this.dfScriptGenerator.generateCodeToGetDataFrameInfo({
+            isDebugging: true,
+            variableName: expression
+        });
         const results = await this.evaluate(
-            `${DataFrameLoading.DataFrameInfoFunc}(${expression})`,
+            code,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (targetVariable as any).frameId
         );
@@ -204,11 +208,14 @@ export class DebuggerVariables
             expression = `${targetVariable.name}${sliceExpression}`;
         }
 
-        // See if we imported or not into the kernel our special function
-        await this.importDataFrameScripts();
-
+        const code = await this.dfScriptGenerator.generateCodeToGetDataFrameRows({
+            isDebugging: true,
+            variableName: expression,
+            startIndex: start,
+            endIndex: end
+        });
         const results = await this.evaluate(
-            `${DataFrameLoading.DataFrameRowFunc}(${expression}, ${start}, ${end})`,
+            code,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (targetVariable as any).frameId
         );
@@ -270,7 +277,6 @@ export class DebuggerVariables
             this.refreshEventEmitter.fire();
             const key = this.debugService.activeDebugSession?.id;
             if (key) {
-                this.importedDataFrameScriptsIntoKernel.delete(key);
                 this.importedGetVariableInfoScriptsIntoKernel.delete(key);
             }
         }
@@ -293,7 +299,6 @@ export class DebuggerVariables
     }
 
     private resetImport(key: string) {
-        this.importedDataFrameScriptsIntoKernel.delete(key);
         this.importedGetVariableInfoScriptsIntoKernel.delete(key);
     }
 
@@ -316,44 +321,14 @@ export class DebuggerVariables
         }
         throw Error('Debugger is not active, cannot evaluate.');
     }
-
-    private async importDataFrameScripts(): Promise<void> {
-        try {
-            // Run our dataframe scripts only once per session because they're slow
-            const key = this.debugService.activeDebugSession?.id;
-            if (key && !this.importedDataFrameScriptsIntoKernel.has(key)) {
-                const scriptPath = DataFrameLoading.getScriptPath(this.context);
-                const contents = await this.fs.readFile(scriptPath);
-                await this.evaluate(contents);
-                this.importedDataFrameScriptsIntoKernel.add(key);
-            }
-        } catch (exc) {
-            traceError('Error attempting to import in debugger', exc);
-        }
-    }
-
-    private async importGetVariableInfoScripts(): Promise<void> {
-        try {
-            // Run our variable info scripts only once per session because they're slow
-            const key = this.debugService.activeDebugSession?.id;
-            if (key && !this.importedGetVariableInfoScriptsIntoKernel.has(key)) {
-                const scriptPath = GetVariableInfo.getScriptPath(this.context);
-                const contents = await this.fs.readFile(scriptPath);
-                await this.evaluate(contents);
-                this.importedGetVariableInfoScriptsIntoKernel.add(key);
-            }
-        } catch (exc) {
-            traceError('Error attempting to import in debugger', exc);
-        }
-    }
-
     public async getFullVariable(variable: IJupyterVariable): Promise<IJupyterVariable> {
-        // See if we imported or not into the kernel our special function
-        await this.importGetVariableInfoScripts();
-
         // Then eval calling the variable info function with our target variable
+        const code = await this.varScriptGenerator.generateCodeToGetVariableInfo({
+            isDebugging: false,
+            variableName: variable.name
+        });
         const results = await this.evaluate(
-            `${GetVariableInfo.VariableInfoFunc}(${variable.name})`,
+            code,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (variable as any).frameId
         );

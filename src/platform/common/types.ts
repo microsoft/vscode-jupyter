@@ -340,9 +340,29 @@ export interface ICell {
 // Was only intended to aggregate together ranges to create an ICell
 // However the "range" aspect is useful when working with plain text document
 // Ultimately, it would probably be ideal to be ICell and change line to range.
-// Specificially see how this is being used for the ICodeLensFactory to
+// Specifically see how this is being used for the ICodeLensFactory to
 // provide cells for the CodeWatcher to use.
 export interface ICellRange {
     range: Range;
     cell_type: string;
+}
+
+export const IVariableScriptGenerator = Symbol('IVariableScriptGenerator');
+export interface IVariableScriptGenerator {
+    generateCodeToGetVariableInfo(options: { isDebugging: boolean; variableName: string }): Promise<string>;
+    generateCodeToGetVariableProperties(options: {
+        variableName: string;
+        stringifiedAttributeNameList: string;
+    }): Promise<string>;
+    generateCodeToGetVariableTypes(): Promise<string>;
+}
+export const IDataFrameScriptGenerator = Symbol('IDataFrameScriptGenerator');
+export interface IDataFrameScriptGenerator {
+    generateCodeToGetDataFrameInfo(options: { isDebugging: boolean; variableName: string }): Promise<string>;
+    generateCodeToGetDataFrameRows(options: {
+        isDebugging: boolean;
+        variableName: string;
+        startIndex: number;
+        endIndex: number;
+    }): Promise<string>;
 }
