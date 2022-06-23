@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { INotebookCompletionProvider } from '../notebooks/types';
-import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
-import { IServiceManager } from '../platform/ioc/types';
+import { INotebookCompletionProvider } from '../../notebooks/types';
+import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../platform/activation/types';
+import { IServiceManager } from '../../platform/ioc/types';
 import { NotebookCellBangInstallDiagnosticsProvider } from './diagnosticsProvider';
 import { IntellisenseProvider } from './intellisenseProvider.node';
 import { LogReplayService } from './logReplayService.node';

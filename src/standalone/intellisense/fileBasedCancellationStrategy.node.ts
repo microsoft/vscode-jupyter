@@ -10,7 +10,7 @@
 import { randomBytes } from 'crypto';
 import * as fs from 'fs';
 import * as os from 'os';
-import * as path from '../platform/vscode-path/path';
+import * as path from '../../platform/vscode-path/path';
 import {
     CancellationReceiverStrategy,
     CancellationSenderStrategy,

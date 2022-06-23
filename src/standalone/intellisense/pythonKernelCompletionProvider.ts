@@ -13,19 +13,19 @@ import {
     TextDocument,
     workspace
 } from 'vscode';
-import { createPromiseFromCancellation } from '../platform/common/cancellation';
-import { traceError, traceInfoIfCI, traceVerbose } from '../platform/logging';
-import { getDisplayPath } from '../platform/common/platform/fs-paths';
-import { IConfigurationService, IDisposableRegistry } from '../platform/common/types';
-import { waitForPromise } from '../platform/common/utils/async';
-import { isNotebookCell } from '../platform/common/utils/misc';
-import { StopWatch } from '../platform/common/utils/stopWatch';
-import { IJupyterSession, IKernelProvider } from '../kernels/types';
-import { INotebookCompletionProvider, INotebookEditorProvider } from '../notebooks/types';
+import { createPromiseFromCancellation } from '../../platform/common/cancellation';
+import { traceError, traceInfoIfCI, traceVerbose } from '../../platform/logging';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
+import { waitForPromise } from '../../platform/common/utils/async';
+import { isNotebookCell } from '../../platform/common/utils/misc';
+import { StopWatch } from '../../platform/common/utils/stopWatch';
+import { IJupyterSession, IKernelProvider } from '../../kernels/types';
+import { INotebookCompletionProvider, INotebookEditorProvider } from '../../notebooks/types';
 import { mapJupyterKind } from './conversion';
-import { isTestExecution, Settings } from '../platform/common/constants';
+import { isTestExecution, Settings } from '../../platform/common/constants';
 import { INotebookCompletion } from './types';
-import { getAssociatedJupyterNotebook } from '../platform/common/utils';
+import { getAssociatedJupyterNotebook } from '../../platform/common/utils';
 
 let IntellisenseTimeout = Settings.IntellisenseTimeout;
 export function setIntellisenseTimeout(timeoutMs: number) {
