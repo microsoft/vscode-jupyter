@@ -30,6 +30,14 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
     }
     public async activate(): Promise<void> {
         // Activate all activation services together. Don't fail them all if one fails.
-        await Promise.all([this.singleActivationServices.map((item) => item.activate().catch((e) => traceError(e)))]);
+        await Promise.all([
+            this.singleActivationServices.map(async (item) => {
+                const promise = item.activate();
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                if ((promise as any).then) {
+                    return promise.catch(traceError);
+                }
+            })
+        ]);
     }
 }

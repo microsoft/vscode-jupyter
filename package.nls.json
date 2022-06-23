@@ -956,24 +956,9 @@
     "Products.installingModule": "Installing {0}",
     "DataScience.webNotSupported": "Operation not supported in web version of Jupyter Extension.",
     "DataScience.outputSizeExceedLimit": "Output exceeds the <a href={0}>size limit</a>. Open the full output data <a href={1}>in a text editor</a>",
-    "DataScience.installPythonTitle": {
-        "message": "Install Python",
-        "comment": ["{Locked='Python'}"]
-    },
-    "DataScience.installPythonExtensionViaKernelPickerTitle": {
-        "message": "Install Python Extension",
-        "comment": ["{Locked='Python'}"]
-    },
-    "DataScience.switchToLocalKernelsTitle": {
-        "message": "Connect to Local Kernels",
-        "comment": ["{Locked='Kernels'}"]
-    },
-    "DataScience.switchToRemoteKernelsTitle": {
-        "message": "Connect to Your Own Jupyter Server",
-        "comment": ["{Locked='Jupyter'}"]
-    },
-    "DataScience.switchToAnotherRemoteKernelsTitle": {
-        "message": "Connect to Another Jupyter Server",
-        "comment": ["{Locked='Jupyter'}"]
-    }
+    "DataScience.installPythonTitle": "Install Python",
+    "DataScience.installPythonExtensionViaKernelPickerTitle": "Install Python Extension",
+    "DataScience.switchToLocalKernelsTitle": "Connect to Local Kernels",
+    "DataScience.switchToRemoteKernelsTitle": "Connect to Your Own Jupyter Server",
+    "DataScience.switchToAnotherRemoteKernelsTitle": "Connect to Another Jupyter Server"
 }
