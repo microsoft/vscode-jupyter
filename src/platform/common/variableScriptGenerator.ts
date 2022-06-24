@@ -33,7 +33,8 @@ export class VariableScriptGenerator implements IVariableScriptGenerator {
         return `${contents}\n\nimport builtins\nbuiltins.print(${VariablePropertiesFunc}(${options.variableName}, ${options.stringifiedAttributeNameList}))`;
     }
     async generateCodeToGetVariableTypes(): Promise<string> {
-        return `import builtins\n_rwho_ls = %who_ls\nbuiltins.print(${VariableTypesFunc}(_rwho_ls))`;
+        const contents = await this.getContentsOfScript();
+        return `${contents}\n\nimport builtins\n_rwho_ls = %who_ls\nbuiltins.print(${VariableTypesFunc}(_rwho_ls))`;
     }
     /**
      * Script content is static, hence read the contents once.
