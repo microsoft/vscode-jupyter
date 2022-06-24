@@ -32,9 +32,12 @@ import {
     clickOKForRestartPrompt,
     closeNotebooksAndCleanUpAfterTests,
     defaultNotebookTestTimeout,
+    generateTemporaryFilePath,
+    hijackSavePrompt,
     waitForExecutionCompletedSuccessfully,
     waitForExecutionCompletedWithErrors,
-    waitForTextOutput
+    waitForTextOutput,
+    WindowPromptStubButtonClickOptions
 } from './notebook/helper';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
@@ -529,6 +532,14 @@ ${actualCode}
         await runInteractiveWindowInput('print("third")', activeInteractiveWindow, 3);
 
         await waitForLastCellToComplete(activeInteractiveWindow, 3, false);
+
+        // the file is only saved on web, so handle the prompt if it appears, but don't wait for it
+        let notebookFile = await generateTemporaryFilePath('py', disposables);
+        const promptOptions: WindowPromptStubButtonClickOptions = {
+            result: notebookFile,
+            clickImmediately: true
+        };
+        await hijackSavePrompt('Export', promptOptions, disposables);
 
         await vscode.commands.executeCommand(Commands.ExportAsPythonScript, activeInteractiveWindow.notebookDocument);
 
