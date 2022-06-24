@@ -1970,12 +1970,9 @@
                 },
                 "jupyter.pylanceHandlesNotebooks": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Determines if pylance's experimental notebook support is used or not.",
-                    "scope": "machine",
-                    "tags": [
-                        "experimental"
-                    ]
+                    "scope": "machine"
                 },
                 "jupyter.pythonCompletionTriggerCharacters": {
                     "type": "string",
