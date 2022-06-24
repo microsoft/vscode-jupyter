@@ -7,8 +7,8 @@ import { IKernel } from '../../../kernels/types';
 import { IJupyterVariable } from '../../../kernels/variables/types';
 import { IDisposable } from '../../../platform/common/types';
 import { SharedMessages } from '../../../messageTypes';
-import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { SliceOperationSource } from '../../../platform/telemetry/constants';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 
 export const CellFetchAllLimit = 100000;
 export const CellFetchSizeFirst = 100000;
@@ -130,5 +130,6 @@ export interface IJupyterVariableDataProviderFactory {
 
 export const IDataViewerDependencyService = Symbol('IDataViewerDependencyService');
 export interface IDataViewerDependencyService {
-    checkAndInstallMissingDependencies(interpreter: PythonEnvironment): Promise<void>;
+    checkAndInstallMissingDependenciesOnEnvironment(environment: PythonEnvironment): Promise<void>;
+    checkAndInstallMissingDependenciesOnKernel(kernel: IKernel): Promise<void>;
 }

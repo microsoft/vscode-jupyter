@@ -1370,7 +1370,12 @@ export namespace DataScience {
     export const failedToGetVersionOfPandas = () =>
         localize(
             { key: 'DataScience.failedToGetVersionOfPandas', comment: ['{Locked="Pandas"}'] },
-            'Failed to get version of Pandas to use Data Viewer'
+            'Failed to get version of Pandas to use the Data Viewer'
+        );
+    export const failedToInstallPandas = () =>
+        localize(
+            { key: 'DataScience.failedToInstallPandas', comment: ['{Locked="Pandas"}'] },
+            'Failed to install Pandas to use the Data Viewer'
         );
 }
 

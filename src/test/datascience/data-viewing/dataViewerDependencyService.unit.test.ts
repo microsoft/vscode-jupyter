@@ -4,15 +4,11 @@
 'use strict';
 
 import { assert } from 'chai';
-import * as path from '../../../platform/vscode-path/path';
-import { SemVer } from 'semver';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { ApplicationShell } from '../../../platform/common/application/applicationShell';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { DataViewerDependencyService } from '../../../webviews/extension-side/dataviewer/dataViewerDependencyService';
-import { Uri } from 'vscode';
-import { IJupyterSession, IKernel, IKernelProvider } from '../../../kernels/types';
+import { IJupyterSession, IKernel } from '../../../kernels/types';
 import { IShellFuture } from '@jupyterlab/services/lib/kernel/kernel';
 import { IExecuteReplyMsg, IExecuteRequestMsg } from '@jupyterlab/services/lib/kernel/messages';
 import { waitForCondition } from '../../common';
@@ -20,10 +16,8 @@ import { KernelMessage } from '@jupyterlab/services';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 
 suite('DataScience - DataViewerDependencyService', () => {
-    let interpreter: PythonEnvironment;
     let dependencyService: DataViewerDependencyService;
     let appShell: IApplicationShell;
-    let kernelProvider: IKernelProvider;
     let kernel: IKernel;
 
     let sessionExecutionContext: KernelMessage.IExecuteRequestMsg['content'][];
@@ -52,19 +46,11 @@ suite('DataScience - DataViewerDependencyService', () => {
     };
 
     setup(async () => {
-        interpreter = {
-            displayName: '',
-            uri: Uri.file(path.join('users', 'python', 'bin', 'python.exe')),
-            sysPrefix: '',
-            sysVersion: '',
-            version: new SemVer('3.3.3')
-        };
         appShell = mock(ApplicationShell);
-        kernelProvider = instance(mock<IKernelProvider>());
         kernel = instance(mock<IKernel>());
         sessionExecutionContext = [];
 
-        dependencyService = new DataViewerDependencyService(instance(appShell), kernelProvider, false);
+        dependencyService = new DataViewerDependencyService(instance(appShell), false);
     });
 
     test('What happens if there are no idle kernels?', async () => {
@@ -72,15 +58,13 @@ suite('DataScience - DataViewerDependencyService', () => {
         (kernel.session as any) = jupyterSession;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (kernel.status as any) = 'busy';
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (kernelProvider.kernels as any) = [kernel];
 
         shellFuture = {
             done: () => Promise.resolve()
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any as IShellFuture<IExecuteRequestMsg, IExecuteReplyMsg>;
 
-        const resultPromise = dependencyService.checkAndInstallMissingDependencies(interpreter);
+        const resultPromise = dependencyService.checkAndInstallMissingDependenciesOnKernel(kernel);
 
         await assert.isRejected(
             resultPromise,
@@ -94,15 +78,13 @@ suite('DataScience - DataViewerDependencyService', () => {
         (kernel.session as any) = undefined;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (kernel.status as any) = 'idle';
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (kernelProvider.kernels as any) = [kernel];
 
         shellFuture = {
             done: () => Promise.resolve()
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any as IShellFuture<IExecuteRequestMsg, IExecuteReplyMsg>;
 
-        const resultPromise = dependencyService.checkAndInstallMissingDependencies(interpreter);
+        const resultPromise = dependencyService.checkAndInstallMissingDependenciesOnKernel(kernel);
 
         await assert.isRejected(
             resultPromise,
@@ -118,12 +100,10 @@ suite('DataScience - DataViewerDependencyService', () => {
         (kernel.session as any) = jupyterSession;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (kernel.status as any) = 'idle';
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (kernelProvider.kernels as any) = [kernel];
 
         // Execution flow:
-        //   checkAndInstallMissingDependencies ->
-        //   private getVersionOfPandas -> executeSilently ->
+        //   checkAndInstallMissingDependenciesOnKernel
+        // private getVersionOfPandas -> executeSilently ->
         //   session.requestExecute -> request.onIOPub ->
         //   onIOPub(message) -> message.msgType === "stream"
 
@@ -137,7 +117,7 @@ suite('DataScience - DataViewerDependencyService', () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any as IShellFuture<IExecuteRequestMsg, IExecuteReplyMsg>;
 
-        const resultPromise = dependencyService.checkAndInstallMissingDependencies(interpreter);
+        const resultPromise = dependencyService.checkAndInstallMissingDependenciesOnKernel(kernel);
 
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         shellFuture.onIOPub(
@@ -168,12 +148,10 @@ suite('DataScience - DataViewerDependencyService', () => {
         (kernel.session as any) = jupyterSession;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (kernel.status as any) = 'idle';
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (kernelProvider.kernels as any) = [kernel];
 
         // Execution flow:
-        //   checkAndInstallMissingDependencies ->
-        //   private getVersionOfPandas -> executeSilently ->
+        //   checkAndInstallMissingDependenciesOnKernel
+        // private getVersionOfPandas -> executeSilently ->
         //   session.requestExecute -> request.onIOPub ->
         //   onIOPub(message) -> message.msgType === "stream"
 
@@ -188,7 +166,7 @@ suite('DataScience - DataViewerDependencyService', () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any as IShellFuture<IExecuteRequestMsg, IExecuteReplyMsg>;
 
-        const resultPromise = dependencyService.checkAndInstallMissingDependencies(interpreter);
+        const resultPromise = dependencyService.checkAndInstallMissingDependenciesOnKernel(kernel);
 
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         shellFuture.onIOPub(
@@ -225,12 +203,10 @@ suite('DataScience - DataViewerDependencyService', () => {
         (kernel.session as any) = jupyterSession;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (kernel.status as any) = 'idle';
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (kernelProvider.kernels as any) = [kernel];
 
         // Execution flow:
-        //   checkAndInstallMissingDependencies ->
-        //   private getVersionOfPandas -> executeSilently ->
+        //   checkAndInstallMissingDependenciesOnKernel
+        // private getVersionOfPandas -> executeSilently ->
         //   session.requestExecute -> request.onIOPub ->
         //   onIOPub(message) -> message.msgType === "stream"
 
@@ -245,7 +221,7 @@ suite('DataScience - DataViewerDependencyService', () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any as IShellFuture<IExecuteRequestMsg, IExecuteReplyMsg>;
 
-        const resultPromise = dependencyService.checkAndInstallMissingDependencies(interpreter);
+        const resultPromise = dependencyService.checkAndInstallMissingDependenciesOnKernel(kernel);
 
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         shellFuture.onIOPub(
@@ -280,8 +256,6 @@ suite('DataScience - DataViewerDependencyService', () => {
         (kernel.session as any) = jupyterSession;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (kernel.status as any) = 'idle';
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (kernelProvider.kernels as any) = [kernel];
 
         const onIOPubPromise = waitForCondition(
             () => Boolean(shellFuture.onIOPub),
@@ -293,7 +267,7 @@ suite('DataScience - DataViewerDependencyService', () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any as IShellFuture<IExecuteRequestMsg, IExecuteReplyMsg>;
 
-        const resultPromise = dependencyService.checkAndInstallMissingDependencies(interpreter);
+        const resultPromise = dependencyService.checkAndInstallMissingDependenciesOnKernel(kernel);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(Common.install() as any);
@@ -335,7 +309,7 @@ suite('DataScience - DataViewerDependencyService', () => {
         shellFuture.onIOPub(
             // IMPORTANT: This is not the real output of the installation of Pandas.
             // Pandas' installation occurs in a larger number of outputs.
-            // checkAndInstallMissingDependencies only looks for errors to determine it failed or not, not for the actual output.
+            // checkAndInstallMissingDependenciesOnKernel lyooks for errors to determine it failed or not, not for the actual output.
             KernelMessage.createMessage<KernelMessage.IStreamMsg>({
                 msgType: 'stream',
                 channel: 'iopub',
@@ -355,8 +329,6 @@ suite('DataScience - DataViewerDependencyService', () => {
         (kernel.session as any) = jupyterSession;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (kernel.status as any) = 'idle';
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (kernelProvider.kernels as any) = [kernel];
 
         const onIOPubPromise = waitForCondition(
             () => Boolean(shellFuture.onIOPub),
@@ -368,7 +340,7 @@ suite('DataScience - DataViewerDependencyService', () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any as IShellFuture<IExecuteRequestMsg, IExecuteReplyMsg>;
 
-        const resultPromise = dependencyService.checkAndInstallMissingDependencies(interpreter);
+        const resultPromise = dependencyService.checkAndInstallMissingDependenciesOnKernel(kernel);
 
         when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve();
 
