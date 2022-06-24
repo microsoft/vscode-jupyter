@@ -7,7 +7,10 @@ import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { ApplicationShell } from '../../../platform/common/application/applicationShell';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { DataViewerDependencyService } from '../../../webviews/extension-side/dataviewer/dataViewerDependencyService';
+import {
+    DataViewerDependencyService,
+    getVersionOfPandasCommand
+} from '../../../webviews/extension-side/dataviewer/dataViewerDependencyService';
 import { IKernel } from '../../../kernels/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import * as helpers from '../../../kernels/helpers';
@@ -49,6 +52,10 @@ suite('DataScience - DataViewerDependencyService', () => {
 
         const result = await dependencyService.checkAndInstallMissingDependenciesOnKernel(kernel);
         assert.equal(result, undefined);
+        assert.deepEqual(
+            stub.getCalls().map((call) => call.lastArg),
+            [getVersionOfPandasCommand]
+        );
     });
 
     test('Throw exception if pandas is installed and version is = 0.20', async () => {
@@ -62,6 +69,10 @@ suite('DataScience - DataViewerDependencyService', () => {
             resultPromise,
             DataScience.pandasTooOldForViewingFormat().format('0.20.'),
             'Failed to identify too old pandas'
+        );
+        assert.deepEqual(
+            stub.getCalls().map((call) => call.lastArg),
+            [getVersionOfPandasCommand]
         );
     });
 
@@ -77,6 +88,10 @@ suite('DataScience - DataViewerDependencyService', () => {
             DataScience.pandasTooOldForViewingFormat().format('0.10.'),
             'Failed to identify too old pandas'
         );
+        assert.deepEqual(
+            stub.getCalls().map((call) => call.lastArg),
+            [getVersionOfPandasCommand]
+        );
     });
 
     test('Prompt to install pandas, then install pandas', async () => {
@@ -88,6 +103,10 @@ suite('DataScience - DataViewerDependencyService', () => {
 
         const resultPromise = dependencyService.checkAndInstallMissingDependenciesOnKernel(kernel);
         assert.equal(await resultPromise, undefined);
+        assert.deepEqual(
+            stub.getCalls().map((call) => call.lastArg),
+            [getVersionOfPandasCommand, 'pip install pandas']
+        );
     });
 
     test('Prompt to install pandas and throw error if user does not install pandas', async () => {
@@ -98,5 +117,9 @@ suite('DataScience - DataViewerDependencyService', () => {
 
         const resultPromise = dependencyService.checkAndInstallMissingDependenciesOnKernel(kernel);
         await assert.isRejected(resultPromise, DataScience.pandasRequiredForViewing());
+        assert.deepEqual(
+            stub.getCalls().map((call) => call.lastArg),
+            [getVersionOfPandasCommand]
+        );
     });
 });

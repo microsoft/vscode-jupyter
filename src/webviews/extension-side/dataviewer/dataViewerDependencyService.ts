@@ -15,10 +15,12 @@ import { DataScience, Common } from '../../../platform/common/utils/localize';
 import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { IDataViewerDependencyService } from './types';
-import * as helpers from '../../../kernels/helpers';
 import { IKernel } from '../../../kernels/types';
+import { executeSilently } from '../../../kernels/helpers';
 
-const minimumSupportedPandaVersion = '0.20.0';
+export const minimumSupportedPandaVersion = '0.20.0';
+export const getVersionOfPandasCommand =
+    'import pandas as _VSCODE_pandas;print(_VSCODE_pandas.__version__);del _VSCODE_pandas';
 
 function isVersionOfPandaSupported(version: SemVer) {
     return version.compare(minimumSupportedPandaVersion) > 0;
@@ -98,9 +100,8 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
     }
 
     private async getVersionOfPandas(kernel: IKernel): Promise<SemVer | undefined> {
-        const command = 'import pandas;print(pandas.__version__)';
         try {
-            const outputs = await this.executeSilently(command, kernel);
+            const outputs = await this.executeSilently(getVersionOfPandasCommand, kernel);
             return outputs.map((text) => (text ? parseSemVer(text.toString()) : undefined)).find((item) => item);
         } catch (e) {
             traceWarning(DataScience.failedToGetVersionOfPandas(), e.message);
@@ -113,7 +114,7 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
             sendTelemetryEvent(Telemetry.NoActiveKernelSession);
             throw new Error(DataScience.noActiveKernelSession());
         }
-        const outputs = await helpers.executeSilently(kernel.session, command);
+        const outputs = await executeSilently(kernel.session, command);
         const error = outputs.find((item) => item.output_type === 'error');
         if (error) {
             traceWarning(DataScience.failedToGetVersionOfPandas(), error.message);
