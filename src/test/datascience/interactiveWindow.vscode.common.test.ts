@@ -390,21 +390,19 @@ ${actualCode}
         const notebookDocument = vscode.workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
         );
-
+        const lastCell = notebookDocument!.cellAt(notebookDocument!.cellCount - 1)!;
         await waitForCondition(
-            () => notebookDocument?.cellAt(0).kind === vscode.NotebookCellKind.Markup,
+            () => lastCell.outputs[0].items[0].mime === 'text/latex',
             defaultNotebookTestTimeout,
-            'Cell should be a markdown cell'
+            () => `Output should be markdown, but is ${lastCell.outputs[0].items[0].mime}`
         );
         await waitForCondition(
-            () => notebookDocument?.cellAt(0).executionSummary?.executionOrder === 1,
+            () => lastCell.executionSummary?.executionOrder === 1,
             defaultNotebookTestTimeout,
-            `Cell should have an execution order of 1, but has ${
-                notebookDocument?.cellAt(0).executionSummary?.executionOrder
-            }`
+            `Cell should have an execution order of 1, but has ${lastCell.executionSummary?.executionOrder}`
         );
         await waitForCondition(
-            () => notebookDocument?.cellAt(0).executionSummary?.success === true,
+            () => lastCell.executionSummary?.success === true,
             defaultNotebookTestTimeout,
             'Cell should have executed successfully'
         );
