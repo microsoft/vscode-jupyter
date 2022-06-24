@@ -1,10 +1,6 @@
 import { joinPath } from '../vscode-path/resources';
 import { IExtensionContext } from './types';
 
-export namespace DataFrameLoading {
-
-}
-
 export namespace AddRunCellHook {
     export function getScriptPath(context: IExtensionContext) {
         return joinPath(

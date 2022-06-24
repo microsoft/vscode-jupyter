@@ -324,7 +324,7 @@ export class DebuggerVariables
     public async getFullVariable(variable: IJupyterVariable): Promise<IJupyterVariable> {
         // Then eval calling the variable info function with our target variable
         const code = await this.varScriptGenerator.generateCodeToGetVariableInfo({
-            isDebugging: false,
+            isDebugging: true,
             variableName: variable.name
         });
         const results = await this.evaluate(
