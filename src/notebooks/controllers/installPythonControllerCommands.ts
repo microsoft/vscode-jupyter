@@ -13,7 +13,7 @@ import { isPythonKernelConnection } from '../../kernels/helpers';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../platform/api/types';
 import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
-import { Commands, PythonExtension, Telemetry } from '../../platform/common/constants';
+import { Commands, JupyterNotebookView, PythonExtension, Telemetry } from '../../platform/common/constants';
 import { ContextKey } from '../../platform/common/contextKey';
 import { IDisposableRegistry, IsWebExtension } from '../../platform/common/types';
 import { Common, DataScience } from '../../platform/common/utils/localize';
@@ -76,13 +76,15 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
 
     // Track if there are any cells currently executing or pending
     private onDidChangeNotebookCellExecutionState(stateEvent: NotebookCellExecutionStateChangeEvent) {
-        if (
-            stateEvent.state === NotebookCellExecutionState.Pending ||
-            stateEvent.state === NotebookCellExecutionState.Executing
-        ) {
-            this.executingCells.add(stateEvent.cell);
-        } else if (stateEvent.state === NotebookCellExecutionState.Idle) {
-            this.executingCells.delete(stateEvent.cell);
+        if (stateEvent.cell.notebook.notebookType === JupyterNotebookView) {
+            if (
+                stateEvent.state === NotebookCellExecutionState.Pending ||
+                stateEvent.state === NotebookCellExecutionState.Executing
+            ) {
+                this.executingCells.add(stateEvent.cell);
+            } else if (stateEvent.state === NotebookCellExecutionState.Idle) {
+                this.executingCells.delete(stateEvent.cell);
+            }
         }
     }
 
@@ -200,10 +202,12 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
             }
         }
 
-        // If the active notebook is not running, this command was triggered by direction clicking
-        // in this case, they clicked on "Install Python Extension" so no need for a modal
+        // If the active notebook is not running, this command was triggered selecting from the kernel picker
+        // in this case, they clicked on "Install Python Extension" so no need for a modal to warn them
         return true;
     }
+
+    // Check if any cells of the active notebook are in pending or executing state
     private isActiveNotebookDocumentRunning(): boolean {
         if (window.activeNotebookEditor) {
             return window.activeNotebookEditor.notebook.getCells().some((cell) => {
