@@ -126,17 +126,12 @@ suite('DataScience - VSCode semantic token tests', function () {
         await insertCodeCell(
             'import sqllite3 as sql\n\nconn = sql.connect("test.db")\ncur = conn.cursor()\n# BLAH BLAH'
         );
-        await insertCodeCell('\n');
+        await insertCodeCell(
+            '\ndata = [\n   ("name", "John", "age", 30)\n   ("name", "John", "age", 30)\n   ("name", "John", "age", 30)\n   ("name", "John", "age", 30)\n   ("name", "John", "age", 30)\n]',
+            { index: 1 }
+        );
         const cell1 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
         const cell2 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(1)!;
-
-        const editor = window.visibleTextEditors.find((e) => e.document.uri === cell2.document.uri);
-        await editor?.edit((b) => {
-            b.insert(
-                new Position(1, 0),
-                'data = [\n   ("name", "John", "age", 30)\n   ("name", "John", "age", 30)\n   ("name", "John", "age", 30)\n   ("name", "John", "age", 30)\n   ("name", "John", "age", 30)\n]'
-            );
-        });
 
         // Wait for tokens on the first cell (it works with just plain pylance)
         await waitForCondition(
