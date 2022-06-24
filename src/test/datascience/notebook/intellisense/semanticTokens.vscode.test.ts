@@ -122,7 +122,7 @@ suite('DataScience - VSCode semantic token tests', function () {
         assert.deepStrictEqual(actualTokens, expectedTokens, 'Tokens not correct after edit');
     });
 
-    test('Special token check', async function () {
+    test.only('Special token check', async function () {
         await insertCodeCell(
             'import sqllite3 as sql\n\nconn = sql.connect("test.db")\ncur = conn.cursor()\n# BLAH BLAH'
         );
@@ -150,6 +150,7 @@ suite('DataScience - VSCode semantic token tests', function () {
             100,
             true
         );
+        await captureScreenShot('TokenOk');
 
         // Then get tokens on second cell.
         const tokens = (await commands.executeCommand(
@@ -157,6 +158,7 @@ suite('DataScience - VSCode semantic token tests', function () {
             cell2.document.uri
         )) as any;
         assert.ok(tokens, 'No tokens found on second cell');
+        await captureScreenShot('TokenFail');
         const expectedTokens: number[] = [1, 0, 4, 14, 1];
         const actualTokens: number[] = [...tokens.data];
         assert.deepStrictEqual(actualTokens, expectedTokens, 'Expected tokens not returned');
