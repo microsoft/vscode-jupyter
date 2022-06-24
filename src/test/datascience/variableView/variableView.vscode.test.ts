@@ -26,6 +26,7 @@ import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { Commands } from '../../../platform/common/constants';
 import { DataViewer } from '../../../webviews/extension-side/dataviewer/dataViewer';
 import { IVariableViewProvider } from '../../../webviews/extension-side/variablesView/types';
+import { IKernelProvider } from '../../../kernels/types';
 
 suite('DataScience - VariableView', function () {
     let api: IExtensionTestApi;
@@ -34,6 +35,7 @@ suite('DataScience - VariableView', function () {
     let commandManager: ICommandManager;
     let variableViewProvider: ITestVariableViewProvider;
     let activeInterpreter: PythonEnvironment;
+    let kernelProvider: IKernelProvider;
     this.timeout(120_000);
     suiteSetup(async function () {
         traceInfo('Suite Setup');
@@ -49,6 +51,7 @@ suite('DataScience - VariableView', function () {
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);
+        kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
         const interpreter = await api.serviceContainer
             .get<IInterpreterService>(IInterpreterService)
             .getActiveInterpreter();
@@ -74,7 +77,7 @@ suite('DataScience - VariableView', function () {
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
 
     // Test for basic variable view functionality with one document
-    test('Can show VariableView (webview-test)', async function () {
+    test('Can show VariableView (webview-test) and do not have any additional variables', async function () {
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
 
@@ -100,6 +103,21 @@ suite('DataScience - VariableView', function () {
             { name: 'test2', type: 'str', length: '12', value: ' MYTESTVALUE2' }
         ];
         await waitForVariablesToMatch(expectedVariables, variableView);
+
+        // Verify we don't have any new variables apart from test, test2, os & sys
+        const kernel = kernelProvider.get(cell.notebook.uri)!;
+        const outputs = await kernel.executeHidden('%who_ls');
+        // Sample output is `["test", "test2", "os", "sys"]`
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const vars = ((outputs[0].data as any)['text/plain'] as string)
+            .trim()
+            .substring(1)
+            .slice(0, -1)
+            .split(',')
+            .map((item) => item.trim())
+            .map((item) => item.trimQuotes())
+            .sort();
+        assert.deepEqual(vars, ['test', 'test2', 'os', 'sys'].sort());
     });
 
     test('Can show variables even when print is overridden', async function () {
