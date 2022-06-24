@@ -399,7 +399,9 @@ ${actualCode}
         await waitForCondition(
             () => notebookDocument?.cellAt(0).executionSummary?.executionOrder === 1,
             defaultNotebookTestTimeout,
-            'Cell should have an execution order of 1'
+            `Cell should have an execution order of 1, but has ${
+                notebookDocument?.cellAt(0).executionSummary?.executionOrder
+            }`
         );
         await waitForCondition(
             () => notebookDocument?.cellAt(0).executionSummary?.success === true,
