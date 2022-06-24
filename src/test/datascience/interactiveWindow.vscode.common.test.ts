@@ -519,7 +519,7 @@ ${actualCode}
         await waitForTextOutput(lastCell, '1');
     });
 
-    test.only('Export Interactive window to Python file', async () => {
+    test('Export Interactive window to Python file', async () => {
         const activeInteractiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
         await waitForInteractiveWindow(activeInteractiveWindow);
 
@@ -534,12 +534,13 @@ ${actualCode}
 
         await waitForCondition(
             () => {
-                return !!vscode.window.visibleTextEditors.find((editor) => {
+                // open document is python file with 3 "cells"
+                let exportedDocument = vscode.window.visibleTextEditors.find((editor) => {
                     const cells = generateCellRangesFromDocument(editor.document);
-                    return cells.length == 3;
+                    return editor.document.languageId === 'python' && cells.length == 3;
                 });
 
-                // open document is python file with 3 '% ##' markers
+                return exportedDocument !== undefined;
             },
             60_000,
             'Exported python file was not opened'
