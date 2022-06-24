@@ -12,7 +12,7 @@ import { ScriptLoader } from './types';
 import { logMessage } from '../../react-common/logger';
 import { WidgetScriptSource } from '../../../../kernels/ipywidgets/types';
 import { Deferred, createDeferred } from '../../../../platform/common/utils/async';
-import { SharedMessages, IPyWidgetMessages, IInteractiveWindowMapping } from '../../../../platform/messageTypes';
+import { SharedMessages, IPyWidgetMessages, IInteractiveWindowMapping } from '../../../../messageTypes';
 import { IJupyterExtraSettings } from '../../../../platform/webviews/types';
 import { isCDNReachable } from './helper';
 import { noop } from '../../../../platform/common/utils/misc';

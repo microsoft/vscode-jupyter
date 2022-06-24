@@ -16,6 +16,7 @@ import { ApiAccessService } from './api/apiAccessService';
 import { ExtensionActivationManager } from './activation/activationManager';
 import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
 import { IExtensionContext } from '../platform/common/types';
+import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry.web';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
@@ -41,6 +42,9 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
         JupyterKernelServiceFactory
     );
     serviceManager.addSingleton<ApiAccessService>(ApiAccessService, ApiAccessService);
+
+    // Intellisense
+    registerIntellisenseTypes(serviceManager, isDevMode);
 
     // Dev Tools
     registerDevToolTypes(context, serviceManager, isDevMode);

@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from '../../vscode-path/path';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { EventName } from '../../../telemetry/constants';
+import { EventName } from '../../telemetry/constants';
 import { traceError } from '../../logging';
 import { isFileNotFoundError } from '../platform/errors';
 import { IFileSystemNode } from '../platform/types.node';

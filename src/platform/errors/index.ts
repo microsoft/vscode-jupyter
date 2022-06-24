@@ -3,7 +3,7 @@
 
 import { FetchError } from 'node-fetch';
 import * as stackTrace from 'stack-trace';
-import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
+import { getTelemetrySafeHashedString } from '../telemetry/helpers';
 import { getErrorTags } from './errors';
 import { getLastFrameFromPythonTraceback } from './errorUtils';
 import { getErrorCategory, TelemetryErrorProperties, BaseError, WrappedError } from './types';

@@ -22,7 +22,7 @@ import { Deferred, createDeferred } from '../common/utils/async';
 import { testOnlyMethod } from '../common/utils/decorators';
 import * as localize from '../common/utils/localize';
 import { StopWatch } from '../common/utils/stopWatch';
-import { InteractiveWindowMessages, SharedMessages } from '../messageTypes';
+import { InteractiveWindowMessages, SharedMessages } from '../../messageTypes';
 import { sendTelemetryEvent } from '../../telemetry';
 import { IJupyterExtraSettings } from './types';
 import { getOSType, OSType } from '../common/utils/platform';

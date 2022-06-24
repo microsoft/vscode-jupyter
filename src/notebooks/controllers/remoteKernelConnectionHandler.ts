@@ -3,8 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Disposable, NotebookDocument } from 'vscode';
-import { IVSCodeNotebookController } from './types';
-import { INotebookControllerManager } from '../types';
+import { IControllerSelection, IVSCodeNotebookController } from './types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
@@ -18,7 +17,7 @@ export class RemoteKernelConnectionHandler implements IExtensionSyncActivationSe
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
-        @inject(INotebookControllerManager) private readonly controllers: INotebookControllerManager,
+        @inject(IControllerSelection) private readonly controllers: IControllerSelection,
         @inject(ILiveRemoteKernelConnectionUsageTracker)
         private readonly liveKernelTracker: ILiveRemoteKernelConnectionUsageTracker,
         @inject(PreferredRemoteKernelIdProvider)
@@ -26,7 +25,7 @@ export class RemoteKernelConnectionHandler implements IExtensionSyncActivationSe
     ) {}
     activate(): void {
         this.kernelProvider.onDidStartKernel(this.onDidStartKernel, this, this.disposables);
-        this.controllers.onNotebookControllerSelectionChanged(
+        this.controllers.onControllerSelectionChanged(
             this.onNotebookControllerSelectionChanged,
             this,
             this.disposables

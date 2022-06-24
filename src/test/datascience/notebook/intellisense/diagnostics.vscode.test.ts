@@ -17,7 +17,7 @@ import {
     waitForDiagnostics
 } from '../helper.node';
 import { Settings } from '../../../../platform/common/constants';
-import { setIntellisenseTimeout } from '../../../../intellisense/pythonKernelCompletionProvider';
+import { setIntellisenseTimeout } from '../../../../standalone/intellisense/pythonKernelCompletionProvider';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Intellisense Notebook Diagnostics', function () {

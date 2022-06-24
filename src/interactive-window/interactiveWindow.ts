@@ -42,13 +42,12 @@ import {
     KernelConnectionMetadata,
     NotebookCellRunState
 } from '../kernels/types';
-import { INotebookControllerManager } from '../notebooks/types';
 import { chainable } from '../platform/common/utils/decorators';
 import { InteractiveCellResultError } from '../platform/errors/interactiveCellResultError';
 import { DataScience } from '../platform/common/utils/localize';
 import { createDeferred, Deferred } from '../platform/common/utils/async';
 import { IServiceContainer } from '../platform/ioc/types';
-import { SysInfoReason } from '../platform/messageTypes';
+import { SysInfoReason } from '../messageTypes';
 import { createOutputWithErrorMessageForDisplay } from '../platform/errors/errorUtils';
 import { INotebookExporter } from '../kernels/jupyter/types';
 import { IExportDialog, ExportFormat } from '../notebooks/export/types';
@@ -56,7 +55,7 @@ import { generateCellsFromNotebookDocument } from './editor-integration/cellFact
 import { CellMatcher } from './editor-integration/cellMatcher';
 import { IInteractiveWindowLoadable, IInteractiveWindowDebugger, IInteractiveWindowDebuggingManager } from './types';
 import { generateInteractiveCode } from './helpers';
-import { IVSCodeNotebookController } from '../notebooks/controllers/types';
+import { IControllerSelection, IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { DisplayOptions } from '../kernels/displayOptions';
 import { getInteractiveCellMetadata } from './helpers';
 import { KernelConnector } from '../notebooks/controllers/kernelConnector';
@@ -121,7 +120,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         private _owner: Resource,
         private mode: InteractiveWindowMode,
         private readonly exportDialog: IExportDialog,
-        private readonly notebookControllerManager: INotebookControllerManager,
+        private readonly notebookControllerSelection: IControllerSelection,
         private readonly serviceContainer: IServiceContainer,
         private readonly interactiveWindowDebugger: IInteractiveWindowDebugger | undefined,
         private readonly errorHandler: IDataScienceErrorHandler,
@@ -380,13 +379,13 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     private listenForControllerSelection() {
-        const controller = this.notebookControllerManager.getSelectedNotebookController(this.notebookEditor.notebook);
+        const controller = this.notebookControllerSelection.getSelected(this.notebookEditor.notebook);
         if (controller !== undefined) {
             this.registerControllerChangeListener(controller);
         }
 
         // Ensure we hear about any controller changes so we can update our cached promises
-        this.notebookControllerManager.onNotebookControllerSelected(
+        this.notebookControllerSelection.onControllerSelected(
             (e: { notebook: NotebookDocument; controller: IVSCodeNotebookController }) => {
                 if (e.notebook !== this.notebookEditor.notebook) {
                     return;
@@ -426,7 +425,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         const insertionIndex =
             notebookCell && notebookCell.index >= 0 ? notebookCell.index : this.notebookEditor.notebook.cellCount;
         // If possible display the error message in the cell.
-        const controller = this.notebookControllerManager.getSelectedNotebookController(this.notebookEditor.notebook);
+        const controller = this.notebookControllerSelection.getSelected(this.notebookEditor.notebook);
         const output = createOutputWithErrorMessageForDisplay(message);
         if (this.notebookEditor.notebook.cellCount === 0 || !controller || !output || !notebookCell) {
             const edit = new WorkspaceEdit();

@@ -48,9 +48,15 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { LastSavedNotebookCellLanguage } from '../../../notebooks/languages/cellLanguageService';
 import { VSCodeNotebookController } from '../../../notebooks/controllers/vscodeNotebookController';
-import { INotebookControllerManager, INotebookEditorProvider } from '../../../notebooks/types';
-import { InteractiveControllerIdSuffix } from '../../../notebooks/controllers/notebookControllerManager';
-import { IVSCodeNotebookController } from '../../../notebooks/controllers/types';
+import { INotebookEditorProvider } from '../../../notebooks/types';
+import {
+    IControllerLoader,
+    IControllerPreferredService,
+    IControllerRegistration,
+    IControllerSelection,
+    InteractiveControllerIdSuffix,
+    IVSCodeNotebookController
+} from '../../../notebooks/controllers/types';
 import { IS_SMOKE_TEST } from '../../constants';
 import * as urlPath from '../../../platform/vscode-path/resources';
 import * as uuid from 'uuid/v4';
@@ -58,7 +64,7 @@ import { IFileSystem, IPlatformService } from '../../../platform/common/platform
 import { initialize, waitForCondition } from '../../common';
 import { VSCodeNotebook } from '../../../platform/common/application/notebook';
 import { IDebuggingManager, IKernelDebugAdapter } from '../../../kernels/debugger/types';
-import { PythonKernelCompletionProvider } from '../../../intellisense/pythonKernelCompletionProvider';
+import { PythonKernelCompletionProvider } from '../../../standalone/intellisense/pythonKernelCompletionProvider';
 import { verifySelectedControllerIsRemoteForRemoteTests } from '../helpers';
 import {
     NotebookCellStateTracker,
@@ -79,9 +85,12 @@ export async function getServices() {
         editorProvider: api.serviceContainer.get<INotebookEditorProvider>(
             INotebookEditorProvider
         ) as INotebookEditorProvider,
-        notebookControllerManager: api.serviceContainer.get<INotebookControllerManager>(
-            INotebookControllerManager
-        ) as INotebookControllerManager,
+        controllerRegistration: api.serviceContainer.get<IControllerRegistration>(
+            IControllerRegistration
+        ) as IControllerRegistration,
+        controllerLoader: api.serviceContainer.get<IControllerLoader>(IControllerLoader),
+        controllerSelection: api.serviceContainer.get<IControllerSelection>(IControllerSelection),
+        controllerPreferred: api.serviceContainer.get<IControllerPreferredService>(IControllerPreferredService),
         isWebExtension: api.serviceContainer.get<boolean>(IsWebExtension),
         serviceContainer: api.serviceContainer
     };
@@ -340,7 +349,7 @@ async function waitForKernelToChangeImpl(
     timeout = defaultNotebookTestTimeout,
     skipAutoSelection?: boolean
 ) {
-    const { vscodeNotebook, notebookControllerManager } = await getServices();
+    const { vscodeNotebook, controllerLoader, controllerRegistration, controllerSelection } = await getServices();
 
     // Wait for the active editor to come up
     if (!vscodeNotebook.activeNotebookEditor) {
@@ -352,8 +361,8 @@ async function waitForKernelToChangeImpl(
     }
 
     // Get the list of NotebookControllers for this document
-    await notebookControllerManager.loadNotebookControllers();
-    const notebookControllers = notebookControllerManager.getRegisteredNotebookControllers();
+    await controllerLoader.loadControllers();
+    const notebookControllers = controllerRegistration.values;
 
     // Find the kernel id that matches the name we want
     let controller: IVSCodeNotebookController | undefined;
@@ -386,7 +395,7 @@ async function waitForKernelToChangeImpl(
             return false;
         }
 
-        const selectedController = notebookControllerManager.getSelectedNotebookController(doc);
+        const selectedController = controllerSelection.getSelected(doc);
         if (!selectedController) {
             return false;
         }
@@ -435,7 +444,14 @@ export async function waitForKernelToGetAutoSelected(
     skipAutoSelection: boolean = false
 ) {
     traceInfoIfCI('Wait for kernel to get auto selected');
-    const { vscodeNotebook, notebookControllerManager, isWebExtension } = await getServices();
+    const {
+        vscodeNotebook,
+        controllerLoader,
+        controllerRegistration,
+        controllerSelection,
+        controllerPreferred,
+        isWebExtension
+    } = await getServices();
     const useRemoteKernelSpec = preferRemoteKernelSpec || isWebExtension; // Web is only remote
 
     // Wait for the active editor to come up
@@ -448,12 +464,12 @@ export async function waitForKernelToGetAutoSelected(
     }
 
     // Get the list of NotebookControllers for this document
-    await notebookControllerManager.loadNotebookControllers();
+    await controllerLoader.loadControllers();
     traceInfoIfCI(`Wait for kernel - got notebook controllers`);
-    const notebookControllers = notebookControllerManager.getRegisteredNotebookControllers();
+    const notebookControllers = controllerRegistration.values;
 
     // Make sure we don't already have a selection (this function gets run even after opening a document)
-    if (notebookControllerManager.getSelectedNotebookController(vscodeNotebook.activeNotebookEditor!.notebook)) {
+    if (controllerSelection.getSelected(vscodeNotebook.activeNotebookEditor!.notebook)) {
         return;
     }
 
@@ -464,9 +480,7 @@ export async function waitForKernelToGetAutoSelected(
     try {
         await waitForCondition(
             async () => {
-                preferred = notebookControllerManager.getPreferredNotebookController(
-                    vscodeNotebook.activeNotebookEditor!.notebook
-                );
+                preferred = controllerPreferred.getPreferred(vscodeNotebook.activeNotebookEditor!.notebook);
                 return preferred != undefined;
             },
             30_000,

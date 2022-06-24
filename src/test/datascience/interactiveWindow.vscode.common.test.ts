@@ -20,6 +20,7 @@ import {
 import {
     createStandaloneInteractiveWindow,
     insertIntoInputEditor,
+    runInteractiveWindowInput,
     runNewPythonFile,
     submitFromPythonFile,
     submitFromPythonFileUsingCodeWatcher,
@@ -35,7 +36,6 @@ import {
     waitForExecutionCompletedWithErrors,
     waitForTextOutput
 } from './notebook/helper';
-import { INotebookControllerManager } from '../../notebooks/types';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/interpreter';
@@ -43,8 +43,10 @@ import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { sleep } from '../core';
 import { IPYTHON_VERSION_CODE } from '../constants';
 import { translateCellErrorOutput, getTextOutputValue } from '../../kernels/execution/helpers';
+import { IControllerSelection } from '../../notebooks/controllers/types';
+import * as dedent from 'dedent';
 
-suite(`Interactive window`, async function () {
+suite(`Interactive window execution`, async function () {
     this.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
@@ -74,8 +76,7 @@ suite(`Interactive window`, async function () {
         const notebookDocument = vscode.workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
         );
-        const notebookControllerManager =
-            api.serviceManager.get<INotebookControllerManager>(INotebookControllerManager);
+        const controllerSelection = api.serviceManager.get<IControllerSelection>(IControllerSelection);
 
         // Ensure we picked up the active interpreter for use as the kernel
         const interpreterService = await api.serviceManager.get<IInterpreterService>(IInterpreterService);
@@ -83,9 +84,7 @@ suite(`Interactive window`, async function () {
         // Give it a bit to warm up
         await sleep(500);
 
-        const controller = notebookDocument
-            ? notebookControllerManager.getSelectedNotebookController(notebookDocument)
-            : undefined;
+        const controller = notebookDocument ? controllerSelection.getSelected(notebookDocument) : undefined;
         if (!IS_REMOTE_NATIVE_TEST()) {
             const activeInterpreter = await interpreterService.getActiveInterpreter();
             assert.ok(
@@ -119,17 +118,14 @@ suite(`Interactive window`, async function () {
         const notebookDocument = vscode.workspace.notebookDocuments.find(
             (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
         )!;
-        const notebookControllerManager =
-            api.serviceManager.get<INotebookControllerManager>(INotebookControllerManager);
+        const controllerSelection = api.serviceManager.get<IControllerSelection>(IControllerSelection);
         // Ensure we picked up the active interpreter for use as the kernel
         const interpreterService = await api.serviceManager.get<IInterpreterService>(IInterpreterService);
 
         // Give it a bit to warm up
         await sleep(500);
 
-        const controller = notebookDocument
-            ? notebookControllerManager.getSelectedNotebookController(notebookDocument)
-            : undefined;
+        const controller = notebookDocument ? controllerSelection.getSelected(notebookDocument) : undefined;
         if (!IS_REMOTE_NATIVE_TEST()) {
             const activeInterpreter = await interpreterService.getActiveInterpreter();
             assert.ok(
@@ -177,11 +173,7 @@ suite(`Interactive window`, async function () {
         const activeInteractiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
         const notebook = await waitForInteractiveWindow(activeInteractiveWindow);
 
-        // Add code to the input box
-        await insertIntoInputEditor('print("foo")');
-
-        // Run the code in the input box
-        await vscode.commands.executeCommand('interactive.execute');
+        await runInteractiveWindowInput('print("foo")', activeInteractiveWindow, 1);
 
         assert.ok(notebook !== undefined, 'No interactive window found');
         await waitForCondition(
@@ -251,8 +243,8 @@ for i in range(10):
     liveplot.draw()
     sleep(0.1)`;
         const interactiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
-        await insertIntoInputEditor(code);
-        await vscode.commands.executeCommand('interactive.execute');
+        await runInteractiveWindowInput(code, interactiveWindow, 1);
+
         const codeCell = await waitForLastCellToComplete(interactiveWindow);
         const output = codeCell?.outputs[0];
         assert.ok(output?.items[0].mime === 'image/png', 'No png output found');
@@ -264,23 +256,17 @@ for i in range(10):
 
     // Create 3 cells. Last cell should update the second
     test('Update display data', async () => {
-        // Create cell 1
         const interactiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
-        await insertIntoInputEditor('dh = display(display_id=True)');
-        await vscode.commands.executeCommand('interactive.execute');
-        await waitForLastCellToComplete(interactiveWindow);
+
+        // Create cell 1
+        await runInteractiveWindowInput('dh = display(display_id=True)', interactiveWindow, 1);
 
         // Create cell 2
-        await insertIntoInputEditor('dh.display("Hello")');
-        await vscode.commands.executeCommand('interactive.execute');
-        const secondCell = await waitForLastCellToComplete(interactiveWindow);
+        const secondCell = await runInteractiveWindowInput('dh.display("Hello")', interactiveWindow, 2);
         await waitForTextOutput(secondCell!, "'Hello'");
 
         // Create cell 3
-        await insertIntoInputEditor('dh.update("Goodbye")');
-        await vscode.commands.executeCommand('interactive.execute');
-        // Last cell output is empty
-        const thirdCell = await waitForLastCellToComplete(interactiveWindow);
+        const thirdCell = await runInteractiveWindowInput('dh.update("Goodbye")', interactiveWindow, 3);
         assert.equal(thirdCell?.outputs.length, 0, 'Third cell should not have any outputs');
         // Second cell output is updated
         await waitForTextOutput(secondCell!, "'Goodbye'");
@@ -382,6 +368,44 @@ ${actualCode}
                 assertHasTextOutputInVSCode(c, `${i}`);
             }
         });
+    });
+
+    test('Run a latex cell with a cell marker', async () => {
+        const { activeInteractiveWindow } = await runNewPythonFile(
+            interactiveWindowProvider,
+            dedent`
+                # %%
+                %%latex
+                \begin{align}
+                \nabla \cdot \vec{\mathbf{E}} & = 4 \pi \rho \\
+                \nabla \times \vec{\mathbf{E}}\, +\, \frac1c\, \frac{\partial\vec{\mathbf{B}}}{\partial t} & = \vec{\mathbf{0}} \\
+                \nabla \cdot \vec{\mathbf{B}} & = 0
+                \end{align}
+                `,
+            disposables
+        );
+
+        await waitForLastCellToComplete(activeInteractiveWindow);
+
+        const notebookDocument = vscode.workspace.notebookDocuments.find(
+            (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
+        );
+        const lastCell = notebookDocument!.cellAt(notebookDocument!.cellCount - 1)!;
+        await waitForCondition(
+            () => lastCell.outputs[0].items[0].mime === 'text/latex',
+            defaultNotebookTestTimeout,
+            () => `Output should be markdown, but is ${lastCell.outputs[0].items[0].mime}`
+        );
+        await waitForCondition(
+            () => lastCell.executionSummary?.executionOrder === 1,
+            defaultNotebookTestTimeout,
+            `Cell should have an execution order of 1, but has ${lastCell.executionSummary?.executionOrder}`
+        );
+        await waitForCondition(
+            () => lastCell.executionSummary?.success === true,
+            defaultNotebookTestTimeout,
+            'Cell should have executed successfully'
+        );
     });
 
     test('Run current file in interactive window (without cells)', async () => {

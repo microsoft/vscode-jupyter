@@ -18,8 +18,7 @@ import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IDisposableRegistry, IDisposable } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { IServiceContainer } from '../../platform/ioc/types';
-import { INotebookControllerManager } from '../../notebooks/types';
-import { IVSCodeNotebookController } from '../../notebooks/controllers/types';
+import { IControllerSelection, IVSCodeNotebookController } from '../../notebooks/controllers/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IWebviewCommunication } from '../../platform/webviews/types';
 import { CommonMessageCoordinator } from '../../kernels/ipywidgets/commonMessageCoordinator';
@@ -103,7 +102,7 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
-        @inject(INotebookControllerManager) private readonly controllerManager: INotebookControllerManager
+        @inject(IControllerSelection) private readonly controllerManager: IControllerSelection
     ) {}
     public activate(): void {
         this.notebook.onDidChangeVisibleNotebookEditors(
@@ -112,7 +111,7 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
             this.disposableRegistry
         );
         this.notebook.onDidCloseNotebookDocument(this.onDidCloseNotebookDocument, this, this.disposableRegistry);
-        this.controllerManager.onNotebookControllerSelected(this.onDidSelectController, this, this.disposableRegistry);
+        this.controllerManager.onControllerSelected(this.onDidSelectController, this, this.disposableRegistry);
     }
     public onDidSelectController(e: { notebook: NotebookDocument; controller: IVSCodeNotebookController }) {
         // Dispose previous message coordinators.
@@ -190,7 +189,7 @@ export class NotebookIPyWidgetCoordinator implements IExtensionSyncActivationSer
         // Find any new editors that may be associated with the current notebook.
         // This can happen when users split editors.
         e.forEach((editor) => {
-            const controller = this.controllerManager.getSelectedNotebookController(editor.notebook);
+            const controller = this.controllerManager.getSelected(editor.notebook);
             this.initializeNotebookCommunication(editor, controller);
         });
     }

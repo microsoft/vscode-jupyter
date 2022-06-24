@@ -26,7 +26,7 @@ import { DataScience } from '../platform/common/utils/localize';
 import { traceInfoIfCI, traceInfo } from '../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../telemetry';
 import { trackKernelResourceInformation } from '../kernels/telemetry/helper';
-import { INotebookControllerManager, INotebookEditorProvider } from './types';
+import { INotebookEditorProvider } from './types';
 import { IServiceContainer } from '../platform/ioc/types';
 import { endCellAndDisplayErrorsInCell } from '../kernels/execution/helpers';
 import { chainWithPendingUpdates } from '../kernels/execution/notebookUpdater';
@@ -34,6 +34,7 @@ import { getAssociatedNotebookDocument } from '../kernels/helpers';
 import { IDataScienceErrorHandler } from '../kernels/errors/types';
 import { getNotebookMetadata } from '../platform/common/utils';
 import { KernelConnector } from './controllers/kernelConnector';
+import { IControllerSelection } from './controllers/types';
 
 @injectable()
 export class NotebookCommandListener implements IDataScienceCommandListener {
@@ -46,7 +47,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IConfigurationService) private configurationService: IConfigurationService,
         @inject(IKernelProvider) private kernelProvider: IKernelProvider,
-        @inject(INotebookControllerManager) private notebookControllerManager: INotebookControllerManager,
+        @inject(IControllerSelection) private notebookControllerSelection: IControllerSelection,
         @inject(IDataScienceErrorHandler) private errorHandler: IDataScienceErrorHandler,
         @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer
@@ -214,14 +215,12 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                 const message = DataScience.restartKernelMessage();
                 const yes = DataScience.restartKernelMessageYes();
                 const dontAskAgain = DataScience.restartKernelMessageDontAskAgain();
-                const no = DataScience.restartKernelMessageNo();
 
                 const response = await this.applicationShell.showInformationMessage(
                     message,
                     { modal: true },
                     yes,
-                    dontAskAgain,
-                    no
+                    dontAskAgain
                 );
                 if (response === dontAskAgain) {
                     await this.disableAskForRestart(document.uri);
@@ -249,7 +248,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         const promise = (async () => {
             // Get currently executing cell and controller
             const currentCell = kernel.pendingCells[0];
-            const controller = this.notebookControllerManager.getSelectedNotebookController(notebook);
+            const controller = this.notebookControllerSelection.getSelected(notebook);
             try {
                 if (!controller) {
                     throw new Error('No kernel associated with the notebook');

@@ -5,7 +5,7 @@
 import type * as nbformat from '@jupyterlab/nbformat';
 import { ConfigurationTarget, Disposable, Event, Extension, ExtensionContext, OutputChannel, Uri, Range } from 'vscode';
 import { PythonEnvironment } from '../pythonEnvironments/info';
-import { CommandsWithoutArgs } from './application/commands';
+import { CommandsWithoutArgs } from '../../commands';
 import { ICommandManager } from './application/types';
 import { Experiments } from './experiments/groups';
 import { ISystemVariables } from './variables/types';

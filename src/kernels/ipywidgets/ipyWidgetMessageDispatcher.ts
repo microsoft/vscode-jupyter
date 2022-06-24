@@ -13,7 +13,7 @@ import { IDisposable } from '../../platform/common/types';
 import { Deferred, createDeferred } from '../../platform/common/utils/async';
 import { noop } from '../../platform/common/utils/misc';
 import { deserializeDataViews, serializeDataViews } from '../../platform/common/utils/serializers';
-import { IPyWidgetMessages, IInteractiveWindowMapping } from '../../platform/messageTypes';
+import { IPyWidgetMessages, IInteractiveWindowMapping } from '../../messageTypes';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { IKernel, IKernelProvider, KernelSocketInformation } from '../types';
 import { WIDGET_MIMETYPE } from './constants';

@@ -1,13 +1,13 @@
 import { Resource } from '../../platform/common/types';
-import { WorkspaceInterpreterTracker } from '../../telemetry/workspaceInterpreterTracker';
+import { WorkspaceInterpreterTracker } from '../../platform/telemetry/workspaceInterpreterTracker';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { InterpreterCountTracker } from '../../telemetry/interpreterCountTracker';
-import { getTelemetrySafeHashedString, getTelemetrySafeLanguage } from '../../telemetry/helpers';
+import { InterpreterCountTracker } from '../../platform/telemetry/interpreterCountTracker';
+import { getTelemetrySafeHashedString, getTelemetrySafeLanguage } from '../../platform/telemetry/helpers';
 import { getNormalizedInterpreterPath } from '../../platform/pythonEnvironments/info/interpreter';
 import { getResourceType } from '../../platform/common/utils';
 import { getComparisonKey } from '../../platform/vscode-path/resources';
 import { getFilePath } from '../../platform/common/platform/fs-paths';
-import { trackedInfo, pythonEnvironmentsByHash, updatePythonPackages } from '../../telemetry/telemetry';
+import { trackedInfo, pythonEnvironmentsByHash, updatePythonPackages } from '../../platform/telemetry/telemetry';
 import { KernelConnectionMetadata } from '../types';
 import { setSharedProperty } from '../../telemetry';
 

@@ -22,7 +22,6 @@ import {
 import { IKernelProvider } from '../../../kernels/types';
 import { IpykernelCheckResult, assertIsDebugConfig } from '../../../kernels/debugger/helper';
 import { KernelDebugAdapter } from './kernelDebugAdapter';
-import { INotebookControllerManager } from '../../../notebooks/types';
 import { IExtensionSingleActivationService } from '../../../platform/activation/types';
 import { ICommandManager, IApplicationShell, IVSCodeNotebook } from '../../../platform/common/application/types';
 import { IPlatformService } from '../../../platform/common/platform/types';
@@ -36,6 +35,7 @@ import { IFileGeneratedCodes } from '../../editor-integration/types';
 import { buildSourceMap } from '../helper';
 import { noop } from '../../../platform/common/utils/misc';
 import { IInteractiveWindowDebuggingManager } from '../../types';
+import { IControllerLoader, IControllerSelection } from '../../../notebooks/controllers/types';
 
 /**
  * The DebuggingManager maintains the mapping between notebook documents and debug sessions.
@@ -47,7 +47,8 @@ export class InteractiveWindowDebuggingManager
 {
     public constructor(
         @inject(IKernelProvider) kernelProvider: IKernelProvider,
-        @inject(INotebookControllerManager) notebookControllerManager: INotebookControllerManager,
+        @inject(IControllerSelection) controllerSelection: IControllerSelection,
+        @inject(IControllerLoader) controllerLoader: IControllerLoader,
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(IApplicationShell) appShell: IApplicationShell,
         @inject(IVSCodeNotebook) vscNotebook: IVSCodeNotebook,
@@ -56,7 +57,7 @@ export class InteractiveWindowDebuggingManager
         private readonly debugLocationTrackerFactory: IDebugLocationTrackerFactory,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {
-        super(kernelProvider, notebookControllerManager, commandManager, appShell, vscNotebook);
+        super(kernelProvider, controllerLoader, controllerSelection, commandManager, appShell, vscNotebook);
     }
 
     public override async activate(): Promise<void> {

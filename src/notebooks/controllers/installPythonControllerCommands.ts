@@ -20,8 +20,7 @@ import { Common, DataScience } from '../../platform/common/utils/localize';
 import { traceError, traceInfo } from '../../platform/logging';
 import { ProgressReporter } from '../../platform/progress/progressReporter';
 import { sendTelemetryEvent } from '../../telemetry';
-import { INotebookControllerManager } from '../types';
-import { IVSCodeNotebookController } from './types';
+import { IControllerLoader, IControllerRegistration } from './types';
 
 // This service owns the commands that show up in the kernel picker to allow for either installing
 // the Python Extension or installing Python
@@ -38,7 +37,8 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
-        @inject(INotebookControllerManager) private readonly controllerManager: INotebookControllerManager,
+        @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
+        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IsWebExtension) private readonly isWeb: boolean
     ) {
         // Context keys to control when these commands are shown
@@ -69,9 +69,7 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
         );
 
         // We need to know when controllers have been updated so that we can update our context keys
-        this.disposables.push(
-            this.controllerManager.onNotebookControllersLoaded(this.onNotebookControllersLoaded, this)
-        );
+        this.disposables.push(this.controllerLoader.refreshed(this.onNotebookControllersLoaded, this));
     }
 
     // Track if there are any cells currently executing or pending
@@ -90,9 +88,9 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
 
     // When the manager loads new controllers we need to check and see if we should enable or disable our context
     // keys that control our commands
-    private async onNotebookControllersLoaded(controllers: Readonly<IVSCodeNotebookController[]>) {
+    private async onNotebookControllersLoaded() {
         if (!this.isWeb) {
-            if (controllers.some((item) => isPythonKernelConnection(item.connection))) {
+            if (this.controllerRegistration.values.some((item) => isPythonKernelConnection(item.connection))) {
                 // We have some type of python kernel, turn off both install helper commands
                 await this.showInstallPythonExtensionContext.set(false);
                 await this.showInstallPythonContext.set(false);
@@ -164,7 +162,7 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
 
                     // Trigger a load of our notebook controllers, we want to await it here so that any in
                     // progress executions get passed to the suggested controller
-                    await this.controllerManager.loadNotebookControllers(true);
+                    await this.controllerLoader.loadControllers(true);
                 } else {
                     traceError('Failed to install Python Extension via Kernel Picker command');
                     sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {

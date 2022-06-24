@@ -7,8 +7,7 @@ import { inject, injectable } from 'inversify';
 import { IPlotViewer, IPlotViewerProvider } from './types';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposable } from '../../../platform/common/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../webview-side/common/constants';
+import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 
 @injectable()
 export class PlotViewerProvider implements IPlotViewerProvider, IAsyncDisposable {

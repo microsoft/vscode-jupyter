@@ -60,20 +60,24 @@ import {
 import { createDeferred } from './platform/common/utils/async';
 import { Common, OutputChannelNames } from './platform/common/utils/localize';
 import { IServiceContainer, IServiceManager } from './platform/ioc/types';
-import { sendErrorTelemetry, sendStartupTelemetry } from './telemetry/startupTelemetry';
+import { sendErrorTelemetry, sendStartupTelemetry } from './platform/telemetry/startupTelemetry';
 import { noop } from './platform/common/utils/misc';
-import { PythonExtension } from './webviews/webview-side/common/constants';
 import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.web';
-import { registerTypes as registerTelemetryTypes } from './telemetry/serviceRegistry.web';
+import { registerTypes as registerTelemetryTypes } from './platform/telemetry/serviceRegistry.web';
 import { registerTypes as registerKernelTypes } from './kernels/serviceRegistry.web';
 import { registerTypes as registerNotebookTypes } from './notebooks/serviceRegistry.web';
 import { registerTypes as registerInteractiveTypes } from './interactive-window/serviceRegistry.web';
-import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry.web';
 import { registerTypes as registerTerminalTypes } from './platform/terminals/serviceRegistry.web';
 import { registerTypes as registerStandaloneTypes } from './standalone/serviceRegistry.web';
 import { registerTypes as registerWebviewTypes } from './webviews/extension-side/serviceRegistry.web';
 import { IExtensionActivationManager } from './platform/activation/types';
-import { isCI, isTestExecution, JUPYTER_OUTPUT_CHANNEL, STANDARD_OUTPUT_CHANNEL } from './platform/common/constants';
+import {
+    isCI,
+    isTestExecution,
+    JUPYTER_OUTPUT_CHANNEL,
+    PythonExtension,
+    STANDARD_OUTPUT_CHANNEL
+} from './platform/common/constants';
 import { getJupyterOutputChannel } from './standalone/devTools/jupyterOutputChannel';
 import { registerLogger, setLoggingLevel } from './platform/logging';
 import { Container } from 'inversify/lib/container/container';
@@ -81,7 +85,7 @@ import { ServiceContainer } from './platform/ioc/container';
 import { ServiceManager } from './platform/ioc/serviceManager';
 import { OutputChannelLogger } from './platform/logging/outputChannelLogger';
 import { ConsoleLogger } from './platform/logging/consoleLogger';
-import { initializeGlobals as initializeTelemetryGlobals } from './telemetry/telemetry';
+import { initializeGlobals as initializeTelemetryGlobals } from './platform/telemetry/telemetry';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -289,7 +293,6 @@ async function activateLegacy(
     registerNotebookTypes(serviceManager);
     registerKernelTypes(serviceManager, isDevMode);
     registerInteractiveTypes(serviceManager);
-    registerIntellisenseTypes(serviceManager, isDevMode);
     registerTerminalTypes(serviceManager);
     registerStandaloneTypes(context, serviceManager, isDevMode);
     registerWebviewTypes(serviceManager);

@@ -59,7 +59,7 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
         usingJupyterDebugProtocol?: boolean
     ) {
         // Don't log empty cells
-        const { executableLines } = this.extractExecutableLines(metadata.interactive.originalSource);
+        const { executableLines } = this.extractExecutableLines(metadata);
         if (executableLines.length > 0 && executableLines.find((s) => s.trim().length > 0)) {
             // When the user adds new code, we know the execution count is increasing
             this.executionCount += 1;
@@ -67,13 +67,31 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
         }
     }
 
-    public extractExecutableLines(code: string): { lines: string[]; executableLines: string[] } {
+    public extractExecutableLines(
+        metadata: Pick<InteractiveCellMetadata, 'interactive' | 'id' | 'interactiveWindowCellMarker'>
+    ): { lines: string[]; executableLines: string[] } {
+        const code = metadata.interactive.originalSource;
         const settings = this.configService.getSettings(this.notebook.uri);
         const cellMatcher = new CellMatcher(settings);
         const lines = splitMultilineString(code);
 
         if (settings.magicCommandsAsComments) {
             lines.forEach((line, index) => (lines[index] = uncommentMagicCommands(line)));
+        }
+
+        // If we have a cell magic then don't send the cell marker.
+        // For cell magics the first line must be the magic, including code line `#` which is a Python comment treats the cell as a Python code cell
+        // then the rest of the code line the magic & the latext code gets treated as Python code, instead of a cell magic.
+        if (
+            metadata.interactiveWindowCellMarker &&
+            lines.length &&
+            lines[0].trim() === metadata.interactiveWindowCellMarker.trim()
+        ) {
+            const nonEmptyLines = lines.slice(1).filter((line) => line.trim().length > 0);
+            if (nonEmptyLines.length > 0 && nonEmptyLines[0].trim().startsWith('%%')) {
+                const executableLines = lines.slice(lines.indexOf(nonEmptyLines[0]));
+                return { lines: executableLines, executableLines };
+            }
         }
 
         // Only strip this off the first line. Otherwise we want the markers in the code.
@@ -181,7 +199,7 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
     } {
         const lines = splitMultilineString(metadata.interactive.originalSource);
         // Compute the code that will really be sent to jupyter (including the cell marker)
-        const { lines: stripped } = this.extractExecutableLines(metadata.interactive.originalSource);
+        const { lines: stripped } = this.extractExecutableLines(metadata);
 
         let trueStartLine = metadata.interactive.lineIndex + 1;
         if (!metadata.interactiveWindowCellMarker) {

@@ -23,7 +23,7 @@ import { noop, sleep } from '../core';
 import { arePathsSame } from '../../platform/common/platform/fileUtils';
 import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { isWeb } from '../../platform/common/utils/misc';
-import { INotebookControllerManager } from '../../notebooks/types';
+import { IControllerSelection } from '../../notebooks/controllers/types';
 
 export async function openNotebook(ipynbFile: vscode.Uri) {
     traceInfo(`Opening notebook ${getFilePath(ipynbFile)}`);
@@ -99,9 +99,21 @@ export async function createStandaloneInteractiveWindow(interactiveWindowProvide
     return activeInteractiveWindow;
 }
 
-export async function insertIntoInputEditor(source: string) {
-    // Add code to the input box
-    await vscode.window.activeTextEditor?.edit((editBuilder) => {
+// Add code to the input box
+export async function insertIntoInputEditor(source: string, interactiveWindow?: InteractiveWindow) {
+    let inputBox: vscode.TextEditor | undefined;
+    if (interactiveWindow) {
+        inputBox = vscode.window.visibleTextEditors.find(
+            (e) => e.document.uri.path === interactiveWindow.inputUri.path
+        );
+    }
+    if (!inputBox) {
+        inputBox = vscode.window.activeTextEditor;
+    }
+
+    assert(inputBox, 'No active text editor for IW input');
+
+    await inputBox!.edit((editBuilder) => {
         editBuilder.insert(new vscode.Position(0, 0), source);
     });
     return vscode.window.activeTextEditor;
@@ -219,6 +231,16 @@ export async function waitForInteractiveWindow(
     return notebookDocument!;
 }
 
+export async function runInteractiveWindowInput(
+    code: string,
+    interactiveWindow: InteractiveWindow,
+    newCellCount: number
+) {
+    await insertIntoInputEditor(code, interactiveWindow);
+    await vscode.commands.executeCommand('interactive.execute');
+    return waitForLastCellToComplete(interactiveWindow, newCellCount, false);
+}
+
 export async function waitForLastCellToComplete(
     interactiveWindow: InteractiveWindow,
     numberOfCells: number = -1,
@@ -284,9 +306,7 @@ export async function verifySelectedControllerIsRemoteForRemoteTests(notebook?: 
     }
     notebook = notebook || vscode.window.activeNotebookEditor!.notebook;
     const api = await initialize();
-    const controller = api.serviceContainer
-        .get<INotebookControllerManager>(INotebookControllerManager)
-        .getSelectedNotebookController(notebook);
+    const controller = api.serviceContainer.get<IControllerSelection>(IControllerSelection).getSelected(notebook);
     if (!controller) {
         return;
     }

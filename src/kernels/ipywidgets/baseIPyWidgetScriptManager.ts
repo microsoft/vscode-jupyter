@@ -9,7 +9,7 @@ import { IDisposable } from '../../platform/common/types';
 import { traceWarning } from '../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { IKernel, isLocalConnection } from '../types';
-import { getTelemetrySafeHashedString } from '../../telemetry/helpers';
+import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import * as stripComments from 'strip-comments';
 import { IIPyWidgetScriptManager } from './types';
 import { StopWatch } from '../../platform/common/utils/stopWatch';

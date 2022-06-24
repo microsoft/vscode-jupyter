@@ -12,7 +12,7 @@ import {
     IJupyterUriProviderRegistration,
     JupyterServerUriHandle
 } from '../../kernels/jupyter/types';
-import { INotebookControllerManager, INotebookEditorProvider } from '../../notebooks/types';
+import { INotebookEditorProvider } from '../../notebooks/types';
 import { IDataViewerDataProvider, IDataViewerFactory } from '../../webviews/extension-side/dataviewer/types';
 import { IExportedKernelService } from './extension';
 import { IPythonApiProvider, PythonApi } from '../../platform/api/types';
@@ -20,6 +20,7 @@ import { isTestExecution } from '../../platform/common/constants';
 import { IExtensionContext } from '../../platform/common/types';
 import { IServiceContainer, IServiceManager } from '../../platform/ioc/types';
 import { traceError } from '../../platform/logging';
+import { IControllerPreferredService } from '../../notebooks/controllers/types';
 
 export const IExportedKernelServiceFactory = Symbol('IExportedKernelServiceFactory');
 export interface IExportedKernelServiceFactory {
@@ -120,12 +121,12 @@ export function buildApi(
             handle: JupyterServerUriHandle,
             notebook: NotebookDocument
         ) => {
-            const controllers = serviceContainer.get<INotebookControllerManager>(INotebookControllerManager);
+            const controllers = serviceContainer.get<IControllerPreferredService>(IControllerPreferredService);
             const connection = serviceContainer.get<JupyterConnection>(JupyterConnection);
             const uri = generateUriFromRemoteProvider(providerId, handle);
             await connection.updateServerUri(uri);
             const serverId = computeServerId(uri);
-            const { controller } = await controllers.computePreferredNotebookController(notebook, serverId);
+            const { controller } = await controllers.computePreferred(notebook, serverId);
             return controller?.controller;
         },
         addRemoteJupyterServer: async (providerId: string, handle: JupyterServerUriHandle) => {

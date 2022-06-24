@@ -5,7 +5,7 @@
 
 import { Event, Uri } from 'vscode';
 import { IDisposable, IHttpClient } from '../../platform/common/types';
-import { IPyWidgetMessages } from '../../platform/messageTypes';
+import { IPyWidgetMessages } from '../../messageTypes';
 import { IKernel } from '../types';
 
 export interface IPyWidgetMessage {

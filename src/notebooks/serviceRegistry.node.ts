@@ -8,12 +8,11 @@ import { IServiceManager } from '../platform/ioc/types';
 import { KernelFilterService } from './controllers/kernelFilter/kernelFilterService';
 import { KernelFilterUI } from './controllers/kernelFilter/kernelFilterUI';
 import { LiveKernelSwitcher } from './controllers/liveKernelSwitcher';
-import { NotebookControllerManager } from './controllers/notebookControllerManager';
 import { RemoteSwitcher } from './controllers/remoteSwitcher';
 import { NotebookCommandListener } from './notebookCommandListener';
 import { NotebookEditorProvider } from './notebookEditorProvider';
 import { ErrorRendererCommunicationHandler } from './outputs/errorRendererComms';
-import { INotebookCompletionProvider, INotebookControllerManager, INotebookEditorProvider } from './types';
+import { INotebookCompletionProvider, INotebookEditorProvider } from './types';
 import { NotebookUsageTracker } from './notebookUsageTracker';
 import { IDataScienceCommandListener } from '../platform/common/types';
 import { CondaControllerRefresher } from './controllers/condaControllerRefresher.node';
@@ -43,12 +42,12 @@ import { ExportUtil } from './export/exportUtil.node';
 import { FileConverter } from './export/fileConverter.node';
 import { IFileConverter, INbConvertExport, ExportFormat, IExport, IExportDialog, IExportBase } from './export/types';
 import { ExportUtilBase } from './export/exportUtil';
+import { registerTypes as registerControllerTypes } from './controllers/serviceRegistry.node';
 
 export function registerTypes(serviceManager: IServiceManager) {
+    registerControllerTypes(serviceManager);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, RemoteSwitcher);
-    serviceManager.addSingleton<INotebookControllerManager>(INotebookControllerManager, NotebookControllerManager);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelFilterUI);
-    serviceManager.addBinding(INotebookControllerManager, IExtensionSyncActivationService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         CondaControllerRefresher

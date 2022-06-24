@@ -84,6 +84,51 @@ suite('Code Generator Unit Tests', () => {
         assert.equal(generatedCodes[0].generatedCodes[0].executionCount, 1, 'Wrong execution count');
     });
 
+    test('Execute %%latex magic in a cell with a cell marker', async () => {
+        const file = '# %%\r\n%%latex\r\n$e^2$';
+        const code = '# %%\r\n%%latex\r\n$e^2$';
+        // Create our document
+        documentManager.addDocument(file, 'foo.py');
+
+        // Add this code
+        await sendCode(code, 1);
+
+        // We should have a single hash
+        let generatedCodes = storage.all;
+        assert.equal(generatedCodes.length, 1, 'No hashes found');
+        assert.strictEqual(generatedCodes[0].generatedCodes[0].code.trim(), '%%latex\n$e^2$');
+    });
+
+    test('Execute %%latex magic in a cell with a cell marker and commented out cell magic', async () => {
+        const file = '# %%\r\n#!%%latex\r\n$e^2$';
+        const code = '# %%\r\n#!%%latex\r\n$e^2$';
+        // Create our document
+        documentManager.addDocument(file, 'foo.py');
+
+        // Add this code
+        await sendCode(code, 1);
+
+        // We should have a single hash
+        let generatedCodes = storage.all;
+        assert.equal(generatedCodes.length, 1, 'No hashes found');
+        assert.strictEqual(generatedCodes[0].generatedCodes[0].code.trim(), '%%latex\n$e^2$');
+    });
+
+    test('Execute %%html magic in a cell with a cell marker', async () => {
+        const file = '# %%\r\n%%html\r\n<button>Hello</button>';
+        const code = '# %%\r\n%%html\r\n<button>Hello</button>';
+        // Create our document
+        documentManager.addDocument(file, 'foo.py');
+
+        // Add this code
+        await sendCode(code, 1);
+
+        // We should have a single hash
+        let generatedCodes = storage.all;
+        assert.equal(generatedCodes.length, 1, 'No hashes found');
+        assert.strictEqual(generatedCodes[0].generatedCodes[0].code.trim(), '%%html\n<button>Hello</button>');
+    });
+
     test('Add a cell, delete it, and recreate it', async () => {
         const file = '#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")';
         const code = '#%%\r\nprint("bar")';

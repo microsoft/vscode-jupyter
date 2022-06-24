@@ -9,7 +9,7 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { convertDebugProtocolVariableToIJupyterVariable } from '../../../kernels/variables/helpers';
 import { IJupyterVariables } from '../../../kernels/variables/types';
 import { IExtensionSingleActivationService } from '../../../platform/activation/types';
-import { ICommandNameArgumentTypeMapping } from '../../../platform/common/application/commands';
+import { ICommandNameArgumentTypeMapping } from '../../../commands';
 import {
     IApplicationShell,
     ICommandManager,
@@ -24,9 +24,9 @@ import { noop } from '../../../platform/common/utils/misc';
 import { untildify } from '../../../platform/common/utils/platform';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { traceError, traceInfo } from '../../../platform/logging';
-import { IShowDataViewerFromVariablePanel } from '../../../platform/messageTypes';
+import { IShowDataViewerFromVariablePanel } from '../../../messageTypes';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { EventName } from '../../../telemetry/constants';
+import { EventName } from '../../../platform/telemetry/constants';
 import { PythonEnvironment } from '../../../standalone/api/extension';
 import { IDataScienceErrorHandler } from '../../../kernels/errors/types';
 import { DataViewerChecker } from './dataViewerChecker';

@@ -6,7 +6,6 @@ import './variableExplorer.css';
 import * as fastDeepEqual from 'fast-deep-equal';
 import * as React from 'react';
 
-import { RegExpValues } from '../common/constants';
 import { getLocString } from '../react-common/locReactSide';
 import { IButtonCellValue, VariableExplorerButtonCellFormatter } from './variableExplorerButtonCellFormatter';
 import { CellStyle, VariableExplorerCellFormatter } from './variableExplorerCellFormatter';
@@ -20,6 +19,7 @@ import { IVariableState } from './redux/reducers/variables';
 import './variableExplorerGrid.less';
 import { VariableExplorerLoadingRowsView } from './variableExplorerLoadingRows';
 import { IJupyterVariable } from '../../../kernels/variables/types';
+import { RegExpValues } from '../../../platform/common/constants';
 
 interface IVariableExplorerProps {
     baseTheme: string;

@@ -5,7 +5,7 @@
 
 import { NotebookDocument, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
 import * as localize from '../../platform/common/utils/localize';
-import { ICommandNameArgumentTypeMapping } from '../../platform/common/application/commands';
+import { ICommandNameArgumentTypeMapping } from '../../commands';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { traceInfo } from '../../platform/logging';
 import { IDisposable } from '../../platform/common/types';
@@ -13,13 +13,13 @@ import { DataScience } from '../../platform/common/utils/localize';
 import { isUri, noop } from '../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
-import { INotebookControllerManager } from '../../notebooks/types';
 import { Commands, Telemetry } from '../../platform/common/constants';
 import { IFileConverter, ExportFormat } from '../../notebooks/export/types';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { getNotebookMetadata } from '../../platform/common/utils';
 import { isPythonNotebook } from '../../kernels/helpers';
+import { IControllerSelection, IControllerPreferredService } from '../../notebooks/controllers/types';
 
 interface IExportQuickPickItem extends QuickPickItem {
     handler(): void;
@@ -34,7 +34,8 @@ export class ExportCommands implements IDisposable {
         private readonly fs: IFileSystem,
         private readonly notebooks: IVSCodeNotebook,
         private readonly interactiveProvider: IInteractiveWindowProvider | undefined,
-        private readonly controllers: INotebookControllerManager
+        private readonly controllerSelection: IControllerSelection,
+        private readonly controllerPreferred: IControllerPreferredService
     ) {}
     public register() {
         this.registerCommand(Commands.ExportAsPythonScript, (sourceDocument, interpreter?) =>
@@ -73,8 +74,8 @@ export class ExportCommands implements IDisposable {
 
         if (document) {
             const interpreter =
-                this.controllers.getSelectedNotebookController(document)?.connection.interpreter ||
-                this.controllers.getPreferredNotebookController(document)?.connection.interpreter;
+                this.controllerSelection.getSelected(document)?.connection.interpreter ||
+                this.controllerPreferred.getPreferred(document)?.connection.interpreter;
             return this.export(document, undefined, undefined, interpreter);
         } else {
             return this.export(undefined, undefined, undefined, undefined);
@@ -101,8 +102,8 @@ export class ExportCommands implements IDisposable {
             // At this point also see if the active editor has a candidate interpreter to use
             interpreter =
                 interpreter ||
-                this.controllers.getSelectedNotebookController(sourceDocument)?.connection.interpreter ||
-                this.controllers.getPreferredNotebookController(sourceDocument)?.connection.interpreter;
+                this.controllerSelection.getSelected(sourceDocument)?.connection.interpreter ||
+                this.controllerPreferred.getPreferred(sourceDocument)?.connection.interpreter;
             if (exportMethod) {
                 sendTelemetryEvent(Telemetry.ExportNotebookAsCommand, undefined, { format: exportMethod });
             }

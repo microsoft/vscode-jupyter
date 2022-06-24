@@ -19,7 +19,7 @@ import debounce from 'lodash/debounce';
 import * as uuid from 'uuid/v4';
 
 import { initializeIcons } from '@fluentui/react';
-import { SharedMessages } from '../../../platform/messageTypes';
+import { SharedMessages } from '../../../messageTypes';
 import {
     IDataViewerMapping,
     DataViewerMessages,
