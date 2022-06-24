@@ -4038,9 +4038,9 @@ No properties for event
     ) {}
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
-    @traceDecoratorError('Failed to select Jupyter Uri')
     public selectJupyterURI(
         commandSource: SelectJupyterUriCommandSource = 'nonUser',
+        existingMultiStep?: IMultiStepInput<{}>
 ```
 
 
@@ -4258,7 +4258,7 @@ No properties for event
 
 [src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
 ```typescript
-        return multiStep.run(this.startSelectingURI.bind(this, showBackButton), {});
+        }
     }
 
     @captureTelemetry(Telemetry.SetJupyterURIToLocal)
@@ -4289,12 +4289,12 @@ No properties for event
 [src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
 ```typescript
         commandSource: SelectJupyterUriCommandSource = 'nonUser',
-        showBackButton: boolean = false
-    ): Promise<InputFlowAction | undefined> {
+        existingMultiStep?: IMultiStepInput<{}>
+    ): Promise<InputFlowAction | undefined | InputStep<{}> | void> {
         sendTelemetryEvent(Telemetry.SetJupyterURIUIDisplayed, undefined, {
             commandSource
         });
-        const multiStep = this.multiStepFactory.create<{}>();
+        if (existingMultiStep) {
 ```
 
 </details>
