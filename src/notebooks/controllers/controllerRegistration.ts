@@ -17,7 +17,7 @@ import {
     IApplicationShell
 } from '../../platform/common/application/types';
 import { isCancellationError } from '../../platform/common/cancellation';
-import { JupyterNotebookView, InteractiveWindowView } from '../../platform/common/constants';
+import { JupyterNotebookView, InteractiveWindowView, Settings } from '../../platform/common/constants';
 import {
     IDisposableRegistry,
     IConfigurationService,
@@ -42,7 +42,7 @@ export class ControllerRegistration implements IControllerRegistration {
     }
     private registeredControllers = new Map<string, VSCodeNotebookController>();
     private creationEmitter = new EventEmitter<IVSCodeNotebookController>();
-    private registeredConnections = new Map<string, KernelConnectionMetadata>();
+    private registeredMetadatas = new Map<string, KernelConnectionMetadata>();
 
     public get onCreated(): Event<IVSCodeNotebookController> {
         return this.creationEmitter.event;
@@ -50,8 +50,8 @@ export class ControllerRegistration implements IControllerRegistration {
     public get values(): IVSCodeNotebookController[] {
         return [...this.registeredControllers.values()];
     }
-    private get connections(): KernelConnectionMetadata[] {
-        return [...this.registeredConnections.values()];
+    private get metadatas(): KernelConnectionMetadata[] {
+        return [...this.registeredMetadatas.values()];
     }
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
@@ -74,6 +74,7 @@ export class ControllerRegistration implements IControllerRegistration {
     ) {
         this.kernelFilter.onDidChange(this.onDidChangeFilter, this, this.disposables);
         this.serverConnectionType.onDidChange(this.onDidChangeFilter, this, this.disposables);
+        this.serverUriStorage.onDidChangeUri(this.onDidChangeUri, this, this.disposables);
     }
     add(
         metadata: KernelConnectionMetadata,
@@ -87,7 +88,7 @@ export class ControllerRegistration implements IControllerRegistration {
                     const id = this.getControllerId(metadata, t);
 
                     // Update our list kernel connections.
-                    this.registeredConnections.set(id, metadata);
+                    this.registeredMetadatas.set(id, metadata);
 
                     // Return the id and the metadata for use below
                     return [id, t];
@@ -134,11 +135,19 @@ export class ControllerRegistration implements IControllerRegistration {
                     controller.onDidDispose(
                         () => {
                             this.registeredControllers.delete(controller.id);
-                            this.registeredConnections.delete(controller.id);
+                            // Note to self, registered metadatas survive disposal.
+                            // This is so we don't have to recompute them when we switch back
+                            // and forth between local and remote
                         },
                         this,
                         this.disposables
                     );
+                    controller.onNotebookControllerSelectionChanged((e) => {
+                        if (!e.selected && this.isFiltered(controller.connection)) {
+                            // This item was selected but is no longer allowed in the kernel list. Remove it
+                            controller.dispose();
+                        }
+                    });
                     // We are disposing as documents are closed, but do this as well
                     this.disposables.push(controller);
                     this.registeredControllers.set(controller.id, controller);
@@ -191,12 +200,24 @@ export class ControllerRegistration implements IControllerRegistration {
         return this.notebook.notebookDocuments.some((doc) => controller.isAssociatedWithDocument(doc));
     }
 
+    private onDidChangeUri() {
+        // Our list of metadata could be out of date. Remove old ones that don't match the uri
+        if (this.serverUriStorage.currentUri !== Settings.JupyterServerLocalLaunch) {
+            [...this.registeredMetadatas.keys()].forEach((k) => {
+                const m = this.registeredMetadatas.get(k);
+                if (m && isRemoteConnection(m) && !this.serverUriStorage.currentUri?.includes(m.baseUrl)) {
+                    this.registeredMetadatas.delete(k);
+                }
+            });
+        }
+    }
+
     private onDidChangeFilter() {
-        // Filter the connections.
-        const connections = this.connections.filter((item) => !this.isFiltered(item));
+        // Give our list of metadata should be up to date, just remove the filtered ones
+        const metadatas = this.metadatas.filter((item) => !this.isFiltered(item));
 
         // Try to re-create the missing controllers.
-        connections.forEach((c) => this.add(c, [JupyterNotebookView, InteractiveWindowView]));
+        metadatas.forEach((c) => this.add(c, [JupyterNotebookView, InteractiveWindowView]));
 
         // Go through all controllers that have been created and hide them.
         // Unless they are attached to an existing document.

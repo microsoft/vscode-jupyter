@@ -26,6 +26,8 @@ import {
 import { EventEmitter, QuickPickItem, QuickPickItemKind } from 'vscode';
 import { noop } from '../../../platform/common/utils/misc';
 import { isLocalConnection } from '../../../kernels/types';
+import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
+import { DataScience } from '../../../platform/common/utils/localize';
 
 function groupBy<T>(data: ReadonlyArray<T>, compare: (a: T, b: T) => number): T[][] {
     const result: T[][] = [];
@@ -65,7 +67,8 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
         @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
-        @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook
+        @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
     ) {
         // Context keys to control when these commands are shown
         this.showingRemoteNotWebContext = new ContextKey('jupyter.showingRemoteNotWeb', this.commandManager);
@@ -108,9 +111,10 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
 
     private async switchToRemoteKernels() {
         const activeNotebookType = this.notebooks.activeNotebookEditor ? JupyterNotebookView : InteractiveWindowView;
+        const startingLocal = this.serverConnectionType.isLocalLaunch;
         const multiStep = this.multiStepFactory.create<{}>();
         return multiStep.run(
-            this.startSwitchRun.bind(this, this.startSwitchingToRemote.bind(this, activeNotebookType)),
+            this.startSwitchRun.bind(this, this.startSwitchingToRemote.bind(this, activeNotebookType, startingLocal)),
             {}
         );
     }
@@ -122,12 +126,23 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
 
     private async startSwitchingToRemote(
         activeNotebookType: typeof JupyterNotebookView | typeof InteractiveWindowView,
+        startedLocal: boolean,
         input: IMultiStepInput<{}>
     ): Promise<InputStep<{}> | void> {
         try {
             await this.serverSelector.selectJupyterURI('nonUser', input);
-            return this.showKernelPicker('Pick remote kernel', 'type here to filter', false, activeNotebookType, input);
+            return this.showKernelPicker(
+                DataScience.pickRemoteKernelTitle(),
+                DataScience.pickRemoteKernelPlaceholder(),
+                false,
+                activeNotebookType,
+                input
+            );
         } catch (e) {
+            // They backed out. Put back to local
+            if (startedLocal) {
+                await this.serverSelector.setJupyterURIToLocal();
+            }
             if (e === InputFlowAction.back) {
                 return this.showVsCodeKernelPicker();
             }
@@ -136,15 +151,22 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
 
     private async switchToLocalKernels() {
         const activeNotebookType = this.notebooks.activeNotebookEditor ? JupyterNotebookView : InteractiveWindowView;
+        const startingLocal = this.serverConnectionType.isLocalLaunch;
+        const startingUri = await this.serverUriStorage.getRemoteUri();
         const multiStep = this.multiStepFactory.create<{}>();
         return multiStep.run(
-            this.startSwitchRun.bind(this, this.startSwitchingToLocal.bind(this, activeNotebookType)),
+            this.startSwitchRun.bind(
+                this,
+                this.startSwitchingToLocal.bind(this, activeNotebookType, startingLocal, startingUri)
+            ),
             {}
         );
     }
 
     private async startSwitchingToLocal(
         activeNotebookType: typeof JupyterNotebookView | typeof InteractiveWindowView,
+        startedLocal: boolean,
+        startedUri: string | undefined,
         input: IMultiStepInput<{}>
     ): Promise<InputStep<{}> | void> {
         // Wait until we switch to local
@@ -156,9 +178,24 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
         } finally {
             disposable.dispose();
         }
-
-        // Then bring up the quick pick for the current set of controllers.
-        return this.showKernelPicker('Pick local kernel', 'type here to filter', true, activeNotebookType, input);
+        try {
+            // Then bring up the quick pick for the current set of controllers.
+            await this.showKernelPicker(
+                DataScience.pickLocalKernelTitle(),
+                DataScience.pickLocalKernelPlaceholder(),
+                true,
+                activeNotebookType,
+                input
+            );
+        } catch (e) {
+            // They backed out. Put back to local
+            if (!startedLocal && startedUri) {
+                await this.serverSelector.setJupyterURIToRemote(startedUri, true);
+            }
+            if (e === InputFlowAction.back) {
+                return this.showVsCodeKernelPicker();
+            }
+        }
     }
 
     private async showKernelPicker(
@@ -205,7 +242,10 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
 
         // Listen to new controllers being added
         this.controllerRegistration.onCreated((e) => {
-            if (e.viewType === viewType) {
+            if (
+                e.viewType === viewType &&
+                quickPickItems.find((p) => (p as any).controller?.id === e.id) === undefined
+            ) {
                 // Create a pick for the new controller
                 const pick: ControllerQuickPick = {
                     label: e.label,

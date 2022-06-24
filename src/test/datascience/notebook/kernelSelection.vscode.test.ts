@@ -341,4 +341,12 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
             waitForTextOutput(cell, venvNoRegSearchString, 0, false)
         ]);
     });
+
+    // Tests to write:
+    // - Pick remote, hit back, make sure kernel list is updated to have local kernels
+    // - Pick remote, pick running server, cancel out of kernel list. Make sure back at local
+    // - Pick remote, with running server, make sure quick pick shows remotes
+    // - Force remote, pick local. Hit back, Make sure kernel list is updated to have remote kernels
+    // - Force remote, pick local, make sure pick pick shows locals
+    // - Force remote, pick local, cancel, Make sure kernel list is updated to have remote kernels
 });
