@@ -7264,8 +7264,8 @@ No description provided
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
 
-            // First present a simple modal dialog to indicate what we are about to do
-            const selection = await this.appShell.showInformationMessage(
+            if (!(await this.shouldInstallExtensionPrompt())) {
+                // Check with the user before we move forward, if they don't want the install, just bail
 ```
 
 
@@ -7275,21 +7275,21 @@ No description provided
             );
             if (selection === Common.install()) {
                 sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
+                return true;
             } else {
                 // If they don't want to install, just bail out at this point
-                sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
 ```
 
 
 [src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
 ```typescript
-                sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
+                return true;
             } else {
                 // If they don't want to install, just bail out at this point
                 sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
-                return;
+                return false;
             }
-
+        }
 ```
 
 </details>

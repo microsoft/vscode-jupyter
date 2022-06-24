@@ -2,11 +2,18 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
+import {
+    NotebookCell,
+    NotebookCellExecutionState,
+    NotebookCellExecutionStateChangeEvent,
+    notebooks,
+    window
+} from 'vscode';
 import { isPythonKernelConnection } from '../../kernels/helpers';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../platform/api/types';
 import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
-import { Commands, PythonExtension, Telemetry } from '../../platform/common/constants';
+import { Commands, JupyterNotebookView, PythonExtension, Telemetry } from '../../platform/common/constants';
 import { ContextKey } from '../../platform/common/contextKey';
 import { IDisposableRegistry, IsWebExtension } from '../../platform/common/types';
 import { Common, DataScience } from '../../platform/common/utils/localize';
@@ -21,6 +28,8 @@ import { IControllerLoader, IControllerRegistration } from './types';
 export class InstallPythonControllerCommands implements IExtensionSingleActivationService {
     private showInstallPythonExtensionContext: ContextKey;
     private showInstallPythonContext: ContextKey;
+    // WeakSet of executing cells, so they get cleaned up on document close without worrying
+    private executingCells: WeakSet<NotebookCell> = new WeakSet<NotebookCell>();
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
@@ -40,6 +49,9 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
         this.showInstallPythonContext = new ContextKey('jupyter.showInstallPythonCommand', this.commandManager);
     }
     public async activate(): Promise<void> {
+        this.disposables.push(
+            notebooks.onDidChangeNotebookCellExecutionState(this.onDidChangeNotebookCellExecutionState, this)
+        );
         // Register our commands that will handle installing the python extension or python via the kernel picker
         this.disposables.push(
             this.commandManager.registerCommand(
@@ -58,6 +70,20 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
 
         // We need to know when controllers have been updated so that we can update our context keys
         this.disposables.push(this.controllerLoader.refreshed(this.onNotebookControllersLoaded, this));
+    }
+
+    // Track if there are any cells currently executing or pending
+    private onDidChangeNotebookCellExecutionState(stateEvent: NotebookCellExecutionStateChangeEvent) {
+        if (stateEvent.cell.notebook.notebookType === JupyterNotebookView) {
+            if (
+                stateEvent.state === NotebookCellExecutionState.Pending ||
+                stateEvent.state === NotebookCellExecutionState.Executing
+            ) {
+                this.executingCells.add(stateEvent.cell);
+            } else if (stateEvent.state === NotebookCellExecutionState.Idle) {
+                this.executingCells.delete(stateEvent.cell);
+            }
+        }
     }
 
     // When the manager loads new controllers we need to check and see if we should enable or disable our context
@@ -112,17 +138,8 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'displayed' });
 
-            // First present a simple modal dialog to indicate what we are about to do
-            const selection = await this.appShell.showInformationMessage(
-                DataScience.pythonExtensionRequiredToRunNotebook(),
-                { modal: true },
-                Common.install()
-            );
-            if (selection === Common.install()) {
-                sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
-            } else {
-                // If they don't want to install, just bail out at this point
-                sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
+            if (!(await this.shouldInstallExtensionPrompt())) {
+                // Check with the user before we move forward, if they don't want the install, just bail
                 return;
             }
 
@@ -158,5 +175,43 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
                 reporter.dispose();
             }
         }
+    }
+
+    // We don't always want to show our modal warning for installing the python extension
+    // this function will choose if this should be shown, and return true if the install should
+    // proceed and false otherwise
+    private async shouldInstallExtensionPrompt(): Promise<boolean> {
+        // We want to show the dialog if the active document is running, in this case, the command
+        // was triggered from the run button and we want to warn the user what we are doing
+        if (this.isActiveNotebookDocumentRunning()) {
+            // First present a simple modal dialog to indicate what we are about to do
+            const selection = await this.appShell.showInformationMessage(
+                DataScience.pythonExtensionRequiredToRunNotebook(),
+                { modal: true },
+                Common.install()
+            );
+            if (selection === Common.install()) {
+                sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'download' });
+                return true;
+            } else {
+                // If they don't want to install, just bail out at this point
+                sendTelemetryEvent(Telemetry.PythonExtensionNotInstalled, undefined, { action: 'dismissed' });
+                return false;
+            }
+        }
+
+        // If the active notebook is not running, this command was triggered selecting from the kernel picker
+        // in this case, they clicked on "Install Python Extension" so no need for a modal to warn them
+        return true;
+    }
+
+    // Check if any cells of the active notebook are in pending or executing state
+    private isActiveNotebookDocumentRunning(): boolean {
+        if (window.activeNotebookEditor) {
+            return window.activeNotebookEditor.notebook.getCells().some((cell) => {
+                return this.executingCells.has(cell);
+            });
+        }
+        return false;
     }
 }
