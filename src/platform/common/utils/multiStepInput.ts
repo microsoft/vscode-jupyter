@@ -16,7 +16,6 @@ import {
     QuickPickItemButtonEvent
 } from 'vscode';
 import { IApplicationShell } from '../application/types';
-import { noop } from './misc';
 
 // Borrowed from https://github.com/Microsoft/vscode-extension-samples/blob/master/quickinput-sample/src/multiStepInput.ts
 // Why re-invent the wheel :)
@@ -33,7 +32,6 @@ export interface IQuickPickParameters<T extends QuickPickItem> {
     title?: string;
     step?: number;
     totalSteps?: number;
-    canGoBack?: boolean;
     items: T[];
     activeItem?: T;
     placeholder: string;
@@ -41,6 +39,8 @@ export interface IQuickPickParameters<T extends QuickPickItem> {
     matchOnDescription?: boolean;
     matchOnDetail?: boolean;
     acceptFilterBoxTextAsSelection?: boolean;
+    startBusy?: boolean;
+    stopBusy?: Event<void>;
     validateFilterBox?(value: string): Promise<string | undefined>;
     shouldResume?(): Promise<boolean>;
     onDidTriggerItemButton?(e: QuickPickItemButtonEvent<T>): void;
@@ -106,6 +106,8 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         matchOnDescription,
         matchOnDetail,
         acceptFilterBoxTextAsSelection,
+        startBusy,
+        stopBusy,
         validateFilterBox,
         onDidTriggerItemButton,
         onDidChangeItems
@@ -120,6 +122,18 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                 input.placeholder = placeholder;
                 input.ignoreFocusOut = true;
                 input.items = items;
+                if (stopBusy) {
+                    input.busy = startBusy ?? false;
+                    stopBusy(
+                        () => {
+                            if (input.enabled) {
+                                input.busy = false;
+                            }
+                        },
+                        this,
+                        disposables
+                    );
+                }
                 if (onDidChangeItems) {
                     input.keepScrollPosition = true;
                     onDidChangeItems(
@@ -170,7 +184,9 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                                 resolve(<any>input.value);
                             } else {
                                 // No validation allowed on a quick pick. Have to put up a dialog instead
-                                this.shell.showErrorMessage(validationMessage, { modal: true }).then(noop, noop);
+                                await this.shell.showErrorMessage(validationMessage, { modal: true });
+                                input.enabled = true;
+                                input.busy = false;
                             }
                         })
                     );

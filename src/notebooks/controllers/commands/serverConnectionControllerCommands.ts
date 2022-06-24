@@ -5,7 +5,7 @@
 import { inject, injectable } from 'inversify';
 import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverConnectionType';
 import { IExtensionSingleActivationService } from '../../../platform/activation/types';
-import { ICommandManager } from '../../../platform/common/application/types';
+import { ICommandManager, IVSCodeNotebook } from '../../../platform/common/application/types';
 import { Commands, JVSC_EXTENSION_ID } from '../../../platform/common/constants';
 import { ContextKey } from '../../../platform/common/contextKey';
 import { IDisposableRegistry, IsWebExtension } from '../../../platform/common/types';
@@ -13,7 +13,9 @@ import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { IControllerLoader, IControllerRegistration, IVSCodeNotebookController } from '../types';
 import { IMultiStepInputFactory, InputFlowAction } from '../../../platform/common/utils/multiStepInput';
-import { QuickPickItem, QuickPickItemKind } from 'vscode';
+import { EventEmitter, QuickPickItem, QuickPickItemKind } from 'vscode';
+import { noop } from '../../../platform/common/utils/misc';
+import { traceInfo } from '../../../platform/logging';
 
 function groupBy<T>(data: ReadonlyArray<T>, compare: (a: T, b: T) => number): T[][] {
     const result: T[][] = [];
@@ -41,8 +43,9 @@ interface ControllerQuickPick extends QuickPickItem {
 // between local and remote kernels
 @injectable()
 export class ServerConnectionControllerCommands implements IExtensionSingleActivationService {
-    private showingRemoteKernelsContext: ContextKey;
-    private showingLocalKernelsContext: ContextKey;
+    private showingRemoteNotWebContext: ContextKey;
+    private showingLocalOrWebEmptyContext: ContextKey;
+    private showingRemoteContext: ContextKey;
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
@@ -51,11 +54,13 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
         @inject(IsWebExtension) private readonly isWeb: boolean,
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
         @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
-        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration
+        @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
+        @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook
     ) {
         // Context keys to control when these commands are shown
-        this.showingLocalKernelsContext = new ContextKey('jupyter.showingLocalKenrnels', this.commandManager);
-        this.showingRemoteKernelsContext = new ContextKey('jupyter.showingRemoteKernels', this.commandManager);
+        this.showingRemoteNotWebContext = new ContextKey('jupyter.showingRemoteNotWeb', this.commandManager);
+        this.showingLocalOrWebEmptyContext = new ContextKey('jupyter.showingLocalOrWebEmpty', this.commandManager);
+        this.showingRemoteContext = new ContextKey('jupyter.showingRemoteKernels', this.commandManager);
     }
     public async activate(): Promise<void> {
         this.disposables.push(
@@ -68,32 +73,41 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
             this.commandManager.registerCommand(Commands.SwitchToAnotherRemoteKernels, this.switchToRemoteKernels, this)
         );
         this.disposables.push(this.serverConnectionType.onDidChange(this.onConnectionTypeChanged, this));
-        this.onConnectionTypeChanged();
+        this.onConnectionTypeChanged().ignoreErrors;
     }
 
-    private onConnectionTypeChanged() {
+    private async onConnectionTypeChanged() {
         const isLocal = this.serverConnectionType.isLocalLaunch;
+        await (this.isWeb ? this.controllerLoader.loaded : Promise.resolve(true));
 
-        // The 'showingLocalKernels' context is used to control the visibility of the 'connect to remote kernels' command
-        // Therefore it should always be enabled when running in the web
-        this.showingLocalKernelsContext.set(isLocal || this.isWeb).ignoreErrors();
-
-        // The 'showingRemoteKernels' context is used to control the visibility of the 'connect to local kernels' command
-        // Therefore it should never be enabled when running in the web
-        this.showingRemoteKernelsContext.set(!isLocal && !this.isWeb).ignoreErrors();
+        this.showingLocalOrWebEmptyContext
+            .set(isLocal || (this.isWeb && this.controllerRegistration.values.length === 0))
+            .ignoreErrors();
+        this.showingRemoteNotWebContext.set(!isLocal && !this.isWeb).ignoreErrors();
+        this.showingRemoteContext.set(!isLocal).ignoreErrors();
     }
 
     private async showVsCodeKernelPicker() {
-        return this.commandManager.executeCommand('notebook.selectKernel');
+        const activeEditor = this.notebooks.activeNotebookEditor;
+        if (activeEditor) {
+            this.commandManager
+                .executeCommand('notebook.selectKernel', { notebookEditor: activeEditor })
+                .then(noop, noop);
+        }
     }
 
     private async switchToRemoteKernels() {
-        // Ask for the server URI
-        const result = await this.serverSelector.selectJupyterURI('nonUser', true);
-        if (result === InputFlowAction.back) {
-            return this.showVsCodeKernelPicker();
-        } else {
-            return this.showKernelPicker('Pick remote kernel', 'type here to filter');
+        try {
+            const result = await this.serverSelector.selectJupyterURI('nonUser', true);
+            if (result === InputFlowAction.back) {
+                return this.showVsCodeKernelPicker();
+            } else if (result === InputFlowAction.cancel) {
+                traceInfo(`Cancelled switching to remote.`);
+            } else {
+                return this.showKernelPicker('Pick remote kernel', 'type here to filter');
+            }
+        } catch (e) {
+            // Do nothing, it didn't work
         }
     }
 
@@ -113,13 +127,14 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
     }
 
     private async showKernelPicker(title: string, placeholder: string) {
-        // Make sure the controllers are refreshed
-        await this.controllerLoader.loadControllers(true);
-
-        // Get the current list
+        // Get the current list. We will dynamically update the list as
+        // more and more controllers are found.
         const controllers = this.controllerRegistration.values;
 
-        // Use these to generate the quick pick items
+        // Create an event emitter for when new controllers are added
+        const changeEmitter = new EventEmitter<(QuickPickItem | ControllerQuickPick)[]>();
+
+        // Use the current controllers to generate the quick pick items
         const picks: ControllerQuickPick[] = controllers.map((d) => {
             return {
                 label: d.label,
@@ -128,25 +143,61 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
                 controller: d
             };
         });
+
+        // Then group them by kind
         const kernelsPerCategory = groupBy(picks, (a, b) =>
             compareIgnoreCase(a.controller.controller.kind || 'z', b.controller.controller.kind || 'z')
         );
+        const kindIndexes = new Map<string, number>();
         const quickPickItems: (QuickPickItem | ControllerQuickPick)[] = [];
         kernelsPerCategory.forEach((items) => {
+            const kind = items[0].controller.controller.kind || 'Other';
             quickPickItems.push({
                 kind: QuickPickItemKind.Separator,
-                label: items[0].controller.controller.kind || 'Other'
+                label: kind
             });
             quickPickItems.push(...items);
+            kindIndexes.set(kind, quickPickItems.length);
         });
 
-        // Show quick pick with the list of python interpreters
+        // Listen to new controllers being added
+        this.controllerRegistration.onCreated((e) => {
+            // Create a pick for the new controller
+            const pick: ControllerQuickPick = {
+                label: e.label,
+                detail: undefined,
+                description: e.controller.description,
+                controller: e
+            };
+
+            // Stick into the list at the right place
+            const kind = e.controller.kind || 'Other';
+            const index = kindIndexes.get(kind) || -1;
+            if (index < 0) {
+                quickPickItems.push({
+                    kind: QuickPickItemKind.Separator,
+                    label: kind
+                });
+                quickPickItems.push(pick);
+                kindIndexes.set(kind, quickPickItems.length);
+            } else {
+                quickPickItems.splice(index, 0, pick);
+                kindIndexes.set(kind, quickPickItems.length);
+            }
+            changeEmitter.fire(quickPickItems);
+        });
+
+        // Show quick pick with the list of controllers
         const multiStep = this.multiStepFactory.create();
         const result = await multiStep.showQuickPick({
             title: title,
-            canGoBack: true,
             items: quickPickItems,
-            placeholder
+            matchOnDescription: true,
+            matchOnDetail: true,
+            startBusy: quickPickItems.length === 0,
+            stopBusy: this.controllerLoader.refreshed,
+            placeholder,
+            onDidChangeItems: changeEmitter.event
         });
 
         if (result && result.label && (result as any).controller) {

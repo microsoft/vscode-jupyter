@@ -1022,11 +1022,11 @@
                 },
                 {
                     "command": "jupyter.switchToLocalKernels",
-                    "when": "jupyter.showingRemoteKernels"
+                    "when": "jupyter.showingRemoteNotWeb"
                 },
                 {
                     "command": "jupyter.switchToRemoteKernels",
-                    "when": "jupyter.showingLocalKernels"
+                    "when": "jupyter.showingLocalOrWebEmpty"
                 },
                 {
                     "command": "jupyter.switchToAnotherRemoteKernels",
