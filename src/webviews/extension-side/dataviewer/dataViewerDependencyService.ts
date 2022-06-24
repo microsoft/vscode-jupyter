@@ -16,7 +16,7 @@ import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { IDataViewerDependencyService } from './types';
 import { executeSilently } from '../../../kernels/helpers';
-import { IJupyterSession, IKernel } from '../../../kernels/types';
+import { IKernel } from '../../../kernels/types';
 
 const minimumSupportedPandaVersion = '0.20.0';
 
