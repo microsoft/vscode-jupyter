@@ -31,7 +31,7 @@ suite('DataScience - DataViewerDependencyService', () => {
     } as any as IJupyterSession;
 
     const expectedPandasVersionExecutionContext = {
-        code: `import pandas; print(pandas.__version__)`,
+        code: `import pandas;print(pandas.__version__)`,
         silent: false,
         stop_on_error: false,
         allow_stdin: true,
@@ -51,26 +51,6 @@ suite('DataScience - DataViewerDependencyService', () => {
         sessionExecutionContext = [];
 
         dependencyService = new DataViewerDependencyService(instance(appShell), false);
-    });
-
-    test('What happens if there are no idle kernels?', async () => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (kernel.session as any) = jupyterSession;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (kernel.status as any) = 'busy';
-
-        shellFuture = {
-            done: () => Promise.resolve()
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any as IShellFuture<IExecuteRequestMsg, IExecuteReplyMsg>;
-
-        const resultPromise = dependencyService.checkAndInstallMissingDependenciesOnKernel(kernel);
-
-        await assert.isRejected(
-            resultPromise,
-            DataScience.noIdleKernel(),
-            'Failed to determine if there was an idle kernel'
-        );
     });
 
     test('What if there are no kernel sessions?', async () => {

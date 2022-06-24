@@ -19,7 +19,7 @@ import { IInstaller, Product } from '../../../kernels/installer/types';
 import { DataViewerDependencyService } from '../../../webviews/extension-side/dataviewer/dataViewerDependencyService.node';
 import { Uri } from 'vscode';
 
-suite('DataScience - DataViewerDependencyService', () => {
+suite('DataScience - DataViewerDependencyService (Node)', () => {
     let dependencyService: DataViewerDependencyService;
     let appShell: IApplicationShell;
     let pythonExecFactory: IPythonExecutionFactory;

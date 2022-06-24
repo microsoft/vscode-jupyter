@@ -34,14 +34,6 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
         @inject(IsCodeSpace) private isCodeSpace: boolean
     ) {}
 
-    private kernelSession(kernel: IKernel): IJupyterSession {
-        if (!kernel.session) {
-            sendTelemetryEvent(Telemetry.NoActiveKernelSession);
-            throw new Error(DataScience.noActiveKernelSession());
-        }
-        return kernel.session;
-    }
-
     private packaging(kernel: IKernel): 'pip' | 'conda' {
         const envType = kernel.kernelConnectionMetadata.interpreter?.envType;
         const isConda = envType === EnvironmentType.Conda;
@@ -70,6 +62,11 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
     }
 
     private async installMissingDependencies(kernel: IKernel): Promise<void> {
+        if (!kernel.session) {
+            sendTelemetryEvent(Telemetry.NoActiveKernelSession);
+            throw new Error(DataScience.noActiveKernelSession());
+        }
+
         sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
             action: 'displayed',
             moduleName: ProductNames.get(Product.pandas)!
@@ -112,7 +109,11 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
     }
 
     private async executeSilently(command: string, kernel: IKernel): Promise<(string | undefined)[]> {
-        const outputs = await executeSilently(this.kernelSession(kernel), command);
+        if (!kernel.session) {
+            sendTelemetryEvent(Telemetry.NoActiveKernelSession);
+            throw new Error(DataScience.noActiveKernelSession());
+        }
+        const outputs = await executeSilently(kernel.session, command);
         const error = outputs.find((item) => item.output_type === 'error');
         if (error) {
             traceWarning(DataScience.failedToGetVersionOfPandas(), error.message);
