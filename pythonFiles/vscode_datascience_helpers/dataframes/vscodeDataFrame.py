@@ -215,12 +215,11 @@ def _VSCODE_getDataFrame(what_to_get, *args):
         _VSCODE_getDataFrameInfo(*args)
 
     try:
-        import sys
-        del sys.modules['_VSCODE_pd']
-        del sys.modules['_VSCODE_json']
-        del sys.modules['_VSCODE_pd_json']
-        del sys.modules['_VSCODE_np']
-        del sys.modules['_VSCODE_builtins']
+        del _VSCODE_pd
+        del _VSCODE_json
+        del _VSCODE_pd_json
+        del _VSCODE_np
+        del _VSCODE_builtins
     except:
         pass
 

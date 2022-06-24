@@ -82,9 +82,8 @@ def _VSCODE_getVariable(what_to_get, *args):
         _VSCODE_getVariableTypes(*args)
 
     try:
-        import sys
-        del sys.modules['_VSCODE_json']
-        del sys.modules['_VSCODE_builtins']
+        del _VSCODE_json
+        del _VSCODE_builtins
     except:
         pass
 
