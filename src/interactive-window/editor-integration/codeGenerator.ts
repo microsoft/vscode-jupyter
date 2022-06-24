@@ -80,8 +80,8 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
         }
 
         // If we have a cell magic then don't send the cell marker.
-        // If we do, then don't sen the cell marker, e.g. in the case of `latex` magic it cannot handle python style comments in the cell.
-        // I.e. %%latex magic cannot handle lines that start with the text `#` which exists in cell markers such as `# %%`.
+        // For cell magics the first line must be the magic, including code line `#` which is a Python comment treats the cell as a Python code cell
+        // then the rest of the code line the magic & the latext code gets treated as Python code, instead of a cell magic.
         if (
             metadata.interactiveWindowCellMarker &&
             lines.length &&
