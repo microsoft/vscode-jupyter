@@ -12,10 +12,15 @@ import { IDisposableRegistry, IsWebExtension } from '../../../platform/common/ty
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { IControllerLoader, IControllerRegistration, IVSCodeNotebookController } from '../types';
-import { IMultiStepInputFactory, InputFlowAction } from '../../../platform/common/utils/multiStepInput';
+import {
+    IMultiStepInput,
+    IMultiStepInputFactory,
+    InputFlowAction,
+    InputStep
+} from '../../../platform/common/utils/multiStepInput';
 import { EventEmitter, QuickPickItem, QuickPickItemKind } from 'vscode';
 import { noop } from '../../../platform/common/utils/misc';
-import { traceInfo } from '../../../platform/logging';
+import { isLocalConnection } from '../../../kernels/types';
 
 function groupBy<T>(data: ReadonlyArray<T>, compare: (a: T, b: T) => number): T[][] {
     const result: T[][] = [];
@@ -97,21 +102,32 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
     }
 
     private async switchToRemoteKernels() {
+        const multiStep = this.multiStepFactory.create<{}>();
+        return multiStep.run(this.startSwitchRun.bind(this, this.startSwitchingToRemote.bind(this)), {});
+    }
+
+    private async startSwitchRun(next: InputStep<{}>, _input: IMultiStepInput<{}>): Promise<InputStep<{}> | void> {
+        // This is a middle man just to create the back button on the first step
+        return next;
+    }
+
+    private async startSwitchingToRemote(input: IMultiStepInput<{}>): Promise<InputStep<{}> | void> {
         try {
-            const result = await this.serverSelector.selectJupyterURI('nonUser', true);
-            if (result === InputFlowAction.back) {
-                return this.showVsCodeKernelPicker();
-            } else if (result === InputFlowAction.cancel) {
-                traceInfo(`Cancelled switching to remote.`);
-            } else {
-                return this.showKernelPicker('Pick remote kernel', 'type here to filter');
-            }
+            await this.serverSelector.selectJupyterURI('nonUser', input);
+            return this.showKernelPicker('Pick remote kernel', 'type here to filter', false, input);
         } catch (e) {
-            // Do nothing, it didn't work
+            if (e === InputFlowAction.back) {
+                return this.showVsCodeKernelPicker();
+            }
         }
     }
 
     private async switchToLocalKernels() {
+        const multiStep = this.multiStepFactory.create<{}>();
+        return multiStep.run(this.startSwitchRun.bind(this, this.startSwitchingToLocal.bind(this)), {});
+    }
+
+    private async startSwitchingToLocal(input: IMultiStepInput<{}>): Promise<InputStep<{}> | void> {
         // Wait until we switch to local
         const deferred = createDeferred<boolean>();
         const disposable = this.serverConnectionType.onDidChange(() => deferred.resolve(true));
@@ -123,13 +139,18 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
         }
 
         // Then bring up the quick pick for the current set of controllers.
-        return this.showKernelPicker('Pick local kernel', 'type here to filter');
+        return this.showKernelPicker('Pick local kernel', 'type here to filter', true, input);
     }
 
-    private async showKernelPicker(title: string, placeholder: string) {
+    private async showKernelPicker(
+        title: string,
+        placeholder: string,
+        local: boolean,
+        input: IMultiStepInput<{}>
+    ): Promise<void> {
         // Get the current list. We will dynamically update the list as
         // more and more controllers are found.
-        const controllers = this.controllerRegistration.values;
+        const controllers = this.controllerRegistration.values.filter((c) => isLocalConnection(c.connection) === local);
 
         // Create an event emitter for when new controllers are added
         const changeEmitter = new EventEmitter<(QuickPickItem | ControllerQuickPick)[]>();
@@ -188,8 +209,7 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
         });
 
         // Show quick pick with the list of controllers
-        const multiStep = this.multiStepFactory.create();
-        const result = await multiStep.showQuickPick({
+        const result = await input.showQuickPick({
             title: title,
             items: quickPickItems,
             matchOnDescription: true,
@@ -208,7 +228,5 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
                 extension: JVSC_EXTENSION_ID
             });
         }
-
-        return result;
     }
 }

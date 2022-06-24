@@ -123,6 +123,14 @@ export function isLocalConnection(
     );
 }
 
+export function isRemoteConnection(
+    kernelConnection: KernelConnectionMetadata
+): kernelConnection is RemoteKernelConnectionMetadata {
+    return (
+        kernelConnection.kind === 'startUsingRemoteKernelSpec' || kernelConnection.kind === 'connectToLiveRemoteKernel'
+    );
+}
+
 export interface IKernel extends IAsyncDisposable {
     /**
      * Total execution count on this kernel

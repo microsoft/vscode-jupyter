@@ -20,6 +20,7 @@ import { ServerConnectionType } from './serverConnectionType';
 export class JupyterServerUriStorage implements IJupyterServerUriStorage {
     private lastSavedList?: Promise<{ uri: string; time: number; displayName?: string | undefined }[]>;
     private currentUriPromise: Promise<string> | undefined;
+    private _currentUri: string | undefined;
     private _onDidChangeUri = new EventEmitter<void>();
     public get onDidChangeUri() {
         return this._onDidChangeUri.event;
@@ -27,6 +28,9 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
     private _onDidRemoveUris = new EventEmitter<string[]>();
     public get onDidRemoveUris() {
         return this._onDidRemoveUris.event;
+    }
+    public get currentUri(): string | undefined {
+        return this._currentUri;
     }
     constructor(
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
@@ -37,7 +41,9 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
         @inject(ServerConnectionType) private readonly serverConnectionType: ServerConnectionType
     ) {
         // Cache our current state so we don't keep asking for it from the encrypted storage
-        this.getUri().ignoreErrors();
+        this.getUri()
+            .then((s) => (this._currentUri = s))
+            .ignoreErrors();
     }
     public async addToUriList(uri: string, time: number, displayName: string) {
         // Uri list is saved partially in the global memento and partially in encrypted storage
@@ -189,6 +195,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage {
     public async setUri(uri: string) {
         // Set the URI as our current state
         this.currentUriPromise = Promise.resolve(uri);
+        this._currentUri = uri;
         if (uri === Settings.JupyterServerLocalLaunch) {
             await this.serverConnectionType.setIsLocalLaunch(true);
         } else {

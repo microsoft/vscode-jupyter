@@ -34,7 +34,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
             this.singleActivationServices.map(async (item) => {
                 const promise = item.activate();
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                if ((promise as any).then) {
+                if (promise && (promise as any).then) {
                     return promise.catch(traceError);
                 }
             })

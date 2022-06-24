@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import isNil = require('lodash/isNil');
-import { EventEmitter, QuickInputButtons, QuickPickItem, ThemeIcon } from 'vscode';
+import { EventEmitter, QuickPickItem, ThemeIcon } from 'vscode';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { traceDecoratorError, traceError, traceWarning } from '../../platform/logging';
 import { DataScience } from '../../platform/common/utils/localize';
@@ -65,16 +65,19 @@ export class JupyterServerSelector {
     ) {}
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
-    @traceDecoratorError('Failed to select Jupyter Uri')
     public selectJupyterURI(
         commandSource: SelectJupyterUriCommandSource = 'nonUser',
-        showBackButton: boolean = false
-    ): Promise<InputFlowAction | undefined> {
+        existingMultiStep?: IMultiStepInput<{}>
+    ): Promise<InputFlowAction | undefined | InputStep<{}> | void> {
         sendTelemetryEvent(Telemetry.SetJupyterURIUIDisplayed, undefined, {
             commandSource
         });
-        const multiStep = this.multiStepFactory.create<{}>();
-        return multiStep.run(this.startSelectingURI.bind(this, showBackButton), {});
+        if (existingMultiStep) {
+            return this.startSelectingURI(existingMultiStep, {});
+        } else {
+            const multiStep = this.multiStepFactory.create<{}>();
+            return multiStep.run(this.startSelectingURI.bind(this), {});
+        }
     }
 
     @captureTelemetry(Telemetry.SetJupyterURIToLocal)
@@ -124,11 +127,7 @@ export class JupyterServerSelector {
         });
     }
 
-    private async startSelectingURI(
-        showBackButton: boolean,
-        input: IMultiStepInput<{}>,
-        _state: {}
-    ): Promise<InputStep<{}> | void> {
+    private async startSelectingURI(input: IMultiStepInput<{}>, _state: {}): Promise<InputStep<{}> | void> {
         // First step, show a quick pick to choose either the remote or the local.
         // newChoice element will be set if the user picked 'enter a new server'
 
@@ -148,8 +147,7 @@ export class JupyterServerSelector {
             items,
             activeItem,
             acceptFilterBoxTextAsSelection: true,
-            validateFilterBox: this.validateSelectJupyterURI.bind(this),
-            buttons: showBackButton ? [QuickInputButtons.Back] : [],
+            validate: this.validateSelectJupyterURI.bind(this),
             title: DataScience.jupyterSelectURIQuickPickTitle(),
             onDidTriggerItemButton: (e) => {
                 const url = e.item.url;

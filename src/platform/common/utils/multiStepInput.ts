@@ -41,7 +41,7 @@ export interface IQuickPickParameters<T extends QuickPickItem> {
     acceptFilterBoxTextAsSelection?: boolean;
     startBusy?: boolean;
     stopBusy?: Event<void>;
-    validateFilterBox?(value: string): Promise<string | undefined>;
+    validate?(value: string): Promise<string | undefined>;
     shouldResume?(): Promise<boolean>;
     onDidTriggerItemButton?(e: QuickPickItemButtonEvent<T>): void;
     onDidChangeItems?: Event<T[]>;
@@ -108,7 +108,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         acceptFilterBoxTextAsSelection,
         startBusy,
         stopBusy,
-        validateFilterBox,
+        validate,
         onDidTriggerItemButton,
         onDidChangeItems
     }: P): Promise<MultiStepInputQuickPicResponseType<T, P>> {
@@ -163,7 +163,25 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                             resolve(<any>item);
                         }
                     }),
-                    input.onDidChangeSelection((selectedItems) => resolve(selectedItems[0])),
+                    input.onDidChangeSelection(async (selectedItems) => {
+                        const itemLabel = selectedItems.length ? selectedItems[0].label : '';
+                        let resolvable = itemLabel ? true : false;
+                        if (itemLabel && validate) {
+                            input.enabled = false;
+                            input.busy = true;
+                            const message = await validate(itemLabel);
+                            if (message) {
+                                resolvable = false;
+                                // No validation allowed on a quick pick. Have to put up a dialog instead
+                                await this.shell.showErrorMessage(message, { modal: true });
+                            }
+                            input.enabled = true;
+                            input.busy = false;
+                        }
+                        if (resolvable) {
+                            resolve(selectedItems[0]);
+                        }
+                    }),
                     input.onDidHide(() => {
                         (async () => {
                             reject(
@@ -175,18 +193,18 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                 if (acceptFilterBoxTextAsSelection) {
                     disposables.push(
                         input.onDidAccept(async () => {
-                            input.enabled = false;
-                            input.busy = true;
-                            const validationMessage = validateFilterBox
-                                ? await validateFilterBox(input.value)
-                                : undefined;
-                            if (!validationMessage) {
-                                resolve(<any>input.value);
-                            } else {
-                                // No validation allowed on a quick pick. Have to put up a dialog instead
-                                await this.shell.showErrorMessage(validationMessage, { modal: true });
-                                input.enabled = true;
-                                input.busy = false;
+                            if (!input.busy) {
+                                const validationMessage = validate ? await validate(input.value) : undefined;
+                                if (!validationMessage) {
+                                    resolve(<any>input.value);
+                                } else {
+                                    input.enabled = false;
+                                    input.busy = true;
+                                    // No validation allowed on a quick pick. Have to put up a dialog instead
+                                    await this.shell.showErrorMessage(validationMessage, { modal: true });
+                                    input.enabled = true;
+                                    input.busy = false;
+                                }
                             }
                         })
                     );

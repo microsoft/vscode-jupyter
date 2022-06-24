@@ -6,7 +6,8 @@ import { Event, EventEmitter } from 'vscode';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { ILocalResourceUriConverter } from '../../kernels/ipywidgets/types';
 import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConnectionType';
-import { IKernelProvider, isLocalConnection, KernelConnectionMetadata } from '../../kernels/types';
+import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
+import { IKernelProvider, isLocalConnection, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import {
     IVSCodeNotebook,
@@ -68,7 +69,8 @@ export class ControllerRegistration implements IControllerRegistration {
         @inject(IBrowserService) private readonly browser: IBrowserService,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(ILocalResourceUriConverter) private readonly resourceConverter: ILocalResourceUriConverter,
-        @inject(ServerConnectionType) private readonly serverConnectionType: ServerConnectionType
+        @inject(ServerConnectionType) private readonly serverConnectionType: ServerConnectionType,
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
     ) {
         this.kernelFilter.onDidChange(this.onDidChangeFilter, this, this.disposables);
         this.serverConnectionType.onDidChange(this.onDidChangeFilter, this, this.disposables);
@@ -173,7 +175,9 @@ export class ControllerRegistration implements IControllerRegistration {
     private isFiltered(metadata: KernelConnectionMetadata): boolean {
         const userFiltered = this.kernelFilter.isKernelHidden(metadata);
         const connectionTypeFiltered = isLocalConnection(metadata) !== this.isLocalLaunch;
-        return userFiltered || connectionTypeFiltered;
+        const urlFiltered =
+            isRemoteConnection(metadata) && !this.serverUriStorage.currentUri?.includes(metadata.baseUrl);
+        return userFiltered || connectionTypeFiltered || urlFiltered;
     }
 
     private getControllerId(
