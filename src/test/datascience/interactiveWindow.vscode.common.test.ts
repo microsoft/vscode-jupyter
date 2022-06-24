@@ -44,6 +44,7 @@ import { sleep } from '../core';
 import { IPYTHON_VERSION_CODE } from '../constants';
 import { translateCellErrorOutput, getTextOutputValue } from '../../kernels/execution/helpers';
 import { IControllerSelection } from '../../notebooks/controllers/types';
+import * as dedent from 'dedent';
 
 suite(`Interactive window execution`, async function () {
     this.timeout(120_000);
@@ -367,6 +368,44 @@ ${actualCode}
                 assertHasTextOutputInVSCode(c, `${i}`);
             }
         });
+    });
+
+    test('Run a latex cell with a cell marker', async () => {
+        const { activeInteractiveWindow } = await runNewPythonFile(
+            interactiveWindowProvider,
+            dedent`
+                # %%
+                %%latex
+                \begin{align}
+                \nabla \cdot \vec{\mathbf{E}} & = 4 \pi \rho \\
+                \nabla \times \vec{\mathbf{E}}\, +\, \frac1c\, \frac{\partial\vec{\mathbf{B}}}{\partial t} & = \vec{\mathbf{0}} \\
+                \nabla \cdot \vec{\mathbf{B}} & = 0
+                \end{align}
+                `,
+            disposables
+        );
+
+        await waitForLastCellToComplete(activeInteractiveWindow);
+
+        const notebookDocument = vscode.workspace.notebookDocuments.find(
+            (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
+        );
+        const lastCell = notebookDocument!.cellAt(notebookDocument!.cellCount - 1)!;
+        await waitForCondition(
+            () => lastCell.outputs[0].items[0].mime === 'text/latex',
+            defaultNotebookTestTimeout,
+            () => `Output should be markdown, but is ${lastCell.outputs[0].items[0].mime}`
+        );
+        await waitForCondition(
+            () => lastCell.executionSummary?.executionOrder === 1,
+            defaultNotebookTestTimeout,
+            `Cell should have an execution order of 1, but has ${lastCell.executionSummary?.executionOrder}`
+        );
+        await waitForCondition(
+            () => lastCell.executionSummary?.success === true,
+            defaultNotebookTestTimeout,
+            'Cell should have executed successfully'
+        );
     });
 
     test('Run current file in interactive window (without cells)', async () => {
