@@ -15,7 +15,7 @@ import { DataScience, Common } from '../../../platform/common/utils/localize';
 import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { IDataViewerDependencyService } from './types';
-import { executeSilently } from '../../../kernels/helpers';
+import * as helpers from '../../../kernels/helpers';
 import { IKernel } from '../../../kernels/types';
 
 const minimumSupportedPandaVersion = '0.20.0';
@@ -113,7 +113,7 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
             sendTelemetryEvent(Telemetry.NoActiveKernelSession);
             throw new Error(DataScience.noActiveKernelSession());
         }
-        const outputs = await executeSilently(kernel.session, command);
+        const outputs = await helpers.executeSilently(kernel.session, command);
         const error = outputs.find((item) => item.output_type === 'error');
         if (error) {
             traceWarning(DataScience.failedToGetVersionOfPandas(), error.message);
