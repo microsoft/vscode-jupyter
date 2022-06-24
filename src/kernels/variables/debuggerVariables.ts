@@ -209,7 +209,6 @@ export class DebuggerVariables
         }
 
         const code = await this.dfScriptGenerator.generateCodeToGetDataFrameRows({
-            isDebugging: true,
             variableName: expression,
             startIndex: start,
             endIndex: end
@@ -324,7 +323,6 @@ export class DebuggerVariables
     public async getFullVariable(variable: IJupyterVariable): Promise<IJupyterVariable> {
         // Then eval calling the variable info function with our target variable
         const code = await this.varScriptGenerator.generateCodeToGetVariableInfo({
-            isDebugging: true,
             variableName: variable.name
         });
         const results = await this.evaluate(

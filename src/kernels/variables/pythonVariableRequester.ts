@@ -93,7 +93,6 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
     ): Promise<{ data: Record<string, unknown>[] }> {
         // Then execute a call to get the rows and turn it into JSON
         const code = await this.dfScriptGenerator.generateCodeToGetDataFrameRows({
-            isDebugging: false,
             variableName: expression,
             startIndex: start,
             endIndex: end
@@ -184,7 +183,6 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
     ): Promise<IJupyterVariable> {
         // Then execute a call to get the info and turn it into JSON
         const code = await this.varScriptGenerator.generateCodeToGetVariableInfo({
-            isDebugging: false,
             variableName: targetVariable.name
         });
         const results = await safeExecuteSilently(kernel, code, {

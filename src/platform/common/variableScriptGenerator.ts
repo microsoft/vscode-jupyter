@@ -5,10 +5,15 @@ import { inject, injectable } from 'inversify';
 import { IFileSystem } from './platform/types';
 import { IExtensionContext, IVariableScriptGenerator } from './types';
 import { joinPath } from '../vscode-path/resources';
+import * as dedent from 'dedent';
 
-const VariableInfoFunc = '_VSCODE_getVariableInfo';
-const VariablePropertiesFunc = '_VSCODE_getVariableProperties';
-const VariableTypesFunc = '_VSCODE_getVariableTypes';
+const VariableFunc = '_VSCODE_getVariable';
+const cleanupCode = dedent`
+                            try:
+                                del _VSCODE_getVariable
+                            except:
+                                pass
+                            `;
 
 @injectable()
 export class VariableScriptGenerator implements IVariableScriptGenerator {
@@ -17,24 +22,27 @@ export class VariableScriptGenerator implements IVariableScriptGenerator {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {}
-    async generateCodeToGetVariableInfo(options: { isDebugging: boolean; variableName: string }): Promise<string> {
+    async generateCodeToGetVariableInfo(options: { variableName: string }): Promise<string> {
         const contents = await this.getContentsOfScript();
-        if (options.isDebugging) {
-            return `${contents}\n\n${VariableInfoFunc}(${options.variableName})`;
-        } else {
-            return `${contents}\n\nimport builtins\nbuiltins.print(${VariableInfoFunc}(${options.variableName}))`;
-        }
+        return `${contents}\n\n${VariableFunc}("info", ${options.variableName})\n\n${cleanupCode}`;
     }
     async generateCodeToGetVariableProperties(options: {
         variableName: string;
         stringifiedAttributeNameList: string;
     }): Promise<string> {
         const contents = await this.getContentsOfScript();
-        return `${contents}\n\nimport builtins\nbuiltins.print(${VariablePropertiesFunc}(${options.variableName}, ${options.stringifiedAttributeNameList}))`;
+        return `${contents}\n\n${VariableFunc}("properties", ${options.variableName}, ${options.stringifiedAttributeNameList}))\n\n${cleanupCode}`;
     }
     async generateCodeToGetVariableTypes(): Promise<string> {
         const contents = await this.getContentsOfScript();
-        return `${contents}\n\nimport builtins\n_rwho_ls = %who_ls\nbuiltins.print(${VariableTypesFunc}(_rwho_ls))`;
+        const cleanupWhoLsCode = dedent`
+        try:
+            del _VSCODE_rwho_ls
+        except:
+            pass
+        `;
+
+        return `${contents}\n\n_VSCODE_rwho_ls = %who_ls\n${VariableFunc}("types",_VSCODE_rwho_ls)\n\n${cleanupCode}\n${cleanupWhoLsCode}`;
     }
     /**
      * Script content is static, hence read the contents once.

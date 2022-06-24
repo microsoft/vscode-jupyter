@@ -349,7 +349,7 @@ export interface ICellRange {
 
 export const IVariableScriptGenerator = Symbol('IVariableScriptGenerator');
 export interface IVariableScriptGenerator {
-    generateCodeToGetVariableInfo(options: { isDebugging: boolean; variableName: string }): Promise<string>;
+    generateCodeToGetVariableInfo(options: { variableName: string }): Promise<string>;
     generateCodeToGetVariableProperties(options: {
         variableName: string;
         stringifiedAttributeNameList: string;
@@ -360,7 +360,6 @@ export const IDataFrameScriptGenerator = Symbol('IDataFrameScriptGenerator');
 export interface IDataFrameScriptGenerator {
     generateCodeToGetDataFrameInfo(options: { isDebugging: boolean; variableName: string }): Promise<string>;
     generateCodeToGetDataFrameRows(options: {
-        isDebugging: boolean;
         variableName: string;
         startIndex: number;
         endIndex: number;
