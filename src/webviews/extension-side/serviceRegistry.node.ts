@@ -6,7 +6,7 @@ import { IExtensionSingleActivationService, IExtensionSyncActivationService } fr
 import { IServiceManager } from '../../platform/ioc/types';
 import { DataViewer } from './dataviewer/dataViewer';
 import { DataViewerCommandRegistry } from './dataviewer/dataViewerCommandRegistry';
-import { DataViewerDependencyService } from './dataviewer/dataViewerDependencyService';
+import { DataViewerDependencyService } from './dataviewer/dataViewerDependencyService.node';
 import { DataViewerFactory } from './dataviewer/dataViewerFactory';
 import { JupyterVariableDataProvider } from './dataviewer/jupyterVariableDataProvider';
 import { JupyterVariableDataProviderFactory } from './dataviewer/jupyterVariableDataProviderFactory';
