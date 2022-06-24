@@ -6,7 +6,12 @@ import { inject, injectable } from 'inversify';
 import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverConnectionType';
 import { IExtensionSingleActivationService } from '../../../platform/activation/types';
 import { ICommandManager, IVSCodeNotebook } from '../../../platform/common/application/types';
-import { Commands, JVSC_EXTENSION_ID } from '../../../platform/common/constants';
+import {
+    Commands,
+    InteractiveWindowView,
+    JupyterNotebookView,
+    JVSC_EXTENSION_ID
+} from '../../../platform/common/constants';
 import { ContextKey } from '../../../platform/common/contextKey';
 import { IDisposableRegistry, IsWebExtension } from '../../../platform/common/types';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
@@ -102,8 +107,12 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
     }
 
     private async switchToRemoteKernels() {
+        const activeNotebookType = this.notebooks.activeNotebookEditor ? JupyterNotebookView : InteractiveWindowView;
         const multiStep = this.multiStepFactory.create<{}>();
-        return multiStep.run(this.startSwitchRun.bind(this, this.startSwitchingToRemote.bind(this)), {});
+        return multiStep.run(
+            this.startSwitchRun.bind(this, this.startSwitchingToRemote.bind(this, activeNotebookType)),
+            {}
+        );
     }
 
     private async startSwitchRun(next: InputStep<{}>, _input: IMultiStepInput<{}>): Promise<InputStep<{}> | void> {
@@ -111,10 +120,13 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
         return next;
     }
 
-    private async startSwitchingToRemote(input: IMultiStepInput<{}>): Promise<InputStep<{}> | void> {
+    private async startSwitchingToRemote(
+        activeNotebookType: typeof JupyterNotebookView | typeof InteractiveWindowView,
+        input: IMultiStepInput<{}>
+    ): Promise<InputStep<{}> | void> {
         try {
             await this.serverSelector.selectJupyterURI('nonUser', input);
-            return this.showKernelPicker('Pick remote kernel', 'type here to filter', false, input);
+            return this.showKernelPicker('Pick remote kernel', 'type here to filter', false, activeNotebookType, input);
         } catch (e) {
             if (e === InputFlowAction.back) {
                 return this.showVsCodeKernelPicker();
@@ -123,11 +135,18 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
     }
 
     private async switchToLocalKernels() {
+        const activeNotebookType = this.notebooks.activeNotebookEditor ? JupyterNotebookView : InteractiveWindowView;
         const multiStep = this.multiStepFactory.create<{}>();
-        return multiStep.run(this.startSwitchRun.bind(this, this.startSwitchingToLocal.bind(this)), {});
+        return multiStep.run(
+            this.startSwitchRun.bind(this, this.startSwitchingToLocal.bind(this, activeNotebookType)),
+            {}
+        );
     }
 
-    private async startSwitchingToLocal(input: IMultiStepInput<{}>): Promise<InputStep<{}> | void> {
+    private async startSwitchingToLocal(
+        activeNotebookType: typeof JupyterNotebookView | typeof InteractiveWindowView,
+        input: IMultiStepInput<{}>
+    ): Promise<InputStep<{}> | void> {
         // Wait until we switch to local
         const deferred = createDeferred<boolean>();
         const disposable = this.serverConnectionType.onDidChange(() => deferred.resolve(true));
@@ -139,18 +158,21 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
         }
 
         // Then bring up the quick pick for the current set of controllers.
-        return this.showKernelPicker('Pick local kernel', 'type here to filter', true, input);
+        return this.showKernelPicker('Pick local kernel', 'type here to filter', true, activeNotebookType, input);
     }
 
     private async showKernelPicker(
         title: string,
         placeholder: string,
         local: boolean,
+        viewType: typeof JupyterNotebookView | typeof InteractiveWindowView,
         input: IMultiStepInput<{}>
     ): Promise<void> {
         // Get the current list. We will dynamically update the list as
         // more and more controllers are found.
-        const controllers = this.controllerRegistration.values.filter((c) => isLocalConnection(c.connection) === local);
+        const controllers = this.controllerRegistration.values.filter(
+            (c) => isLocalConnection(c.connection) === local && c.viewType === viewType
+        );
 
         // Create an event emitter for when new controllers are added
         const changeEmitter = new EventEmitter<(QuickPickItem | ControllerQuickPick)[]>();
@@ -183,29 +205,31 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
 
         // Listen to new controllers being added
         this.controllerRegistration.onCreated((e) => {
-            // Create a pick for the new controller
-            const pick: ControllerQuickPick = {
-                label: e.label,
-                detail: undefined,
-                description: e.controller.description,
-                controller: e
-            };
+            if (e.viewType === viewType) {
+                // Create a pick for the new controller
+                const pick: ControllerQuickPick = {
+                    label: e.label,
+                    detail: undefined,
+                    description: e.controller.description,
+                    controller: e
+                };
 
-            // Stick into the list at the right place
-            const kind = e.controller.kind || 'Other';
-            const index = kindIndexes.get(kind) || -1;
-            if (index < 0) {
-                quickPickItems.push({
-                    kind: QuickPickItemKind.Separator,
-                    label: kind
-                });
-                quickPickItems.push(pick);
-                kindIndexes.set(kind, quickPickItems.length);
-            } else {
-                quickPickItems.splice(index, 0, pick);
-                kindIndexes.set(kind, quickPickItems.length);
+                // Stick into the list at the right place
+                const kind = e.controller.kind || 'Other';
+                const index = kindIndexes.get(kind) || -1;
+                if (index < 0) {
+                    quickPickItems.push({
+                        kind: QuickPickItemKind.Separator,
+                        label: kind
+                    });
+                    quickPickItems.push(pick);
+                    kindIndexes.set(kind, quickPickItems.length);
+                } else {
+                    quickPickItems.splice(index, 0, pick);
+                    kindIndexes.set(kind, quickPickItems.length);
+                }
+                changeEmitter.fire(quickPickItems);
             }
-            changeEmitter.fire(quickPickItems);
         });
 
         // Show quick pick with the list of controllers
