@@ -9,7 +9,6 @@ def _VSCODE_getDataFrame(what_to_get, *args):
     # PyTorch and TensorFlow tensors which can be converted to numpy arrays
     _VSCODE_allowedTensorTypes = ["Tensor", "EagerTensor"]
 
-
     def _VSCODE_stringifyElement(element):
         if isinstance(element, _VSCODE_np.ndarray):
             # Ensure no rjust or ljust padding is applied to stringified elements
@@ -23,7 +22,6 @@ def _VSCODE_getDataFrame(what_to_get, *args):
         else:
             stringified = element
         return stringified
-
 
     def _VSCODE_convertNumpyArrayToDataFrame(ndarray, start=None, end=None):
         # Save the user's current setting
@@ -53,7 +51,6 @@ def _VSCODE_getDataFrame(what_to_get, *args):
             _VSCODE_np.set_printoptions(threshold=current_options["threshold"])
             del flattened
             return _VSCODE_pd.DataFrame(ndarray)
-
 
     # Function that converts tensors to DataFrames
     def _VSCODE_convertTensorToDataFrame(tensor, start=None, end=None):
@@ -88,7 +85,6 @@ def _VSCODE_getDataFrame(what_to_get, *args):
             pass
         return tensor
 
-
     # Function that converts the var passed in into a pandas data frame if possible
     def _VSCODE_convertToDataFrame(df, start=None, end=None):
         vartype = type(df)
@@ -102,7 +98,8 @@ def _VSCODE_getDataFrame(what_to_get, *args):
         elif hasattr(df, "toPandas"):
             df = df.toPandas().iloc[start:end]
         elif (
-            hasattr(vartype, "__name__") and vartype.__name__ in _VSCODE_allowedTensorTypes
+            hasattr(vartype, "__name__")
+            and vartype.__name__ in _VSCODE_allowedTensorTypes
         ):
             df = _VSCODE_convertTensorToDataFrame(df, start, end)
         elif hasattr(vartype, "__name__") and vartype.__name__ == "ndarray":
@@ -112,7 +109,9 @@ def _VSCODE_getDataFrame(what_to_get, *args):
             and hasattr(vartype, "__name__")
             and vartype.__name__ == "DataArray"
         ):
-            df = _VSCODE_convertNumpyArrayToDataFrame(df[start:end].__array__(), start, end)
+            df = _VSCODE_convertNumpyArrayToDataFrame(
+                df[start:end].__array__(), start, end
+            )
         else:
             """Disabling bandit warning for try, except, pass. We want to swallow all exceptions here to not crash on
             variable fetching"""
@@ -123,7 +122,6 @@ def _VSCODE_getDataFrame(what_to_get, *args):
                 pass
         del vartype
         return df
-
 
     # Function to compute row count for a value
     def _VSCODE_getRowCount(var):
@@ -140,7 +138,6 @@ def _VSCODE_getDataFrame(what_to_get, *args):
             except TypeError:
                 return 0
 
-
     # Function to retrieve a set of rows for a data frame
     def _VSCODE_getDataFrameRows(df, start, end):
         df = _VSCODE_convertToDataFrame(df, start, end)
@@ -155,8 +152,9 @@ def _VSCODE_getDataFrame(what_to_get, *args):
             )
         except:
             pass
-        _VSCODE_builtins.print(_VSCODE_pd_json.to_json(None, df, orient="split", date_format="iso"))
-
+        _VSCODE_builtins.print(
+            _VSCODE_pd_json.to_json(None, df, orient="split", date_format="iso")
+        )
 
     # Function to get info on the passed in data frame
     def _VSCODE_getDataFrameInfo(df):

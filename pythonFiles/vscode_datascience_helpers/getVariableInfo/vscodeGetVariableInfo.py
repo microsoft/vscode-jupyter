@@ -52,7 +52,6 @@ def _VSCODE_getVariable(what_to_get, *args):
         # return our json object as a string
         _VSCODE_builtins.print(_VSCODE_json.dumps(result))
 
-
     def _VSCODE_getVariableProperties(var, listOfAttributes):
         result = {
             attr: repr(getattr(var, attr))
@@ -60,7 +59,6 @@ def _VSCODE_getVariable(what_to_get, *args):
             if hasattr(var, attr)
         }
         _VSCODE_builtins.print(_VSCODE_json.dumps(result))
-
 
     def _VSCODE_getVariableTypes(varnames):
         # Map with key: varname and value: vartype
@@ -83,4 +81,3 @@ def _VSCODE_getVariable(what_to_get, *args):
 
     del _VSCODE_json
     del _VSCODE_builtins
-
