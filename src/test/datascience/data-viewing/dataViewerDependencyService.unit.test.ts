@@ -119,7 +119,7 @@ suite('DataScience - DataViewerDependencyService', () => {
         assert.equal(await resultPromise, undefined);
         assert.deepEqual(
             stub.getCalls().map((call) => call.lastArg),
-            [getVersionOfPandasCommand, 'pip install pandas']
+            [getVersionOfPandasCommand, '%pip install pandas']
         );
     });
 

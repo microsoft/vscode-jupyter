@@ -82,7 +82,8 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
                   Common.install()
               );
 
-        const command = `${this.packaging(kernel)} install pandas`;
+        // From https://ipython.readthedocs.io/en/stable/interactive/magics.html#magic-pip (%conda is here as well).
+        const command = `%${this.packaging(kernel)} install pandas`;
 
         if (selection === Common.install()) {
             try {
