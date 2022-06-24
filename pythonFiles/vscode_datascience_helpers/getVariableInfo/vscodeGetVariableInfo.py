@@ -81,9 +81,6 @@ def _VSCODE_getVariable(what_to_get, *args):
     else:
         _VSCODE_getVariableTypes(*args)
 
-    try:
-        del _VSCODE_json
-        del _VSCODE_builtins
-    except:
-        pass
+    del _VSCODE_json
+    del _VSCODE_builtins
 

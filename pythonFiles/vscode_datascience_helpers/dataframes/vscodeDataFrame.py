@@ -214,12 +214,8 @@ def _VSCODE_getDataFrame(what_to_get, *args):
     else:
         _VSCODE_getDataFrameInfo(*args)
 
-    try:
-        del _VSCODE_pd
-        del _VSCODE_json
-        del _VSCODE_pd_json
-        del _VSCODE_np
-        del _VSCODE_builtins
-    except:
-        pass
-
+    del _VSCODE_pd
+    del _VSCODE_json
+    del _VSCODE_pd_json
+    del _VSCODE_np
+    del _VSCODE_builtins

@@ -57,35 +57,25 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
         }
 
         const code = dedent`
-                            import sys
-                            import os
                             try:
-                                __vsc_glob_was_imported = 'glob' in sys.modules
-                                __vsc_os_was_imported = 'os' in sys.modules
                                 __vsc_nbextension_widgets = []
-                                import glob
-                                import os
-                                __vsc_nbextension_Folder = sys.prefix + os.path.sep + 'share' + os.path.sep + 'jupyter' + os.path.sep + 'nbextensions' + os.path.sep
+                                import glob as _VSCODE_glob
+                                import os as _VSCODE_os
+                                import os as _VSCODE_sys
+                                __vsc_nbextension_Folder = _VSCODE_sys.prefix + _VSCODE_os.path.sep + 'share' + _VSCODE_os.path.sep + 'jupyter' + _VSCODE_os.path.sep + 'nbextensions' + _VSCODE_os.path.sep
                                 __vsc_file = ''
-                                for __vsc_file in glob.glob(__vsc_nbextension_Folder + '*' +  os.path.sep + 'extension.js'):
+                                for __vsc_file in _VSCODE_glob.glob(__vsc_nbextension_Folder + '*' +  _VSCODE_os.path.sep + 'extension.js'):
                                     __vsc_nbextension_widgets.append(__vsc_file.replace(__vsc_nbextension_Folder, ""))
 
                                 print(__vsc_nbextension_widgets)
                             except:
                                 pass
 
-                            try:
-                                if not __vsc_glob_was_imported:
-                                    del sys.modules['glob']
-                                if not __vsc_os_was_imported:
-                                    del sys.modules['os']
-                            except:
-                                pass
-
                             # We need to ensure these variables don't interfere with the variable viewer, hence delete them after use.
+                            del _VSCODE_glob
+                            del _VSCODE_os
+                            del _VSCODE_sys
                             del __vsc_file
-                            del __vsc_glob_was_imported
-                            del __vsc_os_was_imported
                             del __vsc_nbextension_Folder
                             del __vsc_nbextension_widgets`;
         if (!this.kernel.session) {
