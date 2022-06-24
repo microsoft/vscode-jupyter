@@ -107,6 +107,8 @@ suite('DataScience - VariableView', function () {
         // Verify we don't have any new variables apart from test, test2, os & sys
         const kernel = kernelProvider.get(cell.notebook.uri)!;
         const outputs = await kernel.executeHidden('%who_ls');
+        // https://github.com/microsoft/vscode-jupyter/issues/10559
+        const varsToIgnore = ['matplotlib_inline', 'matplotlib', 'sys', 'os'];
         // Sample output is `["test", "test2", "os", "sys"]`
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const vars = ((outputs[0].data as any)['text/plain'] as string)
@@ -116,8 +118,9 @@ suite('DataScience - VariableView', function () {
             .split(',')
             .map((item) => item.trim())
             .map((item) => item.trimQuotes())
+            .filter((item) => !varsToIgnore.includes(item))
             .sort();
-        assert.deepEqual(vars, ['test', 'test2', 'os', 'sys'].sort());
+        assert.deepEqual(vars, ['test', 'test2'].sort());
     });
 
     test('Can show variables even when print is overridden', async function () {
