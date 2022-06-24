@@ -7,15 +7,15 @@ import * as os from 'os';
 import * as vscode from 'vscode';
 import * as lspConcat from '@vscode/lsp-notebook-concat';
 import * as protocol from 'vscode-languageserver-protocol';
-import { IExtensionSingleActivationService } from '../platform/activation/types';
-import { ICommandManager, IApplicationShell } from '../platform/common/application/types';
-import { PYTHON_LANGUAGE, NOTEBOOK_SELECTOR, Commands, EditorContexts } from '../platform/common/constants';
-import { ContextKey } from '../platform/common/contextKey';
-import { traceInfo } from '../platform/logging';
-import { IFileSystemNode } from '../platform/common/platform/types.node';
-import { IDisposableRegistry, IConfigurationService } from '../platform/common/types';
-import { sleep, waitForCondition } from '../platform/common/utils/async';
-import { noop, swallowExceptions } from '../platform/common/utils/misc';
+import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { ICommandManager, IApplicationShell } from '../../platform/common/application/types';
+import { PYTHON_LANGUAGE, NOTEBOOK_SELECTOR, Commands, EditorContexts } from '../../platform/common/constants';
+import { ContextKey } from '../../platform/common/contextKey';
+import { traceInfo } from '../../platform/logging';
+import { IFileSystemNode } from '../../platform/common/platform/types.node';
+import { IDisposableRegistry, IConfigurationService } from '../../platform/common/types';
+import { sleep, waitForCondition } from '../../platform/common/utils/async';
+import { noop, swallowExceptions } from '../../platform/common/utils/misc';
 
 /**
  * Class used to replay pylance log output to regenerate a series of edits.

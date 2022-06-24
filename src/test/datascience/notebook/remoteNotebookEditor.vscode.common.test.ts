@@ -31,7 +31,7 @@ import { PYTHON_LANGUAGE, Settings } from '../../../platform/common/constants';
 import { IS_REMOTE_NATIVE_TEST, JVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
 import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/preferredRemoteKernelIdProvider';
 import { IServiceContainer } from '../../../platform/ioc/types';
-import { setIntellisenseTimeout } from '../../../intellisense/pythonKernelCompletionProvider';
+import { setIntellisenseTimeout } from '../../../standalone/intellisense/pythonKernelCompletionProvider';
 import {
     IControllerDefaultService,
     IControllerLoader,

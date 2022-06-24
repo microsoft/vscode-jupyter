@@ -4,16 +4,16 @@
 
 import { inject, injectable } from 'inversify';
 import { Disposable, extensions, Uri, workspace } from 'vscode';
-import { INotebookEditorProvider } from '../notebooks/types';
-import { IExtensionSingleActivationService } from '../platform/activation/types';
-import { IPythonApiProvider } from '../platform/api/types';
-import { PylanceExtension, PythonExtension } from '../platform/common/constants';
-import { getFilePath } from '../platform/common/platform/fs-paths';
-import { IConfigurationService } from '../platform/common/types';
-import { IInterpreterService } from '../platform/interpreter/contracts';
+import { INotebookEditorProvider } from '../../notebooks/types';
+import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IPythonApiProvider } from '../../platform/api/types';
+import { PylanceExtension, PythonExtension } from '../../platform/common/constants';
+import { getFilePath } from '../../platform/common/platform/fs-paths';
+import { IConfigurationService } from '../../platform/common/types';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
 import * as semver from 'semver';
-import { traceInfo, traceVerbose } from '../platform/logging';
-import { IControllerSelection } from '../notebooks/controllers/types';
+import { traceInfo, traceVerbose } from '../../platform/logging';
+import { IControllerSelection } from '../../notebooks/controllers/types';
 
 /**
  * Manages use of the Python extension's registerJupyterPythonPathFunction API which

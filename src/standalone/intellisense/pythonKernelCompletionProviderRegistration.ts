@@ -3,9 +3,9 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { languages } from 'vscode';
-import { IExtensionSingleActivationService } from '../platform/activation/types';
-import { NOTEBOOK_SELECTOR } from '../platform/common/constants';
-import { IDisposableRegistry, IConfigurationService } from '../platform/common/types';
+import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { NOTEBOOK_SELECTOR } from '../../platform/common/constants';
+import { IDisposableRegistry, IConfigurationService } from '../../platform/common/types';
 import { PythonKernelCompletionProvider } from './pythonKernelCompletionProvider';
 
 // Default set of trigger characters for jupyter
