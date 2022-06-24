@@ -58,6 +58,20 @@ suite('DataScience - DataViewerDependencyService', () => {
         );
     });
 
+    test('All ok, if pandas is installed and version is > 1.20, even if the command returns with a new line', async () => {
+        const version = '1.4.2\n';
+
+        const stub = sinon.stub(helpers, 'executeSilently');
+        stub.returns(Promise.resolve([{ ename: 'stdout', output_type: 'stream', text: version }]));
+
+        const result = await dependencyService.checkAndInstallMissingDependenciesOnKernel(kernel);
+        assert.equal(result, undefined);
+        assert.deepEqual(
+            stub.getCalls().map((call) => call.lastArg),
+            [getVersionOfPandasCommand]
+        );
+    });
+
     test('Throw exception if pandas is installed and version is = 0.20', async () => {
         const version = '0.20.0';
 
