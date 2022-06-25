@@ -5,13 +5,13 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
-import { commands, Uri, window } from 'vscode';
+import { commands, QuickInputButtons, Uri, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { BufferDecoder } from '../../../platform/common/process/decoder.node';
 import { ProcessService } from '../../../platform/common/process/proc.node';
 import { IDisposable } from '../../../platform/common/types';
-import { IKernelProvider } from '../../../platform/../kernels/types';
+import { IKernelProvider, isLocalConnection, isRemoteConnection } from '../../../platform/../kernels/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import {
     getInterpreterHash,
@@ -33,11 +33,18 @@ import {
     waitForOutputs,
     waitForTextOutput,
     defaultNotebookTestTimeout,
-    createTemporaryNotebookFromFile
+    createTemporaryNotebookFromFile,
+    hijackCreateQuickPick,
+    asPromise
 } from './helper.node';
 import { getOSType, OSType } from '../../../platform/common/utils/platform';
 import { getTextOutputValue } from '../../../kernels/execution/helpers';
 import { noop } from '../../core';
+import { Commands } from '../../../platform/common/constants';
+import { sleep } from '../../../platform/common/utils/async';
+import { IControllerLoader, IControllerRegistration } from '../../../notebooks/controllers/types';
+import { isWeb } from '../../../platform/common/utils/misc';
+import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience - VSCode Notebook - Kernel Selection', function () {
@@ -69,6 +76,10 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
     const venvNoRegSearchString = '.venvnoreg';
     let activeInterpreterSearchString = '';
     let vscodeNotebook: IVSCodeNotebook;
+    let controllerRegistration: IControllerRegistration;
+    let controllerLoader: IControllerLoader;
+    let serverUriStorage: IJupyterServerUriStorage;
+    let jupyterServerUri: string | undefined;
     this.timeout(120_000); // Slow test, we need to uninstall/install ipykernel.
     /*
     This test requires a virtual environment to be created & registered as a kernel.
@@ -91,6 +102,9 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         const pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
+        controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
+        serverUriStorage = api.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage);
+        controllerLoader = api.serviceContainer.get<IControllerLoader>(IControllerLoader);
 
         if (!pythonChecker.isPythonExtensionInstalled) {
             return this.skip();
@@ -131,6 +145,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         ]);
 
         await startJupyterServer();
+        jupyterServerUri = await serverUriStorage.getRemoteUri();
         sinon.restore();
     });
 
@@ -155,6 +170,9 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         console.log(`End test ${this.currentTest?.title}`);
         await closeNotebooksAndCleanUpAfterTests(disposables);
         console.log(`End test completed ${this.currentTest?.title}`);
+        if (jupyterServerUri) {
+            await serverUriStorage.setUriToRemote(jupyterServerUri, '');
+        }
     });
 
     test('Ensure we select active interpreter as kernel (when Raw Kernels)', async function () {
@@ -340,6 +358,39 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
             // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
             waitForTextOutput(cell, venvNoRegSearchString, 0, false)
         ]);
+    });
+
+    test('Start local, pick remote and go back - locals should be shown', async function () {
+        if (!IS_REMOTE_NATIVE_TEST() || isWeb()) {
+            this.skip(); // Test only works when have a remote server mode and we can connect to locals
+        }
+        await serverUriStorage.setUriToLocal();
+        await controllerLoader.loaded;
+        await createEmptyPythonNotebook(disposables);
+        await insertCodeCell('import sys\nsys.executable', { index: 0 });
+
+        // Hijack the quick pick so we can force picking back
+        const { created } = await hijackCreateQuickPick(disposables);
+        const firstPromise = asPromise(created);
+
+        // Execute the command but don't wait for it
+        const commandPromise = commands.executeCommand(Commands.SwitchToRemoteKernels) as Promise<void>;
+
+        // URI quick pick should be on the screen.
+        const uriQuickPick = await firstPromise;
+
+        // Trigger the back button
+        uriQuickPick.triggerButton(QuickInputButtons.Back);
+
+        // Wait for the command to complete
+        const result = await Promise.race([commandPromise, sleep(5000)]);
+        assert.notOk(result, `Back button did not finish the command`);
+
+        // Make sure our kernel list is only locals
+        const remotes = controllerRegistration.values.filter((c) => isRemoteConnection(c.connection));
+        const locals = controllerRegistration.values.filter((c) => isLocalConnection(c.connection));
+        assert.ok(locals.length > 0, 'No local connections');
+        assert.equal(remotes.length, 0, 'There should be no remote connections');
     });
 
     // Tests to write:

@@ -33,7 +33,12 @@ import {
     CompletionContext,
     CompletionTriggerKind,
     CancellationTokenSource,
-    CompletionItem
+    CompletionItem,
+    QuickPick,
+    QuickPickItem,
+    QuickInputButton,
+    QuickPickItemButtonEvent,
+    EventEmitter
 } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../platform/common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../platform/common/constants';
@@ -57,7 +62,7 @@ import {
     InteractiveControllerIdSuffix,
     IVSCodeNotebookController
 } from '../../../notebooks/controllers/types';
-import { IS_SMOKE_TEST } from '../../constants';
+import { IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
 import * as urlPath from '../../../platform/vscode-path/resources';
 import * as uuid from 'uuid/v4';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
@@ -269,7 +274,7 @@ export async function createEmptyPythonNotebook(
     await openAndShowNotebook(nbFile);
     assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
     if (!dontWaitForKernel) {
-        await waitForKernelToGetAutoSelected();
+        await waitForKernelToGetAutoSelected(undefined, IS_REMOTE_NATIVE_TEST());
         await verifySelectedControllerIsRemoteForRemoteTests();
     }
     await deleteAllCellsAndWait();
@@ -1103,6 +1108,95 @@ export async function hijackSavePrompt(
             displayed = createDeferred<boolean>();
         },
         clickButton: (text?: string) => clickButton.resolve(text || buttonToClick?.result)
+    };
+}
+
+export class MockQuickPick implements QuickPick<QuickPickItem> {
+    value: string;
+    placeholder: string | undefined;
+    get onDidChangeValue(): Event<string> {
+        return this._onDidChangeValueEmitter.event;
+    }
+    get onDidAccept(): Event<void> {
+        return this._onDidAcceptEmitter.event;
+    }
+    buttons: readonly QuickInputButton[];
+    get onDidTriggerButton(): Event<QuickInputButton> {
+        return this._onDidTriggerButtonEmitter.event;
+    }
+    get onDidTriggerItemButton(): Event<QuickPickItemButtonEvent<QuickPickItem>> {
+        return this._onDidTriggerItemButtonEmitter.event;
+    }
+    items: readonly QuickPickItem[];
+    canSelectMany: boolean;
+    matchOnDescription: boolean;
+    matchOnDetail: boolean;
+    keepScrollPosition?: boolean | undefined;
+    activeItems: readonly QuickPickItem[];
+    get onDidChangeActive(): Event<readonly QuickPickItem[]> {
+        return this._onDidChangeActiveEmitter.event;
+    }
+    selectedItems: readonly QuickPickItem[];
+    get onDidChangeSelection(): Event<readonly QuickPickItem[]> {
+        return this._onDidChangeSelectionEmitter.event;
+    }
+    sortByLabel: boolean;
+    title: string | undefined;
+    step: number | undefined;
+    totalSteps: number | undefined;
+    enabled: boolean;
+    busy: boolean;
+    ignoreFocusOut: boolean;
+    show(): void {
+        // Does nothing.
+    }
+    hide(): void {
+        this._onDidHideEmitter.fire();
+    }
+    get onDidHide(): Event<void> {
+        return this._onDidHideEmitter.event;
+    }
+    dispose(): void {
+        // Do nothing
+    }
+    public triggerButton(button: QuickInputButton): void {
+        this._onDidTriggerButtonEmitter.fire(button);
+    }
+    private _onDidChangeValueEmitter = new EventEmitter<string>();
+    private _onDidAcceptEmitter = new EventEmitter<void>();
+    private _onDidTriggerButtonEmitter = new EventEmitter<QuickInputButton>();
+    private _onDidTriggerItemButtonEmitter = new EventEmitter<QuickPickItemButtonEvent<QuickPickItem>>();
+    private _onDidChangeActiveEmitter = new EventEmitter<readonly QuickPickItem[]>();
+    private _onDidChangeSelectionEmitter = new EventEmitter<readonly QuickPickItem[]>();
+    private _onDidHideEmitter = new EventEmitter<void>();
+}
+
+export type QuickPickStub = {
+    dispose(): void;
+    created: Event<MockQuickPick>;
+};
+
+export async function hijackCreateQuickPick(disposables: IDisposable[] = []): Promise<QuickPickStub> {
+    const api = await initialize();
+    const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
+    const emitter = new EventEmitter<MockQuickPick>();
+
+    const stub = sinon.stub(appShell, 'createQuickPick').callsFake(function () {
+        const result = new MockQuickPick();
+        emitter.fire(result);
+        return result;
+    });
+    const disposable = { dispose: () => stub.restore() };
+    if (disposables) {
+        disposables.push(disposable);
+        disposables.push(emitter);
+    }
+    return {
+        dispose: () => {
+            stub.restore();
+            emitter.dispose();
+        },
+        created: emitter.event
     };
 }
 
