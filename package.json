@@ -2144,6 +2144,7 @@
         "stopJupyterServer": "node build/postDebugWebTest.js",
         "validateTelemetryMD": "gulp validateTelemetryMD",
         "verifyUnhandledErrors": "gulp verifyUnhandledErrors",
+        "printWebTestResults": "gulp printWebTestResults",
         "prepare": "husky install"
     },
     "dependencies": {

@@ -732,6 +732,10 @@ jobs:
           path: './webtest.log'
           retention-days: 1
 
+      - name: Web Test results
+        if: "(success() || failure()) && (matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.webOrDesktop == 'web')"
+        run: npm run printWebTestResults
+
       - name: List files
         run: ls
         if: always()

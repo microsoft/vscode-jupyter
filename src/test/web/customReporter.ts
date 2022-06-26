@@ -19,6 +19,7 @@ type Message =
     | { event: typeof Runner.constants.EVENT_RUN_BEGIN }
     | { event: typeof Runner.constants.EVENT_RUN_END; stats?: Stats }
     | { event: typeof Runner.constants.EVENT_SUITE_BEGIN; title: string }
+    | { event: typeof Runner.constants.EVENT_SUITE_END; title: string }
     | {
           event: typeof Runner.constants.EVENT_TEST_FAIL;
           title: string;
@@ -57,6 +58,7 @@ export class CustomReporter extends reporters.Base {
     constructor(runner: Runner) {
         super(runner);
         this.reportServerPor = workspace.getConfiguration('jupyter').get('reportServerPort') as number;
+
         const url = `http://localhost:${this.reportServerPor}`;
         const reportProgress = (message: Message) => sendMessage(url, message);
         runner
@@ -69,7 +71,9 @@ export class CustomReporter extends reporters.Base {
             .on(Runner.constants.EVENT_SUITE_BEGIN, (suite: Suite) => {
                 reportProgress({ event: Runner.constants.EVENT_SUITE_BEGIN, title: suite.fullTitle() });
             })
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .on(Runner.constants.EVENT_SUITE_END, (suite: Suite) => {
+                reportProgress({ event: Runner.constants.EVENT_SUITE_END, title: suite.fullTitle() });
+            })
             .on(Runner.constants.EVENT_TEST_FAIL, (test: Test, err: any) => {
                 reportProgress({
                     event: Runner.constants.EVENT_TEST_FAIL,
@@ -77,16 +81,12 @@ export class CustomReporter extends reporters.Base {
                     err: formatException(err),
                     duration: test.duration
                 });
-                // const durationSuffix = test.duration ? ` after ${test.duration / 1000}s` : '';
-                // reportProgress(`${colors.red('✕ Failed')}: ${test.fullTitle()}${durationSuffix}\n${err.toString()}`);
             })
             .on(Runner.constants.EVENT_TEST_PENDING, (test: Test) => {
                 reportProgress({
                     event: Runner.constants.EVENT_TEST_PENDING,
                     title: test.fullTitle()
                 });
-                // const durationSuffix = test.duration ? ` in ${test.duration / 1000}s` : '';
-                // reportProgress(`${colors.green('✓ Passed')}: ${test.fullTitle()}${durationSuffix}`);
             })
             .on(Runner.constants.EVENT_TEST_PASS, (test: Test) => {
                 reportProgress({
@@ -94,7 +94,6 @@ export class CustomReporter extends reporters.Base {
                     title: test.fullTitle(),
                     duration: test.duration
                 });
-                // reportProgress(`${colors.yellow(`Skipped'): ${test.fullTitle()}`)}`);
             });
     }
 }
