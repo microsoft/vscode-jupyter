@@ -725,7 +725,7 @@ jobs:
 
       - name: Upload Web Test Logs
         uses: actions/upload-artifact@v2
-        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.webOrDesktop == 'web'
+        if: "(success() || failure()) && (matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.webOrDesktop == 'web')"
         with:
           name: WebTestLogs-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.os}}
           path: 'webtest.log'
