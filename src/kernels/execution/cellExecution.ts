@@ -30,7 +30,7 @@ import { getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from
 import { isCancellationError } from '../../platform/common/cancellation';
 import { activeNotebookCellExecution, CellExecutionMessageHandler } from './cellExecutionMessageHandler';
 import { CellExecutionMessageHandlerService } from './cellExecutionMessageHandlerService';
-import { IJupyterSession, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
+import { IKernelConnectionSession, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
 import { NotebookCellStateTracker, traceCellMessage } from './helpers';
 
 export class CellExecutionFactory {
@@ -133,7 +133,7 @@ export class CellExecution implements IDisposable {
     ) {
         return new CellExecution(cell, code, metadata, controller, requestListener);
     }
-    public async start(session: IJupyterSession) {
+    public async start(session: IKernelConnectionSession) {
         if (this.cancelHandled) {
             traceCellMessage(this.cell, 'Not starting as it was cancelled');
             return;
@@ -311,12 +311,12 @@ export class CellExecution implements IDisposable {
         return !this.cell.document.isClosed;
     }
 
-    private async execute(code: string, session: IJupyterSession) {
+    private async execute(code: string, session: IKernelConnectionSession) {
         traceCellMessage(this.cell, 'Send code for execution');
         await this.executeCodeCell(code, session);
     }
 
-    private async executeCodeCell(code: string, session: IJupyterSession) {
+    private async executeCodeCell(code: string, session: IKernelConnectionSession) {
         // Skip if no code to execute
         if (code.trim().length === 0 || this.cell.document.isClosed) {
             traceCellMessage(this.cell, 'Empty cell execution');

@@ -1553,7 +1553,7 @@ No properties for event
     @captureTelemetry(Telemetry.Interrupt)
     @captureTelemetry(Telemetry.InterruptJupyterTime)
     private async interruptExecution(
-        session: IJupyterSession,
+        session: IKernelConnectionSession,
 ```
 
 </details>
@@ -5806,7 +5806,7 @@ No properties for event
     @captureTelemetry(Telemetry.Interrupt)
     @captureTelemetry(Telemetry.InterruptJupyterTime)
     private async interruptExecution(
-        session: IJupyterSession,
+        session: IKernelConnectionSession,
         pendingCells: Promise<unknown>
 ```
 
@@ -8151,7 +8151,7 @@ No properties for event
 
     @captureTelemetry(Telemetry.RestartKernel)
     @captureTelemetry(Telemetry.RestartJupyterTime)
-    private async restartExecution(session: IJupyterSession): Promise<void> {
+    private async restartExecution(session: IKernelConnectionSession): Promise<void> {
         // Just use the internal session. Pending cells should have been canceled by the caller
         await session.restart();
 ```
@@ -8180,7 +8180,7 @@ No properties for event
 
     @captureTelemetry(Telemetry.RestartKernel)
     @captureTelemetry(Telemetry.RestartJupyterTime)
-    private async restartExecution(session: IJupyterSession): Promise<void> {
+    private async restartExecution(session: IKernelConnectionSession): Promise<void> {
         // Just use the internal session. Pending cells should have been canceled by the caller
 ```
 

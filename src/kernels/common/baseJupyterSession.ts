@@ -20,11 +20,11 @@ import { JupyterWaitForIdleError } from '../errors/jupyterWaitForIdleError';
 import { KernelInterruptTimeoutError } from '../errors/kernelInterruptTimeoutError';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
 import {
-    IJupyterServerSession,
-    IJupyterSession,
+    IJupyterKernelConnectionSession,
     ISessionWithSocket,
     KernelConnectionMetadata,
-    KernelSocketInformation
+    KernelSocketInformation,
+    IBaseKernelConnectionSession
 } from '../types';
 import { ChainingExecuteRequester } from './chainingExecuteRequester';
 import { getResourceType } from '../../platform/common/utils';
@@ -70,7 +70,7 @@ export class JupyterSessionStartError extends WrappedError {
     }
 }
 
-export abstract class BaseJupyterSession implements IJupyterSession {
+export abstract class BaseJupyterSession implements IBaseKernelConnectionSession {
     /**
      * Keep a single instance of KernelConnectionWrapper.
      * This way when sessions change, we still have a single Kernel.IKernelConnection proxy (wrapper),
@@ -129,7 +129,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     private previousAnyMessageHandler?: IDisposable;
 
     constructor(
-        public readonly kind: 'localRaw' | 'remoteJupyter' | 'localJupyter',
         protected resource: Resource,
         protected readonly kernelConnectionMetadata: KernelConnectionMetadata,
         public workingDirectory: Uri,
@@ -140,7 +139,7 @@ export abstract class BaseJupyterSession implements IJupyterSession {
             traceInfo(`Unhandled message found: ${m.header.msg_type}`);
         };
     }
-    public isServerSession(): this is IJupyterServerSession {
+    public isServerSession(): this is IJupyterKernelConnectionSession {
         return false;
     }
     public async dispose(): Promise<void> {

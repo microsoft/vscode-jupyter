@@ -27,7 +27,7 @@ import {
     isLocalConnection,
     IJupyterConnection,
     KernelActionSource,
-    IJupyterSession
+    IJupyterKernelConnectionSession
 } from '../../../types';
 import { JupyterSessionManager } from '../../session/jupyterSessionManager';
 import { noop } from '../../../../platform/common/utils/misc';
@@ -41,7 +41,7 @@ import { RemoteJupyterServerConnectionError } from '../../../../platform/errors/
 export class HostJupyterServer implements INotebookServer {
     private connectionInfoDisconnectHandler: IDisposable | undefined;
     private serverExitCode: number | undefined;
-    private sessions = new Set<Promise<IJupyterSession>>();
+    private sessions = new Set<Promise<IJupyterKernelConnectionSession>>();
     private disposed = false;
     constructor(
         @inject(IAsyncDisposableRegistry) private readonly asyncRegistry: IAsyncDisposableRegistry,
@@ -89,10 +89,10 @@ export class HostJupyterServer implements INotebookServer {
         cancelToken: CancellationToken,
         ui: IDisplayOptions,
         actionSource: KernelActionSource
-    ): Promise<IJupyterSession> {
+    ): Promise<IJupyterKernelConnectionSession> {
         this.throwIfDisposedOrCancelled(cancelToken);
         // Compute launch information from the resource and the notebook metadata
-        const sessionPromise = createDeferred<IJupyterSession>();
+        const sessionPromise = createDeferred<IJupyterKernelConnectionSession>();
         // Save the Session
         this.trackDisposable(sessionPromise.promise);
         const startNewSession = async () => {
@@ -141,7 +141,7 @@ export class HostJupyterServer implements INotebookServer {
         cancelToken: CancellationToken,
         ui: IDisplayOptions,
         creator: KernelActionSource
-    ): Promise<IJupyterSession> {
+    ): Promise<IJupyterKernelConnectionSession> {
         this.throwIfDisposedOrCancelled(cancelToken);
         traceInfoIfCI(
             `HostJupyterServer.createNotebook for ${getDisplayPath(resource)} with ui.disableUI=${
@@ -254,7 +254,7 @@ export class HostJupyterServer implements INotebookServer {
         // Default is just say session was disposed
         return new SessionDisposedError();
     }
-    private trackDisposable(sessionPromise: Promise<IJupyterSession>) {
+    private trackDisposable(sessionPromise: Promise<IJupyterKernelConnectionSession>) {
         sessionPromise
             .then((session) => {
                 session.onDidDispose(() => this.sessions.delete(sessionPromise), this, this.disposables);

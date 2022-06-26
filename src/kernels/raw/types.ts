@@ -5,7 +5,7 @@
 import { CancellationToken, Event } from 'vscode';
 import { IAsyncDisposable, IDisplayOptions, IDisposable, Resource } from '../../platform/common/types';
 import {
-    IJupyterSession,
+    IKernelConnectionSession,
     INotebookProviderConnection,
     KernelConnectionMetadata,
     LocalKernelConnectionMetadata,
@@ -95,5 +95,5 @@ export interface IRawNotebookProvider extends IAsyncDisposable {
         kernelConnection: KernelConnectionMetadata,
         ui: IDisplayOptions,
         cancelToken: CancellationToken
-    ): Promise<IJupyterSession>;
+    ): Promise<IKernelConnectionSession>;
 }

@@ -16,8 +16,8 @@ import {
     LiveRemoteKernelConnectionMetadata,
     PythonKernelConnectionMetadata,
     IJupyterKernelSpec,
-    IJupyterSession,
-    IKernel
+    IKernel,
+    IKernelConnectionSession
 } from './types';
 import { Uri, workspace } from 'vscode';
 import { IWorkspaceService } from '../platform/common/application/types';
@@ -1454,7 +1454,7 @@ export type SilentExecutionErrorOptions = {
 };
 
 export async function executeSilently(
-    session: IJupyterSession,
+    session: IKernelConnectionSession,
     code: string,
     errorOptions?: SilentExecutionErrorOptions
 ): Promise<nbformat.IOutput[]> {

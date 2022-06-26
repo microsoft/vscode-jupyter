@@ -21,7 +21,7 @@ import { sendKernelTelemetryEvent } from '../../telemetry/sendKernelTelemetryEve
 import { trackKernelResourceInformation } from '../../telemetry/helper';
 import { sendTelemetryEvent, captureTelemetry, Telemetry } from '../../../telemetry';
 import { getDisplayNameOrNameOfKernelConnection } from '../../../kernels/helpers';
-import { ISessionWithSocket, KernelConnectionMetadata } from '../../../kernels/types';
+import { IRawKernelConnectionSession, ISessionWithSocket, KernelConnectionMetadata } from '../../../kernels/types';
 import { BaseJupyterSession } from '../../common/baseJupyterSession';
 import { IKernelLauncher, IKernelProcess } from '../types';
 import { RawSession } from './rawSession.node';
@@ -30,13 +30,14 @@ import { noop } from '../../../platform/common/utils/misc';
 import { KernelProgressReporter } from '../../../platform/progress/kernelProgressReporter';
 
 /*
-RawJupyterSession is the implementation of IJupyterSession that instead of
+RawJupyterSession is the implementation of IJupyterKernelConnectionSession that instead of
 connecting to JupyterLab services it instead connects to a kernel directly
 through ZMQ.
-It's responsible for translating our IJupyterSession interface into the
+It's responsible for translating our IJupyterKernelConnectionSession interface into the
 jupyterlabs interface as well as starting up and connecting to a raw session
 */
-export class RawJupyterSession extends BaseJupyterSession {
+export class RawJupyterSession extends BaseJupyterSession implements IRawKernelConnectionSession {
+    public readonly kind = 'localRaw';
     private processExitHandler = new WeakMap<RawSession, IDisposable>();
     private terminatingStatus?: KernelMessage.Status;
     public get atleastOneCellExecutedSuccessfully() {
@@ -59,7 +60,7 @@ export class RawJupyterSession extends BaseJupyterSession {
         kernelConnection: KernelConnectionMetadata,
         private readonly launchTimeout: number
     ) {
-        super('localRaw', resource, kernelConnection, workingDirectory, interruptTimeout);
+        super(resource, kernelConnection, workingDirectory, interruptTimeout);
     }
 
     public async waitForIdle(timeout: number): Promise<void> {
