@@ -177,8 +177,8 @@ export class CommonMessageCoordinator {
                     payload.moduleVersion
                 );
                 this.appShell.showErrorMessage(errorMessage).then(noop, noop);
-            } else if (!cdnsEnabled && !this.modulesForWhichWeHaveDisplayedWisdgetErrorMessage.has(key)) {
-                this.modulesForWhichWeHaveDisplayedWisdgetErrorMessage.add(key);
+            } else if (!cdnsEnabled && !this.modulesForWhichWeHaveDisplayedWidgetErrorMessage.has(key)) {
+                this.modulesForWhichWeHaveDisplayedWidgetErrorMessage.add(key);
                 const moreInfo = Common.moreInfo();
                 const enableDownloads = DataScience.enableCDNForWidgetsButton();
                 errorMessage = DataScience.enableCDNForWidgetsSetting().format(
