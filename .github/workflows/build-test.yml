@@ -728,8 +728,12 @@ jobs:
         if: "(success() || failure()) && (matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.webOrDesktop == 'web')"
         with:
           name: WebTestLogs-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.os}}
-          path: 'webtest.log'
+          path: './webtest.log'
           retention-days: 1
+
+      - name: List files
+        run: ls
+        if: always()
 
       - name: Upload Memory snapshot
         uses: actions/upload-artifact@v2
