@@ -1,4 +1,4 @@
-def _VSCODE_getVariable(what_to_get, *args):
+def _VSCODE_getVariable(what_to_get, is_debugging, *args):
 
     # Query Jupyter server for the info about a dataframe
     import json as _VSCODE_json
@@ -50,7 +50,10 @@ def _VSCODE_getVariable(what_to_get, *args):
                 pass
 
         # return our json object as a string
-        _VSCODE_builtins.print(_VSCODE_json.dumps(result))
+        if is_debugging:
+            return _VSCODE_json.dumps(result)
+        else:
+            return _VSCODE_builtins.print(_VSCODE_json.dumps(result))
 
     def _VSCODE_getVariableProperties(var, listOfAttributes):
         result = {
@@ -58,7 +61,10 @@ def _VSCODE_getVariable(what_to_get, *args):
             for attr in listOfAttributes
             if hasattr(var, attr)
         }
-        _VSCODE_builtins.print(_VSCODE_json.dumps(result))
+        if is_debugging:
+            return _VSCODE_json.dumps(result)
+        else:
+            return _VSCODE_builtins.print(_VSCODE_json.dumps(result))
 
     def _VSCODE_getVariableTypes(varnames):
         # Map with key: varname and value: vartype
@@ -70,14 +76,18 @@ def _VSCODE_getVariable(what_to_get, *args):
                     result[name] = vartype.__name__
             except TypeError:
                 pass
-        _VSCODE_builtins.print(_VSCODE_json.dumps(result))
+        if is_debugging:
+            return _VSCODE_json.dumps(result)
+        else:
+            return _VSCODE_builtins.print(_VSCODE_json.dumps(result))
 
-    if what_to_get == "properties":
-        _VSCODE_getVariableProperties(*args)
-    elif what_to_get == "info":
-        _VSCODE_getVariableInfo(*args)
-    else:
-        _VSCODE_getVariableTypes(*args)
-
-    del _VSCODE_json
-    del _VSCODE_builtins
+    try:
+        if what_to_get == "properties":
+            return _VSCODE_getVariableProperties(*args)
+        elif what_to_get == "info":
+            return _VSCODE_getVariableInfo(*args)
+        else:
+            return _VSCODE_getVariableTypes(*args)
+    finally:
+        del _VSCODE_json
+        del _VSCODE_builtins

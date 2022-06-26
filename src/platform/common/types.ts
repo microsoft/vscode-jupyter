@@ -348,20 +348,37 @@ export interface ICellRange {
 }
 
 export const IVariableScriptGenerator = Symbol('IVariableScriptGenerator');
+
+type ScriptCode = {
+    /**
+     * Code that must be executed to initialize the environment.
+     */
+    initializeCode?: string;
+    /**
+     * Actual code that will produce the required information.
+     */
+    code: string;
+    /**
+     * Code that will be executed to re-set the environment, eg. remove variables/functions introduced into the users environment.
+     */
+    cleanupCode?: string;
+};
 export interface IVariableScriptGenerator {
-    generateCodeToGetVariableInfo(options: { variableName: string }): Promise<string>;
+    generateCodeToGetVariableInfo(options: { isDebugging: boolean; variableName: string }): Promise<ScriptCode>;
     generateCodeToGetVariableProperties(options: {
+        isDebugging: boolean;
         variableName: string;
         stringifiedAttributeNameList: string;
-    }): Promise<string>;
-    generateCodeToGetVariableTypes(): Promise<string>;
+    }): Promise<ScriptCode>;
+    generateCodeToGetVariableTypes(options: { isDebugging: boolean }): Promise<ScriptCode>;
 }
 export const IDataFrameScriptGenerator = Symbol('IDataFrameScriptGenerator');
 export interface IDataFrameScriptGenerator {
-    generateCodeToGetDataFrameInfo(options: { isDebugging: boolean; variableName: string }): Promise<string>;
+    generateCodeToGetDataFrameInfo(options: { isDebugging: boolean; variableName: string }): Promise<ScriptCode>;
     generateCodeToGetDataFrameRows(options: {
+        isDebugging: boolean;
         variableName: string;
         startIndex: number;
         endIndex: number;
-    }): Promise<string>;
+    }): Promise<ScriptCode>;
 }

@@ -34,21 +34,28 @@ export function parseDataFrame(df: DataFrameSplitFormat) {
     return { data };
 }
 
-export async function safeExecuteSilently(
+async function safeExecuteSilently(
     kernel: IKernel,
-    code: string,
+    { code, initializeCode, cleanupCode }: { code: string; initializeCode?: string; cleanupCode?: string },
     errorOptions?: SilentExecutionErrorOptions
 ): Promise<nbformat.IOutput[]> {
     if (kernel.disposed || kernel.disposing || !kernel.session || !kernel.session.kernel || kernel.session.disposed) {
         return [];
     }
     try {
+        if (initializeCode) {
+            await executeSilently(kernel.session, initializeCode, errorOptions);
+        }
         return await executeSilently(kernel.session, code, errorOptions);
     } catch (ex) {
         if (ex instanceof SessionDisposedError) {
             return [];
         }
         throw ex;
+    } finally {
+        if (cleanupCode) {
+            await executeSilently(kernel.session, cleanupCode, errorOptions);
+        }
     }
 }
 
@@ -65,15 +72,19 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         expression: string
     ): Promise<IJupyterVariable> {
         // Then execute a call to get the info and turn it into JSON
-        const code = await this.dfScriptGenerator.generateCodeToGetDataFrameInfo({
+        const { code, cleanupCode, initializeCode } = await this.dfScriptGenerator.generateCodeToGetDataFrameInfo({
             isDebugging: false,
             variableName: expression
         });
-        const results = await safeExecuteSilently(kernel, code, {
-            traceErrors: true,
-            traceErrorsMessage: 'Failure in execute_request for getDataFrameInfo',
-            telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-        });
+        const results = await safeExecuteSilently(
+            kernel,
+            { code, cleanupCode, initializeCode },
+            {
+                traceErrors: true,
+                traceErrorsMessage: 'Failure in execute_request for getDataFrameInfo',
+                telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+            }
+        );
 
         const fileName = getAssociatedNotebookDocument(kernel)?.uri || kernel.resourceUri || kernel.uri;
 
@@ -92,16 +103,21 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         expression: string
     ): Promise<{ data: Record<string, unknown>[] }> {
         // Then execute a call to get the rows and turn it into JSON
-        const code = await this.dfScriptGenerator.generateCodeToGetDataFrameRows({
+        const { code, cleanupCode, initializeCode } = await this.dfScriptGenerator.generateCodeToGetDataFrameRows({
+            isDebugging: false,
             variableName: expression,
             startIndex: start,
             endIndex: end
         });
-        const results = await safeExecuteSilently(kernel, code, {
-            traceErrors: true,
-            traceErrorsMessage: 'Failure in execute_request for getDataFrameRows',
-            telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-        });
+        const results = await safeExecuteSilently(
+            kernel,
+            { code, cleanupCode, initializeCode },
+            {
+                traceErrors: true,
+                traceErrorsMessage: 'Failure in execute_request for getDataFrameRows',
+                telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+            }
+        );
 
         return parseDataFrame(this.deserializeJupyterResult<DataFrameSplitFormat>(results));
     }
@@ -121,15 +137,21 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
                 const attributeNames = languageSettings[type];
                 const stringifiedAttributeNameList =
                     '[' + attributeNames.reduce((accumulator, currVal) => accumulator + `"${currVal}", `, '') + ']';
-                const code = await this.varScriptGenerator.generateCodeToGetVariableProperties({
-                    variableName: matchingVariable.name,
-                    stringifiedAttributeNameList
-                });
-                const attributes = await safeExecuteSilently(kernel, code, {
-                    traceErrors: true,
-                    traceErrorsMessage: 'Failure in execute_request for getVariableProperties',
-                    telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-                });
+                const { code, cleanupCode, initializeCode } =
+                    await this.varScriptGenerator.generateCodeToGetVariableProperties({
+                        isDebugging: false,
+                        variableName: matchingVariable.name,
+                        stringifiedAttributeNameList
+                    });
+                const attributes = await safeExecuteSilently(
+                    kernel,
+                    { code, cleanupCode, initializeCode },
+                    {
+                        traceErrors: true,
+                        traceErrorsMessage: 'Failure in execute_request for getVariableProperties',
+                        telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+                    }
+                );
                 result = { ...result, ...this.deserializeJupyterResult(attributes) };
             } else {
                 result[`${word}`] = matchingVariable.value;
@@ -144,12 +166,18 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
     ): Promise<IJupyterVariable[]> {
         if (kernel.session) {
             // VariableTypesFunc takes in list of vars and the corresponding var names
-            const code = await this.varScriptGenerator.generateCodeToGetVariableTypes();
-            const results = await safeExecuteSilently(kernel, code, {
-                traceErrors: true,
-                traceErrorsMessage: 'Failure in execute_request for getVariableNamesAndTypesFromKernel',
-                telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+            const { code, cleanupCode, initializeCode } = await this.varScriptGenerator.generateCodeToGetVariableTypes({
+                isDebugging: false
             });
+            const results = await safeExecuteSilently(
+                kernel,
+                { code, cleanupCode, initializeCode },
+                {
+                    traceErrors: true,
+                    traceErrorsMessage: 'Failure in execute_request for getVariableNamesAndTypesFromKernel',
+                    telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+                }
+            );
 
             if (kernel.disposed || kernel.disposing) {
                 return [];
@@ -182,14 +210,19 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
         _token?: CancellationToken
     ): Promise<IJupyterVariable> {
         // Then execute a call to get the info and turn it into JSON
-        const code = await this.varScriptGenerator.generateCodeToGetVariableInfo({
+        const { code, cleanupCode, initializeCode } = await this.varScriptGenerator.generateCodeToGetVariableInfo({
+            isDebugging: false,
             variableName: targetVariable.name
         });
-        const results = await safeExecuteSilently(kernel, code, {
-            traceErrors: true,
-            traceErrorsMessage: 'Failure in execute_request for getFullVariable',
-            telemetryName: Telemetry.PythonVariableFetchingCodeFailure
-        });
+        const results = await safeExecuteSilently(
+            kernel,
+            { code, cleanupCode, initializeCode },
+            {
+                traceErrors: true,
+                traceErrorsMessage: 'Failure in execute_request for getFullVariable',
+                telemetryName: Telemetry.PythonVariableFetchingCodeFailure
+            }
+        );
 
         // Combine with the original result (the call only returns the new fields)
         return {

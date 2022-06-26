@@ -155,15 +155,17 @@ export class DebuggerVariables
         }
 
         // Then eval calling the main function with our target variable
-        const code = await this.dfScriptGenerator.generateCodeToGetDataFrameInfo({
+        const { cleanupCode, initializeCode, code } = await this.dfScriptGenerator.generateCodeToGetDataFrameInfo({
             isDebugging: true,
             variableName: expression
         });
-        const results = await this.evaluate(
+        const results = await this.evaluate({
             code,
+            cleanupCode,
+            initializeCode,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (targetVariable as any).frameId
-        );
+            frameId: (targetVariable as any).frameId
+        });
 
         const notebook = getAssociatedNotebookDocument(kernel);
         let fileName = notebook ? path.basename(notebook.uri.path) : '';
@@ -208,16 +210,19 @@ export class DebuggerVariables
             expression = `${targetVariable.name}${sliceExpression}`;
         }
 
-        const code = await this.dfScriptGenerator.generateCodeToGetDataFrameRows({
+        const { cleanupCode, initializeCode, code } = await this.dfScriptGenerator.generateCodeToGetDataFrameRows({
+            isDebugging: true,
             variableName: expression,
             startIndex: start,
             endIndex: end
         });
-        const results = await this.evaluate(
+        const results = await this.evaluate({
             code,
+            cleanupCode,
+            initializeCode,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (targetVariable as any).frameId
-        );
+            frameId: (targetVariable as any).frameId
+        });
         return parseDataFrame(JSON.parse(results.result));
     }
 
@@ -301,35 +306,67 @@ export class DebuggerVariables
         this.importedGetVariableInfoScriptsIntoKernel.delete(key);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async evaluate(code: string, frameId?: number): Promise<any> {
+    private async evaluate({
+        code,
+        cleanupCode,
+        frameId,
+        initializeCode
+    }: {
+        code: string;
+        initializeCode?: string;
+        cleanupCode?: string;
+        frameId?: number;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }): Promise<any> {
         if (this.debugService.activeDebugSession) {
-            traceVerbose(`Evaluating in debugger : ${this.debugService.activeDebugSession.id}: ${code}`);
-            const results = await this.debugService.activeDebugSession.customRequest('evaluate', {
-                expression: code,
-                frameId: this.topMostFrameId || frameId,
+            frameId = this.topMostFrameId || frameId;
+            const defaultEvalOptions = {
+                frameId,
                 context: 'repl',
                 format: { rawString: true }
-            });
-            if (results && results.result !== 'None') {
-                return results;
-            } else {
-                traceError(`Cannot evaluate ${code}`);
-                return undefined;
+            };
+            traceVerbose(`Evaluating in debugger : ${this.debugService.activeDebugSession.id}: ${code}`);
+            try {
+                if (initializeCode) {
+                    await this.debugService.activeDebugSession.customRequest('evaluate', {
+                        ...defaultEvalOptions,
+                        expression: initializeCode
+                    });
+                }
+                const results = await this.debugService.activeDebugSession.customRequest('evaluate', {
+                    ...defaultEvalOptions,
+                    expression: code
+                });
+                if (results && results.result !== 'None') {
+                    return results;
+                } else {
+                    traceError(`Cannot evaluate ${code}`);
+                    return undefined;
+                }
+            } finally {
+                if (cleanupCode) {
+                    await this.debugService.activeDebugSession.customRequest('evaluate', {
+                        ...defaultEvalOptions,
+                        expression: cleanupCode
+                    });
+                }
             }
         }
         throw Error('Debugger is not active, cannot evaluate.');
     }
     public async getFullVariable(variable: IJupyterVariable): Promise<IJupyterVariable> {
         // Then eval calling the variable info function with our target variable
-        const code = await this.varScriptGenerator.generateCodeToGetVariableInfo({
+        const { initializeCode, code, cleanupCode } = await this.varScriptGenerator.generateCodeToGetVariableInfo({
+            isDebugging: true,
             variableName: variable.name
         });
-        const results = await this.evaluate(
+        const results = await this.evaluate({
             code,
+            initializeCode,
+            cleanupCode,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (variable as any).frameId
-        );
+            frameId: (variable as any).frameId
+        });
         if (results && results.result) {
             // Results should be the updated variable.
             return {

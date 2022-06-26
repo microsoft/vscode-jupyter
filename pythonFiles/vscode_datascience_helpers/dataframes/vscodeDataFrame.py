@@ -1,4 +1,4 @@
-def _VSCODE_getDataFrame(what_to_get, *args):
+def _VSCODE_getDataFrame(what_to_get, is_debugging, *args):
 
     import pandas as _VSCODE_pd
     import builtins as _VSCODE_builtins
@@ -152,9 +152,13 @@ def _VSCODE_getDataFrame(what_to_get, *args):
             )
         except:
             pass
-        _VSCODE_builtins.print(
-            _VSCODE_pd_json.to_json(None, df, orient="split", date_format="iso")
-        )
+
+        if is_debugging:
+            return _VSCODE_pd_json.to_json(None, df, orient="split", date_format="iso")
+        else:
+            return _VSCODE_builtins.print(
+                _VSCODE_pd_json.to_json(None, df, orient="split", date_format="iso")
+            )
 
     # Function to get info on the passed in data frame
     def _VSCODE_getDataFrameInfo(df):
@@ -205,15 +209,19 @@ def _VSCODE_getDataFrame(what_to_get, *args):
         target["rowCount"] = rowCount
 
         # return our json object as a string
-        _VSCODE_builtins.print(_VSCODE_json.dumps(target))
+        if is_debugging:
+            return _VSCODE_json.dumps(target)
+        else:
+            return _VSCODE_builtins.print(_VSCODE_json.dumps(target))
 
-    if what_to_get == "rows":
-        _VSCODE_getDataFrameRows(*args)
-    else:
-        _VSCODE_getDataFrameInfo(*args)
-
-    del _VSCODE_pd
-    del _VSCODE_json
-    del _VSCODE_pd_json
-    del _VSCODE_np
-    del _VSCODE_builtins
+    try:
+        if what_to_get == "rows":
+            return _VSCODE_getDataFrameRows(*args)
+        else:
+            return _VSCODE_getDataFrameInfo(*args)
+    except:
+        del _VSCODE_pd
+        del _VSCODE_json
+        del _VSCODE_pd_json
+        del _VSCODE_np
+        del _VSCODE_builtins

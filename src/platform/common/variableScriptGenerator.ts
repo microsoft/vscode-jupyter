@@ -22,19 +22,49 @@ export class VariableScriptGenerator implements IVariableScriptGenerator {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {}
-    async generateCodeToGetVariableInfo(options: { variableName: string }): Promise<string> {
-        const contents = await this.getContentsOfScript();
-        return `${contents}\n\n${VariableFunc}("info", ${options.variableName})\n\n${cleanupCode}`;
+    async generateCodeToGetVariableInfo(options: { isDebugging: boolean; variableName: string }) {
+        const initializeCode = await this.getContentsOfScript();
+        const isDebugging = options.isDebugging ? 'True' : 'False';
+        const code = `${VariableFunc}("info", ${isDebugging}, ${options.variableName})`;
+        if (options.isDebugging) {
+            // When debugging, the code is evaluated in the debugger, so we need to initialize the script.
+            // We cannot send complex code to the debugger, it has to be a simple expression that produces a value.
+            // Hence the need to split the code into initialization, real code & finalization.
+            return {
+                initializeCode,
+                code,
+                cleanupCode
+            };
+        } else {
+            return {
+                code: `${initializeCode}\n\n${code}\n\n${cleanupCode}`
+            };
+        }
     }
     async generateCodeToGetVariableProperties(options: {
+        isDebugging: boolean;
         variableName: string;
         stringifiedAttributeNameList: string;
-    }): Promise<string> {
-        const contents = await this.getContentsOfScript();
-        return `${contents}\n\n${VariableFunc}("properties", ${options.variableName}, ${options.stringifiedAttributeNameList}))\n\n${cleanupCode}`;
+    }) {
+        const initializeCode = await this.getContentsOfScript();
+        const isDebugging = options.isDebugging ? 'True' : 'False';
+        const code = `${VariableFunc}("properties", ${isDebugging}, ${options.variableName}, ${options.stringifiedAttributeNameList})`;
+        if (options.isDebugging) {
+            return {
+                initializeCode,
+                code,
+                cleanupCode
+            };
+        } else {
+            return {
+                code: `${initializeCode}\n\n${code}\n\n${cleanupCode}`
+            };
+        }
     }
-    async generateCodeToGetVariableTypes(): Promise<string> {
-        const contents = await this.getContentsOfScript();
+    async generateCodeToGetVariableTypes(options: { isDebugging: boolean }) {
+        const scriptCode = await this.getContentsOfScript();
+        const initializeCode = `${scriptCode}\n\n_VSCODE_rwho_ls = %who_ls\n`;
+        const isDebugging = options.isDebugging ? 'True' : 'False';
         const cleanupWhoLsCode = dedent`
         try:
             del _VSCODE_rwho_ls
@@ -42,7 +72,18 @@ export class VariableScriptGenerator implements IVariableScriptGenerator {
             pass
         `;
 
-        return `${contents}\n\n_VSCODE_rwho_ls = %who_ls\n${VariableFunc}("types",_VSCODE_rwho_ls)\n\n${cleanupCode}\n${cleanupWhoLsCode}`;
+        const code = `${VariableFunc}("types", ${isDebugging}, _VSCODE_rwho_ls)`;
+        if (options.isDebugging) {
+            return {
+                initializeCode,
+                code,
+                cleanupCode: `${cleanupCode}\n${cleanupWhoLsCode}`
+            };
+        } else {
+            return {
+                code: `${initializeCode}${code}\n\n${cleanupCode}\n${cleanupWhoLsCode}`
+            };
+        }
     }
     /**
      * Script content is static, hence read the contents once.

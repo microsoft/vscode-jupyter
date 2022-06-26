@@ -20,17 +20,45 @@ export class DataFrameScriptGenerator implements IDataFrameScriptGenerator {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {}
-    public async generateCodeToGetDataFrameInfo(options: { variableName: string }) {
-        const contents = await this.getContentsOfDataFrameScript();
-        return `${contents}\n\n(${DataFrameFunc}("info", ${options.variableName}))\n\n${cleanupCode}`;
+    public async generateCodeToGetDataFrameInfo(options: { isDebugging: boolean; variableName: string }) {
+        const initializeCode = await this.getContentsOfDataFrameScript();
+        const isDebugging = options.isDebugging ? 'True' : 'False';
+        const code = `${DataFrameFunc}("info", ${isDebugging}, ${options.variableName})`;
+        if (options.isDebugging) {
+            // When debugging, the code is evaluated in the debugger, so we need to initialize the script.
+            // We cannot send complex code to the debugger, it has to be a simple expression that produces a value.
+            // Hence the need to split the code into initialization, real code & finalization.
+            return {
+                initializeCode,
+                code,
+                cleanupCode
+            };
+        } else {
+            return {
+                code: `${initializeCode}\n\n${code}\n\n${cleanupCode}`
+            };
+        }
     }
     public async generateCodeToGetDataFrameRows(options: {
+        isDebugging: boolean;
         variableName: string;
         startIndex: number;
         endIndex: number;
     }) {
-        const contents = await this.getContentsOfDataFrameScript();
-        return `${contents}\n\n${DataFrameFunc}("rows", ${options.variableName}, ${options.startIndex}, ${options.endIndex})\n\n${cleanupCode}`;
+        const initializeCode = await this.getContentsOfDataFrameScript();
+        const isDebugging = options.isDebugging ? 'True' : 'False';
+        const code = `${DataFrameFunc}("rows", ${isDebugging}, ${options.variableName}, ${options.startIndex}, ${options.endIndex})`;
+        if (options.isDebugging) {
+            return {
+                initializeCode,
+                code,
+                cleanupCode
+            };
+        } else {
+            return {
+                code: `${initializeCode}\n\n${code}\n\n${cleanupCode}`
+            };
+        }
     }
 
     static contentsOfDataFrameScript: string | undefined;
