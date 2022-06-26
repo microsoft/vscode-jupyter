@@ -57,7 +57,7 @@ export class CommonMessageCoordinator {
     private jupyterOutput: IOutputChannel;
     private readonly configService: IConfigurationService;
     private webview: IWebviewCommunication | undefined;
-    private modulesForWhichWeHaveDisplayedWisdgetErrorMessage = new Set<string>();
+    private modulesForWhichWeHaveDisplayedWidgetErrorMessage = new Set<string>();
 
     public constructor(
         private readonly document: NotebookDocument,
