@@ -108,7 +108,7 @@ suite('VariableView @variableViewer', function () {
         const execution = kernelProvider.getKernelExecution(kernel);
         const outputs = await execution.executeHidden('%who_ls');
         // https://github.com/microsoft/vscode-jupyter/issues/10559
-        const varsToIgnore = ['matplotlib_inline', 'matplotlib', 'sys', 'os'];
+        const varsToIgnore = ['matplotlib_inline', 'matplotlib'];
         // Sample output is `["test", "test2", "os", "sys"]`
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const vars = ((outputs[0].data as any)['text/plain'] as string)
