@@ -29,7 +29,8 @@ import { createEventHandler } from '../../common';
 import { IKernelProvider } from '../../../kernels/types';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 
-suite('Kernel Event', function () {
+// eslint-disable-next-line no-only-tests/no-only-tests
+suite.only('Kernel Event', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let configSettings: ReadWrite<IWatchableJupyterSettings>;
@@ -77,6 +78,18 @@ suite('Kernel Event', function () {
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
+    test.skip('Bogus2', async function () {
+        // skip
+    });
+    test.skip('Bogus2', async function () {
+        // skip
+    });
+    test('Fail2', async function () {
+        assert.strictEqual(1, 2);
+    });
+    test('Fail3', async function () {
+        throw new Error('Kaboom');
+    });
     test('Kernel Events', async function () {
         const kernelCreated = createEventHandler(kernelProvider, 'onDidCreateKernel', disposables);
         const kernelStarted = createEventHandler(kernelProvider, 'onDidStartKernel', disposables);
