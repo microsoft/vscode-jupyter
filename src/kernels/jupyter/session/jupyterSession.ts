@@ -21,7 +21,7 @@ import {
     IJupyterConnection,
     ISessionWithSocket,
     KernelActionSource,
-    IJupyterServerSession
+    IJupyterKernelConnectionSession
 } from '../../types';
 import { DisplayOptions } from '../../displayOptions';
 import { IBackupFile, IJupyterBackingFileCreator, IJupyterKernelService, IJupyterRequestCreator } from '../types';
@@ -30,7 +30,7 @@ import { generateBackingIPyNbFileName } from './backingFileCreator.base';
 import { noop } from '../../../platform/common/utils/misc';
 
 // function is
-export class JupyterSession extends BaseJupyterSession implements IJupyterServerSession {
+export class JupyterSession extends BaseJupyterSession implements IJupyterKernelConnectionSession {
     public readonly kind: 'remoteJupyter' | 'localJupyter';
 
     constructor(
@@ -53,7 +53,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterServer
         this.kind = connInfo.localLaunch ? 'localJupyter' : 'remoteJupyter';
     }
 
-    public override isServerSession(): this is IJupyterServerSession {
+    public override isServerSession(): this is IJupyterKernelConnectionSession {
         return true;
     }
 

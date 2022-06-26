@@ -270,7 +270,7 @@ export interface IBaseKernelConnectionSession extends IAsyncDisposable {
     readonly status: KernelMessage.Status;
     readonly kernelId: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
-    isServerSession(): this is IJupyterServerSession;
+    isServerSession(): this is IJupyterKernelConnectionSession;
     onSessionStatusChanged: Event<KernelMessage.Status>;
     onDidDispose: Event<void>;
     interrupt(): Promise<void>;
@@ -303,19 +303,15 @@ export interface IBaseKernelConnectionSession extends IAsyncDisposable {
 
 export interface IJupyterKernelConnectionSession extends IBaseKernelConnectionSession {
     readonly kind: 'remoteJupyter' | 'localJupyter';
-}
-export interface IRawKernelConnectionSession extends IBaseKernelConnectionSession {
-    readonly kind: 'localRaw';
-}
-export type IKernelConnectionSession = IJupyterKernelConnectionSession | IRawKernelConnectionSession;
-
-export interface IJupyterServerSession extends IJupyterKernelConnectionSession {
-    readonly kind: 'remoteJupyter' | 'localJupyter';
     invokeWithFileSynced(contents: string, handler: (file: IBackupFile) => Promise<void>): Promise<void>;
     createTempfile(ext: string): Promise<string>;
     deleteTempfile(file: string): Promise<void>;
     getContents(file: string, format: Contents.FileFormat): Promise<Contents.IModel>;
 }
+export interface IRawKernelConnectionSession extends IBaseKernelConnectionSession {
+    readonly kind: 'localRaw';
+}
+export type IKernelConnectionSession = IJupyterKernelConnectionSession | IRawKernelConnectionSession;
 
 export type ISessionWithSocket = Session.ISessionConnection & {
     /**

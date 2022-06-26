@@ -20,7 +20,7 @@ import { JupyterWaitForIdleError } from '../errors/jupyterWaitForIdleError';
 import { KernelInterruptTimeoutError } from '../errors/kernelInterruptTimeoutError';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
 import {
-    IJupyterServerSession,
+    IJupyterKernelConnectionSession,
     ISessionWithSocket,
     KernelConnectionMetadata,
     KernelSocketInformation,
@@ -139,7 +139,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
             traceInfo(`Unhandled message found: ${m.header.msg_type}`);
         };
     }
-    public isServerSession(): this is IJupyterServerSession {
+    public isServerSession(): this is IJupyterKernelConnectionSession {
         return false;
     }
     public async dispose(): Promise<void> {
