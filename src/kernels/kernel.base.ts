@@ -156,9 +156,7 @@ export abstract class BaseKernel implements IKernel {
         this.kernelExecution = new KernelExecution(
             this,
             appShell,
-            kernelConnectionMetadata,
             interruptTimeout,
-            controller,
             outputTracker,
             context,
             formatters

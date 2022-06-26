@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { EventEmitter, NotebookCell, NotebookCellKind, NotebookController, NotebookDocument, workspace } from 'vscode';
+import { EventEmitter, NotebookCell, NotebookCellKind, NotebookDocument, workspace } from 'vscode';
 import { CellExecutionFactory } from './cellExecution';
 import { CellExecutionQueue } from './cellExecutionQueue';
 import { KernelMessage } from '@jupyterlab/services';
@@ -21,7 +21,6 @@ import {
     IKernel,
     InterruptResult,
     ITracebackFormatter,
-    KernelConnectionMetadata,
     NotebookCellRunState
 } from '../../kernels/types';
 import { traceCellMessage } from './helpers';
@@ -44,22 +43,20 @@ export class KernelExecution implements IDisposable {
     constructor(
         private readonly kernel: IKernel,
         appShell: IApplicationShell,
-        readonly metadata: Readonly<KernelConnectionMetadata>,
         private readonly interruptTimeout: number,
-        controller: NotebookController,
         outputTracker: CellOutputDisplayIdTracker,
         context: IExtensionContext,
         formatters: ITracebackFormatter[]
     ) {
         const requestListener = new CellExecutionMessageHandlerService(
             appShell,
-            controller,
+            this.kernel.controller,
             outputTracker,
             context,
             formatters
         );
         this.disposables.push(requestListener);
-        this.executionFactory = new CellExecutionFactory(controller, requestListener);
+        this.executionFactory = new CellExecutionFactory(this.kernel.controller, requestListener);
     }
 
     public get onPreExecute() {
@@ -188,7 +185,11 @@ export class KernelExecution implements IDisposable {
             return existingExecutionQueue;
         }
 
-        const newCellExecutionQueue = new CellExecutionQueue(sessionPromise, this.executionFactory, this.metadata);
+        const newCellExecutionQueue = new CellExecutionQueue(
+            sessionPromise,
+            this.executionFactory,
+            this.kernel.kernelConnectionMetadata
+        );
         this.disposables.push(newCellExecutionQueue);
 
         // If the document is closed (user or on CI), then just stop handling the UI updates & cancel cell execution queue.

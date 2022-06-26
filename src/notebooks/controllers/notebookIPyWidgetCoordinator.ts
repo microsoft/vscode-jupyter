@@ -36,7 +36,7 @@ class NotebookCommunication implements IWebviewCommunication, IDisposable {
         this.changeController(controller);
     }
     public changeController(controller: IVSCodeNotebookController) {
-        if (this.controller === controller) {
+        if (this.controller.id === controller.id) {
             return;
         }
         this.controllerMessageHandler?.dispose();
@@ -44,7 +44,7 @@ class NotebookCommunication implements IWebviewCommunication, IDisposable {
         this.controllerMessageHandler = controller.onDidReceiveMessage(
             (e) => {
                 // Handle messages from this only if its still the active controller.
-                if (e.editor === this.editor && this.controller === controller) {
+                if (e.editor === this.editor && this.controller.id === controller.id) {
                     // If the listeners haven't been hooked up, then dont fire the event (nothing listening).
                     // Instead buffer the messages and fire the events later.
                     if (this.eventHandlerListening) {
