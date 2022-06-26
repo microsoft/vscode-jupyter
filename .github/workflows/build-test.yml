@@ -642,7 +642,7 @@ jobs:
       - name: Run Native Notebook with VSCode & Jupyter (web)
         uses: GabrielBB/xvfb-action@v1.4
         with:
-          run: npm run testWebExtension
+          run: npm run testWebExtension | tee webtest.log
         env:
           VSC_JUPYTER_FORCE_LOGGING: 1
           VSC_PYTHON_FORCE_LOGGING: 1
@@ -721,6 +721,14 @@ jobs:
         with:
           name: VSCodeLogs-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.os}}
           path: '${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/**/*'
+          retention-days: 1
+
+      - name: Upload Web Test Logs
+        uses: actions/upload-artifact@v2
+        if: matrix.python != 'noPython' && matrix.os == 'ubuntu-latest' && matrix.webOrDesktop == 'web'
+        with:
+          name: WebTestLogs-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.os}}
+          path: 'webtest.log'
           retention-days: 1
 
       - name: Upload Memory snapshot
