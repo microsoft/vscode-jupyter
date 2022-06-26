@@ -15,13 +15,13 @@ const progress = [];
 exports.startReportServer = async function () {
     return new Promise((resolve) => {
         console.log(`Creating test server`);
-        server = createServer((req, resp) => {
+        server = createServer((req, res) => {
             let data = '';
             req.on('data', (chunk) => {
                 data += chunk;
             });
             req.on('end', () => {
-                fs.appendFile(webTestSummaryFile, data);
+                fs.appendFileSync(webTestSummaryFile, data);
                 try {
                     progress.push(JSON.parse(data));
                 } catch (ex) {
@@ -31,12 +31,11 @@ exports.startReportServer = async function () {
                 res.end();
             });
         });
-        console.log(`Listening to test server`);
         server.listen({ host: '127.0.0.1', port: 0 }, async () => {
             const port = server.address().port;
             console.log(`Test server listening on port ${port}`);
             const settingsJson = fs.readFileSync(settingsFile).toString();
-            const edits = jsonc.modify(settingsJson, ['jupyter.REPORT_SERVER_PORT'], url, {});
+            const edits = jsonc.modify(settingsJson, ['jupyter.REPORT_SERVER_PORT'], port, {});
             const updatedSettingsJson = jsonc.applyEdits(settingsJson, edits);
             fs.writeFileSync(settingsFile, updatedSettingsJson);
             resolve({
@@ -46,7 +45,6 @@ exports.startReportServer = async function () {
                 }
             });
         });
-        console.log(`Test server running`);
     });
 };
 

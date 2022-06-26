@@ -57,7 +57,7 @@ export class CustomReporter extends reporters.Base {
     private readonly reportServerPor: number;
     constructor(runner: Runner) {
         super(runner);
-        this.reportServerPor = workspace.getConfiguration('jupyter').get('reportServerPort') as number;
+        this.reportServerPor = workspace.getConfiguration('jupyter').get('REPORT_SERVER_PORT') as number;
 
         const url = `http://localhost:${this.reportServerPor}`;
         const reportProgress = (message: Message) => sendMessage(url, message);
