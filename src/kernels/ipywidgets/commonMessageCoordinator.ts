@@ -57,6 +57,7 @@ export class CommonMessageCoordinator {
     private jupyterOutput: IOutputChannel;
     private readonly configService: IConfigurationService;
     private webview: IWebviewCommunication | undefined;
+    private modulesForWhichWeHaveDisplayedWisdgetErrorMessage = new Set<string>();
 
     public constructor(
         private readonly document: NotebookDocument,
@@ -169,13 +170,15 @@ export class CommonMessageCoordinator {
         try {
             let errorMessage: string = payload.error.toString();
             const cdnsEnabled = this.configService.getSettings(undefined).widgetScriptSources.length > 0;
+            const key = `${payload.moduleName}:${payload.className}:${payload.moduleVersion}`;
             if (!payload.isOnline) {
                 errorMessage = DataScience.loadClassFailedWithNoInternet().format(
                     payload.moduleName,
                     payload.moduleVersion
                 );
                 this.appShell.showErrorMessage(errorMessage).then(noop, noop);
-            } else if (!cdnsEnabled) {
+            } else if (!cdnsEnabled && !this.modulesForWhichWeHaveDisplayedWisdgetErrorMessage.has(key)) {
+                this.modulesForWhichWeHaveDisplayedWisdgetErrorMessage.add(key);
                 const moreInfo = Common.moreInfo();
                 const enableDownloads = DataScience.enableCDNForWidgetsButton();
                 errorMessage = DataScience.enableCDNForWidgetsSetting().format(
