@@ -6,14 +6,17 @@ const fs = require('fs-extra');
 const test_web = require('@vscode/test-web');
 const { startJupyter } = require('./preLaunchWebTest');
 const jsonc = require('jsonc-parser');
+const { startReportServer } = require('./webTestReporter');
 const extensionDevelopmentPath = path.resolve(__dirname, '../');
 const packageJsonFile = path.join(extensionDevelopmentPath, 'package.json');
 
 async function go() {
     let exitCode = 0;
     let server;
+    let testServer;
     try {
         server = (await startJupyter()).server;
+        testServer = await startReportServer();
         const bundlePath = path.join(extensionDevelopmentPath, 'out', 'extension.web.bundle');
 
         // Changing the logging level to be read from workspace settings file.
@@ -41,7 +44,9 @@ async function go() {
         console.error('Failed to run tests', err);
         exitCode = 1;
     } finally {
-        console.error(server);
+        if (testServer) {
+            testServer.dispose();
+        }
         if (server) {
             await server.dispose();
         }
