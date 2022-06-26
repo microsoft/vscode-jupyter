@@ -29,14 +29,14 @@ class NotebookCommunication implements IWebviewCommunication, IDisposable {
     private pendingMessages: any[] = [];
     private readonly disposables: IDisposable[] = [];
     private controllerMessageHandler?: IDisposable;
-    private controller!: IVSCodeNotebookController;
+    private controller?: IVSCodeNotebookController;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private readonly _onDidReceiveMessage = new EventEmitter<any>();
     constructor(public readonly editor: NotebookEditor, controller: IVSCodeNotebookController) {
         this.changeController(controller);
     }
     public changeController(controller: IVSCodeNotebookController) {
-        if (this.controller === controller) {
+        if (this.controller?.id === controller.id) {
             return;
         }
         this.controllerMessageHandler?.dispose();
@@ -44,7 +44,7 @@ class NotebookCommunication implements IWebviewCommunication, IDisposable {
         this.controllerMessageHandler = controller.onDidReceiveMessage(
             (e) => {
                 // Handle messages from this only if its still the active controller.
-                if (e.editor === this.editor && this.controller === controller) {
+                if (e.editor === this.editor && this.controller?.id === controller.id) {
                     // If the listeners haven't been hooked up, then dont fire the event (nothing listening).
                     // Instead buffer the messages and fire the events later.
                     if (this.eventHandlerListening) {
@@ -70,10 +70,10 @@ class NotebookCommunication implements IWebviewCommunication, IDisposable {
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public postMessage(message: any): Thenable<boolean> {
-        return this.controller.postMessage(message, this.editor);
+        return this.controller!.postMessage(message, this.editor);
     }
     public asWebviewUri(localResource: Uri): Uri {
-        return this.controller.asWebviewUri(localResource);
+        return this.controller!.asWebviewUri(localResource);
     }
     private sendPendingMessages() {
         if (this.pendingMessages.length) {
