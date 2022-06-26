@@ -128,7 +128,7 @@ function testSkipped(output) {
 /**
  * @param {{ title:string; duration:number  }} output
  */
-function testSkipped(output) {
+function testPassed(output) {
     const durationSuffix = typeof output.duration === 'number' ? ` in ${output.duration / 1000}s` : '';
     console.log(`${getIndentation()}${colors.green('✓ Passed')}: ${output.title}${durationSuffix}`);
 }
