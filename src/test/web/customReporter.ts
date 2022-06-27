@@ -2,10 +2,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Runner, reporters, Suite, Test, Stats } from 'mocha';
+import type * as mochaTypes from 'mocha';
 import { workspace } from 'vscode';
 import { noop } from '../core';
 
+const constants = {
+    EVENT_RUN_BEGIN: 'start',
+    EVENT_RUN_END: 'end',
+    EVENT_SUITE_BEGIN: 'suite',
+    EVENT_SUITE_END: 'suite end',
+    EVENT_TEST_FAIL: 'fail',
+    EVENT_TEST_PENDING: 'pending',
+    EVENT_TEST_PASS: 'pass'
+};
 type Exception = {
     message: string;
     stack: string;
@@ -16,18 +25,18 @@ type Exception = {
     operator: any;
 };
 type Message =
-    | { event: typeof Runner.constants.EVENT_RUN_BEGIN }
-    | { event: typeof Runner.constants.EVENT_RUN_END; stats?: Stats }
-    | { event: typeof Runner.constants.EVENT_SUITE_BEGIN; title: string }
-    | { event: typeof Runner.constants.EVENT_SUITE_END; title: string }
+    | { event: typeof constants.EVENT_RUN_BEGIN }
+    | { event: typeof constants.EVENT_RUN_END; stats?: mochaTypes.Stats }
+    | { event: typeof constants.EVENT_SUITE_BEGIN; title: string }
+    | { event: typeof constants.EVENT_SUITE_END; title: string }
     | {
-          event: typeof Runner.constants.EVENT_TEST_FAIL;
+          event: typeof constants.EVENT_TEST_FAIL;
           title: string;
           err: Exception;
           duration?: number;
       }
-    | { event: typeof Runner.constants.EVENT_TEST_PENDING; title: string }
-    | { event: typeof Runner.constants.EVENT_TEST_PASS; title: string; duration?: number };
+    | { event: typeof constants.EVENT_TEST_PENDING; title: string }
+    | { event: typeof constants.EVENT_TEST_PASS; title: string; duration?: number };
 function sendMessage(url: string, message: Message) {
     fetch(url, {
         method: 'post',
@@ -53,44 +62,43 @@ function formatException(err: any) {
     });
     return error as Exception;
 }
-export class CustomReporter extends reporters.Base {
+export class CustomReporter {
     private readonly reportServerPor: number;
-    constructor(runner: Runner) {
-        super(runner);
+    constructor(runner: mochaTypes.Runner) {
         this.reportServerPor = workspace.getConfiguration('jupyter').get('REPORT_SERVER_PORT') as number;
 
         const url = `http://localhost:${this.reportServerPor}`;
         const reportProgress = (message: Message) => sendMessage(url, message);
         runner
-            .once(Runner.constants.EVENT_RUN_BEGIN, () => {
-                reportProgress({ event: Runner.constants.EVENT_RUN_BEGIN });
+            .once(constants.EVENT_RUN_BEGIN, () => {
+                reportProgress({ event: constants.EVENT_RUN_BEGIN });
             })
-            .once(Runner.constants.EVENT_RUN_END, async () => {
-                reportProgress({ event: Runner.constants.EVENT_RUN_END, stats: runner.stats });
+            .once(constants.EVENT_RUN_END, async () => {
+                reportProgress({ event: constants.EVENT_RUN_END, stats: runner.stats });
             })
-            .on(Runner.constants.EVENT_SUITE_BEGIN, (suite: Suite) => {
-                reportProgress({ event: Runner.constants.EVENT_SUITE_BEGIN, title: suite.fullTitle() });
+            .on(constants.EVENT_SUITE_BEGIN, (suite: mochaTypes.Suite) => {
+                reportProgress({ event: constants.EVENT_SUITE_BEGIN, title: suite.fullTitle() });
             })
-            .on(Runner.constants.EVENT_SUITE_END, (suite: Suite) => {
-                reportProgress({ event: Runner.constants.EVENT_SUITE_END, title: suite.fullTitle() });
+            .on(constants.EVENT_SUITE_END, (suite: mochaTypes.Suite) => {
+                reportProgress({ event: constants.EVENT_SUITE_END, title: suite.fullTitle() });
             })
-            .on(Runner.constants.EVENT_TEST_FAIL, (test: Test, err: any) => {
+            .on(constants.EVENT_TEST_FAIL, (test: mochaTypes.Test, err: any) => {
                 reportProgress({
-                    event: Runner.constants.EVENT_TEST_FAIL,
+                    event: constants.EVENT_TEST_FAIL,
                     title: test.fullTitle(),
                     err: formatException(err),
                     duration: test.duration
                 });
             })
-            .on(Runner.constants.EVENT_TEST_PENDING, (test: Test) => {
+            .on(constants.EVENT_TEST_PENDING, (test: mochaTypes.Test) => {
                 reportProgress({
-                    event: Runner.constants.EVENT_TEST_PENDING,
+                    event: constants.EVENT_TEST_PENDING,
                     title: test.fullTitle()
                 });
             })
-            .on(Runner.constants.EVENT_TEST_PASS, (test: Test) => {
+            .on(constants.EVENT_TEST_PASS, (test: mochaTypes.Test) => {
                 reportProgress({
-                    event: Runner.constants.EVENT_TEST_PASS,
+                    event: constants.EVENT_TEST_PASS,
                     title: test.fullTitle(),
                     duration: test.duration
                 });

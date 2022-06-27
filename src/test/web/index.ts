@@ -38,7 +38,8 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
         return new Promise<void>((resolve, reject) => {
             mocha.setup({
                 ui: 'tdd',
-                reporter: CustomReporter
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                reporter: CustomReporter as any
             });
 
             // bundles all files in the current directory matching `*.web.test` & `*.common.test`
