@@ -4,6 +4,7 @@
 import type { JSONObject } from '@lumino/coreutils';
 import { inject, injectable, named } from 'inversify';
 import { CancellationError, CancellationToken, Event, EventEmitter } from 'vscode';
+import { DebugProtocol } from 'vscode-debugprotocol';
 import { Identifiers, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { Experiments } from '../../platform/common/experiments/groups';
 import { IConfigurationService, IExperimentService, IDisposableRegistry } from '../../platform/common/types';
@@ -405,5 +406,9 @@ export class KernelVariables implements IJupyterVariables {
             );
         }
         return this.enhancedTooltipsExperimentPromise;
+    }
+
+    evaluate(): Promise<DebugProtocol.EvaluateResponse['body']> {
+        throw new Error('Not implemented.');
     }
 }

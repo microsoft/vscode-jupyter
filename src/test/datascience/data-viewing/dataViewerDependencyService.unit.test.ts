@@ -9,7 +9,7 @@ import { ApplicationShell } from '../../../platform/common/application/applicati
 import { IApplicationShell } from '../../../platform/common/application/types';
 import {
     DataViewerDependencyService,
-    printPandasVersion
+    kernelGetPandasVersion
 } from '../../../webviews/extension-side/dataviewer/dataViewerDependencyService';
 import { IKernel } from '../../../kernels/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
@@ -54,7 +54,7 @@ suite('DataScience - DataViewerDependencyService', () => {
         assert.equal(result, undefined);
         assert.deepEqual(
             stub.getCalls().map((call) => call.lastArg),
-            [printPandasVersion]
+            [kernelGetPandasVersion]
         );
     });
 
@@ -68,7 +68,7 @@ suite('DataScience - DataViewerDependencyService', () => {
         assert.equal(result, undefined);
         assert.deepEqual(
             stub.getCalls().map((call) => call.lastArg),
-            [printPandasVersion]
+            [kernelGetPandasVersion]
         );
     });
 
@@ -86,7 +86,7 @@ suite('DataScience - DataViewerDependencyService', () => {
         );
         assert.deepEqual(
             stub.getCalls().map((call) => call.lastArg),
-            [printPandasVersion]
+            [kernelGetPandasVersion]
         );
     });
 
@@ -104,7 +104,7 @@ suite('DataScience - DataViewerDependencyService', () => {
         );
         assert.deepEqual(
             stub.getCalls().map((call) => call.lastArg),
-            [printPandasVersion]
+            [kernelGetPandasVersion]
         );
     });
 
@@ -119,7 +119,7 @@ suite('DataScience - DataViewerDependencyService', () => {
         assert.equal(await resultPromise, undefined);
         assert.deepEqual(
             stub.getCalls().map((call) => call.lastArg),
-            [printPandasVersion, '%pip install pandas']
+            [kernelGetPandasVersion, '%pip install pandas']
         );
     });
 
@@ -133,7 +133,7 @@ suite('DataScience - DataViewerDependencyService', () => {
         await assert.isRejected(resultPromise, DataScience.pandasRequiredForViewing());
         assert.deepEqual(
             stub.getCalls().map((call) => call.lastArg),
-            [printPandasVersion]
+            [kernelGetPandasVersion]
         );
     });
 });

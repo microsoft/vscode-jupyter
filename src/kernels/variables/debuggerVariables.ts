@@ -298,7 +298,7 @@ export class DebuggerVariables
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async evaluate(code: string, frameId?: number): Promise<any> {
+    async evaluate(code: string, frameId?: number): Promise<DebugProtocol.EvaluateResponse['body']> {
         if (this.debugService.activeDebugSession) {
             traceVerbose(`Evaluating in debugger : ${this.debugService.activeDebugSession.id}: ${code}`);
             const results = await this.debugService.activeDebugSession.customRequest('evaluate', {
@@ -311,7 +311,7 @@ export class DebuggerVariables
                 return results;
             } else {
                 traceError(`Cannot evaluate ${code}`);
-                return undefined;
+                throw new Error(`Cannot evaluate ${code}`);
             }
         }
         throw Error('Debugger is not active, cannot evaluate.');

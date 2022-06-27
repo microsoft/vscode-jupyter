@@ -3,6 +3,7 @@
 'use strict';
 
 import { CancellationToken, Event, Uri } from 'vscode';
+import { DebugProtocol } from 'vscode-debugprotocol';
 import { IKernel } from '../types';
 import type { JSONObject } from '@lumino/coreutils';
 
@@ -56,6 +57,7 @@ export interface IJupyterVariables {
     ): Promise<IJupyterVariable | undefined>;
     // This is currently only defined in kernelVariables.ts
     getVariableProperties?(name: string, kernel?: IKernel, cancelToken?: CancellationToken): Promise<JSONObject>;
+    evaluate(code: string, frameId?: number): Promise<DebugProtocol.EvaluateResponse['body']>;
 }
 
 export interface IConditionalJupyterVariables extends IJupyterVariables {

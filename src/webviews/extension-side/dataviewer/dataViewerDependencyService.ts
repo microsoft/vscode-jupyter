@@ -17,24 +17,29 @@ import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import {
     IDataViewerDependencyService,
     IDataViewerDependencyServiceOptions,
-    IdataViewerDependencyServiceOptionsWithDebuggerSession,
+    IdataViewerDependencyServiceOptionsWithVariableProvider,
     IDataViewerDependencyServiceOptionsWithKernel
 } from './types';
 import { executeSilently } from '../../../kernels/helpers';
+import { IKernel } from '../../../kernels/types';
 
 export const minimumSupportedPandaVersion = '0.20.0';
-export const printPandasVersion = [
+export const kernelGetPandasVersion = [
     'import pandas as _VSCODE_pandas;print(_VSCODE_pandas.__version__);del _VSCODE_pandas'
 ];
-export const returnPandasVersion = ['import pandas as _VSCODE_pandas', '_VSCODE_pandas.__version'];
-// def getPandasVersion():
-//    import pandas as pd
-//    return pd.__version
-//
-// getPandasVersion()
-// getVersion = lambda: "ZZZZZZ"
-// `;
-export const deleteCustomPandas = 'del getPandasVersion';
+export const debuggerGetPandasVersion = [
+    'import pandas as _VSCODE_pandas',
+    '_VSCODE_pandas.__version',
+    'del _VSCODE_pandas'
+];
+export const debuggerInstallPandas = [
+    'import subprocess as _VSCODE_subprocess',
+    'import sys as _VSCODE_sys',
+    `def _VSCODE_install_pandas():
+  _VSCODE_subprocess.check_call([_VSCODE_sys.executable, "-m", "pip", "install", "pandas"])`,
+    '_VSCODE_install_pandas()',
+    'del _VSCODE_subprocess, _VSCODE_sys, _VSCODE_install_pandas'
+];
 
 function isVersionOfPandaSupported(version: SemVer) {
     return version.compare(minimumSupportedPandaVersion) > 0;
@@ -50,28 +55,23 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
         @inject(IsCodeSpace) private isCodeSpace: boolean
     ) {}
 
-    private packaging(options: IDataViewerDependencyServiceOptions): 'conda' | 'pip' | '%conda' | '%pip' {
-        const kernel = (options as IDataViewerDependencyServiceOptionsWithKernel).kernel;
-        if (!kernel) return 'pip';
-
+    private kernelPackaging(kernel: IKernel): '%conda' | '%pip' {
         const envType = kernel.kernelConnectionMetadata.interpreter?.envType;
         const isConda = envType === EnvironmentType.Conda;
+        // From https://ipython.readthedocs.io/en/stable/interactive/magics.html#magic-pip (%conda is here as well).
         return isConda ? '%conda' : '%pip';
     }
 
     public async checkAndInstallMissingDependencies(options: IDataViewerDependencyServiceOptions): Promise<void> {
         const kernel = (options as IDataViewerDependencyServiceOptionsWithKernel).kernel;
-        const { debugSession, frameId } = options as IdataViewerDependencyServiceOptionsWithDebuggerSession;
+        const variableProvider = (options as IdataViewerDependencyServiceOptionsWithVariableProvider).variableProvider;
 
         // Providing feedback as soon as possible.
-        if (!kernel && !debugSession) {
+        if (!kernel && !variableProvider) {
             sendTelemetryEvent(Telemetry.InsufficientParameters);
             throw new Error(DataScience.insufficientParameters());
         } else if (kernel && !kernel.session) {
             sendTelemetryEvent(Telemetry.NoActiveKernelSession);
-            throw new Error(DataScience.noActiveKernelSession());
-        } else if (debugSession && !frameId) {
-            sendTelemetryEvent(Telemetry.NoDebuggerSessionAndFrameId);
             throw new Error(DataScience.noActiveKernelSession());
         }
 
@@ -93,7 +93,7 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
 
     private async getVersionOfPandas(options: IDataViewerDependencyServiceOptions): Promise<SemVer | undefined> {
         const kernel = (options as IDataViewerDependencyServiceOptionsWithKernel).kernel;
-        const command = kernel ? printPandasVersion : returnPandasVersion;
+        const command = kernel ? kernelGetPandasVersion : debuggerGetPandasVersion;
 
         try {
             const outputs = await this.executeSilently(command, options);
@@ -118,12 +118,17 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
                   Common.install()
               );
 
-        // From https://ipython.readthedocs.io/en/stable/interactive/magics.html#magic-pip (%conda is here as well).
-        const command = [`${this.packaging(options)} install pandas`];
+        const kernel = (options as IDataViewerDependencyServiceOptionsWithKernel).kernel;
+        let commands: string[];
+        if (kernel) {
+            commands = [`${this.kernelPackaging(kernel)} install pandas`];
+        } else {
+            commands = debuggerInstallPandas;
+        }
 
         if (selection === Common.install()) {
             try {
-                await this.executeSilently(command, options);
+                await this.executeSilently(commands, options);
                 sendTelemetryEvent(Telemetry.UserInstalledPandas);
             } catch (e) {
                 sendTelemetryEvent(Telemetry.FailedToInstallPandas);
@@ -140,16 +145,11 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
         options: IDataViewerDependencyServiceOptions
     ): Promise<(string | undefined)[]> {
         const kernel = (options as IDataViewerDependencyServiceOptionsWithKernel).kernel;
-        const { debugSession, frameId } = options as IdataViewerDependencyServiceOptionsWithDebuggerSession;
+        const variableProvider = (options as IdataViewerDependencyServiceOptionsWithVariableProvider).variableProvider;
 
         let results: (string | undefined)[] = [];
 
         for (const command of commands) {
-            console.log({
-                command,
-                frameId
-            });
-
             if (kernel) {
                 if (!kernel.session) {
                     sendTelemetryEvent(Telemetry.NoActiveKernelSession);
@@ -162,203 +162,10 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
                 }
                 results = results.concat(outputs.map((item) => item.text?.toString()));
             } else {
-                const response = await debugSession.customRequest('evaluate', {
-                    expression: command,
-                    context: 'repl',
-                    format: { rawString: true },
-                    frameId
-                });
-                results.push(response.response);
+                const response = await variableProvider.evaluate(command);
+                results.push(response.result);
             }
         }
-        results.push(
-            (
-                await debugSession.customRequest('evaluate', {
-                    expression: 'getVersion = lambda: "ZZZZZZ"',
-                    context: 'repl',
-                    format: { rawString: true },
-                    frameId
-                })
-            ).response
-        );
-        results.push(
-            (
-                await debugSession.customRequest('evaluate', {
-                    expression: 'getVersion = lambda: "ZZZZZZ"',
-                    context: 'repl',
-                    format: { rawString: true },
-                    frameId
-                })
-            ).response
-        );
-        results.push(
-            (
-                await debugSession.customRequest('evaluate', {
-                    expression: 'print("hola")',
-                    format: { rawString: true },
-                    frameId
-                })
-            ).response
-        );
-        results.push(
-            (
-                await debugSession.customRequest('evaluate', {
-                    expression: '"hola"',
-                    format: { rawString: true },
-                    frameId
-                })
-            ).response
-        );
-        results.push(
-            (
-                await debugSession.customRequest('evaluate', {
-                    expression: 'print("hola")',
-                    frameId
-                })
-            ).response
-        );
-        results.push(
-            (
-                await debugSession.customRequest('evaluate', {
-                    expression: '"hola"',
-                    frameId
-                })
-            ).response
-        );
-        results.push(
-            (
-                await debugSession.customRequest('evaluate', {
-                    expression: 'print("hola")',
-                    context: 'repl',
-                    format: { rawString: true }
-                })
-            ).response
-        );
-        results.push(
-            (
-                await debugSession.customRequest('evaluate', {
-                    expression: '"hola"',
-                    context: 'repl',
-                    format: { rawString: true }
-                })
-            ).response
-        );
-        results.push(
-            (
-                await debugSession.customRequest('evaluate', {
-                    expression: 'print("hola")',
-                    format: { rawString: true }
-                })
-            ).response
-        );
-        results.push(
-            (
-                await debugSession.customRequest('evaluate', {
-                    expression: '"hola"',
-                    format: { rawString: true }
-                })
-            ).response
-        );
-        results.push(
-            (
-                await debugSession.customRequest('evaluate', {
-                    expression: 'print("hola")'
-                })
-            ).response
-        );
-        results.push(
-            (
-                await debugSession.customRequest('evaluate', {
-                    expression: '"hola"'
-                })
-            ).response
-        );
-        results.push(
-            (
-                await debugSession.customRequest('evaluate', {
-                    expression: 'getVersion = lambda: "ZZZZZZ"',
-                    context: 'repl',
-                    format: { rawString: true },
-                    frameId
-                })
-            ).response
-        );
-        results.push(
-            (
-                await debugSession.customRequest('evaluate', {
-                    expression: 'getVersion = lambda: "ZZZZZZ"',
-                    context: 'repl',
-                    frameId
-                })
-            ).response
-        );
-        results.push(
-            (
-                await debugSession.customRequest('evaluate', {
-                    expression: 'getVersion = lambda: "ZZZZZZ"',
-                    format: { rawString: true },
-                    frameId
-                })
-            ).response
-        );
-        results.push(
-            (
-                await debugSession.customRequest('evaluate', {
-                    expression: 'getVersion = lambda: "ZZZZZZ"',
-                    frameId
-                })
-            ).response
-        );
-        results.push(
-            (
-                await debugSession.customRequest('evaluate', {
-                    expression: 'getVersion = lambda: "ZZZZZZ"'
-                })
-            ).response
-        );
-        results.push(
-            (
-                await debugSession.customRequest('evaluate', {
-                    expression: 'getVersion()',
-                    context: 'repl',
-                    format: { rawString: true },
-                    frameId
-                })
-            ).response
-        );
-        results.push(
-            (
-                await debugSession.customRequest('evaluate', {
-                    expression: 'getVersion()',
-                    context: 'repl',
-                    frameId
-                })
-            ).response
-        );
-        results.push(
-            (
-                await debugSession.customRequest('evaluate', {
-                    expression: 'getVersion()',
-                    format: { rawString: true },
-                    frameId
-                })
-            ).response
-        );
-        results.push(
-            (
-                await debugSession.customRequest('evaluate', {
-                    expression: 'getVersion()',
-                    frameId
-                })
-            ).response
-        );
-        results.push(
-            (
-                await debugSession.customRequest('evaluate', {
-                    expression: 'getVersion()'
-                })
-            ).response
-        );
         console.log({ results });
         return results;
     }

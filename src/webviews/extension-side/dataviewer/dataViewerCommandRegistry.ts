@@ -88,10 +88,6 @@ export class DataViewerCommandRegistry implements IExtensionSingleActivationServ
             this.dataViewerFactory
         ) {
             try {
-                const variable = convertDebugProtocolVariableToIJupyterVariable(
-                    request.variable as DebugProtocol.Variable
-                );
-
                 // First find out the current python environment that we are working with
                 if (
                     this.debugService.activeDebugSession.configuration &&
@@ -106,12 +102,14 @@ export class DataViewerCommandRegistry implements IExtensionSingleActivationServ
                     // We still want to make sure we're in a Python environment.
                     if (pythonEnv) {
                         await this.dataViewerDependencyService.checkAndInstallMissingDependencies({
-                            debugSession: this.debugService.activeDebugSession,
-                            frameId: variable.frameId
+                            variableProvider: this.variableProvider
                         });
                     }
                 }
 
+                const variable = convertDebugProtocolVariableToIJupyterVariable(
+                    request.variable as DebugProtocol.Variable
+                );
                 const jupyterVariable = await this.variableProvider.getFullVariable(variable);
                 const jupyterVariableDataProvider = await this.jupyterVariableDataProviderFactory.create(
                     jupyterVariable

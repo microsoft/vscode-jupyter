@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { DebugSession, Event } from 'vscode';
+import { Event } from 'vscode';
 import { IKernel } from '../../../kernels/types';
-import { IJupyterVariable } from '../../../kernels/variables/types';
+import { IJupyterVariable, IJupyterVariables } from '../../../kernels/variables/types';
 import { IDisposable } from '../../../platform/common/types';
 import { SharedMessages } from '../../../messageTypes';
 import { SliceOperationSource } from '../../../platform/telemetry/constants';
@@ -130,13 +130,12 @@ export interface IJupyterVariableDataProviderFactory {
 export interface IDataViewerDependencyServiceOptionsWithKernel {
     kernel: IKernel;
 }
-export interface IdataViewerDependencyServiceOptionsWithDebuggerSession {
-    debugSession: DebugSession;
-    frameId: number;
+export interface IdataViewerDependencyServiceOptionsWithVariableProvider {
+    variableProvider: IJupyterVariables;
 }
 export type IDataViewerDependencyServiceOptions =
     | IDataViewerDependencyServiceOptionsWithKernel
-    | IdataViewerDependencyServiceOptionsWithDebuggerSession;
+    | IdataViewerDependencyServiceOptionsWithVariableProvider;
 export const IDataViewerDependencyService = Symbol('IDataViewerDependencyService');
 export interface IDataViewerDependencyService {
     checkAndInstallMissingDependencies(options: IDataViewerDependencyServiceOptions): Promise<void>;

@@ -1367,7 +1367,7 @@ export namespace DataScience {
     export const noKernelFoundInInterpreter = () =>
         localize('DataScience.noKernelFoundInInterpreter', 'No kernel found in interpreter.');
     export const noActiveKernelSession = () =>
-        localize('DataScience.noActiveKernelSession', 'No active kernel session.');
+        localize('DataScience.noActiveKernelSession', 'No no active kernel session.');
     export const insufficientParameters = () =>
         localize('DataScience.insufficientParameters', 'Insufficient parameters.');
     export const noDebuggerSessionAndFrameId = () =>

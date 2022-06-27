@@ -15,6 +15,7 @@ import {
     IJupyterVariablesResponse,
     IJupyterVariable
 } from './types';
+import { DebugProtocol } from 'vscode-debugprotocol';
 
 /**
  * This class provides variable data for showing in the interactive window or a notebook.
@@ -85,5 +86,10 @@ export class JupyterVariables implements IJupyterVariables {
 
     private fireRefresh() {
         this.refreshEventEmitter.fire();
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public evaluate(code: string): Promise<DebugProtocol.EvaluateResponse['body']> {
+        return this.debuggerVariables.evaluate(code);
     }
 }

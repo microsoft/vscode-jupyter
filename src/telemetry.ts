@@ -1389,11 +1389,6 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.NoActiveKernelSession]: never | undefined;
     /**
-     * Useful when we need a debugger session besides a frameId in order to execute commands from the debugger.
-     * Used by the dataViewerDependencyService.
-     */
-    [Telemetry.NoDebuggerSessionAndFrameId]: never | undefined;
-    /**
      * Error in case none of the necessary parameters are provided.
      */
     [Telemetry.InsufficientParameters]: never | undefined;
