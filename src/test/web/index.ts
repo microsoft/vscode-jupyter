@@ -22,6 +22,8 @@ import type { IExtensionApi } from '../../standalone/api/api';
 import type { IExtensionContext } from '../../platform/common/types';
 import { IExtensionTestApi } from '../common';
 import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
+const CustomReporter = require('./customReporter');
+import { sleep } from '../../platform/common/utils/async';
 
 let activatedResponse: undefined | IExtensionApi;
 
@@ -34,10 +36,11 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
         // imports mocha for the browser, defining the `mocha` global.
         require('mocha/mocha');
 
-        return new Promise<void>((resolve, reject) => {
+        return new Promise<void>(async (resolve, reject) => {
             mocha.setup({
                 ui: 'tdd',
-                reporter: undefined
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                reporter: CustomReporter as any
             });
 
             // bundles all files in the current directory matching `*.web.test` & `*.common.test`
@@ -47,7 +50,9 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
 
             try {
                 // Run the mocha test
-                mocha.run((failures) => {
+                mocha.run(async (failures) => {
+                    // Wait for a while, till we've managed to send the test results to the test server.
+                    await sleep(5_000);
                     if (failures > 0) {
                         reject(new Error(`${failures} tests failed.`));
                     } else {
@@ -56,6 +61,8 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
                 });
             } catch (err) {
                 console.error(err);
+                // Wait for a while, till we've managed to send the test results to the test server.
+                await sleep(5_000);
                 reject(err);
             }
         });

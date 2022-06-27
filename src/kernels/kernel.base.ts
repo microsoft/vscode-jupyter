@@ -43,8 +43,8 @@ import {
 import { sendTelemetryEvent, Telemetry } from '../telemetry';
 import { executeSilently, getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from './helpers';
 import {
-    IJupyterSession,
     IKernel,
+    IKernelConnectionSession,
     INotebookProvider,
     InterruptResult,
     isLocalConnection,
@@ -106,7 +106,7 @@ export abstract class BaseKernel implements IKernel {
     get executionCount(): number {
         return this._visibleExecutionCount;
     }
-    protected _session?: IJupyterSession;
+    protected _session?: IKernelConnectionSession;
     /**
      * If the session died, then ensure the status is set to `dead`.
      * We need to provide an accurate status.
@@ -114,7 +114,7 @@ export abstract class BaseKernel implements IKernel {
      * If a jupyter kernel dies after it has started, then status is set to `dead`.
      */
     private isKernelDead?: boolean;
-    public get session(): IJupyterSession | undefined {
+    public get session(): IKernelConnectionSession | undefined {
         return this._session;
     }
     protected _disposed?: boolean;
@@ -126,8 +126,8 @@ export abstract class BaseKernel implements IKernel {
     private readonly _onStarted = new EventEmitter<void>();
     protected readonly _onDisposed = new EventEmitter<void>();
     protected readonly _onPreExecute = new EventEmitter<NotebookCell>();
-    protected _jupyterSessionPromise?: Promise<IJupyterSession>;
-    private readonly hookedSessionForEvents = new WeakSet<IJupyterSession>();
+    protected _jupyterSessionPromise?: Promise<IKernelConnectionSession>;
+    private readonly hookedSessionForEvents = new WeakSet<IKernelConnectionSession>();
     protected eventHooks: ((ev: 'willInterrupt' | 'willRestart') => Promise<void>)[] = [];
     protected restarting?: Deferred<void>;
     protected startCancellation = new CancellationTokenSource();
@@ -156,9 +156,7 @@ export abstract class BaseKernel implements IKernel {
         this.kernelExecution = new KernelExecution(
             this,
             appShell,
-            kernelConnectionMetadata,
             interruptTimeout,
-            controller,
             outputTracker,
             context,
             formatters
@@ -344,7 +342,7 @@ export abstract class BaseKernel implements IKernel {
     }
     protected async startJupyterSession(
         options: IDisplayOptions = new DisplayOptions(false)
-    ): Promise<IJupyterSession> {
+    ): Promise<IKernelConnectionSession> {
         traceVerbose(`Start Jupyter Session in kernel.ts with disableUI = ${options.disableUI}`);
         this._startedAtLeastOnce = true;
         if (!options.disableUI) {
@@ -395,7 +393,7 @@ export abstract class BaseKernel implements IKernel {
         return this._jupyterSessionPromise;
     }
 
-    private async createJupyterSession(stopWatch: StopWatch): Promise<IJupyterSession> {
+    private async createJupyterSession(stopWatch: StopWatch): Promise<IKernelConnectionSession> {
         let disposables: Disposable[] = [];
         try {
             // No need to block kernel startup on UI updates.
@@ -439,11 +437,14 @@ export abstract class BaseKernel implements IKernel {
             // Else we just pollute the logs with lots of noise.
             if (this.startupUI.disableUI) {
                 traceVerbose(
-                    `failed to create IJupyterSession in kernel, UI Disabled = ${this.startupUI.disableUI}`,
+                    `failed to create IJupyterKernelConnectionSession in kernel, UI Disabled = ${this.startupUI.disableUI}`,
                     ex
                 );
             } else if (!this.startCancellation.token && !isCancellationError(ex)) {
-                traceError(`failed to create IJupyterSession in kernel, UI Disabled = ${this.startupUI.disableUI}`, ex);
+                traceError(
+                    `failed to create IJupyterKernelConnectionSession in kernel, UI Disabled = ${this.startupUI.disableUI}`,
+                    ex
+                );
             }
             Cancellation.throwIfCanceled(this.startCancellation.token);
             if (ex instanceof JupyterConnectError) {
@@ -489,7 +490,7 @@ export abstract class BaseKernel implements IKernel {
 
     protected abstract sendTelemetryForPythonKernelExecutable(): Promise<void>;
 
-    protected async initializeAfterStart(session: IJupyterSession | undefined) {
+    protected async initializeAfterStart(session: IKernelConnectionSession | undefined) {
         traceVerbose(`Started running kernel initialization for ${getDisplayPath(this.uri)}`);
         if (!session) {
             traceVerbose('Not running kernel initialization');
@@ -723,7 +724,7 @@ export abstract class BaseKernel implements IKernel {
     protected abstract getUpdateWorkingDirectoryAndPathCode(launchingFile?: Resource): Promise<string[]>;
 
     private async executeSilently(
-        session: IJupyterSession | undefined,
+        session: IKernelConnectionSession | undefined,
         code: string[],
         errorOptions?: SilentExecutionErrorOptions
     ) {

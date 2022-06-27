@@ -10,7 +10,7 @@ import { Telemetry } from '../../../telemetry';
 import {
     ConnectNotebookProviderOptions,
     GetServerOptions,
-    IJupyterSession,
+    IKernelConnectionSession,
     INotebookProvider,
     INotebookProviderConnection,
     isLocalConnection,
@@ -59,7 +59,7 @@ export class NotebookProvider implements INotebookProvider {
             throw new Error('Python Extension is not installed');
         }
     }
-    public async create(options: NotebookCreationOptions): Promise<IJupyterSession> {
+    public async create(options: NotebookCreationOptions): Promise<IKernelConnectionSession> {
         const kernelConnection = options.kernelConnection;
         const isLocal = isLocalConnection(kernelConnection);
         const rawLocalKernel = this.rawNotebookProvider?.isSupported && isLocal;

@@ -22,7 +22,7 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { trackKernelResourceInformation } from '../../telemetry/helper';
 import { captureTelemetry, sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { isPythonKernelConnection } from '../../helpers';
-import { IJupyterSession, KernelConnectionMetadata } from '../../types';
+import { IRawKernelConnectionSession, KernelConnectionMetadata } from '../../types';
 import { IKernelLauncher, IRawNotebookProvider, IRawNotebookSupportedService } from '../types';
 import { RawJupyterSession } from './rawJupyterSession.node';
 import { Cancellation } from '../../../platform/common/cancellation';
@@ -36,7 +36,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
     public get id(): string {
         return this._id;
     }
-    private sessions = new Set<Promise<IJupyterSession>>();
+    private sessions = new Set<Promise<IRawKernelConnectionSession>>();
     private _id = uuid();
     private disposed = false;
     constructor(
@@ -72,9 +72,9 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         kernelConnection: KernelConnectionMetadata,
         ui: IDisplayOptions,
         cancelToken: vscode.CancellationToken
-    ): Promise<IJupyterSession> {
+    ): Promise<IRawKernelConnectionSession> {
         traceInfo(`Creating raw notebook for resource '${getDisplayPath(resource)}'`);
-        const sessionPromise = createDeferred<IJupyterSession>();
+        const sessionPromise = createDeferred<IRawKernelConnectionSession>();
         this.trackDisposable(sessionPromise.promise);
         let rawSession: RawJupyterSession | undefined;
 
@@ -138,7 +138,7 @@ export class HostRawNotebookProvider implements IRawNotebookProvider {
         return sessionPromise.promise;
     }
 
-    private trackDisposable(sessionPromise: Promise<IJupyterSession>) {
+    private trackDisposable(sessionPromise: Promise<IRawKernelConnectionSession>) {
         void sessionPromise
             .then((session) => {
                 session.onDidDispose(

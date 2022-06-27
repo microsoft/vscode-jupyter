@@ -36,7 +36,7 @@ on:
           - Yes, publish pre-release
 
 env:
-  NODE_VERSION: 16.13.2
+  NODE_VERSION: 16.14.2
   PYTHON_VERSION: 3.8
   JULIA_VERSION: 1.5.2
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
@@ -722,6 +722,10 @@ jobs:
           name: VSCodeLogs-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.os}}
           path: '${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/**/*'
           retention-days: 1
+
+      - name: Log results
+        if: always()
+        run: npm run printTestResults
 
       - name: Upload Memory snapshot
         uses: actions/upload-artifact@v2

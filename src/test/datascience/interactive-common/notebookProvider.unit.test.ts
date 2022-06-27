@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as vscode from 'vscode';
 import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
-import { IJupyterSession, KernelConnectionMetadata } from '../../../platform/../kernels/types';
+import { IJupyterKernelConnectionSession, KernelConnectionMetadata } from '../../../platform/../kernels/types';
 import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
 import { DisplayOptions } from '../../../kernels/displayOptions';
 import { IJupyterNotebookProvider, IServerConnectionType } from '../../../kernels/jupyter/types';
@@ -46,7 +46,7 @@ suite('DataScience - NotebookProvider', () => {
     });
     teardown(() => disposeAllDisposables(disposables));
     test('NotebookProvider getOrCreateNotebook jupyter provider does not have notebook already', async () => {
-        const mockSession = mock<IJupyterSession>();
+        const mockSession = mock<IJupyterKernelConnectionSession>();
         instance(mockSession as any).then = undefined;
         when(jupyterNotebookProvider.createNotebook(anything())).thenResolve(instance(mockSession));
         when(jupyterNotebookProvider.connect(anything())).thenResolve({} as any);
@@ -64,7 +64,7 @@ suite('DataScience - NotebookProvider', () => {
     });
 
     test('NotebookProvider getOrCreateNotebook second request should return the notebook already cached', async () => {
-        const mockSession = mock<IJupyterSession>();
+        const mockSession = mock<IJupyterKernelConnectionSession>();
         instance(mockSession as any).then = undefined;
         when(jupyterNotebookProvider.createNotebook(anything())).thenResolve(instance(mockSession));
         when(jupyterNotebookProvider.connect(anything())).thenResolve({} as any);

@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../platform/activation/types';
-import { IServiceManager } from '../platform/ioc/types';
+import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../platform/activation/types';
+import { IServiceManager } from '../../platform/ioc/types';
 import { NotebookCellBangInstallDiagnosticsProvider } from './diagnosticsProvider';
 import { PythonKernelCompletionProvider } from './pythonKernelCompletionProvider';
 import { PythonKernelCompletionProviderRegistration } from './pythonKernelCompletionProviderRegistration';

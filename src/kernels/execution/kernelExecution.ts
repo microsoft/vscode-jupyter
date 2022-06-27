@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { EventEmitter, NotebookCell, NotebookCellKind, NotebookController, NotebookDocument, workspace } from 'vscode';
+import { EventEmitter, NotebookCell, NotebookCellKind, NotebookDocument, workspace } from 'vscode';
 import { CellExecutionFactory } from './cellExecution';
 import { CellExecutionQueue } from './cellExecutionQueue';
 import { KernelMessage } from '@jupyterlab/services';
@@ -17,11 +17,10 @@ import { trackKernelResourceInformation } from '../telemetry/helper';
 import { captureTelemetry, Telemetry } from '../../telemetry';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import {
-    IJupyterSession,
+    IKernelConnectionSession,
     IKernel,
     InterruptResult,
     ITracebackFormatter,
-    KernelConnectionMetadata,
     NotebookCellRunState
 } from '../../kernels/types';
 import { traceCellMessage } from './helpers';
@@ -44,22 +43,20 @@ export class KernelExecution implements IDisposable {
     constructor(
         private readonly kernel: IKernel,
         appShell: IApplicationShell,
-        readonly metadata: Readonly<KernelConnectionMetadata>,
         private readonly interruptTimeout: number,
-        controller: NotebookController,
         outputTracker: CellOutputDisplayIdTracker,
         context: IExtensionContext,
         formatters: ITracebackFormatter[]
     ) {
         const requestListener = new CellExecutionMessageHandlerService(
             appShell,
-            controller,
+            this.kernel.controller,
             outputTracker,
             context,
             formatters
         );
         this.disposables.push(requestListener);
-        this.executionFactory = new CellExecutionFactory(controller, requestListener);
+        this.executionFactory = new CellExecutionFactory(this.kernel.controller, requestListener);
     }
 
     public get onPreExecute() {
@@ -70,7 +67,7 @@ export class KernelExecution implements IDisposable {
         return notebook ? this.documentExecutions.get(notebook)?.queue || [] : [];
     }
     public async executeCell(
-        sessionPromise: Promise<IJupyterSession>,
+        sessionPromise: Promise<IKernelConnectionSession>,
         cell: NotebookCell,
         codeOverride?: string
     ): Promise<NotebookCellRunState> {
@@ -106,7 +103,7 @@ export class KernelExecution implements IDisposable {
      * Interrupts the execution of cells.
      * If we don't have a kernel (Jupyter Session) available, then just abort all of the cell executions.
      */
-    public async interrupt(sessionPromise?: Promise<IJupyterSession>): Promise<InterruptResult> {
+    public async interrupt(sessionPromise?: Promise<IKernelConnectionSession>): Promise<InterruptResult> {
         trackKernelResourceInformation(this.kernel.resourceUri, { interruptKernel: true });
         const notebook = getAssociatedNotebookDocument(this.kernel);
         const executionQueue = notebook ? this.documentExecutions.get(notebook) : undefined;
@@ -145,7 +142,7 @@ export class KernelExecution implements IDisposable {
      * Restarts the kernel
      * If we don't have a kernel (Jupyter Session) available, then just abort all of the cell executions.
      */
-    public async restart(sessionPromise?: Promise<IJupyterSession>): Promise<void> {
+    public async restart(sessionPromise?: Promise<IKernelConnectionSession>): Promise<void> {
         trackKernelResourceInformation(this.kernel.resourceUri, { restartKernel: true });
         const notebook = getAssociatedNotebookDocument(this.kernel);
         const executionQueue = notebook ? this.documentExecutions.get(notebook) : undefined;
@@ -181,14 +178,21 @@ export class KernelExecution implements IDisposable {
         traceInfoIfCI(`Dispose KernelExecution`);
         this.disposables.forEach((d) => d.dispose());
     }
-    private getOrCreateCellExecutionQueue(document: NotebookDocument, sessionPromise: Promise<IJupyterSession>) {
+    private getOrCreateCellExecutionQueue(
+        document: NotebookDocument,
+        sessionPromise: Promise<IKernelConnectionSession>
+    ) {
         const existingExecutionQueue = this.documentExecutions.get(document);
         // Re-use the existing Queue if it can be used.
         if (existingExecutionQueue && !existingExecutionQueue.isEmpty && !existingExecutionQueue.failed) {
             return existingExecutionQueue;
         }
 
-        const newCellExecutionQueue = new CellExecutionQueue(sessionPromise, this.executionFactory, this.metadata);
+        const newCellExecutionQueue = new CellExecutionQueue(
+            sessionPromise,
+            this.executionFactory,
+            this.kernel.kernelConnectionMetadata
+        );
         this.disposables.push(newCellExecutionQueue);
 
         // If the document is closed (user or on CI), then just stop handling the UI updates & cancel cell execution queue.
@@ -210,7 +214,7 @@ export class KernelExecution implements IDisposable {
     @captureTelemetry(Telemetry.Interrupt)
     @captureTelemetry(Telemetry.InterruptJupyterTime)
     private async interruptExecution(
-        session: IJupyterSession,
+        session: IKernelConnectionSession,
         pendingCells: Promise<unknown>
     ): Promise<InterruptResult> {
         const restarted = createDeferred<boolean>();
@@ -284,7 +288,7 @@ export class KernelExecution implements IDisposable {
 
     @captureTelemetry(Telemetry.RestartKernel)
     @captureTelemetry(Telemetry.RestartJupyterTime)
-    private async restartExecution(session: IJupyterSession): Promise<void> {
+    private async restartExecution(session: IKernelConnectionSession): Promise<void> {
         // Just use the internal session. Pending cells should have been canceled by the caller
         await session.restart();
     }

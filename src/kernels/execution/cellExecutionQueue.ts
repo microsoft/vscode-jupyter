@@ -6,7 +6,7 @@ import { traceInfo, traceError } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
 import { traceCellMessage } from './helpers';
 import { CellExecution, CellExecutionFactory } from './cellExecution';
-import { IJupyterSession, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
+import { IKernelConnectionSession, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
 
 /**
  * A queue responsible for execution of cells.
@@ -36,7 +36,7 @@ export class CellExecutionQueue implements Disposable {
         return this.queueOfCellsToExecute.map((cell) => cell.cell);
     }
     constructor(
-        private readonly session: Promise<IJupyterSession>,
+        private readonly session: Promise<IKernelConnectionSession>,
         private readonly executionFactory: CellExecutionFactory,
         readonly metadata: Readonly<KernelConnectionMetadata>
     ) {}

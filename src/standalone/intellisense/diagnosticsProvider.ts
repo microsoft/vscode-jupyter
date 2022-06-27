@@ -25,14 +25,14 @@ import {
     Diagnostic,
     workspace
 } from 'vscode';
-import { IExtensionSyncActivationService } from '../platform/activation/types';
-import { IVSCodeNotebook, IDocumentManager } from '../platform/common/application/types';
-import { PYTHON_LANGUAGE } from '../platform/common/constants';
-import { disposeAllDisposables } from '../platform/common/helpers';
-import { IDisposable, IDisposableRegistry } from '../platform/common/types';
-import { DataScience } from '../platform/common/utils/localize';
-import { JupyterNotebookView } from '../platform/common/constants';
-import { getAssociatedJupyterNotebook } from '../platform/common/utils';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
+import { IVSCodeNotebook, IDocumentManager } from '../../platform/common/application/types';
+import { PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { disposeAllDisposables } from '../../platform/common/helpers';
+import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
+import { DataScience } from '../../platform/common/utils/localize';
+import { JupyterNotebookView } from '../../platform/common/constants';
+import { getAssociatedJupyterNotebook } from '../../platform/common/utils';
 
 type CellUri = string;
 type CellVersion = number;

@@ -71,7 +71,6 @@ import { registerTypes as registerNotebookTypes } from './notebooks/serviceRegis
 import { registerTypes as registerInteractiveTypes } from './interactive-window/serviceRegistry.node';
 import { registerTypes as registerStandaloneTypes } from './standalone/serviceRegistry.node';
 import { registerTypes as registerTelemetryTypes } from './platform/telemetry/serviceRegistry.node';
-import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry.node';
 import { registerTypes as registerWebviewTypes } from './webviews/extension-side/serviceRegistry.node';
 import { IExtensionActivationManager } from './platform/activation/types';
 import {
@@ -325,7 +324,6 @@ async function activateLegacy(
     registerNotebookTypes(serviceManager);
     registerInteractiveTypes(serviceManager);
     registerStandaloneTypes(context, serviceManager, isDevMode);
-    registerIntellisenseTypes(serviceManager, isDevMode);
     registerWebviewTypes(serviceManager);
 
     // We need to setup this property before any telemetry is sent

@@ -179,7 +179,7 @@ export interface IKernel extends IAsyncDisposable {
      * Provides access to the underlying kernel.
      * The Jupyter kernel can be directly access via the `session.kernel` property.
      */
-    readonly session?: IJupyterSession;
+    readonly session?: IKernelConnectionSession;
     /**
      * We create IKernels early on to ensure they are mapped with the notebook documents.
      * I.e. created even before they are used.
@@ -269,18 +269,16 @@ export enum InterruptResult {
     Restarted = 'restart'
 }
 
-export const IJupyterSession = Symbol('IJupyterSession');
 /**
  * Closely represents Jupyter Labs Kernel.IKernelConnection.
  */
-export interface IJupyterSession extends IAsyncDisposable {
-    readonly kind: 'localRaw' | 'remoteJupyter' | 'localJupyter';
+export interface IBaseKernelConnectionSession extends IAsyncDisposable {
     readonly disposed: boolean;
     readonly kernel?: Kernel.IKernelConnection;
     readonly status: KernelMessage.Status;
     readonly kernelId: string;
     readonly kernelSocket: Observable<KernelSocketInformation | undefined>;
-    isServerSession(): this is IJupyterServerSession;
+    isServerSession(): this is IJupyterKernelConnectionSession;
     onSessionStatusChanged: Event<KernelMessage.Status>;
     onDidDispose: Event<void>;
     interrupt(): Promise<void>;
@@ -311,13 +309,17 @@ export interface IJupyterSession extends IAsyncDisposable {
     shutdown(): Promise<void>;
 }
 
-export interface IJupyterServerSession extends IJupyterSession {
+export interface IJupyterKernelConnectionSession extends IBaseKernelConnectionSession {
     readonly kind: 'remoteJupyter' | 'localJupyter';
     invokeWithFileSynced(contents: string, handler: (file: IBackupFile) => Promise<void>): Promise<void>;
     createTempfile(ext: string): Promise<string>;
     deleteTempfile(file: string): Promise<void>;
     getContents(file: string, format: Contents.FileFormat): Promise<Contents.IModel>;
 }
+export interface IRawKernelConnectionSession extends IBaseKernelConnectionSession {
+    readonly kind: 'localRaw';
+}
+export type IKernelConnectionSession = IJupyterKernelConnectionSession | IRawKernelConnectionSession;
 
 export type ISessionWithSocket = Session.ISessionConnection & {
     /**
@@ -437,7 +439,7 @@ export interface INotebookProvider {
     /**
      * Creates a notebook.
      */
-    create(options: NotebookCreationOptions): Promise<IJupyterSession>;
+    create(options: NotebookCreationOptions): Promise<IKernelConnectionSession>;
     /**
      * Connect to a notebook provider to prepare its connection and to get connection information
      */

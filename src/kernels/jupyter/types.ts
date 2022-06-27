@@ -16,12 +16,13 @@ import {
     IJupyterConnection,
     ConnectNotebookProviderOptions,
     NotebookCreationOptions,
-    IJupyterSession,
+    IJupyterKernelConnectionSession,
     IJupyterKernelSpec,
     GetServerOptions,
     IKernelSocket,
     KernelActionSource,
-    LiveRemoteKernelConnectionMetadata
+    LiveRemoteKernelConnectionMetadata,
+    IKernelConnectionSession
 } from '../types';
 import { ClassType } from '../../platform/ioc/types';
 
@@ -52,7 +53,7 @@ export interface INotebookServer extends IAsyncDisposable {
         cancelToken: CancellationToken,
         ui: IDisplayOptions,
         creator: KernelActionSource
-    ): Promise<IJupyterSession>;
+    ): Promise<IKernelConnectionSession>;
     readonly connection: IJupyterConnection;
 }
 
@@ -65,7 +66,7 @@ export interface INotebookServerFactory {
 export const IJupyterNotebookProvider = Symbol('IJupyterNotebookProvider');
 export interface IJupyterNotebookProvider {
     connect(options: ConnectNotebookProviderOptions): Promise<IJupyterConnection>;
-    createNotebook(options: NotebookCreationOptions): Promise<IJupyterSession>;
+    createNotebook(options: NotebookCreationOptions): Promise<IKernelConnectionSession>;
 }
 
 export type INotebookServerLocalOptions = {
@@ -121,7 +122,7 @@ export interface IJupyterSessionManager extends IAsyncDisposable {
         ui: IDisplayOptions,
         cancelToken: CancellationToken,
         creator: KernelActionSource
-    ): Promise<IJupyterSession>;
+    ): Promise<IJupyterKernelConnectionSession>;
     getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
     getRunningKernels(): Promise<IJupyterKernel[]>;
     getRunningSessions(): Promise<Session.IModel[]>;

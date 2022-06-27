@@ -69,7 +69,7 @@ import { IFileSystem, IPlatformService } from '../../../platform/common/platform
 import { initialize, waitForCondition } from '../../common';
 import { VSCodeNotebook } from '../../../platform/common/application/notebook';
 import { IDebuggingManager, IKernelDebugAdapter } from '../../../kernels/debugger/types';
-import { PythonKernelCompletionProvider } from '../../../intellisense/pythonKernelCompletionProvider';
+import { PythonKernelCompletionProvider } from '../../../standalone/intellisense/pythonKernelCompletionProvider';
 import { verifySelectedControllerIsRemoteForRemoteTests } from '../helpers';
 import {
     NotebookCellStateTracker,
@@ -1075,7 +1075,7 @@ export async function hijackSavePrompt(
         traceInfo(`Message displayed to user '${JSON.stringify(msg)}', checking for '${saveLabel}'`);
         if (msg.saveLabel === saveLabel) {
             messageDisplayed.push(msg.saveLabel);
-            traceInfo(`Exact Message found '${msg}'`);
+            traceInfo(`Exact Message found '${msg.saveLabel}'`);
             displayCount += 1;
             displayed.resolve(true);
             if (buttonToClick) {

@@ -11,20 +11,20 @@ import {
     TextDocument,
     Uri
 } from 'vscode';
-import { IExtensionSyncActivationService } from '../platform/activation/types';
-import { IPythonExtensionChecker } from '../platform/api/types';
-import { IVSCodeNotebook, IWorkspaceService } from '../platform/common/application/types';
-import { IDisposableRegistry, IConfigurationService, IsPreRelease } from '../platform/common/types';
-import { IInterpreterService } from '../platform/interpreter/contracts';
-import { PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { getInterpreterId } from '../platform/pythonEnvironments/info/interpreter';
-import { INotebookCompletionProvider, INotebookEditorProvider } from '../notebooks/types';
+import { IExtensionSyncActivationService } from '../../platform/activation/types';
+import { IPythonExtensionChecker } from '../../platform/api/types';
+import { IVSCodeNotebook, IWorkspaceService } from '../../platform/common/application/types';
+import { IDisposableRegistry, IConfigurationService, IsPreRelease } from '../../platform/common/types';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
+import { getInterpreterId } from '../../platform/pythonEnvironments/info/interpreter';
+import { INotebookCompletionProvider, INotebookEditorProvider } from '../../notebooks/types';
 import { LanguageServer } from './languageServer.node';
-import { IControllerSelection, IVSCodeNotebookController } from '../notebooks/controllers/types';
-import { getComparisonKey } from '../platform/vscode-path/resources';
+import { IControllerSelection, IVSCodeNotebookController } from '../../notebooks/controllers/types';
+import { getComparisonKey } from '../../platform/vscode-path/resources';
 import { CompletionRequest } from 'vscode-languageclient';
 import { NotebookPythonPathService } from './notebookPythonPathService.node';
-import { isJupyterNotebook } from '../platform/common/utils';
+import { isJupyterNotebook } from '../../platform/common/utils';
 
 const EmptyWorkspaceKey = '';
 

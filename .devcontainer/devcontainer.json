@@ -7,7 +7,7 @@
         "dockerfile": "Dockerfile",
         "args": {
             "INSTALL_NODE": "true",
-            "NODE_VERSION": "16.13.2"
+            "NODE_VERSION": "16.14.2"
         }
     },
 

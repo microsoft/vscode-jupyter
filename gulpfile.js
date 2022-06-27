@@ -21,7 +21,7 @@ const os = require('os');
 const { spawnSync } = require('child_process');
 const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
 const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
-
+const { dumpTestSummary } = require('./build/webTestReporter');
 gulp.task('compile', async (done) => {
     // Use tsc so we can generate source maps that look just like tsc does (gulp-sourcemap does not generate them the same way)
     try {
@@ -57,6 +57,10 @@ gulp.task('validateTranslationFiles', (done) => {
     done();
 });
 
+gulp.task('printTestResults', async (done) => {
+    dumpTestSummary();
+    done();
+});
 gulp.task('checkTestResults', async (done) => {
     const core = require('@actions/core');
     var glob = require('@actions/glob');

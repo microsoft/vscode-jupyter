@@ -113,8 +113,9 @@ function configure(): SetupOptions {
     // Without that the smoke tests process doesn't exit after the tests complete.
     options.reporter = 'mocha-multi-reporters';
     const reporterPath = path.join(__dirname, 'common', 'exitCIAfterTestReporter.js');
+    const customReporterPath = path.join(__dirname, 'web', 'customReporter.js');
     options.reporterOptions = {
-        reporterEnabled: `spec,mocha-junit-reporter,${reporterPath}`
+        reporterEnabled: `spec,mocha-junit-reporter,${reporterPath},${customReporterPath}`
     };
 
     // Linux: prevent a weird NPE when mocha on Linux requires the window size from the TTY.
