@@ -7,6 +7,7 @@ const test_web = require('@vscode/test-web');
 const { startJupyter } = require('./preLaunchWebTest');
 const jsonc = require('jsonc-parser');
 const { startReportServer } = require('./webTestReporter');
+const { noop } = require('../out/test/core');
 const extensionDevelopmentPath = path.resolve(__dirname, '../');
 const packageJsonFile = path.join(extensionDevelopmentPath, 'package.json');
 
@@ -45,7 +46,7 @@ async function go() {
         exitCode = 1;
     } finally {
         if (testServer) {
-            testServer.dispose();
+            await testServer.dispose().catch(noop);
         }
         if (server) {
             await server.dispose();

@@ -4,7 +4,6 @@
 
 import type * as mochaTypes from 'mocha';
 import { workspace } from 'vscode';
-import { noop } from '../core';
 
 const constants = {
     EVENT_RUN_BEGIN: 'start',
@@ -16,6 +15,7 @@ const constants = {
     EVENT_TEST_PASS: 'pass'
 };
 type Exception = {
+    showDiff?: boolean;
     message: string;
     stack: string;
     name: string;
@@ -27,31 +27,60 @@ type Exception = {
 type Message =
     | { event: typeof constants.EVENT_RUN_BEGIN }
     | { event: typeof constants.EVENT_RUN_END; stats?: mochaTypes.Stats }
-    | { event: typeof constants.EVENT_SUITE_BEGIN; title: string }
-    | { event: typeof constants.EVENT_SUITE_END; title: string }
+    | { event: typeof constants.EVENT_SUITE_BEGIN; title: string; titlePath: string[]; fullTitle: string }
+    | { event: typeof constants.EVENT_SUITE_END; title: string; slow: number; titlePath: string[]; fullTitle: string }
     | {
           event: typeof constants.EVENT_TEST_FAIL;
           title: string;
           err: Exception;
           duration?: number;
+          titlePath: string[];
+          fullTitle: string;
+          slow: number;
       }
-    | { event: typeof constants.EVENT_TEST_PENDING; title: string }
-    | { event: typeof constants.EVENT_TEST_PASS; title: string; duration?: number };
+    | {
+          event: typeof constants.EVENT_TEST_PENDING;
+          title: string;
+          titlePath: string[];
+          fullTitle: string;
+          slow: number;
+      }
+    | {
+          event: typeof constants.EVENT_TEST_PASS;
+          title: string;
+          duration?: number;
+          titlePath: string[];
+          fullTitle: string;
+          slow: number;
+      };
+let currentPromise = Promise.resolve();
 function sendMessage(url: string, message: Message) {
-    fetch(url, {
-        method: 'post',
-        body: JSON.stringify(message),
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    }).catch(noop);
+    currentPromise = currentPromise.finally(() => {
+        return fetch(url, {
+            method: 'post',
+            body: JSON.stringify(message),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).catch((ex) => {
+            console.error(`Failed to post data to ${url}`, ex);
+        });
+    });
 }
 function formatException(err: any) {
     const props = ['actual', 'expected', 'operator', 'generatedMessage'];
+    let message = '';
+    if (typeof err.inspect === 'function') {
+        message = err.inspect() + '';
+    } else if (err.message && typeof err.message.toString === 'function') {
+        message = err.message + '';
+    }
     const error: Record<string, any> = {
         name: err.name,
-        message: err.message,
-        stack: err.stack
+        message,
+        stack: err.stack,
+        showDiff: err.showDiff,
+        inspect: ''
     };
     props.forEach((prop) => {
         try {
@@ -63,46 +92,65 @@ function formatException(err: any) {
     return error as Exception;
 }
 export class CustomReporter {
-    private readonly reportServerPor: number;
+    private url: string;
     constructor(runner: mochaTypes.Runner) {
         console.error(`Created custom reporter`);
-        this.reportServerPor = workspace.getConfiguration('jupyter').get('REPORT_SERVER_PORT') as number;
-
-        const url = `http://127.0.0.1:${this.reportServerPor}`;
-        console.error(`Started test reporter and writing to ${url}`);
-        const reportProgress = (message: Message) => sendMessage(url, message);
+        console.log(`DEBUG_JUPYTER_SERVER_URI={workspace.getConfiguration('jupyter').get('DEBUG_JUPYTER_SERVER_URI')}`);
+        const reportProgress = (message: Message) => sendMessage(this.url, message);
         runner
             .once(constants.EVENT_RUN_BEGIN, () => {
                 console.error(`Started tests`);
+                const reportServerPor = workspace.getConfiguration('jupyter').get('REPORT_SERVER_PORT') as number;
+
+                this.url = `http://127.0.0.1:${reportServerPor}`;
+                console.error(`Started test reporter and writing to ${this.url}`);
                 reportProgress({ event: constants.EVENT_RUN_BEGIN });
             })
-            .once(constants.EVENT_RUN_END, async () => {
+            .once(constants.EVENT_RUN_END, () => {
+                console.error('Writing the end of the test run');
                 reportProgress({ event: constants.EVENT_RUN_END, stats: runner.stats });
             })
             .on(constants.EVENT_SUITE_BEGIN, (suite: mochaTypes.Suite) => {
-                reportProgress({ event: constants.EVENT_SUITE_BEGIN, title: suite.fullTitle() });
+                reportProgress({
+                    event: constants.EVENT_SUITE_BEGIN,
+                    title: suite.title,
+                    titlePath: suite.titlePath(),
+                    fullTitle: suite.fullTitle()
+                });
             })
             .on(constants.EVENT_SUITE_END, (suite: mochaTypes.Suite) => {
-                reportProgress({ event: constants.EVENT_SUITE_END, title: suite.fullTitle() });
+                reportProgress({
+                    event: constants.EVENT_SUITE_END,
+                    title: suite.title,
+                    titlePath: suite.titlePath(),
+                    slow: suite.slow(),
+                    fullTitle: suite.fullTitle()
+                });
             })
             .on(constants.EVENT_TEST_FAIL, (test: mochaTypes.Test, err: any) => {
                 reportProgress({
                     event: constants.EVENT_TEST_FAIL,
-                    title: test.fullTitle(),
+                    title: test.title,
                     err: formatException(err),
-                    duration: test.duration
+                    duration: test.duration,
+                    titlePath: test.titlePath(),
+                    slow: test.slow(),
+                    fullTitle: test.fullTitle()
                 });
             })
             .on(constants.EVENT_TEST_PENDING, (test: mochaTypes.Test) => {
                 reportProgress({
                     event: constants.EVENT_TEST_PENDING,
-                    title: test.fullTitle()
+                    title: test.title,
+                    titlePath: test.titlePath(),
+                    slow: test.slow(),
+                    fullTitle: test.fullTitle()
                 });
             })
             .on(constants.EVENT_TEST_PASS, (test: mochaTypes.Test) => {
                 reportProgress({
                     event: constants.EVENT_TEST_PASS,
-                    title: test.fullTitle(),
+                    title: test.title,
                     duration: test.duration
                 });
             });
