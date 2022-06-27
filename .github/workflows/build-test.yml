@@ -723,6 +723,10 @@ jobs:
           path: '${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/**/*'
           retention-days: 1
 
+      - name: Log results
+        if: always()
+        run: npm run printTestResults
+
       - name: Upload Memory snapshot
         uses: actions/upload-artifact@v2
         with:
