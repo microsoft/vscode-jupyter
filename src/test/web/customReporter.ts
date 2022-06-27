@@ -4,6 +4,8 @@
 
 import type * as mochaTypes from 'mocha';
 import { workspace } from 'vscode';
+const { inherits } = require('mocha/lib/utils');
+const defaultReporter = require('mocha/lib/reporters/spec');
 
 const constants = {
     EVENT_RUN_BEGIN: 'start',
@@ -62,8 +64,8 @@ function sendMessage(url: string, message: Message) {
             headers: {
                 'Content-Type': 'application/json'
             }
-        }).catch((ex) => {
-            console.error(`Failed to post data to ${url}`, ex);
+        }).catch((_ex) => {
+            // console.error(`Failed to post data to ${url}`, ex);
         });
     });
 }
@@ -91,68 +93,68 @@ function formatException(err: any) {
     });
     return error as Exception;
 }
-export class CustomReporter {
-    private url: string;
-    constructor(runner: mochaTypes.Runner) {
-        console.error(`Created custom reporter`);
-        console.log(`DEBUG_JUPYTER_SERVER_URI={workspace.getConfiguration('jupyter').get('DEBUG_JUPYTER_SERVER_URI')}`);
-        const reportProgress = (message: Message) => sendMessage(this.url, message);
-        runner
-            .once(constants.EVENT_RUN_BEGIN, () => {
-                console.error(`Started tests`);
-                const reportServerPor = workspace.getConfiguration('jupyter').get('REPORT_SERVER_PORT') as number;
+let url = '';
+export function CustomReporter(this: any, runner: mochaTypes.Runner, options: mochaTypes.MochaOptions) {
+    defaultReporter.call(this, runner, options);
+    console.error(`Created custom reporter`);
+    console.log(`DEBUG_JUPYTER_SERVER_URI={workspace.getConfiguration('jupyter').get('DEBUG_JUPYTER_SERVER_URI')}`);
+    const reportProgress = (message: Message) => sendMessage(url, message);
+    runner
+        .once(constants.EVENT_RUN_BEGIN, () => {
+            console.error(`Started tests`);
+            const reportServerPor = workspace.getConfiguration('jupyter').get('REPORT_SERVER_PORT') as number;
 
-                this.url = `http://127.0.0.1:${reportServerPor}`;
-                console.error(`Started test reporter and writing to ${this.url}`);
-                reportProgress({ event: constants.EVENT_RUN_BEGIN });
-            })
-            .once(constants.EVENT_RUN_END, () => {
-                console.error('Writing the end of the test run');
-                reportProgress({ event: constants.EVENT_RUN_END, stats: runner.stats });
-            })
-            .on(constants.EVENT_SUITE_BEGIN, (suite: mochaTypes.Suite) => {
-                reportProgress({
-                    event: constants.EVENT_SUITE_BEGIN,
-                    title: suite.title,
-                    titlePath: suite.titlePath(),
-                    fullTitle: suite.fullTitle()
-                });
-            })
-            .on(constants.EVENT_SUITE_END, (suite: mochaTypes.Suite) => {
-                reportProgress({
-                    event: constants.EVENT_SUITE_END,
-                    title: suite.title,
-                    titlePath: suite.titlePath(),
-                    slow: suite.slow(),
-                    fullTitle: suite.fullTitle()
-                });
-            })
-            .on(constants.EVENT_TEST_FAIL, (test: mochaTypes.Test, err: any) => {
-                reportProgress({
-                    event: constants.EVENT_TEST_FAIL,
-                    title: test.title,
-                    err: formatException(err),
-                    duration: test.duration,
-                    titlePath: test.titlePath(),
-                    slow: test.slow(),
-                    fullTitle: test.fullTitle()
-                });
-            })
-            .on(constants.EVENT_TEST_PENDING, (test: mochaTypes.Test) => {
-                reportProgress({
-                    event: constants.EVENT_TEST_PENDING,
-                    title: test.title,
-                    titlePath: test.titlePath(),
-                    slow: test.slow(),
-                    fullTitle: test.fullTitle()
-                });
-            })
-            .on(constants.EVENT_TEST_PASS, (test: mochaTypes.Test) => {
-                reportProgress({
-                    event: constants.EVENT_TEST_PASS,
-                    title: test.title,
-                    duration: test.duration
-                });
+            url = `http://127.0.0.1:${reportServerPor}`;
+            console.error(`Started test reporter and writing to ${url}`);
+            reportProgress({ event: constants.EVENT_RUN_BEGIN });
+        })
+        .once(constants.EVENT_RUN_END, () => {
+            console.error('Writing the end of the test run');
+            reportProgress({ event: constants.EVENT_RUN_END, stats: runner.stats });
+        })
+        .on(constants.EVENT_SUITE_BEGIN, (suite: mochaTypes.Suite) => {
+            reportProgress({
+                event: constants.EVENT_SUITE_BEGIN,
+                title: suite.title,
+                titlePath: suite.titlePath(),
+                fullTitle: suite.fullTitle()
             });
-    }
+        })
+        .on(constants.EVENT_SUITE_END, (suite: mochaTypes.Suite) => {
+            reportProgress({
+                event: constants.EVENT_SUITE_END,
+                title: suite.title,
+                titlePath: suite.titlePath(),
+                slow: suite.slow(),
+                fullTitle: suite.fullTitle()
+            });
+        })
+        .on(constants.EVENT_TEST_FAIL, (test: mochaTypes.Test, err: any) => {
+            reportProgress({
+                event: constants.EVENT_TEST_FAIL,
+                title: test.title,
+                err: formatException(err),
+                duration: test.duration,
+                titlePath: test.titlePath(),
+                slow: test.slow(),
+                fullTitle: test.fullTitle()
+            });
+        })
+        .on(constants.EVENT_TEST_PENDING, (test: mochaTypes.Test) => {
+            reportProgress({
+                event: constants.EVENT_TEST_PENDING,
+                title: test.title,
+                titlePath: test.titlePath(),
+                slow: test.slow(),
+                fullTitle: test.fullTitle()
+            });
+        })
+        .on(constants.EVENT_TEST_PASS, (test: mochaTypes.Test) => {
+            reportProgress({
+                event: constants.EVENT_TEST_PASS,
+                title: test.title,
+                duration: test.duration
+            });
+        });
 }
+inherits(CustomReporter, defaultReporter);
