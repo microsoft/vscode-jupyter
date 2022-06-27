@@ -65,12 +65,15 @@ function formatException(err: any) {
 export class CustomReporter {
     private readonly reportServerPor: number;
     constructor(runner: mochaTypes.Runner) {
+        console.error(`Created custom reporter`);
         this.reportServerPor = workspace.getConfiguration('jupyter').get('REPORT_SERVER_PORT') as number;
 
-        const url = `http://localhost:${this.reportServerPor}`;
+        const url = `http://127.0.0.1:${this.reportServerPor}`;
+        console.error(`Started test reporter and writing to ${url}`);
         const reportProgress = (message: Message) => sendMessage(url, message);
         runner
             .once(constants.EVENT_RUN_BEGIN, () => {
+                console.error(`Started tests`);
                 reportProgress({ event: constants.EVENT_RUN_BEGIN });
             })
             .once(constants.EVENT_RUN_END, async () => {

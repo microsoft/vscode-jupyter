@@ -18,6 +18,7 @@ exports.startReportServer = async function () {
         server = createServer((req, res) => {
             let data = '';
             req.on('data', (chunk) => {
+                console.error(`Got some output, ${chunk.toString()}`);
                 data += chunk;
             });
             req.on('end', () => {
