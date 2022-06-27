@@ -22,7 +22,7 @@ import type { IExtensionApi } from '../../standalone/api/api';
 import type { IExtensionContext } from '../../platform/common/types';
 import { IExtensionTestApi } from '../common';
 import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
-import { CustomReporter } from './customReporter';
+const CustomReporter = require('./customReporter');
 import { sleep } from '../../platform/common/utils/async';
 
 let activatedResponse: undefined | IExtensionApi;

@@ -398,10 +398,10 @@ jobs:
         exclude:
         #   - python: conda # Conda does't seem to support 3.10 yet.
         #     pythonVersion: '3.10'
-          - pythonVersion: '3.9'
-            python: nonConda
-            jupyter: raw
-            os: ubuntu-latest
+        #   - pythonVersion: '3.9'
+        #     python: nonConda
+        #     jupyter: raw
+        #     os: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
