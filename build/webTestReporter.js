@@ -6,9 +6,7 @@ const path = require('path');
 const { createServer } = require('http');
 const jsonc = require('jsonc-parser');
 const mocha = require('mocha');
-const colors = require('colors');
 const { EventEmitter } = require('events');
-const { sleep } = require('../out/test/core');
 
 const settingsFile = path.join(__dirname, '..', 'src', 'test', 'datascience', '.vscode', 'settings.json');
 const webTestSummaryJsonFile = path.join(__dirname, '..', 'webtest.json');
