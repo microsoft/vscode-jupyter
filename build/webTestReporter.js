@@ -16,22 +16,27 @@ exports.startReportServer = async function () {
     return new Promise((resolve) => {
         console.log(`Creating test server`);
         server = createServer((req, res) => {
-            let data = '';
-            req.on('data', (chunk) => {
-                console.error(`Got some output, ${chunk.toString()}`);
-                data += chunk;
-            });
-            req.on('end', () => {
-                console.log(`Writing test output ${data}`);
-                fs.appendFileSync(webTestSummaryFile, data);
-                try {
-                    progress.push(JSON.parse(data));
-                } catch (ex) {
-                    console.error('Failed to parse test output', ex);
-                }
-                res.writeHead(200);
-                res.end();
-            });
+            if (req.method === 'GET') {
+                res.writeHead(200, { 'Content-Type': 'text/plain' });
+                res.end('Done');
+            } else if (req.method === 'POST') {
+                let data = '';
+                req.on('data', (chunk) => {
+                    console.error(`Got some output, ${chunk.toString()}`);
+                    data += chunk.toString();
+                });
+                req.on('end', () => {
+                    console.log(`Writing test output ${data}`);
+                    fs.appendFileSync(webTestSummaryFile, data);
+                    try {
+                        progress.push(JSON.parse(data));
+                    } catch (ex) {
+                        console.error('Failed to parse test output', ex);
+                    }
+                    res.writeHead(200);
+                    res.end();
+                });
+            }
         });
         server.listen({ host: '127.0.0.1', port: 0 }, async () => {
             const port = server.address().port;
