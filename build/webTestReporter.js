@@ -21,6 +21,7 @@ exports.startReportServer = async function () {
                 data += chunk;
             });
             req.on('end', () => {
+                console.log(`Writing test output ${data}`);
                 fs.appendFileSync(webTestSummaryFile, data);
                 try {
                     progress.push(JSON.parse(data));
