@@ -62,7 +62,7 @@ import {
     InteractiveControllerIdSuffix,
     IVSCodeNotebookController
 } from '../../../notebooks/controllers/types';
-import { IS_REMOTE_NATIVE_TEST, IS_SMOKE_TEST } from '../../constants';
+import { IS_SMOKE_TEST } from '../../constants';
 import * as urlPath from '../../../platform/vscode-path/resources';
 import * as uuid from 'uuid/v4';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
@@ -79,6 +79,7 @@ import {
 } from '../../../kernels/execution/helpers';
 import { chainWithPendingUpdates } from '../../../kernels/execution/notebookUpdater';
 import { openAndShowNotebook } from '../../../platform/common/utils/notebooks';
+import { IServerConnectionType } from '../../../kernels/jupyter/types';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -267,6 +268,7 @@ export async function createEmptyPythonNotebook(
     traceInfoIfCI('Creating an empty notebook');
     const { serviceContainer } = await getServices();
     const vscodeNotebook = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+    const serverConnectionType = serviceContainer.get<IServerConnectionType>(IServerConnectionType);
     // Don't use same file (due to dirty handling, we might save in dirty.)
     // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
     const nbFile = await createTemporaryNotebook([], disposables, 'Python 3', rootFolder, 'emptyPython');
@@ -274,7 +276,7 @@ export async function createEmptyPythonNotebook(
     await openAndShowNotebook(nbFile);
     assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
     if (!dontWaitForKernel) {
-        await waitForKernelToGetAutoSelected(undefined, IS_REMOTE_NATIVE_TEST());
+        await waitForKernelToGetAutoSelected(undefined, !serverConnectionType.isLocalLaunch);
         await verifySelectedControllerIsRemoteForRemoteTests();
     }
     await deleteAllCellsAndWait();
@@ -1159,6 +1161,10 @@ export class MockQuickPick implements QuickPick<QuickPickItem> {
     dispose(): void {
         // Do nothing
     }
+    public selectIndex(index: number) {
+        this.selectedItems = [this.items[index]];
+        this._onDidChangeSelectionEmitter.fire([this.items[index]]);
+    }
     public triggerButton(button: QuickInputButton): void {
         this._onDidTriggerButtonEmitter.fire(button);
     }
@@ -1203,16 +1209,22 @@ export async function hijackCreateQuickPick(disposables: IDisposable[] = []): Pr
 export async function asPromise<T>(
     event: Event<T>,
     predicate?: (value: T) => boolean,
-    timeout = env.uiKind === UIKind.Desktop ? 5000 : 15000
+    timeout = env.uiKind === UIKind.Desktop ? 5000 : 15000,
+    prefix: string | undefined = undefined
 ): Promise<T> {
     return new Promise<T>((resolve, reject) => {
+        let resolved = false;
         const handle = setTimeout(() => {
             // eslint-disable-next-line @typescript-eslint/no-use-before-define
             sub.dispose();
-            reject(new Error('asPromise TIMEOUT reached'));
+            if (!resolved) {
+                reject(new Error(`asPromise ${prefix} TIMEOUT reached`));
+            }
         }, timeout);
         const sub = event((e) => {
             if (!predicate || predicate(e)) {
+                resolved = true;
+                console.log(`Finished promise for ${prefix}`);
                 clearTimeout(handle);
                 sub.dispose();
                 resolve(e);

@@ -130,7 +130,21 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
     ): Promise<InputStep<{}> | void> {
         try {
             await this.serverSelector.selectJupyterURI('nonUser', input);
-            return this.showKernelPicker(
+            return this.showRemoteKernelPicker(activeNotebookType, startedLocal, input);
+        } catch (e) {
+            if (e === InputFlowAction.back) {
+                return this.showVsCodeKernelPicker();
+            }
+        }
+    }
+
+    private async showRemoteKernelPicker(
+        activeNotebookType: typeof JupyterNotebookView | typeof InteractiveWindowView,
+        startedLocal: boolean,
+        input: IMultiStepInput<{}>
+    ): Promise<InputStep<{}> | void> {
+        try {
+            await this.showKernelPicker(
                 DataScience.pickRemoteKernelTitle(),
                 DataScience.pickRemoteKernelPlaceholder(),
                 false,
@@ -142,9 +156,7 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
             if (startedLocal) {
                 await this.serverSelector.setJupyterURIToLocal();
             }
-            if (e === InputFlowAction.back) {
-                return this.showVsCodeKernelPicker();
-            }
+            throw e;
         }
     }
 
