@@ -1165,6 +1165,10 @@ export class MockQuickPick implements QuickPick<QuickPickItem> {
         this.selectedItems = [this.items[index]];
         this._onDidChangeSelectionEmitter.fire([this.items[index]]);
     }
+    public selectLastItem() {
+        const index = this.items.length - 1;
+        this.selectIndex(index);
+    }
     public triggerButton(button: QuickInputButton): void {
         this._onDidTriggerButtonEmitter.fire(button);
     }
@@ -1213,18 +1217,13 @@ export async function asPromise<T>(
     prefix: string | undefined = undefined
 ): Promise<T> {
     return new Promise<T>((resolve, reject) => {
-        let resolved = false;
         const handle = setTimeout(() => {
             // eslint-disable-next-line @typescript-eslint/no-use-before-define
             sub.dispose();
-            if (!resolved) {
-                reject(new Error(`asPromise ${prefix} TIMEOUT reached`));
-            }
+            reject(new Error(`asPromise ${prefix} TIMEOUT reached`));
         }, timeout);
         const sub = event((e) => {
             if (!predicate || predicate(e)) {
-                resolved = true;
-                console.log(`Finished promise for ${prefix}`);
                 clearTimeout(handle);
                 sub.dispose();
                 resolve(e);
