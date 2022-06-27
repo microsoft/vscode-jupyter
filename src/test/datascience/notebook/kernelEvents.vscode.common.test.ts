@@ -30,7 +30,7 @@ import { IKernelProvider } from '../../../kernels/types';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 
 // eslint-disable-next-line no-only-tests/no-only-tests
-suite.only('Kernel Event', function () {
+suite('Kernel Event', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let configSettings: ReadWrite<IWatchableJupyterSettings>;
