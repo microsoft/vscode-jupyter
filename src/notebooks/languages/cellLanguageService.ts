@@ -5,7 +5,7 @@
 
 import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable, named } from 'inversify';
-import { Memento, NotebookCellKind, NotebookDocument } from 'vscode';
+import { Memento, NotebookDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
@@ -14,16 +14,12 @@ import {
     PYTHON_LANGUAGE,
     VSCodeKnownNotebookLanguages
 } from '../../platform/common/constants';
-import { traceWarning } from '../../platform/logging';
 import { IDisposableRegistry, IMemento, GLOBAL_MEMENTO } from '../../platform/common/types';
 import { swallowExceptions } from '../../platform/common/utils/decorators';
-import {
-    getKernelConnectionLanguage,
-    getLanguageInNotebookMetadata,
-    isPythonKernelConnection
-} from '../../kernels/helpers';
-import { getNotebookMetadata, isJupyterNotebook, translateKernelLanguageToMonaco } from '../../platform/common/utils';
+import { getKernelConnectionLanguage, isPythonKernelConnection } from '../../kernels/helpers';
+import { isJupyterNotebook, translateKernelLanguageToMonaco } from '../../platform/common/utils';
 import { IJupyterKernelSpec, KernelConnectionMetadata } from '../../kernels/types';
+import { getLanguageOfNotebookDocument } from './helpers';
 
 export const LastSavedNotebookCellLanguage = 'DATASCIENCE.LAST_SAVED_CELL_LANGUAGE';
 /**
@@ -79,21 +75,9 @@ export class NotebookCellLanguageService implements IExtensionSingleActivationSe
         if (!isJupyterNotebook(doc)) {
             return;
         }
-        const language = this.getLanguageOfFirstCodeCell(doc);
+        const language = getLanguageOfNotebookDocument(doc);
         if (language && language !== this.lastSavedNotebookCellLanguage) {
             await this.globalMemento.update(LastSavedNotebookCellLanguage, language);
-        }
-    }
-    private getLanguageOfFirstCodeCell(doc: NotebookDocument) {
-        // If the document has been closed, accessing cell information can fail.
-        // Ignore such exceptions.
-        try {
-            // Give preference to the language information in the metadata.
-            const language = getLanguageInNotebookMetadata(getNotebookMetadata(doc));
-            // Fall back to the language of the first code cell in the notebook.
-            return language || doc.getCells().find((cell) => cell.kind === NotebookCellKind.Code)?.document.languageId;
-        } catch (ex) {
-            traceWarning('Failed to determine language of first cell', ex);
         }
     }
 }

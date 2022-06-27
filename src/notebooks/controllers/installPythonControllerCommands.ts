@@ -6,6 +6,7 @@ import {
     NotebookCell,
     NotebookCellExecutionState,
     NotebookCellExecutionStateChangeEvent,
+    NotebookEditor,
     notebooks,
     window
 } from 'vscode';
@@ -13,13 +14,20 @@ import { isPythonKernelConnection } from '../../kernels/helpers';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../platform/api/types';
 import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
-import { Commands, JupyterNotebookView, PythonExtension, Telemetry } from '../../platform/common/constants';
+import {
+    Commands,
+    JupyterNotebookView,
+    PythonExtension,
+    PYTHON_LANGUAGE,
+    Telemetry
+} from '../../platform/common/constants';
 import { ContextKey } from '../../platform/common/contextKey';
 import { IDisposableRegistry, IsWebExtension } from '../../platform/common/types';
 import { Common, DataScience } from '../../platform/common/utils/localize';
 import { traceError, traceInfo } from '../../platform/logging';
 import { ProgressReporter } from '../../platform/progress/progressReporter';
 import { sendTelemetryEvent } from '../../telemetry';
+import { getLanguageOfNotebookDocument } from '../languages/helpers';
 import { IControllerLoader, IControllerRegistration } from './types';
 
 // This service owns the commands that show up in the kernel picker to allow for either installing
@@ -30,6 +38,7 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
     private showInstallPythonContext: ContextKey;
     // WeakSet of executing cells, so they get cleaned up on document close without worrying
     private executingCells: WeakSet<NotebookCell> = new WeakSet<NotebookCell>();
+    private foundPythonConnections: boolean = false;
     constructor(
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
@@ -70,6 +79,9 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
 
         // We need to know when controllers have been updated so that we can update our context keys
         this.disposables.push(this.controllerLoader.refreshed(this.onNotebookControllersLoaded, this));
+
+        // Also track active notebook editor change
+        this.disposables.push(window.onDidChangeActiveNotebookEditor(this.onDidChangeActiveNotebookEditor, this));
     }
 
     // Track if there are any cells currently executing or pending
@@ -86,26 +98,41 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
         }
     }
 
-    // When the manager loads new controllers we need to check and see if we should enable or disable our context
-    // keys that control our commands
-    private async onNotebookControllersLoaded() {
-        if (!this.isWeb) {
-            if (this.controllerRegistration.values.some((item) => isPythonKernelConnection(item.connection))) {
-                // We have some type of python kernel, turn off both install helper commands
-                await this.showInstallPythonExtensionContext.set(false);
-                await this.showInstallPythonContext.set(false);
-            } else {
+    private async onDidChangeActiveNotebookEditor(editor: NotebookEditor | undefined) {
+        if (!this.isWeb && editor) {
+            // Make sure we are only showing these for python notebooks or undefined notebooks
+            const lang = getLanguageOfNotebookDocument(editor.notebook);
+            if (!lang || lang === PYTHON_LANGUAGE) {
                 if (!this.extensionChecker.isPythonExtensionInstalled) {
-                    // If we don't have the extension installed, show extension install command
+                    // Python or undefined notebook with no extension, recommend installing extension
                     await this.showInstallPythonExtensionContext.set(true);
                     await this.showInstallPythonContext.set(false);
-                } else {
-                    // If we do have the extension installed, show python install command
+                    return;
+                }
+
+                if (!this.foundPythonConnections) {
+                    // Extension is installed, but we didn't find any python connections
+                    // recommend installing python in this case
                     await this.showInstallPythonExtensionContext.set(false);
                     await this.showInstallPythonContext.set(true);
+                    return;
                 }
             }
         }
+
+        // Final fallback is to always hide the commands
+        await this.showInstallPythonExtensionContext.set(false);
+        await this.showInstallPythonContext.set(false);
+    }
+
+    // Check if we actually found python connections after loading controllers
+    private async onNotebookControllersLoaded() {
+        this.foundPythonConnections = this.controllerRegistration.values.some((item) =>
+            isPythonKernelConnection(item.connection)
+        );
+
+        // If we just finished loading, make sure to check the active document
+        await this.onDidChangeActiveNotebookEditor(window.activeNotebookEditor);
     }
 
     // This is called via the "install python" command in the kernel picker in the case where
