@@ -41,7 +41,7 @@ exports.startReportServer = async function () {
             fs.writeFileSync(settingsFile, updatedSettingsJson);
             resolve({
                 dispose: () => {
-                    fs.readFileSync(webTestSummaryJsonFile, JSON.stringify(progress));
+                    fs.writeFileSync(webTestSummaryJsonFile, JSON.stringify(progress));
                     console.log(JSON.stringify(progress));
                     server.close();
                 }
