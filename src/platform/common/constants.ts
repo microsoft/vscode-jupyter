@@ -640,8 +640,9 @@ export enum Telemetry {
     TerminalShellIdentification = 'TERMINAL_SHELL_IDENTIFICATION',
     TerminalEnvVariableExtraction = 'TERMINAL_ENV_VAR_EXTRACTION',
     JupyterInstalled = 'JUPYTER_IS_INSTALLED',
-    NoIdleKernel = 'DATASCIENCE.NO_IDLE_KERNEL',
-    NoActiveKernelSession = 'DATASCIENCE.NO_ACTIVE_KERNEL_SESSION'
+    NoActiveKernelSession = 'DATASCIENCE.NO_ACTIVE_KERNEL_SESSION',
+    NoDebuggerSessionAndFrameId = 'DATASCIENCE.NO_DEBUGGER_SESSION_WITH_FRAME_ID',
+    InsufficientParameters = 'DATASCIENCE.INSUFFICIENT_PARAMETERS'
 }
 
 export enum NativeKeyboardCommandTelemetry {

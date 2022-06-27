@@ -2,13 +2,12 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { Event } from 'vscode';
+import { DebugSession, Event } from 'vscode';
 import { IKernel } from '../../../kernels/types';
 import { IJupyterVariable } from '../../../kernels/variables/types';
 import { IDisposable } from '../../../platform/common/types';
 import { SharedMessages } from '../../../messageTypes';
 import { SliceOperationSource } from '../../../platform/telemetry/constants';
-import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 
 export const CellFetchAllLimit = 100000;
 export const CellFetchSizeFirst = 100000;
@@ -128,8 +127,17 @@ export interface IJupyterVariableDataProviderFactory {
     create(variable: IJupyterVariable, kernel?: IKernel): Promise<IJupyterVariableDataProvider>;
 }
 
+export interface IDataViewerDependencyServiceOptionsWithKernel {
+    kernel: IKernel;
+}
+export interface IdataViewerDependencyServiceOptionsWithDebuggerSession {
+    debugSession: DebugSession;
+    frameId: number;
+}
+export type IDataViewerDependencyServiceOptions =
+    | IDataViewerDependencyServiceOptionsWithKernel
+    | IdataViewerDependencyServiceOptionsWithDebuggerSession;
 export const IDataViewerDependencyService = Symbol('IDataViewerDependencyService');
 export interface IDataViewerDependencyService {
-    checkAndInstallMissingDependenciesOnEnvironment(environment: PythonEnvironment): Promise<void>;
-    checkAndInstallMissingDependenciesOnKernel(kernel: IKernel): Promise<void>;
+    checkAndInstallMissingDependencies(options: IDataViewerDependencyServiceOptions): Promise<void>;
 }

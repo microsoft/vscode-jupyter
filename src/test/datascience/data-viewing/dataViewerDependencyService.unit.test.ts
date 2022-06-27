@@ -9,7 +9,7 @@ import { ApplicationShell } from '../../../platform/common/application/applicati
 import { IApplicationShell } from '../../../platform/common/application/types';
 import {
     DataViewerDependencyService,
-    getVersionOfPandasCommand
+    printPandasVersion
 } from '../../../webviews/extension-side/dataviewer/dataViewerDependencyService';
 import { IKernel } from '../../../kernels/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
@@ -35,7 +35,7 @@ suite('DataScience - DataViewerDependencyService', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (kernel.session as any) = undefined;
 
-        const resultPromise = dependencyService.checkAndInstallMissingDependenciesOnKernel(kernel);
+        const resultPromise = dependencyService.checkAndInstallMissingDependencies({ kernel });
 
         await assert.isRejected(
             resultPromise,
@@ -50,11 +50,11 @@ suite('DataScience - DataViewerDependencyService', () => {
         const stub = sinon.stub(helpers, 'executeSilently');
         stub.returns(Promise.resolve([{ ename: 'stdout', output_type: 'stream', text: version }]));
 
-        const result = await dependencyService.checkAndInstallMissingDependenciesOnKernel(kernel);
+        const result = await dependencyService.checkAndInstallMissingDependencies({ kernel });
         assert.equal(result, undefined);
         assert.deepEqual(
             stub.getCalls().map((call) => call.lastArg),
-            [getVersionOfPandasCommand]
+            [printPandasVersion]
         );
     });
 
@@ -64,11 +64,11 @@ suite('DataScience - DataViewerDependencyService', () => {
         const stub = sinon.stub(helpers, 'executeSilently');
         stub.returns(Promise.resolve([{ ename: 'stdout', output_type: 'stream', text: version }]));
 
-        const result = await dependencyService.checkAndInstallMissingDependenciesOnKernel(kernel);
+        const result = await dependencyService.checkAndInstallMissingDependencies({ kernel });
         assert.equal(result, undefined);
         assert.deepEqual(
             stub.getCalls().map((call) => call.lastArg),
-            [getVersionOfPandasCommand]
+            [printPandasVersion]
         );
     });
 
@@ -78,7 +78,7 @@ suite('DataScience - DataViewerDependencyService', () => {
         const stub = sinon.stub(helpers, 'executeSilently');
         stub.returns(Promise.resolve([{ ename: 'stdout', output_type: 'stream', text: version }]));
 
-        const resultPromise = dependencyService.checkAndInstallMissingDependenciesOnKernel(kernel);
+        const resultPromise = dependencyService.checkAndInstallMissingDependencies({ kernel });
         await assert.isRejected(
             resultPromise,
             DataScience.pandasTooOldForViewingFormat().format('0.20.'),
@@ -86,7 +86,7 @@ suite('DataScience - DataViewerDependencyService', () => {
         );
         assert.deepEqual(
             stub.getCalls().map((call) => call.lastArg),
-            [getVersionOfPandasCommand]
+            [printPandasVersion]
         );
     });
 
@@ -96,7 +96,7 @@ suite('DataScience - DataViewerDependencyService', () => {
         const stub = sinon.stub(helpers, 'executeSilently');
         stub.returns(Promise.resolve([{ ename: 'stdout', output_type: 'stream', text: version }]));
 
-        const resultPromise = dependencyService.checkAndInstallMissingDependenciesOnKernel(kernel);
+        const resultPromise = dependencyService.checkAndInstallMissingDependencies({ kernel });
         await assert.isRejected(
             resultPromise,
             DataScience.pandasTooOldForViewingFormat().format('0.10.'),
@@ -104,7 +104,7 @@ suite('DataScience - DataViewerDependencyService', () => {
         );
         assert.deepEqual(
             stub.getCalls().map((call) => call.lastArg),
-            [getVersionOfPandasCommand]
+            [printPandasVersion]
         );
     });
 
@@ -115,11 +115,11 @@ suite('DataScience - DataViewerDependencyService', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(Common.install() as any);
 
-        const resultPromise = dependencyService.checkAndInstallMissingDependenciesOnKernel(kernel);
+        const resultPromise = dependencyService.checkAndInstallMissingDependencies({ kernel });
         assert.equal(await resultPromise, undefined);
         assert.deepEqual(
             stub.getCalls().map((call) => call.lastArg),
-            [getVersionOfPandasCommand, '%pip install pandas']
+            [printPandasVersion, '%pip install pandas']
         );
     });
 
@@ -129,11 +129,11 @@ suite('DataScience - DataViewerDependencyService', () => {
 
         when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve();
 
-        const resultPromise = dependencyService.checkAndInstallMissingDependenciesOnKernel(kernel);
+        const resultPromise = dependencyService.checkAndInstallMissingDependencies({ kernel });
         await assert.isRejected(resultPromise, DataScience.pandasRequiredForViewing());
         assert.deepEqual(
             stub.getCalls().map((call) => call.lastArg),
-            [getVersionOfPandasCommand]
+            [printPandasVersion]
         );
     });
 });

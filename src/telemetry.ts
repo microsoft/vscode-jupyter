@@ -1384,13 +1384,17 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.IPyWidgetNbExtensionCopyTime]: never | undefined;
     /**
-     * Useful when we need an active kernel in order to execute commands silently.
-     * Used by the data frame when attempting to install Pandas.
-     */
-    [Telemetry.NoIdleKernel]: never | undefined;
-    /**
      * Useful when we need an active kernel session in order to execute commands silently.
-     * Used by the data frame when attempting to install Pandas.
+     * Used by the dataViewerDependencyService.
      */
     [Telemetry.NoActiveKernelSession]: never | undefined;
+    /**
+     * Useful when we need a debugger session besides a frameId in order to execute commands from the debugger.
+     * Used by the dataViewerDependencyService.
+     */
+    [Telemetry.NoDebuggerSessionAndFrameId]: never | undefined;
+    /**
+     * Error in case none of the necessary parameters are provided.
+     */
+    [Telemetry.InsufficientParameters]: never | undefined;
 }

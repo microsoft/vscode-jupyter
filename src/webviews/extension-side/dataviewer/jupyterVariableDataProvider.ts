@@ -162,7 +162,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
         if (!this.initialized && this.variable) {
             this.initialized = true;
             if (this._kernel?.kernelConnectionMetadata && this.dependencyService) {
-                await this.dependencyService.checkAndInstallMissingDependenciesOnKernel(this._kernel);
+                await this.dependencyService.checkAndInstallMissingDependencies({ kernel: this._kernel });
             }
             this.variable = await this.variableManager.getDataFrameInfo(this.variable, this._kernel);
         }
