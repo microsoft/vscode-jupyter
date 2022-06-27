@@ -22,6 +22,7 @@ import type { IExtensionApi } from '../../standalone/api/api';
 import type { IExtensionContext } from '../../platform/common/types';
 import { IExtensionTestApi } from '../common';
 import { JVSC_EXTENSION_ID } from '../../platform/common/constants';
+import { CustomReporter } from './customReporter';
 
 let activatedResponse: undefined | IExtensionApi;
 
@@ -37,7 +38,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
         return new Promise<void>((resolve, reject) => {
             mocha.setup({
                 ui: 'tdd',
-                reporter: undefined
+                reporter: CustomReporter
             });
 
             // bundles all files in the current directory matching `*.web.test` & `*.common.test`

@@ -130,9 +130,15 @@ function testPassed(output) {
 }
 
 exports.dumpTestSummary = () => {
-    const summary = JSON.parse(fs.readFileSync(webTestSummaryJsonFile).toString());
-    summary.forEach((output) => {
-        console.log(output);
-        messageHandlers.get(output.event)(output);
-    });
+    console.log('Start dumpTestSummary');
+    try {
+        const summary = JSON.parse(fs.readFileSync(webTestSummaryJsonFile).toString());
+        console.log(summary);
+        summary.forEach((output) => {
+            console.log(output);
+            messageHandlers.get(output.event)(output);
+        });
+    } catch (ex) {
+        console.error('Failed dumpTestSummary', ex);
+    }
 };
