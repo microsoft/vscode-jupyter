@@ -30,7 +30,8 @@ import {
 import {
     IJupyterKernel,
     IJupyterRemoteCachedKernelValidator,
-    IJupyterSessionManager
+    IJupyterSessionManager,
+    IServerConnectionType
 } from '../../../kernels/jupyter/types';
 import { KernelFinder } from '../../../kernels/kernelFinder.node';
 import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
@@ -40,7 +41,6 @@ import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { takeTopRankKernel } from './localKernelFinder.unit.test';
-import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverConnectionType';
 import { LocalKernelSpecsCacheKey, RemoteKernelSpecsCacheKey } from '../../../kernels/kernelFinder.base';
 
 suite(`Remote Kernel Finder`, () => {
@@ -150,9 +150,8 @@ suite(`Remote Kernel Finder`, () => {
         const serverUriStorage = mock(JupyterServerUriStorage);
         when(serverUriStorage.getUri()).thenResolve(connInfo.baseUrl);
         when(serverUriStorage.getRemoteUri()).thenResolve(connInfo.baseUrl);
-        const connectionType = mock<ServerConnectionType>();
+        const connectionType = mock<IServerConnectionType>();
         when(connectionType.isLocalLaunch).thenReturn(false);
-        when(connectionType.setIsLocalLaunch(anything())).thenResolve();
         const onDidChangeEvent = new EventEmitter<void>();
         disposables.push(onDidChangeEvent);
         when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);

@@ -35,7 +35,6 @@ import { HostJupyterServerFactory } from './launcher/liveshare/hostJupyterServer
 import { NotebookProvider } from './launcher/notebookProvider';
 import { NotebookServerProvider } from './launcher/notebookServerProvider';
 import { NotebookStarter } from './launcher/notebookStarter.node';
-import { ServerConnectionType } from './launcher/serverConnectionType';
 import { JupyterServerUriStorage } from './launcher/serverUriStorage';
 import { LiveRemoteKernelConnectionUsageTracker } from './liveRemoteKernelConnectionTracker';
 import { RemoteKernelFinder } from './remoteKernelFinder';
@@ -62,7 +61,8 @@ import {
     IJupyterRequestAgentCreator,
     INotebookServerFactory,
     ILiveRemoteKernelConnectionUsageTracker,
-    IJupyterRemoteCachedKernelValidator
+    IJupyterRemoteCachedKernelValidator,
+    IServerConnectionType
 } from './types';
 import { IJupyterCommandFactory, IJupyterSubCommandExecutionService } from './types.node';
 
@@ -128,6 +128,7 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
         JupyterUriProviderRegistration
     );
     serviceManager.addSingleton<IJupyterServerUriStorage>(IJupyterServerUriStorage, JupyterServerUriStorage);
+    serviceManager.addBinding(IJupyterServerUriStorage, IServerConnectionType);
     serviceManager.addSingleton<INotebookStarter>(INotebookStarter, NotebookStarter);
     serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
     serviceManager.addSingleton<IJupyterBackingFileCreator>(IJupyterBackingFileCreator, BackingFileCreator);
@@ -138,7 +139,6 @@ export function registerTypes(serviceManager: IServiceManager, _isDevMode: boole
     );
     serviceManager.addSingleton<IJupyterRequestCreator>(IJupyterRequestCreator, JupyterRequestCreator);
     serviceManager.addSingleton<IJupyterRequestAgentCreator>(IJupyterRequestAgentCreator, RequestAgentCreator);
-    serviceManager.addSingleton<ServerConnectionType>(ServerConnectionType, ServerConnectionType);
     serviceManager.addSingleton<JupyterConnection>(JupyterConnection, JupyterConnection);
     serviceManager.addBinding(JupyterConnection, IExtensionSyncActivationService);
     serviceManager.addSingleton<ILiveRemoteKernelConnectionUsageTracker>(

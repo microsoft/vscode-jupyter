@@ -5,9 +5,6 @@ import { IS_SMOKE_TEST } from './constants.node';
 import { startJupyterServer } from './datascience/notebook/helper.node';
 import { PythonExtension, setTestExecution } from '../platform/common/constants';
 import { activateExtension, closeActiveWindows } from './initialize';
-import { IS_REMOTE_NATIVE_TEST } from './constants';
-import { ServerConnectionType } from '../kernels/jupyter/launcher/serverConnectionType';
-import { noop } from './core';
 
 export * from './initialize';
 export * from './constants.node';
@@ -39,9 +36,6 @@ export async function initialize(): Promise<IExtensionTestApi> {
     if (!jupyterServerStarted) {
         jupyterServerStarted = true;
         await startJupyterServer();
-    }
-    if (IS_REMOTE_NATIVE_TEST()) {
-        api.serviceContainer.get<ServerConnectionType>(ServerConnectionType).setIsLocalLaunch(false).then(noop, noop);
     }
     return api;
 }

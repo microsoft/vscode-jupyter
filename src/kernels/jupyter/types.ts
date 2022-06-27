@@ -322,3 +322,10 @@ export const IJupyterRemoteCachedKernelValidator = Symbol('IJupyterRemoteCachedK
 export interface IJupyterRemoteCachedKernelValidator {
     isValid(kernel: LiveRemoteKernelConnectionMetadata): Promise<boolean>;
 }
+
+export const IServerConnectionType = Symbol('IServerConnectionType');
+
+export interface IServerConnectionType {
+    isLocalLaunch: boolean;
+    onDidChange: Event<void>;
+}

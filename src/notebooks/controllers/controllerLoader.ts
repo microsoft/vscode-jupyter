@@ -35,6 +35,7 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
     private refreshedEmitter = new vscode.EventEmitter<void>();
     // Promise to resolve when we have loaded our controllers
     private controllersPromise: Promise<void>;
+    private loadCancellationToken: vscode.CancellationTokenSource | undefined;
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -114,9 +115,13 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
     public loadControllers(refresh?: boolean | undefined): Promise<void> {
         if (!this.controllersPromise || refresh) {
             const stopWatch = new StopWatch();
-            const cancelToken = new vscode.CancellationTokenSource();
+            // Cancel previous load
+            if (this.loadCancellationToken) {
+                this.loadCancellationToken.cancel();
+            }
+            this.loadCancellationToken = new vscode.CancellationTokenSource();
             this.wasPythonInstalledWhenFetchingControllers = this.extensionChecker.isPythonExtensionInstalled;
-            this.controllersPromise = this.loadControllersImpl(cancelToken.token)
+            this.controllersPromise = this.loadControllersImpl(this.loadCancellationToken.token)
                 .catch((e) => {
                     traceError('Error loading notebook controllers', e);
                     if (!isCancellationError(e, true)) {

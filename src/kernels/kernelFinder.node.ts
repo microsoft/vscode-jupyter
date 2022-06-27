@@ -4,8 +4,7 @@ import { injectable, inject, named } from 'inversify';
 import { Memento } from 'vscode';
 import { IFileSystemNode } from '../platform/common/platform/types.node';
 import { GLOBAL_MEMENTO, IMemento } from '../platform/common/types';
-import { ServerConnectionType } from './jupyter/launcher/serverConnectionType';
-import { IJupyterRemoteCachedKernelValidator, IJupyterServerUriStorage } from './jupyter/types';
+import { IJupyterRemoteCachedKernelValidator, IJupyterServerUriStorage, IServerConnectionType } from './jupyter/types';
 import { BaseKernelFinder } from './kernelFinder.base';
 import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
 import { ILocalKernelFinder, IRemoteKernelFinder } from './raw/types';
@@ -21,7 +20,7 @@ export class KernelFinder extends BaseKernelFinder {
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalState: Memento,
         @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
         @inject(IJupyterServerUriStorage) serverUriStorage: IJupyterServerUriStorage,
-        @inject(ServerConnectionType) serverConnectionType: ServerConnectionType,
+        @inject(IServerConnectionType) serverConnectionType: IServerConnectionType,
         @inject(IJupyterRemoteCachedKernelValidator)
         protected readonly cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator
     ) {

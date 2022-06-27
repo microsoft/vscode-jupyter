@@ -25,8 +25,8 @@ import { Settings } from '../../../platform/common/constants';
 import { DataScienceErrorHandler } from '../../../kernels/errors/kernelErrorHandler';
 import { IDisposable } from '../../../platform/common/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverConnectionType';
 import { JupyterConnection } from '../../../kernels/jupyter/jupyterConnection';
+import { IServerConnectionType } from '../../../kernels/jupyter/types';
 
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - Jupyter Server URI Selector', () => {
@@ -58,7 +58,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         connection = mock<JupyterConnection>();
         when(connection.createConnectionInfo(anything())).thenResolve({ displayName: '' } as any);
         const handler = mock(DataScienceErrorHandler);
-        const connectionType = mock<ServerConnectionType>();
+        const connectionType = mock<IServerConnectionType>();
         when(connectionType.isLocalLaunch).thenReturn(false);
         when(connection.validateRemoteUri(anything())).thenResolve();
         const onDidChangeEvent = new EventEmitter<void>();
@@ -71,7 +71,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
             encryptedStorage,
             instance(applicationEnv),
             new MockMemento(),
-            instance(connectionType)
+            false
         );
         const selector = new JupyterServerSelector(
             multiStepFactory,

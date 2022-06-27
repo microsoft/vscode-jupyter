@@ -55,8 +55,7 @@ import { PreferredRemoteKernelIdProvider } from '../../../kernels/jupyter/prefer
 import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
 import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
-import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverConnectionType';
-import { IJupyterRemoteCachedKernelValidator } from '../../../kernels/jupyter/types';
+import { IJupyterRemoteCachedKernelValidator, IServerConnectionType } from '../../../kernels/jupyter/types';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -238,9 +237,8 @@ import { IJupyterRemoteCachedKernelValidator } from '../../../kernels/jupyter/ty
             preferredRemote = mock(PreferredRemoteKernelIdProvider);
             const notebookProvider = mock(NotebookProvider);
             const serverUriStorage = mock(JupyterServerUriStorage);
-            const connectionType = mock<ServerConnectionType>();
+            const connectionType = mock<IServerConnectionType>();
             when(connectionType.isLocalLaunch).thenReturn(true);
-            when(connectionType.setIsLocalLaunch(anything())).thenResolve();
             const onDidChangeEvent = new EventEmitter<void>();
             disposables.push(onDidChangeEvent);
             when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);

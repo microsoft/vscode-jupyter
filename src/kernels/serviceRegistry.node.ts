@@ -38,11 +38,11 @@ import { registerTypes as registerWidgetTypes } from './ipywidgets/serviceRegist
 import { registerTypes as registerJupyterTypes } from './jupyter/serviceRegistry.node';
 import { KernelProvider } from './kernelProvider.node';
 import { KernelFinder } from './kernelFinder.node';
-import { ServerConnectionType } from './jupyter/launcher/serverConnectionType';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFactory';
 import { Activation } from './activation.node';
 import { PortAttributesProviders } from './port/portAttributeProvider.node';
+import { IServerConnectionType } from './jupyter/types';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Activation);
@@ -123,7 +123,7 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     // This will ensure all subsequent telemetry will get the context of whether it is a custom/native/old notebook editor.
     // This is temporary, and once we ship native editor this needs to be removed.
     setSharedProperty('ds_notebookeditor', 'native');
-    const isLocalConnection = serviceManager.get<ServerConnectionType>(ServerConnectionType).isLocalLaunch;
+    const isLocalConnection = serviceManager.get<IServerConnectionType>(IServerConnectionType).isLocalLaunch;
     setSharedProperty('localOrRemoteConnection', isLocalConnection ? 'local' : 'remote');
     const isPythonExtensionInstalled = serviceManager.get<IPythonExtensionChecker>(IPythonExtensionChecker);
     setSharedProperty(

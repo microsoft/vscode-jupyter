@@ -3,7 +3,6 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverConnectionType';
 import { IExtensionSingleActivationService } from '../../../platform/activation/types';
 import { ICommandManager, IVSCodeNotebook } from '../../../platform/common/application/types';
 import {
@@ -26,7 +25,7 @@ import {
 import { EventEmitter, QuickPickItem, QuickPickItemKind } from 'vscode';
 import { noop } from '../../../platform/common/utils/misc';
 import { isLocalConnection } from '../../../kernels/types';
-import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
+import { IJupyterServerUriStorage, IServerConnectionType } from '../../../kernels/jupyter/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 
 function groupBy<T>(data: ReadonlyArray<T>, compare: (a: T, b: T) => number): T[][] {
@@ -62,7 +61,7 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
-        @inject(ServerConnectionType) private readonly serverConnectionType: ServerConnectionType,
+        @inject(IServerConnectionType) private readonly serverConnectionType: IServerConnectionType,
         @inject(IsWebExtension) private readonly isWeb: boolean,
         @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector,
         @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,

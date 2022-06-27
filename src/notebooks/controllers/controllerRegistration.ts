@@ -5,8 +5,7 @@ import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { ILocalResourceUriConverter } from '../../kernels/ipywidgets/types';
-import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConnectionType';
-import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
+import { IJupyterServerUriStorage, IServerConnectionType } from '../../kernels/jupyter/types';
 import { IKernelProvider, isLocalConnection, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import {
@@ -69,7 +68,7 @@ export class ControllerRegistration implements IControllerRegistration {
         @inject(IBrowserService) private readonly browser: IBrowserService,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(ILocalResourceUriConverter) private readonly resourceConverter: ILocalResourceUriConverter,
-        @inject(ServerConnectionType) private readonly serverConnectionType: ServerConnectionType,
+        @inject(IServerConnectionType) private readonly serverConnectionType: IServerConnectionType,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
     ) {
         this.kernelFilter.onDidChange(this.onDidChangeFilter, this, this.disposables);
