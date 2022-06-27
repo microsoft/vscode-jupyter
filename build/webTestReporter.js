@@ -12,6 +12,7 @@ const settingsFile = path.join(__dirname, '..', 'src', 'test', 'datascience', '.
 const webTestSummaryJsonFile = path.join(__dirname, '..', 'webtest.json');
 const webTestSummaryFile = path.join(__dirname, '..', 'webtest.txt');
 const progress = [];
+
 exports.startReportServer = async function () {
     return new Promise((resolve) => {
         console.log(`Creating test server`);
@@ -58,7 +59,6 @@ exports.startReportServer = async function () {
             const edits = jsonc.modify(settingsJson, ['jupyter.REPORT_SERVER_PORT'], port, {});
             const updatedSettingsJson = jsonc.applyEdits(settingsJson, edits);
             fs.writeFileSync(settingsFile, updatedSettingsJson);
-            console.log(`Test server listening on port and settings file ${updatedSettingsJson} updated`);
             resolve({
                 dispose: async () => {
                     console.error(`Disposing test server`);
@@ -69,97 +69,6 @@ exports.startReportServer = async function () {
         });
     });
 };
-
-// const messageHandlers = new Map();
-// messageHandlers.set(mocha.Runner.constants.EVENT_RUN_BEGIN, startTests);
-// messageHandlers.set(mocha.Runner.constants.EVENT_RUN_END, endTests);
-// messageHandlers.set(mocha.Runner.constants.EVENT_SUITE_BEGIN, beginSuite);
-// messageHandlers.set(mocha.Runner.constants.EVENT_SUITE_END, endSuite);
-// messageHandlers.set(mocha.Runner.constants.EVENT_TEST_FAIL, testFailed);
-// messageHandlers.set(mocha.Runner.constants.EVENT_TEST_PENDING, testSkipped);
-// messageHandlers.set(mocha.Runner.constants.EVENT_TEST_PASS, testPassed);
-
-// function startTests() {
-//     //
-// }
-// /**
-//  * @param {{stats: mocha.Stats}} output
-//  */
-// function endTests(output) {
-//     const messages = [];
-//     if (output.stats) {
-//         if (output.stats.pending) {
-//             messages.push(`${colors.yellow(`${output.stats.pending} Pending`)}`);
-//         }
-//         if (output.stats.passes) {
-//             messages.push(`${colors.green(`${output.stats.pending} Passed`)}`);
-//         }
-//         if (output.stats.failures) {
-//             messages.push(`${colors.red(`${output.stats.failures} Failed`)}`);
-//         }
-//         if (output.stats.duration) {
-//             messages.push(`in ${output.stats.duration / 1000}s`);
-//         }
-//     }
-//     console.log(`${output.stats.tests} tests in ${output.stats.suites} suites, completed, with ${messages.join(', ')}`);
-// }
-// let indentation = 0;
-// function getIndentation() {
-//     return '  '.repeat(indentation);
-// }
-// /**
-//  * @param {{title: string}} output
-//  */
-// function beginSuite(output) {
-//     if (output.title) {
-//         console.log(`${getIndentation()}${output.title}:`);
-//         indentation += 1;
-//     }
-// }
-// function endSuite() {
-//     indentation -= 1;
-// }
-// /**
-//  * @typedef {Object} Exception
-//  * @property {string} message
-//  * @property {string} stack
-//  * @property {string} name
-//  * @property {string} generatedMessage
-//  * @property {string} actual
-//  * @property {string} expected
-//  * @property {string} operator
-//  */
-// /**
-//  * @param {{ title:string; duration?:number; err?:Exception; }} output
-//  */
-// function testFailed(output) {
-//     const durationSuffix = typeof output.duration === 'number' ? ` after ${output.duration / 1000}s` : '';
-//     let errorMessage = output.err.stack;
-//     if ((output.err.name || '').includes('Assertion')) {
-//         errorMessage = `${output.err.name}: ${output.err.message}`;
-//     }
-//     console.log(
-//         [
-//             `${colors.red('✕ Failed')}: ${output.title}${durationSuffix}`,
-//             `${getIndentation()}${getIndentation()}${errorMessage}`
-//         ]
-//             .map((line) => `${getIndentation()}${line}`)
-//             .join('\n')
-//     );
-// }
-// /**
-//  * @param {{ title:string;  }} output
-//  */
-// function testSkipped(output) {
-//     console.log(`${getIndentation()}${getIndentation()}${colors.yellow('Skipped')}: ${output.title}`);
-// }
-// /**
-//  * @param {{ title:string; duration:number  }} output
-//  */
-// function testPassed(output) {
-//     const durationSuffix = typeof output.duration === 'number' ? ` in ${output.duration / 1000}s` : '';
-//     console.log(`${getIndentation()}${colors.green('✓ Passed')}: ${output.title}${durationSuffix}`);
-// }
 
 exports.dumpTestSummary = () => {
     try {
