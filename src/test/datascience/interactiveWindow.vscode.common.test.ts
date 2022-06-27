@@ -32,9 +32,12 @@ import {
     clickOKForRestartPrompt,
     closeNotebooksAndCleanUpAfterTests,
     defaultNotebookTestTimeout,
+    generateTemporaryFilePath,
+    hijackSavePrompt,
     waitForExecutionCompletedSuccessfully,
     waitForExecutionCompletedWithErrors,
-    waitForTextOutput
+    waitForTextOutput,
+    WindowPromptStubButtonClickOptions
 } from './notebook/helper';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
@@ -43,8 +46,10 @@ import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { sleep } from '../core';
 import { IPYTHON_VERSION_CODE } from '../constants';
 import { translateCellErrorOutput, getTextOutputValue } from '../../kernels/execution/helpers';
-import { IControllerSelection } from '../../notebooks/controllers/types';
 import * as dedent from 'dedent';
+import { generateCellRangesFromDocument } from '../../interactive-window/editor-integration/cellFactory';
+import { Commands } from '../../platform/common/constants';
+import { IControllerSelection } from '../../notebooks/controllers/types';
 
 suite(`Interactive window execution`, async function () {
     this.timeout(120_000);
@@ -515,5 +520,41 @@ ${actualCode}
 
         // Parse the last cell's output
         await waitForTextOutput(lastCell, '1');
+    });
+
+    test('Export Interactive window to Python file', async () => {
+        const activeInteractiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
+        await waitForInteractiveWindow(activeInteractiveWindow);
+
+        // Add a few cells from the input box
+        await runInteractiveWindowInput('print("first")', activeInteractiveWindow, 1);
+        await runInteractiveWindowInput('print("second")', activeInteractiveWindow, 2);
+        await runInteractiveWindowInput('print("third")', activeInteractiveWindow, 3);
+
+        await waitForLastCellToComplete(activeInteractiveWindow, 3, false);
+
+        // the file is only saved on web, so handle the prompt if it appears, but don't wait for it
+        let notebookFile = await generateTemporaryFilePath('py', disposables);
+        const promptOptions: WindowPromptStubButtonClickOptions = {
+            result: notebookFile,
+            clickImmediately: true
+        };
+        await hijackSavePrompt('Export', promptOptions, disposables);
+
+        await vscode.commands.executeCommand(Commands.ExportAsPythonScript, activeInteractiveWindow.notebookDocument);
+
+        await waitForCondition(
+            () => {
+                // open document is python file with 3 "cells"
+                let exportedDocument = vscode.window.visibleTextEditors.find((editor) => {
+                    const cells = generateCellRangesFromDocument(editor.document);
+                    return editor.document.languageId === 'python' && cells.length == 3;
+                });
+
+                return exportedDocument !== undefined;
+            },
+            60_000,
+            'Exported python file was not opened'
+        );
     });
 });

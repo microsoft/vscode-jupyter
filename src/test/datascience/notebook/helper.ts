@@ -1068,7 +1068,7 @@ export async function hijackSavePrompt(
         traceInfo(`Message displayed to user '${JSON.stringify(msg)}', checking for '${saveLabel}'`);
         if (msg.saveLabel === saveLabel) {
             messageDisplayed.push(msg.saveLabel);
-            traceInfo(`Exact Message found '${msg}'`);
+            traceInfo(`Exact Message found '${msg.saveLabel}'`);
             displayCount += 1;
             displayed.resolve(true);
             if (buttonToClick) {
