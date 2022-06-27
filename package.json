@@ -1970,12 +1970,9 @@
                 },
                 "jupyter.pylanceHandlesNotebooks": {
                     "type": "boolean",
-                    "default": false,
-                    "description": "Determines if pylance's experimental notebook support is used or not.",
-                    "scope": "machine",
-                    "tags": [
-                        "experimental"
-                    ]
+                    "default": true,
+                    "description": "Determines if Pylance manages notebook concat doc creation.",
+                    "scope": "machine"
                 },
                 "jupyter.pythonCompletionTriggerCharacters": {
                     "type": "string",
