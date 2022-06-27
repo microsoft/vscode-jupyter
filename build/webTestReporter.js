@@ -40,17 +40,13 @@ exports.startReportServer = async function () {
             fs.writeFileSync(settingsFile, updatedSettingsJson);
             resolve({
                 dispose: () => {
-                    endTests();
+                    fs.readFileSync(webTestSummaryJsonFile, JSON.stringify(progress));
                     server.close();
                 }
             });
         });
     });
 };
-
-function endTests() {
-    fs.readFileSync(webTestSummaryJsonFile, JSON.stringify(progress));
-}
 
 const messageHandlers = new Map();
 messageHandlers.set(mocha.Runner.constants.EVENT_RUN_BEGIN, startTests);
@@ -134,6 +130,7 @@ function testPassed(output) {
 exports.dumpTestSummary = () => {
     const summary = JSON.parse(fs.readFileSync(webTestSummaryJsonFile).toString());
     summary.forEach((output) => {
+        console.log(output);
         messageHandlers.get(output.event)(output);
     });
 };
