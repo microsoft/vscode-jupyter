@@ -185,7 +185,6 @@ suite('Telemetry', () => {
         expect(Reporter.properties[0].stackTrace).to.be.length.greaterThan(1);
         delete Reporter.properties[0].stackTrace;
         expect(Reporter.properties).to.deep.equal([expectedErrorProperties]);
-        expect(Reporter.errorProps).to.deep.equal([]);
     });
     test('Send Error Telemetry with stack trace', () => {
         rewiremock.enable();
@@ -234,7 +233,6 @@ suite('Telemetry', () => {
         expect(Reporter.measures).to.deep.equal([measures]);
         expect(Reporter.properties).to.deep.equal([expectedErrorProperties]);
         expect(stackTrace).to.be.length.greaterThan(1);
-        expect(Reporter.errorProps).to.deep.equal([]);
 
         const expectedStack = [
             `at Context.test ${root}/src/test/telemetry/index.unit.test.ts:50:23`,

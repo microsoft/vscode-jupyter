@@ -67,7 +67,6 @@ suite('Telemetry validation', function () {
             eventName: string,
             _properties?: TelemetryEventProperties,
             _measurements?: TelemetryEventMeasurements,
-            _errorProps?: string[],
             _sanitize?: boolean
         ): void {
             eventsSent.add(eventName);

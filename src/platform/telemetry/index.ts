@@ -237,7 +237,7 @@ function sendTelemetryEventInternal<P extends IEventNamePropertyMapping, E exten
             Object.assign(customProperties, sharedProperties);
             populateTelemetryWithErrorInfo(customProperties, ex);
             customProperties = sanitizeProperties(eventNameSent, customProperties);
-            reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures, []);
+            reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures);
         } else {
             // Include a property failed, to indicate there are errors.
             // Lets pay the price for better data.
