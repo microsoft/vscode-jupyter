@@ -39,6 +39,7 @@ suite('DataScience - DataViewerDependencyService with debugger', () => {
 
     test('All ok, if pandas is installed and version is > 1.20', async () => {
         const totalParams: string[] = [];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (variableProvider as any).evaluate = async (command: string) => {
             totalParams.push(command);
             return { result: '0.30.0' };
@@ -52,6 +53,7 @@ suite('DataScience - DataViewerDependencyService with debugger', () => {
 
     test('Throw exception if pandas is installed and version is = 0.20', async () => {
         const totalParams: string[] = [];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (variableProvider as any).evaluate = async (command: string) => {
             totalParams.push(command);
             return { result: '0.20.0' };
@@ -66,6 +68,7 @@ suite('DataScience - DataViewerDependencyService with debugger', () => {
 
     test('Throw exception if pandas is installed and version is < 0.20', async () => {
         const totalParams: string[] = [];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (variableProvider as any).evaluate = async (command: string) => {
             totalParams.push(command);
             return { result: '0.10.0' };
@@ -80,6 +83,7 @@ suite('DataScience - DataViewerDependencyService with debugger', () => {
 
     test('Prompt to install pandas and throw error', async () => {
         const totalParams: string[] = [];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (variableProvider as any).evaluate = async (command: string) => {
             totalParams.push(command);
             throw new Error('Module Not Found: Pandas');
