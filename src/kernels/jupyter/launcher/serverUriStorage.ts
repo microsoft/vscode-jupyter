@@ -38,7 +38,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
         return this._onDidChangeUri.event;
     }
     public get isLocalLaunch(): boolean {
-        return this.currentUri === Settings.JupyterServerLocalLaunch || this.currentUri === undefined;
+        return this._localOnly;
     }
     constructor(
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
