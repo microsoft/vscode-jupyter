@@ -54,7 +54,7 @@ suite('DataScience - DataViewerDependencyService', () => {
         assert.equal(result, undefined);
         assert.deepEqual(
             stub.getCalls().map((call) => call.lastArg),
-            [kernelGetPandasVersion]
+            kernelGetPandasVersion
         );
     });
 
@@ -68,7 +68,7 @@ suite('DataScience - DataViewerDependencyService', () => {
         assert.equal(result, undefined);
         assert.deepEqual(
             stub.getCalls().map((call) => call.lastArg),
-            [kernelGetPandasVersion]
+            kernelGetPandasVersion
         );
     });
 
@@ -86,7 +86,7 @@ suite('DataScience - DataViewerDependencyService', () => {
         );
         assert.deepEqual(
             stub.getCalls().map((call) => call.lastArg),
-            [kernelGetPandasVersion]
+            kernelGetPandasVersion
         );
     });
 
@@ -104,7 +104,7 @@ suite('DataScience - DataViewerDependencyService', () => {
         );
         assert.deepEqual(
             stub.getCalls().map((call) => call.lastArg),
-            [kernelGetPandasVersion]
+            kernelGetPandasVersion
         );
     });
 
@@ -119,7 +119,7 @@ suite('DataScience - DataViewerDependencyService', () => {
         assert.equal(await resultPromise, undefined);
         assert.deepEqual(
             stub.getCalls().map((call) => call.lastArg),
-            [kernelGetPandasVersion, '%pip install pandas']
+            [kernelGetPandasVersion[0], '%pip install pandas']
         );
     });
 
@@ -133,7 +133,7 @@ suite('DataScience - DataViewerDependencyService', () => {
         await assert.isRejected(resultPromise, DataScience.pandasRequiredForViewing());
         assert.deepEqual(
             stub.getCalls().map((call) => call.lastArg),
-            [kernelGetPandasVersion]
+            kernelGetPandasVersion
         );
     });
 });

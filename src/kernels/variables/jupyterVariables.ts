@@ -88,7 +88,6 @@ export class JupyterVariables implements IJupyterVariables {
         this.refreshEventEmitter.fire();
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public evaluate(code: string): Promise<DebugProtocol.EvaluateResponse['body']> {
         return this.debuggerVariables.evaluate(code);
     }

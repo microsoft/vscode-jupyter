@@ -297,7 +297,6 @@ export class DebuggerVariables
         this.importedGetVariableInfoScriptsIntoKernel.delete(key);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async evaluate(code: string, frameId?: number): Promise<DebugProtocol.EvaluateResponse['body']> {
         if (this.debugService.activeDebugSession) {
             traceVerbose(`Evaluating in debugger : ${this.debugService.activeDebugSession.id}: ${code}`);

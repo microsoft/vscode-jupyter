@@ -196,7 +196,6 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
                 results.push(response.result);
             }
         }
-        console.log({ results });
         return results;
     }
 }
