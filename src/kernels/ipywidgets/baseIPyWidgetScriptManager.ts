@@ -6,13 +6,14 @@ import { Uri } from 'vscode';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../platform/common/types';
-import { traceWarning } from '../../platform/logging';
+import { traceError, traceInfoIfCI, traceWarning } from '../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { IKernel, isLocalConnection } from '../types';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import * as stripComments from 'strip-comments';
 import { IIPyWidgetScriptManager } from './types';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
+import { isCI } from '../../platform/common/constants';
 
 export function extractRequireConfigFromWidgetEntry(baseUrl: Uri, widgetFolderName: string, contents: string) {
     // Look for `require.config(` or `window["require"].config` or `window['requirejs'].config`
@@ -148,9 +149,21 @@ export abstract class BaseIPyWidgetScriptManager implements IIPyWidgetScriptMana
 
         try {
             const config = await extractRequireConfigFromWidgetEntry(baseUrl, widgetFolderName, contents);
+            if (!config) {
+                let message = `Failed to extract require.config from widget for ${widgetFolderName} from ${getDisplayPath(
+                    script
+                )}`;
+                if (isCI) {
+                    message += `with contents ${contents}`;
+                }
+                traceWarning(message);
+            }
             return config;
         } catch (ex) {
-            traceWarning(`Failed to extract require.config entry from ${getDisplayPath(script)}`, ex);
+            traceError(
+                `Failed to extract require.config entry for ${widgetFolderName} from ${getDisplayPath(script)}`,
+                ex
+            );
         }
     }
     private async getWidgetModuleMappingsImpl(): Promise<Record<string, Uri> | undefined> {
@@ -168,11 +181,17 @@ export abstract class BaseIPyWidgetScriptManager implements IIPyWidgetScriptMana
 
         const config = widgetConfigs.reduce((prev, curr) => Object.assign(prev || {}, curr), {});
         // Exclude entries that are not required (widgets that we have already bundled with our code).
-        if (config) {
+        if (config && Object.keys(config).length) {
             delete config['jupyter-js-widgets'];
             delete config['@jupyter-widgets/base'];
             delete config['@jupyter-widgets/controls'];
             delete config['@jupyter-widgets/output'];
+        } else {
+            traceInfoIfCI(
+                `No config, entryPoints = ${JSON.stringify(entryPoints)}, widgetConfigs = ${JSON.stringify(
+                    widgetConfigs
+                )}`
+            );
         }
         sendTelemetryEvent(Telemetry.DiscoverIPyWidgetNamesPerf, stopWatch.elapsedTime, {
             type: isLocalConnection(this.kernel.kernelConnectionMetadata) ? 'local' : 'remote'
