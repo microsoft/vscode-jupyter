@@ -27,20 +27,24 @@ export class InteractiveWindowTracebackFormatter implements ITracebackFormatter 
             return traceback;
         }
         const storage = this.storageFactory.get({ notebook: cell.notebook });
-        if (!storage) {
+        const useIPython8Format = traceback.some((traceFrame) => /^[Input|File].*?\n.*/.test(traceFrame));
+        if (!useIPython8Format && !storage) {
+            // nothing to modify for IPython7 if we don't have any code to look up (standalone Interactive Window)
             return traceback;
         }
-        const useIPython8Format = traceback.some((traceFrame) => /^[Input|File].*?\n.*/.test(traceFrame));
         return traceback.map((traceFrame) => {
             // Check IPython8. We handle that one special
             if (useIPython8Format) {
-                return this.modifyTracebackFrameIPython8(traceFrame, storage.all);
+                return this.modifyTracebackFrameIPython8(traceFrame, storage?.all);
             } else {
-                return this.modifyTracebackFrameIPython7(traceFrame, storage.all);
+                return this.modifyTracebackFrameIPython7(traceFrame, storage!.all);
             }
         });
     }
-    private modifyTracebackFrameIPython8(traceFrame: string, generatedCodes: IFileGeneratedCodes[]): string {
+    private modifyTracebackFrameIPython8(
+        traceFrame: string,
+        generatedCodes: IFileGeneratedCodes[] | undefined
+    ): string {
         // Ansi colors are described here:
         // https://en.wikipedia.org/wiki/ANSI_escape_code under the SGR section
 
@@ -61,7 +65,7 @@ export class InteractiveWindowTracebackFormatter implements ITracebackFormatter 
         traceInfoIfCI(`Trace frame to match: ${traceFrame}`);
 
         const inputMatch = /^Input.*?\[.*32mIn\s+\[(\d+).*?0;36m(.*?)\n.*/.exec(traceFrame);
-        if (inputMatch && inputMatch.length > 1) {
+        if (generatedCodes && inputMatch && inputMatch.length > 1) {
             const executionCount = parseInt(inputMatch[1]);
 
             // Find the cell that matches the execution count in group 1
