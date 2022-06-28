@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named, optional } from 'inversify';
 import { SemVer } from 'semver';
 import { ProductNames } from '../../../kernels/installer/productNames';
 import { Product } from '../../../kernels/installer/types';
@@ -17,11 +17,13 @@ import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import {
     IDataViewerDependencyService,
     IDataViewerDependencyServiceOptions,
-    IdataViewerDependencyServiceOptionsWithVariableProvider,
+    IdataViewerDependencyServiceOptionsWithInterpreter,
     IDataViewerDependencyServiceOptionsWithKernel
 } from './types';
 import { executeSilently } from '../../../kernels/helpers';
 import { IKernel } from '../../../kernels/types';
+import { Identifiers } from '../../../platform/common/constants';
+import { IJupyterVariables } from '../../../kernels/variables/types';
 
 export const minimumSupportedPandaVersion = '0.20.0';
 export const kernelGetPandasVersion = [
@@ -29,9 +31,13 @@ export const kernelGetPandasVersion = [
 ];
 export const debuggerGetPandasVersion = [
     'import pandas as _VSCODE_pandas',
-    '_VSCODE_pandas.__version',
+    '_VSCODE_pandas.__version__',
     'del _VSCODE_pandas'
 ];
+
+// TODO: Installing pandas does not work with the debugger.
+// It takes a long time, then it breaks with:
+// error: Command \"clang -Wno-unused-result -Wsign-compare -Wunreachable-code...
 export const debuggerInstallPandas = [
     'import subprocess as _VSCODE_subprocess',
     'import sys as _VSCODE_sys',
@@ -52,7 +58,11 @@ function isVersionOfPandaSupported(version: SemVer) {
 export class DataViewerDependencyService implements IDataViewerDependencyService {
     constructor(
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(IsCodeSpace) private isCodeSpace: boolean
+        @inject(IsCodeSpace) private isCodeSpace: boolean,
+        @inject(IJupyterVariables)
+        @optional()
+        @named(Identifiers.DEBUGGER_VARIABLES)
+        private variableProvider: IJupyterVariables | undefined
     ) {}
 
     private kernelPackaging(kernel: IKernel): '%conda' | '%pip' {
@@ -64,13 +74,25 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
 
     public async checkAndInstallMissingDependencies(options: IDataViewerDependencyServiceOptions): Promise<void> {
         const kernel = (options as IDataViewerDependencyServiceOptionsWithKernel).kernel;
-        const variableProvider = (options as IdataViewerDependencyServiceOptionsWithVariableProvider).variableProvider;
+        const interpreter = (options as IdataViewerDependencyServiceOptionsWithInterpreter).interpreter;
+
+        if (kernel) {
+            console.log('Checking and installing missing dependencies using the kernel.');
+        }
+        if (!kernel && this.variableProvider) {
+            console.log('Checking and installing missing dependencies using the variableProvider');
+        }
 
         // Providing feedback as soon as possible.
-        if (!kernel && !variableProvider) {
+        if (!kernel && !this.variableProvider && !interpreter) {
             sendTelemetryEvent(Telemetry.InsufficientParameters);
             throw new Error(DataScience.insufficientParameters());
-        } else if (kernel && !kernel.session) {
+        }
+        if (!kernel && !this.variableProvider && interpreter) {
+            sendTelemetryEvent(Telemetry.WebInterpreterInsufficient);
+            throw new Error(DataScience.webInterpreterInsufficient());
+        }
+        if (kernel && !kernel.session) {
             sendTelemetryEvent(Telemetry.NoActiveKernelSession);
             throw new Error(DataScience.noActiveKernelSession());
         }
@@ -110,15 +132,24 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
             moduleName: ProductNames.get(Product.pandas)!
         });
 
-        const selection = this.isCodeSpace
-            ? Common.install()
-            : await this.applicationShell.showErrorMessage(
-                  DataScience.pandasRequiredForViewing(),
-                  { modal: true },
-                  Common.install()
-              );
-
         const kernel = (options as IDataViewerDependencyServiceOptionsWithKernel).kernel;
+
+        let selection: string | undefined;
+        if (kernel) {
+            selection = this.isCodeSpace
+                ? Common.install()
+                : await this.applicationShell.showErrorMessage(
+                      DataScience.pandasRequiredForViewing(),
+                      { modal: true },
+                      Common.install()
+                  );
+        } else {
+            // TODO: Installing pandas does not work with the debugger.
+            // It takes a long time, then it breaks with:
+            // error: Command \"clang -Wno-unused-result -Wsign-compare -Wunreachable-code...
+            await this.applicationShell.showErrorMessage(DataScience.pandasRequiredForViewing());
+        }
+
         let commands: string[];
         if (kernel) {
             commands = [`${this.kernelPackaging(kernel)} install pandas`];
@@ -145,7 +176,6 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
         options: IDataViewerDependencyServiceOptions
     ): Promise<(string | undefined)[]> {
         const kernel = (options as IDataViewerDependencyServiceOptionsWithKernel).kernel;
-        const variableProvider = (options as IdataViewerDependencyServiceOptionsWithVariableProvider).variableProvider;
 
         let results: (string | undefined)[] = [];
 
@@ -161,8 +191,8 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
                     traceWarning(DataScience.failedToGetVersionOfPandas(), error.message);
                 }
                 results = results.concat(outputs.map((item) => item.text?.toString()));
-            } else {
-                const response = await variableProvider.evaluate(command);
+            } else if (this.variableProvider) {
+                const response = await this.variableProvider.evaluate(command);
                 results.push(response.result);
             }
         }

@@ -4,10 +4,11 @@
 
 import { Event } from 'vscode';
 import { IKernel } from '../../../kernels/types';
-import { IJupyterVariable, IJupyterVariables } from '../../../kernels/variables/types';
+import { IJupyterVariable } from '../../../kernels/variables/types';
 import { IDisposable } from '../../../platform/common/types';
 import { SharedMessages } from '../../../messageTypes';
 import { SliceOperationSource } from '../../../platform/telemetry/constants';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 
 export const CellFetchAllLimit = 100000;
 export const CellFetchSizeFirst = 100000;
@@ -130,12 +131,12 @@ export interface IJupyterVariableDataProviderFactory {
 export interface IDataViewerDependencyServiceOptionsWithKernel {
     kernel: IKernel;
 }
-export interface IdataViewerDependencyServiceOptionsWithVariableProvider {
-    variableProvider: IJupyterVariables;
+export interface IdataViewerDependencyServiceOptionsWithInterpreter {
+    interpreter: PythonEnvironment;
 }
 export type IDataViewerDependencyServiceOptions =
     | IDataViewerDependencyServiceOptionsWithKernel
-    | IdataViewerDependencyServiceOptionsWithVariableProvider;
+    | IdataViewerDependencyServiceOptionsWithInterpreter;
 export const IDataViewerDependencyService = Symbol('IDataViewerDependencyService');
 export interface IDataViewerDependencyService {
     checkAndInstallMissingDependencies(options: IDataViewerDependencyServiceOptions): Promise<void>;

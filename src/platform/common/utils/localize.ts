@@ -1370,6 +1370,11 @@ export namespace DataScience {
         localize('DataScience.noActiveKernelSession', 'No no active kernel session.');
     export const insufficientParameters = () =>
         localize('DataScience.insufficientParameters', 'Insufficient parameters.');
+    export const webInterpreterInsufficient = () =>
+        localize(
+            'DataScience.webInterpreterInsufficient',
+            'The interpreter alone is not sufficient to execute this method on the web.'
+        );
     export const noDebuggerSessionAndFrameId = () =>
         localize(
             'DataScience.noDebuggerSessionAndFrameId',
