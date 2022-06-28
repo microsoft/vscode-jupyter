@@ -6,7 +6,7 @@ import * as path from '../../platform/vscode-path/path';
 import * as dedent from 'dedent';
 import { ExtensionMode, Uri } from 'vscode';
 import { IExtensionContext, IHttpClient } from '../../platform/common/types';
-import { traceError } from '../../platform/logging';
+import { traceError, traceInfoIfCI } from '../../platform/logging';
 import { executeSilently, isPythonKernelConnection } from '../helpers';
 import { IKernel, RemoteKernelConnectionMetadata } from '../types';
 import { IIPyWidgetScriptManager } from './types';
@@ -57,42 +57,39 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
         }
 
         const code = dedent`
-                            import sys
-                            import os
+                            __vsc_nbextension_widgets = []
+                            __vsc_file = ''
+                            __vsc_nbextension_Folder = ''
+                            import glob as _VSCODE_glob
+                            import os as _VSCODE_os
+                            import sys as _VSCODE_sys
                             try:
-                                __vsc_glob_was_imported = 'glob' in sys.modules
-                                __vsc_os_was_imported = 'os' in sys.modules
-                                __vsc_nbextension_widgets = []
-                                import glob
-                                import os
-                                __vsc_nbextension_Folder = sys.prefix + os.path.sep + 'share' + os.path.sep + 'jupyter' + os.path.sep + 'nbextensions' + os.path.sep
-                                __vsc_file = ''
-                                for __vsc_file in glob.glob(__vsc_nbextension_Folder + '*' +  os.path.sep + 'extension.js'):
+                                __vsc_nbextension_Folder = _VSCODE_sys.prefix + _VSCODE_os.path.sep + 'share' + _VSCODE_os.path.sep + 'jupyter' + _VSCODE_os.path.sep + 'nbextensions' + _VSCODE_os.path.sep
+                                for __vsc_file in _VSCODE_glob.glob(__vsc_nbextension_Folder + '*' +  _VSCODE_os.path.sep + 'extension.js'):
                                     __vsc_nbextension_widgets.append(__vsc_file.replace(__vsc_nbextension_Folder, ""))
 
                                 print(__vsc_nbextension_widgets)
                             except:
                                 pass
 
-                            try:
-                                if not __vsc_glob_was_imported:
-                                    del sys.modules['glob']
-                                if not __vsc_os_was_imported:
-                                    del sys.modules['os']
-                            except:
-                                pass
-
                             # We need to ensure these variables don't interfere with the variable viewer, hence delete them after use.
+                            del _VSCODE_glob
+                            del _VSCODE_os
+                            del _VSCODE_sys
                             del __vsc_file
-                            del __vsc_glob_was_imported
-                            del __vsc_os_was_imported
                             del __vsc_nbextension_Folder
                             del __vsc_nbextension_widgets`;
         if (!this.kernel.session) {
+            traceInfoIfCI('No Kernel session to get list of widget entry points');
             return [];
         }
         const promises: Promise<nbformat.IOutput[]>[] = [];
-        promises.push(executeSilently(this.kernel.session, code));
+        promises.push(
+            executeSilently(this.kernel.session, code, {
+                traceErrors: true,
+                traceErrorsMessage: 'Failed to get widget entry points from remote kernel'
+            })
+        );
         // A bug was identified in our code that resulted in a deadlock.
         // While the widgets are loading this code gets executed, however the kernel execution is blocked waiting for kernel messages to be completed on the UI side
         // This is how we synchronize messages between the UI and kernel - i.e. we wait for kernel messages to be handled completely.
@@ -111,10 +108,12 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
 
         const outputs = await Promise.race(promises);
         if (outputs.length === 0) {
+            traceInfoIfCI('Unable to get widget entry points, no outputs after running the code');
             return [];
         }
         const output = outputs[0] as nbformat.IStream;
         if (output.output_type !== 'stream' || output.name !== 'stdout') {
+            traceInfoIfCI('Unable to get widget entry points, no stream/stdout outputs after running the code');
             return [];
         }
         try {

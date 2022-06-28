@@ -9,9 +9,13 @@ import { DebugAdapterTracker, Disposable, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { Identifiers } from '../../platform/common/constants';
 import { IDebugService, IVSCodeNotebook } from '../../platform/common/application/types';
-import { DataFrameLoading, GetVariableInfo } from '../../platform/common/scriptConstants';
 import { traceError, traceVerbose } from '../../platform/logging';
-import { IConfigurationService, IExtensionContext, Resource } from '../../platform/common/types';
+import {
+    IConfigurationService,
+    IDataFrameScriptGenerator,
+    IVariableScriptGenerator,
+    Resource
+} from '../../platform/common/types';
 import { DebugLocationTracker } from '../debugger/debugLocationTracker';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { IDebuggingManager, IJupyterDebugService, KernelDebugMode } from '../debugger/types';
@@ -24,7 +28,6 @@ import {
     IJupyterVariablesResponse
 } from './types';
 import { convertDebugProtocolVariableToIJupyterVariable, DataViewableTypes } from './helpers';
-import { IFileSystem } from '../../platform/common/platform/types';
 import { noop } from '../../platform/common/utils/misc';
 import { getAssociatedNotebookDocument } from '../helpers';
 
@@ -36,9 +39,9 @@ export class DebuggerVariables
     extends DebugLocationTracker
     implements IConditionalJupyterVariables, DebugAdapterTracker
 {
+    static dataFrameScriptContents?: string;
     private refreshEventEmitter = new EventEmitter<void>();
     private lastKnownVariables: IJupyterVariable[] = [];
-    private importedDataFrameScriptsIntoKernel = new Set<string>();
     private importedGetVariableInfoScriptsIntoKernel = new Set<string>();
     private watchedNotebooks = new Map<string, Disposable[]>();
     private debuggingStarted = false;
@@ -50,8 +53,8 @@ export class DebuggerVariables
         @inject(IDebuggingManager) private readonly debuggingManager: IDebuggingManager,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IVSCodeNotebook) private readonly vscNotebook: IVSCodeNotebook,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IExtensionContext) private readonly context: IExtensionContext
+        @inject(IVariableScriptGenerator) private readonly varScriptGenerator: IVariableScriptGenerator,
+        @inject(IDataFrameScriptGenerator) private readonly dfScriptGenerator: IDataFrameScriptGenerator
     ) {
         super(undefined);
         this.debuggingManager.onDoneDebugging(() => this.refreshEventEmitter.fire(), this);
@@ -146,20 +149,23 @@ export class DebuggerVariables
             this.watchKernel(kernel);
         }
 
-        // See if we imported or not into the kernel our special function
-        await this.importDataFrameScripts();
-
         let expression = targetVariable.name;
         if (sliceExpression) {
             expression = `${targetVariable.name}${sliceExpression}`;
         }
 
         // Then eval calling the main function with our target variable
-        const results = await this.evaluate(
-            `${DataFrameLoading.DataFrameInfoFunc}(${expression})`,
+        const { cleanupCode, initializeCode, code } = await this.dfScriptGenerator.generateCodeToGetDataFrameInfo({
+            isDebugging: true,
+            variableName: expression
+        });
+        const results = await this.evaluate({
+            code,
+            cleanupCode,
+            initializeCode,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (targetVariable as any).frameId
-        );
+            frameId: (targetVariable as any).frameId
+        });
 
         const notebook = getAssociatedNotebookDocument(kernel);
         let fileName = notebook ? path.basename(notebook.uri.path) : '';
@@ -204,14 +210,19 @@ export class DebuggerVariables
             expression = `${targetVariable.name}${sliceExpression}`;
         }
 
-        // See if we imported or not into the kernel our special function
-        await this.importDataFrameScripts();
-
-        const results = await this.evaluate(
-            `${DataFrameLoading.DataFrameRowFunc}(${expression}, ${start}, ${end})`,
+        const { cleanupCode, initializeCode, code } = await this.dfScriptGenerator.generateCodeToGetDataFrameRows({
+            isDebugging: true,
+            variableName: expression,
+            startIndex: start,
+            endIndex: end
+        });
+        const results = await this.evaluate({
+            code,
+            cleanupCode,
+            initializeCode,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (targetVariable as any).frameId
-        );
+            frameId: (targetVariable as any).frameId
+        });
         return parseDataFrame(JSON.parse(results.result));
     }
 
@@ -270,7 +281,6 @@ export class DebuggerVariables
             this.refreshEventEmitter.fire();
             const key = this.debugService.activeDebugSession?.id;
             if (key) {
-                this.importedDataFrameScriptsIntoKernel.delete(key);
                 this.importedGetVariableInfoScriptsIntoKernel.delete(key);
             }
         }
@@ -293,70 +303,70 @@ export class DebuggerVariables
     }
 
     private resetImport(key: string) {
-        this.importedDataFrameScriptsIntoKernel.delete(key);
         this.importedGetVariableInfoScriptsIntoKernel.delete(key);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async evaluate(code: string, frameId?: number): Promise<any> {
+    private async evaluate({
+        code,
+        cleanupCode,
+        frameId,
+        initializeCode
+    }: {
+        code: string;
+        initializeCode?: string;
+        cleanupCode?: string;
+        frameId?: number;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }): Promise<any> {
         if (this.debugService.activeDebugSession) {
-            traceVerbose(`Evaluating in debugger : ${this.debugService.activeDebugSession.id}: ${code}`);
-            const results = await this.debugService.activeDebugSession.customRequest('evaluate', {
-                expression: code,
-                frameId: this.topMostFrameId || frameId,
+            frameId = this.topMostFrameId || frameId;
+            const defaultEvalOptions = {
+                frameId,
                 context: 'repl',
                 format: { rawString: true }
-            });
-            if (results && results.result !== 'None') {
-                return results;
-            } else {
-                traceError(`Cannot evaluate ${code}`);
-                return undefined;
+            };
+            traceVerbose(`Evaluating in debugger : ${this.debugService.activeDebugSession.id}: ${code}`);
+            try {
+                if (initializeCode) {
+                    await this.debugService.activeDebugSession.customRequest('evaluate', {
+                        ...defaultEvalOptions,
+                        expression: initializeCode
+                    });
+                }
+                const results = await this.debugService.activeDebugSession.customRequest('evaluate', {
+                    ...defaultEvalOptions,
+                    expression: code
+                });
+                if (results && results.result !== 'None') {
+                    return results;
+                } else {
+                    traceError(`Cannot evaluate ${code}`);
+                    return undefined;
+                }
+            } finally {
+                if (cleanupCode) {
+                    await this.debugService.activeDebugSession.customRequest('evaluate', {
+                        ...defaultEvalOptions,
+                        expression: cleanupCode
+                    });
+                }
             }
         }
         throw Error('Debugger is not active, cannot evaluate.');
     }
-
-    private async importDataFrameScripts(): Promise<void> {
-        try {
-            // Run our dataframe scripts only once per session because they're slow
-            const key = this.debugService.activeDebugSession?.id;
-            if (key && !this.importedDataFrameScriptsIntoKernel.has(key)) {
-                const scriptPath = DataFrameLoading.getScriptPath(this.context);
-                const contents = await this.fs.readFile(scriptPath);
-                await this.evaluate(contents);
-                this.importedDataFrameScriptsIntoKernel.add(key);
-            }
-        } catch (exc) {
-            traceError('Error attempting to import in debugger', exc);
-        }
-    }
-
-    private async importGetVariableInfoScripts(): Promise<void> {
-        try {
-            // Run our variable info scripts only once per session because they're slow
-            const key = this.debugService.activeDebugSession?.id;
-            if (key && !this.importedGetVariableInfoScriptsIntoKernel.has(key)) {
-                const scriptPath = GetVariableInfo.getScriptPath(this.context);
-                const contents = await this.fs.readFile(scriptPath);
-                await this.evaluate(contents);
-                this.importedGetVariableInfoScriptsIntoKernel.add(key);
-            }
-        } catch (exc) {
-            traceError('Error attempting to import in debugger', exc);
-        }
-    }
-
     public async getFullVariable(variable: IJupyterVariable): Promise<IJupyterVariable> {
-        // See if we imported or not into the kernel our special function
-        await this.importGetVariableInfoScripts();
-
         // Then eval calling the variable info function with our target variable
-        const results = await this.evaluate(
-            `${GetVariableInfo.VariableInfoFunc}(${variable.name})`,
+        const { initializeCode, code, cleanupCode } = await this.varScriptGenerator.generateCodeToGetVariableInfo({
+            isDebugging: true,
+            variableName: variable.name
+        });
+        const results = await this.evaluate({
+            code,
+            initializeCode,
+            cleanupCode,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (variable as any).frameId
-        );
+            frameId: (variable as any).frameId
+        });
         if (results && results.result) {
             // Results should be the updated variable.
             return {

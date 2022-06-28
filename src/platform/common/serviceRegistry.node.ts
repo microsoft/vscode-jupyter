@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { IExtensionSingleActivationService } from '../activation/types';
-import { IExperimentService, IHttpClient } from '../common/types';
+import { IDataFrameScriptGenerator, IExperimentService, IHttpClient, IVariableScriptGenerator } from '../common/types';
 import { IServiceManager } from '../ioc/types';
 import { ActiveResourceService } from './application/activeResource.node';
 import { ApplicationEnvironment } from './application/applicationEnvironment.node';
@@ -51,6 +51,8 @@ import { registerTypes as processRegisterTypes } from './process/serviceRegistry
 import { registerTypes as variableRegisterTypes } from './variables/serviceRegistry.node';
 import { RunInDedicatedExtensionHostCommandHandler } from './application/commands/runInDedicatedExtensionHost.node';
 import { TerminalManager } from './application/terminalManager.node';
+import { VariableScriptGenerator } from './variableScriptGenerator';
+import { DataFrameScriptGenerator } from './dataFrameScriptGenerator';
 
 // eslint-disable-next-line
 export function registerTypes(serviceManager: IServiceManager) {
@@ -73,6 +75,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtilsNode);
     serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
     serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
+    serviceManager.addSingleton<IDataFrameScriptGenerator>(IDataFrameScriptGenerator, DataFrameScriptGenerator);
+    serviceManager.addSingleton<IVariableScriptGenerator>(IVariableScriptGenerator, VariableScriptGenerator);
 
     serviceManager.addSingleton<IFeatureDeprecationManager>(IFeatureDeprecationManager, FeatureDeprecationManager);
 
