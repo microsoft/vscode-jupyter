@@ -127,18 +127,21 @@ export class ErrorRendererCommunicationHandler implements IExtensionSyncActivati
         // If there is one, go to the cell that matches
         if (cell) {
             const cellRange = new NotebookRange(cell.index, cell.index);
-            return this.notebooks.showNotebookDocument(cell.notebook.uri, { selections: [cellRange] }).then((_e) => {
-                return this.commandManager.executeCommand('notebook.cell.edit').then(() => {
-                    const cellEditor = this.documentManager.visibleTextEditors.find(
-                        (v) => v.document.uri.toString() === cellUri
-                    );
-                    if (cellEditor) {
-                        // Force the selection to change
-                        cellEditor.revealRange(selection);
-                        cellEditor.selection = new Selection(selection.start, selection.start);
-                    }
+            return this.notebooks
+                .openNotebookDocument(cell.notebook.uri)
+                .then((document) => this.notebooks.showNotebookDocument(document, { selections: [cellRange] }))
+                .then((_e) => {
+                    return this.commandManager.executeCommand('notebook.cell.edit').then(() => {
+                        const cellEditor = this.documentManager.visibleTextEditors.find(
+                            (v) => v.document.uri.toString() === cellUri
+                        );
+                        if (cellEditor) {
+                            // Force the selection to change
+                            cellEditor.revealRange(selection);
+                            cellEditor.selection = new Selection(selection.start, selection.start);
+                        }
+                    });
                 });
-            });
         }
     }
 }

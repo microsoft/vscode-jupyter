@@ -274,10 +274,9 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                         getDisplayPath(file)
                     );
                     // Next open this notebook & execute it.
-                    const editor = await this.notebook.showNotebookDocument(uri, {
-                        preserveFocus: false,
-                        viewColumn: ViewColumn.Beside
-                    });
+                    const editor = await this.notebook
+                        .openNotebookDocument(uri)
+                        .then((document) => this.notebook.showNotebookDocument(document));
                     const { controller } = await this.controllerPreferredService.computePreferred(editor.notebook);
                     if (controller) {
                         await this.commandManager.executeCommand('notebook.selectKernel', {

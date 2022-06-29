@@ -25,7 +25,6 @@ import {
 } from 'vscode';
 import { IDisposableRegistry } from '../types';
 import { testOnlyMethod } from '../utils/decorators';
-import { isUri } from '../utils/misc';
 import { IApplicationEnvironment, IVSCodeNotebook } from './types';
 
 @injectable()
@@ -72,20 +71,11 @@ export class VSCodeNotebook implements IVSCodeNotebook {
         }
     }
 
-    public async showNotebookDocument(uri: Uri, options?: NotebookDocumentShowOptions): Promise<NotebookEditor>;
     public async showNotebookDocument(
         document: NotebookDocument,
         options?: NotebookDocumentShowOptions
-    ): Promise<NotebookEditor>;
-    public async showNotebookDocument(
-        uriOrDocument: Uri | NotebookDocument,
-        options?: NotebookDocumentShowOptions
     ): Promise<NotebookEditor> {
-        if (isUri(uriOrDocument)) {
-            return window.showNotebookDocument(uriOrDocument, options);
-        } else {
-            return window.showNotebookDocument(uriOrDocument, options);
-        }
+        return window.showNotebookDocument(document, options);
     }
 
     public registerNotebookSerializer(
