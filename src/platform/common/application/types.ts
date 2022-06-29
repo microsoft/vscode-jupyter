@@ -1247,7 +1247,6 @@ export interface IVSCodeNotebook {
     ): NotebookController;
     openNotebookDocument(uri: Uri): Thenable<NotebookDocument>;
     openNotebookDocument(viewType: string, content?: NotebookData): Promise<NotebookDocument>;
-    showNotebookDocument(uri: Uri, options?: NotebookDocumentShowOptions): Thenable<NotebookEditor>;
     showNotebookDocument(document: NotebookDocument, options?: NotebookDocumentShowOptions): Thenable<NotebookEditor>;
 }
 
