@@ -10,8 +10,7 @@ import { ApplicationShell } from '../../../platform/common/application/applicati
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { ConfigurationService } from '../../../platform/common/configuration/service.node';
 import { DataScience } from '../../../platform/common/utils/localize';
-import { MultiStepInput, MultiStepInputFactory } from '../../../platform/common/utils/multiStepInput';
-import { MockInputBox } from '../mockInputBox';
+import { MultiStepInputFactory } from '../../../platform/common/utils/multiStepInput';
 import { MockQuickPick } from '../mockQuickPick';
 import { MockMemento } from '../../mocks/mementos';
 import { WorkspaceService } from '../../../platform/common/application/workspace.node';
@@ -36,7 +35,6 @@ suite('DataScience - Jupyter Server URI Selector', () => {
     const disposables: IDisposable[] = [];
     function createDataScienceObject(
         quickPickSelection: string,
-        inputSelection: string,
         hasFolders: boolean
     ): { selector: JupyterServerSelector; storage: JupyterServerUriStorage } {
         const configService = mock(ConfigurationService);
@@ -47,9 +45,8 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         const crypto = mock(CryptoUtils);
         when(crypto.createHash(anyString(), 'string')).thenCall((a1, _a2) => a1);
         quickPick = new MockQuickPick(quickPickSelection);
-        const input = new MockInputBox(inputSelection);
         when(applicationShell.createQuickPick()).thenReturn(quickPick!);
-        when(applicationShell.createInputBox()).thenReturn(input);
+        when(applicationShell.showErrorMessage(anything(), anything())).thenResolve(undefined);
         when(applicationEnv.machineId).thenReturn(os.hostname());
         const multiStepFactory = new MultiStepInputFactory(instance(applicationShell));
         when(workspaceService.getWorkspaceFolderIdentifier(anything())).thenReturn('1');
@@ -92,7 +89,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
     });
 
     test('Local pick server uri', async () => {
-        const { selector, storage } = createDataScienceObject('$(zap) Default', '', true);
+        const { selector, storage } = createDataScienceObject('', true);
         await selector.selectJupyterURI();
         let value = await storage.getUri();
         assert.equal(value, Settings.JupyterServerLocalLaunch, 'Default should pick local launch');
@@ -103,11 +100,11 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         assert.equal(value, Settings.JupyterServerLocalLaunch, 'Default should pick local launch');
 
         // Verify active items
-        assert.equal(quickPick?.items.length, 2, 'Wrong number of items in the quick pick');
+        assert.equal(quickPick?.items.length, 0, 'Wrong number of items in the quick pick');
     });
 
     test('Local pick server uri with no workspace', async () => {
-        const { selector, storage } = createDataScienceObject('$(zap) Default', '', false);
+        const { selector, storage } = createDataScienceObject('', false);
         await selector.selectJupyterURI();
         let value = await storage.getUri();
         assert.equal(value, Settings.JupyterServerLocalLaunch, 'Default should pick local launch');
@@ -118,15 +115,15 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         assert.equal(value, Settings.JupyterServerLocalLaunch, 'Default should pick local launch');
 
         // Verify active items
-        assert.equal(quickPick?.items.length, 2, 'Wrong number of items in the quick pick');
+        assert.equal(quickPick?.items.length, 0, 'Wrong number of items in the quick pick');
     });
 
     test('Quick pick MRU tests', async () => {
-        const { selector, storage } = createDataScienceObject('$(zap) Default', '', true);
+        const { selector, storage } = createDataScienceObject('', true);
         console.log('Step1');
         await selector.selectJupyterURI();
         // Verify initial default items
-        assert.equal(quickPick?.items.length, 2, 'Wrong number of items in the quick pick');
+        assert.equal(quickPick?.items.length, 0, 'Wrong number of items in the quick pick');
 
         // Add in a new server
         const serverA1 = { uri: 'ServerA', time: 1, date: new Date(1) };
@@ -135,8 +132,8 @@ suite('DataScience - Jupyter Server URI Selector', () => {
 
         console.log('Step3');
         await selector.selectJupyterURI();
-        assert.equal(quickPick?.items.length, 3, 'Wrong number of items in the quick pick');
-        quickPickCheck(quickPick?.items[2], serverA1);
+        assert.equal(quickPick?.items.length, 1, 'Wrong number of items in the quick pick');
+        quickPickCheck(quickPick?.items[0], serverA1);
 
         // Add in a second server, the newer server should be higher in the list due to newer time
         const serverB1 = { uri: 'ServerB', time: 2, date: new Date(2) };
@@ -144,9 +141,9 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         await storage.addToUriList(serverB1.uri, serverB1.time, serverB1.uri);
         console.log('Step5');
         await selector.selectJupyterURI();
-        assert.equal(quickPick?.items.length, 4, 'Wrong number of items in the quick pick');
-        quickPickCheck(quickPick?.items[2], serverB1);
-        quickPickCheck(quickPick?.items[3], serverA1);
+        assert.equal(quickPick?.items.length, 2, 'Wrong number of items in the quick pick');
+        quickPickCheck(quickPick?.items[0], serverB1);
+        quickPickCheck(quickPick?.items[1], serverA1);
 
         // Reconnect to server A with a new time, it should now be higher in the list
         const serverA3 = { uri: 'ServerA', time: 3, date: new Date(3) };
@@ -154,9 +151,9 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         await storage.addToUriList(serverA3.uri, serverA3.time, serverA3.uri);
         console.log('Step7');
         await selector.selectJupyterURI();
-        assert.equal(quickPick?.items.length, 4, 'Wrong number of items in the quick pick');
-        quickPickCheck(quickPick?.items[3], serverB1);
-        quickPickCheck(quickPick?.items[2], serverA1);
+        assert.equal(quickPick?.items.length, 2, 'Wrong number of items in the quick pick');
+        quickPickCheck(quickPick?.items[1], serverB1);
+        quickPickCheck(quickPick?.items[0], serverA1);
 
         // Verify that we stick to our settings limit
         for (let i = 0; i < Settings.JupyterServerUriListMax + 10; i = i + 1) {
@@ -166,10 +163,9 @@ suite('DataScience - Jupyter Server URI Selector', () => {
 
         console.log('Step9');
         await selector.selectJupyterURI();
-        // Need a plus 2 here for the two default items
         assert.equal(
             quickPick?.items.length,
-            Settings.JupyterServerUriListMax + 2,
+            Settings.JupyterServerUriListMax,
             'Wrong number of items in the quick pick'
         );
     });
@@ -187,34 +183,34 @@ suite('DataScience - Jupyter Server URI Selector', () => {
     }
 
     test('Remote server uri', async () => {
-        const { selector, storage } = createDataScienceObject('$(server) Existing', 'http://localhost:1111', true);
+        const { selector, storage } = createDataScienceObject('http://localhost:1111', true);
         await selector.selectJupyterURI();
         const value = await storage.getUri();
         assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
     });
     test('Remote server uri no workspace', async () => {
-        const { selector, storage } = createDataScienceObject('$(server) Existing', 'http://localhost:1111', false);
+        const { selector, storage } = createDataScienceObject('http://localhost:1111', false);
         await selector.selectJupyterURI();
         const value = await storage.getUri();
         assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
     });
 
     test('Remote server uri no local', async () => {
-        const { selector, storage } = createDataScienceObject('$(server) Existing', 'http://localhost:1111', true);
+        const { selector, storage } = createDataScienceObject('http://localhost:1111', true);
         await selector.selectJupyterURI();
         const value = await storage.getUri();
         assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
     });
 
     test('Remote server uri (reload VSCode if there is a change in settings)', async () => {
-        const { selector, storage } = createDataScienceObject('$(server) Existing', 'http://localhost:1111', true);
+        const { selector, storage } = createDataScienceObject('http://localhost:1111', true);
         await selector.selectJupyterURI();
         const value = await storage.getUri();
         assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
     });
 
     test('Remote server uri (do not reload VSCode if there is no change in settings)', async () => {
-        const { selector, storage } = createDataScienceObject('$(server) Existing', 'http://localhost:1111', true);
+        const { selector, storage } = createDataScienceObject('http://localhost:1111', true);
         await storage.setUri('http://localhost:1111');
 
         await selector.selectJupyterURI();
@@ -223,7 +219,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
     });
 
     test('Invalid server uri', async () => {
-        const { selector, storage } = createDataScienceObject('$(server) Existing', 'httx://localhost:1111', true);
+        const { selector, storage } = createDataScienceObject('httx://localhost:1111', true);
         await selector.selectJupyterURI();
         const value = await storage.getUri();
         assert.notEqual(value, 'httx://localhost:1111', 'Already running should validate');
@@ -231,7 +227,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
     });
 
     test('Server is validated', async () => {
-        const { selector, storage } = createDataScienceObject('$(server) Existing', 'https://localhost:1111', true);
+        const { selector, storage } = createDataScienceObject('https://localhost:1111', true);
         await selector.selectJupyterURI();
         const value = await storage.getUri();
         assert.equal(value, 'https://localhost:1111', 'Validation failed');
@@ -239,7 +235,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
     });
 
     test('Remote authorization is asked when ssl cert is invalid and works', async () => {
-        const { selector, storage } = createDataScienceObject('$(server) Existing', 'https://localhost:1111', true);
+        const { selector, storage } = createDataScienceObject('https://localhost:1111', true);
         when(connection.validateRemoteUri(anyString())).thenReject(new Error('reason: self signed certificate'));
         when(
             applicationShell.showErrorMessage(anything(), deepEqual({ modal: true }), anything(), anything())
@@ -252,7 +248,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         verify(connection.validateRemoteUri('https://localhost:1111')).atLeast(1);
     });
     test('Remote authorization is asked when ssl cert has expired is invalid and works', async () => {
-        const { selector, storage } = createDataScienceObject('$(server) Existing', 'https://localhost:1111', true);
+        const { selector, storage } = createDataScienceObject('https://localhost:1111', true);
         when(connection.validateRemoteUri(anyString())).thenReject(new Error('reason: certificate has expired'));
         when(
             applicationShell.showErrorMessage(anything(), deepEqual({ modal: true }), anything(), anything())
@@ -266,7 +262,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
     });
 
     test('Remote authorization is asked for usage of self signed ssl cert and skipped', async () => {
-        const { selector, storage } = createDataScienceObject('$(server) Existing', 'https://localhost:1111', true);
+        const { selector, storage } = createDataScienceObject('https://localhost:1111', true);
         when(connection.validateRemoteUri(anyString())).thenReject(new Error('reason: self signed certificate'));
         when(applicationShell.showErrorMessage(anything(), anything(), anything())).thenCall((_m, _c1, c2) => {
             return Promise.resolve(c2);
@@ -278,7 +274,7 @@ suite('DataScience - Jupyter Server URI Selector', () => {
     });
 
     test('Fails to connect to remote jupyter server, hence remote jupyter server is not used', async () => {
-        const { selector, storage } = createDataScienceObject('$(server) Existing', 'https://localhost:1111', true);
+        const { selector, storage } = createDataScienceObject('https://localhost:1111', true);
         when(connection.validateRemoteUri(anyString())).thenReject(new Error('Failed to connect to remote server'));
         await selector.selectJupyterURI();
         const value = await storage.getUri();
@@ -287,27 +283,11 @@ suite('DataScience - Jupyter Server URI Selector', () => {
     });
 
     test('Remote authorization is asked and skipped for a different error', async () => {
-        const { selector, storage } = createDataScienceObject('$(server) Existing', 'https://localhost:1111', true);
+        const { selector, storage } = createDataScienceObject('https://localhost:1111', true);
         when(connection.validateRemoteUri(anyString())).thenReject(new Error('different error'));
         await selector.selectJupyterURI();
         const value = await storage.getUri();
         assert.equal(value, 'local', 'Should not be a remote URI');
         verify(connection.validateRemoteUri('https://localhost:1111')).once();
-    });
-
-    suite('Default Uri when selecting remote uri', () => {
-        const defaultUri = 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe';
-
-        async function testDefaultUri(expectedDefaultUri: string) {
-            const showInputBox = sinon.spy(MultiStepInput.prototype, 'showInputBox');
-            const { selector } = createDataScienceObject('$(server) Existing', 'http://localhost:1111', true);
-            await selector.selectJupyterURI();
-
-            assert.equal(showInputBox.firstCall.args[0].value, expectedDefaultUri);
-        }
-
-        test('Display default uri', async () => {
-            await testDefaultUri(defaultUri);
-        });
     });
 });

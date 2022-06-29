@@ -10,9 +10,11 @@ import {
 import { Settings } from '../../../platform/common/constants';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { ICryptoUtils, IMemento, GLOBAL_MEMENTO, IsWebExtension } from '../../../platform/common/types';
+import { computeServerId } from '../jupyterUtils';
 import { IJupyterServerUriStorage, IServerConnectionType } from '../types';
 
 export const mementoKeyToIndicateIfConnectingToLocalKernelsOnly = 'connectToLocalKernelsOnly';
+export const currentServerHashKey = 'currentServerHash';
 
 /**
  * Class for storing Jupyter Server URI values
@@ -21,7 +23,7 @@ export const mementoKeyToIndicateIfConnectingToLocalKernelsOnly = 'connectToLoca
 export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServerConnectionType {
     private lastSavedList?: Promise<{ uri: string; time: number; displayName?: string | undefined }[]>;
     private currentUriPromise: Promise<string> | undefined;
-    private _currentUri: string | undefined;
+    private _currentServerId: string | undefined;
     private _localOnly: boolean = false;
     private _onDidChangeUri = new EventEmitter<void>();
     public get onDidChangeUri() {
@@ -31,8 +33,8 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
     public get onDidRemoveUris() {
         return this._onDidRemoveUris.event;
     }
-    public get currentUri(): string | undefined {
-        return this._currentUri;
+    public get currentServerId(): string | undefined {
+        return this._currentServerId;
     }
     public get onDidChange(): Event<void> {
         return this._onDidChangeUri.event;
@@ -52,11 +54,10 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
         this._localOnly = isWebExtension
             ? false
             : this.globalMemento.get<boolean>(mementoKeyToIndicateIfConnectingToLocalKernelsOnly, true);
+        this._currentServerId = this.globalMemento.get<string | undefined>(currentServerHashKey, undefined);
 
         // Cache our current state so we don't keep asking for it from the encrypted storage
-        this.getUri()
-            .then((s) => (this._currentUri = s))
-            .ignoreErrors();
+        this.getUri().ignoreErrors();
     }
     public async addToUriList(uri: string, time: number, displayName: string) {
         // Uri list is saved partially in the global memento and partially in encrypted storage
@@ -208,12 +209,13 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
     public async setUri(uri: string) {
         // Set the URI as our current state
         this.currentUriPromise = Promise.resolve(uri);
-        this._currentUri = uri;
+        this._currentServerId = computeServerId(uri);
         this._localOnly = uri === Settings.JupyterServerLocalLaunch || uri === undefined;
         this._onDidChangeUri.fire(); // Needs to happen as soon as we change so that dependencies update synchronously
 
         // No update the async parts
         await this.globalMemento.update(mementoKeyToIndicateIfConnectingToLocalKernelsOnly, this._localOnly);
+        await this.globalMemento.update(currentServerHashKey, this._currentServerId);
 
         if (!this._localOnly) {
             await this.addToUriList(uri, Date.now(), uri);
@@ -230,6 +232,11 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
             // Should be stored in encrypted storage based on the workspace
             const key = this.getUriAccountKey();
             const storedUri = await this.encryptedStorage.retrieve(Settings.JupyterServerRemoteLaunchService, key);
+
+            // Update server id if not already set
+            if (!this._currentServerId && storedUri) {
+                this._currentServerId = computeServerId(storedUri);
+            }
 
             return storedUri || Settings.JupyterServerLocalLaunch;
         }
