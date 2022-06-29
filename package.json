@@ -2079,7 +2079,6 @@
         "notebookWorkspaceEdit",
         "notebookDebugOptions",
         "notebookDeprecated",
-        "notebookEditor",
         "notebookMessaging",
         "notebookMime",
         "notebookCellExecutionState",

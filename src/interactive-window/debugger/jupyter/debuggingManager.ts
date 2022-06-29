@@ -86,7 +86,7 @@ export class InteractiveWindowDebuggingManager
         }
 
         const checkIpykernelAndStart = async (allowSelectKernel = true): Promise<void> => {
-            const ipykernelResult = await this.checkForIpykernel6(editor.document);
+            const ipykernelResult = await this.checkForIpykernel6(editor.notebook);
             switch (ipykernelResult) {
                 case IpykernelCheckResult.NotInstalled:
                     // User would have been notified about this, nothing more to do.
