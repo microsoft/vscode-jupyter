@@ -5864,8 +5864,8 @@ No properties for event
 
 [src/kernels/ipywidgets/baseIPyWidgetScriptManager.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/ipywidgets/baseIPyWidgetScriptManager.ts)
 ```typescript
-            delete config['@jupyter-widgets/controls'];
-            delete config['@jupyter-widgets/output'];
+                )}`
+            );
         }
         sendTelemetryEvent(Telemetry.DiscoverIPyWidgetNamesPerf, stopWatch.elapsedTime, {
             type: isLocalConnection(this.kernel.kernelConnectionMetadata) ? 'local' : 'remote'
