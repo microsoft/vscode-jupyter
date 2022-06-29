@@ -132,10 +132,8 @@ suite(`Interactive window Execution`, async function () {
         );
 
         const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        await vscodeNotebook.openNotebookDocument(notebookFile);
-        let editor = await vscodeNotebook
-            .openNotebookDocument(notebookFile)
-            .then((document) => vscodeNotebook.showNotebookDocument(document, { preserveFocus: false }));
+        const document = await vscodeNotebook.openNotebookDocument(notebookFile);
+        let editor = await vscodeNotebook.showNotebookDocument(document, { preserveFocus: false });
 
         const cells = editor.notebook.getCells();
         assert.strictEqual(cells?.length, 3);
