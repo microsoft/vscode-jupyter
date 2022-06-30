@@ -434,6 +434,38 @@ ${actualCode}
         await waitForTextOutput(notebookDocument!.cellAt(1), '1\n2');
     });
 
+    test('Error stack traces have correct line hrefs with mix of cell sources', async function () {
+        const settings = vscode.workspace.getConfiguration('jupyter', null);
+        await settings.update('interactiveWindowMode', 'single');
+
+        const interactiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
+        await runInteractiveWindowInput('print(1)', interactiveWindow, 1);
+
+        await runNewPythonFile(interactiveWindowProvider, '# %%\nx = 1\nNotDefined\nx = 2', disposables);
+        const lastCell = await waitForLastCellToComplete(interactiveWindow, 2, true);
+
+        // Wait for the outputs to be available.
+        await waitForCondition(
+            async () => lastCell.outputs.length > 0 && lastCell.outputs[0].items.length > 0,
+            defaultNotebookTestTimeout,
+            'Outputs not available'
+        );
+
+        // Parse the last cell's error output
+        const errorOutput = translateCellErrorOutput(lastCell.outputs[0]);
+        assert.ok(errorOutput, 'No error output found');
+        assert.equal(errorOutput.traceback.length, 4, 'Traceback wrong size');
+
+        // Convert to html for easier parsing
+        const ansiToHtml = require('ansi-to-html') as typeof import('ansi-to-html');
+        const converter = new ansiToHtml();
+        const html = converter.toHtml(errorOutput.traceback.join('\n'));
+
+        // Should be three hrefs for the two lines in the call stack
+        const hrefs = html.match(/<a\s+href='.*\?line=(\d+)'/gm);
+        assert.equal(hrefs?.length, 4, '4 hrefs not found in traceback');
+    });
+
     test('Raising an exception from within a function has a stack trace', async function () {
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,

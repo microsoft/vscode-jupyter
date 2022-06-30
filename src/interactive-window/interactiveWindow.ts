@@ -63,7 +63,6 @@ import { getFilePath } from '../platform/common/platform/fs-paths';
 import {
     ICodeGeneratorFactory,
     IGeneratedCodeStorageFactory,
-    IInteractiveWindowCodeGenerator,
     InteractiveCellMetadata
 } from './editor-integration/types';
 import { IDataScienceErrorHandler } from '../kernels/errors/types';
@@ -100,7 +99,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private _submitters: Uri[] = [];
     private fileInKernel: Uri | undefined;
     private cellMatcher;
-    private codeGenerator: IInteractiveWindowCodeGenerator;
 
     private internalDisposables: Disposable[] = [];
     private kernelDisposables: Disposable[] = [];
@@ -130,7 +128,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         public readonly notebookEditor: NotebookEditor,
         public readonly inputUri: Uri,
         public readonly appShell: IApplicationShell,
-        codeGeneratorFactory: ICodeGeneratorFactory,
+        private readonly codeGeneratorFactory: ICodeGeneratorFactory,
         private readonly storageFactory: IGeneratedCodeStorageFactory,
         private readonly debuggingManager: IInteractiveWindowDebuggingManager,
         private readonly isWebExtension: boolean
@@ -163,7 +161,8 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             this.insertInfoMessage(DataScience.noKernelsSpecifyRemote()).ignoreErrors();
         }
 
-        this.codeGenerator = codeGeneratorFactory.getOrCreate(this.notebookDocument);
+        // Create the code generator right away to start watching the notebook
+        this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
     }
 
     private async startKernel(
@@ -763,7 +762,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             !isLocalConnection(kernel.kernelConnectionMetadata) ||
             this.configuration.getSettings(undefined).forceIPyKernelDebugger;
 
-        const generatedCode = this.codeGenerator.generateCode(metadata, isDebug, forceIPyKernelDebugger);
+        const generatedCode = this.codeGeneratorFactory
+            .getOrCreate(this.notebookDocument)
+            .generateCode(metadata, isDebug, forceIPyKernelDebugger);
 
         const newMetadata: typeof metadata = {
             ...metadata,
