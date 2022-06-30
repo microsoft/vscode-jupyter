@@ -105,9 +105,12 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
     }
 
     private onDidChangeNotebookDocument(e: NotebookDocumentChangeEvent) {
+        if (e.notebook !== this.notebook) {
+            return;
+        }
         e.contentChanges.forEach((change) => {
             change.addedCells.forEach((cell: NotebookCell) => {
-                if (cell.notebook === this.notebook && cell.kind === NotebookCellKind.Code) {
+                if (cell.kind === NotebookCellKind.Code) {
                     // When the user adds new code, we know the execution count is increasing
                     this.executionCount += 1;
                 }
