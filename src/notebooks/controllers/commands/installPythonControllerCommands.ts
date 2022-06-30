@@ -10,6 +10,7 @@ import {
     notebooks,
     window
 } from 'vscode';
+import { IDataScienceErrorHandler } from '../../../kernels/errors/types';
 import { isPythonKernelConnection } from '../../../kernels/helpers';
 import { IExtensionSingleActivationService } from '../../../platform/activation/types';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
@@ -23,7 +24,9 @@ import {
 } from '../../../platform/common/constants';
 import { ContextKey } from '../../../platform/common/contextKey';
 import { IDisposableRegistry, IsWebExtension } from '../../../platform/common/types';
+import { sleep } from '../../../platform/common/utils/async';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
+import { noop } from '../../../platform/common/utils/misc';
 import { traceError, traceInfo } from '../../../platform/logging';
 import { ProgressReporter } from '../../../platform/progress/progressReporter';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -48,7 +51,8 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
         @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
-        @inject(IsWebExtension) private readonly isWeb: boolean
+        @inject(IsWebExtension) private readonly isWeb: boolean,
+        @inject(IDataScienceErrorHandler) private readonly errorHandler: IDataScienceErrorHandler
     ) {
         // Context keys to control when these commands are shown
         this.showInstallPythonExtensionContext = new ContextKey(
@@ -179,9 +183,10 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
                 // Don't move forward until we have hooked the API
                 // Note extensions.installExtension seems to return "mostly" after the install is done, but at that
                 // point we don't see it installed via the checker and don't have the API so wait for it here
-                await this.pythonApi.pythonExtensionHooked;
+                const hookResult = await Promise.race([sleep(60_000), this.pythonApi.pythonExtensionHooked]);
 
-                if (this.extensionChecker.isPythonExtensionInstalled) {
+                // Make sure that we didn't timeout waiting for the hook
+                if (this.extensionChecker.isPythonExtensionInstalled && typeof hookResult !== 'number') {
                     traceInfo('Python Extension installed via Kernel Picker command');
                     sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {
                         action: 'success'
@@ -195,7 +200,9 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
                     sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {
                         action: 'failed'
                     });
-                    throw new Error('Failed to install Python Extension via Kernel Picker command');
+                    this.errorHandler
+                        .handleError(new Error(DataScience.failedToInstallPythonExtension()))
+                        .then(noop, noop);
                 }
             } finally {
                 // Always clean up our progress reported

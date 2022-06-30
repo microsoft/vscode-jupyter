@@ -1,5 +1,78 @@
 # Changelog
 
+## 2022.6.100 (1 July 2022)
+
+### Enhancements
+
+1. Ensure static resources required by IPyWidgets get downloaded appropriately in the Web and when using local or remote Jupyter Servers.
+   ([#8834](https://github.com/Microsoft/vscode-jupyter/issues/8834))
+1. Enabled export Interactive Window for web.
+   ([#10291](https://github.com/Microsoft/vscode-jupyter/issues/10291))
+1. Enabled expand and collapse Interactive Window cells in Web.
+   ([#10524](https://github.com/Microsoft/vscode-jupyter/issues/10524))
+1. For the new "Install Python Extension" command only show the modal dialog box if triggered via a running document.
+   ([#10548](https://github.com/Microsoft/vscode-jupyter/issues/10548))
+1. Change the logic to show our "Install Python (Extension)" commands in the kernel picker more often.
+   ([#10583](https://github.com/Microsoft/vscode-jupyter/issues/10583))
+
+### Fixes
+
+1. Support displaying of complex outputs (such as Plots) in the Output Widget.
+   ([#9503](https://github.com/Microsoft/vscode-jupyter/issues/9503))
+1. Fixes to pick the correct python version when opening in the DataViewer from python debug menu.
+   ([#10007](https://github.com/Microsoft/vscode-jupyter/issues/10007))
+1. Ensure IPyWidgets get loaded correctly when loading resources from the CDN, Remote Jupyter or local the Python Environment.
+   ([#10060](https://github.com/Microsoft/vscode-jupyter/issues/10060))
+1. Fix problem with variable view not refreshing when switching between tabs.
+   ([#10241](https://github.com/Microsoft/vscode-jupyter/issues/10241))
+1. Fix error link clicking in the web version of the extension.
+   ([#10287](https://github.com/Microsoft/vscode-jupyter/issues/10287))
+1. Fixed loading of scripts related to custom IPyWidgets.
+   ([#10319](https://github.com/Microsoft/vscode-jupyter/issues/10319))
+1. Enable `IPyWidgets` for Kernels other than `Python`.
+   ([#10330](https://github.com/Microsoft/vscode-jupyter/issues/10330))
+1. Fix inconsistent link in README. Thanks @ChaseKnowlden
+   ([#10396](https://github.com/Microsoft/vscode-jupyter/issues/10396))
+1. Fix problem with continuous progress bar in the 'Jupyter:Variables' window by making the jupyter extension load when this view is visible.
+   ([#10413](https://github.com/Microsoft/vscode-jupyter/issues/10413))
+1. Fix problem with widgets being rendered offscreen and not appearing when scrolling.
+   ([#10485](https://github.com/Microsoft/vscode-jupyter/issues/10485))
+1. Replace 'Python 3' dummy kernel with commands to install the python extension or install python.
+   ([#10513](https://github.com/Microsoft/vscode-jupyter/issues/10513))
+1. Ensure we always import scripts required to load DataFrame and variable information.
+   ([#10516](https://github.com/Microsoft/vscode-jupyter/issues/10516))
+1. Ensure we can run Latex from within a Interactive Window cell (with a cell marker).
+   ([#10531](https://github.com/Microsoft/vscode-jupyter/issues/10531))
+1. Remove extra button from Restart Kernel modal. (Thanks [kilacoda](https://github.com/kilacoda))
+   ([#10539](https://github.com/Microsoft/vscode-jupyter/issues/10539))
+
+### Code Health
+
+1. Removed deprecated 'change directory on import/export' option
+   ([#8752](https://github.com/Microsoft/vscode-jupyter/issues/8752))
+1. Remove usage of console.log in renderers.
+   ([#10202](https://github.com/Microsoft/vscode-jupyter/issues/10202))
+1. Fix 'Special Token Check' test.
+   ([#10565](https://github.com/Microsoft/vscode-jupyter/issues/10565))
+
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [Python Extension](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+-   [debugpy](https://pypi.org/project/debugpy/)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   [Jupyter](https://jupyter.org/):
+    [Notebooks](https://jupyter-notebook.readthedocs.io/en/latest/?badge=latest),
+    [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/),
+    [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/),
+    [nbconvert](https://nbconvert.readthedocs.io/en/latest/)
+
 ## 2022.5.100 (7 June 2022)
 
 ### Enhancements

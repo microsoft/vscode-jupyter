@@ -1367,6 +1367,8 @@ export namespace DataScience {
     export const pickRemoteKernelTitle = () => localize('DataScience.pickRemoteKernelTitle', `Select a Remote Kernel`);
     export const pickRemoteKernelPlaceholder = () =>
         localize('DataScience.pickRemoteKernelPlaceholder', `type to filter`);
+    export const failedToInstallPythonExtension = () =>
+        localize('DataScience.failedToInstallPythonExtension', `Failed to install the Python Extension.`);
 }
 
 export namespace Installer {
