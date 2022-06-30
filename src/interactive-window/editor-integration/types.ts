@@ -110,7 +110,6 @@ export type InteractiveCellMetadata = {
 };
 
 export interface IInteractiveWindowCodeGenerator extends IDisposable {
-    bumpExecutionCount(): void;
     reset(): void;
     generateCode(
         metadata: Pick<InteractiveCellMetadata, 'interactive' | 'id' | 'interactiveWindowCellMarker'>,

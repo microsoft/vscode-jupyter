@@ -4,12 +4,16 @@
 import * as hashjs from 'hash.js';
 import {
     Disposable,
+    NotebookCell,
+    NotebookCellKind,
     NotebookDocument,
+    NotebookDocumentChangeEvent,
     Position,
     Range,
     TextDocumentChangeEvent,
     TextDocumentContentChangeEvent,
-    Uri
+    Uri,
+    workspace
 } from 'vscode';
 
 import { splitMultilineString } from '../../platform/common/utils';
@@ -37,10 +41,7 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
         disposables.push(this);
         // Watch document changes so we can update our generated code
         this.documentManager.onDidChangeTextDocument(this.onChangedDocument, this, this.disposables);
-    }
-
-    bumpExecutionCount(): void {
-        this.executionCount += 1;
+        workspace.onDidChangeNotebookDocument(this.onDidChangeNotebookDocument, this, this.disposables);
     }
 
     public dispose() {
@@ -65,8 +66,6 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
         // Don't log empty cells
         const { executableLines } = this.extractExecutableLines(metadata);
         if (executableLines.length > 0 && executableLines.find((s) => s.trim().length > 0)) {
-            // When the user adds new code, we know the execution count is increasing
-            this.executionCount += 1;
             return this.generateCodeImpl(metadata, this.executionCount, debug, usingJupyterDebugProtocol);
         }
     }
@@ -103,6 +102,17 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
             return { lines, executableLines: lines.slice(1) };
         }
         return { lines, executableLines: lines };
+    }
+
+    private onDidChangeNotebookDocument(e: NotebookDocumentChangeEvent) {
+        e.contentChanges.forEach((change) => {
+            change.addedCells.forEach((cell: NotebookCell) => {
+                if (cell.notebook === this.notebook && cell.kind === NotebookCellKind.Code) {
+                    // When the user adds new code, we know the execution count is increasing
+                    this.executionCount += 1;
+                }
+            });
+        });
     }
 
     private generateCodeImpl(
