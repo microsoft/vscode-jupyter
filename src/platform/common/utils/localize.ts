@@ -312,10 +312,7 @@ export namespace DataScience {
             'Raw kernel process exited before connecting.'
         );
     export const unknownMimeTypeFormat = () =>
-        localize(
-            { key: 'DataScience.unknownMimeTypeFormat', comment: ['{Locked="Mime type"}'] },
-            'Mime type {0} is not currently supported'
-        );
+        localize('DataScience.unknownMimeTypeFormat', 'MIME type {0} is not currently supported');
     export const exportDialogTitle = () =>
         localize(
             { key: 'DataScience.exportDialogTitle', comment: ['{Locked="Notebook"}'] },

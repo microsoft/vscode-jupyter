@@ -13,7 +13,9 @@ import {
     ICryptoUtils,
     IAsyncDisposableRegistry,
     IBrowserService,
-    IHttpClient
+    IHttpClient,
+    IVariableScriptGenerator,
+    IDataFrameScriptGenerator
 } from './types';
 import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.web';
 import { Extensions } from './application/extensions.web';
@@ -28,6 +30,8 @@ import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStep
 import { BrowserService } from './net/browser';
 import { DebugService } from './application/debugService';
 import { HttpClient } from './net/httpClient';
+import { DataFrameScriptGenerator } from './dataFrameScriptGenerator';
+import { VariableScriptGenerator } from './variableScriptGenerator';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingletonInstance<boolean>(IsWindows, false);
@@ -45,6 +49,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
     serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
     serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
+    serviceManager.addSingleton<IDataFrameScriptGenerator>(IDataFrameScriptGenerator, DataFrameScriptGenerator);
+    serviceManager.addSingleton<IVariableScriptGenerator>(IVariableScriptGenerator, VariableScriptGenerator);
 
     registerPlatformTypes(serviceManager);
 }

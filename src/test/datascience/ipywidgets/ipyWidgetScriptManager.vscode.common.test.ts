@@ -72,6 +72,10 @@ suite('IPyWidget Script Manager', function () {
         kernel = kernelProvider.get(notebook.uri)!;
         scriptManager = widgetScriptManagerFactory.getOrCreate(kernel);
     });
+    setup(async function () {
+        traceInfo(`Starting Test ${this.currentTest?.title}`);
+    });
+
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
@@ -175,6 +179,7 @@ suite('IPyWidget Script Manager', function () {
     });
     test('Should not contain any modules that we already bundle with our ipywidgets bundle', async () => {
         const moduleMappings = await scriptManager.getWidgetModuleMappings();
+        assert.isObject(moduleMappings);
         ['jupyter-js-widgets', '@jupyter-widgets/base', '@jupyter-widgets/controls', '@jupyter-widgets/output'].forEach(
             (moduleName) => {
                 assert.isFalse(moduleName in moduleMappings!, `Module ${moduleName} should not exist in the mapping`);

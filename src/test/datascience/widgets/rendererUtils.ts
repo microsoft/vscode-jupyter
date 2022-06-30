@@ -44,7 +44,6 @@ function initializeComms() {
         return;
     }
     rendererContext.onDidReceiveMessage((message) => {
-        console.log(`Received message in Widget renderer ${JSON.stringify(message)}`);
         rendererContext.postMessage!({
             command: 'log',
             message: `Received message in Widget renderer ${JSON.stringify(message)}`

@@ -1534,7 +1534,7 @@ export async function executeSilently(
         handleExecuteSilentErrors(outputs, errorOptions, codeForLogging);
     }
 
-    traceInfo(`Executing silently Code (completed) = ${codeForLogging}`);
+    traceInfo(`Executing silently Code (completed) = ${codeForLogging} with ${outputs.length} output(s)`);
 
     return outputs;
 }
