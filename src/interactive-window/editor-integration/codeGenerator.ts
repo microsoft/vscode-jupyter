@@ -39,6 +39,10 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
         this.documentManager.onDidChangeTextDocument(this.onChangedDocument, this, this.disposables);
     }
 
+    bumpExecutionCount(): void {
+        this.executionCount += 1;
+    }
+
     public dispose() {
         if (this.disposed) {
             return;

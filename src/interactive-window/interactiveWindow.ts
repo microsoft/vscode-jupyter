@@ -160,6 +160,28 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         } else if (this.isWebExtension) {
             this.insertInfoMessage(DataScience.noKernelsSpecifyRemote()).ignoreErrors();
         }
+
+        this.listenForNewNotebookCells();
+    }
+
+    private listenForNewNotebookCells() {
+        workspace.onDidChangeNotebookDocument(
+            (e) => {
+                e.contentChanges.forEach((change) => {
+                    change.addedCells.forEach((cell: NotebookCell) => {
+                        if (cell.notebook === this.notebookDocument && cell.kind === NotebookCellKind.Code) {
+                            const metadata = getInteractiveCellMetadata(cell);
+                            if (!metadata) {
+                                // No metadata means the cell was added through the input box, and we haven't accounted for it yet
+                                this.codeGeneratorFactory.getOrCreate(this.notebookDocument).bumpExecutionCount();
+                            }
+                        }
+                    });
+                });
+            },
+            this,
+            this.internalDisposables
+        );
     }
 
     private async startKernel(
