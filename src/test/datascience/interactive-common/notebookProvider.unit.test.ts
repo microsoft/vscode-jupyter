@@ -7,11 +7,10 @@ import { PythonExtensionChecker } from '../../../platform/api/pythonApi';
 import { IJupyterKernelConnectionSession, KernelConnectionMetadata } from '../../../platform/../kernels/types';
 import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProvider';
 import { DisplayOptions } from '../../../kernels/displayOptions';
-import { IJupyterNotebookProvider } from '../../../kernels/jupyter/types';
+import { IJupyterNotebookProvider, IServerConnectionType } from '../../../kernels/jupyter/types';
 import { IRawNotebookProvider } from '../../../kernels/raw/types';
 import { IDisposable } from '../../../platform/common/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverConnectionType';
 
 function Uri(filename: string): vscode.Uri {
     return vscode.Uri.file(filename);
@@ -32,7 +31,7 @@ suite('DataScience - NotebookProvider', () => {
         when(rawNotebookProvider.isSupported).thenReturn(false);
         const extensionChecker = mock(PythonExtensionChecker);
         when(extensionChecker.isPythonExtensionInstalled).thenReturn(true);
-        const connectionType = mock<ServerConnectionType>();
+        const connectionType = mock<IServerConnectionType>();
         when(connectionType.isLocalLaunch).thenReturn(true);
         const onDidChangeEvent = new vscode.EventEmitter<void>();
         disposables.push(onDidChangeEvent);

@@ -10,28 +10,28 @@ import {
     notebooks,
     window
 } from 'vscode';
-import { IDataScienceErrorHandler } from '../../kernels/errors/types';
-import { isPythonKernelConnection } from '../../kernels/helpers';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
-import { IPythonApiProvider, IPythonExtensionChecker } from '../../platform/api/types';
-import { IApplicationShell, ICommandManager } from '../../platform/common/application/types';
+import { IDataScienceErrorHandler } from '../../../kernels/errors/types';
+import { isPythonKernelConnection } from '../../../kernels/helpers';
+import { IExtensionSingleActivationService } from '../../../platform/activation/types';
+import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
+import { IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
 import {
     Commands,
     JupyterNotebookView,
     PythonExtension,
     PYTHON_LANGUAGE,
     Telemetry
-} from '../../platform/common/constants';
-import { ContextKey } from '../../platform/common/contextKey';
-import { IDisposableRegistry, IsWebExtension } from '../../platform/common/types';
-import { sleep } from '../../platform/common/utils/async';
-import { Common, DataScience } from '../../platform/common/utils/localize';
-import { noop } from '../../platform/common/utils/misc';
-import { traceError, traceInfo } from '../../platform/logging';
-import { ProgressReporter } from '../../platform/progress/progressReporter';
-import { sendTelemetryEvent } from '../../telemetry';
-import { getLanguageOfNotebookDocument } from '../languages/helpers';
-import { IControllerLoader, IControllerRegistration } from './types';
+} from '../../../platform/common/constants';
+import { ContextKey } from '../../../platform/common/contextKey';
+import { IDisposableRegistry, IsWebExtension } from '../../../platform/common/types';
+import { sleep } from '../../../platform/common/utils/async';
+import { Common, DataScience } from '../../../platform/common/utils/localize';
+import { noop } from '../../../platform/common/utils/misc';
+import { traceError, traceInfo } from '../../../platform/logging';
+import { ProgressReporter } from '../../../platform/progress/progressReporter';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { getLanguageOfNotebookDocument } from '../../languages/helpers';
+import { IControllerLoader, IControllerRegistration } from '../types';
 
 // This service owns the commands that show up in the kernel picker to allow for either installing
 // the Python Extension or installing Python

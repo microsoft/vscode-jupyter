@@ -19,8 +19,7 @@ import {
 import { Cancellation } from '../../../platform/common/cancellation';
 import { DisplayOptions } from '../../displayOptions';
 import { IRawNotebookProvider } from '../../raw/types';
-import { IJupyterNotebookProvider } from '../types';
-import { ServerConnectionType } from './serverConnectionType';
+import { IJupyterNotebookProvider, IServerConnectionType } from '../types';
 import { sendKernelTelemetryWhenDone } from '../../telemetry/sendKernelTelemetryEvent';
 
 @injectable()
@@ -33,7 +32,7 @@ export class NotebookProvider implements INotebookProvider {
         @inject(IJupyterNotebookProvider)
         private readonly jupyterNotebookProvider: IJupyterNotebookProvider,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(ServerConnectionType) private readonly serverConnectionType: ServerConnectionType
+        @inject(IServerConnectionType) private readonly serverConnectionType: IServerConnectionType
     ) {}
 
     // Attempt to connect to our server provider, and if we do, return the connection info

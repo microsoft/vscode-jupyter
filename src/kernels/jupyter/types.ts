@@ -231,6 +231,7 @@ export interface IJupyterUriProviderRegistration {
 
 export const IJupyterServerUriStorage = Symbol('IJupyterServerUriStorage');
 export interface IJupyterServerUriStorage {
+    readonly currentServerId: string | undefined;
     readonly onDidChangeUri: Event<void>;
     readonly onDidRemoveUris: Event<string[]>;
     addToUriList(uri: string, time: number, displayName: string): Promise<void>;
@@ -321,4 +322,11 @@ export interface ILiveRemoteKernelConnectionUsageTracker {
 export const IJupyterRemoteCachedKernelValidator = Symbol('IJupyterRemoteCachedKernelValidator');
 export interface IJupyterRemoteCachedKernelValidator {
     isValid(kernel: LiveRemoteKernelConnectionMetadata): Promise<boolean>;
+}
+
+export const IServerConnectionType = Symbol('IServerConnectionType');
+
+export interface IServerConnectionType {
+    isLocalLaunch: boolean;
+    onDidChange: Event<void>;
 }

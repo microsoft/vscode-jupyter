@@ -157,20 +157,20 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
         );
     });
 
-    test('Local and Remote kernels are listed', async function () {
+    test('Local and Remote kernels are not listed', async function () {
         await controllerLoader.loadControllers();
         const controllers = controllerRegistration.values;
         assert.ok(
             controllers.some((item) => item.connection.kind === 'startUsingRemoteKernelSpec'),
             'Should have at least one remote kernelspec'
         );
-        assert.ok(
+        assert.notOk(
             controllers.some(
                 (item) =>
                     item.connection.kind === 'startUsingLocalKernelSpec' ||
                     item.connection.kind === 'startUsingPythonInterpreter'
             ),
-            'Should have at least one local kernel'
+            'Should have no local kernels'
         );
     });
     test('Remote kernels are removed when switching to local', async function () {

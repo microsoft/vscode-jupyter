@@ -16,8 +16,7 @@ import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { DisplayOptions } from './displayOptions';
 import { rankKernels, deserializeKernelConnection, serializeKernelConnection, isExactMatch } from './helpers';
 import { computeServerId } from './jupyter/jupyterUtils';
-import { ServerConnectionType } from './jupyter/launcher/serverConnectionType';
-import { IJupyterServerUriStorage } from './jupyter/types';
+import { IJupyterServerUriStorage, IServerConnectionType } from './jupyter/types';
 import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
 import { ILocalKernelFinder, IRemoteKernelFinder } from './raw/types';
 import {
@@ -44,7 +43,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
         private readonly remoteKernelFinder: IRemoteKernelFinder | undefined,
         private readonly globalState: Memento,
         protected readonly serverUriStorage: IJupyterServerUriStorage,
-        protected readonly serverConnectionType: ServerConnectionType
+        protected readonly serverConnectionType: IServerConnectionType
     ) {}
 
     @traceDecoratorVerbose('Rank Kernels', TraceOptions.BeforeCall | TraceOptions.Arguments)

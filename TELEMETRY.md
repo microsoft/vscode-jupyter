@@ -898,13 +898,13 @@ No properties for event
 
 [src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
 ```typescript
-        return multiStep.run(this.startSelectingURI.bind(this, allowLocal), {});
+        await this.serverUriStorage.setUriToLocal();
     }
 
     @captureTelemetry(Telemetry.EnterJupyterURI)
     @traceDecoratorError('Failed to enter Jupyter Uri')
-    public async enterJupyterURI(): Promise<string | undefined> {
-        let initialValue = defaultUri;
+    public async setJupyterURIToRemote(userURI: string, ignoreValidation?: boolean): Promise<void> {
+        // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
 ```
 
 </details>
@@ -4038,9 +4038,9 @@ No properties for event
     ) {}
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
-    @traceDecoratorError('Failed to select Jupyter Uri')
     public selectJupyterURI(
-        allowLocal: boolean,
+        commandSource: SelectJupyterUriCommandSource = 'nonUser',
+        existingMultiStep?: IMultiStepInput<{}>
 ```
 
 
@@ -4050,9 +4050,9 @@ No properties for event
     }
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
-    public selectJupyterCommandLine(file: Uri): Promise<void> {
+    public async selectJupyterCommandLine(file: Uri): Promise<void> {
         const multiStep = this.multiStepFactory.create<{}>();
-        return multiStep.run(this.startSelectingCommandLine.bind(this, file), {});
+        await multiStep.run(this.startSelectingCommandLine.bind(this, file), {});
 ```
 
 </details>
@@ -4258,9 +4258,9 @@ No properties for event
 
 [src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
 ```typescript
-            return computeServerId(uri);
         }
     }
+
     @captureTelemetry(Telemetry.SetJupyterURIToLocal)
     public async setJupyterURIToLocal(): Promise<void> {
         await this.serverUriStorage.setUriToLocal();
@@ -4288,13 +4288,13 @@ No properties for event
 
 [src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
 ```typescript
-        allowLocal: boolean,
-        commandSource: SelectJupyterUriCommandSource = 'nonUser'
-    ): Promise<void> {
+        commandSource: SelectJupyterUriCommandSource = 'nonUser',
+        existingMultiStep?: IMultiStepInput<{}>
+    ): Promise<InputFlowAction | undefined | InputStep<{}> | void> {
         sendTelemetryEvent(Telemetry.SetJupyterURIUIDisplayed, undefined, {
             commandSource
         });
-        const multiStep = this.multiStepFactory.create<{}>();
+        if (existingMultiStep) {
 ```
 
 </details>
@@ -7179,10 +7179,10 @@ No description provided
 
 ## Locations Used
 
-[src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
+[src/notebooks/controllers/commands/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/commands/installPythonControllerCommands.ts)
 ```typescript
-
-                if (this.extensionChecker.isPythonExtensionInstalled) {
+                // Make sure that we didn't timeout waiting for the hook
+                if (this.extensionChecker.isPythonExtensionInstalled && typeof hookResult !== 'number') {
                     traceInfo('Python Extension installed via Kernel Picker command');
                     sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {
                         action: 'success'
@@ -7191,7 +7191,7 @@ No description provided
 ```
 
 
-[src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
+[src/notebooks/controllers/commands/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/commands/installPythonControllerCommands.ts)
 ```typescript
                     await this.controllerLoader.loadControllers(true);
                 } else {
@@ -7199,7 +7199,7 @@ No description provided
                     sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {
                         action: 'failed'
                     });
-                    throw new Error('Failed to install Python Extension via Kernel Picker command');
+                    this.errorHandler
 ```
 
 </details>
@@ -7257,7 +7257,7 @@ No description provided
 ```
 
 
-[src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
+[src/notebooks/controllers/commands/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/commands/installPythonControllerCommands.ts)
 ```typescript
     // click run again
     private async installPythonExtensionViaKernelPicker(): Promise<void> {
@@ -7269,7 +7269,7 @@ No description provided
 ```
 
 
-[src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
+[src/notebooks/controllers/commands/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/commands/installPythonControllerCommands.ts)
 ```typescript
                 Common.install()
             );
@@ -7281,7 +7281,7 @@ No description provided
 ```
 
 
-[src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
+[src/notebooks/controllers/commands/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/commands/installPythonControllerCommands.ts)
 ```typescript
                 return true;
             } else {
@@ -7546,7 +7546,7 @@ No description provided
 
 ## Locations Used
 
-[src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
+[src/notebooks/controllers/commands/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/commands/installPythonControllerCommands.ts)
 ```typescript
     // Unlike installing the python extension we don't expect in progress executions to be handled
     // when this command is installed, user will have to manually install python and rerun the cell
@@ -7558,7 +7558,7 @@ No description provided
 ```
 
 
-[src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
+[src/notebooks/controllers/commands/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/commands/installPythonControllerCommands.ts)
 ```typescript
         );
 
@@ -7570,7 +7570,7 @@ No description provided
 ```
 
 
-[src/notebooks/controllers/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/installPythonControllerCommands.ts)
+[src/notebooks/controllers/commands/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/commands/installPythonControllerCommands.ts)
 ```typescript
             // Direct the user to download from python.org
             this.appShell.openUrl('https://www.python.org/downloads');

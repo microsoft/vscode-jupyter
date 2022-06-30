@@ -841,11 +841,23 @@
             },
             {
                 "command": "jupyter.installPythonExtensionViaKernelPicker",
-                "title": "Install Python Extension"
+                "title": "%DataScience.installPythonExtensionViaKernelPickerTitle%"
             },
             {
                 "command": "jupyter.installPythonViaKernelPicker",
-                "title": "Install Python"
+                "title": "%DataScience.installPythonTitle%"
+            },
+            {
+                "command": "jupyter.switchToLocalKernels",
+                "title": "%DataScience.switchToLocalKernelsTitle%"
+            },
+            {
+                "command": "jupyter.switchToRemoteKernels",
+                "title": "%DataScience.switchToRemoteKernelsTitle%"
+            },
+            {
+                "command": "jupyter.switchToAnotherRemoteKernels",
+                "title": "%DataScience.switchToAnotherRemoteKernelsTitle%"
             }
         ],
         "menus": {
@@ -1007,6 +1019,18 @@
                 {
                     "command": "jupyter.installPythonViaKernelPicker",
                     "when": "jupyter.showInstallPythonCommand"
+                },
+                {
+                    "command": "jupyter.switchToLocalKernels",
+                    "when": "jupyter.showingRemoteNotWeb"
+                },
+                {
+                    "command": "jupyter.switchToRemoteKernels",
+                    "when": "jupyter.showingLocalOrWebEmpty"
+                },
+                {
+                    "command": "jupyter.switchToAnotherRemoteKernels",
+                    "when": "jupyter.showingRemoteKernels"
                 }
             ],
             "interactive/toolbar": [
@@ -1087,6 +1111,18 @@
                 },
                 {
                     "command": "jupyter.installPythonViaKernelPicker",
+                    "when": "false"
+                },
+                {
+                    "command": "jupyter.switchToLocalKernels",
+                    "when": "false"
+                },
+                {
+                    "command": "jupyter.switchToRemoteKernels",
+                    "when": "false"
+                },
+                {
+                    "command": "jupyter.switchToAnotherRemoteKernels",
                     "when": "false"
                 },
                 {

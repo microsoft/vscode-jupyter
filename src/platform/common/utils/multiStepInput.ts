@@ -32,7 +32,6 @@ export interface IQuickPickParameters<T extends QuickPickItem> {
     title?: string;
     step?: number;
     totalSteps?: number;
-    canGoBack?: boolean;
     items: T[];
     activeItem?: T;
     placeholder: string;
@@ -40,6 +39,9 @@ export interface IQuickPickParameters<T extends QuickPickItem> {
     matchOnDescription?: boolean;
     matchOnDetail?: boolean;
     acceptFilterBoxTextAsSelection?: boolean;
+    startBusy?: boolean;
+    stopBusy?: Event<void>;
+    validate?(value: string): Promise<string | undefined>;
     shouldResume?(): Promise<boolean>;
     onDidTriggerItemButton?(e: QuickPickItemButtonEvent<T>): void;
     onDidChangeItems?: Event<T[]>;
@@ -61,7 +63,7 @@ export interface InputBoxParameters {
 type MultiStepInputQuickPicResponseType<T, P> = T | (P extends { buttons: (infer I)[] } ? I : never);
 type MultiStepInputInputBoxResponseType<P> = string | (P extends { buttons: (infer I)[] } ? I : never);
 export interface IMultiStepInput<S> {
-    run(start: InputStep<S>, state: S): Promise<void>;
+    run(start: InputStep<S>, state: S): Promise<InputFlowAction | undefined>;
     showQuickPick<T extends QuickPickItem, P extends IQuickPickParameters<T>>({
         title,
         step,
@@ -104,6 +106,9 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         matchOnDescription,
         matchOnDetail,
         acceptFilterBoxTextAsSelection,
+        startBusy,
+        stopBusy,
+        validate,
         onDidTriggerItemButton,
         onDidChangeItems
     }: P): Promise<MultiStepInputQuickPicResponseType<T, P>> {
@@ -117,6 +122,18 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                 input.placeholder = placeholder;
                 input.ignoreFocusOut = true;
                 input.items = items;
+                if (stopBusy) {
+                    input.busy = startBusy ?? false;
+                    stopBusy(
+                        () => {
+                            if (input.enabled) {
+                                input.busy = false;
+                            }
+                        },
+                        this,
+                        disposables
+                    );
+                }
                 if (onDidChangeItems) {
                     input.keepScrollPosition = true;
                     onDidChangeItems(
@@ -146,7 +163,25 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                             resolve(<any>item);
                         }
                     }),
-                    input.onDidChangeSelection((selectedItems) => resolve(selectedItems[0])),
+                    input.onDidChangeSelection(async (selectedItems) => {
+                        const itemLabel = selectedItems.length ? selectedItems[0].label : '';
+                        let resolvable = itemLabel ? true : false;
+                        if (itemLabel && validate) {
+                            input.enabled = false;
+                            input.busy = true;
+                            const message = await validate(itemLabel);
+                            if (message) {
+                                resolvable = false;
+                                // No validation allowed on a quick pick. Have to put up a dialog instead
+                                await this.shell.showErrorMessage(message, { modal: true });
+                            }
+                            input.enabled = true;
+                            input.busy = false;
+                        }
+                        if (resolvable) {
+                            resolve(selectedItems[0]);
+                        }
+                    }),
                     input.onDidHide(() => {
                         (async () => {
                             reject(
@@ -157,8 +192,20 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                 );
                 if (acceptFilterBoxTextAsSelection) {
                     disposables.push(
-                        input.onDidAccept(() => {
-                            resolve(<any>input.value);
+                        input.onDidAccept(async () => {
+                            if (!input.busy) {
+                                const validationMessage = validate ? await validate(input.value) : undefined;
+                                if (!validationMessage) {
+                                    resolve(<any>input.value);
+                                } else {
+                                    input.enabled = false;
+                                    input.busy = true;
+                                    // No validation allowed on a quick pick. Have to put up a dialog instead
+                                    await this.shell.showErrorMessage(validationMessage, { modal: true });
+                                    input.enabled = true;
+                                    input.busy = false;
+                                }
+                            }
                         })
                     );
                 }
@@ -247,7 +294,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         }
     }
 
-    private async stepThrough(start: InputStep<S>, state: S) {
+    private async stepThrough(start: InputStep<S>, state: S): Promise<InputFlowAction | undefined> {
         let step: InputStep<S> | void = start;
         while (step) {
             this.steps.push(step);
@@ -267,6 +314,9 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                     step = undefined;
                 } else {
                     throw err;
+                }
+                if (!step) {
+                    return err;
                 }
             }
         }

@@ -5,13 +5,13 @@ import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
-import { commands, Uri, window } from 'vscode';
+import { commands, QuickInputButtons, Uri, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
 import { BufferDecoder } from '../../../platform/common/process/decoder.node';
 import { ProcessService } from '../../../platform/common/process/proc.node';
 import { IDisposable } from '../../../platform/common/types';
-import { IKernelProvider } from '../../../platform/../kernels/types';
+import { IKernelProvider, isLocalConnection, isRemoteConnection } from '../../../platform/../kernels/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import {
     getInterpreterHash,
@@ -33,11 +33,18 @@ import {
     waitForOutputs,
     waitForTextOutput,
     defaultNotebookTestTimeout,
-    createTemporaryNotebookFromFile
+    createTemporaryNotebookFromFile,
+    hijackCreateQuickPick,
+    asPromise
 } from './helper.node';
 import { getOSType, OSType } from '../../../platform/common/utils/platform';
 import { getTextOutputValue } from '../../../kernels/execution/helpers';
 import { noop } from '../../core';
+import { Commands } from '../../../platform/common/constants';
+import { sleep } from '../../../platform/common/utils/async';
+import { IControllerLoader, IControllerRegistration, IControllerSelection } from '../../../notebooks/controllers/types';
+import { isWeb } from '../../../platform/common/utils/misc';
+import { IJupyterServerUriStorage } from '../../../kernels/jupyter/types';
 
 /* eslint-disable no-invalid-this, , , @typescript-eslint/no-explicit-any */
 suite('DataScience - VSCode Notebook - Kernel Selection', function () {
@@ -69,6 +76,11 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
     const venvNoRegSearchString = '.venvnoreg';
     let activeInterpreterSearchString = '';
     let vscodeNotebook: IVSCodeNotebook;
+    let controllerRegistration: IControllerRegistration;
+    let controllerLoader: IControllerLoader;
+    let controllerSelection: IControllerSelection;
+    let serverUriStorage: IJupyterServerUriStorage;
+    let jupyterServerUri: string | undefined;
     this.timeout(120_000); // Slow test, we need to uninstall/install ipykernel.
     /*
     This test requires a virtual environment to be created & registered as a kernel.
@@ -91,6 +103,10 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         const pythonChecker = api.serviceContainer.get<IPythonExtensionChecker>(IPythonExtensionChecker);
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
+        controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
+        serverUriStorage = api.serviceContainer.get<IJupyterServerUriStorage>(IJupyterServerUriStorage);
+        controllerLoader = api.serviceContainer.get<IControllerLoader>(IControllerLoader);
+        controllerSelection = api.serviceContainer.get<IControllerSelection>(IControllerSelection);
 
         if (!pythonChecker.isPythonExtensionInstalled) {
             return this.skip();
@@ -131,6 +147,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         ]);
 
         await startJupyterServer();
+        jupyterServerUri = await serverUriStorage.getRemoteUri();
         sinon.restore();
     });
 
@@ -155,6 +172,9 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         console.log(`End test ${this.currentTest?.title}`);
         await closeNotebooksAndCleanUpAfterTests(disposables);
         console.log(`End test completed ${this.currentTest?.title}`);
+        if (jupyterServerUri) {
+            await serverUriStorage.setUriToRemote(jupyterServerUri, '');
+        }
     });
 
     test('Ensure we select active interpreter as kernel (when Raw Kernels)', async function () {
@@ -340,5 +360,322 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
             // Confirm the executable printed as a result of code in cell `import sys;sys.executable`
             waitForTextOutput(cell, venvNoRegSearchString, 0, false)
         ]);
+    });
+
+    async function verifyExpectedCounts(localIsExpected: boolean) {
+        await controllerLoader.loaded;
+        const remotes = controllerRegistration.values.filter((c) => isRemoteConnection(c.connection));
+        const locals = controllerRegistration.values.filter((c) => isLocalConnection(c.connection));
+
+        if (localIsExpected) {
+            assert.ok(locals.length > 1, 'Expected at least two local controller');
+            assert.ok(remotes.length <= 1, 'Expected at most one remote controller');
+        } else {
+            assert.ok(locals.length <= 1, 'Expected at most one local controller');
+            assert.ok(remotes.length >= 1, 'Expected at least one remote controller');
+        }
+    }
+
+    test('Start local, pick remote second level and go back - locals should be shown', async function () {
+        if (!IS_REMOTE_NATIVE_TEST() || isWeb()) {
+            this.skip(); // Test only works when have a remote server mode and we can connect to locals
+        }
+        await serverUriStorage.setUriToLocal();
+        await controllerLoader.loaded;
+        await createEmptyPythonNotebook(disposables);
+        await insertCodeCell('import sys\nsys.executable', { index: 0 });
+
+        let locals = controllerRegistration.values.filter((c) => isLocalConnection(c.connection));
+        // We should start off with locals
+        assert.ok(locals.length > 0, 'No locals found');
+
+        // Hijack the quick pick so we can force picking back
+        const { created } = await hijackCreateQuickPick(disposables);
+        const firstPromise = asPromise(created, undefined, 5000, 'first:back');
+
+        // Execute the command but don't wait for it
+        const commandPromise = commands.executeCommand(Commands.SwitchToRemoteKernels) as Promise<void>;
+
+        // URI quick pick should be on the screen.
+        let uriQuickPick = await firstPromise;
+
+        // Trigger the selection of the first URI (should be our remote URI)
+        const secondPromise = asPromise(created, undefined, 5000, 'second:back');
+        uriQuickPick.selectIndex(0);
+
+        // Wait for the 'remote' list to show up
+        const remoteQuickPick = await secondPromise;
+        await controllerLoader.loaded;
+
+        // At this point we should have remote kernels
+        let remotes = controllerRegistration.values.filter((c) => isRemoteConnection(c.connection));
+        assert.ok(remotes.length > 0, 'No remote kernels found');
+
+        // Trigger the back button on the remote list
+        const thirdPromise = asPromise(created, undefined, 5000, 'third:back');
+        remoteQuickPick.triggerButton(QuickInputButtons.Back);
+
+        // That should bring up the URI list again
+        uriQuickPick = await thirdPromise;
+
+        // Trigger back on that
+        uriQuickPick.triggerButton(QuickInputButtons.Back);
+
+        // Wait for the command to complete
+        const result = await Promise.race([commandPromise, sleep(5000)]);
+        assert.notOk(result, `Back button did not finish the command`);
+
+        // Make sure our kernel list is only locals
+        await verifyExpectedCounts(true);
+    });
+
+    test('Start local, pick remote - remotes should be shown', async function () {
+        if (!IS_REMOTE_NATIVE_TEST() || isWeb()) {
+            this.skip(); // Test only works when have a remote server mode and we can connect to locals
+        }
+        await serverUriStorage.setUriToLocal();
+        await controllerLoader.loaded;
+        const notebook = await createEmptyPythonNotebook(disposables);
+        await insertCodeCell('import sys\nsys.executable', { index: 0 });
+
+        let locals = controllerRegistration.values.filter((c) => isLocalConnection(c.connection));
+        // We should start off with locals
+        assert.ok(locals.length > 0, 'No locals found');
+
+        // Hijack the quick pick so we can force picking back
+        const { created } = await hijackCreateQuickPick(disposables);
+        const firstPromise = asPromise(created, undefined, 5000, 'first:back');
+
+        // Execute the command but don't wait for it
+        const commandPromise = commands.executeCommand(Commands.SwitchToRemoteKernels) as Promise<void>;
+
+        // URI quick pick should be on the screen.
+        let uriQuickPick = await firstPromise;
+
+        // Trigger the selection of the first URI (should be our remote URI)
+        const secondPromise = asPromise(created, undefined, 5000, 'second:back');
+        uriQuickPick.selectIndex(0);
+
+        // Wait for the 'remote' list to show up
+        const remoteQuickPick = await secondPromise;
+        await controllerLoader.loaded;
+
+        // At this point we should have remote kernels
+        let remotes = controllerRegistration.values.filter((c) => isRemoteConnection(c.connection));
+        assert.ok(remotes.length > 0, 'No remote kernels found');
+
+        // Pick a remote kernel
+        remoteQuickPick.selectLastItem();
+
+        // Wait for the command to complete
+        const selectionChanged = asPromise(controllerSelection.onControllerSelected);
+        const result = await Promise.race([commandPromise, sleep(5000)]);
+        assert.notOk(result, `Picking remote did not complete`);
+
+        // Make sure our kernel list is remotes
+        await verifyExpectedCounts(false);
+
+        // Make sure the selected kernel is remote
+        await selectionChanged;
+        const selected = controllerSelection.getSelected(notebook);
+        assert.ok(selected, 'Remote kernel was not selected');
+        assert.ok(isRemoteConnection(selected!.connection), 'Selected kernel is not remote');
+    });
+
+    test('Start local, pick remote first level and go back - locals should be shown', async function () {
+        if (!IS_REMOTE_NATIVE_TEST() || isWeb()) {
+            this.skip(); // Test only works when have a remote server mode and we can connect to locals
+        }
+        await serverUriStorage.setUriToLocal();
+        await controllerLoader.loaded;
+        await createEmptyPythonNotebook(disposables);
+        await insertCodeCell('import sys\nsys.executable', { index: 0 });
+
+        let locals = controllerRegistration.values.filter((c) => isLocalConnection(c.connection));
+        // We should start off with locals
+        assert.ok(locals.length > 0, 'No locals found');
+
+        // Hijack the quick pick so we can force picking back
+        const { created } = await hijackCreateQuickPick(disposables);
+        const firstPromise = asPromise(created, undefined, 5000, 'first:back');
+
+        // Execute the command but don't wait for it
+        const commandPromise = commands.executeCommand(Commands.SwitchToRemoteKernels) as Promise<void>;
+
+        // URI quick pick should be on the screen.
+        let uriQuickPick = await firstPromise;
+
+        // Trigger the back button on the uri list
+        uriQuickPick.triggerButton(QuickInputButtons.Back);
+
+        // Wait for the command to complete
+        const result = await Promise.race([commandPromise, sleep(5000)]);
+        assert.notOk(result, `Back button did not finish the command`);
+
+        // Make sure our kernel list is only locals
+        await verifyExpectedCounts(true);
+    });
+
+    test('Start local, pick remote and cancel - locals should be shown', async function () {
+        if (!IS_REMOTE_NATIVE_TEST() || isWeb()) {
+            this.skip(); // Test only works when have a remote server mode and we can connect to locals
+        }
+        await serverUriStorage.setUriToLocal();
+        await controllerLoader.loaded;
+        await createEmptyPythonNotebook(disposables);
+        await insertCodeCell('import sys\nsys.executable', { index: 0 });
+
+        let locals = controllerRegistration.values.filter((c) => isLocalConnection(c.connection));
+        // We should start off with locals
+        assert.ok(locals.length > 0, 'No locals found');
+
+        // Hijack the quick pick so we can force picking back
+        const { created } = await hijackCreateQuickPick(disposables);
+        const firstPromise = asPromise(created, undefined, 5000, 'first:cancel');
+
+        // Execute the command but don't wait for it
+        const commandPromise = commands.executeCommand(Commands.SwitchToRemoteKernels) as Promise<void>;
+
+        // URI quick pick should be on the screen.
+        let uriQuickPick = await firstPromise;
+
+        // Trigger the selection of the first URI (should be our remote URI)
+        const secondPromise = asPromise(created, undefined, 5000, 'second:cancel');
+        uriQuickPick.selectIndex(0);
+
+        // Wait for the 'remote' list to show up
+        const remoteQuickPick = await secondPromise;
+        await controllerLoader.loaded;
+
+        // At this point we should have remote kernels
+        let remotes = controllerRegistration.values.filter((c) => isRemoteConnection(c.connection));
+        assert.ok(remotes.length > 0, 'No remote kernels found');
+
+        // Trigger a cancel
+        remoteQuickPick.hide();
+
+        // Wait for the command to complete
+        const result = await Promise.race([commandPromise, sleep(5000)]);
+        assert.notEqual(result, 5000, `Cancel button did not finish the command`);
+
+        // Make sure our kernel list is only locals
+        await verifyExpectedCounts(true);
+    });
+    test('Start remote, pick local and cancel - remotes should be shown', async function () {
+        if (!IS_REMOTE_NATIVE_TEST() || isWeb()) {
+            this.skip(); // Test only works when have a remote server mode and we can connect to locals
+        }
+        await controllerLoader.loaded;
+        await createEmptyPythonNotebook(disposables);
+        await insertCodeCell('import sys\nsys.executable', { index: 0 });
+
+        let remotes = controllerRegistration.values.filter((c) => isRemoteConnection(c.connection));
+        // We should start off with remotes
+        assert.ok(remotes.length > 0, 'No remotes found');
+
+        // Hijack the quick pick so we can force picking back
+        const { created } = await hijackCreateQuickPick(disposables);
+        const firstPromise = asPromise(created, undefined, 5000, 'first:cancel');
+
+        // Execute the command but don't wait for it
+        const commandPromise = commands.executeCommand(Commands.SwitchToLocalKernels) as Promise<void>;
+
+        // Locals quick pick should be on the first screen
+        let localsQuickPick = await firstPromise;
+        await controllerLoader.loaded;
+
+        // Should have all locals at the moment
+        let locals = controllerRegistration.values.filter((c) => isLocalConnection(c.connection));
+        assert.ok(locals.length > 1, 'No local connections');
+
+        // Cancel locals
+        localsQuickPick.hide();
+
+        // Wait for the command to complete
+        const result = await Promise.race([commandPromise, sleep(5000)]);
+        assert.notEqual(result, 5000, `Cancel button did not finish the command`);
+
+        // Make sure our kernel list is only remotes
+        await verifyExpectedCounts(false);
+    });
+
+    test('Start remote, pick local and back - remotes should be shown', async function () {
+        if (!IS_REMOTE_NATIVE_TEST() || isWeb()) {
+            this.skip(); // Test only works when have a remote server mode and we can connect to locals
+        }
+        await controllerLoader.loaded;
+        await createEmptyPythonNotebook(disposables);
+        await insertCodeCell('import sys\nsys.executable', { index: 0 });
+
+        let remotes = controllerRegistration.values.filter((c) => isRemoteConnection(c.connection));
+        // We should start off with remotes
+        assert.ok(remotes.length > 0, 'No remotes found');
+
+        // Hijack the quick pick so we can force picking back
+        const { created } = await hijackCreateQuickPick(disposables);
+        const firstPromise = asPromise(created, undefined, 5000, 'first:cancel');
+
+        // Execute the command but don't wait for it
+        const commandPromise = commands.executeCommand(Commands.SwitchToLocalKernels) as Promise<void>;
+
+        // Locals quick pick should be on the first screen
+        let localsQuickPick = await firstPromise;
+        await controllerLoader.loaded;
+
+        // Should have all locals at the moment
+        let locals = controllerRegistration.values.filter((c) => isLocalConnection(c.connection));
+        assert.ok(locals.length > 0, 'No local connections');
+
+        // Hit back
+        localsQuickPick.triggerButton(QuickInputButtons.Back);
+
+        // Wait for the command to complete
+        const result = await Promise.race([commandPromise, sleep(5000)]);
+        assert.notEqual(result, 5000, `Cancel button did not finish the command`);
+
+        // Make sure our kernel list is only remotes
+        await verifyExpectedCounts(false);
+    });
+    test('Start remote, pick local. Make sure it is picked', async function () {
+        if (!IS_REMOTE_NATIVE_TEST() || isWeb()) {
+            this.skip(); // Test only works when have a remote server mode and we can connect to locals
+        }
+        await controllerLoader.loaded;
+        const notebook = await createEmptyPythonNotebook(disposables);
+        await insertCodeCell('import sys\nsys.executable', { index: 0 });
+
+        let remotes = controllerRegistration.values.filter((c) => isRemoteConnection(c.connection));
+        // We should start off with remotes
+        assert.ok(remotes.length > 0, 'No remotes found');
+
+        // Hijack the quick pick so we can force picking back
+        const { created } = await hijackCreateQuickPick(disposables);
+        const firstPromise = asPromise(created, undefined, 5000, 'first:cancel');
+
+        // Execute the command but don't wait for it
+        const commandPromise = commands.executeCommand(Commands.SwitchToLocalKernels) as Promise<void>;
+
+        // Locals quick pick should be on the first screen
+        let localsQuickPick = await firstPromise;
+        await controllerLoader.loaded;
+
+        // Should have all locals at the moment
+        let locals = controllerRegistration.values.filter((c) => isLocalConnection(c.connection));
+        assert.ok(locals.length > 1, 'No local connections');
+
+        // Pick a local connection
+        localsQuickPick.selectLastItem();
+
+        // Wait for the command to complete
+        const selectionChanged = asPromise(controllerSelection.onControllerSelected);
+        const result = await Promise.race([commandPromise, sleep(5000)]);
+        assert.notEqual(result, 5000, `Cancel button did not finish the command`);
+
+        // Make sure our kernel list is only locals
+        await verifyExpectedCounts(true);
+        await selectionChanged;
+        const selected = controllerSelection.getSelected(notebook);
+        assert.ok(selected, 'Local kernel was not selected');
+        assert.ok(isLocalConnection(selected!.connection), 'Selected kernel is not local');
     });
 });

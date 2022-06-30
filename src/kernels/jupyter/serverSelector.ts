@@ -5,8 +5,8 @@
 
 import { inject, injectable } from 'inversify';
 import isNil = require('lodash/isNil');
-import { EventEmitter, QuickPickItem, ThemeIcon, Uri } from 'vscode';
-import { IApplicationShell, IClipboard } from '../../platform/common/application/types';
+import { EventEmitter, QuickPickItem, ThemeIcon } from 'vscode';
+import { IApplicationShell } from '../../platform/common/application/types';
 import { traceDecoratorError, traceError, traceWarning } from '../../platform/logging';
 import { DataScience } from '../../platform/common/utils/localize';
 import {
@@ -37,10 +37,7 @@ import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsErr
 import { RemoteJupyterServerConnectionError } from '../../platform/errors/remoteJupyterServerConnectionError';
 import { JupyterSelfCertsExpiredError } from '../../platform/errors/jupyterSelfCertsExpiredError';
 
-const defaultUri = 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe';
-
 interface ISelectUriQuickPickItem extends QuickPickItem {
-    newChoice: boolean;
     provider?: IJupyterUriProvider;
     url?: string;
 }
@@ -54,11 +51,7 @@ export type SelectJupyterUriCommandSource =
     | 'prompt';
 @injectable()
 export class JupyterServerSelector {
-    private readonly localLabel = `$(zap) ${DataScience.jupyterSelectURINoneLabel()}`;
-    private readonly newLabel = `$(server) ${DataScience.jupyterSelectURINewLabel()}`;
-    private readonly remoteLabel = `$(server) ${DataScience.jupyterSelectURIRemoteLabel()}`;
     constructor(
-        @inject(IClipboard) private readonly clipboard: IClipboard,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
         @inject(IJupyterUriProviderRegistration)
         private extraUriProviders: IJupyterUriProviderRegistration,
@@ -72,48 +65,28 @@ export class JupyterServerSelector {
     ) {}
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
-    @traceDecoratorError('Failed to select Jupyter Uri')
     public selectJupyterURI(
-        allowLocal: boolean,
-        commandSource: SelectJupyterUriCommandSource = 'nonUser'
-    ): Promise<void> {
+        commandSource: SelectJupyterUriCommandSource = 'nonUser',
+        existingMultiStep?: IMultiStepInput<{}>
+    ): Promise<InputFlowAction | undefined | InputStep<{}> | void> {
         sendTelemetryEvent(Telemetry.SetJupyterURIUIDisplayed, undefined, {
             commandSource
         });
-        const multiStep = this.multiStepFactory.create<{}>();
-        return multiStep.run(this.startSelectingURI.bind(this, allowLocal), {});
-    }
-
-    @captureTelemetry(Telemetry.EnterJupyterURI)
-    @traceDecoratorError('Failed to enter Jupyter Uri')
-    public async enterJupyterURI(): Promise<string | undefined> {
-        let initialValue = defaultUri;
-        try {
-            const text = await this.clipboard.readText().catch(() => '');
-            const parsedUri = Uri.parse(text.trim(), true);
-            // Only display http/https uris.
-            initialValue = text && parsedUri && parsedUri.scheme.toLowerCase().startsWith('http') ? text : defaultUri;
-        } catch {
-            // We can ignore errors.
-        }
-        // Ask the user to enter a URI to connect to.
-        const uri = await this.applicationShell.showInputBox({
-            title: DataScience.jupyterSelectURIPrompt(),
-            value: initialValue || defaultUri,
-            validateInput: this.validateSelectJupyterURI,
-            prompt: ''
-        });
-
-        if (uri) {
-            await this.setJupyterURIToRemote(uri, true);
-            return computeServerId(uri);
+        if (existingMultiStep) {
+            return this.startSelectingURI(existingMultiStep, {});
+        } else {
+            const multiStep = this.multiStepFactory.create<{}>();
+            return multiStep.run(this.startSelectingURI.bind(this), {});
         }
     }
+
     @captureTelemetry(Telemetry.SetJupyterURIToLocal)
     public async setJupyterURIToLocal(): Promise<void> {
         await this.serverUriStorage.setUriToLocal();
     }
 
+    @captureTelemetry(Telemetry.EnterJupyterURI)
+    @traceDecoratorError('Failed to enter Jupyter Uri')
     public async setJupyterURIToRemote(userURI: string, ignoreValidation?: boolean): Promise<void> {
         // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
         try {
@@ -154,18 +127,14 @@ export class JupyterServerSelector {
         });
     }
 
-    private async startSelectingURI(
-        allowLocal: boolean,
-        input: IMultiStepInput<{}>,
-        _state: {}
-    ): Promise<InputStep<{}> | void> {
+    private async startSelectingURI(input: IMultiStepInput<{}>, _state: {}): Promise<InputStep<{}> | void> {
         // First step, show a quick pick to choose either the remote or the local.
         // newChoice element will be set if the user picked 'enter a new server'
 
         // Get the list of items and show what the current value is
         const remoteUri = await this.serverUriStorage.getRemoteUri();
-        const items = await this.getUriPickList(allowLocal, remoteUri);
-        const activeItem = items.find((i) => i.url === remoteUri || (i.label === this.localLabel && !remoteUri));
+        const items = await this.getUriPickList(remoteUri);
+        const activeItem = items.find((i) => i.url === remoteUri);
         const currentValue = !remoteUri ? DataScience.jupyterSelectURINoneLabel() : activeItem?.label;
         const placeholder = currentValue // This will show at the top (current value really)
             ? DataScience.jupyterSelectURIQuickPickCurrent().format(currentValue)
@@ -177,9 +146,9 @@ export class JupyterServerSelector {
             placeholder,
             items,
             activeItem,
-            title: allowLocal
-                ? DataScience.jupyterSelectURIQuickPickTitle()
-                : DataScience.jupyterSelectURIQuickPickTitleRemoteOnly(),
+            acceptFilterBoxTextAsSelection: true,
+            validate: this.validateSelectJupyterURI.bind(this),
+            title: DataScience.jupyterSelectURIQuickPickTitle(),
             onDidTriggerItemButton: (e) => {
                 const url = e.item.url;
                 if (url && e.button.tooltip === DataScience.removeRemoteJupyterServerEntryInQuickPick()) {
@@ -188,17 +157,17 @@ export class JupyterServerSelector {
                     );
                     items.splice(items.indexOf(e.item), 1);
                     onDidChangeItems.fire(items.concat([]));
+                } else if (e.button) {
+                    throw InputFlowAction.back;
                 }
             },
             onDidChangeItems: onDidChangeItems.event
         });
         await pendingUpdatesToUri.catch((ex) => traceError('Failed to update Uri list', ex));
-        if (item.label === this.localLabel) {
-            await this.setJupyterURIToLocal();
-        } else if (!item.newChoice && !item.provider) {
-            await this.setJupyterURIToRemote(!isNil(item.url) ? item.url : item.label);
+        if (typeof item === 'string') {
+            await this.setJupyterURIToRemote(item);
         } else if (!item.provider) {
-            return this.selectRemoteURI.bind(this);
+            await this.setJupyterURIToRemote(!isNil(item.url) ? item.url : item.label);
         } else {
             return this.selectProviderURI.bind(this, item.provider, item);
         }
@@ -225,28 +194,6 @@ export class JupyterServerSelector {
         if (result) {
             const uri = generateUriFromRemoteProvider(id, result);
             await this.setJupyterURIToRemote(uri);
-        }
-    }
-    private async selectRemoteURI(input: IMultiStepInput<{}>, _state: {}): Promise<InputStep<{}> | void> {
-        let initialValue = defaultUri;
-        try {
-            const text = await this.clipboard.readText().catch(() => '');
-            const parsedUri = Uri.parse(text.trim(), true);
-            // Only display http/https uris.
-            initialValue = text && parsedUri && parsedUri.scheme.toLowerCase().startsWith('http') ? text : defaultUri;
-        } catch {
-            // We can ignore errors.
-        }
-        // Ask the user to enter a URI to connect to.
-        const uri = await input.showInputBox({
-            title: DataScience.jupyterSelectURIPrompt(),
-            value: initialValue || defaultUri,
-            validate: this.validateSelectJupyterURI,
-            prompt: ''
-        });
-
-        if (uri) {
-            await this.setJupyterURIToRemote(uri, true);
         }
     }
 
@@ -291,7 +238,7 @@ export class JupyterServerSelector {
         }
     };
 
-    private async getUriPickList(allowLocal: boolean, currentRemoteUri?: string): Promise<ISelectUriQuickPickItem[]> {
+    private async getUriPickList(currentRemoteUri?: string): Promise<ISelectUriQuickPickItem[]> {
         // Ask our providers to stick on items
         let providerItems: ISelectUriQuickPickItem[] = [];
         const providers = await this.extraUriProviders.getProviders();
@@ -307,20 +254,7 @@ export class JupyterServerSelector {
             });
         }
 
-        // Always have 'local' and 'add new'
-        let items: ISelectUriQuickPickItem[] = [];
-        if (allowLocal) {
-            items.push({ label: this.localLabel, detail: DataScience.jupyterSelectURINoneDetail(), newChoice: false });
-            items = items.concat(providerItems);
-            items.push({ label: this.newLabel, detail: DataScience.jupyterSelectURINewDetail(), newChoice: true });
-        } else {
-            items = items.concat(providerItems);
-            items.push({
-                label: this.remoteLabel,
-                detail: DataScience.jupyterSelectURIRemoteDetail(),
-                newChoice: true
-            });
-        }
+        let items: ISelectUriQuickPickItem[] = [...providerItems];
 
         // Get our list of recent server connections and display that as well
         const savedURIList = await this.serverUriStorage.getSavedUriList();
@@ -331,7 +265,6 @@ export class JupyterServerSelector {
                 items.push({
                     label: !isNil(uriItem.displayName) ? uriItem.displayName : uriItem.uri,
                     detail: DataScience.jupyterSelectURIMRUDetail().format(uriDate.toLocaleString()),
-                    newChoice: false,
                     url: uriItem.uri,
                     buttons: isSelected
                         ? [] // Cannot delete the current Uri (you can only switch to local).

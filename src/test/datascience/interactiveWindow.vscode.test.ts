@@ -99,7 +99,8 @@ suite(`Interactive window Execution`, async function () {
         await vscode.commands.executeCommand('python.clearWorkspaceInterpreter');
     }
 
-    test('Export Interactive window to Notebook', async () => {
+    // Flakey test: https://github.com/microsoft/vscode-jupyter/issues/10649
+    test.skip('Export Interactive window to Notebook', async () => {
         const activeInteractiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
         await waitForInteractiveWindow(activeInteractiveWindow);
 

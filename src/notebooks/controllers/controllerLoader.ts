@@ -5,9 +5,8 @@ import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { isPythonNotebook } from '../../kernels/helpers';
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
-import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConnectionType';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
-import { IKernelFinder, IKernelProvider, isLocalConnection, KernelConnectionMetadata } from '../../kernels/types';
+import { IKernelFinder, IKernelProvider, KernelConnectionMetadata } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
@@ -32,13 +31,11 @@ const REMOTE_KERNEL_REFRESH_INTERVAL = 2_000;
  */
 @injectable()
 export class ControllerLoader implements IControllerLoader, IExtensionSyncActivationService {
-    private get isLocalLaunch(): boolean {
-        return this.serverConnectionType.isLocalLaunch;
-    }
     private wasPythonInstalledWhenFetchingControllers?: boolean;
     private refreshedEmitter = new vscode.EventEmitter<void>();
     // Promise to resolve when we have loaded our controllers
     private controllersPromise: Promise<void>;
+    private loadCancellationToken: vscode.CancellationTokenSource | undefined;
     constructor(
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
@@ -48,7 +45,6 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(ServerConnectionType) private readonly serverConnectionType: ServerConnectionType,
         @inject(IControllerRegistration) private readonly registration: IControllerRegistration
     ) {
         this.loadControllers(true).ignoreErrors();
@@ -119,9 +115,13 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
     public loadControllers(refresh?: boolean | undefined): Promise<void> {
         if (!this.controllersPromise || refresh) {
             const stopWatch = new StopWatch();
-            const cancelToken = new vscode.CancellationTokenSource();
+            // Cancel previous load
+            if (this.loadCancellationToken) {
+                this.loadCancellationToken.cancel();
+            }
+            this.loadCancellationToken = new vscode.CancellationTokenSource();
             this.wasPythonInstalledWhenFetchingControllers = this.extensionChecker.isPythonExtensionInstalled;
-            this.controllersPromise = this.loadControllersImpl(cancelToken.token)
+            this.controllersPromise = this.loadControllersImpl(this.loadCancellationToken.token)
                 .catch((e) => {
                     traceError('Error loading notebook controllers', e);
                     if (!isCancellationError(e, true)) {
@@ -172,9 +172,6 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
     }
 
     private async onDidChangeExtensions() {
-        if (!this.isLocalLaunch || !this.controllersPromise) {
-            return;
-        }
         // If we just installed the Python extension and we fetched the controllers, then fetch it again.
         if (!this.wasPythonInstalledWhenFetchingControllers && this.extensionChecker.isPythonExtensionInstalled) {
             await this.loadControllers(true);
@@ -183,10 +180,6 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
 
     private async loadControllersImpl(cancelToken: vscode.CancellationToken) {
         let cachedConnections = await this.listKernels(cancelToken, 'useCache');
-        // Remove all remove kernels if we're no longer interested in them.
-        if (this.isLocalLaunch) {
-            cachedConnections = cachedConnections.filter((connection) => isLocalConnection(connection));
-        }
         const nonCachedConnectionsPromise = this.listKernels(cancelToken, 'ignoreCache');
 
         traceVerbose(`Found ${cachedConnections.length} cached controllers`);
@@ -208,12 +201,7 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
             // Never remove remote kernels that don't exist.
             // Always leave them there for user to select, and if the connection is not available/not valid,
             // then notify the user and remove them.
-            // Unless the user switches to using local kernels (i.e. doesn't have a remote kernel setup).
-            if (
-                connectionIsNoLongerValid &&
-                controller.connection.kind === 'connectToLiveRemoteKernel' &&
-                !this.isLocalLaunch
-            ) {
+            if (connectionIsNoLongerValid && controller.connection.kind === 'connectToLiveRemoteKernel') {
                 return true;
             }
             return connectionIsNoLongerValid;

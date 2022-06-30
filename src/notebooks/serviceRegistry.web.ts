@@ -37,6 +37,7 @@ import { ExportToHTML } from './export/exportToHTML';
 import { ExportToPDF } from './export/exportToPDF';
 import { ExportToPython } from './export/exportToPython';
 import { registerTypes as registerControllerTypes } from './controllers/serviceRegistry.web';
+import { ServerConnectionControllerCommands } from './controllers/commands/serverConnectionControllerCommands';
 
 export function registerTypes(serviceManager: IServiceManager) {
     registerControllerTypes(serviceManager);
@@ -100,4 +101,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToPDF, ExportFormat.pdf);
     serviceManager.addSingleton<INbConvertExport>(INbConvertExport, ExportToPython, ExportFormat.python);
     serviceManager.addSingleton<ExportUtilBase>(ExportUtilBase, ExportUtilBase);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        ServerConnectionControllerCommands
+    );
 }

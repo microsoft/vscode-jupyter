@@ -9,13 +9,13 @@ import { RemoteJupyterServerUriProviderError } from '../errors/remoteJupyterServ
 import { BaseError } from '../../platform/errors/types';
 import { IJupyterConnection } from '../types';
 import { computeServerId, createRemoteConnectionInfo, extractJupyterServerHandleAndId } from './jupyterUtils';
-import { ServerConnectionType } from './launcher/serverConnectionType';
 import {
     IJupyterServerUri,
     IJupyterServerUriStorage,
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
-    IJupyterUriProviderRegistration
+    IJupyterUriProviderRegistration,
+    IServerConnectionType
 } from './types';
 
 @injectable()
@@ -29,7 +29,7 @@ export class JupyterConnection implements IExtensionSyncActivationService {
         private readonly jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IDisposableRegistry)
         private readonly disposables: IDisposableRegistry,
-        @inject(ServerConnectionType) private readonly serverConnectionType: ServerConnectionType,
+        @inject(IServerConnectionType) private readonly serverConnectionType: IServerConnectionType,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
     ) {
         disposables.push(this);

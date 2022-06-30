@@ -33,7 +33,12 @@ import {
     CompletionContext,
     CompletionTriggerKind,
     CancellationTokenSource,
-    CompletionItem
+    CompletionItem,
+    QuickPick,
+    QuickPickItem,
+    QuickInputButton,
+    QuickPickItemButtonEvent,
+    EventEmitter
 } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../../../platform/common/application/types';
 import { JVSC_EXTENSION_ID, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../../../platform/common/constants';
@@ -74,6 +79,7 @@ import {
 } from '../../../kernels/execution/helpers';
 import { chainWithPendingUpdates } from '../../../kernels/execution/notebookUpdater';
 import { openAndShowNotebook } from '../../../platform/common/utils/notebooks';
+import { IServerConnectionType } from '../../../kernels/jupyter/types';
 
 // Running in Conda environments, things can be a little slower.
 export const defaultNotebookTestTimeout = 60_000;
@@ -262,6 +268,7 @@ export async function createEmptyPythonNotebook(
     traceInfoIfCI('Creating an empty notebook');
     const { serviceContainer } = await getServices();
     const vscodeNotebook = serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+    const serverConnectionType = serviceContainer.get<IServerConnectionType>(IServerConnectionType);
     // Don't use same file (due to dirty handling, we might save in dirty.)
     // Coz we won't save to file, hence extension will backup in dirty file and when u re-open it will open from dirty.
     const nbFile = await createTemporaryNotebook([], disposables, 'Python 3', rootFolder, 'emptyPython');
@@ -269,7 +276,7 @@ export async function createEmptyPythonNotebook(
     await openAndShowNotebook(nbFile);
     assert.isOk(vscodeNotebook.activeNotebookEditor, 'No active notebook');
     if (!dontWaitForKernel) {
-        await waitForKernelToGetAutoSelected();
+        await waitForKernelToGetAutoSelected(undefined, !serverConnectionType.isLocalLaunch);
         await verifySelectedControllerIsRemoteForRemoteTests();
     }
     await deleteAllCellsAndWait();
@@ -524,7 +531,9 @@ export async function waitForKernelToGetAutoSelected(
             `Houston, we have a problem, no match. Expected language ${expectedLanguage}. Expected kind ${preferredKind}.`
         );
         assert.fail(
-            `No notebook controller found for ${expectedLanguage} when useRemote is ${useRemoteKernelSpec} and preferred kind is ${preferredKind}. NotebookControllers count: ${notebookControllers.length}`
+            `No notebook controller found for ${expectedLanguage} when useRemote is ${useRemoteKernelSpec} and preferred kind is ${preferredKind}. NotebookControllers : ${JSON.stringify(
+                notebookControllers.map((c) => c.connection)
+            )}`
         );
     }
 
@@ -1106,16 +1115,114 @@ export async function hijackSavePrompt(
     };
 }
 
+export class MockQuickPick implements QuickPick<QuickPickItem> {
+    value: string;
+    placeholder: string | undefined;
+    get onDidChangeValue(): Event<string> {
+        return this._onDidChangeValueEmitter.event;
+    }
+    get onDidAccept(): Event<void> {
+        return this._onDidAcceptEmitter.event;
+    }
+    buttons: readonly QuickInputButton[];
+    get onDidTriggerButton(): Event<QuickInputButton> {
+        return this._onDidTriggerButtonEmitter.event;
+    }
+    get onDidTriggerItemButton(): Event<QuickPickItemButtonEvent<QuickPickItem>> {
+        return this._onDidTriggerItemButtonEmitter.event;
+    }
+    items: readonly QuickPickItem[];
+    canSelectMany: boolean;
+    matchOnDescription: boolean;
+    matchOnDetail: boolean;
+    keepScrollPosition?: boolean | undefined;
+    activeItems: readonly QuickPickItem[];
+    get onDidChangeActive(): Event<readonly QuickPickItem[]> {
+        return this._onDidChangeActiveEmitter.event;
+    }
+    selectedItems: readonly QuickPickItem[];
+    get onDidChangeSelection(): Event<readonly QuickPickItem[]> {
+        return this._onDidChangeSelectionEmitter.event;
+    }
+    sortByLabel: boolean;
+    title: string | undefined;
+    step: number | undefined;
+    totalSteps: number | undefined;
+    enabled: boolean;
+    busy: boolean;
+    ignoreFocusOut: boolean;
+    show(): void {
+        // Does nothing.
+    }
+    hide(): void {
+        this._onDidHideEmitter.fire();
+    }
+    get onDidHide(): Event<void> {
+        return this._onDidHideEmitter.event;
+    }
+    dispose(): void {
+        // Do nothing
+    }
+    public selectIndex(index: number) {
+        this.selectedItems = [this.items[index]];
+        this._onDidChangeSelectionEmitter.fire([this.items[index]]);
+    }
+    public selectLastItem() {
+        const index = this.items.length - 1;
+        this.selectIndex(index);
+    }
+    public triggerButton(button: QuickInputButton): void {
+        this._onDidTriggerButtonEmitter.fire(button);
+    }
+    private _onDidChangeValueEmitter = new EventEmitter<string>();
+    private _onDidAcceptEmitter = new EventEmitter<void>();
+    private _onDidTriggerButtonEmitter = new EventEmitter<QuickInputButton>();
+    private _onDidTriggerItemButtonEmitter = new EventEmitter<QuickPickItemButtonEvent<QuickPickItem>>();
+    private _onDidChangeActiveEmitter = new EventEmitter<readonly QuickPickItem[]>();
+    private _onDidChangeSelectionEmitter = new EventEmitter<readonly QuickPickItem[]>();
+    private _onDidHideEmitter = new EventEmitter<void>();
+}
+
+export type QuickPickStub = {
+    dispose(): void;
+    created: Event<MockQuickPick>;
+};
+
+export async function hijackCreateQuickPick(disposables: IDisposable[] = []): Promise<QuickPickStub> {
+    const api = await initialize();
+    const appShell = api.serviceContainer.get<IApplicationShell>(IApplicationShell);
+    const emitter = new EventEmitter<MockQuickPick>();
+
+    const stub = sinon.stub(appShell, 'createQuickPick').callsFake(function () {
+        const result = new MockQuickPick();
+        emitter.fire(result);
+        return result;
+    });
+    const disposable = { dispose: () => stub.restore() };
+    if (disposables) {
+        disposables.push(disposable);
+        disposables.push(emitter);
+    }
+    return {
+        dispose: () => {
+            stub.restore();
+            emitter.dispose();
+        },
+        created: emitter.event
+    };
+}
+
 export async function asPromise<T>(
     event: Event<T>,
     predicate?: (value: T) => boolean,
-    timeout = env.uiKind === UIKind.Desktop ? 5000 : 15000
+    timeout = env.uiKind === UIKind.Desktop ? 5000 : 15000,
+    prefix: string | undefined = undefined
 ): Promise<T> {
     return new Promise<T>((resolve, reject) => {
         const handle = setTimeout(() => {
             // eslint-disable-next-line @typescript-eslint/no-use-before-define
             sub.dispose();
-            reject(new Error('asPromise TIMEOUT reached'));
+            reject(new Error(`asPromise ${prefix} TIMEOUT reached`));
         }, timeout);
         const sub = event((e) => {
             if (!predicate || predicate(e)) {

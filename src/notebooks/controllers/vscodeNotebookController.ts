@@ -27,7 +27,7 @@ import {
     IDocumentManager,
     IApplicationShell
 } from '../../platform/common/application/types';
-import { InteractiveWindowView, PYTHON_LANGUAGE } from '../../platform/common/constants';
+import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import {
     traceInfoIfCI,
@@ -116,6 +116,10 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         return this.kernelConnection;
     }
 
+    get viewType() {
+        return this._viewType as typeof InteractiveWindowView | typeof JupyterNotebookView;
+    }
+
     get onNotebookControllerSelected() {
         return this._onNotebookControllerSelected.event;
     }
@@ -136,7 +140,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     constructor(
         private kernelConnection: KernelConnectionMetadata,
         id: string,
-        viewType: string,
+        private _viewType: string,
         label: string,
         private readonly notebookApi: IVSCodeNotebook,
         private readonly commandManager: ICommandManager,
@@ -162,7 +166,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         traceVerbose(`Creating notebook controller with name ${label}`);
         this.controller = this.notebookApi.createNotebookController(
             id,
-            viewType,
+            _viewType,
             label,
             this.handleExecution.bind(this),
             this.getRendererScripts(),

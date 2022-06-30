@@ -7,12 +7,12 @@ import { assert, use } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter } from 'vscode';
 import { JupyterConnection } from '../../../kernels/jupyter/jupyterConnection';
-import { ServerConnectionType } from '../../../kernels/jupyter/launcher/serverConnectionType';
 import {
     IJupyterServerUriStorage,
     IJupyterSessionManager,
     IJupyterSessionManagerFactory,
-    IJupyterUriProviderRegistration
+    IJupyterUriProviderRegistration,
+    IServerConnectionType
 } from '../../../kernels/jupyter/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
@@ -22,14 +22,14 @@ suite('Jupyter Connection', async () => {
     let jupyterConnection: JupyterConnection;
     let registrationPicker: IJupyterUriProviderRegistration;
     let sessionManagerFactory: IJupyterSessionManagerFactory;
-    let serverConnectionType: ServerConnectionType;
+    let serverConnectionType: IServerConnectionType;
     let sessionManager: IJupyterSessionManager;
     let serverUriStorage: IJupyterServerUriStorage;
     const disposables: IDisposable[] = [];
     setup(() => {
         registrationPicker = mock<IJupyterUriProviderRegistration>();
         sessionManagerFactory = mock<IJupyterSessionManagerFactory>();
-        serverConnectionType = mock<ServerConnectionType>();
+        serverConnectionType = mock<IServerConnectionType>();
         sessionManager = mock<IJupyterSessionManager>();
         serverUriStorage = mock<IJupyterServerUriStorage>();
         jupyterConnection = new JupyterConnection(

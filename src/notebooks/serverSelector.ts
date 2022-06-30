@@ -34,7 +34,7 @@ export class JupyterServerSelectorCommand implements IExtensionSyncActivationSer
     }
 
     private async selectJupyterUri(
-        local: boolean = true,
+        _local: boolean = true, // Legacy - 3rd party extenions may use this
         source: Uri | SelectJupyterUriCommandSource = 'commandPalette'
     ): Promise<void> {
         if (source instanceof Uri) {
@@ -44,7 +44,7 @@ export class JupyterServerSelectorCommand implements IExtensionSyncActivationSer
             await this.serverSelector.setJupyterURIToRemote(source.toString(true));
         } else {
             // Activate UI Selector
-            this.serverSelector.selectJupyterURI(local, source).ignoreErrors();
+            this.serverSelector.selectJupyterURI(source).ignoreErrors();
         }
 
         // Picking the 'preferred' kernel for remote should happen in the command handler from the

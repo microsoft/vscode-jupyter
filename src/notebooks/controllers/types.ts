@@ -14,6 +14,7 @@ export interface IVSCodeNotebookController extends IDisposable {
     readonly controller: vscode.NotebookController;
     readonly id: string;
     readonly label: string;
+    readonly viewType: typeof JupyterNotebookView | typeof InteractiveWindowView;
     readonly onNotebookControllerSelected: vscode.Event<{
         notebook: vscode.NotebookDocument;
         controller: IVSCodeNotebookController;

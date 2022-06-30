@@ -9,6 +9,7 @@ import {
     IExtensionSingleActivationService,
     IExtensionSyncActivationService
 } from '../../platform/activation/types';
+import { traceError } from '../../platform/logging';
 
 @injectable()
 export class ExtensionActivationManager implements IExtensionActivationManager {
@@ -28,7 +29,15 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         this.syncActivationServices.map((item) => item.activate());
     }
     public async activate(): Promise<void> {
-        // Activate all activation services together.
-        await Promise.all([this.singleActivationServices.map((item) => item.activate())]);
+        // Activate all activation services together. Don't fail them all if one fails.
+        await Promise.all([
+            this.singleActivationServices.map(async (item) => {
+                const promise = item.activate();
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                if (promise && (promise as any).then) {
+                    return promise.catch(traceError);
+                }
+            })
+        ]);
     }
 }

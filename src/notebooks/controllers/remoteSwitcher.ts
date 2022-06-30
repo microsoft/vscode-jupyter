@@ -53,7 +53,7 @@ export class RemoteSwitcher implements IExtensionSingleActivationService {
         this.updateStatusBar().catch(noop);
     }
     private async onToolBarCommand() {
-        await this.serverSelector.selectJupyterURI(true, 'nativeNotebookToolbar');
+        await this.serverSelector.selectJupyterURI('nativeNotebookToolbar');
     }
     private async updateStatusBar() {
         if (!this.notebook.activeNotebookEditor || !isJupyterNotebook(this.notebook.activeNotebookEditor.notebook)) {

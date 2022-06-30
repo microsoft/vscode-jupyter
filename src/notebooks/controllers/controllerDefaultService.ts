@@ -1,13 +1,14 @@
 import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
 import { isPythonNotebook } from '../../kernels/helpers';
-import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConnectionType';
+import { IServerConnectionType } from '../../kernels/jupyter/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 import { InteractiveWindowView, JupyterNotebookView, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { IDisposableRegistry, IsWebExtension, Resource } from '../../platform/common/types';
 import { getNotebookMetadata } from '../../platform/common/utils';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { traceInfoIfCI, traceVerbose, traceDecoratorVerbose, traceError } from '../../platform/logging';
+import { isEqual } from '../../platform/vscode-path/resources';
 import { createActiveInterpreterController } from './helpers';
 import {
     IControllerDefaultService,
@@ -27,7 +28,7 @@ export class ControllerDefaultService implements IControllerDefaultService {
         @inject(IInterpreterService) private readonly interpreters: IInterpreterService,
         @inject(IVSCodeNotebook) private readonly notebook: IVSCodeNotebook,
         @inject(IDisposableRegistry) readonly disposables: IDisposableRegistry,
-        @inject(ServerConnectionType) private readonly serverConnectionType: ServerConnectionType,
+        @inject(IServerConnectionType) private readonly serverConnectionType: IServerConnectionType,
         @inject(IsWebExtension) private readonly isWeb: boolean
     ) {}
     public async computeDefaultController(
@@ -41,7 +42,7 @@ export class ControllerDefaultService implements IControllerDefaultService {
             traceInfoIfCI('CreateDefaultRemoteController');
             const notebook =
                 viewType === JupyterNotebookView
-                    ? this.notebook.notebookDocuments.find((item) => item.notebookType === viewType)
+                    ? this.notebook.notebookDocuments.find((item) => isEqual(item.uri, resource, true))
                     : undefined;
             const controller = await this.createDefaultRemoteController(viewType, notebook);
             // If we're running on web, there is no active interpreter to fall back to

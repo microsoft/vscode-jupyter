@@ -29,6 +29,7 @@ export class MockQuickPick implements QuickPick<QuickPickItem> {
     private didHideEmitter: EventEmitter<void> = new EventEmitter<void>();
     private _activeItems: QuickPickItem[] = [];
     private _pickedItem: string;
+    private _hidden: boolean = false;
     constructor(pickedItem: string) {
         this._pickedItem = pickedItem;
     }
@@ -71,13 +72,22 @@ export class MockQuickPick implements QuickPick<QuickPickItem> {
             const item = this.items.find((a) => a.label === this._pickedItem);
             if (item) {
                 this.didChangeSelectedEmitter.fire([item]);
+            } else if (this._pickedItem) {
+                this.value = this._pickedItem;
+                this.didAcceptEmitter.fire();
+                setTimeout(() => {
+                    if (!this._hidden) {
+                        // Validation should have failed.
+                        this.didHideEmitter.fire();
+                    }
+                }, 1);
             } else {
                 this.didHideEmitter.fire();
             }
         }, 1);
     }
     public hide(): void {
-        // Do nothing.
+        this._hidden = true;
     }
     public dispose(): void {
         // Do nothing.

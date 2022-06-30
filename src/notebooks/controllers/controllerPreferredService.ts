@@ -16,7 +16,7 @@ import {
     getLanguageInNotebookMetadata,
     isPythonNotebook
 } from '../../kernels/helpers';
-import { ServerConnectionType } from '../../kernels/jupyter/launcher/serverConnectionType';
+import { IServerConnectionType } from '../../kernels/jupyter/types';
 import { trackKernelResourceInformation } from '../../kernels/telemetry/helper';
 import { IKernelFinder, KernelConnectionMetadata } from '../../kernels/types';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
@@ -65,7 +65,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
         @inject(IDisposableRegistry) readonly disposables: IDisposableRegistry,
         @inject(IKernelFinder) private readonly kernelFinder: IKernelFinder,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
-        @inject(ServerConnectionType) private readonly serverConnectionType: ServerConnectionType
+        @inject(IServerConnectionType) private readonly serverConnectionType: IServerConnectionType
     ) {}
     public async activate() {
         // Sign up for document either opening or closing
