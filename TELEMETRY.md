@@ -7181,8 +7181,8 @@ No description provided
 
 [src/notebooks/controllers/commands/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/commands/installPythonControllerCommands.ts)
 ```typescript
-
-                if (this.extensionChecker.isPythonExtensionInstalled) {
+                // Make sure that we didn't timeout waiting for the hook
+                if (this.extensionChecker.isPythonExtensionInstalled && typeof hookResult !== 'number') {
                     traceInfo('Python Extension installed via Kernel Picker command');
                     sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {
                         action: 'success'
@@ -7199,7 +7199,7 @@ No description provided
                     sendTelemetryEvent(Telemetry.PythonExtensionInstalledViaKernelPicker, undefined, {
                         action: 'failed'
                     });
-                    throw new Error('Failed to install Python Extension via Kernel Picker command');
+                    this.errorHandler
 ```
 
 </details>
