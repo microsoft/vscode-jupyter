@@ -531,7 +531,9 @@ export async function waitForKernelToGetAutoSelected(
             `Houston, we have a problem, no match. Expected language ${expectedLanguage}. Expected kind ${preferredKind}.`
         );
         assert.fail(
-            `No notebook controller found for ${expectedLanguage} when useRemote is ${useRemoteKernelSpec} and preferred kind is ${preferredKind}. NotebookControllers count: ${notebookControllers.length}`
+            `No notebook controller found for ${expectedLanguage} when useRemote is ${useRemoteKernelSpec} and preferred kind is ${preferredKind}. NotebookControllers : ${JSON.stringify(
+                notebookControllers.map((c) => c.connection)
+            )}`
         );
     }
 

@@ -96,7 +96,9 @@ export function sharedIWDebuggerTests(
                 await closeNotebooksAndCleanUpAfterTests(disposables);
             });
 
-            test('Debug a cell from a python file', async () => {
+            // Flakey test: https://github.com/microsoft/vscode-jupyter/issues/10521
+
+            test.skip('Debug a cell from a python file', async () => {
                 // Run a cell to get IW open
                 const source = 'print(42)';
                 const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
