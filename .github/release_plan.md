@@ -3,6 +3,10 @@
 -   Python 3.7 and higher
 -   run `python3 -m pip install --user -r news/requirements.txt`
 
+# Move milestone issues (Tuesday of VS Code Endgame week)
+
+- [ ] Move all open issues out of current milestone to next milestone or with no milestone and back into triage. This allows endgame champ to have a better idea of 'done' state.
+
 # Release candidate (Friday of VS Code endgame week, XXX XX)
 
 -   [ ] Review [Component Governance](https://dev.azure.com/monacotools/Monaco/_componentGovernance/191876) (Click on "microsoft/vscode-jupyter" on that page) and resolve all High/Severe issues.
