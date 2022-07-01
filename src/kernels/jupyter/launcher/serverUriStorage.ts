@@ -10,6 +10,7 @@ import {
 import { Settings } from '../../../platform/common/constants';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { ICryptoUtils, IMemento, GLOBAL_MEMENTO, IsWebExtension } from '../../../platform/common/types';
+import { traceError } from '../../../platform/logging';
 import { computeServerId } from '../jupyterUtils';
 import { IJupyterServerUriStorage, IServerConnectionType } from '../types';
 
@@ -197,16 +198,21 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
         return this.currentUriPromise;
     }
     public async getRemoteUri(): Promise<string | undefined> {
-        const uri = await this.getUri();
-        switch (uri) {
-            case Settings.JupyterServerLocalLaunch:
-                return;
-            case Settings.JupyterServerRemoteLaunch:
-                // In `getUriInternal` its not possible for us to end up with Settings.JupyterServerRemoteLaunch.
-                // If we do, then this means the uri was never saved or not in encrypted store, hence no point returning and invalid entry.
-                return;
-            default:
-                return uri;
+        try {
+            const uri = await this.getUri();
+            switch (uri) {
+                case Settings.JupyterServerLocalLaunch:
+                    return;
+                case Settings.JupyterServerRemoteLaunch:
+                    // In `getUriInternal` its not possible for us to end up with Settings.JupyterServerRemoteLaunch.
+                    // If we do, then this means the uri was never saved or not in encrypted store, hence no point returning and invalid entry.
+                    return;
+                default:
+                    return uri;
+            }
+        } catch (e) {
+            traceError(`Exception getting uri: ${e}`);
+            return;
         }
     }
     public async setUriToLocal(): Promise<void> {

@@ -215,7 +215,7 @@ export class ControllerRegistration implements IControllerRegistration {
         this.onDidChangeFilter();
     }
 
-    private onDidRemoveUris(uris: string[]) {
+    private async onDidRemoveUris(uris: string[]) {
         // Remove any connections that are no longer available.
         const serverIds = await Promise.all(uris.map(computeServerId));
         serverIds.forEach((serverId) => {

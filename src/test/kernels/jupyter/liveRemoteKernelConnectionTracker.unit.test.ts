@@ -25,6 +25,7 @@ suite('Live kernel Connection Tracker', async () => {
     let onDidRemoveUris: EventEmitter<string[]>;
     const disposables: IDisposable[] = [];
     const server2Uri = 'http://one:1234/hello?token=1234';
+    const server2Id = await computeServerId(server2Uri);
     const remoteLiveKernel1: LiveRemoteKernelConnectionMetadata = {
         baseUrl: 'baseUrl',
         id: 'connectionId',
@@ -51,7 +52,7 @@ suite('Live kernel Connection Tracker', async () => {
         baseUrl: 'http://one:1234/',
         id: 'connectionId2',
         kind: 'connectToLiveRemoteKernel',
-        serverId: computeServerId(server2Uri),
+        serverId: server2Id,
         kernelModel: {
             id: 'modelId2',
             lastActivityTime: new Date(),
@@ -73,7 +74,7 @@ suite('Live kernel Connection Tracker', async () => {
         baseUrl: 'http://one:1234/',
         id: 'connectionId3',
         kind: 'connectToLiveRemoteKernel',
-        serverId: computeServerId(server2Uri),
+        serverId: server2Id,
         kernelModel: {
             lastActivityTime: new Date(),
             id: 'modelId3',
