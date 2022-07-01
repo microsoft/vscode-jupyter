@@ -22,6 +22,7 @@ import { disposeAllDisposables } from '../../../../platform/common/helpers';
 export class ScriptManager extends EventEmitter {
     public readonly widgetsRegisteredInRequireJs = new Set<string>();
     private readonly disposables: IDisposable[] = [];
+    private baseUrl?: string;
     private readonly widgetSourceRequests = new Map<
         string,
         {
@@ -68,9 +69,11 @@ export class ScriptManager extends EventEmitter {
                 } else if (type === IPyWidgetMessages.IPyWidgets_BaseUrlResponse) {
                     const baseUrl = payload as string;
                     if (baseUrl) {
+                        this.baseUrl = baseUrl;
                         // Required by Jupyter Notebook widgets.
                         // This base url is used to load additional resources.
                         document.body.dataset.baseUrl = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
+                        console.error(`data-base-url set to ${baseUrl}`);
                         logMessage(`data-base-url set to ${baseUrl}`);
                     }
                 } else if (type === IPyWidgetMessages.IPyWidgets_kernelOptions) {
@@ -257,7 +260,7 @@ export class ScriptManager extends EventEmitter {
             // We want to always give preference to the widgets from CDN.
             const currentRegistration = this.registeredWidgetSources.get(source.moduleName);
             if (!currentRegistration || (currentRegistration.source && currentRegistration.source !== 'cdn')) {
-                registerScripts([source]);
+                registerScripts(this.baseUrl, [source]);
                 this.registeredWidgetSources.set(source.moduleName, source);
                 this.widgetsRegisteredInRequireJs.add(source.moduleName);
             }

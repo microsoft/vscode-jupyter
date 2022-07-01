@@ -53,11 +53,14 @@ function getRequireJs() {
     }
     return requireJsFunc;
 }
-function registerScriptsInRequireJs(scripts: NonPartial<WidgetScriptSource>[]) {
+function registerScriptsInRequireJs(baseUrl: string | undefined, scripts: NonPartial<WidgetScriptSource>[]) {
     const requireJsFunc = getRequireJs();
-    const config: { paths: Record<string, string> } = {
+    const config: { baseUrl?: string; paths: Record<string, string> } = {
         paths: {}
     };
+    if (baseUrl) {
+        // config.baseUrl = baseUrl;
+    }
     registerCustomScripts();
 
     scripts.forEach((script) => {
@@ -74,10 +77,10 @@ function registerScriptsInRequireJs(scripts: NonPartial<WidgetScriptSource>[]) {
     requireJsFunc.config(config);
 }
 
-export function registerScripts(scripts: WidgetScriptSource[]) {
+export function registerScripts(baseUrl: string | undefined, scripts: WidgetScriptSource[]) {
     const scriptsToRegister = getScriptsToBeRegistered(scripts);
     const validScriptsToRegister = getScriptsWithAValidScriptUriToBeRegistered(scriptsToRegister);
-    registerScriptsInRequireJs(validScriptsToRegister);
+    registerScriptsInRequireJs(baseUrl, validScriptsToRegister);
 }
 
 function registerCustomScripts() {
