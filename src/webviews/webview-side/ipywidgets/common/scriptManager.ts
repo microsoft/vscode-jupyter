@@ -73,7 +73,6 @@ export class ScriptManager extends EventEmitter {
                         // Required by Jupyter Notebook widgets.
                         // This base url is used to load additional resources.
                         document.body.dataset.baseUrl = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
-                        console.error(`data-base-url set to ${baseUrl}`);
                         logMessage(`data-base-url set to ${baseUrl}`);
                     }
                 } else if (type === IPyWidgetMessages.IPyWidgets_kernelOptions) {

@@ -4,7 +4,6 @@
 
 let messageLogger: undefined | ((message: string) => void);
 export function logMessage(message: string) {
-    console.log(message);
     if (messageLogger) {
         messageLogger(message);
     }
