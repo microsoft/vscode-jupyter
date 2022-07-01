@@ -4,6 +4,7 @@
 import * as hashjs from 'hash.js';
 import {
     Disposable,
+    NotebookCellExecutionStateChangeEvent,
     NotebookDocument,
     Position,
     Range,
@@ -13,7 +14,7 @@ import {
 } from 'vscode';
 
 import { splitMultilineString } from '../../platform/common/utils';
-import { IDocumentManager } from '../../platform/common/application/types';
+import { IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { traceInfo } from '../../platform/logging';
 import { IConfigurationService, IDisposableRegistry } from '../../platform/common/types';
 import { uncommentMagicCommands } from './cellFactory';
@@ -25,6 +26,7 @@ import { IGeneratedCode, IInteractiveWindowCodeGenerator, IGeneratedCodeStore, I
 export class CodeGenerator implements IInteractiveWindowCodeGenerator {
     // Map of file to Map of start line to actual hash
     private executionCount: number = 0;
+    private cellIndexesCounted: Record<number, boolean> = {};
     private disposed?: boolean;
     private disposables: Disposable[] = [];
     constructor(
@@ -32,11 +34,13 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
         private readonly configService: IConfigurationService,
         private readonly storage: IGeneratedCodeStore,
         private readonly notebook: NotebookDocument,
+        notebooks: IVSCodeNotebook,
         disposables: IDisposableRegistry
     ) {
         disposables.push(this);
         // Watch document changes so we can update our generated code
         this.documentManager.onDidChangeTextDocument(this.onChangedDocument, this, this.disposables);
+        notebooks.onDidChangeNotebookCellExecutionState(this.onDidCellStateChange, this, this.disposables);
     }
 
     public dispose() {
@@ -55,14 +59,16 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
 
     public generateCode(
         metadata: Pick<InteractiveCellMetadata, 'interactive' | 'id' | 'interactiveWindowCellMarker'>,
+        cellIndex: number,
         debug: boolean,
         usingJupyterDebugProtocol?: boolean
     ) {
         // Don't log empty cells
         const { executableLines } = this.extractExecutableLines(metadata);
+        // user added code that we're about to execute, so increase the execution count for the code that we need to generate
+        this.executionCount += 1;
+        this.cellIndexesCounted[cellIndex] = true;
         if (executableLines.length > 0 && executableLines.find((s) => s.trim().length > 0)) {
-            // When the user adds new code, we know the execution count is increasing
-            this.executionCount += 1;
             return this.generateCodeImpl(metadata, this.executionCount, debug, usingJupyterDebugProtocol);
         }
     }
@@ -99,6 +105,20 @@ export class CodeGenerator implements IInteractiveWindowCodeGenerator {
             return { lines, executableLines: lines.slice(1) };
         }
         return { lines, executableLines: lines };
+    }
+
+    private onDidCellStateChange(e: NotebookCellExecutionStateChangeEvent) {
+        if (
+            e.cell.notebook !== this.notebook ||
+            !e.cell.executionSummary?.executionOrder ||
+            this.cellIndexesCounted[e.cell.index]
+        ) {
+            return;
+        }
+        // A cell executed that we haven't counted yet, likely from the input box, so bump the execution count
+        // Cancelled cells (from earlier cells in the queue) don't have an execution order and shoud not increase the execution count
+        this.executionCount += 1;
+        this.cellIndexesCounted[e.cell.index] = true;
     }
 
     private generateCodeImpl(

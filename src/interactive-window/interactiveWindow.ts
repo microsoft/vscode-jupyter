@@ -160,6 +160,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         } else if (this.isWebExtension) {
             this.insertInfoMessage(DataScience.noKernelsSpecifyRemote()).ignoreErrors();
         }
+
+        // Create the code generator right away to start watching the notebook
+        this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
     }
 
     private async startKernel(
@@ -761,7 +764,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
         const generatedCode = this.codeGeneratorFactory
             .getOrCreate(this.notebookDocument)
-            .generateCode(metadata, isDebug, forceIPyKernelDebugger);
+            .generateCode(metadata, cell.index, isDebug, forceIPyKernelDebugger);
 
         const newMetadata: typeof metadata = {
             ...metadata,

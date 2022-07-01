@@ -10,6 +10,7 @@ import { MockDocumentManager } from '../mockDocumentManager';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { IGeneratedCodeStore, InteractiveCellMetadata } from '../../../interactive-window/editor-integration/types';
 import { GeneratedCodeStorage } from '../../../interactive-window/editor-integration/generatedCodeStorage';
+import { IVSCodeNotebook } from '../../../platform/common/application/types';
 
 // eslint-disable-next-line
 suite('Code Generator Unit Tests', () => {
@@ -19,6 +20,7 @@ suite('Code Generator Unit Tests', () => {
     let pythonSettings: IWatchableJupyterSettings;
     let storage: IGeneratedCodeStore;
     let notebook: NotebookDocument;
+    let vscodeNotebooks: IVSCodeNotebook;
     setup(() => {
         configurationService = mock<IConfigurationService>();
         pythonSettings = mock<IWatchableJupyterSettings>();
@@ -26,12 +28,14 @@ suite('Code Generator Unit Tests', () => {
         when(configurationService.getSettings(anything())).thenReturn(instance(pythonSettings));
         documentManager = new MockDocumentManager();
         notebook = mock<NotebookDocument>();
+        vscodeNotebooks = mock<IVSCodeNotebook>();
         when(notebook.uri).thenReturn();
         codeGenerator = new CodeGenerator(
             documentManager,
             instance(configurationService),
             storage,
             instance(notebook),
+            instance(vscodeNotebooks),
             []
         );
     });
@@ -51,7 +55,7 @@ suite('Code Generator Unit Tests', () => {
             },
             id: '1'
         };
-        return codeGenerator.generateCode(metadata, false);
+        return codeGenerator.generateCode(metadata, -1, false);
     }
 
     test('Add a cell and edit it', async () => {
