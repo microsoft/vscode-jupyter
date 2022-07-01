@@ -29,7 +29,7 @@ import { JupyterPaths } from '../../../kernels/raw/finder/jupyterPaths.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 
-suite.only('DataScience - ipywidget - Widget Script Source Provider', () => {
+suite('DataScience - ipywidget - Widget Script Source Provider', () => {
     let scriptSourceProvider: IPyWidgetScriptSourceProvider;
     let kernel: IKernel;
     let configService: IConfigurationService;
