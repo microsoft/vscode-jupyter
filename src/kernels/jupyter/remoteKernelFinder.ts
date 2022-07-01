@@ -53,10 +53,11 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                 sessionManager = await this.jupyterSessionManagerFactory.create(connInfo);
 
                 // Get running and specs at the same time
-                const [running, specs, sessions] = await Promise.all([
+                const [running, specs, sessions, serverId] = await Promise.all([
                     sessionManager.getRunningKernels(),
                     sessionManager.getKernelSpecs(),
-                    sessionManager.getRunningSessions()
+                    sessionManager.getRunningSessions(),
+                    computeServerId(connInfo.url)
                 ]);
 
                 // Turn them both into a combined list
@@ -67,9 +68,9 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                             kind: 'startUsingRemoteKernelSpec',
                             interpreter: await this.getInterpreter(s, connInfo.baseUrl),
                             kernelSpec: s,
-                            id: getKernelId(s, undefined, computeServerId(connInfo.url)),
+                            id: getKernelId(s, undefined, serverId),
                             baseUrl: connInfo.baseUrl,
-                            serverId: computeServerId(connInfo.url)
+                            serverId: serverId
                         };
                         return kernel;
                     })
@@ -100,7 +101,7 @@ export class RemoteKernelFinder implements IRemoteKernelFinder {
                         },
                         baseUrl: connInfo.baseUrl,
                         id: s.kernel?.id || '',
-                        serverId: computeServerId(connInfo.url)
+                        serverId
                     };
                     return kernel;
                 });

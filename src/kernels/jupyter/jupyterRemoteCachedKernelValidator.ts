@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { traceWarning } from '../../platform/logging';
 import { LiveRemoteKernelConnectionMetadata } from '../types';
-import { computeServerId, extractJupyterServerHandleAndId } from './jupyterUtils';
+import { extractJupyterServerHandleAndId } from './jupyterUtils';
 import {
     IJupyterRemoteCachedKernelValidator,
     IJupyterServerUriStorage,
@@ -28,7 +28,7 @@ export class JupyterRemoteCachedKernelValidator implements IJupyterRemoteCachedK
         }
         const providersPromise = this.providerRegistration.getProviders();
         const currentList = await this.uriStorage.getSavedUriList();
-        const item = currentList.find((item) => computeServerId(item.uri) === kernel.serverId);
+        const item = currentList.find((item) => item.serverId === kernel.serverId);
         if (!item) {
             // Server has been removed and we have some old cached data.
             return false;

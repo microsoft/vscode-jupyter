@@ -8,7 +8,12 @@ import { noop } from '../../platform/common/utils/misc';
 import { RemoteJupyterServerUriProviderError } from '../errors/remoteJupyterServerUriProviderError';
 import { BaseError } from '../../platform/errors/types';
 import { IJupyterConnection } from '../types';
-import { computeServerId, createRemoteConnectionInfo, extractJupyterServerHandleAndId } from './jupyterUtils';
+import {
+    computeServerId,
+    createRemoteConnectionInfo,
+    extractJupyterServerHandleAndId,
+    generateUriFromRemoteProvider
+} from './jupyterUtils';
 import {
     IJupyterServerUri,
     IJupyterServerUriStorage,
@@ -66,7 +71,7 @@ export class JupyterConnection implements IExtensionSyncActivationService {
     private async getUriFromServerId(serverId: string) {
         // Since there's one server per session, don't use a resource to figure out these settings
         const savedList = await this.serverUriStorage.getSavedUriList();
-        return savedList.find((item) => computeServerId(item.uri) === serverId)?.uri;
+        return savedList.find((item) => item.serverId === serverId)?.uri;
     }
     private async createConnectionInfoFromUri(uri: string) {
         // Prepare our map of server URIs
@@ -113,7 +118,10 @@ export class JupyterConnection implements IExtensionSyncActivationService {
                 if (ex instanceof BaseError) {
                     throw ex;
                 }
-                throw new RemoteJupyterServerUriProviderError(idAndHandle.id, idAndHandle.handle, ex);
+                const serverId = await computeServerId(
+                    generateUriFromRemoteProvider(idAndHandle.id, idAndHandle.handle)
+                );
+                throw new RemoteJupyterServerUriProviderError(idAndHandle.id, idAndHandle.handle, ex, serverId);
             }
         }
     }
