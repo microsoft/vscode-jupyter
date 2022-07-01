@@ -89,14 +89,17 @@ export class LiveRemoteKernelConnectionUsageTracker
     }
     private onDidRemoveUris(uris: string[]) {
         uris.forEach((uri) => {
-            const serverId = computeServerId(uri);
-            delete this.usedRemoteKernelServerIdsAndSessions[serverId];
-            this.memento
-                .update(
-                    mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources,
-                    this.usedRemoteKernelServerIdsAndSessions
-                )
-                .then(noop, noop);
+            computeServerId(uri)
+                .then((serverId) => {
+                    delete this.usedRemoteKernelServerIdsAndSessions[serverId];
+                    this.memento
+                        .update(
+                            mementoKeyToTrackRemoveKernelUrisAndSessionsUsedByResources,
+                            this.usedRemoteKernelServerIdsAndSessions
+                        )
+                        .then(noop, noop);
+                })
+                .ignoreErrors();
         });
     }
 }

@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import '../../platform/common/extensions';
-import * as hashjs from 'hash.js';
 import * as path from '../../platform/vscode-path/path';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';
@@ -15,6 +14,7 @@ import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { DataScience } from '../../platform/common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Telemetry } from '../../platform/common/constants';
+const msrCrypto = require('../msrCrypto/msrCrypto.min') as typeof import('msrCrypto');
 
 export function expandWorkingDir(
     workingDir: string | undefined,
@@ -133,8 +133,10 @@ export function createRemoteConnectionInfo(
     };
 }
 
-export function computeServerId(uri: string) {
-    return hashjs.sha256().update(uri).digest('hex');
+export async function computeServerId(uri: string) {
+    const inputBuffer = new TextEncoder().encode(uri);
+    const outputBuffer = await msrCrypto.subtle.digest('SHA-256', inputBuffer);
+    return new TextDecoder().decode(outputBuffer!);
 }
 
 export function generateUriFromRemoteProvider(id: string, result: JupyterServerUriHandle) {

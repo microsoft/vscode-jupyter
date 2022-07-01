@@ -235,7 +235,7 @@ export interface IJupyterServerUriStorage {
     readonly onDidChangeUri: Event<void>;
     readonly onDidRemoveUris: Event<string[]>;
     addToUriList(uri: string, time: number, displayName: string): Promise<void>;
-    getSavedUriList(): Promise<{ uri: string; time: number; displayName?: string }[]>;
+    getSavedUriList(): Promise<{ uri: string; serverId: string; time: number; displayName?: string }[]>;
     removeUri(uri: string): Promise<void>;
     clearUriList(): Promise<void>;
     getRemoteUri(): Promise<string | undefined>;

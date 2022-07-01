@@ -4,7 +4,6 @@
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { isPythonNotebook } from '../../kernels/helpers';
-import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
 import { IKernelFinder, IKernelProvider, KernelConnectionMetadata } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
@@ -75,26 +74,6 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         // Make sure to reload whenever we do something that changes state
         const forceLoad = () => this.loadControllers(true);
         this.serverUriStorage.onDidChangeUri(forceLoad, this, this.disposables);
-        this.serverUriStorage.onDidRemoveUris(
-            (uris) =>
-                uris.forEach((uri) => {
-                    // Remove controllers associated with remote connections that are no longer available.
-                    this.registration.values.forEach((item) => {
-                        if (
-                            item.connection.kind !== 'connectToLiveRemoteKernel' &&
-                            item.connection.kind !== 'startUsingRemoteKernelSpec'
-                        ) {
-                            return;
-                        }
-                        if (item.connection.serverId !== computeServerId(uri)) {
-                            return;
-                        }
-                        item.dispose();
-                    });
-                }),
-            this,
-            this.disposables
-        );
         this.kernelProvider.onDidStartKernel(forceLoad, this, this.disposables);
 
         // For kernel dispose we need to wait a bit, otherwise the list comes back the
