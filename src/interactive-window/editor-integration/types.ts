@@ -113,6 +113,7 @@ export interface IInteractiveWindowCodeGenerator extends IDisposable {
     reset(): void;
     generateCode(
         metadata: Pick<InteractiveCellMetadata, 'interactive' | 'id' | 'interactiveWindowCellMarker'>,
+        cellIndex: number,
         debug: boolean,
         usingJupyterDebugProtocol?: boolean
     ): IGeneratedCode | undefined;
