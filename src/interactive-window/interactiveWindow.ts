@@ -764,7 +764,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
 
         const generatedCode = this.codeGeneratorFactory
             .getOrCreate(this.notebookDocument)
-            .generateCode(metadata, isDebug, forceIPyKernelDebugger);
+            .generateCode(metadata, cell.index, isDebug, forceIPyKernelDebugger);
 
         const newMetadata: typeof metadata = {
             ...metadata,

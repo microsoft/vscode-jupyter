@@ -33,6 +33,7 @@ export class CodeGeneratorFactory implements ICodeGeneratorFactory, IExtensionSy
             this.configService,
             this.storageFactory.getOrCreate(notebook),
             notebook,
+            this.notebooks,
             this.disposables
         );
         this.codeGenerators.set(notebook, codeGenerator);
