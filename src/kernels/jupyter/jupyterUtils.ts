@@ -148,9 +148,8 @@ export async function computeServerId(uri: string) {
         return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
     } catch (e) {
         traceError(`Failed to compute server id for ${uri}`, e);
+        throw e;
     }
-
-    throw new Error('Server ID did not match hash');
 }
 
 export function generateUriFromRemoteProvider(id: string, result: JupyterServerUriHandle) {
