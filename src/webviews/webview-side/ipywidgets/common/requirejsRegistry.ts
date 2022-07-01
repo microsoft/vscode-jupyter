@@ -59,7 +59,7 @@ function registerScriptsInRequireJs(baseUrl: string | undefined, scripts: NonPar
         paths: {}
     };
     if (baseUrl) {
-        // config.baseUrl = baseUrl;
+        config.baseUrl = baseUrl;
     }
     registerCustomScripts();
 

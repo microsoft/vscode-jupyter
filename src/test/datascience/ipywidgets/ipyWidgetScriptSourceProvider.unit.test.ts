@@ -25,10 +25,11 @@ import { ScriptSourceProviderFactory } from '../../../kernels/ipywidgets/scriptS
 import { CDNWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/cdnWidgetScriptSourceProvider';
 import { IPyWidgetScriptManagerFactory } from '../../../kernels/ipywidgets/ipyWidgetScriptManagerFactory.node';
 import { NbExtensionsPathProvider } from '../../../kernels/ipywidgets/nbExtensionsPathProvider.node';
+import { JupyterPaths } from '../../../kernels/raw/finder/jupyterPaths.node';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 
-suite('DataScience - ipywidget - Widget Script Source Provider', () => {
+suite.only('DataScience - ipywidget - Widget Script Source Provider', () => {
     let scriptSourceProvider: IPyWidgetScriptSourceProvider;
     let kernel: IKernel;
     let configService: IConfigurationService;
@@ -40,6 +41,7 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
     let userSelectedOkOrDoNotShowAgainInPrompt: PersistentState<boolean>;
     let context: IExtensionContext;
     let memento: Memento;
+    let jupyterPaths: JupyterPaths;
     setup(() => {
         configService = mock(ConfigurationService);
         appShell = mock(ApplicationShell);
@@ -64,11 +66,13 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
         const httpClient = mock(HttpClient);
         const resourceConverter = mock<ILocalResourceUriConverter>();
         const fs = mock(FileSystem);
+        jupyterPaths = mock<JupyterPaths>();
         const scriptManagerFactory = new IPyWidgetScriptManagerFactory(
             new NbExtensionsPathProvider(),
             instance(fs),
             instance(context),
-            instance(httpClient)
+            instance(httpClient),
+            instance(jupyterPaths)
         );
         scriptSourceFactory = new ScriptSourceProviderFactory(
             instance(configService),
