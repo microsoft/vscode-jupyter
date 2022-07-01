@@ -86,17 +86,7 @@ export class IPyWidgetScriptSource {
                 this.uriConverter.resolveUri(response.request, response.response);
             }
         } else if (message === IPyWidgetMessages.IPyWidgets_Ready) {
-            // Send to UI (even if there's an error) instead of hanging while waiting for a response.
-            (this.scriptProvider ? this.scriptProvider?.getBaseUrl() : Promise.resolve())
-                .then((baseUrl) => {
-                    if (baseUrl) {
-                        this.postEmitter.fire({
-                            message: IPyWidgetMessages.IPyWidgets_BaseUrlResponse,
-                            payload: baseUrl.toString()
-                        });
-                    }
-                })
-                .catch((ex) => traceError(`Failed to get baseUrl`, ex));
+            this.sendBaseUrl();
         } else if (message === IPyWidgetMessages.IPyWidgets_IsOnline) {
             const isOnline = (payload as { isOnline: boolean }).isOnline;
             this.isWebViewOnline.resolve(isOnline);
@@ -134,7 +124,29 @@ export class IPyWidgetScriptSource {
         );
         this.kernel.onDisposed(() => this.dispose());
         this.handlePendingRequests();
+        this.sendBaseUrl();
         traceVerbose('IPyWidgetScriptSource.initialize');
+    }
+    /**
+     * Sends the base url of the remote Jupyter server to the webview.
+     * Jupyter Widgets needs this to load scripts from the remote jupyter server.
+     */
+    private sendBaseUrl() {
+        if (!this.scriptProvider) {
+            return;
+        }
+        // Send to UI (even if there's an error) instead of hanging while waiting for a response.
+        this.scriptProvider
+            .getBaseUrl()
+            .then((baseUrl) => {
+                if (baseUrl) {
+                    this.postEmitter.fire({
+                        message: IPyWidgetMessages.IPyWidgets_BaseUrlResponse,
+                        payload: baseUrl.toString()
+                    });
+                }
+            })
+            .catch((ex) => traceError(`Failed to get baseUrl`, ex));
     }
     private async onRequestWidgetScript(payload: { moduleName: string; moduleVersion: string; requestId: string }) {
         const { moduleName, moduleVersion, requestId } = payload;
