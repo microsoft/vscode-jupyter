@@ -74,6 +74,7 @@ export enum InteractiveWindowMessages {
 export enum IPyWidgetMessages {
     IPyWidgets_logMessage = 'IPyWidgets_logMessage',
     IPyWidgets_IsReadyRequest = 'IPyWidgets_IsReadyRequest',
+    IPyWidgets_AttemptToDownloadFailedWidgetsAgain = 'IPyWidgets_AttemptToDownloadFailedWidgetsAgain',
     IPyWidgets_IsOnline = 'IPyWidgets_IsOnline',
     IPyWidgets_Ready = 'IPyWidgets_Ready',
     IPyWidgets_onRestartKernel = 'IPyWidgets_onRestartKernel',

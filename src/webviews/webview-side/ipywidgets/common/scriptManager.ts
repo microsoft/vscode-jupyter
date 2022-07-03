@@ -7,7 +7,7 @@ import * as fastDeepEqual from 'fast-deep-equal';
 import { EventEmitter } from 'events';
 import { PostOffice } from '../../react-common/postOffice';
 import { warnAboutWidgetVersionsThatAreNotSupported } from '../common/incompatibleWidgetHandler';
-import { registerScripts } from '../common/requirejsRegistry';
+import { registerScripts, undefineModule } from '../common/requirejsRegistry';
 import { ScriptLoader } from './types';
 import { logMessage } from '../../react-common/logger';
 import { WidgetScriptSource } from '../../../../kernels/ipywidgets/types';
@@ -36,6 +36,7 @@ export class ScriptManager extends EventEmitter {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private previousKernelOptions?: any;
     private readonly registeredWidgetSources = new Map<string, WidgetScriptSource>();
+    private readonly widgetModulesFailedToLoad = new Set<string>();
     private timedoutWaitingForWidgetsToGetLoaded?: boolean;
     private readonly isOnline = createDeferred<boolean>();
     private widgetsCanLoadFromCDN: boolean = false;
@@ -66,6 +67,15 @@ export class ScriptManager extends EventEmitter {
                     this.widgetsCanLoadFromCDN = settings.widgetScriptSources.length > 0;
                 } else if (type === IPyWidgetMessages.IPyWidgets_WidgetScriptSourceResponse) {
                     this.registerScriptSourceInRequirejs(payload as WidgetScriptSource);
+                } else if (type === IPyWidgetMessages.IPyWidgets_AttemptToDownloadFailedWidgetsAgain) {
+                    // This message is sent when we re-enable CDN or the like,
+                    // & we can now attempt to fetch the widget scripts again.
+                    // For this to be possible we need to clear the widgets from require.js and the fact that we also attempted to download it.
+                    Array.from(this.widgetModulesFailedToLoad.values()).forEach((moduleName) => {
+                        // If we don't have a source, then we can re-try fetching the source (next time its requested).
+                        this.clearWidgetModuleScriptSource(moduleName);
+                    });
+                    this.widgetModulesFailedToLoad.clear();
                 } else if (type === IPyWidgetMessages.IPyWidgets_BaseUrlResponse) {
                     const baseUrl = payload as string;
                     if (baseUrl) {
@@ -229,6 +239,13 @@ export class ScriptManager extends EventEmitter {
     public handleLoadSuccess(className: string, moduleName: string, moduleVersion: string) {
         this.emit('onWidgetLoadSuccess', { className, moduleName, moduleVersion });
     }
+
+    private clearWidgetModuleScriptSource(moduleName: string) {
+        this.widgetSourceRequests.delete(moduleName);
+        this.registeredWidgetSources.delete(moduleName);
+        this.widgetsRegisteredInRequireJs.delete(moduleName);
+        undefineModule(moduleName);
+    }
     /**
      * E.g. when we have restarted a kernel.
      * If user changed the kernel, then some widgets might exist now and some might now.
@@ -305,6 +322,7 @@ export class ScriptManager extends EventEmitter {
         error: any,
         timedout: boolean = false
     ) {
+        this.widgetModulesFailedToLoad.add(moduleName);
         const isOnline = await isCDNReachable();
         this.emit('onWidgetLoadError', { className, moduleName, moduleVersion, error, timedout, isOnline });
     }

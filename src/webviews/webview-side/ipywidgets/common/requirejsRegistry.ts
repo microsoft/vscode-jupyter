@@ -46,7 +46,7 @@ function getScriptsWithAValidScriptUriToBeRegistered(scripts: WidgetScriptSource
 
 function getRequireJs() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const requireJsFunc = (window as any).requirejs as { config: Function; define: Function };
+    const requireJsFunc = (window as any).requirejs as { config: Function; define: Function; undef: Function };
     if (!requireJsFunc) {
         window.console.error('Requirejs not found');
         throw new Error('Requirejs not found');
@@ -77,6 +77,10 @@ function registerScriptsInRequireJs(baseUrl: string | undefined, scripts: NonPar
     requireJsFunc.config(config);
 }
 
+export function undefineModule(moduleName: string) {
+    scriptsAlreadyRegisteredInRequireJs.delete(moduleName);
+    getRequireJs().undef(moduleName);
+}
 export function registerScripts(baseUrl: string | undefined, scripts: WidgetScriptSource[]) {
     const scriptsToRegister = getScriptsToBeRegistered(scripts);
     const validScriptsToRegister = getScriptsWithAValidScriptUriToBeRegistered(scriptsToRegister);
