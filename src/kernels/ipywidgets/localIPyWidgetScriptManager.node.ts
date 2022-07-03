@@ -58,12 +58,10 @@ export class LocalIPyWidgetScriptManager extends BaseIPyWidgetScriptManager impl
             const kernelHash = getTelemetrySafeHashedString(this.kernel.kernelConnectionMetadata.id);
             const baseUrl = Uri.joinPath(this.context.extensionUri, 'tmp', 'scripts', kernelHash, 'jupyter');
             const targetNbExtensions = Uri.joinPath(baseUrl, 'nbextensions');
-            await this.fs.ensureLocalDir(targetNbExtensions.fsPath);
-            await this.fs.copyLocal(
-                Uri.joinPath(this.sourceNbExtensionsPath, 'nbextensions').fsPath,
-                targetNbExtensions.fsPath,
-                { overwrite }
-            );
+            await this.fs.createDirectory(targetNbExtensions);
+            await this.fs.copy(Uri.joinPath(this.sourceNbExtensionsPath, 'nbextensions'), targetNbExtensions, {
+                overwrite
+            });
             // If we've copied once, then next time, don't overwrite.
             this.overwriteExistingFiles = false;
             LocalIPyWidgetScriptManager.nbExtensionsCopiedKernelConnectionList.add(
@@ -93,6 +91,6 @@ export class LocalIPyWidgetScriptManager extends BaseIPyWidgetScriptManager impl
         }));
     }
     protected getWidgetScriptSource(source: Uri): Promise<string> {
-        return this.fs.readLocalFile(source.fsPath);
+        return this.fs.readFile(source);
     }
 }

@@ -129,8 +129,8 @@ suite('DataScience - JupyterSession', () => {
         const backingFileCreator = new BackingFileCreator();
         const requestCreator = new JupyterRequestCreator();
         when(fs.createTemporaryLocalFile(anything())).thenResolve({ dispose: noop, filePath: tmpFile });
-        when(fs.deleteLocalFile(anything())).thenResolve();
-        when(fs.ensureLocalDir(anything())).thenResolve();
+        when(fs.delete(anything())).thenResolve();
+        when(fs.createDirectory(anything())).thenResolve();
         jupyterSession = new JupyterSession(
             resource,
             instance(connection),

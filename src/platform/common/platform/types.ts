@@ -47,7 +47,7 @@ export interface IExecutables {
 export const IFileSystem = Symbol('IFileSystem');
 export interface IFileSystem {
     arePathsSame(path1: vscode.Uri, path2: vscode.Uri): boolean;
-    copy(source: vscode.Uri, destination: vscode.Uri): Promise<void>;
+    copy(source: vscode.Uri, destination: vscode.Uri, options?: { overwrite: boolean }): Promise<void>;
     createDirectory(uri: vscode.Uri): Promise<void>;
     delete(uri: vscode.Uri): Promise<void>;
     readFile(uri: vscode.Uri): Promise<string>;

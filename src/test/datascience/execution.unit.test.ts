@@ -766,7 +766,13 @@ suite('Jupyter Execution', async () => {
             'Unknown interpreter' as any as Error
         );
         if (runInDocker) {
-            when(fileSystem.readLocalFile('/proc/self/cgroup')).thenResolve('hello docker world');
+            when(fileSystem.readFile(anything())).thenCall((uri: Uri) => {
+                if (uri.fsPath === '/proc/self/cgroup') {
+                    return Promise.resolve('hello docker world');
+                } else {
+                    return Promise.resolve('');
+                }
+            });
         }
         // Create our working python and process service.
         const workingService = createTypeMoq<IPythonExecutionService>('working');
@@ -909,12 +915,18 @@ suite('Jupyter Execution', async () => {
             filePath: '/foo/bar/baz.py'
         };
         when(fileSystem.createTemporaryLocalFile(anything())).thenResolve(tempFile);
-        when(fileSystem.createLocalDirectory(anything())).thenResolve();
-        when(fileSystem.deleteLocalDirectory(anything())).thenResolve();
-        when(fileSystem.localFileExists(workingKernelSpec)).thenResolve(true);
-        when(fileSystem.readLocalFile(workingKernelSpec)).thenResolve(
-            '{"display_name":"Python 3","language":"python","argv":["/foo/bar/python.exe","-m","ipykernel_launcher","-f","{connection_file}"]}'
-        );
+        when(fileSystem.createDirectory(anything())).thenResolve();
+        when(fileSystem.delete(anything())).thenResolve();
+        when(fileSystem.exists(anything())).thenCall((file: Uri) => file.fsPath === Uri.file(workingKernelSpec).fsPath);
+        when(fileSystem.readFile(anything())).thenCall((uri: Uri) => {
+            if (uri.fsPath === workingKernelSpec) {
+                return Promise.resolve(
+                    '{"display_name":"Python 3","language":"python","argv":["/foo/bar/python.exe","-m","ipykernel_launcher","-f","{connection_file}"]}'
+                );
+            } else {
+                return Promise.resolve('');
+            }
+        });
 
         const persistentSateFactory = mock(PersistentStateFactory);
         const persistentState = mock(PersistentState);

@@ -109,8 +109,8 @@ export class JupyterImporter implements INotebookImporter {
             try {
                 // Save this file into our disposables so the temp file goes away
                 this.disposableRegistry.push(file);
-                await this.fs.appendLocalFile(
-                    file.filePath,
+                await this.fs.writeFile(
+                    Uri.file(file.filePath),
                     this.nbconvertBaseTemplateFormat.format(
                         nbconvert6 ? this.nbconvert6Null : this.nbconvert5Null,
                         this.defaultCellMarker

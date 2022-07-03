@@ -70,7 +70,7 @@ suite('DataScience URI Picker', () => {
         const allStub = sinon.stub(Extensions.prototype, 'all');
         allStub.callsFake(() => extensionList);
         const extensions = new Extensions(instance(fileSystem));
-        when(fileSystem.localFileExists(anything())).thenResolve(false);
+        when(fileSystem.exists(anything())).thenResolve(false);
         const memento = mock<vscode.Memento>();
         when(memento.get<string[]>(anything())).thenReturn([]);
         when(memento.get<string[]>(anything(), anything())).thenReturn([]);

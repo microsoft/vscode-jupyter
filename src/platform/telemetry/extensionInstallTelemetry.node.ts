@@ -5,6 +5,7 @@ import * as path from '../vscode-path/path';
 import { setSharedProperty } from '.';
 import { IFileSystemNode } from '../common/platform/types.node';
 import { EXTENSION_ROOT_DIR } from '../constants.node';
+import { Uri } from 'vscode';
 
 /**
  * Sets shared telemetry property about where the extension was installed from
@@ -23,8 +24,8 @@ export async function setExtensionInstallTelemetryProperties(fs: IFileSystemNode
     // or %USERPROFILE%/.vscode-insiders/extensions depending on what was installed
     // previously by the user. If we always join (<home>, .vscode, extensions), we will
     // end up looking at the wrong place, with respect to the extension that was launched.
-    const fileToCheck = path.join(path.dirname(EXTENSION_ROOT_DIR), 'PythonCodingPack');
-    if (await fs.localFileExists(fileToCheck)) {
+    const fileToCheck = Uri.file(path.join(path.dirname(EXTENSION_ROOT_DIR), 'PythonCodingPack'));
+    if (await fs.exists(fileToCheck)) {
         setSharedProperty('installSource', 'pythonCodingPack');
     } else {
         // We did not file the `PythonCodingPack` file, assume market place install.

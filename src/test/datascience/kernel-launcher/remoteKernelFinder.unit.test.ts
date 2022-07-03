@@ -145,8 +145,8 @@ suite(`Remote Kernel Finder`, () => {
         const notebookProvider = mock(NotebookProvider);
         when(notebookProvider.connect(anything())).thenResolve(connInfo);
         fs = mock(FileSystem);
-        when(fs.deleteLocalFile(anything())).thenResolve();
-        when(fs.localFileExists(anything())).thenResolve(true);
+        when(fs.delete(anything())).thenResolve();
+        when(fs.exists(anything())).thenResolve(true);
         const serverUriStorage = mock(JupyterServerUriStorage);
         when(serverUriStorage.getUri()).thenResolve(connInfo.baseUrl);
         when(serverUriStorage.getRemoteUri()).thenResolve(connInfo.baseUrl);

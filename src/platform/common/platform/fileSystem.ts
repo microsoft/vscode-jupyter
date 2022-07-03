@@ -40,8 +40,8 @@ export class FileSystem implements IFileSystem {
 
     // URI-based filesystem functions
 
-    async copy(source: vscode.Uri, destination: vscode.Uri): Promise<void> {
-        await this.vscfs.copy(source, destination);
+    async copy(source: vscode.Uri, destination: vscode.Uri, options?: { overwrite: boolean }): Promise<void> {
+        await this.vscfs.copy(source, destination, options);
     }
 
     async createDirectory(uri: vscode.Uri): Promise<void> {

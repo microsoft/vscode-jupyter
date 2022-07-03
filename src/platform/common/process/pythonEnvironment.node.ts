@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IFileSystemNode } from '../platform/types.node';
 import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
 import { InterpreterInformation } from '../../pythonEnvironments/info';
 import { getExecutablePath } from '../../pythonEnvironments/info/executable.node';
@@ -13,6 +12,7 @@ import { compare, SemVer } from 'semver';
 import type { PythonEnvironment as PyEnv } from '../../pythonEnvironments/info';
 import { getDisplayPath, getFilePath } from '../platform/fs-paths';
 import { Uri } from 'vscode';
+import { IFileSystem } from '../platform/types';
 class PythonEnvironment {
     private cachedInterpreterInformation: InterpreterInformation | undefined | null = null;
 
@@ -98,10 +98,10 @@ export function createPythonEnv(
     interpreter: PyEnv,
     // These are used to generate the deps.
     procs: IProcessService,
-    fs: IFileSystemNode
+    fs: IFileSystem
 ): PythonEnvironment {
     const deps = createDeps(
-        async (filename: Uri) => fs.localFileExists(getFilePath(filename)),
+        async (filename: Uri) => fs.exists(filename),
         // We use the default: [pythonPath].
         undefined,
         undefined,
@@ -127,7 +127,7 @@ export function createCondaEnv(
     interpreter: PyEnv,
     // These are used to generate the deps.
     procs: IProcessService,
-    fs: IFileSystemNode
+    fs: IFileSystem
 ): PythonEnvironment {
     const runArgs = ['run'];
     if (condaInfo.name === '') {
@@ -137,7 +137,7 @@ export function createCondaEnv(
     }
     const pythonArgv = [condaFile, ...runArgs, 'python'];
     const deps = createDeps(
-        async (filename) => fs.localFileExists(getFilePath(filename)),
+        async (filename) => fs.exists(filename),
         pythonArgv,
         // eslint-disable-next-line
         // TODO: Use pythonArgv here once 'conda run' can be

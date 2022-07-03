@@ -12,10 +12,10 @@ import { ICommandManager, IApplicationShell } from '../../platform/common/applic
 import { PYTHON_LANGUAGE, NOTEBOOK_SELECTOR, Commands, EditorContexts } from '../../platform/common/constants';
 import { ContextKey } from '../../platform/common/contextKey';
 import { traceInfo } from '../../platform/logging';
-import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { IDisposableRegistry, IConfigurationService } from '../../platform/common/types';
 import { sleep, waitForCondition } from '../../platform/common/utils/async';
 import { noop, swallowExceptions } from '../../platform/common/utils/misc';
+import { IFileSystem } from '../../platform/common/platform/types';
 
 /**
  * Class used to replay pylance log output to regenerate a series of edits.
@@ -44,7 +44,7 @@ export class LogReplayService implements IExtensionSingleActivationService {
         @inject(ICommandManager) private readonly commandService: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}
     public async activate(): Promise<void> {
@@ -237,7 +237,7 @@ export class LogReplayService implements IExtensionSingleActivationService {
     }
 
     private async parsePylanceLogSteps(fileName: string) {
-        const contents = await this.fs.readLocalFile(fileName);
+        const contents = await this.fs.readFile(vscode.Uri.file(fileName));
         const results: protocol.DidChangeTextDocumentParams[] = [];
         const regex = /textDocument\/didChange'[\s\S]*?Params:\s(?<json_event>[\s\S]*?\n\})/g;
 

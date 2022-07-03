@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
-import { IPlatformService } from '../../common/platform/types';
+import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IServiceContainer } from '../../ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
@@ -10,7 +10,6 @@ import { EventName } from '../../telemetry/constants';
 import { IWorkspaceService } from '../application/types';
 import { ignoreLogging, traceDecoratorVerbose, traceError, traceInfo } from '../../logging';
 import { getDisplayPath } from '../platform/fs-paths';
-import { IFileSystemNode } from '../platform/types.node';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../types';
 import { ProcessService } from './proc.node';
 import { PythonDaemonFactory } from './pythonDaemonFactory.node';
@@ -41,7 +40,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     private readonly daemonsPerPythonService = new Map<string, Promise<IPythonDaemonExecutionService>>();
     private readonly disposables: IDisposableRegistry;
     private readonly logger: IProcessLogger;
-    private readonly fileSystem: IFileSystemNode;
+    private readonly fileSystem: IFileSystem;
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
@@ -55,7 +54,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         // Acquire other objects here so that if we are called during dispose they are available.
         this.disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.logger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
-        this.fileSystem = this.serviceContainer.get<IFileSystemNode>(IFileSystemNode);
+        this.fileSystem = this.serviceContainer.get<IFileSystem>(IFileSystem);
     }
     @traceDecoratorVerbose('Creating execution process')
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
@@ -189,7 +188,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
 function createPythonService(
     interpreter: PythonEnvironment,
     procService: IProcessService,
-    fs: IFileSystemNode,
+    fs: IFileSystem,
     conda?: [
         string,
         {

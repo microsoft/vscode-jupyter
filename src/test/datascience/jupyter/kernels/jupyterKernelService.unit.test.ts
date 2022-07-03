@@ -15,7 +15,6 @@ import { EXTENSION_ROOT_DIR } from '../../../../platform/constants.node';
 import * as path from '../../../../platform/vscode-path/path';
 import { CancellationTokenSource, Uri } from 'vscode';
 import { EnvironmentVariablesService } from '../../../../platform/common/variables/environment.node';
-import { arePathsSame } from '../../../../platform/common/platform/fileUtils.node';
 import { JupyterKernelService } from '../../../../kernels/jupyter/jupyterKernelService.node';
 import { JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths.node';
 import { DisplayOptions } from '../../../../kernels/displayOptions';
@@ -23,6 +22,7 @@ import { getOSType, OSType } from '../../../../platform/common/utils/platform';
 import { IConfigurationService, IWatchableJupyterSettings } from '../../../../platform/common/types';
 import { ConfigurationService } from '../../../../platform/common/configuration/service.node';
 import { JupyterSettings } from '../../../../platform/common/configSettings';
+import { uriEquals } from '../../helpers';
 
 // eslint-disable-next-line
 suite('DataScience - JupyterKernelService', () => {
@@ -364,21 +364,20 @@ suite('DataScience - JupyterKernelService', () => {
     setup(() => {
         kernelDependencyService = mock(KernelDependencyService);
         fs = mock(FileSystem);
-        when(fs.localFileExists(anything())).thenCall((p) => {
-            const match = kernels.find((k) => p.includes(k.kernelSpec?.name));
+        when(fs.exists(anything())).thenCall((p: Uri) => {
+            const match = kernels.find((k) => p.fsPath.includes(k.kernelSpec?.name));
             if (match) {
                 return Promise.resolve(true);
             }
             return Promise.resolve(false);
         });
-        when(fs.readLocalFile(anything())).thenCall((p) => {
-            const match = kernels.find((k) => p.includes(k.kernelSpec?.name));
+        when(fs.readFile(anything())).thenCall((p: Uri) => {
+            const match = kernels.find((k) => p.fsPath.includes(k.kernelSpec?.name));
             if (match) {
                 return Promise.resolve(JSON.stringify(match.kernelSpec));
             }
             return Promise.reject('Invalid file');
         });
-        when(fs.areLocalPathsSame(anything(), anything())).thenCall((a, b) => arePathsSame(a, b));
         when(fs.searchLocal(anything(), anything())).thenResolve([]);
         appEnv = mock<IEnvironmentActivationService>();
         when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({});
@@ -427,7 +426,7 @@ suite('DataScience - JupyterKernelService', () => {
             kernelsWithInvalidName[0].kernelSpec?.name!,
             'kernel.json'
         );
-        when(fs.localFileExists(anything())).thenResolve(false);
+        when(fs.exists(anything())).thenResolve(false);
         const token = new CancellationTokenSource();
         await kernelService.ensureKernelIsUsable(
             undefined,
@@ -436,16 +435,16 @@ suite('DataScience - JupyterKernelService', () => {
             token.token
         );
         token.dispose();
-        verify(fs.writeLocalFile(kernelSpecPath, anything())).once();
+        verify(fs.writeFile(uriEquals(kernelSpecPath), anything())).once();
     });
 
     test('Kernel environment updated with interpreter environment', async () => {
         const kernelsWithInterpreters = kernels.filter((k) => k.interpreter && k.kernelSpec?.metadata?.interpreter);
         let updateCount = 0;
-        when(fs.localFileExists(anything())).thenResolve(true);
+        when(fs.exists(anything())).thenResolve(true);
         when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({ foo: 'bar' });
-        when(fs.writeLocalFile(anything(), anything())).thenCall((f, c) => {
-            if (f.endsWith('.json')) {
+        when(fs.writeFile(anything(), anything())).thenCall((f: Uri, c) => {
+            if (f.fsPath.endsWith('.json')) {
                 const obj = JSON.parse(c);
                 if (obj.env.foo && obj.env.foo === 'bar') {
                     updateCount += 1;
@@ -465,16 +464,16 @@ suite('DataScience - JupyterKernelService', () => {
 
     test('Kernel environment preserves env variables from original Python kernelspec', async () => {
         const spec: LocalKernelConnectionMetadata = kernels.find((item) => item.id === '12')!;
-        when(fs.localFileExists(anything())).thenResolve(true);
+        when(fs.exists(anything())).thenResolve(true);
         when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             foo: 'bar',
             [pathVariable]: `Path1${path.delimiter}Path2`
         });
-        when(fs.writeLocalFile(anything(), anything())).thenResolve();
+        when(fs.writeFile(anything(), anything())).thenResolve();
         const token = new CancellationTokenSource();
         await kernelService.ensureKernelIsUsable(undefined, spec, new DisplayOptions(true), token.token);
         token.dispose();
-        const kernelJson = JSON.parse(capture(fs.writeLocalFile).last()[1].toString());
+        const kernelJson = JSON.parse(capture(fs.writeFile).last()[1].toString());
         assert.strictEqual(kernelJson.env['PYTHONNOUSERSITE'], undefined);
         // Preserve interpreter env variables.
         assert.strictEqual(kernelJson.env['foo'], 'bar');
@@ -488,16 +487,16 @@ suite('DataScience - JupyterKernelService', () => {
     });
     test('Kernel environment preserves env variables from original non-python kernelspec', async () => {
         const spec: LocalKernelConnectionMetadata = kernels.find((item) => item.id === '13')!;
-        when(fs.localFileExists(anything())).thenResolve(true);
+        when(fs.exists(anything())).thenResolve(true);
         when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             foo: 'bar',
             [pathVariable]: `Path1${path.delimiter}Path2`
         });
-        when(fs.writeLocalFile(anything(), anything())).thenResolve();
+        when(fs.writeFile(anything(), anything())).thenResolve();
         const token = new CancellationTokenSource();
         await kernelService.ensureKernelIsUsable(undefined, spec, new DisplayOptions(true), token.token);
         token.dispose();
-        const kernelJson = JSON.parse(capture(fs.writeLocalFile).last()[1].toString());
+        const kernelJson = JSON.parse(capture(fs.writeFile).last()[1].toString());
         assert.strictEqual(kernelJson.env['PYTHONNOUSERSITE'], undefined);
         // Preserve interpreter env variables.
         assert.strictEqual(kernelJson.env['foo'], 'bar');
@@ -512,19 +511,19 @@ suite('DataScience - JupyterKernelService', () => {
     test('Verify registration of the kernelspec', async () => {
         const spec: LocalKernelConnectionMetadata = kernels.find((item) => item.id === '14')!;
         const filesCreated = new Set<string>([spec.kernelSpec.specFile!]);
-        when(fs.localFileExists(anything())).thenCall((f) => Promise.resolve(filesCreated.has(f)));
+        when(fs.exists(anything())).thenCall((f: Uri) => Promise.resolve(filesCreated.has(f.fsPath)));
         when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             foo: 'bar',
             [pathVariable]: `Path1${path.delimiter}Path2`
         });
-        when(fs.writeLocalFile(anything(), anything())).thenCall((f) => {
-            filesCreated.add(f);
+        when(fs.writeFile(anything(), anything())).thenCall((f: Uri) => {
+            filesCreated.add(f.fsPath);
             return Promise.resolve();
         });
         const token = new CancellationTokenSource();
         await kernelService.ensureKernelIsUsable(undefined, spec, new DisplayOptions(true), token.token);
         token.dispose();
-        const kernelJson = JSON.parse(capture(fs.writeLocalFile).last()[1].toString());
+        const kernelJson = JSON.parse(capture(fs.writeFile).last()[1].toString());
         assert.strictEqual(kernelJson.env['PYTHONNOUSERSITE'], undefined);
         // Preserve interpreter env variables.
         assert.strictEqual(kernelJson.env['foo'], 'bar');
@@ -540,21 +539,21 @@ suite('DataScience - JupyterKernelService', () => {
     test('Verify registration of the kernelspec and value PYTHONNOUSERSITE should be true', async () => {
         const spec: LocalKernelConnectionMetadata = kernels.find((item) => item.id === '14')!;
         const filesCreated = new Set<string>([spec.kernelSpec.specFile!]);
-        when(fs.localFileExists(anything())).thenCall((f) => Promise.resolve(filesCreated.has(f)));
+        when(fs.exists(anything())).thenCall((f: Uri) => Promise.resolve(filesCreated.has(f.fsPath)));
         when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             foo: 'bar',
             [pathVariable]: `Path1${path.delimiter}Path2`
         });
         when(appEnv.hasActivationCommands(anything(), anything())).thenResolve(true);
-        when(fs.writeLocalFile(anything(), anything())).thenCall((f) => {
-            filesCreated.add(f);
+        when(fs.writeFile(anything(), anything())).thenCall((f: Uri) => {
+            filesCreated.add(f.fsPath);
             return Promise.resolve();
         });
         when(settings.excludeUserSitePackages).thenReturn(true);
         const token = new CancellationTokenSource();
         await kernelService.ensureKernelIsUsable(undefined, spec, new DisplayOptions(true), token.token);
         token.dispose();
-        const kernelJson = JSON.parse(capture(fs.writeLocalFile).last()[1].toString());
+        const kernelJson = JSON.parse(capture(fs.writeFile).last()[1].toString());
         assert.strictEqual(kernelJson.env['PYTHONNOUSERSITE'], 'True');
         // Preserve interpreter env variables.
         assert.strictEqual(kernelJson.env['foo'], 'bar');
@@ -571,9 +570,9 @@ suite('DataScience - JupyterKernelService', () => {
         const kernelsWithoutInterpreters = kernels.filter((k) => k.interpreter && !k.kernelSpec?.metadata?.interpreter);
         let updateCount = 0;
         when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({ foo: 'bar' });
-        when(fs.localFileExists(anything())).thenResolve(true);
-        when(fs.writeLocalFile(anything(), anything())).thenCall((f, c) => {
-            if (f.endsWith('.json')) {
+        when(fs.exists(anything())).thenResolve(true);
+        when(fs.writeFile(anything(), anything())).thenCall((f: Uri, c) => {
+            if (f.fsPath.endsWith('.json')) {
                 const obj = JSON.parse(c);
                 if (obj.env.foo && obj.env.foo === 'bar') {
                     updateCount += 1;

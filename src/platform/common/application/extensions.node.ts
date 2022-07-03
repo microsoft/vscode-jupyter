@@ -5,16 +5,16 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
-import { Event, Extension, extensions } from 'vscode';
+import { Event, Extension, extensions, Uri } from 'vscode';
 import { IExtensions } from '../types';
 import { DataScience } from '../utils/localize';
-import { IFileSystemNode } from '../platform/types.node';
 import * as stacktrace from 'stack-trace';
 import { EXTENSION_ROOT_DIR } from '../../constants.node';
+import { IFileSystem } from '../platform/types';
 
 @injectable()
 export class Extensions implements IExtensions {
-    constructor(@inject(IFileSystemNode) private readonly fs: IFileSystemNode) {}
+    constructor(@inject(IFileSystem) private readonly fs: IFileSystem) {}
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public get all(): readonly Extension<any>[] {
         return extensions.all;
@@ -57,9 +57,9 @@ export class Extensions implements IExtensions {
                 let dirName = path.dirname(frame);
                 let last = frame;
                 while (dirName && dirName.length < last.length) {
-                    const possiblePackageJson = path.join(dirName, 'package.json');
-                    if (await this.fs.localFileExists(possiblePackageJson)) {
-                        const text = await this.fs.readLocalFile(possiblePackageJson);
+                    const possiblePackageJson = Uri.file(path.join(dirName, 'package.json'));
+                    if (await this.fs.exists(possiblePackageJson)) {
+                        const text = await this.fs.readFile(possiblePackageJson);
                         try {
                             const json = JSON.parse(text);
                             return { extensionId: `${json.publisher}.${json.name}`, displayName: json.displayName };
