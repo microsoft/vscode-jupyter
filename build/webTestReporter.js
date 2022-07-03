@@ -85,6 +85,7 @@ exports.dumpTestSummary = () => {
         let executionCount = 0;
         const skippedTests = [];
         console.error(`Can use colors ${mocha.reporters.Base.useColors}`);
+        mocha.reporters.Base.useColors = true;
         // mocha.reporters.Base.consoleLog = (fmt, ...args) => {
         //     const msg = format(fmt, ...args);
         //     if (msg.startsWith('\u001b[')) {
