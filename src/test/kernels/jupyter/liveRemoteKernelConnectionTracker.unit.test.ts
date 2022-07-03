@@ -16,7 +16,7 @@ import {
 } from '../../../kernels/jupyter/liveRemoteKernelConnectionTracker';
 import { LiveRemoteKernelConnectionMetadata } from '../../../kernels/types';
 import { computeServerId } from '../../../kernels/jupyter/jupyterUtils';
-import { sleep, waitForCondition } from '../../common.node';
+import { waitForCondition } from '../../common.node';
 
 use(chaiAsPromised);
 suite('Live kernel Connection Tracker', async () => {
