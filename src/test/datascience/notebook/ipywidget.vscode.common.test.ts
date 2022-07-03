@@ -24,12 +24,12 @@ import { createDeferred, Deferred } from '../../../platform/common/utils/async';
 import { InteractiveWindowMessages } from '../../../messageTypes';
 import { initialize } from '../../initialize';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
-import { traceInfo } from '../../../platform/logging';
+import { traceError, traceInfo, traceLog, traceWarning } from '../../../platform/logging';
 import { NotebookIPyWidgetCoordinator } from '../../../notebooks/controllers/notebookIPyWidgetCoordinator';
 import { IWebviewCommunication } from '../../../platform/webviews/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - Standard', function () {
+suite.only('DataScience - VSCode Notebook - Standard', function () {
     this.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
@@ -63,12 +63,24 @@ suite('DataScience - VSCode Notebook - Standard', function () {
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
-            await captureScreenShot(`IPyWidget-standard-test-${this.currentTest?.title || 'unknown'}`);
+            captureScreenShot(this);
         }
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
+    test.skip('Skipped test', () => {
+        //
+    });
+    test('Custom error', () => {
+        throw new Error('kaboom');
+    });
+    test('Custom console output', () => {
+        traceLog('logging');
+        traceError('error', new Error('Somethign failed'));
+        traceInfo('info');
+        traceWarning('warn');
+    });
     test('Can run a widget notebook (webview-test)', async function () {
         const notebook = await openNotebook(testWidgetNb);
         await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);

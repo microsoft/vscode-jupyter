@@ -132,7 +132,7 @@ suite('DataScience - Verify serviceRegistry is correct', function () {
             api = await initialize();
             traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
         } catch (e) {
-            await captureScreenShot(this.currentTest?.title || 'unknown');
+            await captureScreenShot(this);
             throw e;
         }
     });

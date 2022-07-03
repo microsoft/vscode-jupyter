@@ -52,14 +52,14 @@ suite('3rd Party Kernel Service API', function () {
             await startJupyterServer();
             traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
         } catch (e) {
-            await captureScreenShot(this.currentTest?.title || 'unknown');
+            await captureScreenShot(this);
             throw e;
         }
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
-            await captureScreenShot(this.currentTest?.title);
+            await captureScreenShot(this);
         }
         // Added temporarily to identify why tests are failing.
         await closeNotebooksAndCleanUpAfterTests(disposables);

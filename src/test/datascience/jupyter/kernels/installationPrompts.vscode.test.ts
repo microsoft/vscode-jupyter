@@ -174,7 +174,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
     teardown(async function () {
         console.log(`End test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
-            await captureScreenShot(this.currentTest?.title);
+            await captureScreenShot(this);
         }
         configSettings.disableJupyterAutoStart = previousDisableJupyterAutoStartValue;
         await closeNotebooksAndCleanUpAfterTests(disposables);

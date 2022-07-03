@@ -65,7 +65,7 @@ suite(`Interactive window Execution`, async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             // For a flaky interrupt test.
-            await captureScreenShot(`Interactive-Tests-${this.currentTest?.title}`);
+            captureScreenShot(this);
         }
         sinon.restore();
         await closeNotebooksAndCleanUpAfterTests(disposables);

@@ -124,7 +124,8 @@ const config = {
             // for the list of Node.js core module polyfills.
             assert: require.resolve('assert'),
             buffer: require.resolve('buffer'),
-            stream: require.resolve('stream-browserify')
+            stream: require.resolve('stream-browserify'),
+            os: require.resolve('os-browserify')
         }
     },
     output: {

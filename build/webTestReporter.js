@@ -6,11 +6,16 @@ const path = require('path');
 const { createServer } = require('http');
 const jsonc = require('jsonc-parser');
 const mocha = require('mocha');
+const dedent = require('dedent');
 const { EventEmitter } = require('events');
+const colors = require('colors');
+const core = require('@actions/core');
 
 const settingsFile = path.join(__dirname, '..', 'src', 'test', 'datascience', '.vscode', 'settings.json');
-const webTestSummaryJsonFile = path.join(__dirname, '..', 'webtest.json');
-const webTestSummaryFile = path.join(__dirname, '..', 'webtest.txt');
+const webTestSummaryJsonFile = path.join(__dirname, '..', 'testresults.json');
+const webTestSummaryFile = path.join(__dirname, '..', 'testresults.txt');
+const webTestSummaryNb = path.join(__dirname, '..', 'testresults.ipynb');
+const webTestSummaryXunit = path.join(__dirname, '..', 'testresults.xml');
 const progress = [];
 
 exports.startReportServer = async function () {
@@ -73,23 +78,129 @@ exports.startReportServer = async function () {
 exports.dumpTestSummary = () => {
     try {
         const summary = JSON.parse(fs.readFileSync(webTestSummaryJsonFile).toString());
-        const eventEmitter = new EventEmitter();
-        const reportWriter = new mocha.reporters.Spec(eventEmitter);
+        const runner = new EventEmitter();
+        runner.stats = {};
+        const reportWriter = new mocha.reporters.Spec(runner, { color: true });
+        const xUnitReportWriter = new mocha.reporters.XUnit(runner, {
+            color: true,
+            reporterOptions: { output: webTestSummaryXunit }
+        });
         reportWriter.failures = [];
+        xUnitReportWriter.failures = [];
+        const cells = [];
+        let indent = 0;
+        let executionCount = 0;
+        const skippedTests = [];
         summary.forEach((output) => {
+            output = JSON.parse(JSON.stringify(output));
             // mocha expects test objects to have a method `slow, fullTitle, titlePath`.
-            ['slow', 'fullTitle', 'titlePath'].forEach((fnName) => {
+            ['slow', 'fullTitle', 'titlePath', 'isPending', 'currentRetry'].forEach((fnName) => {
                 const value = output[fnName];
                 output[fnName] = () => value;
             });
+            // Tests have a parent with a title, used by xunit.
+            const currentParent = output.parent || { fullTitle: '' };
+            output.parent = {
+                fullTitle: () => ('fullTitle' in currentParent ? currentParent.fullTitle : '') || ''
+            };
             if ('stats' in output) {
-                reportWriter.stats = output.stats;
+                reportWriter.stats = { ...output.stats };
+                Object.assign(runner.stats, output.stats);
             }
             if (output.event === 'fail') {
                 reportWriter.failures.push(output);
+                xUnitReportWriter.failures.push(output);
             }
-            eventEmitter.emit(output.event, Object.assign({}, output));
+            runner.emit(output.event, output, output.err);
+
+            switch (output.event) {
+                case 'suite': {
+                    indent += 1;
+                    const indentString = '#'.repeat(indent);
+                    cells.push({
+                        cell_type: 'markdown',
+                        metadata: {
+                            collapsed: true
+                        },
+                        source: dedent`
+                                ${indentString} ${output.title}
+                                `
+                    });
+                    break;
+                }
+                case 'suite end': {
+                    indent -= 1;
+                    break;
+                }
+                case 'pending': {
+                    skippedTests.push(output);
+                    break;
+                }
+                case 'fail': {
+                    const stackFrames = (output.err.stack || '').split(/\r?\n/);
+                    const line1 = stackFrames.shift() || '';
+
+                    const assertionError = {
+                        ename: '',
+                        evalue: '',
+                        output_type: 'error',
+                        traceback: [`${colors.red(line1)}\n`, stackFrames.join('\n')]
+                    };
+                    const consoleOutputs = (output.consoleOutput || [])
+                        .map((item) => {
+                            const time = item.time ? new Date(item.time) : '';
+                            const timeStr = time ? `${time.toLocaleTimeString()}.${time.getMilliseconds()}` : '';
+                            const colorizedTime = timeStr ? `${colors.blue(timeStr)}: ` : '';
+                            switch (item.category) {
+                                case 'warn':
+                                    return `${colorizedTime}${colors.yellow(item.output)}`;
+                                case 'error':
+                                    return `${colorizedTime}${colors.red(item.output)}`;
+                                default:
+                                    return `${colorizedTime}${item.output}`;
+                                    break;
+                            }
+                        })
+                        .map((item) => `${item}\n`);
+                    const consoleOutput = {
+                        name: 'stdout',
+                        output_type: 'stream',
+                        text: consoleOutputs
+                    };
+                    cells.push({
+                        cell_type: 'code',
+                        metadata: {
+                            collapsed: true
+                        },
+                        source: `#${output.title}`,
+                        execution_count: ++executionCount,
+                        outputs: [assertionError, consoleOutput]
+                    });
+                    break;
+                }
+            }
         });
+
+        // This is useful (in case we've accidentally skipped, or forgotten about skipped tests)
+        // Basically we should avoid skipping tests, unless we're absolutely certain they need to be (e.g. platform specific etc).
+        if (skippedTests.length) {
+            core.info(`${reportWriter.failures.length} tests skipped:`);
+            reportWriter.skippedTests.forEach((skippedTest, i) => {
+                const suite = skippedTest.fullTitle().substring(0, skippedTest.fullTitle().indexOf(skippedTest.title));
+                core.info(`${i + 1}). ${suite.trim()} -> ${skippedTest.title}`);
+            });
+        }
+        if (reportWriter.failures.length) {
+            core.error(`${reportWriter.failures.length} tests failed:`);
+            reportWriter.failures.forEach((failure, i) => {
+                const suite = failure.fullTitle().substring(0, failure.fullTitle().indexOf(failure.title));
+                core.error(`${i + 1}). ${suite.trim()} -> ${failure.title}`);
+                const message =
+                    failure.err.name && failure.err.message ? `${failure.err.name}: ${failure.err.message}` : undefined;
+                core.info(message || failure.err.stack);
+            });
+        }
+        fs.writeFileSync(webTestSummaryNb, JSON.stringify({ cells: cells }));
     } catch (ex) {
         console.error('Failed dumpTestSummary', ex);
     }

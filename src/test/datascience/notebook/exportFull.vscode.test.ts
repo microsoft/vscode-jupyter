@@ -106,14 +106,14 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
                 template = (await importer.createTemplateFile(version!.major >= 6))!;
             }
         } catch (e) {
-            await captureScreenShot(this.currentTest?.title || 'unknown');
+            await captureScreenShot(this);
             throw e;
         }
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
-            await captureScreenShot(this.currentTest?.title);
+            await captureScreenShot(this);
         }
         // Revert back our settings just in case
         const settings = workspace.getConfiguration('jupyter', null);

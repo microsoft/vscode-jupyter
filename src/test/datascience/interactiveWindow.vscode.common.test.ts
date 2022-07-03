@@ -51,7 +51,7 @@ import { generateCellRangesFromDocument } from '../../interactive-window/editor-
 import { Commands } from '../../platform/common/constants';
 import { IControllerSelection } from '../../notebooks/controllers/types';
 
-suite(`Interactive window execution`, async function () {
+suite.only(`Interactive window execution`, async function () {
     this.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
@@ -69,14 +69,22 @@ suite(`Interactive window execution`, async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             // For a flaky interrupt test.
-            await captureScreenShot(`Interactive-Tests-${this.currentTest?.title}`);
+            captureScreenShot(this);
         }
         sinon.restore();
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
-
-    test('Execute cell from Python file', async () => {
+    test.skip('skipped fn', () => {
+        //
+    });
+    test('Some assertion failure', () => {
+        assert.equal(1, 3);
+    });
+    test('Some random failure', () => {
+        throw new Error('kaboom');
+    });
+    test.skip('Execute cell from Python file', async () => {
         const source = 'print(42)';
         const { activeInteractiveWindow } = await submitFromPythonFile(interactiveWindowProvider, source, disposables);
         const notebookDocument = vscode.workspace.notebookDocuments.find(
@@ -111,7 +119,7 @@ suite(`Interactive window execution`, async function () {
         await waitForExecutionCompletedSuccessfully(secondCell!);
         await waitForTextOutput(secondCell!, '42');
     });
-    test('__file__ exists even after restarting a kernel', async function () {
+    test.skip('__file__ exists even after restarting a kernel', async function () {
         // Ensure we click `Yes` when prompted to restart the kernel.
         disposables.push(await clickOKForRestartPrompt());
 
@@ -196,7 +204,7 @@ suite(`Interactive window execution`, async function () {
         await waitForTextOutput(cell, 'foo');
     });
 
-    test('Clear output', async function () {
+    test.skip('Clear output', async function () {
         // Test failing after using python insiders. Not getting expected
         // output
         // https://github.com/microsoft/vscode-jupyter/issues/7580
@@ -211,7 +219,7 @@ for i in range(10):
         await waitForTextOutput(cell!, 'Hello World 9!');
     });
 
-    test('Clear input box', async () => {
+    test.skip('Clear input box', async () => {
         const text = '42';
         // Create interactive window with no owner
         await createStandaloneInteractiveWindow(interactiveWindowProvider);
@@ -232,7 +240,7 @@ for i in range(10):
         );
     });
 
-    test('LiveLossPlot', async () => {
+    test.skip('LiveLossPlot', async () => {
         const code = `from time import sleep
 import numpy as np
 
@@ -261,7 +269,7 @@ for i in range(10):
     });
 
     // Create 3 cells. Last cell should update the second
-    test('Update display data', async () => {
+    test.skip('Update display data', async () => {
         const interactiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
 
         // Create cell 1
@@ -278,7 +286,7 @@ for i in range(10):
         await waitForTextOutput(secondCell!, "'Goodbye'");
     });
 
-    test('Cells with errors cancel execution for others', async () => {
+    test.skip('Cells with errors cancel execution for others', async () => {
         const source =
             '# %%\nprint(1)\n# %%\nimport time\ntime.sleep(1)\nraise Exception("foo")\n# %%\nprint(2)\n# %%\nprint(3)';
         const { activeInteractiveWindow } = await submitFromPythonFileUsingCodeWatcher(source, disposables);
@@ -302,7 +310,7 @@ for i in range(10):
         ]);
     });
 
-    test('Multiple interactive windows', async () => {
+    test.skip('Multiple interactive windows', async () => {
         const settings = vscode.workspace.getConfiguration('jupyter', null);
         await settings.update('interactiveWindowMode', 'multiple');
         const window1 = await interactiveWindowProvider.getOrCreate(undefined);
@@ -314,7 +322,7 @@ for i in range(10):
         );
     });
 
-    test('Dispose test', async () => {
+    test.skip('Dispose test', async () => {
         const interactiveWindow = await interactiveWindowProvider.getOrCreate(undefined);
         await interactiveWindow.dispose();
         const interactiveWindow2 = await interactiveWindowProvider.getOrCreate(undefined);
@@ -324,7 +332,7 @@ for i in range(10):
         );
     });
 
-    test('Leading and trailing empty lines in #%% cell are trimmed', async () => {
+    test.skip('Leading and trailing empty lines in #%% cell are trimmed', async () => {
         const actualCode = `    print('foo')
 
 
@@ -352,7 +360,7 @@ ${actualCode}
         assert.equal(actualCellText, actualCode);
     });
 
-    test('Run current file in interactive window (with cells)', async () => {
+    test.skip('Run current file in interactive window (with cells)', async () => {
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,
             '#%%\na=1\nprint(a)\n#%%\nb=2\nprint(b)\n',
@@ -376,7 +384,7 @@ ${actualCode}
         });
     });
 
-    test('Run a latex cell with a cell marker', async () => {
+    test.skip('Run a latex cell with a cell marker', async () => {
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,
             dedent`
@@ -414,7 +422,7 @@ ${actualCode}
         );
     });
 
-    test('Run current file in interactive window (without cells)', async () => {
+    test.skip('Run current file in interactive window (without cells)', async () => {
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,
             'a=1\nprint(a)\nb=2\nprint(b)\n',
@@ -466,7 +474,7 @@ ${actualCode}
         assert.equal(hrefs?.length, 4, '4 hrefs not found in traceback');
     });
 
-    test('Raising an exception from within a function has a stack trace', async function () {
+    test.skip('Raising an exception from within a function has a stack trace', async function () {
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,
             '# %%\ndef raiser():\n  raise Exception("error")\n# %%\nraiser()',
@@ -500,7 +508,7 @@ ${actualCode}
         assert.ok(hrefs[3].endsWith("line=2'"), `Wrong last ref line : ${hrefs[2]}`);
     });
 
-    test('Raising an exception from system code has a stack trace', async function () {
+    test.skip('Raising an exception from system code has a stack trace', async function () {
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,
             `# %%\n${IPYTHON_VERSION_CODE}# %%\nimport pathlib as pathlib\nx = pathlib.Path()\ny = None\nx.joinpath(y, "Foo")`,
@@ -536,7 +544,7 @@ ${actualCode}
         }
     });
 
-    test('Running a cell with markdown and code runs two cells', async () => {
+    test.skip('Running a cell with markdown and code runs two cells', async () => {
         const { activeInteractiveWindow } = await runNewPythonFile(
             interactiveWindowProvider,
             '# %% [markdown]\n# # HEADER\n# **bold**\nprint(1)',
@@ -555,7 +563,7 @@ ${actualCode}
         await waitForTextOutput(lastCell, '1');
     });
 
-    test('Export Interactive window to Python file', async () => {
+    test.skip('Export Interactive window to Python file', async () => {
         const activeInteractiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
         await waitForInteractiveWindow(activeInteractiveWindow);
 

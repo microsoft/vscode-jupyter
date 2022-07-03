@@ -49,7 +49,7 @@ suite('DataScience - VSCode Intellisense Notebook and Interactive Goto Definitio
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         setIntellisenseTimeout(Settings.IntellisenseTimeout);
         if (this.currentTest?.isFailed()) {
-            await captureScreenShot(this.currentTest?.title);
+            await captureScreenShot(this);
         }
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
