@@ -84,15 +84,7 @@ exports.dumpTestSummary = () => {
         let indent = 0;
         let executionCount = 0;
         const skippedTests = [];
-        console.error(`Can use colors ${mocha.reporters.Base.useColors}`);
         mocha.reporters.Base.useColors = true;
-        // mocha.reporters.Base.consoleLog = (fmt, ...args) => {
-        //     const msg = format(fmt, ...args);
-        //     if (msg.startsWith('\u001b[')) {
-        //     } else {
-        //         console.log('My message', msg);
-        //     }
-        // };
         summary.forEach((output) => {
             output = JSON.parse(JSON.stringify(output));
             // mocha expects test objects to have a method `slow, fullTitle, titlePath`.
@@ -186,7 +178,7 @@ exports.dumpTestSummary = () => {
         // Basically we should avoid skipping tests, unless we're absolutely certain they need to be (e.g. platform specific etc).
         if (skippedTests.length) {
             core.info(`${reportWriter.failures.length} tests skipped:`);
-            reportWriter.skippedTests.forEach((skippedTest, i) => {
+            skippedTests.forEach((skippedTest, i) => {
                 const suite = skippedTest.fullTitle().substring(0, skippedTest.fullTitle().indexOf(skippedTest.title));
                 core.info(`${i + 1}). ${suite.trim()} -> ${skippedTest.title}`);
             });
@@ -196,7 +188,7 @@ exports.dumpTestSummary = () => {
                 const suite = failure.fullTitle().substring(0, failure.fullTitle().indexOf(failure.title));
                 core.error(`${i + 1}). ${suite.trim()} -> ${failure.title}`);
                 const message =
-                failure.err.name && failure.err.message ? `${failure.err.name}: ${failure.err.message}` : undefined;
+                    failure.err.name && failure.err.message ? `${failure.err.name}: ${failure.err.message}` : undefined;
                 core.info(message || failure.err.stack);
             });
             core.setFailed(`${reportWriter.failures.length} tests failed`);
@@ -206,6 +198,6 @@ exports.dumpTestSummary = () => {
         fs.writeFileSync(webTestSummaryNb, JSON.stringify({ cells: cells }));
     } catch (ex) {
         core.error('Failed to print test summary');
-        core.error(ex);
+        core.setFailed(ex);
     }
 };
