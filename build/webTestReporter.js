@@ -191,14 +191,14 @@ exports.dumpTestSummary = () => {
             });
         }
         if (reportWriter.failures.length) {
-            core.error(`${reportWriter.failures.length} tests failed:`);
             reportWriter.failures.forEach((failure, i) => {
                 const suite = failure.fullTitle().substring(0, failure.fullTitle().indexOf(failure.title));
                 core.error(`${i + 1}). ${suite.trim()} -> ${failure.title}`);
                 const message =
-                    failure.err.name && failure.err.message ? `${failure.err.name}: ${failure.err.message}` : undefined;
+                failure.err.name && failure.err.message ? `${failure.err.name}: ${failure.err.message}` : undefined;
                 core.info(message || failure.err.stack);
             });
+            core.setFailed(`${reportWriter.failures.length} tests failed`);
         }
         // Write output into an ipynb file with the failures & corresponding console output.
         // TODO: Include the screenshots if any.
