@@ -10,12 +10,11 @@ const dedent = require('dedent');
 const { EventEmitter } = require('events');
 const colors = require('colors');
 const core = require('@actions/core');
+const { format } = require('util');
 
 const settingsFile = path.join(__dirname, '..', 'src', 'test', 'datascience', '.vscode', 'settings.json');
 const webTestSummaryJsonFile = path.join(__dirname, '..', 'testresults.json');
-const webTestSummaryFile = path.join(__dirname, '..', 'testresults.txt');
 const webTestSummaryNb = path.join(__dirname, '..', 'testresults.ipynb');
-const webTestSummaryXunit = path.join(__dirname, '..', 'testresults.xml');
 const progress = [];
 
 exports.startReportServer = async function () {
@@ -43,7 +42,6 @@ exports.startReportServer = async function () {
                     data += chunk.toString();
                 });
                 req.on('end', () => {
-                    fs.appendFileSync(webTestSummaryFile, data);
                     try {
                         progress.push(JSON.parse(data));
                     } catch (ex) {
@@ -81,16 +79,19 @@ exports.dumpTestSummary = () => {
         const runner = new EventEmitter();
         runner.stats = {};
         const reportWriter = new mocha.reporters.Spec(runner, { color: true });
-        const xUnitReportWriter = new mocha.reporters.XUnit(runner, {
-            color: true,
-            reporterOptions: { output: webTestSummaryXunit }
-        });
         reportWriter.failures = [];
-        xUnitReportWriter.failures = [];
         const cells = [];
         let indent = 0;
         let executionCount = 0;
         const skippedTests = [];
+        console.error(`Can use colors ${mocha.reporters.Base.useColors}`);
+        // mocha.reporters.Base.consoleLog = (fmt, ...args) => {
+        //     const msg = format(fmt, ...args);
+        //     if (msg.startsWith('\u001b[')) {
+        //     } else {
+        //         console.log('My message', msg);
+        //     }
+        // };
         summary.forEach((output) => {
             output = JSON.parse(JSON.stringify(output));
             // mocha expects test objects to have a method `slow, fullTitle, titlePath`.
@@ -109,7 +110,6 @@ exports.dumpTestSummary = () => {
             }
             if (output.event === 'fail') {
                 reportWriter.failures.push(output);
-                xUnitReportWriter.failures.push(output);
             }
             runner.emit(output.event, output, output.err);
 
@@ -200,8 +200,11 @@ exports.dumpTestSummary = () => {
                 core.info(message || failure.err.stack);
             });
         }
+        // Write output into an ipynb file with the failures & corresponding console output.
+        // TODO: Include the screenshots if any.
         fs.writeFileSync(webTestSummaryNb, JSON.stringify({ cells: cells }));
     } catch (ex) {
-        console.error('Failed dumpTestSummary', ex);
+        core.error('Failed to print test summary');
+        core.error(ex);
     }
 };
