@@ -10,7 +10,9 @@ const dedent = require('dedent');
 const { EventEmitter } = require('events');
 const colors = require('colors');
 const core = require('@actions/core');
-const { format } = require('util');
+const hashjs = require('hash.js');
+const glob = require('glob');
+const { ExtensionRootDir } = require('./constants');
 
 const settingsFile = path.join(__dirname, '..', 'src', 'test', 'datascience', '.vscode', 'settings.json');
 const webTestSummaryJsonFile = path.join(__dirname, '..', 'testresults.json');
@@ -132,7 +134,11 @@ exports.dumpTestSummary = () => {
                 case 'fail': {
                     const stackFrames = (output.err.stack || '').split(/\r?\n/);
                     const line1 = stackFrames.shift() || '';
-
+                    const fullTestNameHash = hashjs
+                        .sha256()
+                        .update(output.fullTitle() || '')
+                        .digest('hex');
+                    const fileNamePrefix = `${output.title}_${fullTestNameHash}`.replace(/[\W]+/g, '_');
                     const assertionError = {
                         ename: '',
                         evalue: '',
@@ -160,6 +166,21 @@ exports.dumpTestSummary = () => {
                         output_type: 'stream',
                         text: consoleOutputs
                     };
+                    // Look for a screenshot file with the above prefix & attach that to the cell outputs.
+                    const screenshots = glob
+                        .sync(`${fileNamePrefix}*-screenshot.png`, { cwd: ExtensionRootDir })
+                        .map((file) => {
+                            const contents = Buffer.from(fs.readFileSync(path.join(ExtensionRootDir, file))).toString(
+                                'base64'
+                            );
+                            return {
+                                data: {
+                                    'image/png': contents
+                                },
+                                metadata: {},
+                                output_type: 'display_data'
+                            };
+                        });
                     cells.push({
                         cell_type: 'code',
                         metadata: {
@@ -167,7 +188,7 @@ exports.dumpTestSummary = () => {
                         },
                         source: `#${output.title}`,
                         execution_count: ++executionCount,
-                        outputs: [assertionError, consoleOutput]
+                        outputs: [assertionError, consoleOutput, ...screenshots]
                     });
                     break;
                 }
