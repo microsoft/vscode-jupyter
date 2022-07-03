@@ -16,6 +16,7 @@ import {
 } from '../../../kernels/jupyter/liveRemoteKernelConnectionTracker';
 import { LiveRemoteKernelConnectionMetadata } from '../../../kernels/types';
 import { computeServerId } from '../../../kernels/jupyter/jupyterUtils';
+import { sleep, waitForCondition } from '../../common.node';
 
 use(chaiAsPromised);
 suite('Live kernel Connection Tracker', async () => {
@@ -214,13 +215,20 @@ suite('Live kernel Connection Tracker', async () => {
         assert.isTrue(tracker.wasKernelUsed(remoteLiveKernel2));
         assert.isTrue(tracker.wasKernelUsed(remoteLiveKernel3));
 
-        // Forget the Uir connection all together.
+        // Forget the Uri connection all together.
         onDidRemoveUris.fire([server2Uri]);
 
-        assert.isFalse(tracker.wasKernelUsed(remoteLiveKernel1));
-        assert.isFalse(tracker.wasKernelUsed(remoteLiveKernel2));
-        assert.isFalse(tracker.wasKernelUsed(remoteLiveKernel3));
-
-        assert.isEmpty(cachedItems);
+        await waitForCondition(
+            () => {
+                assert.isFalse(tracker.wasKernelUsed(remoteLiveKernel1));
+                assert.isFalse(tracker.wasKernelUsed(remoteLiveKernel2));
+                assert.isFalse(tracker.wasKernelUsed(remoteLiveKernel3));
+                return true;
+            },
+            100,
+            `Expected all to be false. But got ${[remoteLiveKernel1, remoteLiveKernel2, remoteLiveKernel3].map((item) =>
+                tracker.wasKernelUsed(item)
+            )}`
+        );
     });
 });
