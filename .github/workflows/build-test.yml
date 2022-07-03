@@ -707,8 +707,8 @@ jobs:
         uses: actions/upload-artifact@v2
         if: always()
         with:
-          name: testResults-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.os}}
-          path: testresults.*
+          name: TestResultNotebook-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.os}}
+          path: testresults.ipynb
           retention-days: 1
 
       - name: Upload screenshots
