@@ -195,15 +195,6 @@ exports.dumpTestSummary = () => {
             }
         });
 
-        // This is useful (in case we've accidentally skipped, or forgotten about skipped tests)
-        // Basically we should avoid skipping tests, unless we're absolutely certain they need to be (e.g. platform specific etc).
-        if (skippedTests.length) {
-            core.info(`${reportWriter.failures.length} tests skipped:`);
-            skippedTests.forEach((skippedTest, i) => {
-                const suite = skippedTest.fullTitle().substring(0, skippedTest.fullTitle().indexOf(skippedTest.title));
-                core.info(`${i + 1}). ${suite.trim()} -> ${skippedTest.title}`);
-            });
-        }
         if (reportWriter.failures.length) {
             reportWriter.failures.forEach((failure, i) => {
                 const suite = failure.fullTitle().substring(0, failure.fullTitle().indexOf(failure.title));
