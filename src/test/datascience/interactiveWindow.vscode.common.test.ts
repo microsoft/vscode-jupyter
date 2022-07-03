@@ -69,7 +69,7 @@ suite.only(`Interactive window execution`, async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             // For a flaky interrupt test.
-            captureScreenShot(this);
+            await captureScreenShot(this);
         }
         sinon.restore();
         await closeNotebooksAndCleanUpAfterTests(disposables);
@@ -182,7 +182,7 @@ suite.only(`Interactive window execution`, async function () {
 
         await verifyCells();
     });
-    test('Execute cell from input box', async () => {
+    test.only('Execute cell from input box', async () => {
         // Create new interactive window
         const activeInteractiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
         const notebook = await waitForInteractiveWindow(activeInteractiveWindow);

@@ -63,7 +63,7 @@ suite.only('DataScience - VSCode Notebook - Standard', function () {
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
-            captureScreenShot(this);
+            await captureScreenShot(this);
         }
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
