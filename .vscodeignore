@@ -12,6 +12,7 @@ docs/**
 .gitignore
 .gitmodules
 .huskyrc.json
+.husky/**
 .npmrc
 .nvmrc
 .nycrc
