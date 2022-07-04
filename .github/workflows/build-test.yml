@@ -683,10 +683,6 @@ jobs:
         id: test_notebookWithoutPythonExt_vscode
         if: matrix.python == 'noPython' && matrix.os != 'windows-latest'
 
-      - name: Check test run
-        run: npm run checkTestResults
-        if: always()
-
       - name: Upload test results
         uses: actions/upload-artifact@v2
         if: always()
@@ -726,6 +722,14 @@ jobs:
       - name: Log results
         if: always()
         run: npm run printTestResults
+
+      - name: Upload test result files
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: TestResultNotebook-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.os}}
+          path: testresults.ipynb
+          retention-days: 1
 
       - name: Upload Memory snapshot
         uses: actions/upload-artifact@v2

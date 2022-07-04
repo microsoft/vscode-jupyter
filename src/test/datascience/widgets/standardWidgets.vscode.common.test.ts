@@ -131,7 +131,7 @@ suite('Standard IPyWidget Tests', function () {
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
-            await captureScreenShot(this.currentTest.title);
+            await captureScreenShot(this);
         }
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);

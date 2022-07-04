@@ -2128,7 +2128,6 @@
         "prePublishBundleNLS": "cross-env BUILD_WITH_VSCODE_NLS=true gulp prePublishBundle",
         "prePublishNonBundle": "gulp clean && gulp prePublishNonBundle",
         "createNycFolder": "gulp createNycFolder",
-        "checkTestResults": "gulp checkTestResults",
         "validateTranslationFiles": "gulp validateTranslationFiles",
         "compile": "tsc -watch -p ./",
         "compile-no-watch": "tsc -p ./",

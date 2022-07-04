@@ -114,14 +114,14 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             await commands.executeCommand('workbench.action.closePanel');
             traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
         } catch (e) {
-            await captureScreenShot(this.currentTest?.title || 'unknown');
+            await captureScreenShot(this);
             throw e;
         }
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
-            await captureScreenShot(this.currentTest?.title);
+            await captureScreenShot(this);
         }
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);

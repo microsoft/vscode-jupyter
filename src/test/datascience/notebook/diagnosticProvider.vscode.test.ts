@@ -42,7 +42,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             assert.isOk(activeNotebook, 'No active notebook');
             traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
         } catch (e) {
-            await captureScreenShot(this.currentTest?.title || 'unknown');
+            await captureScreenShot(this);
             throw e;
         }
     });

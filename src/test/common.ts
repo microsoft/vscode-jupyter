@@ -169,7 +169,7 @@ export type CommonApi = {
     createTemporaryFile(options: { extension: string; contents?: string }): Promise<{ file: Uri } & IDisposable>;
     startJupyterServer(notebook?: NotebookDocument, useCert?: boolean): Promise<void>;
     stopJupyterServer?(): Promise<void>;
-    captureScreenShot?(fileNamePrefix: string): Promise<void>;
+    captureScreenShot?(contextOrFileName: string | Mocha.Context): Promise<void>;
     initialize(): Promise<IExtensionTestApi>;
 };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -195,9 +195,9 @@ export async function stopJupyterServer() {
         return API.stopJupyterServer();
     }
 }
-export async function captureScreenShot(fileNamePrefix: string) {
+export async function captureScreenShot(contextOrFileName: string | Mocha.Context) {
     if (API.captureScreenShot) {
-        await API.captureScreenShot(fileNamePrefix);
+        await API.captureScreenShot(contextOrFileName);
     }
 }
 
