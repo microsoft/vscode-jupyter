@@ -87,6 +87,7 @@ exports.dumpTestSummary = () => {
         let executionCount = 0;
         const skippedTests = [];
         mocha.reporters.Base.useColors = true;
+        colors.enable();
         summary.forEach((output) => {
             output = JSON.parse(JSON.stringify(output));
             // mocha expects test objects to have a method `slow, fullTitle, titlePath`.
