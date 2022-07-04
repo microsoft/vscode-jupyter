@@ -375,6 +375,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
                 const closeOption: string = DataScience.jupyterSelfCertClose();
                 const value = await this.appShell.showErrorMessage(
                     DataScience.jupyterSelfCertFail().format(e.message),
+                    { modal: true },
                     enableOption,
                     closeOption
                 );
