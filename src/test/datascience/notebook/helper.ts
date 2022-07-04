@@ -571,7 +571,11 @@ export async function workAroundVSCodeNotebookStartPages() {
     }
 }
 
+const prewarmNotebooksDone = { done: false };
 export async function prewarmNotebooks() {
+    if (prewarmNotebooksDone.done) {
+        return;
+    }
     const { editorProvider, vscodeNotebook, serviceContainer } = await getServices();
     await closeActiveWindows();
 
@@ -592,6 +596,7 @@ export async function prewarmNotebooks() {
         await shutdownAllNotebooks();
     } finally {
         disposables.forEach((d) => d.dispose());
+        prewarmNotebooksDone.done = true;
     }
 }
 
