@@ -80,7 +80,7 @@ suite('VariableView @variableViewer', function () {
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
 
-        // Aquire the variable view from the provider
+        // Acquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const variableView = coreVariableView as any as ITestWebviewHost;
@@ -127,7 +127,7 @@ suite('VariableView @variableViewer', function () {
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
 
-        // Aquire the variable view from the provider
+        // Acquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const variableView = coreVariableView as any as ITestWebviewHost;
@@ -153,7 +153,7 @@ suite('VariableView @variableViewer', function () {
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
 
-        // Aquire the variable view from the provider
+        // Acquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const variableView = coreVariableView as any as ITestWebviewHost;
@@ -200,7 +200,7 @@ suite('VariableView @variableViewer', function () {
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
 
-        // Aquire the variable view from the provider
+        // Acquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const variableView = coreVariableView as any as ITestWebviewHost;
@@ -241,7 +241,7 @@ myClass = MyClass()
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
 
-        // Aquire the variable view from the provider
+        // Acquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const variableView = coreVariableView as any as ITestWebviewHost;
@@ -280,7 +280,7 @@ mySet = {1, 2, 3}
         // Send the command to open the view
         await commandManager.executeCommand(Commands.OpenVariableView);
 
-        // Aquire the variable view from the provider
+        // Acquire the variable view from the provider
         const coreVariableView = await variableViewProvider.activeVariableView;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const variableView = coreVariableView as any as ITestWebviewHost;
