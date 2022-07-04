@@ -5,7 +5,6 @@
 import type * as mochaTypes from 'mocha';
 import { env, extensions, UIKind, Uri, workspace } from 'vscode';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from '../constants';
-import { noop } from '../core';
 import { format } from 'util';
 import { registerLogger, traceInfoIfCI } from '../../platform/logging/index';
 import { Arguments, ILogger } from '../../platform/logging/types';
