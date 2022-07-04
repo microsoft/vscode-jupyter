@@ -78,10 +78,10 @@ suite.only(`Interactive window execution`, async function () {
     test.skip('skipped fn', () => {
         //
     });
-    test('Some assertion failure', () => {
+    test.only('Some assertion failure', () => {
         assert.equal(1, 3);
     });
-    test('Some random failure', () => {
+    test.only('Some random failure', () => {
         throw new Error('kaboom');
     });
     test.skip('Execute cell from Python file', async () => {

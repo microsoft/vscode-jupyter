@@ -254,7 +254,7 @@ suite.only('DataScience - VSCode Notebook - (Execution) (slow)', function () {
             )
         ]);
     });
-    test('Verify Cell output, execution count and status', async () => {
+    test.only('Verify Cell output, execution count and status', async () => {
         await insertCodeCell('print("Hello World")');
         const cell = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
 
@@ -263,7 +263,7 @@ suite.only('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         // Verify execution count.
         assert.ok(cell.executionSummary?.executionOrder, 'Execution count should be > 0');
     });
-    test('Verify multiple cells get executed', async () => {
+    test.only('Verify multiple cells get executed', async () => {
         await insertCodeCell('print("Foo Bar")');
         await insertCodeCell('print("Hello World")');
         const cells = vscodeNotebook.activeNotebookEditor?.notebook.getCells()!;

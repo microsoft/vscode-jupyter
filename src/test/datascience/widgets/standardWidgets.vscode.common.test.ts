@@ -143,7 +143,7 @@ suite.only('Standard IPyWidget Tests', function () {
         await executeCellAndWaitForOutput(cell, comms);
         await assertOutputContainsHtml(cell, comms, ['6519'], '.widget-readout');
     });
-    test('Textbox Widget', async () => {
+    test.only('Textbox Widget', async () => {
         const comms = await initializeNotebookForWidgetTest(api, disposables, {
             templateFile: 'standard_widgets.ipynb'
         });
@@ -206,7 +206,7 @@ suite.only('Standard IPyWidget Tests', function () {
         await assertOutputContainsHtml(cell1, comms, ['Button clicked']);
         await assertOutputContainsHtml(cell2, comms, ['Button clicked']);
     });
-    test('Button Widget with custom comm message', async () => {
+    test.only('Button Widget with custom comm message', async () => {
         const comms = await initializeNotebookForWidgetTest(api, disposables, {
             templateFile: 'button_widget_comm_msg.ipynb'
         });
@@ -214,7 +214,7 @@ suite.only('Standard IPyWidget Tests', function () {
 
         await executeCellAndWaitForOutput(cell0, comms);
         await executeCellAndWaitForOutput(cell1, comms);
-        await assertOutputContainsHtml(cell0, comms, ['Click Me!', '<button']);
+        await assertOutputContainsHtml(cell0, comms, ['Click Me!1', '<button']);
 
         // Click the button and verify we have output in the same cell.
         await clickWidget(comms, cell0, 'button');

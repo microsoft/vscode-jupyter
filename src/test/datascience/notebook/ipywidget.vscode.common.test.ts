@@ -29,7 +29,7 @@ import { NotebookIPyWidgetCoordinator } from '../../../notebooks/controllers/not
 import { IWebviewCommunication } from '../../../platform/webviews/types';
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite.only('DataScience - VSCode Notebook - Standard', function () {
+suite('DataScience - VSCode Notebook - Standard', function () {
     this.timeout(120_000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];

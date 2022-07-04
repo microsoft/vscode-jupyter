@@ -89,7 +89,7 @@ import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../ke
         });
         suiteTeardown(async () => closeNotebooksAndCleanUpAfterTests(disposables));
 
-        test('Button Widget with custom comm message rendering a matplotlib widget', async () => {
+        test.only('Button Widget with custom comm message rendering a matplotlib widget', async () => {
             const comms = await initializeNotebookForWidgetTest(api, disposables, {
                 templateFile: 'button_widget_comm_msg_matplotlib.ipynb'
             });
