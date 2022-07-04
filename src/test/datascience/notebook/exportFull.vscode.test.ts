@@ -65,12 +65,12 @@ suite('DataScience - VSCode Notebook - (Export) (slow)', function () {
                 INbConvertInterpreterDependencyChecker
             );
             interpreterService = api.serviceContainer.get<IInterpreterService>(IInterpreterService);
-                await hijackPrompt(
-                    'showErrorMessage',
-                    { endsWith: expectedPromptMessageSuffix },
-                    { result: Common.install(), clickImmediately: true },
-                    disposables
-                );
+            await hijackPrompt(
+                'showErrorMessage',
+                { endsWith: expectedPromptMessageSuffix },
+                { result: Common.install(), clickImmediately: true },
+                disposables
+            );
 
             sinon.restore();
             vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);

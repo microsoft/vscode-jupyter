@@ -11,7 +11,7 @@ import {
     prewarmNotebooks,
     runCell,
     startJupyterServer,
-    waitForTextOutput,
+    waitForTextOutput
 } from '../datascience/notebook/helper.node';
 import { initialize } from '../initialize.node';
 import * as sinon from 'sinon';
