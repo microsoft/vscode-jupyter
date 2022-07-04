@@ -32,7 +32,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         try {
             traceInfo(`Start Test ${this.currentTest?.title}`);
             api = await initialize();
-            await workAroundVSCodeNotebookStartPages();
             vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
             diagnosticProvider = api.serviceContainer
                 .getAll<NotebookCellBangInstallDiagnosticsProvider>(IExtensionSyncActivationService)

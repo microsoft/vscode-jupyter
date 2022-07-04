@@ -22,7 +22,6 @@ import {
     prewarmNotebooks,
     hijackPrompt,
     createEmptyPythonNotebook,
-    workAroundVSCodeNotebookStartPages,
     waitForExecutionCompletedSuccessfully,
     runAllCellsInActiveNotebook,
     waitForKernelToGetAutoSelected,
@@ -65,7 +64,6 @@ suite('DataScience - VSCode Notebook Kernel Error Handling - (Execution) (slow)'
             api = await initialize();
             kernelProvider = api.serviceContainer.get<IKernelProvider>(IKernelProvider);
             config = api.serviceContainer.get<IConfigurationService>(IConfigurationService);
-            await workAroundVSCodeNotebookStartPages();
             await startJupyterServer();
             await prewarmNotebooks();
             sinon.restore();

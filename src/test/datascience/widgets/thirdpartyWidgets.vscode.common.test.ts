@@ -63,8 +63,7 @@ import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../ke
             const memento = api.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
             await memento.update(GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce, true);
 
-            await workAroundVSCodeNotebookStartPages();
-            await startJupyterServer();
+                await startJupyterServer();
             await prewarmNotebooks();
             sinon.restore();
             traceInfo('Suite Setup (completed)');

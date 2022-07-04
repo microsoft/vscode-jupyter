@@ -20,8 +20,7 @@
 //     waitForExecutionCompletedSuccessfully,
 //     hijackPrompt,
 //     createEmptyPythonNotebook,
-//     workAroundVSCodeNotebookStartPages,
-//     waitForTextOutput
+// //     waitForTextOutput
 // } from './helper';
 // import { ProductNames } from '../../../platform/common/installer/productNames';
 // import { INotebookControllerManager } from '../../../notebooks/types';
@@ -68,8 +67,7 @@
 //         if (!(await canRunNotebookTests())) {
 //             return this.skip();
 //         }
-//         await workAroundVSCodeNotebookStartPages();
-//         await hijackPrompt(
+// //         await hijackPrompt(
 //             'showErrorMessage',
 //             { endsWith: expectedPromptMessageSuffix },
 //             { text: Common.install(), clickImmediately: true },

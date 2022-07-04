@@ -16,7 +16,6 @@ import {
     createEmptyPythonNotebook,
     insertCodeCell,
     prewarmNotebooks,
-    workAroundVSCodeNotebookStartPages,
     getCellOutputs,
     defaultNotebookTestTimeout,
     waitForStoppedEvent,
@@ -51,7 +50,6 @@ suite('VSCode Notebook - Run By Line', function () {
         }
 
         api = await initialize();
-        await workAroundVSCodeNotebookStartPages();
         await closeNotebooksAndCleanUpAfterTests(disposables);
         await prewarmNotebooks();
         sinon.restore();

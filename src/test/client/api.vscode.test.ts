@@ -12,7 +12,6 @@ import {
     runCell,
     startJupyterServer,
     waitForTextOutput,
-    workAroundVSCodeNotebookStartPages
 } from '../datascience/notebook/helper.node';
 import { initialize } from '../initialize.node';
 import * as sinon from 'sinon';
@@ -32,7 +31,6 @@ suite('3rd Party Kernel Service API', function () {
         this.timeout(120_000);
         try {
             api = await initialize();
-            await workAroundVSCodeNotebookStartPages();
             await startJupyterServer();
             await prewarmNotebooks();
             sinon.restore();
