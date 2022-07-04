@@ -20,7 +20,7 @@ import {
 } from 'vscode';
 import { Common } from '../../../platform/common/utils/localize';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
-import { traceInfo, traceInfoIfCI } from '../../../platform/logging';
+import { traceError, traceInfo, traceInfoIfCI, traceWarning } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize.node';
@@ -69,7 +69,7 @@ import { InteractiveWindowMessages } from '../../../messageTypes';
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
+suite.only('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
@@ -267,7 +267,8 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         await insertCodeCell('print("Foo Bar")');
         await insertCodeCell('print("Hello World")');
         const cells = vscodeNotebook.activeNotebookEditor?.notebook.getCells()!;
-
+        traceWarning('Warnings are highlighted as expected');
+        traceError('Errors are highlighted as expected', new Error('Foo Bar'));
         await Promise.all([
             runAllCellsInActiveNotebook(),
             // Verify output.

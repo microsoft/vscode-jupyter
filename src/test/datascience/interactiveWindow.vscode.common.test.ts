@@ -119,11 +119,11 @@ suite.only(`Interactive window execution`, async function () {
         await waitForExecutionCompletedSuccessfully(secondCell!);
         await waitForTextOutput(secondCell!, '42');
     });
-    test.skip('__file__ exists even after restarting a kernel', async function () {
+    test('__file__ exists even after restarting a kernel', async function () {
         // Ensure we click `Yes` when prompted to restart the kernel.
         disposables.push(await clickOKForRestartPrompt());
 
-        const source = 'print(__file__)';
+        const source = 'print(__file__xyz)';
         const { activeInteractiveWindow, untitledPythonFile } = await submitFromPythonFile(
             interactiveWindowProvider,
             source,

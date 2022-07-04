@@ -38,7 +38,7 @@ import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../ke
 
 [true, false].forEach((useCDN) => {
     /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-    suite(`Third party IPyWidget Tests ${useCDN ? 'with CDN' : 'without CDN'}`, function () {
+    suite.only(`Third party IPyWidget Tests ${useCDN ? 'with CDN' : 'without CDN'}`, function () {
         let api: IExtensionTestApi;
         const disposables: IDisposable[] = [];
         let vscodeNotebook: IVSCodeNotebook;
@@ -101,7 +101,7 @@ import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../ke
 
             // Click the button and verify we have output in the same cell.
             await clickWidget(comms, cell0, 'button');
-            await assertOutputContainsHtml(cell0, comms, ['>Figure 1<', '<canvas', 'Download plot']);
+            await assertOutputContainsHtml(cell0, comms, ['>Figure 12314<', '<canvas', 'Download plot']);
         });
         test('Render IPySheets', async function () {
             // https://github.com/microsoft/vscode-jupyter/issues/10506
