@@ -97,7 +97,10 @@ function writeReportProgress(message: Message) {
             const ext = extensions.getExtension(JVSC_EXTENSION_ID_FOR_TESTS)!.extensionUri;
             const logFile = Uri.joinPath(ext, 'testresults.json');
             traceInfoIfCI(`Writing test results to ${logFile}`);
-            workspace.fs.writeFile(logFile, Buffer.from(JSON.stringify(messages))).then(noop, noop);
+            const requireFunc: typeof require = typeof __webpack_require__ === "function" ? __non_webpack_require__ : require;
+            const fs: typeof import('fs') = requireFunc('fs');
+            // eslint-disable-next-line local-rules/dont-use-fspath
+            fs.writeFileSync(logFile.fsPath, JSON.stringify(messages));
         }
     } else {
         if (message.event === constants.EVENT_RUN_BEGIN) {
