@@ -7,7 +7,7 @@ import { env, extensions, UIKind, Uri, workspace } from 'vscode';
 import { JVSC_EXTENSION_ID_FOR_TESTS } from '../constants';
 import { noop } from '../core';
 import { format } from 'util';
-import { registerLogger } from '../../platform/logging/index';
+import { registerLogger, traceInfoIfCI } from '../../platform/logging/index';
 import { Arguments, ILogger } from '../../platform/logging/types';
 const { inherits } = require('mocha/lib/utils');
 const defaultReporter = require('mocha/lib/reporters/spec');
@@ -96,6 +96,7 @@ function writeReportProgress(message: Message) {
         if (message.event === constants.EVENT_RUN_END) {
             const ext = extensions.getExtension(JVSC_EXTENSION_ID_FOR_TESTS)!.extensionUri;
             const logFile = Uri.joinPath(ext, 'testresults.json');
+            traceInfoIfCI(`Writing test results to ${logFile}`);
             workspace.fs.writeFile(logFile, Buffer.from(JSON.stringify(messages))).then(noop, noop);
         }
     } else {
