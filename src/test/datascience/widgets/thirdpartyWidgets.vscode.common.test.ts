@@ -24,8 +24,7 @@ import {
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     defaultNotebookTestTimeout,
-    prewarmNotebooks,
-    workAroundVSCodeNotebookStartPages
+    prewarmNotebooks
 } from '../notebook/helper';
 import {
     assertOutputContainsHtml,

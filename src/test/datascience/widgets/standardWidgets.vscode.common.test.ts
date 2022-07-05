@@ -25,8 +25,7 @@ import {
     waitForCellExecutionToComplete,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected,
-    waitForTextOutput,
-    workAroundVSCodeNotebookStartPages
+    waitForTextOutput
 } from '../notebook/helper';
 import { initializeWidgetComms, Utils } from './commUtils';
 import { WidgetRenderingTimeoutForTests } from './constants';

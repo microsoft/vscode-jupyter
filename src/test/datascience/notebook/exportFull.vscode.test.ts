@@ -22,8 +22,7 @@ import {
     insertCodeCell,
     insertMarkdownCell,
     saveActiveNotebook,
-    startJupyterServer,
-    workAroundVSCodeNotebookStartPages
+    startJupyterServer
 } from './helper.node';
 import { commands, ConfigurationTarget, Uri, window, workspace } from 'vscode';
 import { createDeferred } from '../../../platform/common/utils/async';
