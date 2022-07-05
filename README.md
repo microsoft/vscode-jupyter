@@ -56,7 +56,7 @@ The Jupyter Extension supports other languages in addition to Python such as Jul
 
 ## Notebooks Quick Start
 
--   To create a new notebook open the command palette (Windows: Ctrl + Shift + P, macOS: Command + Shift + P) and select the command `"Jupyter: Create New Jupyter Notebook"`
+-   To create a new notebook open the command palette (Windows: Ctrl + Shift + P, macOS: Command + Shift + P) and select the command `"Create: New Jupyter Notebook"`
 
     <img src=https://raw.githubusercontent.com/microsoft/vscode-jupyter/main/images/Jupyter%20README/CreateNewNotebook.png>
 
@@ -74,7 +74,7 @@ Open the Command Palette (Command+Shift+P on macOS and Ctrl+Shift+P on Windows/L
 
 | Command                                          | Description                                                            |
 | ------------------------------------------------ | ---------------------------------------------------------------------- |
-| `Jupyter: Create New Jupyter Notebook`           | Create a new blank Jupyter Notebook                                    |
+| `Create: New Jupyter Notebook`           | Create: New Jupyter Notebook                                    |
 | `Notebook: Select Notebook Kernel`               | Select or switch kernels within your notebook                          |
 | `Notebook: Change Cell Language`                 | Change the language of the cell currently in focus                     |
 | `Jupyter: Export to HTML Jupyter: Export to PDF` | Create a presentation-friendly version of your notebook in HTML or PDF |
