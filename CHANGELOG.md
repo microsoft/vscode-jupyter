@@ -45,6 +45,12 @@
    ([#10531](https://github.com/Microsoft/vscode-jupyter/issues/10531))
 1. Remove extra button from Restart Kernel modal. (Thanks [kilacoda](https://github.com/kilacoda))
    ([#10539](https://github.com/Microsoft/vscode-jupyter/issues/10539))
+1. Add support for loading of widget scripts found within the [global Jupyter data directory](https://docs.jupyter.org/en/latest/use/jupyter-directories.html#envvar-JUPYTER_DATA_DIR).
+   ([#8241](https://github.com/Microsoft/vscode-jupyter/issues/8241))
+1. Set a longer timeout so that if we fail to install the Python extension for some reason we don't just wait forever.
+   ([#10617](https://github.com/Microsoft/vscode-jupyter/issues/10617))
+1. Expose `jQuery` in Notebook Cell outputs for IPyWidgets.
+   ([#10660](https://github.com/Microsoft/vscode-jupyter/issues/10660))
 
 ### Code Health
 
