@@ -34,8 +34,8 @@ suite('DataScience - Export HTML', function () {
         );
         await exportToHTML.export(document, target, interpreter, token.token);
         assert.exists(target);
-        assert.equal(await fileSystem.localFileExists(target!.fsPath), true);
-        const fileContents = await fileSystem.readLocalFile(target!.fsPath);
+        assert.equal(await fileSystem.exists(target), true);
+        const fileContents = await fileSystem.readFile(target!);
         assert.include(fileContents, '<!DOCTYPE html>');
         // this is the content of a cell
         assert.include(fileContents, 'f6886df81f3d4023a2122cc3f55fdbec');

@@ -11,7 +11,8 @@ import { TemporaryFile } from './types';
 import { IFileSystemNode } from './types.node';
 import { ENCODING, FileSystem as FileSystemBase } from './fileSystem';
 import { IExtensionContext, IHttpClient } from '../types';
-import { arePathsSame } from './fileUtils.node';
+import { FileType, Uri } from 'vscode';
+import { getFilePath } from './fs-paths';
 
 /**
  * File system abstraction which wraps the VS Code API.
@@ -23,10 +24,6 @@ export class FileSystem extends FileSystemBase implements IFileSystemNode {
     constructor(@inject(IExtensionContext) context: IExtensionContext, @inject(IHttpClient) httpClient: IHttpClient) {
         super(context, httpClient);
         this.globFiles = promisify(glob);
-    }
-
-    public async appendLocalFile(path: string, text: string): Promise<void> {
-        return fs.appendFile(path, text);
     }
 
     public createLocalWriteStream(path: string): fs.WriteStream {
@@ -55,25 +52,6 @@ export class FileSystem extends FileSystemBase implements IFileSystemNode {
         });
     }
 
-    public async deleteLocalDirectory(dirname: string) {
-        await new Promise((resolve) => fs.rm(dirname, { force: true, recursive: true }, resolve));
-    }
-
-    public async ensureLocalDir(path: string): Promise<void> {
-        return fs.ensureDir(path);
-    }
-
-    public async localDirectoryExists(dirname: string): Promise<boolean> {
-        return fs.pathExists(dirname);
-    }
-
-    public async localFileExists(filename: string): Promise<boolean> {
-        return fs.pathExists(filename);
-    }
-    public async deleteLocalFile(path: string): Promise<void> {
-        await fs.unlink(path);
-    }
-
     public async searchLocal(globPattern: string, cwd?: string, dot?: boolean): Promise<string[]> {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let options: any;
@@ -88,34 +66,70 @@ export class FileSystem extends FileSystemBase implements IFileSystemNode {
         return Array.isArray(found) ? found : [];
     }
 
-    areLocalPathsSame(path1: string, path2: string): boolean {
-        return arePathsSame(path1, path2);
-    }
-
-    public async createLocalDirectory(path: string): Promise<void> {
-        await fs.ensureDir(path);
-    }
-
-    async copyLocal(
-        source: string,
-        destination: string,
-        options: { overwrite: boolean } = { overwrite: true }
-    ): Promise<void> {
-        await fs.copy(source, destination, { overwrite: options?.overwrite });
-    }
-
-    async readLocalData(filename: string): Promise<Buffer> {
-        return fs.readFile(filename);
-    }
-
-    async readLocalFile(filename: string): Promise<string> {
-        const result = await fs.readFile(filename);
-        const data = Buffer.from(result);
-        return data.toString(ENCODING);
-    }
-
     async writeLocalFile(filename: string, text: string | Buffer): Promise<void> {
         await fs.ensureDir(path.dirname(filename));
         return fs.writeFile(filename, text);
     }
+
+    override async readFile(uri: Uri): Promise<string> {
+        if (isLocalFile(uri)) {
+            const result = await fs.readFile(getFilePath(uri));
+            const data = Buffer.from(result);
+            return data.toString(ENCODING);
+        } else {
+            return super.readFile(uri);
+        }
+    }
+
+    override async delete(uri: Uri): Promise<void> {
+        if (isLocalFile(uri)) {
+            if (await this.exists(uri)) {
+                const stat = await this.stat(uri);
+                if (stat.type === FileType.Directory) {
+                    await new Promise((resolve) => fs.rm(getFilePath(uri), { force: true, recursive: true }, resolve));
+                } else {
+                    await fs.unlink(getFilePath(uri));
+                }
+            }
+        } else {
+            await super.delete(uri);
+        }
+    }
+
+    override async exists(filename: Uri, fileType?: FileType | undefined): Promise<boolean> {
+        if (isLocalFile(filename)) {
+            return fs.pathExists(getFilePath(filename));
+        } else {
+            return super.exists(filename, fileType);
+        }
+    }
+    override async createDirectory(uri: Uri): Promise<void> {
+        if (isLocalFile(uri)) {
+            await fs.ensureDir(getFilePath(uri));
+        } else {
+            await this.vscfs.createDirectory(uri);
+        }
+    }
+    override async writeFile(uri: Uri, text: string | Buffer): Promise<void> {
+        if (isLocalFile(uri)) {
+            const filename = getFilePath(uri);
+            await fs.ensureDir(path.dirname(filename));
+            return fs.writeFile(filename, text);
+        } else {
+            await this.vscfs.writeFile(uri, typeof text === 'string' ? Buffer.from(text) : text);
+        }
+    }
+    override async copy(source: Uri, destination: Uri, options?: { overwrite: boolean }): Promise<void> {
+        if (isLocalFile(source) && isLocalFile(destination)) {
+            const overwrite =
+                typeof options === undefined || typeof options?.overwrite == undefined ? true : options?.overwrite;
+            await fs.copy(getFilePath(source), getFilePath(destination), { overwrite });
+        } else {
+            await super.copy(source, destination, options);
+        }
+    }
+}
+
+function isLocalFile(uri: Uri) {
+    return uri.scheme === 'file';
 }

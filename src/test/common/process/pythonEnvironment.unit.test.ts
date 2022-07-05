@@ -6,10 +6,11 @@
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { SemVer } from 'semver';
+import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
-import { IFileSystemNode } from '../../../platform/common/platform/types.node';
+import { IFileSystem } from '../../../platform/common/platform/types';
 import {
     createCondaEnv,
     createPythonEnv,
@@ -22,12 +23,12 @@ use(chaiAsPromised);
 
 suite('PythonEnvironment', () => {
     let processService: TypeMoq.IMock<IProcessService>;
-    let fileSystem: TypeMoq.IMock<IFileSystemNode>;
+    let fileSystem: IFileSystem;
     const pythonPath = Uri.file('path/to/python');
 
     setup(() => {
         processService = TypeMoq.Mock.ofType<IProcessService>(undefined, TypeMoq.MockBehavior.Strict);
-        fileSystem = TypeMoq.Mock.ofType<IFileSystemNode>(undefined, TypeMoq.MockBehavior.Strict);
+        fileSystem = mock<IFileSystem>();
     });
 
     test('getInterpreterInformation should return an object if the python path is valid', async () => {
@@ -40,7 +41,11 @@ suite('PythonEnvironment', () => {
         processService
             .setup((p) => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
-        const env = createPythonEnv({ uri: pythonPath } as PythonEnvironment, processService.object, fileSystem.object);
+        const env = createPythonEnv(
+            { uri: pythonPath } as PythonEnvironment,
+            processService.object,
+            instance(fileSystem)
+        );
 
         const result = await env.getInterpreterInformation();
         const expectedResult = {
@@ -63,7 +68,11 @@ suite('PythonEnvironment', () => {
         processService
             .setup((p) => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
-        const env = createPythonEnv({ uri: pythonPath } as PythonEnvironment, processService.object, fileSystem.object);
+        const env = createPythonEnv(
+            { uri: pythonPath } as PythonEnvironment,
+            processService.object,
+            instance(fileSystem)
+        );
 
         const result = await env.getInterpreterInformation();
         const expectedResult = {
@@ -89,7 +98,11 @@ suite('PythonEnvironment', () => {
         processService
             .setup((p) => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
-        const env = createPythonEnv({ uri: pythonPath } as PythonEnvironment, processService.object, fileSystem.object);
+        const env = createPythonEnv(
+            { uri: pythonPath } as PythonEnvironment,
+            processService.object,
+            instance(fileSystem)
+        );
 
         const result = await env.getInterpreterInformation();
         const expectedResult = {
@@ -110,7 +123,11 @@ suite('PythonEnvironment', () => {
             .setup((p) => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .returns(() => Promise.reject(new Error('timed out')));
-        const env = createPythonEnv({ uri: pythonPath } as PythonEnvironment, processService.object, fileSystem.object);
+        const env = createPythonEnv(
+            { uri: pythonPath } as PythonEnvironment,
+            processService.object,
+            instance(fileSystem)
+        );
 
         const result = await env.getInterpreterInformation();
 
@@ -124,7 +141,11 @@ suite('PythonEnvironment', () => {
         processService
             .setup((p) => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: 'bad json' }));
-        const env = createPythonEnv({ uri: pythonPath } as PythonEnvironment, processService.object, fileSystem.object);
+        const env = createPythonEnv(
+            { uri: pythonPath } as PythonEnvironment,
+            processService.object,
+            instance(fileSystem)
+        );
 
         const result = await env.getInterpreterInformation();
 
@@ -132,8 +153,12 @@ suite('PythonEnvironment', () => {
     });
 
     test('getExecutablePath should return pythonPath if pythonPath is a file', async () => {
-        fileSystem.setup((f) => f.localFileExists(getFilePath(pythonPath))).returns(() => Promise.resolve(true));
-        const env = createPythonEnv({ uri: pythonPath } as PythonEnvironment, processService.object, fileSystem.object);
+        when(fileSystem.exists(anything())).thenCall((file: Uri) => file.fsPath === pythonPath.fsPath);
+        const env = createPythonEnv(
+            { uri: pythonPath } as PythonEnvironment,
+            processService.object,
+            instance(fileSystem)
+        );
 
         const result = await env.getExecutablePath();
 
@@ -142,12 +167,16 @@ suite('PythonEnvironment', () => {
 
     test('getExecutablePath should not return pythonPath if pythonPath is not a file', async () => {
         const executablePath = 'path/to/dummy/executable';
-        fileSystem.setup((f) => f.localFileExists(getFilePath(pythonPath))).returns(() => Promise.resolve(false));
+        when(fileSystem.exists(anything())).thenCall((file: Uri) => file.fsPath !== pythonPath.fsPath);
         const argv = ['-c', 'import sys;print(sys.executable)'];
         processService
             .setup((p) => p.exec(getFilePath(pythonPath), argv, { throwOnStdErr: true }))
             .returns(() => Promise.resolve({ stdout: executablePath }));
-        const env = createPythonEnv({ uri: pythonPath } as PythonEnvironment, processService.object, fileSystem.object);
+        const env = createPythonEnv(
+            { uri: pythonPath } as PythonEnvironment,
+            processService.object,
+            instance(fileSystem)
+        );
 
         const result = await env.getExecutablePath();
 
@@ -159,12 +188,16 @@ suite('PythonEnvironment', () => {
 
     test('getExecutablePath should throw if the result of exec() writes to stderr', async () => {
         const stderr = 'bar';
-        fileSystem.setup((f) => f.localFileExists(getFilePath(pythonPath))).returns(() => Promise.resolve(false));
+        when(fileSystem.exists(anything())).thenCall((file: Uri) => file.fsPath !== pythonPath.fsPath);
         const argv = ['-c', 'import sys;print(sys.executable)'];
         processService
             .setup((p) => p.exec(getFilePath(pythonPath), argv, { throwOnStdErr: true }))
             .returns(() => Promise.reject(new StdErrError(stderr)));
-        const env = createPythonEnv({ uri: pythonPath } as PythonEnvironment, processService.object, fileSystem.object);
+        const env = createPythonEnv(
+            { uri: pythonPath } as PythonEnvironment,
+            processService.object,
+            instance(fileSystem)
+        );
 
         const result = env.getExecutablePath();
 
@@ -178,7 +211,11 @@ suite('PythonEnvironment', () => {
             .setup((p) => p.exec(getFilePath(pythonPath), argv, { throwOnStdErr: true }))
             .returns(() => Promise.resolve({ stdout: '' }))
             .verifiable(TypeMoq.Times.once());
-        const env = createPythonEnv({ uri: pythonPath } as PythonEnvironment, processService.object, fileSystem.object);
+        const env = createPythonEnv(
+            { uri: pythonPath } as PythonEnvironment,
+            processService.object,
+            instance(fileSystem)
+        );
 
         await env.isModuleInstalled(moduleName);
 
@@ -191,7 +228,11 @@ suite('PythonEnvironment', () => {
         processService
             .setup((p) => p.exec(getFilePath(pythonPath), argv, { throwOnStdErr: true }))
             .returns(() => Promise.resolve({ stdout: '' }));
-        const env = createPythonEnv({ uri: pythonPath } as PythonEnvironment, processService.object, fileSystem.object);
+        const env = createPythonEnv(
+            { uri: pythonPath } as PythonEnvironment,
+            processService.object,
+            instance(fileSystem)
+        );
 
         const result = await env.isModuleInstalled(moduleName);
 
@@ -204,7 +245,11 @@ suite('PythonEnvironment', () => {
         processService
             .setup((p) => p.exec(getFilePath(pythonPath), argv, { throwOnStdErr: true }))
             .returns(() => Promise.reject(new StdErrError('bar')));
-        const env = createPythonEnv({ uri: pythonPath } as PythonEnvironment, processService.object, fileSystem.object);
+        const env = createPythonEnv(
+            { uri: pythonPath } as PythonEnvironment,
+            processService.object,
+            instance(fileSystem)
+        );
 
         const result = await env.isModuleInstalled(moduleName);
 
@@ -213,7 +258,11 @@ suite('PythonEnvironment', () => {
 
     test('getExecutionInfo should return pythonPath and the execution arguments as is', () => {
         const args = ['-a', 'b', '-c'];
-        const env = createPythonEnv({ uri: pythonPath } as PythonEnvironment, processService.object, fileSystem.object);
+        const env = createPythonEnv(
+            { uri: pythonPath } as PythonEnvironment,
+            processService.object,
+            instance(fileSystem)
+        );
 
         const result = env.getExecutionInfo(args);
 
@@ -231,14 +280,14 @@ suite('PythonEnvironment', () => {
 
 suite('CondaEnvironment', () => {
     let processService: TypeMoq.IMock<IProcessService>;
-    let fileSystem: TypeMoq.IMock<IFileSystemNode>;
+    let fileSystem: IFileSystem;
     const args = ['-a', 'b', '-c'];
     const pythonPath = Uri.file('path/to/python');
     const condaFile = 'path/to/conda';
 
     setup(() => {
         processService = TypeMoq.Mock.ofType<IProcessService>(undefined, TypeMoq.MockBehavior.Strict);
-        fileSystem = TypeMoq.Mock.ofType<IFileSystemNode>(undefined, TypeMoq.MockBehavior.Strict);
+        fileSystem = mock<IFileSystem>();
     });
 
     test('getExecutionInfo with a named environment should return execution info using the environment name', () => {
@@ -248,7 +297,7 @@ suite('CondaEnvironment', () => {
             condaInfo,
             { uri: pythonPath } as PythonEnvironment,
             processService.object,
-            fileSystem.object
+            instance(fileSystem)
         );
 
         const result = env.getExecutionInfo(args);
@@ -268,7 +317,7 @@ suite('CondaEnvironment', () => {
             condaInfo,
             { uri: pythonPath } as PythonEnvironment,
             processService.object,
-            fileSystem.object
+            instance(fileSystem)
         );
 
         const result = env.getExecutionInfo(args);
@@ -294,7 +343,7 @@ suite('CondaEnvironment', () => {
             condaInfo,
             { uri: pythonPath } as PythonEnvironment,
             processService.object,
-            fileSystem.object
+            instance(fileSystem)
         );
 
         const result = env.getExecutionObservableInfo(args);
@@ -315,7 +364,7 @@ suite('CondaEnvironment', () => {
             condaInfo,
             { uri: pythonPath } as PythonEnvironment,
             processService.object,
-            fileSystem.object
+            instance(fileSystem)
         );
 
         const result = env.getExecutionObservableInfo(args);

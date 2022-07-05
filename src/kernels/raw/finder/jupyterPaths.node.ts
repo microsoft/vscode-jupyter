@@ -6,7 +6,7 @@ import { inject, injectable, named } from 'inversify';
 import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken, Memento, Uri } from 'vscode';
-import { IPlatformService } from '../../../platform/common/platform/types';
+import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { traceError } from '../../../platform/logging';
 import { IDisposableRegistry, IMemento, GLOBAL_MEMENTO, IExtensionContext } from '../../../platform/common/types';
@@ -37,7 +37,7 @@ export class JupyterPaths {
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
-        @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
+        @inject(IFileSystemNode) private readonly fs: IFileSystem,
         @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {
         this.envVarsProvider.onDidEnvironmentVariablesChange(
@@ -55,7 +55,7 @@ export class JupyterPaths {
      */
     public async getKernelSpecTempRegistrationFolder() {
         const dir = uriPath.joinPath(this.context.extensionUri, 'temp', 'jupyter', 'kernels');
-        await this.fs.ensureLocalDir(dir.fsPath);
+        await this.fs.createDirectory(dir);
         return dir;
     }
     /**
@@ -117,9 +117,7 @@ export class JupyterPaths {
 
         try {
             // Make sure the local file exists
-            if (!(await this.fs.localDirectoryExists(runtimeDir.fsPath))) {
-                await this.fs.ensureLocalDir(runtimeDir.fsPath);
-            }
+            await this.fs.createDirectory(runtimeDir);
             return runtimeDir;
         } catch (ex) {
             traceError(`Failed to create runtime directory, reverting to temp directory ${runtimeDir}`, ex);

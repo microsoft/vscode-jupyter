@@ -4,12 +4,12 @@ import { sendActivationTelemetry } from '../../platform/telemetry/envFileTelemet
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IWorkspaceService, IActiveResourceService, IDocumentManager } from '../../platform/common/application/types';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { IDisposable, Resource } from '../../platform/common/types';
 import { Deferred } from '../../platform/common/utils/async';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { traceDecoratorError } from '../../platform/logging';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IFileSystem } from '../../platform/common/platform/types';
 
 @injectable()
 export class WorkspaceActivation implements IExtensionSingleActivationService {
@@ -22,7 +22,7 @@ export class WorkspaceActivation implements IExtensionSingleActivationService {
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IFileSystemNode) private readonly fileSystem: IFileSystemNode,
+        @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IActiveResourceService) private readonly activeResourceService: IActiveResourceService,
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker
     ) {}

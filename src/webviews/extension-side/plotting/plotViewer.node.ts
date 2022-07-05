@@ -141,13 +141,13 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
 
                     case '.png':
                         const buffer = Buffer.from(payload.png.replace('data:image/png;base64', ''), 'base64');
-                        await this.fs.writeLocalFile(file.fsPath, buffer);
+                        await this.fs.writeFile(file, buffer);
                         break;
 
                     default:
                     case '.svg':
                         // This is the easy one:
-                        await this.fs.writeLocalFile(file.fsPath, payload.svg);
+                        await this.fs.writeFile(file, payload.svg);
                         break;
                 }
             }

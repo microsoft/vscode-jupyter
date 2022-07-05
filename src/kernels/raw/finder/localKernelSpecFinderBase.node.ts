@@ -173,9 +173,9 @@ export abstract class LocalKernelSpecFinderBase {
         const destinationFolder = path.join(path.dirname(path.dirname(kernelSpecFile)), oldKernelsSpecFolderName);
         this.oldKernelSpecsFolder = destinationFolder;
         const destinationFile = path.join(destinationFolder, kernelSpecFolderName, path.basename(kernelSpecFile));
-        await this.fs.ensureLocalDir(path.dirname(destinationFile));
-        await this.fs.copyLocal(kernelSpecFile, destinationFile).catch(noop);
-        await this.fs.deleteLocalFile(kernelSpecFile);
+        await this.fs.createDirectory(Uri.file(path.dirname(destinationFile)));
+        await this.fs.copy(Uri.file(kernelSpecFile), Uri.file(destinationFile)).catch(noop);
+        await this.fs.delete(Uri.file(kernelSpecFile));
         traceInfo(`Old KernelSpec '${kernelSpecFile}' deleted and backup stored in ${destinationFolder}`);
     }
     /**
@@ -211,7 +211,7 @@ export abstract class LocalKernelSpecFinderBase {
         }
         const promise = (async () => {
             const searchPath = isUri(searchItem) ? searchItem : searchItem.kernelSearchPath;
-            if (await this.fs.localDirectoryExists(searchPath.fsPath)) {
+            if (await this.fs.exists(searchPath)) {
                 if (cancelToken?.isCancellationRequested) {
                     return [];
                 }
@@ -258,7 +258,7 @@ export async function loadKernelSpec(
                 interpreter?.uri ? getDisplayPath(interpreter.uri) : ''
             }`
         );
-        kernelJson = JSON.parse(await fs.readLocalFile(specPath.fsPath));
+        kernelJson = JSON.parse(await fs.readFile(specPath));
     } catch (ex) {
         traceError(`Failed to parse kernelspec ${specPath}`, ex);
         return;
@@ -314,7 +314,7 @@ export async function loadKernelSpec(
 
     // Possible user deleted the underlying kernel.
     const interpreterPath = interpreter?.uri.fsPath || kernelJson?.metadata?.interpreter?.path;
-    if (interpreterPath && !(await fs.localFileExists(interpreterPath))) {
+    if (interpreterPath && !(await fs.exists(Uri.file(interpreterPath)))) {
         return;
     }
 

@@ -5335,7 +5335,7 @@ No properties for event
 
 [src/kernels/jupyter/jupyterKernelService.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/jupyterKernelService.node.ts)
 ```typescript
-            await this.fs.writeLocalFile(kernelSpecFilePath.fsPath, JSON.stringify(contents, undefined, 4));
+            await this.fs.writeFile(kernelSpecFilePath, JSON.stringify(contents, undefined, 4));
         } catch (ex) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any, true);
@@ -5347,7 +5347,7 @@ No properties for event
 
 [src/kernels/jupyter/jupyterKernelService.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/jupyterKernelService.node.ts)
 ```typescript
-                    await this.fs.writeLocalFile(kernelSpecFilePath, JSON.stringify(specModel, undefined, 2));
+                    await this.fs.writeFile(Uri.file(kernelSpecFilePath), JSON.stringify(specModel, undefined, 2));
                 } catch (ex) {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any, true);

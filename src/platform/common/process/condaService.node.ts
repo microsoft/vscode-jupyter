@@ -7,13 +7,12 @@ import { EventEmitter, Memento, RelativePattern, Uri, workspace } from 'vscode';
 import { IPythonApiProvider } from '../../api/types';
 import { TraceOptions } from '../../logging/types';
 import { traceDecoratorVerbose, traceError, traceVerbose } from '../../logging';
-import { IPlatformService } from '../platform/types';
+import { IFileSystem, IPlatformService } from '../platform/types';
 import { GLOBAL_MEMENTO, IDisposable, IDisposableRegistry, IMemento } from '../types';
 import { createDeferredFromPromise } from '../utils/async';
 import * as path from '../../../platform/vscode-path/path';
 import * as uriPath from '../../../platform/vscode-path/resources';
 import { swallowExceptions } from '../utils/decorators';
-import { IFileSystemNode } from '../platform/types.node';
 import { homePath } from '../platform/fs-paths.node';
 import { noop } from '../utils/misc';
 
@@ -34,7 +33,7 @@ export class CondaService {
     constructor(
         @inject(IPythonApiProvider) private readonly pythonApi: IPythonApiProvider,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
-        @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IPlatformService) private readonly ps: IPlatformService,
         @inject(IDisposableRegistry) private readonly disposables: IDisposable[]
     ) {
@@ -110,9 +109,9 @@ export class CondaService {
                 const fileDir = path.dirname(file.fsPath);
                 // Batch file depends upon OS
                 if (this.ps.isWindows) {
-                    const possibleBatch = path.join(fileDir, '..', 'condabin', 'conda.bat');
-                    if (await this.fs.localFileExists(possibleBatch)) {
-                        return Uri.file(possibleBatch);
+                    const possibleBatch = Uri.file(path.join(fileDir, '..', 'condabin', 'conda.bat'));
+                    if (await this.fs.exists(possibleBatch)) {
+                        return possibleBatch;
                     }
                 }
             }
@@ -158,10 +157,10 @@ export class CondaService {
 
     private async getCondaEnvsFromEnvFile(): Promise<string[]> {
         try {
-            const fileContents = await this.fs.readLocalFile(condaEnvironmentsFile.fsPath);
+            const fileContents = await this.fs.readFile(condaEnvironmentsFile);
             return fileContents.split('\n').sort();
         } catch (ex) {
-            if (await this.fs.localFileExists(condaEnvironmentsFile.fsPath)) {
+            if (await this.fs.exists(condaEnvironmentsFile)) {
                 traceError(`Failed to read file ${condaEnvironmentsFile}`, ex);
             }
             return [];

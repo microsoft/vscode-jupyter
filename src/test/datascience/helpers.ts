@@ -24,6 +24,7 @@ import { arePathsSame } from '../../platform/common/platform/fileUtils';
 import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { isWeb } from '../../platform/common/utils/misc';
 import { IControllerSelection } from '../../notebooks/controllers/types';
+import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 
 export async function openNotebook(ipynbFile: vscode.Uri) {
     traceInfo(`Opening notebook ${getFilePath(ipynbFile)}`);
@@ -318,4 +319,16 @@ export async function verifySelectedControllerIsRemoteForRemoteTests(notebook?: 
             `Notebook Controller is not a remote controller, it is ${controller.connection.kind}:${controller.id}`
         );
     }
+}
+
+export function uriEquals(expected: string | vscode.Uri) {
+    class UriMatcher extends Matcher {
+        constructor(private readonly expectedUri: vscode.Uri) {
+            super();
+        }
+        override match(value: vscode.Uri): boolean {
+            return arePathsSame(getFilePath(value), getFilePath(this.expectedUri));
+        }
+    }
+    return new UriMatcher(typeof expected === 'string' ? vscode.Uri.file(expected) : expected) as unknown as vscode.Uri;
 }

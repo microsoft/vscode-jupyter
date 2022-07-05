@@ -6,7 +6,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
-import { IFileSystemNode } from '../../../platform/common/platform/types.node';
+import { IFileSystem } from '../../../platform/common/platform/types';
 import { createPythonEnv } from '../../../platform/common/process/pythonEnvironment.node';
 import { createPythonProcessService } from '../../../platform/common/process/pythonProcess.node';
 import { IProcessService, StdErrError } from '../../../platform/common/process/types.node';
@@ -18,12 +18,12 @@ use(chaiAsPromised);
 // eslint-disable-next-line
 suite('PythonProcessService', () => {
     let processService: TypeMoq.IMock<IProcessService>;
-    let fileSystem: TypeMoq.IMock<IFileSystemNode>;
+    let fileSystem: TypeMoq.IMock<IFileSystem>;
     const pythonPath = Uri.file('path/to/python');
 
     setup(() => {
         processService = TypeMoq.Mock.ofType<IProcessService>(undefined, TypeMoq.MockBehavior.Strict);
-        fileSystem = TypeMoq.Mock.ofType<IFileSystemNode>(undefined, TypeMoq.MockBehavior.Strict);
+        fileSystem = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
     });
 
     test('execObservable should call processService.execObservable', () => {

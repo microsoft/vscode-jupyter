@@ -41,7 +41,6 @@ import {
     LiveRemoteKernelConnectionMetadata,
     LocalKernelConnectionMetadata
 } from '../../../platform/../kernels/types';
-import { arePathsSame } from '../../../platform/common/platform/fileUtils.node';
 import { JupyterPaths } from '../../../kernels/raw/finder/jupyterPaths.node';
 import { LocalKernelFinder } from '../../../kernels/raw/finder/localKernelFinder.node';
 import { loadKernelSpec } from '../../../kernels/raw/finder/localKernelSpecFinderBase.node';
@@ -56,6 +55,7 @@ import { NotebookProvider } from '../../../kernels/jupyter/launcher/notebookProv
 import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder';
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 import { IJupyterRemoteCachedKernelValidator, IServerConnectionType } from '../../../kernels/jupyter/types';
+import { uriEquals } from '../helpers';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -127,8 +127,8 @@ import { IJupyterRemoteCachedKernelValidator, IServerConnectionType } from '../.
             when(platformService.isLinux).thenReturn(!isWindows);
             when(platformService.isMac).thenReturn(false);
             fs = mock(FileSystem);
-            when(fs.deleteLocalFile(anything())).thenResolve();
-            when(fs.localFileExists(anything())).thenResolve(true);
+            when(fs.delete(anything())).thenResolve();
+            when(fs.exists(anything())).thenResolve(true);
             const workspaceService = mock(WorkspaceService);
             const testWorkspaceFolder = Uri.file(path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience'));
 
@@ -181,11 +181,11 @@ import { IJupyterRemoteCachedKernelValidator, IServerConnectionType } from '../.
                     kernelSpecsBySpecFile.set(jsonFile.replace(/\\/g, '/'), kernelSpec);
                 })
             );
-            when(fs.readLocalFile(anything())).thenCall((f) => {
+            when(fs.readFile(anything())).thenCall((f: Uri) => {
                 // These tests run on windows & linux, hence support both paths.
-                f = f.replace(/\\/g, '/');
-                return kernelSpecsBySpecFile.has(f)
-                    ? Promise.resolve(JSON.stringify(kernelSpecsBySpecFile.get(f)!))
+                const file = f.fsPath.replace(/\\/g, '/');
+                return kernelSpecsBySpecFile.has(file)
+                    ? Promise.resolve(JSON.stringify(kernelSpecsBySpecFile.get(file)!))
                     : Promise.reject(`File "${f}" not found.`);
             });
             when(fs.searchLocal(anything(), anything(), true)).thenCall((_p, c: string, _d) => {
@@ -204,13 +204,11 @@ import { IJupyterRemoteCachedKernelValidator, IServerConnectionType } from '../.
                 }
                 return [];
             });
-            when(fs.areLocalPathsSame(anything(), anything())).thenCall((a, b) => {
-                return arePathsSame(a, b);
-            });
-            when(fs.ensureLocalDir(anything())).thenResolve();
-            when(fs.deleteLocalFile(anything())).thenResolve();
-            when(fs.copyLocal(anything(), anything())).thenResolve();
-            when(fs.localDirectoryExists(anything())).thenResolve(true);
+            when(fs.createDirectory(anything())).thenResolve();
+            when(fs.delete(anything())).thenResolve();
+            when(fs.copy(anything(), anything())).thenResolve();
+            when(fs.copy(anything(), anything(), anything())).thenResolve();
+            when(fs.exists(anything())).thenResolve(true);
             const nonPythonKernelSpecFinder = new LocalKnownPathKernelSpecFinder(
                 instance(fs),
                 instance(workspaceService),
@@ -841,16 +839,16 @@ import { IJupyterRemoteCachedKernelValidator, IServerConnectionType } from '../.
             ];
 
             // Verify files were copied to some other location before being deleted.
-            verify(fs.copyLocal(kernelSpecsToBeDeleted[0].fsPath, anything())).calledBefore(
-                fs.deleteLocalFile(kernelSpecsToBeDeleted[0].fsPath)
+            verify(fs.copy(uriEquals(kernelSpecsToBeDeleted[0]), anything())).calledBefore(
+                fs.delete(uriEquals(kernelSpecsToBeDeleted[0]))
             );
-            verify(fs.copyLocal(kernelSpecsToBeDeleted[1].fsPath, anything())).calledBefore(
-                fs.deleteLocalFile(kernelSpecsToBeDeleted[1].fsPath)
+            verify(fs.copy(uriEquals(kernelSpecsToBeDeleted[1]), anything())).calledBefore(
+                fs.delete(uriEquals(kernelSpecsToBeDeleted[1]))
             );
 
             // Verify files were deleted.
-            verify(fs.deleteLocalFile(kernelSpecsToBeDeleted[0].fsPath)).atLeast(1);
-            verify(fs.deleteLocalFile(kernelSpecsToBeDeleted[1].fsPath)).atLeast(1);
+            verify(fs.delete(uriEquals(kernelSpecsToBeDeleted[0]))).atLeast(1);
+            verify(fs.delete(uriEquals(kernelSpecsToBeDeleted[1]))).atLeast(1);
         });
 
         [

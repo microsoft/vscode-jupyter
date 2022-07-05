@@ -8,8 +8,9 @@ import { Resource } from '../common/types';
 import { SystemVariables } from '../common/variables/systemVariables.node';
 
 import { sendTelemetryEvent } from '.';
-import { IFileSystemNode } from '../common/platform/types.node';
 import { EventName } from './constants';
+import { Uri } from 'vscode';
+import { IFileSystem } from '../common/platform/types';
 
 let _defaultEnvFileSetting: string | undefined;
 let envFileTelemetrySent = false;
@@ -27,14 +28,14 @@ export function sendFileCreationTelemetry() {
 }
 
 export async function sendActivationTelemetry(
-    fileSystem: IFileSystemNode,
+    fileSystem: IFileSystem,
     workspaceService: IWorkspaceService,
     resource: Resource
 ) {
     if (shouldSendTelemetry()) {
         const systemVariables = new SystemVariables(resource, undefined, workspaceService);
         const envFilePath = systemVariables.resolveAny(defaultEnvFileSetting(workspaceService))!;
-        const envFileExists = await fileSystem.localFileExists(envFilePath);
+        const envFileExists = await fileSystem.exists(Uri.file(envFilePath));
 
         if (envFileExists) {
             sendTelemetry();

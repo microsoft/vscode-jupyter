@@ -7,12 +7,13 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { traceError } from '../../logging';
 import { isFileNotFoundError } from '../platform/errors';
-import { IFileSystemNode } from '../platform/types.node';
 import { EnvironmentVariables, IEnvironmentVariablesService } from './types';
+import { Uri } from 'vscode';
+import { IFileSystem } from '../platform/types';
 
 @injectable()
 export class EnvironmentVariablesService implements IEnvironmentVariablesService {
-    constructor(@inject(IFileSystemNode) private readonly fs: IFileSystemNode) {}
+    constructor(@inject(IFileSystem) private readonly fs: IFileSystem) {}
 
     public async parseFile(
         filePath?: string,
@@ -22,7 +23,7 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
             return;
         }
         try {
-            return parseEnvFile(await this.fs.readLocalFile(filePath), baseVars);
+            return parseEnvFile(await this.fs.readFile(Uri.file(filePath)), baseVars);
         } catch (ex) {
             if (!isFileNotFoundError(ex)) {
                 traceError(`Failed to parse env file ${filePath}`, ex);

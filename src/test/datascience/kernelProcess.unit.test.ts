@@ -36,6 +36,7 @@ import { EventEmitter } from 'stream';
 import { PythonKernelInterruptDaemon } from '../../kernels/raw/finder/pythonKernelInterruptDaemon.node';
 import { JupyterPaths } from '../../kernels/raw/finder/jupyterPaths.node';
 import { waitForCondition } from '../common.node';
+import { uriEquals } from './helpers';
 
 suite('kernel Process', () => {
     let kernelProcess: KernelProcess;
@@ -158,8 +159,8 @@ suite('kernel Process', () => {
 
         verify(fs.createTemporaryLocalFile(deepEqual(tempFileCreationOptions))).atLeast(1);
         verify(tempFileDisposable.dispose()).once();
-        verify(fs.writeLocalFile(tempFile, anything())).atLeast(1);
-        verify(tempFileDisposable.dispose()).calledBefore(fs.writeLocalFile(tempFile, anything()));
+        verify(fs.writeFile(uriEquals(tempFile), anything())).atLeast(1);
+        verify(tempFileDisposable.dispose()).calledBefore(fs.writeFile(uriEquals(tempFile), anything()));
     });
     test('Ensure kernelspec json file is created with the connection info in it', async () => {
         const kernelSpec: IJupyterKernelSpec = {
@@ -178,7 +179,7 @@ suite('kernel Process', () => {
 
         await kernelProcess.launch('', 0, token.token);
 
-        verify(fs.writeLocalFile(tempFile, JSON.stringify(connection))).atLeast(1);
+        verify(fs.writeFile(uriEquals(tempFile), JSON.stringify(connection))).atLeast(1);
     });
     test('Ensure we start the .NET process instead of a Python process (& daemon is not started either)', async () => {
         const kernelSpec: IJupyterKernelSpec = {
@@ -219,7 +220,7 @@ suite('kernel Process', () => {
             dispose: instance(tempFileDisposable).dispose,
             filePath: tempFile
         });
-        when(fs.localFileExists(expectedConnectionFile)).thenResolve(true);
+        when(fs.exists(anything())).thenCall((file: Uri) => file.fsPath === Uri.file(expectedConnectionFile).fsPath);
 
         await kernelProcess.launch('', 0, token.token);
 
@@ -233,7 +234,7 @@ suite('kernel Process', () => {
         await kernelProcess.dispose();
         await waitForCondition(
             () => {
-                verify(fs.deleteLocalFile(expectedConnectionFile)).once();
+                verify(fs.delete(uriEquals(expectedConnectionFile))).once();
                 return true;
             },
             5_000,
@@ -255,7 +256,7 @@ suite('kernel Process', () => {
             dispose: instance(tempFileDisposable).dispose,
             filePath: tempFile
         });
-        when(fs.localFileExists(tempFile)).thenResolve(true);
+        when(fs.exists(anything())).thenCall((file: Uri) => file.fsPath === Uri.file(tempFile).fsPath);
 
         await kernelProcess.launch('', 0, token.token);
 
@@ -266,7 +267,7 @@ suite('kernel Process', () => {
         await kernelProcess.dispose();
         await waitForCondition(
             () => {
-                verify(fs.deleteLocalFile(tempFile)).once();
+                verify(fs.delete(uriEquals(tempFile))).once();
                 return true;
             },
             5_000,
@@ -287,7 +288,7 @@ suite('kernel Process', () => {
             dispose: noop,
             filePath: tempFile
         });
-        when(fs.localFileExists(expectedConnectionFile)).thenResolve(true);
+        when(fs.exists(anything())).thenCall((file: Uri) => file.fsPath === Uri.file(expectedConnectionFile).fsPath);
         when(jupyterPaths.getRuntimeDir()).thenResolve(jupyterRuntimeDir);
         when(pythonExecFactory.createDaemon(anything())).thenResolve(instance(pythonProcess));
         when(connectionMetadata.kind).thenReturn('startUsingPythonInterpreter');
@@ -316,7 +317,7 @@ suite('kernel Process', () => {
         await kernelProcess.dispose();
         await waitForCondition(
             () => {
-                verify(fs.deleteLocalFile(expectedConnectionFile)).once();
+                verify(fs.delete(uriEquals(expectedConnectionFile))).once();
                 return true;
             },
             5_000,
@@ -335,7 +336,7 @@ suite('kernel Process', () => {
             dispose: noop,
             filePath: tempFile
         });
-        when(fs.localFileExists(tempFile)).thenResolve(true);
+        when(fs.exists(anything())).thenCall((file: Uri) => file.fsPath === Uri.file(tempFile).fsPath);
         when(jupyterPaths.getRuntimeDir()).thenResolve();
         when(pythonExecFactory.createDaemon(anything())).thenResolve(instance(pythonProcess));
         when(connectionMetadata.kind).thenReturn('startUsingPythonInterpreter');
@@ -364,7 +365,7 @@ suite('kernel Process', () => {
         await kernelProcess.dispose();
         await waitForCondition(
             () => {
-                verify(fs.deleteLocalFile(tempFile)).once();
+                verify(fs.delete(uriEquals(tempFile))).once();
                 return true;
             },
             5_000,

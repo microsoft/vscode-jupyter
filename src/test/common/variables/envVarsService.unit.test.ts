@@ -8,25 +8,26 @@
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from '../../../platform/vscode-path/path';
-import * as TypeMoq from 'typemoq';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { EnvironmentVariablesService, parseEnvFile } from '../../../platform/common/variables/environment.node';
+import { anything, instance, mock, when } from 'ts-mockito';
+import { Uri } from 'vscode';
 
 use(chaiAsPromised);
 
 suite('Environment Variables Service', () => {
     const filename = 'x/y/z/.env';
-    let fs: TypeMoq.IMock<IFileSystemNode>;
+    let fs: IFileSystemNode;
     let variablesService: EnvironmentVariablesService;
     setup(() => {
-        fs = TypeMoq.Mock.ofType<IFileSystemNode>(undefined, TypeMoq.MockBehavior.Loose);
-        variablesService = new EnvironmentVariablesService(fs.object);
+        fs = mock<IFileSystemNode>();
+        variablesService = new EnvironmentVariablesService(instance(fs));
     });
     function setFile(fileName: string, text: string) {
-        fs.setup((f) => f.localFileExists(fileName)) // Handle the specific file.
-            .returns(() => Promise.resolve(true)); // The file exists.
-        fs.setup((f) => f.readLocalFile(fileName)) // Handle the specific file.
-            .returns(() => Promise.resolve(text)); // Pretend to read from the file.
+        when(fs.exists(anything())).thenCall((file: Uri) => file.fsPath === Uri.file(fileName).fsPath);
+        when(fs.readFile(anything())).thenCall((file: Uri) =>
+            Promise.resolve(file.fsPath === Uri.file(fileName).fsPath ? text : '')
+        );
     }
 
     suite('parseFile()', () => {
@@ -37,8 +38,7 @@ suite('Environment Variables Service', () => {
         });
 
         test('Custom variables should be undefined with non-existent files', async () => {
-            fs.setup((f) => f.localFileExists(filename)) // Handle the specific file.
-                .returns(() => Promise.resolve(false)); // The file is missing.
+            when(fs.exists(anything())).thenCall((file: Uri) => file.fsPath !== Uri.file(filename).fsPath);
 
             const vars = await variablesService.parseFile(filename);
 
@@ -47,9 +47,7 @@ suite('Environment Variables Service', () => {
 
         test('Custom variables should be undefined when folder name is passed instead of a file name', async () => {
             const dirname = 'x/y/z';
-            fs.setup((f) => f.localFileExists(dirname)) // Handle the specific "file".
-                .returns(() => Promise.resolve(false)); // It isn't a "regular" file.
-
+            when(fs.exists(anything())).thenCall((file: Uri) => file.fsPath !== Uri.file(dirname).fsPath);
             const vars = await variablesService.parseFile(dirname);
 
             expect(vars).to.equal(undefined, 'Variables should be undefined');

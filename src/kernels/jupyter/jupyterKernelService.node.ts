@@ -7,7 +7,7 @@ import type { KernelSpec } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import * as path from '../../platform/vscode-path/path';
 import * as uriPath from '../../platform/vscode-path/resources';
-import { CancellationToken } from 'vscode';
+import { CancellationToken, Uri } from 'vscode';
 import { Cancellation } from '../../platform/common/cancellation';
 import '../../platform/common/extensions';
 import {
@@ -18,7 +18,7 @@ import {
     ignoreLogging,
     traceDecoratorError
 } from '../../platform/logging';
-import { getDisplayPath } from '../../platform/common/platform/fs-paths';
+import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { Resource, ReadWrite, IDisplayOptions, IConfigurationService } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
@@ -39,6 +39,7 @@ import {
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { serializePythonEnvironment } from '../../platform/api/pythonApi';
 import { IJupyterKernelService } from './types';
+import { arePathsSame } from '../../platform/common/platform/fileUtils';
 
 /**
  * Responsible for registering and updating kernels
@@ -108,7 +109,7 @@ export class JupyterKernelService implements IJupyterKernelService {
             // Default to the kernel spec file.
             specFile = kernel.kernelSpec.specFile;
 
-            if (!specFile || !(await this.fs.localFileExists(specFile))) {
+            if (!specFile || !(await this.fs.exists(Uri.file(specFile)))) {
                 specFile = await this.registerKernel(kernel, cancelToken);
             }
             // Special case. If the original spec file came from an interpreter, we may need to register a kernel
@@ -174,16 +175,13 @@ export class JupyterKernelService implements IJupyterKernelService {
         const kernelSpecFilePath = uriPath.joinPath(root, kernel.kernelSpec.name, 'kernel.json');
 
         // If this file already exists, we can just exit
-        if (await this.fs.localFileExists(kernelSpecFilePath.fsPath)) {
+        if (await this.fs.exists(kernelSpecFilePath)) {
             return kernelSpecFilePath.fsPath;
         }
 
         // If it doesn't exist, see if we had an original spec file that's different.
         const contents = { ...kernel.kernelSpec };
-        if (
-            kernel.kernelSpec.specFile &&
-            !this.fs.areLocalPathsSame(kernelSpecFilePath.fsPath, kernel.kernelSpec.specFile)
-        ) {
+        if (kernel.kernelSpec.specFile && !arePathsSame(getFilePath(kernelSpecFilePath), kernel.kernelSpec.specFile)) {
             // Add extra metadata onto the contents. We'll use this
             // when searching for kernels later to remove duplicates.
             contents.metadata = contents.metadata || {};
@@ -210,7 +208,7 @@ export class JupyterKernelService implements IJupyterKernelService {
 
         // Write out the contents into the new spec file
         try {
-            await this.fs.writeLocalFile(kernelSpecFilePath.fsPath, JSON.stringify(contents, undefined, 4));
+            await this.fs.writeFile(kernelSpecFilePath, JSON.stringify(contents, undefined, 4));
         } catch (ex) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any, true);
@@ -230,7 +228,7 @@ export class JupyterKernelService implements IJupyterKernelService {
                 otherFiles.map(async (f) => {
                     const oldPath = path.join(originalSpecDir, f);
                     const newPath = path.join(newSpecDir, f);
-                    await this.fs.copyLocal(oldPath, newPath);
+                    await this.fs.copy(Uri.file(oldPath), Uri.file(newPath));
                 })
             );
         }
@@ -256,13 +254,13 @@ export class JupyterKernelService implements IJupyterKernelService {
                     : uriPath.joinPath(kernelSpecRootPath, kernel.name, 'kernel.json').fsPath;
 
             // Make sure the file exists
-            if (!(await this.fs.localFileExists(kernelSpecFilePath))) {
+            if (!(await this.fs.exists(Uri.file(kernelSpecFilePath)))) {
                 return;
             }
 
             // Read spec from the file.
             let specModel: ReadWrite<KernelSpec.ISpecModel> = JSON.parse(
-                await this.fs.readLocalFile(kernelSpecFilePath)
+                await this.fs.readFile(Uri.file(kernelSpecFilePath))
             );
             let shouldUpdate = false;
 
@@ -342,7 +340,7 @@ export class JupyterKernelService implements IJupyterKernelService {
             // Update the kernel.json with our new stuff.
             if (shouldUpdate) {
                 try {
-                    await this.fs.writeLocalFile(kernelSpecFilePath, JSON.stringify(specModel, undefined, 2));
+                    await this.fs.writeFile(Uri.file(kernelSpecFilePath), JSON.stringify(specModel, undefined, 2));
                 } catch (ex) {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any, true);

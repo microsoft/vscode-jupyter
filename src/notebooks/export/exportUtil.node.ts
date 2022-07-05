@@ -10,6 +10,7 @@ import { ExportUtilBase } from './exportUtil';
 import { IExtensions } from '../../platform/common/types';
 import { ExportFormat, IExportDialog } from './types';
 import { Uri } from 'vscode';
+import { getFilePath } from '../../platform/common/platform/fs-paths';
 
 @injectable()
 export class ExportUtil extends ExportUtilBase {
@@ -22,11 +23,11 @@ export class ExportUtil extends ExportUtilBase {
     }
 
     public async generateTempDir(): Promise<TemporaryDirectory> {
-        const resultDir = path.join(os.tmpdir(), uuid());
-        await this.fs.createLocalDirectory(resultDir);
+        const resultDir = Uri.file(path.join(os.tmpdir(), uuid()));
+        await this.fs.createDirectory(resultDir);
 
         return {
-            path: resultDir,
+            path: getFilePath(resultDir),
             dispose: async () => {
                 // Try ten times. Process may still be up and running.
                 // We don't want to do async as async dispose means it may never finish and then we don't
@@ -34,7 +35,7 @@ export class ExportUtil extends ExportUtilBase {
                 let count = 0;
                 while (count < 10) {
                     try {
-                        await this.fs.deleteLocalDirectory(resultDir);
+                        await this.fs.delete(resultDir);
                         count = 10;
                     } catch {
                         await sleep(3000);
@@ -64,7 +65,7 @@ export class ExportUtil extends ExportUtilBase {
     public async makeFileInDirectory(contents: string, fileName: string, dirPath: string): Promise<string> {
         const newFilePath = path.join(dirPath, fileName);
 
-        await this.fs.writeLocalFile(newFilePath, contents);
+        await this.fs.writeFile(Uri.file(newFilePath), contents);
 
         return newFilePath;
     }

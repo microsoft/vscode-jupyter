@@ -18,7 +18,7 @@ import {
 import { JUPYTER_OUTPUT_CHANNEL } from '../../../platform/common/constants';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { traceInfo, traceError } from '../../../platform/logging';
-import { TemporaryDirectory } from '../../../platform/common/platform/types';
+import { IFileSystem, TemporaryDirectory } from '../../../platform/common/platform/types';
 import { IDisposable, IOutputChannel, Resource } from '../../../platform/common/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { StopWatch } from '../../../platform/common/utils/stopWatch';
@@ -32,8 +32,8 @@ import { KernelProgressReporter } from '../../../platform/progress/kernelProgres
 import { ReportableAction } from '../../../platform/progress/types';
 import { IJupyterConnection } from '../../types';
 import { IJupyterSubCommandExecutionService } from '../types.node';
-import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { INotebookStarter } from '../types';
+import { getFilePath } from '../../../platform/common/platform/fs-paths';
 
 /**
  * Responsible for starting a notebook.
@@ -53,7 +53,7 @@ export class NotebookStarter implements INotebookStarter {
     constructor(
         @inject(IJupyterSubCommandExecutionService)
         private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService,
-        @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IOutputChannel)
         @named(JUPYTER_OUTPUT_CHANNEL)
@@ -272,7 +272,7 @@ export class NotebookStarter implements INotebookStarter {
         // In the temp dir, create an empty config python file. This is the same
         // as starting jupyter with all of the defaults.
         const configFile = path.join(tempDir.path, 'jupyter_notebook_config.py');
-        await this.fs.writeLocalFile(configFile, '');
+        await this.fs.writeFile(Uri.file(configFile), '');
         traceInfo(`Generating custom default config at ${configFile}`);
 
         // Create extra args based on if we have a config or not
@@ -291,7 +291,7 @@ export class NotebookStarter implements INotebookStarter {
         const args: string[] = [];
         // Check for a docker situation.
         try {
-            const cgroup = await this.fs.readLocalFile('/proc/self/cgroup').catch(() => '');
+            const cgroup = await this.fs.readFile(Uri.file('/proc/self/cgroup')).catch(() => '');
             if (!cgroup.includes('docker') && !cgroup.includes('kubepods')) {
                 return args;
             }
@@ -313,11 +313,11 @@ export class NotebookStarter implements INotebookStarter {
         }
     }
     private async generateTempDir(): Promise<TemporaryDirectory> {
-        const resultDir = path.join(os.tmpdir(), uuid());
-        await this.fs.createLocalDirectory(resultDir);
+        const resultDir = Uri.file(path.join(os.tmpdir(), uuid()));
+        await this.fs.createDirectory(resultDir);
 
         return {
-            path: resultDir,
+            path: getFilePath(resultDir),
             dispose: async () => {
                 // Try ten times. Process may still be up and running.
                 // We don't want to do async as async dispose means it may never finish and then we don't
@@ -325,7 +325,7 @@ export class NotebookStarter implements INotebookStarter {
                 let count = 0;
                 while (count < 10) {
                     try {
-                        await this.fs.deleteLocalDirectory(resultDir);
+                        await this.fs.delete(resultDir);
                         count = 10;
                     } catch {
                         count += 1;

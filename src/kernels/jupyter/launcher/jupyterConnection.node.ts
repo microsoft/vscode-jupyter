@@ -9,7 +9,6 @@ import { CancellationError, CancellationToken, Disposable, Event, EventEmitter, 
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
 import { Cancellation } from '../../../platform/common/cancellation';
 import { traceInfo, traceError, traceWarning } from '../../../platform/logging';
-import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { ObservableExecutionResult, Output } from '../../../platform/common/process/types.node';
 import { Deferred, createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -19,6 +18,8 @@ import { JupyterConnectError } from '../../../platform/errors/jupyterConnectErro
 import { IJupyterConnection } from '../../types';
 import { JupyterServerInfo } from '../types';
 import { getJupyterConnectionDisplayName } from './helpers';
+import { arePathsSame } from '../../../platform/common/platform/fileUtils';
+import { getFilePath } from '../../../platform/common/platform/fs-paths';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires, @typescript-eslint/no-explicit-any
 const namedRegexp = require('named-js-regexp');
@@ -28,7 +29,6 @@ export class JupyterConnectionWaiter implements IDisposable {
     private startPromise: Deferred<IJupyterConnection>;
     private launchTimeout: NodeJS.Timer | number;
     private configService: IConfigurationService;
-    private fs: IFileSystemNode;
     private stderr: string[] = [];
     private connectionDisposed = false;
     private subscriptions: Subscription[] = [];
@@ -42,7 +42,6 @@ export class JupyterConnectionWaiter implements IDisposable {
         private cancelToken?: CancellationToken
     ) {
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
-        this.fs = serviceContainer.get<IFileSystemNode>(IFileSystemNode);
 
         // Cancel our start promise if a cancellation occurs
         if (cancelToken) {
@@ -125,7 +124,7 @@ export class JupyterConnectionWaiter implements IDisposable {
     private getJupyterURL(serverInfos: JupyterServerInfo[] | undefined, data: any) {
         if (serverInfos && serverInfos.length > 0 && !this.startPromise.completed) {
             const matchInfo = serverInfos.find((info) =>
-                this.fs.areLocalPathsSame(this.notebookDir.fsPath, info.notebook_dir)
+                arePathsSame(getFilePath(this.notebookDir), info.notebook_dir)
             );
             if (matchInfo) {
                 const url = matchInfo.url;

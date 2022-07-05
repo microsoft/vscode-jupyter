@@ -83,7 +83,6 @@ suite('DataScience - JupyterConnection', () => {
         configService = mock(ConfigurationService);
         const settings = mock(JupyterSettings);
         getServerInfoStub.resolves(dummyServerInfos);
-        when(fs.areLocalPathsSame(anything(), anything())).thenCall((path1, path2) => path1 === path2);
         when(configService.getSettings(anything())).thenReturn(instance(settings));
         when(serviceContainer.get<IFileSystemNode>(IFileSystemNode)).thenReturn(instance(fs));
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));

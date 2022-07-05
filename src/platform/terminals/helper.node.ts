@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, multiInject } from 'inversify';
-import { Terminal } from 'vscode';
+import { Terminal, Uri } from 'vscode';
 import { sendTelemetryEvent } from '../../telemetry';
 import { ITerminalManager, IWorkspaceService } from '../common/application/types';
 import { Telemetry } from '../common/constants';
@@ -71,7 +71,7 @@ export class TerminalHelper implements ITerminalHelper {
             let command: string | undefined;
             failureReason = 'fileCreation';
             const { dispose, filePath } = await this.fs.createTemporaryLocalFile('txt');
-            await this.fs.deleteLocalFile(filePath).catch(noop);
+            await this.fs.delete(Uri.file(filePath)).catch(noop);
             disposables.push({ dispose });
             failureReason = 'shellDetection';
             shell = this.shellDetector.identifyTerminalShell(terminal);
@@ -91,9 +91,10 @@ export class TerminalHelper implements ITerminalHelper {
             failureReason = 'commandExecution';
             terminal.sendText(command);
             failureReason = 'waitForCommand';
-            await waitForCondition(() => this.fs.localFileExists(filePath), 10_000, 100);
+            const filePathUri = Uri.file(filePath);
+            await waitForCondition(() => this.fs.exists(filePathUri), 10_000, 100);
             const env = process.env;
-            const envContents = await this.fs.readLocalFile(filePath);
+            const envContents = await this.fs.readFile(filePathUri);
             failureReason = 'parseOutput';
             envContents.splitLines({ trim: true, removeEmptyEntries: true }).forEach((line) => {
                 try {

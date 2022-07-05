@@ -7,7 +7,7 @@ import { kill } from 'process';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from '../../../platform/vscode-path/path';
-import { CancellationError, CancellationToken, Event, EventEmitter } from 'vscode';
+import { CancellationError, CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 import {
     connectionFilePlaceholder,
     findIndexOfConnectionFile,
@@ -286,7 +286,7 @@ export class KernelProcess implements IKernelProcess {
         swallowExceptions(async () => {
             if (this.connectionFile) {
                 await this.fileSystem
-                    .deleteLocalFile(this.connectionFile)
+                    .delete(Uri.file(this.connectionFile))
                     .catch((ex) => traceWarning(`Failed to delete connection file ${this.connectionFile}`, ex));
             }
         });
@@ -352,7 +352,7 @@ export class KernelProcess implements IKernelProcess {
             // Add in our connection command line args
             this.launchKernelSpec.argv.push(...this.addPythonConnectionArgs());
         } else {
-            await this.fileSystem.writeLocalFile(this.connectionFile, JSON.stringify(this._connection));
+            await this.fileSystem.writeFile(Uri.file(this.connectionFile), JSON.stringify(this._connection));
 
             // Replace the connection file argument with this file
             // Remember, non-python kernels can have argv as `--connection-file={connection_file}`,

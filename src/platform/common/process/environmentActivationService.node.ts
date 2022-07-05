@@ -19,7 +19,7 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { getInterpreterHash } from '../../pythonEnvironments/info/interpreter';
 import { IPythonApiProvider } from '../../api/types';
 import { StopWatch } from '../utils/stopWatch';
-import { Memento } from 'vscode';
+import { Memento, Uri } from 'vscode';
 import { getDisplayPath } from '../platform/fs-paths';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -682,7 +682,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             const [args, parse] = printEnvVariablesToFile(tmpFile.filePath);
             const execInfo = service.getExecutionInfo(args);
             await proc.exec(execInfo.command, execInfo.args, { env, timeout: CONDA_ENVIRONMENT_TIMEOUT });
-            const jsonContents = await this.fs.readLocalFile(tmpFile.filePath);
+            const jsonContents = await this.fs.readFile(Uri.file(tmpFile.filePath));
             const envVars = await parse(jsonContents);
             traceInfo(
                 `Got activated conda env vars ourselves for ${getDisplayPath(interpreter.uri)} in ${
