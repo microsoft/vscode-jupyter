@@ -8,38 +8,24 @@ import { traceInfo } from '../../platform/logging';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../platform/common/types';
 import { InteractiveWindowProvider } from '../../interactive-window/interactiveWindowProvider';
-import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../common.node';
+import { captureScreenShot, IExtensionTestApi } from '../common.node';
 import { initialize, IS_REMOTE_NATIVE_TEST, IS_CONDA_TEST } from '../initialize.node';
 import {
     closeInteractiveWindow,
-    createStandaloneInteractiveWindow,
     installIPyKernel,
     runCurrentFile,
     runNewPythonFile,
     setActiveInterpreter,
     uninstallIPyKernel,
-    waitForInteractiveWindow,
-    waitForLastCellToComplete,
-    runInteractiveWindowInput
+    waitForLastCellToComplete
 } from './helpers.node';
-import {
-    closeNotebooksAndCleanUpAfterTests,
-    defaultNotebookTestTimeout,
-    generateTemporaryFilePath,
-    hijackPrompt,
-    hijackSavePrompt,
-    startJupyterServer,
-    waitForTextOutput,
-    WindowPromptStubButtonClickOptions
-} from './notebook/helper.node';
+import { closeNotebooksAndCleanUpAfterTests, startJupyterServer } from './notebook/helper.node';
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { areInterpreterPathsSame } from '../../platform/pythonEnvironments/info/interpreter';
 import { IPythonApiProvider } from '../../platform/api/types';
 import { isEqual } from '../../platform/vscode-path/resources';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { IVSCodeNotebook } from '../../platform/common/application/types';
-import { Commands } from '../../platform/common/constants';
 import { IControllerSelection } from '../../notebooks/controllers/types';
 
 suite(`Interactive window Execution`, async function () {
@@ -98,48 +84,6 @@ suite(`Interactive window Execution`, async function () {
         await setActiveInterpreter(pythonApiProvider, undefined, originalActiveInterpreter?.uri);
         await vscode.commands.executeCommand('python.clearWorkspaceInterpreter');
     }
-
-    // Flakey test: https://github.com/microsoft/vscode-jupyter/issues/10649
-    test.skip('Export Interactive window to Notebook', async () => {
-        const activeInteractiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
-        await waitForInteractiveWindow(activeInteractiveWindow);
-
-        // Add a few cells from the input box
-        await runInteractiveWindowInput('print("first")', activeInteractiveWindow, 1);
-        await runInteractiveWindowInput('print("second")', activeInteractiveWindow, 2);
-        await runInteractiveWindowInput('print("third")', activeInteractiveWindow, 3);
-
-        await waitForLastCellToComplete(activeInteractiveWindow, 3, false);
-        let notebookFile = await generateTemporaryFilePath('ipynb', disposables);
-        const promptOptions: WindowPromptStubButtonClickOptions = {
-            result: notebookFile,
-            clickImmediately: true
-        };
-        let savePrompt = await hijackSavePrompt('Export', promptOptions, disposables);
-        let openFilePrompt = await hijackPrompt(
-            'showInformationMessage',
-            { contains: 'Notebook written to' },
-            { dismissPrompt: false },
-            disposables
-        );
-
-        await vscode.commands.executeCommand(Commands.InteractiveExportAsNotebook, activeInteractiveWindow.notebookUri);
-
-        await waitForCondition(() => savePrompt.displayed, defaultNotebookTestTimeout, 'save Prompt not displayed');
-        await waitForCondition(
-            () => openFilePrompt.displayed,
-            defaultNotebookTestTimeout,
-            'open file Prompt not displayed'
-        );
-
-        const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
-        const document = await vscodeNotebook.openNotebookDocument(notebookFile);
-        let editor = await vscodeNotebook.showNotebookDocument(document, { preserveFocus: false });
-
-        const cells = editor.notebook.getCells();
-        assert.strictEqual(cells?.length, 3);
-        await waitForTextOutput(cells[0], 'first');
-    });
 
     test('Switching active interpreter on a python file changes kernel in use', async function () {
         // Virtual environments are not available in conda

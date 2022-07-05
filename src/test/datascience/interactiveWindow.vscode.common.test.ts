@@ -33,6 +33,7 @@ import {
     closeNotebooksAndCleanUpAfterTests,
     defaultNotebookTestTimeout,
     generateTemporaryFilePath,
+    hijackPrompt,
     hijackSavePrompt,
     waitForExecutionCompletedSuccessfully,
     waitForExecutionCompletedWithErrors,
@@ -50,6 +51,7 @@ import * as dedent from 'dedent';
 import { generateCellRangesFromDocument } from '../../interactive-window/editor-integration/cellFactory';
 import { Commands } from '../../platform/common/constants';
 import { IControllerSelection } from '../../notebooks/controllers/types';
+import { IVSCodeNotebook } from '../../platform/common/application/types';
 
 suite(`Interactive window execution`, async function () {
     this.timeout(120_000);
@@ -588,5 +590,46 @@ ${actualCode}
             60_000,
             'Exported python file was not opened'
         );
+    });
+
+    test('Export Interactive window to Notebook', async () => {
+        const activeInteractiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
+        await waitForInteractiveWindow(activeInteractiveWindow);
+
+        // Add a few cells from the input box
+        await runInteractiveWindowInput('print("first")', activeInteractiveWindow, 1);
+        await runInteractiveWindowInput('print("second")', activeInteractiveWindow, 2);
+        await runInteractiveWindowInput('print("third")', activeInteractiveWindow, 3);
+
+        await waitForLastCellToComplete(activeInteractiveWindow, 3, false);
+        let notebookFile = await generateTemporaryFilePath('ipynb', disposables);
+        const promptOptions: WindowPromptStubButtonClickOptions = {
+            result: notebookFile,
+            clickImmediately: true
+        };
+        let savePrompt = await hijackSavePrompt('Export', promptOptions, disposables);
+        let openFilePrompt = await hijackPrompt(
+            'showInformationMessage',
+            { contains: 'Notebook written to' },
+            { dismissPrompt: false },
+            disposables
+        );
+
+        await vscode.commands.executeCommand(Commands.InteractiveExportAsNotebook, activeInteractiveWindow.notebookUri);
+
+        await waitForCondition(() => savePrompt.displayed, defaultNotebookTestTimeout, 'save Prompt not displayed');
+        await waitForCondition(
+            () => openFilePrompt.displayed,
+            defaultNotebookTestTimeout,
+            'open file Prompt not displayed'
+        );
+
+        const vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
+        const document = await vscodeNotebook.openNotebookDocument(notebookFile);
+        let editor = await vscodeNotebook.showNotebookDocument(document, { preserveFocus: false });
+
+        const cells = editor.notebook.getCells();
+        assert.strictEqual(cells?.length, 3);
+        await waitForTextOutput(cells[0], 'first');
     });
 });
