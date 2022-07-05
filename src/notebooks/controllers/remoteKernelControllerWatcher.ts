@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { computeServerId, extractJupyterServerHandleAndId } from '../../kernels/jupyter/jupyterUtils';
+import { extractJupyterServerHandleAndId } from '../../kernels/jupyter/jupyterUtils';
 import {
     IJupyterServerUriStorage,
     IJupyterUriProvider,
@@ -48,7 +48,7 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
                 if (!info || info.id !== provider.id) {
                     return;
                 }
-                serverJupyterProviderMap.set(computeServerId(item.uri), {
+                serverJupyterProviderMap.set(item.serverId, {
                     uri: item.uri,
                     providerId: info.id,
                     handle: info.handle

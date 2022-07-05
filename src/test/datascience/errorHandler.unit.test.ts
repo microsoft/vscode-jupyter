@@ -641,7 +641,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
         });
         test('Display error when connection to remote jupyter server fails', async () => {
             const uri = 'http://hello:1234/jupyter';
-            const serverId = computeServerId(uri);
+            const serverId = await computeServerId(uri);
             const error = new RemoteJupyterServerConnectionError(uri, serverId, new Error('ECONNRESET error'));
             const connection: RemoteKernelSpecConnectionMetadata = {
                 baseUrl: 'http://hello:1234/',
@@ -682,8 +682,8 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
         });
         test('Display error when connection to remote jupyter server fails due to 3rd party extension', async () => {
             const uri = generateUriFromRemoteProvider('1', 'a');
-            const serverId = computeServerId(uri);
-            const error = new RemoteJupyterServerUriProviderError('1', 'a', new Error('invalid handle'));
+            const serverId = await computeServerId(uri);
+            const error = new RemoteJupyterServerUriProviderError('1', 'a', new Error('invalid handle'), serverId);
             const connection: RemoteKernelSpecConnectionMetadata = {
                 baseUrl: 'http://hello:1234/',
                 id: '1',
@@ -696,7 +696,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 kind: 'startUsingRemoteKernelSpec',
                 serverId
             };
-            when(uriStorage.getSavedUriList()).thenResolve([{ time: 1, uri, displayName: 'Hello Server' }]);
+            when(uriStorage.getSavedUriList()).thenResolve([{ time: 1, uri, serverId, displayName: 'Hello Server' }]);
             when(
                 applicationShell.showErrorMessage(anything(), anything(), anything(), anything(), anything())
             ).thenResolve();
@@ -723,7 +723,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
         });
         test('Remove remote Uri if user choses to do so, when connection to remote jupyter server fails', async () => {
             const uri = 'http://hello:1234/jupyter';
-            const serverId = computeServerId(uri);
+            const serverId = await computeServerId(uri);
             const error = new RemoteJupyterServerConnectionError(uri, serverId, new Error('ECONNRESET error'));
             const connection: RemoteKernelSpecConnectionMetadata = {
                 baseUrl: 'http://hello:1234/',
@@ -742,8 +742,8 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             ).thenResolve(DataScience.removeRemoteJupyterConnectionButtonText() as any);
             when(uriStorage.removeUri(anything())).thenResolve();
             when(uriStorage.getSavedUriList()).thenResolve([
-                { time: 1, uri: 'one' },
-                { uri, time: 2 }
+                { time: 1, serverId: 'foobar', uri: 'one' },
+                { uri, serverId, time: 2 }
             ]);
             const result = await dataScienceErrorHandler.handleKernelError(
                 error,
@@ -759,7 +759,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
         });
         test('Change remote Uri if user choses to do so, when connection to remote jupyter server fails', async () => {
             const uri = 'http://hello:1234/jupyter';
-            const serverId = computeServerId(uri);
+            const serverId = await computeServerId(uri);
             const error = new RemoteJupyterServerConnectionError(uri, serverId, new Error('ECONNRESET error'));
             const connection: RemoteKernelSpecConnectionMetadata = {
                 baseUrl: 'http://hello:1234/',
@@ -791,7 +791,7 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
         });
         test('Select different kernel user choses to do so, when connection to remote jupyter server fails', async () => {
             const uri = 'http://hello:1234/jupyter';
-            const serverId = computeServerId(uri);
+            const serverId = await computeServerId(uri);
             const error = new RemoteJupyterServerConnectionError(uri, serverId, new Error('ECONNRESET error'));
             const connection: RemoteKernelSpecConnectionMetadata = {
                 baseUrl: 'http://hello:1234/',

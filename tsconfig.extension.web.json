@@ -17,6 +17,7 @@
         ".git",
         "src/*.node.ts",
         "src/**/*.node.ts",
-        ".vscode-test-web"
+        ".vscode-test-web",
+        "gulpfile.js"
     ]
 }

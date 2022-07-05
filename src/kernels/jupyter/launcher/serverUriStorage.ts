@@ -10,6 +10,7 @@ import {
 import { Settings } from '../../../platform/common/constants';
 import { getFilePath } from '../../../platform/common/platform/fs-paths';
 import { ICryptoUtils, IMemento, GLOBAL_MEMENTO, IsWebExtension } from '../../../platform/common/types';
+import { traceError } from '../../../platform/logging';
 import { computeServerId } from '../jupyterUtils';
 import { IJupyterServerUriStorage, IServerConnectionType } from '../types';
 
@@ -21,7 +22,9 @@ export const currentServerHashKey = 'currentServerHash';
  */
 @injectable()
 export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServerConnectionType {
-    private lastSavedList?: Promise<{ uri: string; time: number; displayName?: string | undefined }[]>;
+    private lastSavedList?: Promise<
+        { uri: string; serverId: string; time: number; displayName?: string | undefined }[]
+    >;
     private currentUriPromise: Promise<string> | undefined;
     private _currentServerId: string | undefined;
     private _localOnly: boolean = false;
@@ -65,13 +68,16 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
         // Start with saved list.
         const uriList = await this.getSavedUriList();
 
+        // Compute server id for saving in the list
+        const serverId = await computeServerId(uri);
+
         // Remove this uri if already found (going to add again with a new time)
         const editedList = uriList.filter((f, i) => {
             return f.uri !== uri && i < Settings.JupyterServerUriListMax - 1;
         });
 
         // Add this entry into the last.
-        editedList.push({ uri, time, displayName: displayName || uri });
+        editedList.push({ uri, time, serverId, displayName: displayName || uri });
 
         return this.updateMemento(editedList);
     }
@@ -88,7 +94,9 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
         }
         this._onDidRemoveUris.fire([uri]);
     }
-    private async updateMemento(editedList: { uri: string; time: number; displayName?: string | undefined }[]) {
+    private async updateMemento(
+        editedList: { uri: string; serverId: string; time: number; displayName?: string | undefined }[]
+    ) {
         // Sort based on time. Newest time first
         const sorted = editedList.sort((a, b) => {
             return b.time - a.time;
@@ -122,7 +130,9 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
             blob
         );
     }
-    public async getSavedUriList(): Promise<{ uri: string; time: number; displayName?: string | undefined }[]> {
+    public async getSavedUriList(): Promise<
+        { uri: string; serverId: string; time: number; displayName?: string | undefined }[]
+    > {
         if (this.lastSavedList) {
             return this.lastSavedList;
         }
@@ -143,6 +153,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
                         // Split out the display name and the URI (they were combined because display name may have secret tokens in it too)
                         const uriAndDisplayName = split[i].split(Settings.JupyterServerRemoteLaunchNameSeparator);
                         const uri = uriAndDisplayName[0];
+                        const serverId = await computeServerId(uri);
 
                         // 'same' is specified for the display name to keep storage shorter if it is the same value as the URI
                         const displayName =
@@ -150,7 +161,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
                             !uriAndDisplayName[1]
                                 ? uri
                                 : uriAndDisplayName[1];
-                        result.push({ time: indexes[i].time, displayName, uri });
+                        result.push({ time: indexes[i].time, serverId, displayName, uri });
                     }
                     return result;
                 }
@@ -160,6 +171,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
         this.lastSavedList = promise();
         return this.lastSavedList;
     }
+
     public async clearUriList(): Promise<void> {
         const uriList = await this.getSavedUriList();
         this.lastSavedList = Promise.resolve([]);
@@ -186,16 +198,21 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
         return this.currentUriPromise;
     }
     public async getRemoteUri(): Promise<string | undefined> {
-        const uri = await this.getUri();
-        switch (uri) {
-            case Settings.JupyterServerLocalLaunch:
-                return;
-            case Settings.JupyterServerRemoteLaunch:
-                // In `getUriInternal` its not possible for us to end up with Settings.JupyterServerRemoteLaunch.
-                // If we do, then this means the uri was never saved or not in encrypted store, hence no point returning and invalid entry.
-                return;
-            default:
-                return uri;
+        try {
+            const uri = await this.getUri();
+            switch (uri) {
+                case Settings.JupyterServerLocalLaunch:
+                    return;
+                case Settings.JupyterServerRemoteLaunch:
+                    // In `getUriInternal` its not possible for us to end up with Settings.JupyterServerRemoteLaunch.
+                    // If we do, then this means the uri was never saved or not in encrypted store, hence no point returning and invalid entry.
+                    return;
+                default:
+                    return uri;
+            }
+        } catch (e) {
+            traceError(`Exception getting uri: ${e}`);
+            return;
         }
     }
     public async setUriToLocal(): Promise<void> {
@@ -212,7 +229,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
     public async setUri(uri: string) {
         // Set the URI as our current state
         this.currentUriPromise = Promise.resolve(uri);
-        this._currentServerId = computeServerId(uri);
+        this._currentServerId = await computeServerId(uri);
         this._localOnly = uri === Settings.JupyterServerLocalLaunch || uri === undefined;
         this._onDidChangeUri.fire(); // Needs to happen as soon as we change so that dependencies update synchronously
 
@@ -238,7 +255,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
 
             // Update server id if not already set
             if (!this._currentServerId && storedUri) {
-                this._currentServerId = computeServerId(storedUri);
+                this._currentServerId = await computeServerId(storedUri);
             }
 
             return storedUri || Settings.JupyterServerLocalLaunch;

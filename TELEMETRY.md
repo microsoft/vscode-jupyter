@@ -8898,8 +8898,8 @@ No properties for event
                 if (err.message.includes('Failed to fetch') && this.isWebExtension) {
                     sendTelemetryEvent(Telemetry.FetchError, undefined, { currentTask: 'connecting' });
                 }
-                await this.errorHandler.handleError(
-                    new RemoteJupyterServerConnectionError(userURI, computeServerId(userURI), err)
+                const serverId = await computeServerId(userURI);
+                await this.errorHandler.handleError(new RemoteJupyterServerConnectionError(userURI, serverId, err));
 ```
 
 </details>

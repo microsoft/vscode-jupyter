@@ -125,7 +125,7 @@ export function buildApi(
             const connection = serviceContainer.get<JupyterConnection>(JupyterConnection);
             const uri = generateUriFromRemoteProvider(providerId, handle);
             await connection.updateServerUri(uri);
-            const serverId = computeServerId(uri);
+            const serverId = await computeServerId(uri);
             const { controller } = await controllers.computePreferred(notebook, serverId);
             return controller?.controller;
         },

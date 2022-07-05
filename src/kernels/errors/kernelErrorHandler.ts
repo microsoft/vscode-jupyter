@@ -52,7 +52,6 @@ import { handleExpiredCertsError, handleSelfCertsError } from '../jupyter/jupyte
 import { getFilePath } from '../../platform/common/platform/fs-paths';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { JupyterExpiredCertsError } from '../../platform/errors/jupyterExpiredCertsError';
-import { computeServerId } from '../jupyter/jupyterUtils';
 import { RemoteJupyterServerConnectionError } from '../../platform/errors/remoteJupyterServerConnectionError';
 import { RemoteJupyterServerUriProviderError } from './remoteJupyterServerUriProviderError';
 import { InvalidRemoteJupyterServerUriHandleError } from './invalidRemoteJupyterServerUriHandleError';
@@ -175,7 +174,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                     ? error.originalError.message || ''
                     : error.originalError?.message || error.message;
             const serverId = error instanceof RemoteJupyterServerConnectionError ? error.serverId : error.serverId;
-            const displayName = savedList.find((item) => computeServerId(item.uri) === serverId)?.displayName;
+            const displayName = savedList.find((item) => item.serverId === serverId)?.displayName;
             const baseUrl = error instanceof RemoteJupyterServerConnectionError ? error.baseUrl : '';
             const idAndHandle =
                 error instanceof RemoteJupyterServerUriProviderError ? `${error.providerId}:${error.handle}` : '';
@@ -247,7 +246,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                     ? err.originalError.message || ''
                     : err.originalError?.message || err.message;
             const serverId = err instanceof RemoteJupyterServerConnectionError ? err.serverId : err.serverId;
-            const displayName = savedList.find((item) => computeServerId(item.uri) === serverId)?.displayName;
+            const displayName = savedList.find((item) => item.serverId === serverId)?.displayName;
             const baseUrl = err instanceof RemoteJupyterServerConnectionError ? err.baseUrl : '';
             const idAndHandle =
                 err instanceof RemoteJupyterServerUriProviderError ? `${err.providerId}:${err.handle}` : '';
@@ -272,7 +271,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                     const uriList = await this.serverUriStorage.getSavedUriList();
 
                     // Remove this uri if already found (going to add again with a new time)
-                    const item = uriList.find((f) => computeServerId(f.uri) === serverId);
+                    const item = uriList.find((f) => f.serverId === serverId);
                     if (item) {
                         await this.serverUriStorage.removeUri(item.uri);
                     }
