@@ -73,7 +73,7 @@ suite('VSCode Notebook - Run By Line', function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             // For a flaky interrupt test.
-            await captureScreenShot(`Debugger-Tests-${this.currentTest?.title}`);
+            await captureScreenShot(this);
         }
         await closeNotebooks(disposables);
         await closeNotebooksAndCleanUpAfterTests(disposables);

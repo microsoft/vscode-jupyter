@@ -79,7 +79,7 @@ suite('IPyWidget Script Manager', function () {
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
-            await captureScreenShot(`IPyWidget-standard-test-${this.currentTest?.title || 'unknown'}`);
+            await captureScreenShot(this);
         }
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });

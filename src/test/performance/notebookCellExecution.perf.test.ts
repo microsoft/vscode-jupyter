@@ -18,7 +18,7 @@ suite('Initial Notebook Cell Execution Perf Test', function () {
         // results are reported in global test hooks
         this.currentTest!.perfCheckpoints = tracker.finish();
         if (this.currentTest?.isFailed()) {
-            await captureScreenShot(this.currentTest?.title);
+            await captureScreenShot(this);
         }
     });
     test('Initial Notebook Cell Execution Perf Test', async function () {
