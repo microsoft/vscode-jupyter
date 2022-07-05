@@ -22,7 +22,6 @@ import {
     startJupyterServer,
     prewarmNotebooks,
     createEmptyPythonNotebook,
-    workAroundVSCodeNotebookStartPages,
     waitForTextOutput,
     defaultNotebookTestTimeout
 } from './helper.node';
@@ -71,7 +70,6 @@ suite('DataScience - Memory Test', function () {
         this.timeout(120_000);
         try {
             api = await initialize();
-            await workAroundVSCodeNotebookStartPages();
             await startJupyterServer();
             await prewarmNotebooks();
             sinon.restore();

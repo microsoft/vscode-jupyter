@@ -547,31 +547,11 @@ export async function waitForKernelToGetAutoSelected(
     return waitForKernelToChange(criteria, timeout, skipAutoSelection);
 }
 
-let workedAroundVSCodeNotebookStartPage = false;
-/**
- * VS Code displays a start page when opening notebooks for the first time.
- * This takes focus from the notebook, hence our tests can fail as a result of this.
- * Solution, try to trigger the display of the start page displayed before starting the tests.
- */
-export async function workAroundVSCodeNotebookStartPages() {
-    try {
-        if (workedAroundVSCodeNotebookStartPage) {
-            return;
-        }
-        workedAroundVSCodeNotebookStartPage = true;
-        const { editorProvider } = await getServices();
-        await closeActiveWindows();
-
-        // Open a notebook, VS Code will open the start page (wait for 5s for VSCode to react & open it)
-        await editorProvider.createNew();
-        await sleep(5_000);
-        await closeActiveWindows();
-    } catch (ex) {
-        // Don't fail because closing didn't work.
-    }
-}
-
+const prewarmNotebooksDone = { done: false };
 export async function prewarmNotebooks() {
+    if (prewarmNotebooksDone.done) {
+        return;
+    }
     const { editorProvider, vscodeNotebook, serviceContainer } = await getServices();
     await closeActiveWindows();
 
@@ -592,6 +572,7 @@ export async function prewarmNotebooks() {
         await shutdownAllNotebooks();
     } finally {
         disposables.forEach((d) => d.dispose());
+        prewarmNotebooksDone.done = true;
     }
 }
 

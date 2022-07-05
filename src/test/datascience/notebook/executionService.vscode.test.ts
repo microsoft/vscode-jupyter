@@ -43,7 +43,6 @@ import {
     createEmptyPythonNotebook,
     assertNotHasTextOutputInVSCode,
     waitForQueuedForExecutionOrExecuting,
-    workAroundVSCodeNotebookStartPages,
     waitForTextOutput,
     defaultNotebookTestTimeout,
     waitForCellExecutionState,
@@ -83,7 +82,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         this.timeout(120_000);
         try {
             api = await initialize();
-            await workAroundVSCodeNotebookStartPages();
             await hijackPrompt(
                 'showErrorMessage',
                 { endsWith: expectedPromptMessageSuffix },

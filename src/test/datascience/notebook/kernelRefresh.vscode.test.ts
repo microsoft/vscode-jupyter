@@ -19,7 +19,6 @@ import {
     waitForExecutionCompletedSuccessfully,
     prewarmNotebooks,
     createEmptyPythonNotebook,
-    workAroundVSCodeNotebookStartPages,
     defaultNotebookTestTimeout
 } from './helper.node';
 import { IS_CONDA_TEST } from '../../constants.node';
@@ -42,7 +41,6 @@ suite('DataScience - VSCode Notebook - (Conda Env Detection) (slow)', function (
         try {
             api = await initialize();
             controllerRegistration = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
-            await workAroundVSCodeNotebookStartPages();
             await startJupyterServer();
             await prewarmNotebooks();
             sinon.restore();

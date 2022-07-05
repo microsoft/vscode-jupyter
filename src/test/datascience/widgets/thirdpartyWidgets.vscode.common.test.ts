@@ -24,8 +24,7 @@ import {
     closeNotebooks,
     closeNotebooksAndCleanUpAfterTests,
     defaultNotebookTestTimeout,
-    prewarmNotebooks,
-    workAroundVSCodeNotebookStartPages
+    prewarmNotebooks
 } from '../notebook/helper';
 import {
     assertOutputContainsHtml,
@@ -63,7 +62,6 @@ import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../ke
             const memento = api.serviceContainer.get<Memento>(IMemento, GLOBAL_MEMENTO);
             await memento.update(GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce, true);
 
-            await workAroundVSCodeNotebookStartPages();
             await startJupyterServer();
             await prewarmNotebooks();
             sinon.restore();

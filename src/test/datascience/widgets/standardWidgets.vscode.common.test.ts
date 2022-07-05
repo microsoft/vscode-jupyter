@@ -25,8 +25,7 @@ import {
     waitForCellExecutionToComplete,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected,
-    waitForTextOutput,
-    workAroundVSCodeNotebookStartPages
+    waitForTextOutput
 } from '../notebook/helper';
 import { initializeWidgetComms, Utils } from './commUtils';
 import { WidgetRenderingTimeoutForTests } from './constants';
@@ -110,7 +109,6 @@ suite('Standard IPyWidget Tests', function () {
         api = await initialize();
         const config = workspace.getConfiguration('jupyter', undefined);
         await config.update('widgetScriptSources', widgetScriptSourcesValue, ConfigurationTarget.Global);
-        await workAroundVSCodeNotebookStartPages();
         await startJupyterServer();
         await prewarmNotebooks();
         sinon.restore();

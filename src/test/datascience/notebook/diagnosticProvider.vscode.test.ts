@@ -11,12 +11,7 @@ import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { captureScreenShot, IExtensionTestApi, waitForCondition } from '../../common.node';
 import { initialize } from '../../initialize.node';
-import {
-    closeNotebooksAndCleanUpAfterTests,
-    insertCodeCell,
-    createEmptyPythonNotebook,
-    workAroundVSCodeNotebookStartPages
-} from './helper.node';
+import { closeNotebooksAndCleanUpAfterTests, insertCodeCell, createEmptyPythonNotebook } from './helper.node';
 import { NotebookDocument, Range } from 'vscode';
 import { IExtensionSyncActivationService } from '../../../platform/activation/types';
 import { NotebookCellBangInstallDiagnosticsProvider } from '../../../standalone/intellisense/diagnosticsProvider';
@@ -32,7 +27,6 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
         try {
             traceInfo(`Start Test ${this.currentTest?.title}`);
             api = await initialize();
-            await workAroundVSCodeNotebookStartPages();
             vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
             diagnosticProvider = api.serviceContainer
                 .getAll<NotebookCellBangInstallDiagnosticsProvider>(IExtensionSyncActivationService)

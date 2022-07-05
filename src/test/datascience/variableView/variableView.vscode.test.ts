@@ -13,7 +13,6 @@ import {
     runCell,
     insertCodeCell,
     waitForExecutionCompletedSuccessfully,
-    workAroundVSCodeNotebookStartPages,
     startJupyterServer,
     defaultNotebookTestTimeout
 } from '../notebook/helper.node';
@@ -47,7 +46,6 @@ suite('DataScience - VariableView', function () {
             return this.skip();
         }
 
-        await workAroundVSCodeNotebookStartPages();
         sinon.restore();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         commandManager = api.serviceContainer.get<ICommandManager>(ICommandManager);

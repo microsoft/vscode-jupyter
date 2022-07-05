@@ -26,7 +26,6 @@ import {
     saveActiveNotebook,
     waitForExecutionCompletedSuccessfully,
     waitForKernelToGetAutoSelected,
-    workAroundVSCodeNotebookStartPages,
     waitForTextOutput,
     createTemporaryNotebookFromFile
 } from './helper.node';
@@ -69,7 +68,6 @@ suite('DataScience - VSCode Notebook - Kernels (non-python-kernel) (slow)', () =
             return this.skip();
         }
         sinon.restore();
-        await workAroundVSCodeNotebookStartPages();
         verifyPromptWasNotDisplayed();
         vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
         editorProvider = api.serviceContainer.get<INotebookEditorProvider>(INotebookEditorProvider);
