@@ -711,7 +711,7 @@ jobs:
           path: '${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/**/*'
           retention-days: 1
 
-      - name: Log results
+      - name: Log test results
         if: always()
         run: npm run printTestResults
 
@@ -720,7 +720,7 @@ jobs:
         if: always()
         with:
           name: TestResultNotebook-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.os}}
-          path: testresults.ipynb
+          path: testresults.*
           retention-days: 1
 
       - name: Upload Memory snapshot
