@@ -14,6 +14,7 @@ import { sendKernelTelemetryEvent } from './telemetry/sendKernelTelemetryEvent';
 import { endCellAndDisplayErrorsInCell } from './execution/helpers';
 import { getDisplayNameOrNameOfKernelConnection } from './helpers';
 import { IKernel, IKernelProvider } from './types';
+import { swallowExceptions } from '../platform/common/utils/decorators';
 
 @injectable()
 export class KernelCrashMonitor implements IExtensionSyncActivationService {
@@ -34,6 +35,7 @@ export class KernelCrashMonitor implements IExtensionSyncActivationService {
         kernel.onPreExecute((cell) => this.lastExecutedCellPerKernel.set(kernel, cell), this, this.disposableRegistry);
     }
 
+    @swallowExceptions()
     private async onKernelStatusChanged({ kernel }: { status: KernelMessage.Status; kernel: IKernel }) {
         // We're only interested in kernels that started successfully.
         if (!this.kernelsStartedSuccessfully.has(kernel)) {
