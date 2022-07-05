@@ -280,7 +280,7 @@ function writeTelemetryEntry(entry: TelemetryEntry) {
             const link = `https://github.com/microsoft/vscode-jupyter/tree/main/${l.file}`;
             writeOutput(`\n[${l.file}](${link})`);
             writeOutput('```typescript');
-            writeOutput(l.code.replace('\\r\\n', '\n'));
+            writeOutput(l.code.replace(/\r\n/g, '\n'));
             writeOutput('```\n');
         });
     }
