@@ -1,5 +1,8 @@
 {
     "products.installingModule": "Installing {0}",
+    "contributes.walkthroughs.ipynb.newUntitledIpynb.title": "Create or open a Jupyter Notebook",
+    "contributes.walkthroughs.ipynb.newUntitledIpynb.description": "Right click in the file explorer and create a new file with an .ipynb extension. Or, open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Create: New Jupyter Notebook``.\n[Create New Jupyter Notebook](command:toSide:ipynb.newUntitledIpynb)\n If you have an existing project, you can also [open a folder](command:toSide:workbench.action.files.openFolder) and/or clone a project from GitHub: [clone a Git repository](command:toSide:git.clone).",
+    "jupyter.command.dataScience.clearCache.title": "Clear Cache",
     "jupyter.command.jupyter.exportAsPythonScript.title": "Export to Python Script",
     "jupyter.command.jupyter.exportToHTML.title": "Export to HTML",
     "jupyter.command.jupyter.exportToPDF.title": "Export to PDF",

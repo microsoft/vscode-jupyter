@@ -95,8 +95,8 @@
                 "steps": [
                     {
                         "id": "ipynb.newUntitledIpynb",
-                        "title": "Create or open a Jupyter Notebook",
-                        "description": "Right click in the file explorer and create a new file with an .ipynb extension. Or, open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Create: New Jupyter Notebook``.\n[Create New Jupyter Notebook](command:toSide:ipynb.newUntitledIpynb)\n If you have an existing project, you can also [open a folder](command:toSide:workbench.action.files.openFolder) and/or clone a project from GitHub: [clone a Git repository](command:toSide:git.clone).",
+                        "title": "%contributes.walkthroughs.ipynb.newUntitledIpynb.title%",
+                        "description": "%contributes.walkthroughs.ipynb.newUntitledIpynb.description%",
                         "media": {
                             "svg": "resources/walkthroughs/opennotebook.svg",
                             "altText": "Creating a new Jupyter notebook"
@@ -272,7 +272,7 @@
         "commands": [
             {
                 "command": "dataScience.ClearCache",
-                "title": "Clear Cache",
+                "title": "%jupyter.command.dataScience.clearCache.title%",
                 "category": "Jupyter (Dev)",
                 "enablement": "jupyter.development"
             },
