@@ -118,19 +118,19 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             this.modelIdsToBeDisplayed.set(modelId, createDeferred());
         }
         // Wait until it is flagged as ready to be processed.
-        // This widget manager must have recieved this message and performed all operations before this.
-        // Once all messages prior to this have been processed in sequence and this message is receievd,
+        // This widget manager must have received this message and performed all operations before this.
+        // Once all messages prior to this have been processed in sequence and this message is received,
         // then, and only then are we ready to render the widget.
-        // I.e. this is a way of synchronzing the render with the processing of the messages.
+        // I.e. this is a way of synchronizing the render with the processing of the messages.
         await this.modelIdsToBeDisplayed.get(modelId)!.promise;
 
         const modelPromise = this.manager.get_model(data.model_id);
         if (!modelPromise) {
-            console.warn('Widget model not avaialble to render an ipywidget');
+            console.warn('Widget model not available to render an ipywidget');
             return undefined;
         }
 
-        // ipywdigets may not have completed creating the model.
+        // IPyWidgets may not have completed creating the model.
         // ipywidgets have a promise, as the model may get created by a 3rd party library.
         // That 3rd party library may not be available and may have to be downloaded.
         // Hence the promise to wait until it has been created.
@@ -168,7 +168,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
             this.proxyKernel.iopubMessage.connect(this.handleDisplayDataMessage.bind(this));
 
             // Listen for unhandled IO pub so we can forward to the extension
-            this.manager.onUnhandledIOPubMessage.connect(this.handleUnhanldedIOPubMessage.bind(this));
+            this.manager.onUnhandledIOPubMessage.connect(this.handleUnhandledIOPubMessage.bind(this));
 
             // Tell the observable about our new manager
             WidgetManager._instance.next(this);
@@ -213,7 +213,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageHandler {
         }
     }
 
-    private handleUnhanldedIOPubMessage(_manager: any, msg: KernelMessage.IIOPubMessage) {
+    private handleUnhandledIOPubMessage(_manager: any, msg: KernelMessage.IIOPubMessage) {
         // Send this to the other side
         this.postOffice.sendMessage<IInteractiveWindowMapping>(
             InteractiveWindowMessages.IPyWidgetUnhandledKernelMessage,

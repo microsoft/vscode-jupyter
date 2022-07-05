@@ -30,6 +30,7 @@ import { IIPyWidgetMessageDispatcher, ILocalResourceUriConverter, IWidgetScriptS
 import { ConsoleForegroundColors } from '../../platform/logging/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { IWebviewCommunication } from '../../platform/webviews/types';
+import { swallowExceptions } from '../../platform/common/utils/decorators';
 
 /**
  * This class wraps all of the ipywidgets communication with a backing notebook
@@ -170,7 +171,7 @@ export class CommonMessageCoordinator {
         try {
             let errorMessage: string = payload.error.toString();
             const cdnsEnabled = this.configService.getSettings(undefined).widgetScriptSources.length > 0;
-            const key = `${payload.moduleName}:${payload.className}:${payload.moduleVersion}`;
+            const key = `${payload.moduleName}:${payload.moduleVersion}`;
             if (!payload.isOnline) {
                 errorMessage = DataScience.loadClassFailedWithNoInternet().format(
                     payload.moduleName,
@@ -193,9 +194,7 @@ export class CommonMessageCoordinator {
                                 this.appShell.openUrl('https://aka.ms/PVSCIPyWidgets');
                                 break;
                             case enableDownloads:
-                                this.commandManager
-                                    .executeCommand(Commands.EnableLoadingWidgetsFrom3rdPartySource)
-                                    .then(noop, noop);
+                                this.enableCDNForWidgets().ignoreErrors();
                                 break;
                             default:
                                 break;
@@ -212,6 +211,13 @@ export class CommonMessageCoordinator {
             });
         } catch {
             // do nothing on failure
+        }
+    }
+    @swallowExceptions()
+    private async enableCDNForWidgets() {
+        await this.commandManager.executeCommand(Commands.EnableLoadingWidgetsFrom3rdPartySource);
+        if (this.webview) {
+            await this.webview.postMessage({ type: IPyWidgetMessages.IPyWidgets_AttemptToDownloadFailedWidgetsAgain });
         }
     }
     private sendUnsupportedWidgetVersionFailureTelemetry(payload: NotifyIPyWidgetWidgetVersionNotSupportedAction) {

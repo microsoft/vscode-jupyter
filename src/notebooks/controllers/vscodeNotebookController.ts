@@ -365,6 +365,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         scripts.push(
             Uri.joinPath(this.context.extensionUri, 'out', 'webviews/webview-side', 'ipywidgetsKernel', 'require.js')
         );
+        scripts.push(Uri.joinPath(this.context.extensionUri, 'resources', 'jquery.js'));
 
         // Only used in tests & while debugging.
         if (

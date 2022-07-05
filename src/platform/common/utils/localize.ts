@@ -1111,14 +1111,6 @@ export namespace DataScience {
             'DataScience.loadClassFailedWithNoInternet',
             'Error loading {0}:{1}. Internet connection required for loading 3rd party widgets.'
         );
-    export const loadThirdPartyWidgetScriptsPostEnabled = () =>
-        localize(
-            {
-                key: 'DataScience.loadThirdPartyWidgetScriptsPostEnabled',
-                comment: ["{Locked='widgetScriptSources'}"]
-            },
-            "Please restart the Kernel when changing the setting 'jupyter.widgetScriptSources'."
-        );
     export const useCDNForWidgets = () =>
         localize(
             'DataScience.useCDNForWidgets',
