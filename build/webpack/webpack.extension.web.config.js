@@ -89,6 +89,14 @@ const config = {
     },
     externals: ['vscode', 'commonjs', 'electron'], // Don't bundle these
     plugins: [
+        new copyWebpackPlugin({
+            patterns: [
+                {
+                    from: './node_modules/jquery/dist/jquery.min.js',
+                    to: './node_modules/jquery/dist/jquery.min.js'
+                }
+            ]
+        }),
         // Work around for Buffer is undefined:
         new webpack.ProvidePlugin({
             Buffer: ['buffer', 'Buffer']
