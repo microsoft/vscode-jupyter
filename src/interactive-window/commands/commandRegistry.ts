@@ -143,19 +143,13 @@ export class CommandRegistry implements IDisposable, IExtensionSingleActivationS
         }
     }
 
-    private enableLoadingWidgetScriptsFromThirdParty(): void {
+    private async enableLoadingWidgetScriptsFromThirdParty() {
         if (this.configService.getSettings(undefined).widgetScriptSources.length > 0) {
             return;
         }
         // Update the setting and once updated, notify user to restart kernel.
-        this.configService
+        await this.configService
             .updateSetting('widgetScriptSources', ['jsdelivr.com', 'unpkg.com'], undefined, ConfigurationTarget.Global)
-            .then(() => {
-                // Let user know they'll need to restart the kernel.
-                this.appShell
-                    .showInformationMessage(DataScience.loadThirdPartyWidgetScriptsPostEnabled())
-                    .then(noop, noop);
-            })
             .catch(noop);
     }
 

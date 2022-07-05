@@ -11,6 +11,7 @@ import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import { IKernel } from '../types';
 import { BaseIPyWidgetScriptManager } from './baseIPyWidgetScriptManager';
 import { IIPyWidgetScriptManager, INbExtensionsPathProvider } from './types';
+import { JupyterPaths } from '../raw/finder/jupyterPaths.node';
 
 type KernelConnectionId = string;
 /**
@@ -35,7 +36,8 @@ export class LocalIPyWidgetScriptManager extends BaseIPyWidgetScriptManager impl
         kernel: IKernel,
         private readonly fs: IFileSystemNode,
         private readonly nbExtensionsPathProvider: INbExtensionsPathProvider,
-        private readonly context: IExtensionContext
+        private readonly context: IExtensionContext,
+        private readonly jupyterPaths: JupyterPaths
     ) {
         super(kernel);
         // When re-loading VS Code, always overwrite the files.
@@ -58,11 +60,18 @@ export class LocalIPyWidgetScriptManager extends BaseIPyWidgetScriptManager impl
             const kernelHash = getTelemetrySafeHashedString(this.kernel.kernelConnectionMetadata.id);
             const baseUrl = Uri.joinPath(this.context.extensionUri, 'tmp', 'scripts', kernelHash, 'jupyter');
             const targetNbExtensions = Uri.joinPath(baseUrl, 'nbextensions');
+            const jupyterDataDir = await this.jupyterPaths.getDataDir();
+            const userNbExtensionsDir = jupyterDataDir ? Uri.joinPath(jupyterDataDir, 'nbextensions') : undefined;
             await this.fs.ensureLocalDir(targetNbExtensions.fsPath);
+            if (userNbExtensionsDir && (await this.fs.exists(userNbExtensionsDir))) {
+                await this.fs.copyLocal(userNbExtensionsDir.fsPath, targetNbExtensions.fsPath, { overwrite });
+            }
             await this.fs.copyLocal(
                 Uri.joinPath(this.sourceNbExtensionsPath, 'nbextensions').fsPath,
                 targetNbExtensions.fsPath,
-                { overwrite }
+                {
+                    overwrite
+                }
             );
             // If we've copied once, then next time, don't overwrite.
             this.overwriteExistingFiles = false;
