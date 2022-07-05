@@ -3,7 +3,7 @@ import { ILocalResourceUriConverter } from './types';
 import * as uriPath from '../../platform/vscode-path/resources';
 import { inject, injectable } from 'inversify';
 import { IFileSystem } from '../../platform/common/platform/types';
-import { IExtensionContext } from '../../platform/common/types';
+import { IExtensionContext, IsWebExtension } from '../../platform/common/types';
 import { sha256 } from 'hash.js';
 import { createDeferred, Deferred } from '../../platform/common/utils/async';
 import { traceInfo, traceError } from '../../platform/logging';
@@ -37,6 +37,10 @@ export class ScriptUriConverter implements ILocalResourceUriConverter {
      * Copying into global workspace folder would also work, but over time this folder size could grow (in an unmanaged way).
      */
     public async asWebviewUri(localResource: Uri): Promise<Uri> {
+        if (this.isWeb) {
+            // We cannot create folders on the web, return this as is.
+            return localResource;
+        }
         // Make a copy of the local file if not already in the correct location
         if (!this.isInScriptPath(localResource)) {
             const key = getComparisonKey(localResource);
@@ -89,7 +93,8 @@ export class ScriptUriConverter implements ILocalResourceUriConverter {
 
     constructor(
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IExtensionContext) extensionContext: IExtensionContext
+        @inject(IExtensionContext) extensionContext: IExtensionContext,
+        @inject(IsWebExtension) private readonly isWeb: boolean
     ) {
         // Scripts have to be written somewhere we can:
         // - Write to disk
@@ -99,14 +104,16 @@ export class ScriptUriConverter implements ILocalResourceUriConverter {
         // This is pending: https://github.com/microsoft/vscode/issues/149868
         this._rootScriptFolder = uriPath.joinPath(extensionContext.extensionUri, 'tmp', 'scripts');
         this.targetWidgetScriptsFolder = uriPath.joinPath(this._rootScriptFolder, 'nbextensions');
-        this.createTargetWidgetScriptsFolder = this.fs
-            .exists(this.targetWidgetScriptsFolder, FileType.Directory)
-            .then(async (exists) => {
-                if (!exists) {
-                    await this.fs.createDirectory(this.targetWidgetScriptsFolder);
-                }
-                return this.targetWidgetScriptsFolder;
-            });
+        if (!this.isWeb) {
+            this.createTargetWidgetScriptsFolder = this.fs
+                .exists(this.targetWidgetScriptsFolder, FileType.Directory)
+                .then(async (exists) => {
+                    if (!exists) {
+                        await this.fs.createDirectory(this.targetWidgetScriptsFolder);
+                    }
+                    return this.targetWidgetScriptsFolder;
+                });
+        }
     }
 
     private isInScriptPath(uri: Uri) {

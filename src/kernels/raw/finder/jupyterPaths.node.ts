@@ -22,7 +22,9 @@ const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 const linuxJupyterPath = path.join('.local', 'share', 'jupyter', 'kernels');
 const macJupyterPath = path.join('Library', 'Jupyter', 'kernels');
 const winJupyterRuntimePath = path.join('AppData', 'Roaming', 'jupyter', 'runtime');
+const winJupyterDataDirPath = path.join('AppData', 'Roaming', 'jupyter');
 const macJupyterRuntimePath = path.join('Library', 'Jupyter', 'runtime');
+const macJupyterDataDirPath = path.join('Library', 'Jupyter');
 
 export const baseKernelPath = path.join('share', 'jupyter', 'kernels');
 const CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH = 'CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH.';
@@ -123,6 +125,31 @@ export class JupyterPaths {
             return runtimeDir;
         } catch (ex) {
             traceError(`Failed to create runtime directory, reverting to temp directory ${runtimeDir}`, ex);
+        }
+    }
+    /**
+     * Returns the value for `JUPYTER_DATA_DIR`, location where Jupyter stores nbextensions files.
+     */
+    public async getDataDir(): Promise<Uri | undefined> {
+        let dataDir: Uri | undefined;
+        const userHomeDir = getUserHomeDir();
+        if (userHomeDir) {
+            if (this.platformService.isWindows) {
+                // On windows the path is not correct if we combine those variables.
+                // It won't point to a path that you can actually read from.
+                dataDir = await tryGetRealPath(uriPath.joinPath(userHomeDir, winJupyterDataDirPath));
+            } else if (this.platformService.isMac) {
+                dataDir = uriPath.joinPath(userHomeDir, macJupyterDataDirPath);
+            } else {
+                dataDir = process.env['$XDG_DATA_HOME']
+                    ? fsPathToUri(path.join(process.env['$XDG_DATA_HOME'], 'jupyter'))
+                    : uriPath.joinPath(userHomeDir, '.local', 'share', 'jupyter');
+            }
+        }
+        if (dataDir) {
+            return dataDir;
+        } else {
+            traceError(`Failed to determine Jupyter runtime directory`);
         }
     }
     /**
