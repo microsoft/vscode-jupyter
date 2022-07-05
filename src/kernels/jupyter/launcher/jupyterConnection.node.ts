@@ -8,7 +8,7 @@ import { Subscription } from 'rxjs/Subscription';
 import { CancellationError, CancellationToken, Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IConfigurationService, IDisposable } from '../../../platform/common/types';
 import { Cancellation } from '../../../platform/common/cancellation';
-import { traceInfo, traceError, traceWarning } from '../../../platform/logging';
+import { traceInfo, traceError, traceWarning, traceInfoIfCI } from '../../../platform/logging';
 import { ObservableExecutionResult, Output } from '../../../platform/common/process/types.node';
 import { Deferred, createDeferred } from '../../../platform/common/utils/async';
 import { DataScience } from '../../../platform/common/utils/localize';
@@ -123,9 +123,11 @@ export class JupyterConnectionWaiter implements IDisposable {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private getJupyterURL(serverInfos: JupyterServerInfo[] | undefined, data: any) {
         if (serverInfos && serverInfos.length > 0 && !this.startPromise.completed) {
+            traceInfoIfCI('getJupyterURL(', JSON.stringify(serverInfos));
             const matchInfo = serverInfos.find((info) =>
                 arePathsSame(getFilePath(this.notebookDir), info.notebook_dir)
             );
+            traceInfoIfCI('getJupyterURL.matchInfo', JSON.stringify(matchInfo));
             if (matchInfo) {
                 const url = matchInfo.url;
                 const token = matchInfo.token;
