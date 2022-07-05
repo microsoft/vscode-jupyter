@@ -75,6 +75,8 @@ suite(`Interactive window execution`, async function () {
         }
         sinon.restore();
         await closeNotebooksAndCleanUpAfterTests(disposables);
+        const settings = vscode.workspace.getConfiguration('jupyter', null);
+        await settings.update('interactiveWindowMode', 'multiple');
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     test('Execute cell from Python file', async () => {
@@ -592,7 +594,7 @@ ${actualCode}
         );
     });
 
-    test('Export Interactive window to Notebook', async () => {
+    test('Export Interactive window as Notebook', async () => {
         const activeInteractiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
         await waitForInteractiveWindow(activeInteractiveWindow);
 

@@ -10,6 +10,7 @@ import { IApplicationShell, IWorkspaceService } from '../../platform/common/appl
 import * as localize from '../../platform/common/utils/localize';
 import { ExportFormat, IExportDialog } from './types';
 import { IsWebExtension } from '../../platform/common/types';
+import { traceInfoIfCI } from '../../platform/logging';
 
 // File extensions for each export method
 export const PDFExtensions = { PDF: ['pdf'] };
@@ -68,6 +69,10 @@ export class ExportDialog implements IExportDialog {
             saveLabel: localize.DataScience.exportButtonTitle(),
             filters: fileExtensions
         };
+
+        traceInfoIfCI(
+            `showing save dialog with options: ${JSON.stringify(options)}\r\n for source: ${JSON.stringify(source)}`
+        );
 
         return this.applicationShell.showSaveDialog(options);
     }
