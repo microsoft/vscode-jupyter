@@ -1379,17 +1379,30 @@ export namespace DataScience {
 export namespace Deprecated {
     export const SHOW_DEPRECATED_FEATURE_PROMPT_FORMAT_ON_SAVE = () =>
         localize(
-            'Deprecated.SHOW_DEPRECATED_FEATURE_PROMPT_FORMAT_ON_SAVE',
+            {
+                key: 'Deprecated.SHOW_DEPRECATED_FEATURE_PROMPT_FORMAT_ON_SAVE',
+                comment: ['{Locked="python.formatting.formatOnSave"}', '{Locked="editor.formatOnSave"}']
+            },
             "The setting 'python.formatting.formatOnSave' is deprecated, please use 'editor.formatOnSave'."
         );
     export const SHOW_DEPRECATED_FEATURE_PROMPT_LINT_ON_TEXT_CHANGE = () =>
         localize(
-            'Deprecated.SHOW_DEPRECATED_FEATURE_PROMPT_LINT_ON_TEXT_CHANGE',
+            {
+                key: 'Deprecated.SHOW_DEPRECATED_FEATURE_PROMPT_LINT_ON_TEXT_CHANGE',
+                comment: [
+                    '{Locked="python.linting.lintOnTextChange"}',
+                    '{Locked="python.linting.lintOnSave"}',
+                    '{Locked="files.autoSave"}'
+                ]
+            },
             "The setting 'python.linting.lintOnTextChange' is deprecated, please enable 'python.linting.lintOnSave' and 'files.autoSave'."
         );
     export const SHOW_DEPRECATED_FEATURE_PROMPT_FOR_AUTO_COMPLETE_PRELOAD_MODULES = () =>
         localize(
-            'Deprecated.SHOW_DEPRECATED_FEATURE_PROMPT_FOR_AUTO_COMPLETE_PRELOAD_MODULES',
+            {
+                key: 'Deprecated.SHOW_DEPRECATED_FEATURE_PROMPT_FOR_AUTO_COMPLETE_PRELOAD_MODULES',
+                comment: ['{Locked="python.autoComplete.preloadModules"}', '{Locked="python.languageServer"}']
+            },
             "The setting 'python.autoComplete.preloadModules' is deprecated, please consider using Pylance Language Server ('python.languageServer' setting)."
         );
 }

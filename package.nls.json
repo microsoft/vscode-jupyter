@@ -4,16 +4,35 @@
     "contributes.walkthroughs.jupyterWelcome.title": "Get started with Jupyter Notebooks",
     "contributes.walkthroughs.jupyterWelcome.description": "Your first steps to set up a Jupyter project with all the powerful tools and features that the Jupyter Extension has to offer!",
     "contributes.walkthroughs.jupyterWelcome.steps.ipynb.newUntitledIpynb.title": "Create or open a Jupyter Notebook",
-    "contributes.walkthroughs.jupyterWelcome.steps.ipynb.newUntitledIpynb.description": "Right click in the file explorer and create a new file with an .ipynb extension. Or, open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Create: New Jupyter Notebook``.\n[Create New Jupyter Notebook](command:toSide:ipynb.newUntitledIpynb)\n If you have an existing project, you can also [open a folder](command:toSide:workbench.action.files.openFolder) and/or clone a project from GitHub: [clone a Git repository](command:toSide:git.clone).",
+    "contributes.walkthroughs.jupyterWelcome.steps.ipynb.newUntitledIpynb.description": {
+        "message": "Right click in the file explorer and create a new file with an .ipynb extension. Or, open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Create: New Jupyter Notebook``.\n[Create New Jupyter Notebook](command:toSide:ipynb.newUntitledIpynb)\n If you have an existing project, you can also [open a folder](command:toSide:workbench.action.files.openFolder) and/or clone a project from GitHub: [clone a Git repository](command:toSide:git.clone).",
+        "comment": [
+            "{Locked='command:workbench.action.showCommands'}",
+            "{Locked='command:toSide:ipynb.newUntitledIpynb'}",
+            "{Locked='command:toSide:workbench.action.files.openFolder'}",
+            "{Locked='command:toSide:git.clone'}"
+        ]
+    },
     "contributes.walkthroughs.jupyterWelcome.steps.ipynb.newUntitledIpynb.media.altText": "Creating a new Jupyter notebook",
     "contributes.walkthroughs.jupyterWelcome.steps.jupyter.selectKernel.title": "Select a Jupyter kernel",
-    "contributes.walkthroughs.jupyterWelcome.steps.jupyter.selectKernel.description": "Click Select Kernel at the top right of the notebook and choose the environment in which to run your kernel. Or, with a notebook opened and in focus, open the [Command Palette](command:workbench.action.showCommands) and run the command: \n``Notebook: Select Notebook Kernel``. \n[Open Command Palette to Select a Jupyter Kernel](command:workbench.action.showCommands)",
+    "contributes.walkthroughs.jupyterWelcome.steps.jupyter.selectKernel.description": {
+        "message": "Click Select Kernel at the top right of the notebook and choose the environment in which to run your kernel. Or, with a notebook opened and in focus, open the [Command Palette](command:workbench.action.showCommands) and run the command: \n``Notebook: Select Notebook Kernel``. \n[Open Command Palette to Select a Jupyter Kernel](command:workbench.action.showCommands)",
+        "comment": ["{Locked='command:workbench.action.showCommands'}"]
+    },
     "contributes.walkthroughs.jupyterWelcome.steps.jupyter.selectKernel.media.altText": "Selecting or changing a notebook kernel",
     "contributes.walkthroughs.jupyterWelcome.steps.jupyter.exploreAndDebug.title": "Explore data and debug",
     "contributes.walkthroughs.jupyterWelcome.steps.jupyter.exploreAndDebug.description": "📅 You can use the [Data Viewer](https://code.visualstudio.com/docs/datascience/data-science-tutorial#_prepare-the-data) to view, sort, and filter the rows of data. After loading your data, click \"Variables\" at the top right of notebook and click the Data Viewer icon to the left of the data table. \n \n[Learn about Data Viewer](https://code.visualstudio.com/docs/datascience/data-science-tutorial#_prepare-the-data)\n \n📒 Debug your notebook using the [Run by Line](https://code.visualstudio.com/docs/datascience/jupyter-notebooks#_run-by-line) mode to execute a cell one line at a time. Click the Run by Line icon from your cell (play button with lines) or hit F10. \n \n[Learn about Run by Line](https://code.visualstudio.com/docs/datascience/jupyter-notebooks#_run-by-line)",
     "contributes.walkthroughs.jupyterWelcome.steps.jupyter.exploreAndDebug.media.altText": "Opening data viewer",
     "contributes.walkthroughs.jupyterWelcome.steps.jupyter.dataScienceLearnMore.title": "Find out more!",
-    "contributes.walkthroughs.jupyterWelcome.steps.jupyter.dataScienceLearnMore.description": "🎨 Explore all the features the Jupyter Extension has to offer by looking for \"Jupyter\" in the [Command Palette](command:workbench.action.showCommands). \n 📈 Learn more about getting started with data science in [Python](command:workbench.action.openWalkthrough?%7B%22category%22%3A%22ms-python.python%23pythonDataScienceWelcome%22%2C%22step%22%3A%22ms-python.python%23python.createNewNotebook%22%7D) by installing the Python Extension ([search Python extension](command:workbench.extensions.search?\"ms-python.python\")). \n 📃 Find out more features in our [Tutorials](https://code.visualstudio.com/docs/datascience/jupyter-notebooks).  \n[Learn more](https://aka.ms/AAdar6q)",
+    "contributes.walkthroughs.jupyterWelcome.steps.jupyter.dataScienceLearnMore.description": {
+        "message": "🎨 Explore all the features the Jupyter Extension has to offer by looking for \"Jupyter\" in the [Command Palette](command:workbench.action.showCommands). \n 📈 Learn more about getting started with data science in [Python](command:workbench.action.openWalkthrough?%7B%22category%22%3A%22ms-python.python%23pythonDataScienceWelcome%22%2C%22step%22%3A%22ms-python.python%23python.createNewNotebook%22%7D) by installing the Python Extension ([search Python extension](command:workbench.extensions.search?\"ms-python.python\")). \n 📃 Find out more features in our [Tutorials](https://code.visualstudio.com/docs/datascience/jupyter-notebooks).  \n[Learn more](https://aka.ms/AAdar6q)",
+        "comment": [
+            "{Locked='command:workbench.action.showCommands'}",
+            "{Locked='command:workbench.action.openWalkthrough?%7B%22category%22%3A%22ms-python.python%23pythonDataScienceWelcome%22%2C%22step%22%3A%22ms-python.python%23python.createNewNotebook%22%7D'}",
+            "{Locked='command:workbench.extensions.search?\"ms-python.python\")'}",
+            "{Locked='docs/datascience/jupyter-notebooks'}"
+        ]
+    },
     "contributes.walkthroughs.jupyterWelcome.steps.jupyter.dataScienceLearnMore.media.altText": "Image representing our documentation page and mailing list resources.",
     "jupyter.command.dataScience.clearCache.title": "Clear Cache",
     "jupyter.command.jupyter.replayPylanceLog.title": "Replay Pylance Log",
@@ -266,11 +285,17 @@
     "jupyter.configuration.jupyter.showCellInputCode.deprecationMessage": "This setting is deprecated and will be removed in the next release.",
     "jupyter.configuration.jupyter.showCellInputCode.description": "Show cell input code.",
     "jupyter.configuration.jupyter.collapseCellInputCodeByDefault.description": "Collapse cell input code by default.",
-    "jupyter.configuration.jupyter.collapseCellInputCodeByDefault.markdownDeprecationMessage": "This setting has been deprecated, please use `#interactiveWindow.collapseCellInputCode#` instead.",
+    "jupyter.configuration.jupyter.collapseCellInputCodeByDefault.markdownDeprecationMessage": {
+        "message": "This setting has been deprecated, please use `#interactiveWindow.collapseCellInputCode#` instead.",
+        "comment": ["{Locked='interactiveWindow.collapseCellInputCode'}"]
+    },
     "jupyter.configuration.jupyter.maxOutputSize.deprecationMessage": "This setting is deprecated and will be removed in the next release.",
     "jupyter.configuration.jupyter.maxOutputSize.description": "Maximum size (in pixels) of text output in the Notebook Editor before a scrollbar appears. First enable scrolling for cell outputs in settings.",
     "jupyter.configuration.jupyter.alwaysScrollOnNewCell.description": "Automatically scroll the interactive window to show the output of the last statement executed. If false, the interactive window will only automatically scroll if the bottom of the prior cell is visible.",
-    "jupyter.configuration.jupyter.alwaysScrollOnNewCell.deprecationMessage": "This setting is obsolete. Use the 'interactiveWindow.alwaysScrollOnNewCell' setting instead.",
+    "jupyter.configuration.jupyter.alwaysScrollOnNewCell.deprecationMessage": {
+        "message": "This setting is obsolete. Use the 'interactiveWindow.alwaysScrollOnNewCell' setting instead.",
+        "comment": ["{Locked='interactiveWindow.alwaysScrollOnNewCell'}"]
+    },
     "jupyter.configuration.jupyter.enableScrollingForCellOutputs.deprecationMessage": "This setting is deprecated and will be removed in the next release.",
     "jupyter.configuration.jupyter.enableScrollingForCellOutputs.description": "Enables scrolling for large cell outputs in the Notebook Editor. This setting does not apply to the Interactive Window.",
     "jupyter.configuration.jupyter.sendSelectionToInteractiveWindow.description": "When pressing shift+enter, send selected code in a Python file to the Jupyter interactive window as opposed to the Python terminal.",
@@ -296,26 +321,47 @@
     "jupyter.configuration.jupyter.stopOnFirstLineWhileDebugging.description": "When debugging a cell, stop on the first line.",
     "jupyter.configuration.jupyter.remoteDebuggerPort.description": "When debugging a cell, open this port on the remote box. If -1 is specified, a random port between 8889 and 9000 will be attempted.",
     "jupyter.configuration.jupyter.disableJupyterAutoStart.description": "When true, disables Jupyter from being automatically started for you. You must instead run a cell to start Jupyter.",
-    "jupyter.configuration.jupyter.textOutputLimit.deprecationMessage": "This setting is deprecated in favor of `notebook.output.textLineLimit`. This setting will be removed in an upcoming release.",
+    "jupyter.configuration.jupyter.textOutputLimit.deprecationMessage": {
+        "message": "This setting is deprecated in favor of `notebook.output.textLineLimit`. This setting will be removed in an upcoming release.",
+        "comment": ["{Locked='notebook.output.textLineLimit'}"]
+    },
     "jupyter.configuration.jupyter.textOutputLimit.description": "Limit the amount of text in Interactive cell text output to this value. 0 to allow any amount of characters.",
     "jupyter.configuration.jupyter.colorizeInputBox.deprecationMessage": "This setting is deprecated and will be removed in an upcoming release.",
     "jupyter.configuration.jupyter.colorizeInputBox.description": "Whether or not to use the theme's peek color as the background for the input box.",
     "jupyter.configuration.jupyter.stopOnError.description": "Stop running cells if a cell throws an exception.",
-    "jupyter.configuration.jupyter.addGotoCodeLenses.description": "After running a cell, add a 'Goto' code lens on the cell. Note, disabling all code lenses disables this code lens as well.",
-    "jupyter.configuration.jupyter.variableQueries.markdownDescription": "Language to query mapping for returning the list of active variables in a Jupyter kernel. Used by the Variable Explorer in both the Interactive Window and Notebooks. Example:\n```\n[\n  {\n    \"language\": \"python\",\n    \"query\": \"%who_ls\",\n    \"parseExpr\": \"'(\\\\w+)'\"\n  }\n]\n```",
-    "jupyter.configuration.jupyter.kernels.filter.items.markdownDescription": "Fully qualified path to the kernel spec or the python environment. \nE.g. `~/miniconda3/envs/sample/bin/python`.",
-    "jupyter.configuration.jupyter.kernels.filter.markdownDescription": "List of Jupyter Kernels and/or python environments that are to be excluded from the Kernel picker.",
-    "jupyter.configuration.jupyter.interactiveWindowMode.description": "Behavior of the Interactive Window. 'perFile' will create a new interactive window for every file that runs a cell. 'single' allows a single window. 'multiple' allows the creation of multiple.",
+    "jupyter.configuration.jupyter.addGotoCodeLenses.description": {
+        "message": "After running a cell, add a 'Goto' code lens on the cell. Note, disabling all code lenses disables this code lens as well.",
+        "comment": ["{Locked='Goto'}"]
+    },
+    "jupyter.configuration.jupyter.variableQueries.markdownDescription": {
+        "message": "Language to query mapping for returning the list of active variables in a Jupyter kernel. Used by the Variable Explorer in both the Interactive Window and Notebooks. Example:\n```\n[\n  {\n    \"language\": \"python\",\n    \"query\": \"%who_ls\",\n    \"parseExpr\": \"'(\\\\w+)'\"\n  }\n]\n```",
+        "comment": ["{Locked='language\": \"python\",\n    \"query\": \"%who_ls\",\n    \"parseExpr'}"]
+    },
+    "jupyter.configuration.jupyter.kernels.filter.items.markdownDescription": "Fully qualified path to the kernel spec or the Python environment. \nE.g. `~/miniconda3/envs/sample/bin/python`.",
+    "jupyter.configuration.jupyter.kernels.filter.markdownDescription": "List of Jupyter Kernels and/or Python environments that are to be excluded from the Kernel picker.",
+    "jupyter.configuration.jupyter.interactiveWindowMode.description": {
+        "messages": "Behavior of the Interactive Window. 'perFile' will create a new interactive window for every file that runs a cell. 'single' allows a single window. 'multiple' allows the creation of multiple.",
+        "comment": ["{Locked='perFile'}", "{Locked=\"'single'\"}", "{Locked=\"'multiple'\"}"]
+    },
     "jupyter.configuration.jupyter.magicCommandsAsComments.description": "Uncomment shell assignments (#!), line magic (#!%) and cell magic (#!%%) when parsing code cells.",
-    "jupyter.configuration.jupyter.pythonExportMethod.description": "The method to use when exporting a notebook to a Python file. 'direct' will copy over the code directly as is. 'commentMagics' will comment out lines starting with line magics (%), cell magics (%%), and shell commands(!). 'nbconvert' will install nbconvert and use that for the conversion which can translate iPython syntax into Python syntax.",
-    "jupyter.configuration.jupyter.runStartupCommands.description": "A series of Python instructions or iPython magic commands. Can be either an array of strings or a single string with commands separated by '\\n'. Commands will be silently executed whenever the interactive window loads. For instance, set this to '%load_ext autoreload\\n%autoreload 2' to automatically reload changes made to imported files without having to restart the interactive session.",
+    "jupyter.configuration.jupyter.pythonExportMethod.description": {
+        "message": "The method to use when exporting a notebook to a Python file. 'direct' will copy over the code directly as is. 'commentMagics' will comment out lines starting with line magics (%), cell magics (%%), and shell commands(!). 'nbconvert' will install nbconvert and use that for the conversion which can translate iPython syntax into Python syntax.",
+        "comment": ["{Locked='direct'}", "{Locked=\"'commentMagics'\"}", "{Locked=\"'nbconvert'\"}"]
+    },
+    "jupyter.configuration.jupyter.runStartupCommands.description": {
+        "message": "A series of Python instructions or iPython magic commands. Can be either an array of strings or a single string with commands separated by '\\n'. Commands will be silently executed whenever the interactive window loads. For instance, set this to '%load_ext autoreload\\n%autoreload 2' to automatically reload changes made to imported files without having to restart the interactive session.",
+        "comment": ["{Locked='%load_ext autoreload\\n%autoreload 2'}"]
+    },
     "jupyter.configuration.jupyter.debugJustMyCode.description": "When debugging, debug just my code.",
     "jupyter.configuration.jupyter.showOutlineButtonInNotebookToolbar.description": "Show the Outline button in the Jupyter notebook toolbar.",
     "jupyter.configuration.jupyter.newCellOnRunLast.description": "Append a new empty cell to an interactive window file on running the currently last cell.",
     "jupyter.configuration.jupyter.pylanceHandlesNotebooks.description": "Determines if Pylance manages notebook concat doc creation.",
     "jupyter.configuration.jupyter.pythonCompletionTriggerCharacters.description": "Characters which trigger auto completion on a python jupyter kernel.",
     "jupyter.configuration.jupyter.logKernelOutputSeparately.description": "Creates separate output panels for kernels/jupyter server console output",
-    "jupyter.configuration.jupyter.excludeUserSitePackages.description": "Add PYTHONNOUSERSITE to kernels before starting. This prevents global/user site-packages from being used in the PYTHONPATH of the kernel.",
+    "jupyter.configuration.jupyter.excludeUserSitePackages.description": {
+        "message": "Add PYTHONNOUSERSITE to kernels before starting. This prevents global/user site-packages from being used in the PYTHONPATH of the kernel.",
+        "comment": ["{Locked='PYTHONNOUSERSITE'}", "{Locked='PYTHONPATH'}"]
+    },
     "jupyter.configuration.jupyter.enableExtendedKernelCompletions.markdownDescription": "Enables Jedi support for extended IntelliSense completions in running Jupyter kernels (see this [setting](https://ipython.readthedocs.io/en/stable/config/options/terminal.html?highlight=use_jedi#configtrait-Completer.use_jedi)). This can greatly impact notebook cell execution performance. Use with caution.",
     "Pylance.proposePylanceMessage": "Try out a new faster, feature-rich language server for Python by Microsoft, Pylance! Install the extension now.",
     "Pylance.tryItNow": "Try it now",
