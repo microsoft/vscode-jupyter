@@ -200,7 +200,9 @@ exports.dumpTestSummary = () => {
             core.setFailed(`${reportWriter.failures.length} tests failed.`);
         }
         // Write output into an ipynb file with the failures & corresponding console output & screenshot.
-        fs.writeFileSync(webTestSummaryNb, JSON.stringify({ cells: cells }));
+        if (cells.length) {
+            fs.writeFileSync(webTestSummaryNb, JSON.stringify({ cells: cells }));
+        }
     } catch (ex) {
         core.error('Failed to print test summary');
         core.setFailed(ex);
