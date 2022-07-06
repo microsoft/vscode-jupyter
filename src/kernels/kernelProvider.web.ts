@@ -17,6 +17,7 @@ import { BaseKernelProvider } from './kernelProvider.base';
 import { IStatusProvider } from '../platform/progress/types';
 import { InteractiveWindowView } from '../platform/common/constants';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
+import { IFileSystem } from '../platform/common/platform/types';
 
 @injectable()
 export class KernelProvider extends BaseKernelProvider {
@@ -31,7 +32,8 @@ export class KernelProvider extends BaseKernelProvider {
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @multiInject(ITracebackFormatter) private readonly formatters: ITracebackFormatter[]
+        @multiInject(ITracebackFormatter) private readonly formatters: ITracebackFormatter[],
+        @inject(IFileSystem) private readonly fs: IFileSystem
     ) {
         super(asyncDisposables, disposables, notebook);
     }
@@ -62,7 +64,8 @@ export class KernelProvider extends BaseKernelProvider {
             this.statusProvider,
             options.creator,
             this.context,
-            this.formatters
+            this.formatters,
+            this.fs
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);

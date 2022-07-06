@@ -69,13 +69,12 @@ suite(`Interactive window execution`, async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
             // For a flaky interrupt test.
-            await captureScreenShot(`Interactive-Tests-${this.currentTest?.title}`);
+            await captureScreenShot(this);
         }
         sinon.restore();
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
-
     test('Execute cell from Python file', async () => {
         const source = 'print(42)';
         const { activeInteractiveWindow } = await submitFromPythonFile(interactiveWindowProvider, source, disposables);

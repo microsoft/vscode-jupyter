@@ -51,7 +51,7 @@ suite('RemoteKernelControllerWatcher', () => {
         const provider1Id = 'provider1';
         const provider1Handle1: JupyterServerUriHandle = 'provider1Handle1';
         const remoteUriForProvider1 = generateUriFromRemoteProvider(provider1Id, provider1Handle1);
-        const serverId = computeServerId(remoteUriForProvider1);
+        const serverId = await computeServerId(remoteUriForProvider1);
 
         let onDidChangeHandles: undefined | (() => Promise<void>);
         const provider1 = mock<IJupyterUriProvider>();
@@ -112,7 +112,7 @@ suite('RemoteKernelControllerWatcher', () => {
         ]);
 
         when(uriStorage.getSavedUriList()).thenResolve([
-            { time: 1, uri: remoteUriForProvider1, displayName: 'Something' }
+            { time: 1, serverId, uri: remoteUriForProvider1, displayName: 'Something' }
         ]);
 
         watcher.activate();

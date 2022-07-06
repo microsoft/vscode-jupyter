@@ -5,6 +5,7 @@ import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { ILocalResourceUriConverter } from '../../kernels/ipywidgets/types';
+import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
 import { IJupyterServerUriStorage, IServerConnectionType } from '../../kernels/jupyter/types';
 import { IKernelProvider, isLocalConnection, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
@@ -74,6 +75,7 @@ export class ControllerRegistration implements IControllerRegistration {
         this.kernelFilter.onDidChange(this.onDidChangeFilter, this, this.disposables);
         this.serverConnectionType.onDidChange(this.onDidChangeFilter, this, this.disposables);
         this.serverUriStorage.onDidChangeUri(this.onDidChangeUri, this, this.disposables);
+        this.serverUriStorage.onDidRemoveUris(this.onDidRemoveUris, this, this.disposables);
     }
     add(
         metadata: KernelConnectionMetadata,
@@ -210,6 +212,22 @@ export class ControllerRegistration implements IControllerRegistration {
         }
 
         // Update the list of controllers
+        this.onDidChangeFilter();
+    }
+
+    private async onDidRemoveUris(uris: string[]) {
+        // Remove any connections that are no longer available.
+        const serverIds = await Promise.all(uris.map(computeServerId));
+        serverIds.forEach((serverId) => {
+            [...this.registeredMetadatas.keys()].forEach((k) => {
+                const m = this.registeredMetadatas.get(k);
+                if (m && isRemoteConnection(m) && serverId === m.serverId) {
+                    this.registeredMetadatas.delete(k);
+                }
+            });
+        });
+
+        // Update list of controllers
         this.onDidChangeFilter();
     }
 

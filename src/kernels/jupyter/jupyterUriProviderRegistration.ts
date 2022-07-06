@@ -9,6 +9,7 @@ import * as localize from '../../platform/common/utils/localize';
 import { noop } from '../../platform/common/utils/misc';
 import { InvalidRemoteJupyterServerUriHandleError } from '../errors/invalidRemoteJupyterServerUriHandleError';
 import { JupyterUriProviderWrapper } from './jupyterUriProviderWrapper';
+import { computeServerId, generateUriFromRemoteProvider } from './jupyterUtils';
 import {
     IJupyterServerUri,
     IJupyterUriProvider,
@@ -58,7 +59,8 @@ export class JupyterUriProviderRegistration implements IJupyterUriProviderRegist
                 const handles = await provider.getHandles();
                 if (!handles.includes(handle)) {
                     const extensionId = this.providerExtensionMapping.get(id)!;
-                    throw new InvalidRemoteJupyterServerUriHandleError(id, handle, extensionId);
+                    const serverId = await computeServerId(generateUriFromRemoteProvider(id, handle));
+                    throw new InvalidRemoteJupyterServerUriHandleError(id, handle, extensionId, serverId);
                 }
             }
             return provider.getServerUri(handle);

@@ -21,6 +21,7 @@
         "build",
         "src/test",
         "src/*.web.ts",
-        "src/**/*.web.ts"
+        "src/**/*.web.ts",
+        "gulpfile.js"
     ]
 }

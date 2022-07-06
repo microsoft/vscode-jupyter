@@ -24,6 +24,7 @@
         "removeComments": true,
         "useUnknownInCatchVariables": false,
         "strictPropertyInitialization": false,
+        "allowJs": true,
         "types": ["@types/vscode-notebook-renderer/preload", "webpack-env"]
     },
     "exclude": [
@@ -42,6 +43,7 @@
         "ipywidgets",
         "tmp",
         ".nyc_output",
-        ".git"
+        ".git",
+        "gulpfile.js"
     ]
 }

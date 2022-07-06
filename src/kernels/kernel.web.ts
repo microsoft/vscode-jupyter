@@ -11,13 +11,14 @@ import { IStatusProvider } from '../platform/progress/types';
 import { InteractiveWindowView } from '../platform/common/constants';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { getAssociatedNotebookDocument } from './helpers';
-const addRunCellHook = require('../../pythonFiles/vscode_datascience_helpers/kernel/addRunCellHook.py');
+import { IFileSystem } from '../platform/common/platform/types';
 
 /**
  * This class is just a stand in for now. It will connect to kernels in the web when this is finished.
  * For now it's just here to get the service container to load.
  */
 export class Kernel extends BaseKernel {
+    private addRunCellHookContents?: Promise<string>;
     constructor(
         id: Uri,
         resourceUri: Resource,
@@ -33,7 +34,8 @@ export class Kernel extends BaseKernel {
         statusProvider: IStatusProvider,
         creator: KernelActionSource,
         context: IExtensionContext,
-        formatters: ITracebackFormatter[]
+        formatters: ITracebackFormatter[],
+        private readonly fs: IFileSystem
     ) {
         super(
             id,
@@ -58,6 +60,18 @@ export class Kernel extends BaseKernel {
         if (getAssociatedNotebookDocument(this)?.notebookType === InteractiveWindowView) {
             // If using ipykernel 6, we need to set the IPYKERNEL_CELL_NAME so that
             // debugging can work. However this code is harmless for IPYKERNEL 5 so just always do it
+            if (!this.addRunCellHookContents) {
+                this.addRunCellHookContents = this.fs.readFile(
+                    Uri.joinPath(
+                        this.context.extensionUri,
+                        'pythonFiles',
+                        'vscode_datascience_helpers',
+                        'kernel',
+                        'addRunCellHook.py'
+                    )
+                );
+            }
+            const addRunCellHook = await this.addRunCellHookContents;
             return addRunCellHook.splitLines({ trim: false });
         }
         return [];

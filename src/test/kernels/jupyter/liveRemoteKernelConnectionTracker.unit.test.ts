@@ -16,6 +16,7 @@ import {
 } from '../../../kernels/jupyter/liveRemoteKernelConnectionTracker';
 import { LiveRemoteKernelConnectionMetadata } from '../../../kernels/types';
 import { computeServerId } from '../../../kernels/jupyter/jupyterUtils';
+import { waitForCondition } from '../../common.node';
 
 use(chaiAsPromised);
 suite('Live kernel Connection Tracker', async () => {
@@ -25,6 +26,7 @@ suite('Live kernel Connection Tracker', async () => {
     let onDidRemoveUris: EventEmitter<string[]>;
     const disposables: IDisposable[] = [];
     const server2Uri = 'http://one:1234/hello?token=1234';
+    const server2Id = await computeServerId(server2Uri);
     const remoteLiveKernel1: LiveRemoteKernelConnectionMetadata = {
         baseUrl: 'baseUrl',
         id: 'connectionId',
@@ -51,7 +53,7 @@ suite('Live kernel Connection Tracker', async () => {
         baseUrl: 'http://one:1234/',
         id: 'connectionId2',
         kind: 'connectToLiveRemoteKernel',
-        serverId: computeServerId(server2Uri),
+        serverId: server2Id,
         kernelModel: {
             id: 'modelId2',
             lastActivityTime: new Date(),
@@ -73,7 +75,7 @@ suite('Live kernel Connection Tracker', async () => {
         baseUrl: 'http://one:1234/',
         id: 'connectionId3',
         kind: 'connectToLiveRemoteKernel',
-        serverId: computeServerId(server2Uri),
+        serverId: server2Id,
         kernelModel: {
             lastActivityTime: new Date(),
             id: 'modelId3',
@@ -213,13 +215,20 @@ suite('Live kernel Connection Tracker', async () => {
         assert.isTrue(tracker.wasKernelUsed(remoteLiveKernel2));
         assert.isTrue(tracker.wasKernelUsed(remoteLiveKernel3));
 
-        // Forget the Uir connection all together.
+        // Forget the Uri connection all together.
         onDidRemoveUris.fire([server2Uri]);
 
-        assert.isFalse(tracker.wasKernelUsed(remoteLiveKernel1));
-        assert.isFalse(tracker.wasKernelUsed(remoteLiveKernel2));
-        assert.isFalse(tracker.wasKernelUsed(remoteLiveKernel3));
-
-        assert.isEmpty(cachedItems);
+        await waitForCondition(
+            () => {
+                assert.isFalse(tracker.wasKernelUsed(remoteLiveKernel1));
+                assert.isFalse(tracker.wasKernelUsed(remoteLiveKernel2));
+                assert.isFalse(tracker.wasKernelUsed(remoteLiveKernel3));
+                return true;
+            },
+            100,
+            `Expected all to be false. But got ${[remoteLiveKernel1, remoteLiveKernel2, remoteLiveKernel3].map((item) =>
+                tracker.wasKernelUsed(item)
+            )}`
+        );
     });
 });

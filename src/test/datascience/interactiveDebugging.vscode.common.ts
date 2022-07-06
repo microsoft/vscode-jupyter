@@ -89,7 +89,7 @@ export function sharedIWDebuggerTests(
 
                 traceInfo(`Ended Test ${this.currentTest?.title}`);
                 if (this.currentTest?.isFailed()) {
-                    await captureScreenShot(this.currentTest?.title);
+                    await captureScreenShot(this);
                 }
                 sinon.restore();
                 debugAdapterTracker = undefined;

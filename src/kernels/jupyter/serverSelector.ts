@@ -110,9 +110,8 @@ export class JupyterServerSelector {
                 if (err.message.includes('Failed to fetch') && this.isWebExtension) {
                     sendTelemetryEvent(Telemetry.FetchError, undefined, { currentTask: 'connecting' });
                 }
-                await this.errorHandler.handleError(
-                    new RemoteJupyterServerConnectionError(userURI, computeServerId(userURI), err)
-                );
+                const serverId = await computeServerId(userURI);
+                await this.errorHandler.handleError(new RemoteJupyterServerConnectionError(userURI, serverId, err));
                 // Can't set the URI in this case.
                 return;
             }

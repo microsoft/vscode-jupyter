@@ -43,7 +43,7 @@ export class Kernel extends BaseKernel {
         private readonly pythonExecutionFactory: IPythonExecutionFactory,
         statusProvider: IStatusProvider,
         creator: KernelActionSource,
-        private readonly context: IExtensionContext,
+        context: IExtensionContext,
         formatters: ITracebackFormatter[]
     ) {
         super(

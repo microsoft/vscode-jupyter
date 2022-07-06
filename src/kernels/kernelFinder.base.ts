@@ -15,7 +15,6 @@ import { PythonEnvironment } from '../platform/pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { DisplayOptions } from './displayOptions';
 import { rankKernels, deserializeKernelConnection, serializeKernelConnection, isExactMatch } from './helpers';
-import { computeServerId } from './jupyter/jupyterUtils';
 import { IJupyterServerUriStorage, IServerConnectionType } from './jupyter/types';
 import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
 import { ILocalKernelFinder, IRemoteKernelFinder } from './raw/types';
@@ -263,7 +262,7 @@ export abstract class BaseKernelFinder implements IKernelFinder {
             ui,
             localJupyter: false,
             token: cancelToken,
-            serverId: computeServerId(uri)
+            serverId: this.serverUriStorage.currentServerId!
         });
     }
 

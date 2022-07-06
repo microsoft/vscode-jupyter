@@ -9,6 +9,7 @@ import { IKernel } from '../types';
 import { IIPyWidgetScriptManager, IIPyWidgetScriptManagerFactory, INbExtensionsPathProvider } from './types';
 import { RemoteIPyWidgetScriptManager } from './remoteIPyWidgetScriptManager';
 import { LocalIPyWidgetScriptManager } from './localIPyWidgetScriptManager.node';
+import { JupyterPaths } from '../raw/finder/jupyterPaths.node';
 
 @injectable()
 export class IPyWidgetScriptManagerFactory implements IIPyWidgetScriptManagerFactory {
@@ -17,7 +18,8 @@ export class IPyWidgetScriptManagerFactory implements IIPyWidgetScriptManagerFac
         @inject(INbExtensionsPathProvider) private readonly nbExtensionsPathProvider: INbExtensionsPathProvider,
         @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @inject(IHttpClient) private readonly httpClient: IHttpClient
+        @inject(IHttpClient) private readonly httpClient: IHttpClient,
+        @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths
     ) {}
     getOrCreate(kernel: IKernel): IIPyWidgetScriptManager {
         if (!this.managers.has(kernel)) {
@@ -29,7 +31,13 @@ export class IPyWidgetScriptManagerFactory implements IIPyWidgetScriptManagerFac
             } else {
                 this.managers.set(
                     kernel,
-                    new LocalIPyWidgetScriptManager(kernel, this.fs, this.nbExtensionsPathProvider, this.context)
+                    new LocalIPyWidgetScriptManager(
+                        kernel,
+                        this.fs,
+                        this.nbExtensionsPathProvider,
+                        this.context,
+                        this.jupyterPaths
+                    )
                 );
             }
         }

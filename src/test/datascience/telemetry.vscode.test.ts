@@ -118,14 +118,14 @@ suite('Telemetry validation', function () {
             await createEmptyPythonNotebook(disposables);
             traceInfo(`Start Test (completed) ${this.currentTest?.title}`);
         } catch (e) {
-            await captureScreenShot(this.currentTest?.title || 'unknown');
+            await captureScreenShot(this);
             throw e;
         }
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
-            await captureScreenShot(this.currentTest?.title);
+            await captureScreenShot(this);
         }
         setTestExecution(true);
         await closeNotebooksAndCleanUpAfterTests(disposables);

@@ -950,10 +950,6 @@
     "DataScience.loadClassFailedWithNoInternet": "Error loading {0}:{1}. Internet connection required for loading 3rd party widgets.",
     "DataScience.useCDNForWidgets": "Widgets require us to download supporting files from a 3rd party website. Click [here](https://aka.ms/PVSCIPyWidgets) for more information.",
     "DataScience.useCDNForWidgetsNoInformation": "Widgets require us to download supporting files from a 3rd party website.",
-    "DataScience.loadThirdPartyWidgetScriptsPostEnabled": {
-        "message": "Please restart the Kernel when changing the setting 'jupyter.widgetScriptSources'.",
-        "comment": ["{Locked='Kernel'}"]
-    },
     "DataScience.enableCDNForWidgetsSettingHtml": "Widgets require us to download supporting files from a 3rd party website. Click <a href='https://command:jupyter.enableLoadingWidgetScriptsFromThirdPartySource'>here</a> to enable this or click <a href='https://aka.ms/PVSCIPyWidgets'>here</a> for more information. (Error loading {0}:{1}).",
     "DataScience.enableCDNForWidgetsSetting": "Widgets require us to download supporting files from a 3rd party website. (Error loading {0}:{1}).",
     "DataScience.enableCDNForWidgetsButton": "Enable Downloads",
