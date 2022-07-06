@@ -100,7 +100,6 @@ suite('DataScience - JupyterConnection', () => {
         );
     }
     test('Successfully gets connection info', async () => {
-        console.log('Start: Successfully gets connection info');
         (<any>dsSettings).jupyterLaunchTimeout = 10_000;
         const waiter = createConnectionWaiter();
         observableOutput.next({ source: 'stderr', out: 'Jupyter listening on http://123.123.123:8888' });

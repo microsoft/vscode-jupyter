@@ -123,13 +123,9 @@ export class JupyterConnectionWaiter implements IDisposable {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private getJupyterURL(serverInfos: JupyterServerInfo[] | undefined, data: any) {
         if (serverInfos && serverInfos.length > 0 && !this.startPromise.completed) {
-            console.log('getJupyterURL(', JSON.stringify(serverInfos));
             const matchInfo = serverInfos.find((info) => {
-                console.log('looking for match', JSON.stringify(info), JSON.stringify(this.notebookDir));
-                console.log(`getFilePath(this.notebookDir) = ${getFilePath(this.notebookDir)}, ${info.notebook_dir}`);
                 return arePathsSame(getFilePath(this.notebookDir), getFilePath(Uri.file(info.notebook_dir)));
             });
-            console.log('getJupyterURL.matchInfo', JSON.stringify(matchInfo));
             if (matchInfo) {
                 const url = matchInfo.url;
                 const token = matchInfo.token;
