@@ -65,7 +65,7 @@ export class ExportDialog implements IExportDialog {
                 : `${path.basename(source.path, path.extname(source.path))}${extension}`;
 
         const options: SaveDialogOptions = {
-            defaultUri: await this.getDefaultUri(source, targetFileName),
+            defaultUri: await this.getDefaultUri(undefined, targetFileName),
             saveLabel: localize.DataScience.exportButtonTitle(),
             filters: fileExtensions
         };
@@ -78,11 +78,6 @@ export class ExportDialog implements IExportDialog {
     }
 
     private async getDefaultUri(source: Uri | undefined, targetFileName: string): Promise<Uri | undefined> {
-        if (source && source.scheme === 'untitled' && this.isWebExtension) {
-            // Force using simple file dialog
-            return undefined;
-        }
-
         if (
             !source ||
             source.scheme === 'file' ||

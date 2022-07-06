@@ -54,7 +54,7 @@ import { IControllerSelection } from '../../notebooks/controllers/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
 
 suite(`Interactive window execution`, async function () {
-    this.timeout(120_000);
+    this.timeout(120_0000);
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let interactiveWindowProvider: InteractiveWindowProvider;
@@ -76,7 +76,7 @@ suite(`Interactive window execution`, async function () {
         sinon.restore();
         await closeNotebooksAndCleanUpAfterTests(disposables);
         const settings = vscode.workspace.getConfiguration('jupyter', null);
-        await settings.update('interactiveWindowMode', 'multiple');
+        await settings.update('interactiveWindowMode', '');
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     test('Execute cell from Python file', async () => {
@@ -595,15 +595,11 @@ ${actualCode}
     });
 
     test('Export Interactive window as Notebook', async () => {
-        const activeInteractiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
+        const source = '# %%\nprint("export me")';
+        const { activeInteractiveWindow } = await submitFromPythonFile(interactiveWindowProvider, source, disposables);
         await waitForInteractiveWindow(activeInteractiveWindow);
+        await waitForLastCellToComplete(activeInteractiveWindow, 1, false);
 
-        // Add a few cells from the input box
-        await runInteractiveWindowInput('print("first")', activeInteractiveWindow, 1);
-        await runInteractiveWindowInput('print("second")', activeInteractiveWindow, 2);
-        await runInteractiveWindowInput('print("third")', activeInteractiveWindow, 3);
-
-        await waitForLastCellToComplete(activeInteractiveWindow, 3, false);
         let notebookFile = await generateTemporaryFilePath('ipynb', disposables);
         const promptOptions: WindowPromptStubButtonClickOptions = {
             result: notebookFile,
@@ -631,7 +627,7 @@ ${actualCode}
         let editor = await vscodeNotebook.showNotebookDocument(document, { preserveFocus: false });
 
         const cells = editor.notebook.getCells();
-        assert.strictEqual(cells?.length, 3);
-        await waitForTextOutput(cells[0], 'first');
+        assert.strictEqual(cells?.length, 1);
+        await waitForTextOutput(cells[0], 'export me');
     });
 });
