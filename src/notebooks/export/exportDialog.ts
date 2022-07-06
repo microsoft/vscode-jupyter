@@ -78,6 +78,11 @@ export class ExportDialog implements IExportDialog {
     }
 
     private async getDefaultUri(source: Uri | undefined, targetFileName: string): Promise<Uri | undefined> {
+        if (source && source.scheme === 'untitled' && this.isWebExtension) {
+            // Force using simple file dialog
+            return undefined;
+        }
+
         if (
             !source ||
             source.scheme === 'file' ||
