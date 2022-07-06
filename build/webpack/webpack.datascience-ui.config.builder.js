@@ -207,29 +207,44 @@ function buildConfiguration(bundle) {
                 {
                     test: /\.tsx?$/,
                     use: [
-                        {
-                            loader: 'thread-loader',
-                            options: {
-                                // there should be 1 cpu for the fork-ts-checker-webpack-plugin
-                                workers: require('os').cpus().length - 1,
-                                workerNodeArgs: ['--max-old-space-size=9096'],
-                                poolTimeout: isProdBuild ? 1000 : Infinity // set this to Infinity in watch mode - see https://github.com/webpack-contrib/thread-loader
-                            }
-                        },
-                        {
-                            loader: 'ts-loader',
-                            options: {
-                                happyPackMode: true, // IMPORTANT! use happyPackMode mode to speed-up compilation and reduce errors reported to webpack
-                                configFile: configFileName,
-                                // Faster (turn on only on CI, for dev we don't need this).
-                                transpileOnly: true,
-                                silent: true,
-                                compilerOptions: {
-                                    skipLibCheck: true
-                                },
-                                reportFiles: ['src/webviews/webview-side/**/*.{ts,tsx}']
-                            }
-                        }
+                        ...(fasterCompiler
+                            ? [
+                                  // Esbuild doesn't have type checking, hence we need to not use esbuild
+                                  // in some cases (so we catch issues with the type checker).
+                                  {
+                                      loader: 'esbuild-loader',
+                                      options: {
+                                          loader: 'tsx',
+                                          target: ['es6', 'es2018', 'ES2019', 'ES2020'],
+                                          tsconfigRaw: require(path.join(constants.ExtensionRootDir, configFileName))
+                                      }
+                                  }
+                              ]
+                            : [
+                                  {
+                                      loader: 'thread-loader',
+                                      options: {
+                                          // there should be 1 cpu for the fork-ts-checker-webpack-plugin
+                                          workers: require('os').cpus().length - 1,
+                                          workerNodeArgs: ['--max-old-space-size=9096'],
+                                          poolTimeout: isProdBuild ? 1000 : Infinity // set this to Infinity in watch mode - see https://github.com/webpack-contrib/thread-loader
+                                      }
+                                  },
+                                  {
+                                      loader: 'ts-loader',
+                                      options: {
+                                          happyPackMode: true, // IMPORTANT! use happyPackMode mode to speed-up compilation and reduce errors reported to webpack
+                                          configFile: configFileName,
+                                          // Faster (turn on only on CI, for dev we don't need this).
+                                          transpileOnly: true,
+                                          silent: true,
+                                          compilerOptions: {
+                                              skipLibCheck: true
+                                          },
+                                          reportFiles: ['src/webviews/webview-side/**/*.{ts,tsx}']
+                                      }
+                                  }
+                              ])
                     ]
                 },
                 {

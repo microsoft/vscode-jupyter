@@ -2,7 +2,7 @@ import type * as nbformat from '@jupyterlab/nbformat';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from '../../platform/vscode-path/path';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { TemporaryDirectory } from '../../platform/common/platform/types';
 import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { sleep } from '../../platform/common/utils/async';

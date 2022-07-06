@@ -10,7 +10,7 @@ suite('Dummy12', () => {
 // import { assert } from 'chai';
 // import { ChildProcess } from 'child_process';
 // import * as path from '../../platform/vscode-path/path';
-// import * as uuid from 'uuid/v4';
+// import uuid from 'uuid/v4';
 // import { CodeLens, Disposable, Position, Range, TextDocument } from 'vscode';
 // import { CancellationToken } from 'vscode-jsonrpc';
 

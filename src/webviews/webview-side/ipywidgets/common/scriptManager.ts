@@ -3,7 +3,7 @@
 
 'use strict';
 
-import * as fastDeepEqual from 'fast-deep-equal';
+import fastDeepEqual from 'fast-deep-equal';
 import { EventEmitter } from 'events';
 import { PostOffice } from '../../react-common/postOffice';
 import { warnAboutWidgetVersionsThatAreNotSupported } from '../common/incompatibleWidgetHandler';

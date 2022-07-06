@@ -3,7 +3,7 @@
 
 import type * as nbformat from '@jupyterlab/nbformat';
 import * as path from '../../platform/vscode-path/path';
-import * as dedent from 'dedent';
+import dedent from 'dedent';
 import { ExtensionMode, Uri } from 'vscode';
 import { IExtensionContext, IHttpClient } from '../../platform/common/types';
 import { traceError, traceInfoIfCI } from '../../platform/logging';

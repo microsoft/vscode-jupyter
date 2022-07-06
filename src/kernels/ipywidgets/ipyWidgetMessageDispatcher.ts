@@ -4,7 +4,7 @@
 'use strict';
 
 import type { KernelMessage } from '@jupyterlab/services';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import type { Data as WebSocketData } from 'ws';
 import { traceVerbose, traceError, traceInfo } from '../../platform/logging';

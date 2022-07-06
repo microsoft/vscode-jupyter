@@ -77,7 +77,7 @@ jobs:
       test_matrix_os: ${{ env.test_matrix_os }}
       release_channel: ${{ env.release_channel }}
       package_command: ${{ env.package_command }}
-    if: github.repository == 'microsoft/vscode-jupyter'
+    # if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: dump_event
         uses: crazy-max/ghaction-dump-context@v1
@@ -178,13 +178,13 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-jupyter'
+    # if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
       - name: List files
-        run: find src/**/**.ts | wc -l
+        run: git ls-files src | grep .ts$ | wc -l
         # if: steps.out-cache.outputs.cache-hit != 'true'
         env:
           CI_JUPYTER_FAST_COMPILATION: 'true'
@@ -324,7 +324,7 @@ jobs:
           CI_JUPYTER_FAST_COMPILATION: 'true'
 
       - name: Compile if not cached
-        run: ls src/**/**.ts | xargs npx esbuild --format=cjs --outdir=out --sourcemap=inline --tsconfig=tsconfig.json --platform=node
+        run: git ls-files | grep src | grep .ts$ | xargs npx esbuild --format=cjs --outdir=out --sourcemap=inline --tsconfig=tsconfig.json --platform=node
         # if: steps.out-cache.outputs.cache-hit != 'true'
         env:
           CI_JUPYTER_FAST_COMPILATION: 'true'
@@ -577,7 +577,7 @@ jobs:
 
         # This step is slow.
       - name: Compile if not cached
-        run: ls src/**/**.ts | xargs npx esbuild --format=cjs --outdir=out --sourcemap=inline --tsconfig=tsconfig.json --platform=node
+        run: git ls-files | grep src | grep .ts$ | xargs npx esbuild --format=cjs --outdir=out --sourcemap=inline --tsconfig=tsconfig.json --platform=node
         # if: steps.out-cache.outputs.cache-hit != 'true'
         env:
           CI_JUPYTER_FAST_COMPILATION: 'true'
@@ -928,7 +928,7 @@ jobs:
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}-faster-compilation
 
       - name: Compile if not cached
-        run: ls src/**/**.ts | xargs npx esbuild --format=cjs --outdir=out --sourcemap=inline --tsconfig=tsconfig.json --platform=node
+        run: git ls-files | grep src | grep .ts$ | xargs npx esbuild --format=cjs --outdir=out --sourcemap=inline --tsconfig=tsconfig.json --platform=node
         # if: steps.out-cache.outputs.cache-hit != 'true'
         env:
           CI_JUPYTER_FAST_COMPILATION: 'true'

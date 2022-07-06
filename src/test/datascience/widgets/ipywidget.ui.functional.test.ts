@@ -11,7 +11,7 @@ suite('Dummy14', () => {
 
 // import type * as nbformat from '@jupyterlab/nbformat';
 // import { assert, use } from 'chai';
-// import * as chaiAsPromised from 'chai-as-promised';
+// import chaiAsPromised from 'chai-as-promised';
 // import * as fs from 'fs-extra';
 // import * as os from 'os';
 // import * as path from '../../platform/vscode-path/path';

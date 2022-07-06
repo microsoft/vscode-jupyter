@@ -10,7 +10,7 @@ suite('Dummy10', () => {
 // /* eslint-disable , comma-dangle, @typescript-eslint/no-explicit-any, no-multi-str */
 // import '../../platform/common/extensions.node';
 
-// import * as assert from 'assert';
+// import assert from 'assert';
 // import { ComponentClass, mount, ReactWrapper } from 'enzyme';
 // import { parse } from 'node-html-parser';
 // import * as React from 'react';

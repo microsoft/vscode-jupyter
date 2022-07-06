@@ -31,7 +31,7 @@ import {
     getCellOutputs
 } from './helper.node';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_NON_RAW_NATIVE_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
-import * as dedent from 'dedent';
+import dedent from 'dedent';
 import { IKernelProvider } from '../../../platform/../kernels/types';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { sleep } from '../../core';

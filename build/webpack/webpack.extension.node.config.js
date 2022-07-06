@@ -14,6 +14,7 @@ const configFileName = path.join(constants.ExtensionRootDir, 'tsconfig.extension
 // Some modules will be pre-genearted and stored in out/.. dir and they'll be referenced via NormalModuleReplacementPlugin
 // We need to ensure they do not get bundled into the output (as they are large).
 const existingModulesInOutDir = common.getListOfExistingModulesInOutDir();
+const fasterCompiler = !!process.env.CI_JUPYTER_FAST_COMPILATION;
 const config = {
     mode: 'production',
     target: 'node',
@@ -57,9 +58,20 @@ const config = {
                 test: /\.ts$/,
                 exclude: /node_modules/,
                 use: [
-                    {
-                        loader: 'ts-loader'
-                    }
+                    fasterCompiler
+                        ? // Esbuild doesn't have type checking, hence we need to not use esbuild
+                          // in some cases (so we catch issues with the type checker).
+                          {
+                              loader: 'esbuild-loader',
+                              options: {
+                                  loader: 'ts',
+                                  target: ['es6', 'es2018', 'ES2019', 'ES2020'],
+                                  tsconfigRaw: require(configFileName)
+                              }
+                          }
+                        : {
+                              loader: 'ts-loader'
+                          }
                 ]
             },
             {

@@ -8,7 +8,7 @@ import * as os from 'os';
 import * as path from '../../../platform/vscode-path/path';
 import * as portfinder from 'portfinder';
 import { promisify } from 'util';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { CancellationError, CancellationToken, window } from 'vscode';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { Cancellation, createPromiseFromCancellation } from '../../../platform/common/cancellation';

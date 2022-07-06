@@ -7,7 +7,7 @@ suite('Dummy4', () => {
         //
     });
 });
-// import * as assert from 'assert';
+// import assert from 'assert';
 // import { Disposable } from 'vscode';
 
 // import { InteractiveWindowMessages } from '../../platform/datascience/interactive-common/interactiveWindowTypes';

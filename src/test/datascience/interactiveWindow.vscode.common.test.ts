@@ -46,7 +46,7 @@ import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { sleep } from '../core';
 import { IPYTHON_VERSION_CODE } from '../constants';
 import { translateCellErrorOutput, getTextOutputValue } from '../../kernels/execution/helpers';
-import * as dedent from 'dedent';
+import dedent from 'dedent';
 import { generateCellRangesFromDocument } from '../../interactive-window/editor-integration/cellFactory';
 import { Commands } from '../../platform/common/constants';
 import { IControllerSelection } from '../../notebooks/controllers/types';

@@ -10,7 +10,7 @@ import { SemVer } from 'semver';
 import { anything, instance, match, mock, reset, when } from 'ts-mockito';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as TypeMoq from 'typemoq';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { CancellationTokenSource, ConfigurationChangeEvent, Disposable, EventEmitter, Uri } from 'vscode';
 import { ApplicationShell } from '../../platform/common/application/applicationShell';
 import { IApplicationShell, IWorkspaceService } from '../../platform/common/application/types';

@@ -7,7 +7,7 @@ export const __ = '';
 // import { anything, instance, mock, verify, when } from 'ts-mockito';
 // import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 // import * as TypeMoq from 'typemoq';
-// import * as uuid from 'uuid/v4';
+// import uuid from 'uuid/v4';
 // import { EventEmitter, Uri } from 'vscode';
 // import { ApplicationShell } from '../../platform/common/application/applicationShell';
 // import { IApplicationShell } from '../../platform/common/application/types';

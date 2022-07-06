@@ -4,7 +4,7 @@
 'use strict';
 
 import { expect, use } from 'chai';
-import * as chaiPromise from 'chai-as-promised';
+import chaiPromise from 'chai-as-promised';
 import {
     isUnitTestExecution,
     isTestExecution,

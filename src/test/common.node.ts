@@ -4,12 +4,12 @@
 
 /* eslint-disable no-console, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 
-import * as assert from 'assert';
+import assert from 'assert';
 import * as hashjs from 'hash.js';
 import * as fs from 'fs-extra';
 import * as path from '../platform/vscode-path/path';
 import * as tmp from 'tmp';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { coerce, SemVer } from 'semver';
 import { IProcessService } from '../platform/common/process/types.node';
 import {

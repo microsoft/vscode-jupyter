@@ -3,7 +3,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import * as assert from 'assert';
+import assert from 'assert';
 import * as sinon from 'sinon';
 import { IS_REMOTE_NATIVE_TEST } from '../constants.node';
 import { IDisposable, IJupyterSettings } from '../../platform/common/types';

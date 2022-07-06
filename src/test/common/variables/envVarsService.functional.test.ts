@@ -6,7 +6,7 @@
 /* eslint-disable  */
 
 import { expect, use } from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import chaiAsPromised from 'chai-as-promised';
 import { instance, mock } from 'ts-mockito';
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { IExtensionContext, IHttpClient } from '../../../platform/common/types';

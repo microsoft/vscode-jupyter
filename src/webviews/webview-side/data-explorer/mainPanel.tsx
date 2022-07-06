@@ -16,7 +16,7 @@ import '../react-common/codicon/codicon.css';
 import '../react-common/seti/seti.less';
 import { SliceControl } from './sliceControl';
 import debounce from 'lodash/debounce';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 
 import { initializeIcons } from '@fluentui/react';
 import { SharedMessages } from '../../../messageTypes';

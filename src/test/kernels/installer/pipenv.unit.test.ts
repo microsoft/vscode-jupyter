@@ -1,4 +1,4 @@
-import * as assert from 'assert';
+import assert from 'assert';
 import * as pathModule from '../../../platform/vscode-path/path';
 import * as sinon from 'sinon';
 import * as platformApis from '../../../platform/common/utils/platform.node';

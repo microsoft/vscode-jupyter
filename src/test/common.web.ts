@@ -5,7 +5,7 @@ import { commands, NotebookDocument, Uri, workspace } from 'vscode';
 import { IDisposable } from '../platform/common/types';
 import { initializeCommonApi } from './common';
 import { JUPYTER_SERVER_URI } from './constants';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { noop } from './core';
 import { initialize } from './initialize';
 

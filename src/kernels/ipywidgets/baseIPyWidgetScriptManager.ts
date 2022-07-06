@@ -10,7 +10,7 @@ import { traceError, traceInfoIfCI, traceWarning } from '../../platform/logging'
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { IKernel, isLocalConnection } from '../types';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
-import * as stripComments from 'strip-comments';
+import stripComments from 'strip-comments';
 import { IIPyWidgetScriptManager } from './types';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { isCI } from '../../platform/common/constants';

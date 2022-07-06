@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as urlPath from '../../../platform/vscode-path/resources';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { CancellationToken, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { Cancellation } from '../../../platform/common/cancellation';

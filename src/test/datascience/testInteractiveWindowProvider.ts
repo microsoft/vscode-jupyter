@@ -2,7 +2,7 @@
 // // Licensed under the MIT License.
 // 'use strict';
 // import { inject, injectable, named } from 'inversify';
-// import * as uuid from 'uuid/v4';
+// import uuid from 'uuid/v4';
 // import { Memento, Uri } from 'vscode';
 // import * as types from '../../platform/common/application/types';
 // import { IFileSystem } from '../../platform/common/platform/types.node';

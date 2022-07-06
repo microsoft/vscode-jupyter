@@ -25,8 +25,11 @@ const { dumpTestSummary } = require('./build/webTestReporter');
 gulp.task('compile', async (done) => {
     // Use tsc so we can generate source maps that look just like tsc does (gulp-sourcemap does not generate them the same way)
     try {
-        const stdout = await spawnAsync('tsc', ['-p', './'], {}, true);
-        if (stdout.toLowerCase().includes('error ts')) {
+        const fasterCompiler = !!process.env.CI_JUPYTER_FAST_COMPILATION;
+        const cmd = fasterCompiler ? 'npm' : 'tsc';
+        const args = fasterCompiler ? ['run', 'compile-no-watch-swc'] : ['-p', './'];
+        const stdout = await spawnAsync(cmd, args, { cwd: __dirname }, !fasterCompiler);
+        if (!fasterCompiler && stdout.toLowerCase().includes('error ts')) {
             throw new Error(`Compile errors: \n${stdout}`);
         }
         done();

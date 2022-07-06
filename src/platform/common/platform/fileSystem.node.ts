@@ -3,7 +3,7 @@
 
 import * as path from '../../../platform/vscode-path/path';
 import * as fs from 'fs-extra';
-import * as glob from 'glob';
+import glob from 'glob';
 import { inject, injectable } from 'inversify';
 import * as tmp from 'tmp';
 import { promisify } from 'util';

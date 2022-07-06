@@ -4,7 +4,7 @@
 import { IJupyterRequestCreator } from '../types';
 import * as nodeFetch from 'node-fetch';
 import { ClassType } from '../../../platform/ioc/types';
-import * as WebSocketIsomorphic from 'isomorphic-ws';
+import WebSocketIsomorphic from 'isomorphic-ws';
 import { traceError } from '../../../platform/logging';
 import { noop } from '../../../platform/common/utils/misc';
 import { KernelSocketWrapper } from '../../common/kernelSocketWrapper';

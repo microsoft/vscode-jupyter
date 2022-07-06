@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { IFileSystem } from './platform/types';
 import { IExtensionContext, IVariableScriptGenerator } from './types';
 import { joinPath } from '../vscode-path/resources';
-import * as dedent from 'dedent';
+import dedent from 'dedent';
 
 const VariableFunc = '_VSCODE_getVariable';
 const cleanupCode = dedent`

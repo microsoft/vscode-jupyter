@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 export const __ = '';
-// import * as assert from 'assert';
+// import assert from 'assert';
 // import { ReactWrapper } from 'enzyme';
 // import * as React from 'react';
 // import { CodeLens, Uri } from 'vscode';

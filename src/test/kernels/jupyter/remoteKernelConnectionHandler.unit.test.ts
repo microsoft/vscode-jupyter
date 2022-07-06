@@ -9,7 +9,7 @@ import { Disposable, EventEmitter, NotebookDocument, Uri } from 'vscode';
 import { ILiveRemoteKernelConnectionUsageTracker } from '../../../kernels/jupyter/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
-import * as chaiAsPromised from 'chai-as-promised';
+import chaiAsPromised from 'chai-as-promised';
 import {
     IKernel,
     IKernelProvider,

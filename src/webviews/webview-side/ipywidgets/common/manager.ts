@@ -8,7 +8,7 @@ import '@jupyter-widgets/controls/css/labvariables.css';
 import type { Kernel, KernelMessage } from '@jupyterlab/services';
 import type * as nbformat from '@jupyterlab/nbformat';
 import { Widget } from '@lumino/widgets';
-import * as fastDeepEqual from 'fast-deep-equal';
+import fastDeepEqual from 'fast-deep-equal';
 import 'rxjs/add/operator/concatMap';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';

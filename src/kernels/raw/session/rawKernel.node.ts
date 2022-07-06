@@ -3,7 +3,7 @@
 import type { Kernel, KernelSpec, KernelMessage, ServerConnection } from '@jupyterlab/services';
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
 import cloneDeep = require('lodash/cloneDeep');
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { traceError, traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
 import { swallowExceptions } from '../../../platform/common/utils/misc';

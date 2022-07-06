@@ -22,6 +22,7 @@
         "noFallthroughCasesInSwitch": true,
         "resolveJsonModule": true,
         "removeComments": true,
+        "esModuleInterop": true,
         "useUnknownInCatchVariables": false,
         "strictPropertyInitialization": false,
         "allowJs": true,

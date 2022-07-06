@@ -9,7 +9,7 @@ import { IExtensionContext, IHttpClient } from '../types';
 import { getHashString } from './fileUtils';
 import { IFileSystem, TemporaryFileUri } from './types';
 import * as uriPath from '../../vscode-path/resources';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { isFileNotFoundError } from './errors';
 import { traceError } from '../../logging';
 

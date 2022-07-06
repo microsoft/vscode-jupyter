@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import type { Kernel, KernelMessage, ServerConnection, Session } from '@jupyterlab/services';
 import { ISignal, Signal } from '@lumino/signaling';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { getTelemetrySafeErrorMessageFromPythonTraceback } from '../../../platform/errors/errorUtils';
 import '../../../platform/common/extensions';
 import { traceVerbose, traceInfoIfCI, traceError, traceWarning } from '../../../platform/logging';

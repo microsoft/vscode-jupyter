@@ -4,7 +4,7 @@
 import '../../../platform/common/extensions';
 
 import * as vscode from 'vscode';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { injectable, inject } from 'inversify';
 import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';

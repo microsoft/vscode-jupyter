@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { IFileSystem } from './platform/types';
 import { IDataFrameScriptGenerator, IExtensionContext } from './types';
 import { joinPath } from '../vscode-path/resources';
-import * as dedent from 'dedent';
+import dedent from 'dedent';
 
 const DataFrameFunc = '_VSCODE_getDataFrame';
 const cleanupCode = dedent`

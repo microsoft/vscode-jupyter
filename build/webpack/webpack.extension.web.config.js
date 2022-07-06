@@ -21,6 +21,7 @@ const entry = process.env.VSC_TEST_BUNDLE === 'true' ? testEntry : devEntry;
 
 // tslint:disable-next-line:no-var-requires no-require-imports
 const configFileName = path.join(constants.ExtensionRootDir, 'tsconfig.extension.web.json');
+const fasterCompiler = !!process.env.CI_JUPYTER_FAST_COMPILATION;
 const config = {
     mode: process.env.VSC_TEST_BUNDLE ? 'development' : 'none',
     target: 'webworker',
@@ -36,12 +37,23 @@ const config = {
                 test: /\.ts$/,
                 exclude: /node_modules/,
                 use: [
-                    {
-                        loader: 'ts-loader',
-                        options: {
-                            configFile: 'tsconfig.extension.web.json'
-                        }
-                    }
+                    fasterCompiler
+                        ? // Esbuild doesn't have type checking, hence we need to not use esbuild
+                          // in some cases (so we catch issues with the type checker).
+                          {
+                              loader: 'esbuild-loader',
+                              options: {
+                                  loader: 'ts',
+                                  target: ['es6', 'es2018', 'ES2019', 'ES2020'],
+                                  tsconfigRaw: require(configFileName)
+                              }
+                          }
+                        : {
+                              loader: 'ts-loader',
+                              options: {
+                                  configFile: 'tsconfig.extension.web.json'
+                              }
+                          }
                 ]
             },
             {

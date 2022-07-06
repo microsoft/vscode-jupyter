@@ -45,11 +45,6 @@ export interface IPersistentStateFactory {
     createWorkspacePersistentState<T>(key: string, defaultValue?: T, expiryDurationMs?: number): IPersistentState<T>;
 }
 
-export const IRandom = Symbol('IRandom');
-export interface IRandom {
-    getRandomInt(min?: number, max?: number): number;
-}
-
 export interface IJupyterSettings {
     readonly experiments: IExperiments;
     readonly logging: ILoggingSettings;
@@ -73,7 +68,6 @@ export interface IJupyterSettings {
     readonly errorBackgroundColor: string;
     readonly ignoreVscodeTheme: boolean;
     readonly variableExplorerExclude: string;
-    readonly liveShareConnectionTimeout: number;
     readonly decorateCells: boolean;
     readonly enableCellCodeLens: boolean;
     askForLargeDataFrames: boolean;
@@ -84,17 +78,12 @@ export interface IJupyterSettings {
     readonly debugCodeLenses: string;
     readonly debugpyDistPath: string;
     readonly stopOnFirstLineWhileDebugging: boolean;
-    readonly textOutputLimit: number;
     readonly magicCommandsAsComments: boolean;
     readonly pythonExportMethod: 'direct' | 'commentMagics' | 'nbconvert';
-    readonly stopOnError: boolean;
-    readonly remoteDebuggerPort: number;
-    readonly colorizeInputBox: boolean;
     readonly addGotoCodeLenses: boolean;
     readonly runStartupCommands: string | string[];
     readonly debugJustMyCode: boolean;
     readonly defaultCellMarker: string;
-    readonly verboseLogging: boolean;
     readonly themeMatplotlibPlots: boolean;
     readonly variableQueries: IVariableQuery[];
     readonly disableJupyterAutoStart: boolean;
@@ -170,27 +159,6 @@ export interface IConfigurationService {
         configTarget?: ConfigurationTarget
     ): Promise<void>;
 }
-
-export type DownloadOptions = {
-    /**
-     * Prefix for progress messages displayed.
-     *
-     * @type {('Downloading ... ' | string)}
-     */
-    progressMessagePrefix: 'Downloading ... ' | string;
-    /**
-     * Output panel into which progress information is written.
-     *
-     * @type {IOutputChannel}
-     */
-    outputChannel?: IOutputChannel;
-    /**
-     * Extension of file that'll be created when downloading the file.
-     *
-     * @type {('tmp' | string)}
-     */
-    extension: 'tmp' | string;
-};
 
 export const IHttpClient = Symbol('IHttpClient');
 export interface IHttpClient {

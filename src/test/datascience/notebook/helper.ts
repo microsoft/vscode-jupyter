@@ -64,7 +64,7 @@ import {
 } from '../../../notebooks/controllers/types';
 import { IS_SMOKE_TEST } from '../../constants';
 import * as urlPath from '../../../platform/vscode-path/resources';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { initialize, waitForCondition } from '../../common';
 import { VSCodeNotebook } from '../../../platform/common/application/notebook';

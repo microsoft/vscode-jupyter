@@ -31,7 +31,7 @@ import { Commands, defaultNotebookFormat, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } f
 import '../platform/common/extensions';
 import { traceError, traceInfoIfCI } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 
 import { IConfigurationService, InteractiveWindowMode, Resource } from '../platform/common/types';
 import { noop } from '../platform/common/utils/misc';

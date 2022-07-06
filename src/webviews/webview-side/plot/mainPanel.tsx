@@ -5,7 +5,7 @@ import './mainPanel.css';
 
 import * as React from 'react';
 import { Tool, Value } from 'react-svg-pan-zoom';
-import * as uuid from 'uuid/v4';
+import uuid from 'uuid/v4';
 
 import { storeLocStrings } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
