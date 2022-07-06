@@ -95,8 +95,8 @@
                 "steps": [
                     {
                         "id": "ipynb.newUntitledIpynb",
-                        "title": "%contributes.walkthroughs.ipynb.newUntitledIpynb.title%",
-                        "description": "%contributes.walkthroughs.ipynb.newUntitledIpynb.description%",
+                        "title": "%contributes.walkthroughs.jupyterWelcome.steps.ipynb.newUntitledIpynb.title%",
+                        "description": "%contributes.walkthroughs.jupyterWelcome.steps.ipynb.newUntitledIpynb.description%",
                         "media": {
                             "svg": "resources/walkthroughs/opennotebook.svg",
                             "altText": "Creating a new Jupyter notebook"
@@ -110,8 +110,8 @@
                     },
                     {
                         "id": "jupyter.selectKernel",
-                        "title": "%contributes.walkthroughs.jupyter.selectKernel.title%",
-                        "description": "%contributes.walkthroughs.jupyter.selectKernel.description%",
+                        "title": "%contributes.walkthroughs.jupyterWelcome.steps.jupyter.selectKernel.title%",
+                        "description": "%contributes.walkthroughs.jupyterWelcome.steps.jupyter.selectKernel.description%",
                         "media": {
                             "svg": "resources/walkthroughs/kernel.svg",
                             "altText": "Selecting or changing a notebook kernel"
@@ -122,8 +122,8 @@
                     },
                     {
                         "id": "jupyter.exploreAndDebug",
-                        "title": "%contributes.walkthroughs.jupyter.exploreAndDebug.title%",
-                        "description": "%contributes.walkthroughs.jupyter.exploreAndDebug.description%",
+                        "title": "%contributes.walkthroughs.jupyterWelcome.steps.jupyter.exploreAndDebug.title%",
+                        "description": "%contributes.walkthroughs.jupyterWelcome.steps.jupyter.exploreAndDebug.description%",
                         "media": {
                             "svg": "resources/walkthroughs/data.svg",
                             "altText": "Opening data viewer"
@@ -131,8 +131,8 @@
                     },
                     {
                         "id": "jupyter.dataScienceLearnMore",
-                        "title": "%contributes.walkthroughs.jupyter.dataScienceLearnMore.title%",
-                        "description": "%contributes.walkthroughs.jupyter.dataScienceLearnMore.description%",
+                        "title": "%contributes.walkthroughs.jupyterWelcome.steps.jupyter.dataScienceLearnMore.title%",
+                        "description": "%contributes.walkthroughs.jupyterWelcome.steps.jupyter.dataScienceLearnMore.description%",
                         "media": {
                             "svg": "resources/walkthroughs/learnmore.svg",
                             "altText": "Image representing our documentation page and mailing list resources."
