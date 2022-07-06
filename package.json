@@ -278,13 +278,13 @@
             },
             {
                 "command": "jupyter.replayPylanceLog",
-                "title": "Replay Pylance Log",
+                "title": "%jupyter.command.jupyter.replayPylanceLog.title%",
                 "category": "Jupyter (Dev)",
                 "enablement": "jupyter.development && notebookType == jupyter-notebook && isWorkspaceTrusted && !jupyter.webExtension"
             },
             {
                 "command": "jupyter.replayPylanceLogStep",
-                "title": "Step Pylance Log",
+                "title": "%jupyter.command.jupyter.replayPylanceLogStep.title%",
                 "category": "Jupyter (Dev)",
                 "icon": "$(debug-start)",
                 "enablement": "jupyter.development && notebookType == jupyter-notebook && isWorkspaceTrusted && jupyter.replayLogLoaded && !jupyter.webExtension"
@@ -298,7 +298,7 @@
             },
             {
                 "command": "jupyter.filterKernels",
-                "title": "Filter Kernels",
+                "title": "%jupyter.command.jupyter.filterKernels.title%",
                 "category": "Jupyter",
                 "enablement": "!jupyter.webExtension"
             },
@@ -730,7 +730,7 @@
             },
             {
                 "command": "jupyter.createnewnotebook",
-                "title": "Create New Jupyter Notebook",
+                "title": "%jupyter.command.jupyter.createnewnotebook.title%",
                 "category": "Jupyter",
                 "enablement": "!jupyter.webExtension"
             },
@@ -2055,7 +2055,7 @@
             {
                 "id": "jupyter-ipywidget-renderer",
                 "entrypoint": "./out/webviews/webview-side/ipywidgetsRenderer/ipywidgetsRenderer.js",
-                "displayName": "Jupyter IPyWidget Renderer",
+                "displayName": "%jupyter.notebookRenderer.IPyWidget.displayName%",
                 "mimeTypes": [
                     "application/vnd.jupyter.widget-view+json"
                 ],
@@ -2064,7 +2064,7 @@
             {
                 "id": "jupyter-error-renderer",
                 "entrypoint": "./out/webviews/webview-side/errorRenderer/errorRenderer.js",
-                "displayName": "Jupyter Error Renderer",
+                "displayName": "%jupyter.notebookRenderer.Error.displayName%",
                 "requiresMessaging": "always",
                 "mimeTypes": [
                     "application/vnd.code.notebook.error"
@@ -2099,11 +2099,11 @@
         "debuggers": [
             {
                 "type": "Python Kernel Debug Adapter",
-                "label": "Python Kernel Debug Adapter"
+                "label": "%jupyter.debuggers.kernel%"
             },
             {
                 "type": "Python Interactive Window Debug Adapter",
-                "label": "Python Interactive Window"
+                "label": "%jupyter.debuggers.interactive%"
             }
         ],
         "markdown.previewStyles": [
