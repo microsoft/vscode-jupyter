@@ -61,6 +61,11 @@ export namespace Common {
     export const gotIt = () => localize('Common.gotIt', 'Got it!');
     export const install = () => localize('Common.install', 'Install');
     export const loadingExtension = () => localize('Common.loadingExtension', 'Jupyter Extension loading...');
+    export const handleExtensionActivationError = () =>
+        localize(
+            'Common.handleExtensionActivationError',
+            "Extension activation failed, run the 'Developer: Toggle Developer Tools' command for more information."
+        );
     export const openOutputPanel = () => localize('Common.openOutputPanel', 'Show output');
     export const noIWillDoItLater = () => localize('Common.noIWillDoItLater', 'No, I will do it later');
     export const notNow = () => localize('Common.notNow', 'Not now');
@@ -1369,6 +1374,24 @@ export namespace DataScience {
         localize('DataScience.pickRemoteKernelPlaceholder', `type to filter`);
     export const failedToInstallPythonExtension = () =>
         localize('DataScience.failedToInstallPythonExtension', `Failed to install the Python Extension.`);
+}
+
+export namespace Deprecated {
+    export const SHOW_DEPRECATED_FEATURE_PROMPT_FORMAT_ON_SAVE = () =>
+        localize(
+            'Deprecated.SHOW_DEPRECATED_FEATURE_PROMPT_FORMAT_ON_SAVE',
+            "The setting 'python.formatting.formatOnSave' is deprecated, please use 'editor.formatOnSave'."
+        );
+    export const SHOW_DEPRECATED_FEATURE_PROMPT_LINT_ON_TEXT_CHANGE = () =>
+        localize(
+            'Deprecated.SHOW_DEPRECATED_FEATURE_PROMPT_LINT_ON_TEXT_CHANGE',
+            "The setting 'python.linting.lintOnTextChange' is deprecated, please enable 'python.linting.lintOnSave' and 'files.autoSave'."
+        );
+    export const SHOW_DEPRECATED_FEATURE_PROMPT_FOR_AUTO_COMPLETE_PRELOAD_MODULES = () =>
+        localize(
+            'Deprecated.SHOW_DEPRECATED_FEATURE_PROMPT_FOR_AUTO_COMPLETE_PRELOAD_MODULES',
+            "The setting 'python.autoComplete.preloadModules' is deprecated, please consider using Pylance Language Server ('python.languageServer' setting)."
+        );
 }
 
 export namespace Installer {
