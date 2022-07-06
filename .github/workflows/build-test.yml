@@ -184,7 +184,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: List files
-        run: find src/**/**.ts
+        run: find src/**/**.ts | wc -l
         # if: steps.out-cache.outputs.cache-hit != 'true'
         env:
           CI_JUPYTER_FAST_COMPILATION: 'true'
