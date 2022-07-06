@@ -82,7 +82,7 @@
         "virtualWorkspaces": true,
         "untrustedWorkspaces": {
             "supported": "limited",
-            "description": "Execution of cells in Interactive Window and Notebooks is not supported in untrusted workspaces."
+            "description": "%capabilities.untrustedWorkspace.description%"
         }
     },
     "contributes": {
@@ -99,7 +99,7 @@
                         "description": "%contributes.walkthroughs.jupyterWelcome.steps.ipynb.newUntitledIpynb.description%",
                         "media": {
                             "svg": "resources/walkthroughs/opennotebook.svg",
-                            "altText": "Creating a new Jupyter notebook"
+                            "altText": "%contributes.walkthroughs.jupyterWelcome.steps.ipynb.newUntitledIpynb.media.altText%"
                         },
                         "completionEvents": [
                             "onCommand:ipynb.newUntitledIpynb",
@@ -114,7 +114,7 @@
                         "description": "%contributes.walkthroughs.jupyterWelcome.steps.jupyter.selectKernel.description%",
                         "media": {
                             "svg": "resources/walkthroughs/kernel.svg",
-                            "altText": "Selecting or changing a notebook kernel"
+                            "altText": "%contributes.walkthroughs.jupyterWelcome.steps.jupyter.selectKernel.media.altText%"
                         },
                         "completionEvents": [
                             "onCommand:notebook.selectKernel"
@@ -126,7 +126,7 @@
                         "description": "%contributes.walkthroughs.jupyterWelcome.steps.jupyter.exploreAndDebug.description%",
                         "media": {
                             "svg": "resources/walkthroughs/data.svg",
-                            "altText": "Opening data viewer"
+                            "altText": "%contributes.walkthroughs.jupyterWelcome.steps.jupyter.exploreAndDebug.media.altText%"
                         }
                     },
                     {
@@ -135,7 +135,7 @@
                         "description": "%contributes.walkthroughs.jupyterWelcome.steps.jupyter.dataScienceLearnMore.description%",
                         "media": {
                             "svg": "resources/walkthroughs/learnmore.svg",
-                            "altText": "Image representing our documentation page and mailing list resources."
+                            "altText": "%contributes.walkthroughs.jupyterWelcome.steps.jupyter.dataScienceLearnMore.media.altText%"
                         }
                     }
                 ]
