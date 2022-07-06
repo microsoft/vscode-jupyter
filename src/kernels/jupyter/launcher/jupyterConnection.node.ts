@@ -123,9 +123,9 @@ export class JupyterConnectionWaiter implements IDisposable {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private getJupyterURL(serverInfos: JupyterServerInfo[] | undefined, data: any) {
         if (serverInfos && serverInfos.length > 0 && !this.startPromise.completed) {
-            const matchInfo = serverInfos.find((info) =>
-                arePathsSame(getFilePath(this.notebookDir), info.notebook_dir)
-            );
+            const matchInfo = serverInfos.find((info) => {
+                return arePathsSame(getFilePath(this.notebookDir), getFilePath(Uri.file(info.notebook_dir)));
+            });
             if (matchInfo) {
                 const url = matchInfo.url;
                 const token = matchInfo.token;
