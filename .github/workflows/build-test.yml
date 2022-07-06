@@ -711,11 +711,19 @@ jobs:
           path: '${{env.VSC_JUPYTER_USER_DATA_DIR}}/logs/**/*'
           retention-days: 1
 
-      - name: Log results
+      - name: Log test results
         if: always()
         run: npm run printTestResults
 
       - name: Upload test result files
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: TestResult-${{matrix.jupyter}}-${{matrix.python}}-${{matrix.pythonVersion}}-${{matrix.os}}
+          path: testresults.json
+          retention-days: 1
+
+      - name: Upload test failure notebook file
         uses: actions/upload-artifact@v2
         if: always()
         with:
