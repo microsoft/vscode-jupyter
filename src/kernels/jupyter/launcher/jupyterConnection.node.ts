@@ -127,7 +127,7 @@ export class JupyterConnectionWaiter implements IDisposable {
             const matchInfo = serverInfos.find((info) => {
                 console.log('looking for match', JSON.stringify(info), JSON.stringify(this.notebookDir));
                 console.log(`getFilePath(this.notebookDir) = ${getFilePath(this.notebookDir)}, ${info.notebook_dir}`);
-                return arePathsSame(getFilePath(this.notebookDir), info.notebook_dir);
+                return arePathsSame(getFilePath(this.notebookDir), getFilePath(Uri.file(info.notebook_dir)));
             });
             console.log('getJupyterURL.matchInfo', JSON.stringify(matchInfo));
             if (matchInfo) {
