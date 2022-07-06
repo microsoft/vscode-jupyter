@@ -312,13 +312,13 @@ jobs:
         run: npm ci --prefer-offline
 
       - name: Compile if not cached
-        run: ls src/**/*.ts
+        run: ls src/**/**.ts
         # if: steps.out-cache.outputs.cache-hit != 'true'
         env:
           CI_JUPYTER_FAST_COMPILATION: 'true'
 
       - name: Compile if not cached
-        run: ls src/**/*.ts | xargs npx esbuild --format=cjs --outdir=out --sourcemap=inline --tsconfig=tsconfig.json --platform=node
+        run: ls src/**/**.ts | xargs npx esbuild --format=cjs --outdir=out --sourcemap=inline --tsconfig=tsconfig.json --platform=node
         # if: steps.out-cache.outputs.cache-hit != 'true'
         env:
           CI_JUPYTER_FAST_COMPILATION: 'true'
@@ -571,7 +571,7 @@ jobs:
 
         # This step is slow.
       - name: Compile if not cached
-        run: ls src/**/*.ts | xargs npx esbuild --format=cjs --outdir=out --sourcemap=inline --tsconfig=tsconfig.json --platform=node
+        run: ls src/**/**.ts | xargs npx esbuild --format=cjs --outdir=out --sourcemap=inline --tsconfig=tsconfig.json --platform=node
         # if: steps.out-cache.outputs.cache-hit != 'true'
         env:
           CI_JUPYTER_FAST_COMPILATION: 'true'
@@ -922,7 +922,7 @@ jobs:
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}-faster-compilation
 
       - name: Compile if not cached
-        run: ls src/**/*.ts | xargs npx esbuild --format=cjs --outdir=out --sourcemap=inline --tsconfig=tsconfig.json --platform=node
+        run: ls src/**/**.ts | xargs npx esbuild --format=cjs --outdir=out --sourcemap=inline --tsconfig=tsconfig.json --platform=node
         # if: steps.out-cache.outputs.cache-hit != 'true'
         env:
           CI_JUPYTER_FAST_COMPILATION: 'true'
