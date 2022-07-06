@@ -63,6 +63,7 @@ suite(`Interactive window Execution`, async function () {
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
+        await vscode.commands.executeCommand('python.clearWorkspaceInterpreter');
         if (this.currentTest?.isFailed()) {
             // For a flaky interrupt test.
             await captureScreenShot(this);
@@ -99,8 +100,7 @@ suite(`Interactive window Execution`, async function () {
         await vscode.commands.executeCommand('python.clearWorkspaceInterpreter');
     }
 
-    // Flakey test: https://github.com/microsoft/vscode-jupyter/issues/10649
-    test.skip('Export Interactive window to Notebook', async () => {
+    test('Export Interactive window to Notebook', async () => {
         const activeInteractiveWindow = await createStandaloneInteractiveWindow(interactiveWindowProvider);
         await waitForInteractiveWindow(activeInteractiveWindow);
 

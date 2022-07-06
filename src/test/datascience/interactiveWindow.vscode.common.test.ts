@@ -73,6 +73,9 @@ suite(`Interactive window execution`, async function () {
         }
         sinon.restore();
         await closeNotebooksAndCleanUpAfterTests(disposables);
+        // restore the default value
+        const settings = vscode.workspace.getConfiguration('jupyter', null);
+        await settings.update('interactiveWindowMode', 'multiple');
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);
     });
     test('Execute cell from Python file', async () => {
