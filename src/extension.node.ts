@@ -198,9 +198,7 @@ function displayProgress(promise: Promise<any>) {
 // error handling
 
 async function handleError(ex: Error, startupDurations: Record<string, number>) {
-    notifyUser(
-        "Extension activation failed, run the 'Developer: Toggle Developer Tools' command for more information."
-    );
+    notifyUser(Common.handleExtensionActivationError());
     // Possible logger hasn't initialized either.
     console.error('extension activation failed', ex);
     traceError('extension activation failed', ex);

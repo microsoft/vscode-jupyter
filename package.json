@@ -82,24 +82,24 @@
         "virtualWorkspaces": true,
         "untrustedWorkspaces": {
             "supported": "limited",
-            "description": "Execution of cells in Interactive Window and Notebooks is not supported in untrusted workspaces."
+            "description": "%capabilities.untrustedWorkspace.description%"
         }
     },
     "contributes": {
         "walkthroughs": [
             {
                 "id": "jupyterWelcome",
-                "title": "Get started with Jupyter Notebooks",
-                "description": "Your first steps to set up a Jupyter project with all the powerful tools and features that the Jupyter Extension has to offer!",
+                "title": "%contributes.walkthroughs.jupyterWelcome.title%",
+                "description": "%contributes.walkthroughs.jupyterWelcome.description%",
                 "when": "workspacePlatform != webworker",
                 "steps": [
                     {
                         "id": "ipynb.newUntitledIpynb",
-                        "title": "Create or open a Jupyter Notebook",
-                        "description": "Right click in the file explorer and create a new file with an .ipynb extension. Or, open the [Command Palette](command:workbench.action.showCommands) and run the command \n``Create: New Jupyter Notebook``.\n[Create New Jupyter Notebook](command:toSide:ipynb.newUntitledIpynb)\n If you have an existing project, you can also [open a folder](command:toSide:workbench.action.files.openFolder) and/or clone a project from GitHub: [clone a Git repository](command:toSide:git.clone).",
+                        "title": "%contributes.walkthroughs.jupyterWelcome.steps.ipynb.newUntitledIpynb.title%",
+                        "description": "%contributes.walkthroughs.jupyterWelcome.steps.ipynb.newUntitledIpynb.description%",
                         "media": {
                             "svg": "resources/walkthroughs/opennotebook.svg",
-                            "altText": "Creating a new Jupyter notebook"
+                            "altText": "%contributes.walkthroughs.jupyterWelcome.steps.ipynb.newUntitledIpynb.media.altText%"
                         },
                         "completionEvents": [
                             "onCommand:ipynb.newUntitledIpynb",
@@ -110,11 +110,11 @@
                     },
                     {
                         "id": "jupyter.selectKernel",
-                        "title": "Select a Jupyter kernel",
-                        "description": "Click Select Kernel at the top right of the notebook and choose the environment in which to run your kernel. Or, with a notebook opened and in focus, open the [Command Palette](command:workbench.action.showCommands) and run the command: \n``Notebook: Select Notebook Kernel``. \n[Open Command Palette to Select a Jupyter Kernel](command:workbench.action.showCommands)",
+                        "title": "%contributes.walkthroughs.jupyterWelcome.steps.jupyter.selectKernel.title%",
+                        "description": "%contributes.walkthroughs.jupyterWelcome.steps.jupyter.selectKernel.description%",
                         "media": {
                             "svg": "resources/walkthroughs/kernel.svg",
-                            "altText": "Selecting or changing a notebook kernel"
+                            "altText": "%contributes.walkthroughs.jupyterWelcome.steps.jupyter.selectKernel.media.altText%"
                         },
                         "completionEvents": [
                             "onCommand:notebook.selectKernel"
@@ -122,20 +122,20 @@
                     },
                     {
                         "id": "jupyter.exploreAndDebug",
-                        "title": "Explore data and debug",
-                        "description": "📅 You can use the [Data Viewer](https://code.visualstudio.com/docs/datascience/data-science-tutorial#_prepare-the-data) to view, sort, and filter the rows of data. After loading your data, click \"Variables\" at the top right of notebook and click the Data Viewer icon to the left of the data table. \n \n[Learn about Data Viewer](https://code.visualstudio.com/docs/datascience/data-science-tutorial#_prepare-the-data)\n \n📒 Debug your notebook using the [Run by Line](https://code.visualstudio.com/docs/datascience/jupyter-notebooks#_run-by-line) mode to execute a cell one line at a time. Click the Run by Line icon from your cell (play button with lines) or hit F10. \n \n[Learn about Run by Line](https://code.visualstudio.com/docs/datascience/jupyter-notebooks#_run-by-line)",
+                        "title": "%contributes.walkthroughs.jupyterWelcome.steps.jupyter.exploreAndDebug.title%",
+                        "description": "%contributes.walkthroughs.jupyterWelcome.steps.jupyter.exploreAndDebug.description%",
                         "media": {
                             "svg": "resources/walkthroughs/data.svg",
-                            "altText": "Opening data viewer"
+                            "altText": "%contributes.walkthroughs.jupyterWelcome.steps.jupyter.exploreAndDebug.media.altText%"
                         }
                     },
                     {
                         "id": "jupyter.dataScienceLearnMore",
-                        "title": "Find out more!",
-                        "description": "🎨 Explore all the features the Jupyter Extension has to offer by looking for \"Jupyter\" in the [Command Palette](command:workbench.action.showCommands). \n 📈 Learn more about getting started with data science in [Python](command:workbench.action.openWalkthrough?%7B%22category%22%3A%22ms-python.python%23pythonDataScienceWelcome%22%2C%22step%22%3A%22ms-python.python%23python.createNewNotebook%22%7D) by installing the Python Extension ([search Python extension](command:workbench.extensions.search?\"ms-python.python\")). \n 📃 Find out more features in our [Tutorials](https://code.visualstudio.com/docs/datascience/jupyter-notebooks).  \n[Learn more](https://aka.ms/AAdar6q)",
+                        "title": "%contributes.walkthroughs.jupyterWelcome.steps.jupyter.dataScienceLearnMore.title%",
+                        "description": "%contributes.walkthroughs.jupyterWelcome.steps.jupyter.dataScienceLearnMore.description%",
                         "media": {
                             "svg": "resources/walkthroughs/learnmore.svg",
-                            "altText": "Image representing our documentation page and mailing list resources."
+                            "altText": "%contributes.walkthroughs.jupyterWelcome.steps.jupyter.dataScienceLearnMore.media.altText%"
                         }
                     }
                 ]
@@ -272,19 +272,19 @@
         "commands": [
             {
                 "command": "dataScience.ClearCache",
-                "title": "Clear Cache",
+                "title": "%jupyter.command.dataScience.clearCache.title%",
                 "category": "Jupyter (Dev)",
                 "enablement": "jupyter.development"
             },
             {
                 "command": "jupyter.replayPylanceLog",
-                "title": "Replay Pylance Log",
+                "title": "%jupyter.command.jupyter.replayPylanceLog.title%",
                 "category": "Jupyter (Dev)",
                 "enablement": "jupyter.development && notebookType == jupyter-notebook && isWorkspaceTrusted && !jupyter.webExtension"
             },
             {
                 "command": "jupyter.replayPylanceLogStep",
-                "title": "Step Pylance Log",
+                "title": "%jupyter.command.jupyter.replayPylanceLogStep.title%",
                 "category": "Jupyter (Dev)",
                 "icon": "$(debug-start)",
                 "enablement": "jupyter.development && notebookType == jupyter-notebook && isWorkspaceTrusted && jupyter.replayLogLoaded && !jupyter.webExtension"
@@ -298,7 +298,7 @@
             },
             {
                 "command": "jupyter.filterKernels",
-                "title": "Filter Kernels",
+                "title": "%jupyter.command.jupyter.filterKernels.title%",
                 "category": "Jupyter",
                 "enablement": "!jupyter.webExtension"
             },
@@ -730,7 +730,7 @@
             },
             {
                 "command": "jupyter.createnewnotebook",
-                "title": "Create New Jupyter Notebook",
+                "title": "%jupyter.command.jupyter.createnewnotebook.title%",
                 "category": "Jupyter",
                 "enablement": "!jupyter.webExtension"
             },
@@ -1127,7 +1127,7 @@
                 },
                 {
                     "command": "jupyter.replayPylanceLog",
-                    "title": "Replay Pylance Log",
+                    "title": "%jupyter.commandPalette.jupyter.replayPylanceLog.title%",
                     "when": "jupyter.development && isWorkspaceTrusted"
                 },
                 {
@@ -1572,13 +1572,13 @@
                 "jupyter.experiments.enabled": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Enables/disables A/B tests.",
+                    "description": "%jupyter.configuration.jupyter.experiments.enabled.description%",
                     "scope": "machine"
                 },
                 "jupyter.showVariableViewWhenDebugging": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Bring up the Variable View when starting a Run by Line session.",
+                    "description": "%jupyter.configuration.jupyter.showVariableViewWhenDebugging.description%",
                     "scope": "application"
                 },
                 "jupyter.logging.level": {
@@ -1593,7 +1593,7 @@
                         "verbose",
                         "everything"
                     ],
-                    "description": "The logging level the extension logs at.",
+                    "description": "%jupyter.configuration.jupyter.logging.level.description%",
                     "scope": "machine"
                 },
                 "jupyter.experiments.optInto": {
@@ -1602,7 +1602,7 @@
                     "items": {
                         "enum": []
                     },
-                    "markdownDescription": "List of experiment to opt into. If empty, user is assigned the default experiment groups. [Learn more](https://github.com/microsoft/vscode-jupyter/wiki/Experiments).",
+                    "markdownDescription": "%jupyter.configuration.jupyter.experiments.optInto.markdownDescription%",
                     "scope": "application"
                 },
                 "jupyter.experiments.optOutFrom": {
@@ -1611,21 +1611,21 @@
                     "items": {
                         "enum": []
                     },
-                    "markdownDescription": "List of experiment to opt out of. If empty, user is assigned the default experiment groups. [Learn more](https://github.com/microsoft/vscode-jupyter/wiki/Experiments).",
+                    "markdownDescription": "%jupyter.configuration.jupyter.experiments.optOutFrom.markdownDescription%",
                     "scope": "application"
                 },
                 "jupyter.enableKeyboardShortcuts": {
                     "type": "boolean",
                     "default": true,
-                    "deprecationMessage": "This setting has been deprecated as Jupyter keyboard shortcuts have been moved into the ms-toolsai.jupyter-keymap extension. If you would like to disable Jupyter keyboard shortcuts, please uninstall or disable that extension instead.",
-                    "description": "Enables Jupyter style keyboard shortcuts for Notebooks.",
+                    "deprecationMessage": "%jupyter.configuration.jupyter.enableKeyboardShortcuts.deprecationMessage%",
+                    "description": "%jupyter.configuration.jupyter.enableKeyboardShortcuts.description%",
                     "scope": "application"
                 },
                 "jupyter.allowImportFromNotebook": {
                     "type": "boolean",
                     "default": true,
-                    "deprecationMessage": "This setting is deprecated and will be removed in the next release.",
-                    "description": "Allows a user to import a jupyter notebook into a python file anytime one is opened.",
+                    "deprecationMessage": "%jupyter.configuration.jupyter.allowImportFromNotebook.deprecationMessage%",
+                    "description": "%jupyter.configuration.jupyter.allowImportFromNotebook.description%",
                     "scope": "resource"
                 },
                 "jupyter.widgetScriptSources": {
@@ -1638,268 +1638,268 @@
                             "unpkg.com"
                         ],
                         "enumDescriptions": [
-                            "Loads widget (javascript) scripts from https://www.jsdelivr.com/",
-                            "Loads widget (javascript) scripts from https://unpkg.com/"
+                            "%jupyter.configuration.jupyter.widgetScriptSources.items.enumDescriptions.0%",
+                            "%jupyter.configuration.jupyter.widgetScriptSources.items.enumDescriptions.1%"
                         ]
                     },
                     "uniqueItems": true,
-                    "markdownDescription": "Defines the location and order of the sources where scripts files for Widgets are downloaded from (e.g. ipywidgest, bqplot, beakerx, ipyleaflet, etc). Not selecting any of these could result in widgets not rendering or function correctly. See [here](https://aka.ms/PVSCIPyWidgets) for more information. Once updated you will need to restart the Kernel.",
+                    "markdownDescription": "%jupyter.configuration.jupyter.widgetScriptSources.markdownDescription%",
                     "scope": "machine"
                 },
                 "jupyter.askForLargeDataFrames": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Warn the user before trying to open really large data frames.",
+                    "description": "%jupyter.configuration.jupyter.askForLargeDataFrames.description%",
                     "scope": "application"
                 },
                 "jupyter.askForKernelRestart": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Warn the user before restarting a kernel.",
+                    "description": "%jupyter.configuration.jupyter.askForKernelRestart.description%",
                     "scope": "application"
                 },
                 "jupyter.exportWithOutputEnabled": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Enable exporting a python file into a jupyter notebook and run all cells when doing so.",
+                    "description": "%jupyter.configuration.jupyter.exportWithOutputEnabled.description%",
                     "scope": "resource"
                 },
                 "jupyter.jupyterLaunchTimeout": {
                     "type": "number",
                     "default": 60000,
-                    "description": "Amount of time (in ms) to wait for the Jupyter Notebook server to start.",
+                    "description": "%jupyter.configuration.jupyter.jupyterLaunchTimeout.description%",
                     "scope": "resource"
                 },
                 "jupyter.jupyterLaunchRetries": {
                     "type": "number",
                     "default": 3,
-                    "description": "Number of times to attempt to connect to the Jupyter Notebook",
+                    "description": "%jupyter.configuration.jupyter.jupyterLaunchRetries.description%",
                     "scope": "resource"
                 },
                 "jupyter.jupyterCommandLineArguments": {
                     "type": "array",
                     "default": [],
-                    "description": "When a Notebook Editor or Interactive Window Jupyter server is started, these arguments will be passed to it. By default this list is generated by the Jupyter Extension.",
+                    "description": "%jupyter.configuration.jupyter.jupyterCommandLineArguments.description%",
                     "scope": "resource"
                 },
                 "jupyter.notebookFileRoot": {
                     "type": "string",
                     "default": "${fileDirname}",
-                    "description": "Set the root directory for running notebooks and the Interactive window.",
+                    "description": "%jupyter.configuration.jupyter.notebookFileRoot.description%",
                     "scope": "resource"
                 },
                 "jupyter.searchForJupyter": {
                     "type": "boolean",
                     "default": true,
-                    "deprecationMessage": "This setting is deprecated and will be removed in the next release.",
-                    "description": "Search all installed Python interpreters for a Jupyter installation when starting the Interactive window",
+                    "deprecationMessage": "%jupyter.configuration.jupyter.searchForJupyter.deprecationMessage%",
+                    "description": "%jupyter.configuration.jupyter.searchForJupyter.description%",
                     "scope": "resource"
                 },
                 "jupyter.useDefaultConfigForJupyter": {
                     "type": "boolean",
                     "default": true,
-                    "description": "When running Jupyter locally, create a default empty Jupyter config for the Interactive window",
+                    "description": "%jupyter.configuration.jupyter.useDefaultConfigForJupyter.description%",
                     "scope": "resource"
                 },
                 "jupyter.jupyterInterruptTimeout": {
                     "type": "number",
                     "default": 10000,
-                    "description": "Amount of time (in ms) to wait for an interrupt before asking to restart the Jupyter kernel.",
+                    "description": "%jupyter.configuration.jupyter.jupyterInterruptTimeout.description%",
                     "scope": "resource"
                 },
                 "jupyter.allowInput": {
                     "type": "boolean",
                     "default": true,
-                    "deprecationMessage": "This setting is deprecated and will be removed in the next release.",
-                    "description": "Allow the inputting of python code directly into the Interactive window"
+                    "deprecationMessage": "%jupyter.configuration.jupyter.allowInput.deprecationMessage%",
+                    "description": "%jupyter.configuration.jupyter.allowInput.description%"
                 },
                 "jupyter.showCellInputCode": {
                     "type": "boolean",
                     "default": true,
-                    "deprecationMessage": "This setting is deprecated and will be removed in the next release.",
-                    "description": "Show cell input code.",
+                    "deprecationMessage": "%jupyter.configuration.jupyter.showCellInputCode.deprecationMessage%",
+                    "description": "%jupyter.configuration.jupyter.showCellInputCode.description%",
                     "scope": "resource"
                 },
                 "jupyter.collapseCellInputCodeByDefault": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Collapse cell input code by default.",
-                    "markdownDeprecationMessage": "This setting has been deprecated, please use `#interactiveWindow.collapseCellInputCode#` instead.",
+                    "description": "%jupyter.configuration.jupyter.collapseCellInputCodeByDefault.description%",
+                    "markdownDeprecationMessage": "%jupyter.configuration.jupyter.collapseCellInputCodeByDefault.markdownDeprecationMessage%",
                     "scope": "resource"
                 },
                 "jupyter.maxOutputSize": {
                     "type": "number",
                     "default": 400,
-                    "deprecationMessage": "This setting is deprecated and will be removed in the next release.",
-                    "description": "Maximum size (in pixels) of text output in the Notebook Editor before a scrollbar appears. First enable scrolling for cell outputs in settings.",
+                    "deprecationMessage": "%jupyter.configuration.jupyter.maxOutputSize.deprecationMessage%",
+                    "description": "%jupyter.configuration.jupyter.maxOutputSize.description%",
                     "scope": "resource"
                 },
                 "jupyter.alwaysScrollOnNewCell": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Automatically scroll the interactive window to show the output of the last statement executed. If false, the interactive window will only automatically scroll if the bottom of the prior cell is visible.",
+                    "description": "%jupyter.configuration.jupyter.alwaysScrollOnNewCell.description%",
                     "scope": "resource",
-                    "deprecationMessage": "This setting is obsolete. Use the 'interactiveWindow.alwaysScrollOnNewCell' setting instead."
+                    "deprecationMessage": "%jupyter.configuration.jupyter.alwaysScrollOnNewCell.deprecationMessage%"
                 },
                 "jupyter.enableScrollingForCellOutputs": {
                     "type": "boolean",
                     "default": true,
-                    "deprecationMessage": "This setting is deprecated and will be removed in the next release.",
-                    "description": "Enables scrolling for large cell outputs in the Notebook Editor. This setting does not apply to the Interactive Window.",
+                    "deprecationMessage": "%jupyter.configuration.jupyter.enableScrollingForCellOutputs.deprecationMessage%",
+                    "description": "%jupyter.configuration.jupyter.enableScrollingForCellOutputs.description%",
                     "scope": "resource"
                 },
                 "jupyter.sendSelectionToInteractiveWindow": {
                     "type": "boolean",
                     "default": false,
-                    "description": "When pressing shift+enter, send selected code in a Python file to the Jupyter interactive window as opposed to the Python terminal.",
+                    "description": "%jupyter.configuration.jupyter.sendSelectionToInteractiveWindow.description%",
                     "scope": "resource"
                 },
                 "jupyter.variableExplorerExclude": {
                     "type": "string",
                     "default": "module;function;builtin_function_or_method;ABCMeta;type",
-                    "description": "Types to exclude from showing in the Interactive variable explorer",
+                    "description": "%jupyter.configuration.jupyter.variableExplorerExclude.description%",
                     "scope": "resource"
                 },
                 "jupyter.codeRegularExpression": {
                     "type": "string",
                     "default": "^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])",
-                    "description": "Regular expression used to identify code cells. All code until the next match is considered part of this cell.",
+                    "description": "%jupyter.configuration.jupyter.codeRegularExpression.description%",
                     "scope": "resource"
                 },
                 "jupyter.defaultCellMarker": {
                     "type": "string",
                     "default": "# %%",
-                    "description": "Cell marker used for delineating a cell in a python file.",
+                    "description": "%jupyter.configuration.jupyter.defaultCellMarker.description%",
                     "scope": "resource"
                 },
                 "jupyter.markdownRegularExpression": {
                     "type": "string",
                     "default": "^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)",
-                    "description": "Regular expression used to identify markdown cells. All comments after this expression are considered part of the markdown.",
+                    "description": "%jupyter.configuration.jupyter.markdownRegularExpression.description%",
                     "scope": "resource"
                 },
                 "jupyter.allowLiveShare": {
                     "type": "boolean",
                     "default": true,
-                    "deprecationMessage": "This setting is deprecated as Live Share support for the interactive window no longer exists in the Jupyter Extension.",
-                    "description": "Allow the Interactive window to be shared during a Live Share session",
+                    "deprecationMessage": "%jupyter.configuration.jupyter.allowLiveShare.deprecationMessage%",
+                    "description": "%jupyter.configuration.jupyter.allowLiveShare.description%",
                     "scope": "resource"
                 },
                 "jupyter.ignoreVscodeTheme": {
                     "type": "boolean",
                     "default": false,
-                    "deprecationMessage": "This setting is deprecated and will be removed in the next release.",
-                    "description": "Don't use the VS Code theme in the Interactive window (requires reload of VS Code). This forces the Interactive window to use 'Light +(default light)' and disables matplotlib defaults.",
+                    "deprecationMessage": "%jupyter.configuration.jupyter.ignoreVscodeTheme.deprecationMessage%",
+                    "description": "%jupyter.configuration.jupyter.ignoreVscodeTheme.description%",
                     "scope": "resource"
                 },
                 "jupyter.themeMatplotlibPlots": {
                     "type": "boolean",
                     "default": false,
-                    "description": "In the Interactive window and Notebook Editor theme matplotlib outputs to match the VS Code editor theme.",
+                    "description": "%jupyter.configuration.jupyter.themeMatplotlibPlots.description%",
                     "scope": "resource"
                 },
                 "jupyter.liveShareConnectionTimeout": {
                     "type": "number",
                     "default": 1000,
-                    "deprecationMessage": "This setting is deprecated and will be removed in the next release.",
-                    "description": "Amount of time to wait for guest connections to verify they have the Python Extension installed.",
+                    "deprecationMessage": "%jupyter.configuration.jupyter.liveShareConnectionTimeout.deprecationMessage%",
+                    "description": "%jupyter.configuration.jupyter.liveShareConnectionTimeout.description%",
                     "scope": "application"
                 },
                 "jupyter.decorateCells": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Draw a highlight behind the currently active cell.",
+                    "description": "%jupyter.configuration.jupyter.decorateCells.description%",
                     "scope": "resource"
                 },
                 "jupyter.enableCellCodeLens": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Enables code lens for 'cells' in a python file.",
+                    "description": "%jupyter.configuration.jupyter.enableCellCodeLens.description%",
                     "scope": "resource"
                 },
                 "jupyter.enableAutoMoveToNextCell": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Enables moving to the next cell when clicking on a 'Run Cell' code lens.",
+                    "description": "%jupyter.configuration.jupyter.enableAutoMoveToNextCell.description%",
                     "scope": "resource"
                 },
                 "jupyter.allowUnauthorizedRemoteConnection": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Allow for connecting the Interactive window to a https Jupyter server that does not have valid certificates. This can be a security risk, so only use for known and trusted servers.",
+                    "description": "%jupyter.configuration.jupyter.allowUnauthorizedRemoteConnection.description%",
                     "scope": "resource"
                 },
                 "jupyter.generateSVGPlots": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Generate SVG output for notebook plots. This allows for better display in the plot viewer at the cost of generation speed and file size.",
+                    "description": "%jupyter.configuration.jupyter.generateSVGPlots.description%",
                     "scope": "resource"
                 },
                 "jupyter.codeLenses": {
                     "type": "string",
                     "default": "jupyter.runcell, jupyter.runallcellsabove, jupyter.debugcell",
-                    "description": "Set of commands to put as code lens above a cell.",
+                    "description": "%jupyter.configuration.jupyter.codeLenses.description%",
                     "scope": "resource"
                 },
                 "jupyter.debugCodeLenses": {
                     "type": "string",
                     "default": "jupyter.debugcontinue, jupyter.debugstop, jupyter.debugstepover",
-                    "description": "Set of debug commands to put as code lens above a cell while debugging.",
+                    "description": "%jupyter.configuration.jupyter.debugCodeLenses.description%",
                     "scope": "resource"
                 },
                 "jupyter.debugpyDistPath": {
                     "type": "string",
                     "default": "",
-                    "description": "Path to debugpy bits for debugging cells.",
+                    "description": "%jupyter.configuration.jupyter.debugpyDistPath.description%",
                     "scope": "resource"
                 },
                 "jupyter.stopOnFirstLineWhileDebugging": {
                     "type": "boolean",
                     "default": true,
-                    "description": "When debugging a cell, stop on the first line.",
+                    "description": "%jupyter.configuration.jupyter.stopOnFirstLineWhileDebugging.description%",
                     "scope": "resource"
                 },
                 "jupyter.remoteDebuggerPort": {
                     "type": "number",
                     "default": -1,
-                    "description": "When debugging a cell, open this port on the remote box. If -1 is specified, a random port between 8889 and 9000 will be attempted.",
+                    "description": "%jupyter.configuration.jupyter.remoteDebuggerPort.description%",
                     "scope": "resource"
                 },
                 "jupyter.disableJupyterAutoStart": {
                     "type": "boolean",
                     "default": false,
-                    "description": "When true, disables Jupyter from being automatically started for you. You must instead run a cell to start Jupyter.",
+                    "description": "%jupyter.configuration.jupyter.disableJupyterAutoStart.description%",
                     "scope": "resource"
                 },
                 "jupyter.textOutputLimit": {
                     "type": "number",
                     "default": 20000,
-                    "deprecationMessage": "This setting is deprecated in favor of `notebook.output.textLineLimit`. This setting will be removed in an upcoming release.",
-                    "description": "Limit the amount of text in Interactive cell text output to this value. 0 to allow any amount of characters.",
+                    "deprecationMessage": "%jupyter.configuration.jupyter.textOutputLimit.deprecationMessage%",
+                    "description": "%jupyter.configuration.jupyter.textOutputLimit.description%",
                     "scope": "resource"
                 },
                 "jupyter.colorizeInputBox": {
                     "type": "boolean",
                     "default": true,
-                    "deprecationMessage": "This setting is deprecated and will be removed in an upcoming release.",
-                    "description": "Whether or not to use the theme's peek color as the background for the input box.",
+                    "deprecationMessage": "%jupyter.configuration.jupyter.colorizeInputBox.deprecationMessage%",
+                    "description": "%jupyter.configuration.jupyter.colorizeInputBox.description%",
                     "scope": "resource"
                 },
                 "jupyter.stopOnError": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Stop running cells if a cell throws an exception.",
+                    "description": "%jupyter.configuration.jupyter.stopOnError.description%",
                     "scope": "resource"
                 },
                 "jupyter.addGotoCodeLenses": {
                     "type": "boolean",
                     "default": true,
-                    "description": "After running a cell, add a 'Goto' code lens on the cell. Note, disabling all code lenses disables this code lens as well.",
+                    "description": "%jupyter.configuration.jupyter.addGotoCodeLenses.description%",
                     "scope": "resource"
                 },
                 "jupyter.variableQueries": {
                     "type": "array",
-                    "markdownDescription": "Language to query mapping for returning the list of active variables in a Jupyter kernel. Used by the Variable Explorer in both the Interactive Window and Notebooks. Example:\n```\n[\n  {\n    \"language\": \"python\",\n    \"query\": \"%who_ls\",\n    \"parseExpr\": \"'(\\\\w+)'\"\n  }\n]\n```",
+                    "markdownDescription": "%jupyter.configuration.jupyter.variableQueries.markdownDescription%",
                     "scope": "machine",
                     "examples": [
                         [
@@ -1929,7 +1929,7 @@
                             },
                             "path": {
                                 "type": "string",
-                                "markdownDescription": "Fully qualified path to the kernel spec or the python enviornment. \nE.g. `~/miniconda3/envs/sample/bin/python`."
+                                "markdownDescription": "%jupyter.configuration.jupyter.kernels.filter.items.markdownDescription%"
                             },
                             "required": [
                                 "type",
@@ -1937,7 +1937,7 @@
                             ]
                         }
                     },
-                    "markdownDescription": "List of Jupyter Kernels and/or python environments that are to be excluded from the Kernel picker.",
+                    "markdownDescription": "%jupyter.configuration.jupyter.kernels.filter.markdownDescription%",
                     "scope": "machine-overridable",
                     "examples": [
                         [
@@ -1960,13 +1960,13 @@
                         "multiple"
                     ],
                     "scope": "resource",
-                    "description": "Behavior of the Interactive Window. 'perFile' will create a new interactive window for every file that runs a cell. 'single' allows a single window. 'multiple' allows the creation of multiple.",
+                    "description": "%jupyter.configuration.jupyter.interactiveWindowMode.description%",
                     "default": "multiple"
                 },
                 "jupyter.magicCommandsAsComments": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Uncomment shell assignments (#!), line magic (#!%) and cell magic (#!%%) when parsing code cells.",
+                    "description": "%jupyter.configuration.jupyter.magicCommandsAsComments.description%",
                     "scope": "resource"
                 },
                 "jupyter.pythonExportMethod": {
@@ -1977,61 +1977,61 @@
                         "nbconvert"
                     ],
                     "default": "direct",
-                    "description": "The method to use when exporting a notebook to a Python file. 'direct' will copy over the code directly as is. 'commentMagics' will comment out lines starting with line magics (%), cell magics (%%), and shell commands(!). 'nbconvert' will install nbconvert and use that for the conversion which can translate iPython syntax into Python syntax.",
+                    "description": "%jupyter.configuration.jupyter.pythonExportMethod.description%",
                     "scope": "application"
                 },
                 "jupyter.runStartupCommands": {
                     "type": "array",
                     "default": "",
-                    "description": "A series of Python instructions or iPython magic commands. Can be either an array of strings or a single string with commands separated by '\\n'. Commands will be silently executed whenever the interactive window loads. For instance, set this to '%load_ext autoreload\\n%autoreload 2' to automatically reload changes made to imported files without having to restart the interactive session.",
+                    "description": "%jupyter.configuration.jupyter.runStartupCommands.description%",
                     "scope": "application"
                 },
                 "jupyter.debugJustMyCode": {
                     "type": "boolean",
                     "default": true,
-                    "description": "When debugging, debug just my code.",
+                    "description": "%jupyter.configuration.jupyter.debugJustMyCode.description%",
                     "scope": "resource"
                 },
                 "jupyter.showOutlineButtonInNotebookToolbar": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Show the Outline button in the Jupyter notebook toolbar.",
+                    "description": "%jupyter.configuration.jupyter.showOutlineButtonInNotebookToolbar.description%",
                     "scope": "resource"
                 },
                 "jupyter.newCellOnRunLast": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Append a new empty cell to an interactive window file on running the currently last cell.",
+                    "description": "%jupyter.configuration.jupyter.newCellOnRunLast.description%",
                     "scope": "resource"
                 },
                 "jupyter.pylanceHandlesNotebooks": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Determines if Pylance manages notebook concat doc creation.",
+                    "description": "%jupyter.configuration.jupyter.pylanceHandlesNotebooks.description%",
                     "scope": "machine"
                 },
                 "jupyter.pythonCompletionTriggerCharacters": {
                     "type": "string",
                     "default": ".%'\"",
-                    "description": "Characters which trigger auto completion on a python jupyter kernel.",
+                    "description": "%jupyter.configuration.jupyter.pythonCompletionTriggerCharacters.description%",
                     "scope": "machine"
                 },
                 "jupyter.logKernelOutputSeparately": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Creates separate output panels for kernels/jupyter server console output",
+                    "description": "%jupyter.configuration.jupyter.logKernelOutputSeparately.description%",
                     "scope": "machine"
                 },
                 "jupyter.excludeUserSitePackages": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Add PYTHONNOUSERSITE to kernels before starting. This prevents global/user site-packages from being used in the PYTHONPATH of the kernel.",
+                    "description": "%jupyter.configuration.jupyter.excludeUserSitePackages.description%",
                     "scope": "machine"
                 },
                 "jupyter.enableExtendedKernelCompletions": {
                     "type": "boolean",
                     "default": false,
-                    "markdownDescription": "Enables Jedi support for extended IntelliSense completions in running Jupyter kernels (see this [setting](https://ipython.readthedocs.io/en/stable/config/options/terminal.html?highlight=use_jedi#configtrait-Completer.use_jedi)). This can greatly impact notebook cell execution performance. Use with caution.",
+                    "markdownDescription": "%jupyter.configuration.jupyter.enableExtendedKernelCompletions.markdownDescription%",
                     "scope": "machine"
                 }
             }
@@ -2055,7 +2055,7 @@
             {
                 "id": "jupyter-ipywidget-renderer",
                 "entrypoint": "./out/webviews/webview-side/ipywidgetsRenderer/ipywidgetsRenderer.js",
-                "displayName": "Jupyter IPyWidget Renderer",
+                "displayName": "%jupyter.notebookRenderer.IPyWidget.displayName%",
                 "mimeTypes": [
                     "application/vnd.jupyter.widget-view+json"
                 ],
@@ -2064,7 +2064,7 @@
             {
                 "id": "jupyter-error-renderer",
                 "entrypoint": "./out/webviews/webview-side/errorRenderer/errorRenderer.js",
-                "displayName": "Jupyter Error Renderer",
+                "displayName": "%jupyter.notebookRenderer.Error.displayName%",
                 "requiresMessaging": "always",
                 "mimeTypes": [
                     "application/vnd.code.notebook.error"
@@ -2099,11 +2099,11 @@
         "debuggers": [
             {
                 "type": "Python Kernel Debug Adapter",
-                "label": "Python Kernel Debug Adapter"
+                "label": "%jupyter.debuggers.kernel%"
             },
             {
                 "type": "Python Interactive Window Debug Adapter",
-                "label": "Python Interactive Window"
+                "label": "%jupyter.debuggers.interactive%"
             }
         ],
         "markdown.previewStyles": [
