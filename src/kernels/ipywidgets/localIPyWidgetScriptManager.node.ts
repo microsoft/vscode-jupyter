@@ -70,16 +70,25 @@ export class LocalIPyWidgetScriptManager extends BaseIPyWidgetScriptManager impl
             }
             const kernelHash = getTelemetrySafeHashedString(this.kernel.kernelConnectionMetadata.id);
             const baseUrl = Uri.joinPath(this.context.extensionUri, 'tmp', 'scripts', kernelHash, 'jupyter');
+
             const targetNbExtensions = Uri.joinPath(baseUrl, 'nbextensions');
-            const jupyterDataDir = await this.jupyterPaths.getDataDir();
-            const userNbExtensionsDir = jupyterDataDir ? Uri.joinPath(jupyterDataDir, 'nbextensions') : undefined;
-            await this.fs.createDirectory(targetNbExtensions);
-            if (userNbExtensionsDir && (await this.fs.exists(userNbExtensionsDir))) {
-                await this.fs.copy(userNbExtensionsDir, targetNbExtensions, { overwrite });
+            const [jupyterDataDirectories] = await Promise.all([
+                this.jupyterPaths.getDataDirs({
+                    resource: this.kernel.resourceUri,
+                    interpreter: this.kernel.kernelConnectionMetadata.interpreter
+                }),
+                this.fs.createDirectory(targetNbExtensions)
+            ]);
+            const nbExtensionFolders = jupyterDataDirectories.map((dataDir) => Uri.joinPath(dataDir, 'nbextensions'));
+            // The nbextensions folder is sorted in order of priority.
+            // Hence when copying, copy the lowest priority nbextensions folder first.
+            // This way contents get overwritten with contents of highest priority (thereby adhering to the priority).
+            nbExtensionFolders.reverse();
+            for (const nbExtensionFolder of nbExtensionFolders) {
+                if (await this.fs.exists(nbExtensionFolder)) {
+                    await this.fs.copy(nbExtensionFolder, targetNbExtensions, { overwrite });
+                }
             }
-            await this.fs.copy(Uri.joinPath(this.sourceNbExtensionsPath, 'nbextensions'), targetNbExtensions, {
-                overwrite
-            });
             // If we've copied once, then next time, don't overwrite.
             this.overwriteExistingFiles = false;
             LocalIPyWidgetScriptManager.nbExtensionsCopiedKernelConnectionList.add(

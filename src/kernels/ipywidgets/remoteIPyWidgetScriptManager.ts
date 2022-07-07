@@ -3,7 +3,6 @@
 
 import type * as nbformat from '@jupyterlab/nbformat';
 import * as path from '../../platform/vscode-path/path';
-import * as dedent from 'dedent';
 import { ExtensionMode, Uri } from 'vscode';
 import { IExtensionContext, IHttpClient } from '../../platform/common/types';
 import { traceError, traceInfoIfCI } from '../../platform/logging';
@@ -14,14 +13,17 @@ import { BaseIPyWidgetScriptManager } from './baseIPyWidgetScriptManager';
 import { isCI } from '../../platform/common/constants';
 import { sleep } from '../../platform/common/utils/async';
 import { noop } from '../../platform/common/utils/misc';
+import { IFileSystem } from '../../platform/common/platform/types';
 
 export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager implements IIPyWidgetScriptManager {
     private readonly kernelConnection: RemoteKernelConnectionMetadata;
+    private code?: Promise<string>;
     private widgetEntryPointsPromise?: Promise<{ uri: Uri; widgetFolderName: string }[]>;
     constructor(
         kernel: IKernel,
         private readonly httpClient: IHttpClient,
-        private readonly context: IExtensionContext
+        private readonly context: IExtensionContext,
+        private readonly fs: IFileSystem
     ) {
         super(kernel);
         if (
@@ -49,6 +51,14 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
         }
         return this.widgetEntryPointsPromise;
     }
+    private getCodeToExecute() {
+        if (!this.code) {
+            this.code = this.fs.readFile(
+                Uri.joinPath(this.context.extensionUri, 'pythonFiles', 'printJupyWidgetEntryPoints.py')
+            );
+        }
+        return this.code!;
+    }
     private async getWidgetEntryPointsImpl() {
         // If we're connected to a non-python kernel, then assume we don't have 3rd party widget script sources for now.
         // If we do, we can get this later on by starting a python kernel.
@@ -56,29 +66,7 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
             return [];
         }
 
-        const code = dedent`
-                            __vsc_nbextension_widgets = []
-                            __vsc_file = ''
-                            __vsc_nbextension_Folder = ''
-                            import glob as _VSCODE_glob
-                            import os as _VSCODE_os
-                            import sys as _VSCODE_sys
-                            try:
-                                __vsc_nbextension_Folder = _VSCODE_sys.prefix + _VSCODE_os.path.sep + 'share' + _VSCODE_os.path.sep + 'jupyter' + _VSCODE_os.path.sep + 'nbextensions' + _VSCODE_os.path.sep
-                                for __vsc_file in _VSCODE_glob.glob(__vsc_nbextension_Folder + '*' +  _VSCODE_os.path.sep + 'extension.js'):
-                                    __vsc_nbextension_widgets.append(__vsc_file.replace(__vsc_nbextension_Folder, ""))
-
-                                print(__vsc_nbextension_widgets)
-                            except:
-                                pass
-
-                            # We need to ensure these variables don't interfere with the variable viewer, hence delete them after use.
-                            del _VSCODE_glob
-                            del _VSCODE_os
-                            del _VSCODE_sys
-                            del __vsc_file
-                            del __vsc_nbextension_Folder
-                            del __vsc_nbextension_widgets`;
+        const code = await this.getCodeToExecute();
         if (!this.kernel.session) {
             traceInfoIfCI('No Kernel session to get list of widget entry points');
             return [];
