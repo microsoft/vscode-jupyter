@@ -99,8 +99,8 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          name: ${{env.VSC_JUPYTER_EXTENSION_VSIX}}
-          path: ${{env.VSC_JUPYTER_EXTENSION_VSIX}}
+          name: 'ms-toolsai-jupyter-insiders.vsix'
+          path: 'ms-toolsai-jupyter-insiders.vsix'
 
   lint:
     name: Lint
@@ -676,7 +676,7 @@ jobs:
     if: github.repository == 'microsoft/vscode-jupyter'
     needs: [build-vsix]
     env:
-      VSIX_NAME: ${{env.VSC_JUPYTER_EXTENSION_VSIX}}
+      VSIX_NAME: 'ms-toolsai-jupyter-insiders.vsix'
     strategy:
       fail-fast: false
       matrix:
@@ -708,7 +708,7 @@ jobs:
       - name: Download VSIX
         uses: actions/download-artifact@v2
         with:
-          name: ${{env.VSC_JUPYTER_EXTENSION_VSIX}}
+          name: 'ms-toolsai-jupyter-insiders.vsix'
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
@@ -758,7 +758,7 @@ jobs:
     if: github.repository == 'microsoft/vscode-jupyter'
     needs: [build-vsix]
     env:
-      VSIX_NAME: ${{env.VSC_JUPYTER_EXTENSION_VSIX}}
+      VSIX_NAME: 'ms-toolsai-jupyter-insiders.vsix'
     strategy:
       fail-fast: false
       matrix:
@@ -795,7 +795,7 @@ jobs:
       - name: Download VSIX
         uses: actions/download-artifact@v2
         with:
-          name: ${{env.VSC_JUPYTER_EXTENSION_VSIX}}
+          name: 'ms-toolsai-jupyter-insiders.vsix'
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
