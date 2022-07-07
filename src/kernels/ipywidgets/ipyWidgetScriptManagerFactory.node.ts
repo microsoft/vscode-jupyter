@@ -27,7 +27,10 @@ export class IPyWidgetScriptManagerFactory implements IIPyWidgetScriptManagerFac
                 kernel.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel' ||
                 kernel.kernelConnectionMetadata.kind === 'startUsingRemoteKernelSpec'
             ) {
-                this.managers.set(kernel, new RemoteIPyWidgetScriptManager(kernel, this.httpClient, this.context));
+                this.managers.set(
+                    kernel,
+                    new RemoteIPyWidgetScriptManager(kernel, this.httpClient, this.context, this.fs)
+                );
             } else {
                 this.managers.set(
                     kernel,

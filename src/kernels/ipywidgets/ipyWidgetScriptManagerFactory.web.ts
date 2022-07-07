@@ -3,6 +3,7 @@
 // Licensed under the MIT License.
 
 import { injectable, inject } from 'inversify';
+import { IFileSystem } from '../../platform/common/platform/types';
 import { IExtensionContext, IHttpClient } from '../../platform/common/types';
 import { IKernel } from '../types';
 import { RemoteIPyWidgetScriptManager } from './remoteIPyWidgetScriptManager';
@@ -13,7 +14,8 @@ export class IPyWidgetScriptManagerFactory implements IIPyWidgetScriptManagerFac
     private readonly managers = new WeakMap<IKernel, IIPyWidgetScriptManager>();
     constructor(
         @inject(IHttpClient) private readonly httpClient: IHttpClient,
-        @inject(IExtensionContext) private readonly context: IExtensionContext
+        @inject(IExtensionContext) private readonly context: IExtensionContext,
+        @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}
     getOrCreate(kernel: IKernel): IIPyWidgetScriptManager {
         if (!this.managers.has(kernel)) {
@@ -21,7 +23,10 @@ export class IPyWidgetScriptManagerFactory implements IIPyWidgetScriptManagerFac
                 kernel.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel' ||
                 kernel.kernelConnectionMetadata.kind === 'startUsingRemoteKernelSpec'
             ) {
-                this.managers.set(kernel, new RemoteIPyWidgetScriptManager(kernel, this.httpClient, this.context));
+                this.managers.set(
+                    kernel,
+                    new RemoteIPyWidgetScriptManager(kernel, this.httpClient, this.context, this.fs)
+                );
             } else {
                 throw new Error('Cannot enumerate Widget Scripts using local kernels on the Web');
             }

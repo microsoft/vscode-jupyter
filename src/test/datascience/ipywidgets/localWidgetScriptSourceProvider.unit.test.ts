@@ -39,7 +39,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
         when(scriptManager.getBaseUrl).thenReturn();
 
         assert.isOk(scriptManager.getBaseUrl);
-        const baseUrl = await scriptSourceProvider.getBaseUrl!();
+        const baseUrl = scriptSourceProvider.getBaseUrl!();
 
         assert.isUndefined(baseUrl);
     });

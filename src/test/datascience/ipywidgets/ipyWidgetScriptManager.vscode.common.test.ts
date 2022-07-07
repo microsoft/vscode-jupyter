@@ -85,7 +85,7 @@ suite('IPyWidget Script Manager', function () {
     });
     suiteTeardown(() => closeNotebooksAndCleanUpAfterTests(disposables));
     test('Returns the right base Url', async function () {
-        const baseUrl = await scriptManager.getBaseUrl!();
+        const baseUrl = scriptManager.getBaseUrl!();
         console.error(baseUrl);
         assert.isOk(baseUrl, 'BaseUrl should be defined');
 
@@ -143,7 +143,7 @@ suite('IPyWidget Script Manager', function () {
         assert.deepEqual(newFiles, files);
     });
     test('Get a list of Widgets and script paths', async () => {
-        const baseUrl = (await scriptManager.getBaseUrl!())!;
+        const baseUrl = scriptManager.getBaseUrl!()!;
         const moduleMappings = await scriptManager.getWidgetModuleMappings();
 
         assert.isObject(moduleMappings);
