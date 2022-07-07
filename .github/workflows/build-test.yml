@@ -488,6 +488,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-${{env.PYTHON_VERSION}}-
 
+      - name: Install PyThreeJs into user
+        if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython'
+        run: |
+            # Uninstall pythreejs from the sys prefix folder and ensure the widget scripts are installed
+            # into the user directory.
+            python -m jupyter nbextension uninstall --sys-prefix --py pythreejs
+            python -m jupyter nbextension install --user --py pythreejs
+            python -m jupyter nbextension install --system --py ipympl
+            python -m jupyter nbextension uninstall --sys-prefix --py ipympl
+
+
       # Caching of npm packages (https://github.com/actions/cache/blob/main/examples.md#node---npm)
       - name: Cache npm on linux/mac
         uses: actions/cache@v3
