@@ -31,6 +31,8 @@
 git clone https://github.com/microsoft/vscode-jupyter
 cd vscode-jupyter
 npm ci
+# Run this to setup the necessary pre-commit hooks.
+npm run setup-precommit-hook
 python3 -m venv .venv
 # Activate the virtual environment as appropriate for your shell, For example, on bash it's ...
 source .venv/bin/activate
