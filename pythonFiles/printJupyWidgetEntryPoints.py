@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+# Source borrowed from site-packages/jupyter_core/paths.py
+
 def __vsc_print_nbextension_widgets():
     import os as __vscode_os
     import site as __vscode_site
