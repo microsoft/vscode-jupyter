@@ -86,15 +86,13 @@ export class LocalIPyWidgetScriptManager extends BaseIPyWidgetScriptManager impl
         }
     }
     protected async getWidgetEntryPoints(): Promise<{ uri: Uri; widgetFolderName: string }[]> {
-        const [sourceNbExtensionsPath] = await Promise.all([
-            this.nbExtensionsPathProvider.getNbExtensionsParentPath(this.kernel)
-        ]);
-        if (!sourceNbExtensionsPath) {
+        const nbExtensionsParentPath = await this.getNbExtensionsParentPath();
+        if (!nbExtensionsParentPath) {
             return [];
         }
 
         // Get all of the widget entry points, which would be of the form `nbextensions/<widget folder>/extension.js`
-        const nbExtensionsFolder = Uri.joinPath(sourceNbExtensionsPath, 'nbextensions');
+        const nbExtensionsFolder = Uri.joinPath(nbExtensionsParentPath, 'nbextensions');
         const extensions = await this.fs.searchLocal('*/extension.js', nbExtensionsFolder.fsPath, true);
         return extensions.map((entry) => ({
             uri: Uri.joinPath(nbExtensionsFolder, entry),
