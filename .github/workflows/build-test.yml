@@ -45,8 +45,8 @@ env:
   DISABLE_INSIDERS_EXTENSION: 1 # Disable prompts to install pre-release in tests (else it blocks activation of extension).
   VSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE: true
   VSIX_NAME_PYTHON: 'ms-python-insiders.vsix'
-  VSC_JUPTYER_EXTENSION_VSIX: 'ms-toolsai-jupyter-insiders.vsix'
-  VSC_JUPTYER_PYTHON_EXTENSION_VERSION: 'stable'
+  VSC_JUPYTER_EXTENSION_VSIX: 'ms-toolsai-jupyter-insiders.vsix'
+  VSC_JUPYTER_PYTHON_EXTENSION_VERSION: 'stable'
   VSC_JUPYTER_LOG_KERNEL_OUTPUT: true
   DOTNET_VERSION: 6.0.x
 
@@ -63,7 +63,7 @@ jobs:
   build-vsix:
     name: Build VSIX
     runs-on: ubuntu-latest
-    # if: github.repository == 'microsoft/vscode-jupyter'
+    if: github.repository == 'microsoft/vscode-jupyter'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -99,8 +99,8 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          name: ${{ env.VSC_JUPTYER_EXTENSION_VSIX }}
-          path: ${{ env.VSC_JUPTYER_EXTENSION_VSIX }}
+          name: ${{env.VSC_JUPYTER_EXTENSION_VSIX}}
+          path: ${{env.VSC_JUPYTER_EXTENSION_VSIX}}
 
   lint:
     name: Lint
@@ -676,7 +676,7 @@ jobs:
     if: github.repository == 'microsoft/vscode-jupyter'
     needs: [build-vsix]
     env:
-      VSIX_NAME: ${{ env.VSC_JUPTYER_EXTENSION_VSIX }}
+      VSIX_NAME: ${{env.VSC_JUPYTER_EXTENSION_VSIX}}
     strategy:
       fail-fast: false
       matrix:
@@ -708,7 +708,7 @@ jobs:
       - name: Download VSIX
         uses: actions/download-artifact@v2
         with:
-          name: ${{ env.VSC_JUPTYER_EXTENSION_VSIX }}
+          name: ${{env.VSC_JUPYTER_EXTENSION_VSIX}}
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
@@ -758,7 +758,7 @@ jobs:
     if: github.repository == 'microsoft/vscode-jupyter'
     needs: [build-vsix]
     env:
-      VSIX_NAME: ${{ env.VSC_JUPTYER_EXTENSION_VSIX }}
+      VSIX_NAME: ${{env.VSC_JUPYTER_EXTENSION_VSIX}}
     strategy:
       fail-fast: false
       matrix:
@@ -795,7 +795,7 @@ jobs:
       - name: Download VSIX
         uses: actions/download-artifact@v2
         with:
-          name: ${{ env.VSC_JUPTYER_EXTENSION_VSIX }}
+          name: ${{env.VSC_JUPYTER_EXTENSION_VSIX}}
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
