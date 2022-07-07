@@ -51,6 +51,9 @@ export class LocalIPyWidgetScriptManager extends BaseIPyWidgetScriptManager impl
     }
     protected override onKernelRestarted(): void {
         this.nbExtensionsParentPath = undefined;
+        // Possible there are new versions of nbExtensions that are not yet copied.
+        // E.g. user installs a package and restarts the kernel.
+        this.overwriteExistingFiles = true;
         super.onKernelRestarted();
     }
     protected async getNbExtensionsParentPath(): Promise<Uri | undefined> {
