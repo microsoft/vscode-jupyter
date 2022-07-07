@@ -348,6 +348,14 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 } else if (variable.count) {
                     newSize = variable.count.toString();
                 }
+                let value = variable.value;
+                if (variable.type === 'str' && variable.value) {
+                    if (variable.value[0] === ' ') {
+                        value = `'${variable.value.slice(1)}'`;
+                    } else {
+                        value = `'${variable.value}'`;
+                    }
+                }
                 return {
                     buttons: {
                         name: variable.name,
@@ -359,9 +367,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                     type: variable.type,
                     size: newSize,
                     index,
-                    value: variable.value
-                        ? variable.value
-                        : getLocString('DataScience.variableLoadingValue', 'Loading...')
+                    value: value ? value : getLocString('DataScience.variableLoadingValue', 'Loading...')
                 };
             }
         }
