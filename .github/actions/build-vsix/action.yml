@@ -12,5 +12,5 @@ runs:
     - run: npm ci --prefer-offline
       shell: bash
 
-    - run: npm run Package
+    - run: npm run package
       shell: bash
