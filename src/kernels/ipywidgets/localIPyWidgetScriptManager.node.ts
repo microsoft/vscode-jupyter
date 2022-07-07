@@ -32,6 +32,7 @@ export class LocalIPyWidgetScriptManager extends BaseIPyWidgetScriptManager impl
     private sourceNbExtensionsPath?: Uri;
     private overwriteExistingFiles = true;
     static nbExtensionsCopiedKernelConnectionList = new Set<KernelConnectionId>();
+    private nbExtensionsParentPath?: Promise<Uri | undefined>;
     constructor(
         kernel: IKernel,
         private readonly fs: IFileSystemNode,
@@ -48,7 +49,17 @@ export class LocalIPyWidgetScriptManager extends BaseIPyWidgetScriptManager impl
     public getBaseUrl() {
         return this.getNbExtensionsParentPath();
     }
+    protected override onKernelRestarted(): void {
+        this.nbExtensionsParentPath = undefined;
+        super.onKernelRestarted();
+    }
     protected async getNbExtensionsParentPath(): Promise<Uri | undefined> {
+        if (!this.nbExtensionsParentPath) {
+            this.nbExtensionsParentPath = this.getNbExtensionsParentPathImpl();
+        }
+        return this.nbExtensionsParentPath;
+    }
+    private async getNbExtensionsParentPathImpl(): Promise<Uri | undefined> {
         let overwrite = this.overwriteExistingFiles;
 
         try {
