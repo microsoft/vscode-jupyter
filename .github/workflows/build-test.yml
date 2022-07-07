@@ -24,16 +24,6 @@ on:
       - 'release-*'
   schedule:
     - cron: '0 9 * * 1-5' # 9am UTC, Monday-Friday (2am PDT, after VS Code pre-release builds which is 11pm PDT)
-  workflow_dispatch:
-    inputs:
-      publishPreRelease:
-        description: 'Publish Pre-Release'
-        required: false
-        default: 'Do not publish'
-        type: choice
-        options:
-          - Do not publish
-          - Yes, publish pre-release
 
 env:
   NODE_VERSION: 16.14.2
@@ -55,6 +45,7 @@ env:
   DISABLE_INSIDERS_EXTENSION: 1 # Disable prompts to install pre-release in tests (else it blocks activation of extension).
   VSC_JUPYTER_INSTRUMENT_CODE_FOR_COVERAGE: true
   VSIX_NAME_PYTHON: 'ms-python-insiders.vsix'
+  VSC_JUPTYER_EXTENSION_VSIX: 'ms-toolsai-jupyter-insiders.vsix'
   VSC_JUPTYER_PYTHON_EXTENSION_VERSION: 'stable'
   VSC_JUPYTER_LOG_KERNEL_OUTPUT: true
   DOTNET_VERSION: 6.0.x
@@ -69,65 +60,7 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
-  pick_environment:
-    name: Pick Environment
-    runs-on: ubuntu-latest
-    outputs:
-      vsix_name: ${{ env.vsix_name }}
-      test_matrix_os: ${{ env.test_matrix_os }}
-      release_channel: ${{ env.release_channel }}
-      package_command: ${{ env.package_command }}
-    if: github.repository == 'microsoft/vscode-jupyter'
-    steps:
-      - name: dump_event
-        uses: crazy-max/ghaction-dump-context@v1
-
-      - name: default_package
-        run: |
-          echo "package_command=package" >> $GITHUB_ENV
-
-      - name: pr
-        if: github.event_name == 'pull_request'
-        run: |
-          echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
-          echo "test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
-
-      - name: pr release push
-        if: github.event_name == 'pull_request' && contains(github.event.body, 'publish')
-        run: |
-          echo "release_channel=stable" >> $GITHUB_ENV
-          echo "package_command=packagePreRelease" >> $GITHUB_ENV
-
-      - name: pre-release
-        if: (github.event_name == 'push' || github.event_name == 'schedule' || github.event.inputs.publishPreRelease == 'Yes, publish pre-release') && github.ref == 'refs/heads/main'
-        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
-        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
-        run: |
-          echo "vsix_name=ms-toolsai-jupyter-insiders.vsix" >> $GITHUB_ENV
-          echo "test_matrix_os=[\"ubuntu-latest\", \"windows-latest\"]" >> $GITHUB_ENV
-
-      #   - name:
-      #       pre-release channel
-      #       # Scheduled builds will publish pre-release builds.
-      #     if: (github.event_name == 'schedule' || github.event.inputs.publishPreRelease == 'Yes, publish pre-release') && github.ref == 'refs/heads/main'
-      #     run: |
-      #       echo "package_command=packagePreRelease" >> $GITHUB_ENV
-      #       echo "release_channel=pre-release" >> $GITHUB_ENV
-
-      - name: release
-        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && contains(github.ref, 'refs/heads/release')
-        run: |
-          echo "vsix_name=ms-toolsai-jupyter-release.vsix" >> $GITHUB_ENV
-          echo "test_matrix_os=[\"ubuntu-latest\"]" >> $GITHUB_ENV
-
-      - name: release channel
-        # All pushes to release can push to marketplace place with the words `release` `publish` in commit.
-        if: github.event_name == 'push' && contains(github.ref, 'refs/heads/release') && contains(github.event.head_commit.message, 'release') && contains(github.event.head_commit.message, 'publish')
-        run: |
-          echo "release_channel=stable" >> $GITHUB_ENV
-
   build-vsix:
-    needs: pick_environment
     name: Build VSIX
     runs-on: ubuntu-latest
     # if: github.repository == 'microsoft/vscode-jupyter'
@@ -162,18 +95,12 @@ jobs:
 
       - name: Build VSIX
         uses: ./.github/actions/build-vsix
-        with:
-          package_command: ${{ needs.pick_environment.outputs.package_command }}
         id: build-vsix
-
-      - name: Rename VSIX for release branch
-        if: steps.build-vsix.outputs.path != needs.pick_environment.outputs.vsix_name
-        run: mv ${{ steps.build-vsix.outputs.path }} ${{ needs.pick_environment.outputs.vsix_name }}
 
       - uses: actions/upload-artifact@v2
         with:
-          name: ${{needs.pick_environment.outputs.vsix_name}}
-          path: ${{needs.pick_environment.outputs.vsix_name}}
+          name: ${{ env.VSC_JUPTYER_EXTENSION_VSIX }}
+          path: ${{ env.VSC_JUPTYER_EXTENSION_VSIX }}
 
   lint:
     name: Lint
@@ -258,14 +185,13 @@ jobs:
     #       failure-message: 'News entry file missing; see news/README.md for instructions (the ${skip-label} label can be used to pass this check)'
 
   ts_tests:
-    needs: pick_environment
     name: Type Script Tests
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
     strategy:
       fail-fast: false
       matrix:
-        os: ${{fromJson(needs.pick_environment.outputs.test_matrix_os)}}
+        os: ["ubuntu-latest", "windows-latest"]
         test-suite: [ts-unit]
     steps:
       - name: Checkout
@@ -748,9 +674,9 @@ jobs:
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
-    needs: [build-vsix, pick_environment]
+    needs: [build-vsix]
     env:
-      VSIX_NAME: ${{ needs.pick_environment.outputs.vsix_name }}
+      VSIX_NAME: ${{ env.VSC_JUPTYER_EXTENSION_VSIX }}
     strategy:
       fail-fast: false
       matrix:
@@ -782,7 +708,7 @@ jobs:
       - name: Download VSIX
         uses: actions/download-artifact@v2
         with:
-          name: ${{needs.pick_environment.outputs.vsix_name}}
+          name: ${{ env.VSC_JUPTYER_EXTENSION_VSIX }}
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
@@ -830,9 +756,9 @@ jobs:
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
     runs-on: ${{ matrix.os }}
     if: github.repository == 'microsoft/vscode-jupyter'
-    needs: [build-vsix, pick_environment]
+    needs: [build-vsix]
     env:
-      VSIX_NAME: ${{ needs.pick_environment.outputs.vsix_name }}
+      VSIX_NAME: ${{ env.VSC_JUPTYER_EXTENSION_VSIX }}
     strategy:
       fail-fast: false
       matrix:
@@ -869,7 +795,7 @@ jobs:
       - name: Download VSIX
         uses: actions/download-artifact@v2
         with:
-          name: ${{needs.pick_environment.outputs.vsix_name}}
+          name: ${{ env.VSC_JUPTYER_EXTENSION_VSIX }}
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
@@ -968,85 +894,3 @@ jobs:
       # Alternative method for uploading
       # - name: Upload coverage to codecov
       #  run: bash <(curl -s https://codecov.io/bash) -f ./coverage/cobertura-coverage.xml -v
-
-  release:
-    name: Release
-    runs-on: ubuntu-latest
-    # This should happen in the release and main branch
-    if: github.repository == 'microsoft/vscode-jupyter' && (needs.pick_environment.outputs.release_channel == 'pre-release' || needs.pick_environment.outputs.release_channel == 'stable')
-    needs: [pick_environment, build-vsix, lint, ts_tests, smoke-tests]
-    environment:
-      name: ${{needs.pick_environment.outputs.release_channel}}
-    steps:
-      - name: dump_event
-        run: |
-          echo "Event_name is ${{ github.event_name }}"
-          echo "Ref is ${{ github.ref }}"
-          echo "Release Channel (Environment) is is ${{needs.pick_environment.outputs.release_channel}}"
-          echo "VSIX Name is ${{ needs.pick_environment.outputs.vsix_name }}"
-
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Use Python ${{env.PYTHON_VERSION}}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{env.PYTHON_VERSION}}
-
-      - name: Use Node ${{env.NODE_VERSION}}
-        uses: actions/setup-node@v2.4.1
-        with:
-          node-version: ${{env.NODE_VERSION}}
-
-      - run: npm i -g vsce
-
-      - name: Download VSIX
-        uses: actions/download-artifact@v2
-        with:
-          name: ${{needs.pick_environment.outputs.vsix_name}}
-
-      - name: Publish Pre-release
-        if: needs.pick_environment.outputs.release_channel == 'pre-release'
-        run: vsce publish --pre-release --packagePath ${{needs.pick_environment.outputs.vsix_name}} --pat ${{secrets.VSCE_TOKEN}} --noVerify
-
-      - name: Publish Stable
-        if: needs.pick_environment.outputs.release_channel == 'stable'
-        run: vsce publish --packagePath ${{needs.pick_environment.outputs.vsix_name}} --pat ${{secrets.VSCE_TOKEN}} --noVerify
-
-      - name: Extract Extension
-        if: needs.pick_environment.outputs.release_channel == 'stable'
-        shell: bash
-        run: |
-          python -c "import zipfile;zip=zipfile.ZipFile('${{needs.pick_environment.outputs.vsix_name}}', 'r');zip.extractall('tmp')"
-
-      - name: Get Version
-        if: needs.pick_environment.outputs.release_channel == 'stable'
-        id: version
-        run: |
-          echo ::set-output name=version::$(node -p -e "require('./package.json').version")
-        shell: bash
-
-      - name: Generate Changelog
-        if: needs.pick_environment.outputs.release_channel == 'stable'
-        # Just extract change log, anything between `\n## 20` (for each release we have a section with year and month..)
-        run: |
-          echo ::set-output name=changelog::$(node -p -e "let fs = require('fs');let changelog = fs.readFileSync('./CHANGELOG.md').toString();changelog = changelog.split('\n## 20')[1].split('\n').filter((_, index) => index > 0).join('\n');fs.writeFileSync('./RELEASE_CHANGELOG.md', changelog)")
-        shell: bash
-
-      - name: Print version
-        run: |
-          echo ${{steps.version.outputs.version}}
-        shell: bash
-
-      - name: Create GH Release
-        id: create_release
-        if: needs.pick_environment.outputs.release_channel == 'stable'
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN_TO_CREATE_RELEASE }}
-        with:
-          tag_name: ${{steps.version.outputs.version}}
-          release_name: Release ${{steps.version.outputs.version}}
-          body_path: RELEASE_CHANGELOG.md
-          draft: false
-          prerelease: false
