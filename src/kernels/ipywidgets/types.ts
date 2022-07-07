@@ -80,16 +80,10 @@ export interface IWidgetScriptSourceProviderFactory {
     ): IWidgetScriptSourceProvider[];
 }
 
-export const ILocalResourceUriConverter = Symbol('ILocalResourceUriConverter');
-
 /**
  * Given a local resource this will convert the Uri into a form such that it can be used in a WebView.
  */
 export interface ILocalResourceUriConverter {
-    /**
-     * Root folder that scripts should be copied to.
-     */
-    readonly rootScriptFolder: Uri;
     /**
      * Convert a uri for the local file system to one that can be used inside webviews.
      *
@@ -102,15 +96,6 @@ export interface ILocalResourceUriConverter {
      * ```
      */
     asWebviewUri(localResource: Uri): Promise<Uri>;
-    /**
-     * The converter will post an event when it needs to convert the webview URI
-     */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    requestUri: Event<Uri>;
-    /**
-     * This is the response to the requestUri event
-     */
-    resolveUri(request: Uri, result: Uri): void;
 }
 
 export const INbExtensionsPathProvider = Symbol('INbExtensionsPathProvider');
