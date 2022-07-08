@@ -481,6 +481,22 @@ jobs:
           beakerx_kernel_java install
           conda install pytorch cpuonly -c pytorch
 
+      - name: Install pythreejs and matplotlib widgets into user and system paths
+        if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython'
+        # This test will ensure widgets work when installed in 3 places
+        # 1. In python environments site-packages folder (we have other 3rd party widgets in the python env)
+        # 2. In user's home folder (pythreejs will be installed in there)
+        # 3. In system folder (all users) (matplotlib will be installed in there)
+        run: |
+            # Uninstall pythreejs from the sys prefix folder and ensure the widget scripts are installed
+            # into the user directory.
+            export PYTHON_EXECUTABLE=$(which python)
+            echo $PYTHON_EXECUTABLE
+            python -m jupyter nbextension uninstall --sys-prefix --py pythreejs
+            python -m jupyter nbextension install --user --py pythreejs
+            python -m jupyter nbextension uninstall --sys-prefix --py ipympl
+            sudo $PYTHON_EXECUTABLE -m jupyter nbextension install --system --py ipympl
+
         # This step is slow.
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
