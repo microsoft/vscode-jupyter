@@ -270,10 +270,11 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             'No errors in cell (third time)'
         );
     });
-    test('Ensure ipykernel install prompt is displayed every time you try to run a cell in an Interactive Window and you can switch kernels', async function () {
+    test.only('Ensure ipykernel install prompt is displayed every time you try to run a cell in an Interactive Window and you can switch kernels', async function () {
         if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
+        console.log('IANHU Test Starting');
         // This is a complex test that tests the following workflow (which used to fail)
         // Verify errors are displayed against the cells being executed.
         // 1. Run cell against env that does not have ipykernel
@@ -305,16 +306,14 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             (doc) => doc.uri.toString() === activeInteractiveWindow?.notebookUri?.toString()
         )!;
 
+        console.log('IANHU Waiting for first prompt.');
+
         // The prompt should be displayed when we run a cell.
         await waitForCondition(async () => prompt.displayed.then(() => true), delayForUITest, 'Prompt not displayed');
         await verifyIPyKernelPromptDisplayed(prompt, venvPythonPath.fsPath);
         await verifyErrorInCellOutput(notebookDocument, venvPythonPath.fsPath);
 
-        // Submitting code again should display the same prompt again.
-        prompt.reset();
-        await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0).catch(noop);
-        await verifyIPyKernelPromptDisplayed(prompt, venvPythonPath.fsPath);
-        await verifyErrorInCellOutput(notebookDocument, venvPythonPath.fsPath);
+        console.log('IANHU Submitting code again.');
 
         // Submitting code again should display the same prompt again.
         prompt.reset();
@@ -322,7 +321,20 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         await verifyIPyKernelPromptDisplayed(prompt, venvPythonPath.fsPath);
         await verifyErrorInCellOutput(notebookDocument, venvPythonPath.fsPath);
 
-        await sleep(1_000);
+        console.log('IANHU Submitting code third time.');
+
+        // Submitting code again should display the same prompt again.
+        prompt.reset();
+        await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0).catch(noop);
+        await verifyIPyKernelPromptDisplayed(prompt, venvPythonPath.fsPath);
+        await verifyErrorInCellOutput(notebookDocument, venvPythonPath.fsPath);
+
+        console.log('IANHU Pre Sleep');
+
+        //await sleep(1_000);
+        await sleep(10_000);
+
+        console.log('IANHU Post Sleep');
 
         // Verify we didn't get a prompt again.
         // In the past when we dismissed the prompt, we would get a prompt again.
@@ -354,8 +366,12 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         } as any);
         disposables.push({ dispose: () => stub.restore() });
 
+        console.log('IANHU Submitting to select another kernel');
+
         // Submitting code again should display the same prompt again, but this time we're going to select another kernel.
         await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0).catch(noop);
+
+        console.log('IANHU Code added');
 
         await Promise.all([
             // The prompt should be displayed when we run a cell.
@@ -389,17 +405,23 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             )
         ]);
 
-        // Submitting code again should display the same prompt again.
-        prompt.reset();
-        await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0).catch(noop);
-        await verifyIPyKernelPromptDisplayed(prompt, venvNoRegPath.fsPath);
-        await verifyErrorInCellOutput(notebookDocument, venvNoRegPath.fsPath);
+        console.log('IANHU Big promise all hit.');
 
         // Submitting code again should display the same prompt again.
         prompt.reset();
         await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0).catch(noop);
         await verifyIPyKernelPromptDisplayed(prompt, venvNoRegPath.fsPath);
         await verifyErrorInCellOutput(notebookDocument, venvNoRegPath.fsPath);
+
+        console.log('IANHU Big promise all hit again.');
+
+        // Submitting code again should display the same prompt again.
+        prompt.reset();
+        await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0).catch(noop);
+        await verifyIPyKernelPromptDisplayed(prompt, venvNoRegPath.fsPath);
+        await verifyErrorInCellOutput(notebookDocument, venvNoRegPath.fsPath);
+
+        console.log('IANHU Big promise all hit again.');
 
         // Now install ipykernel and ensure we can run a cell & that it runs against the right environment.
         prompt.reset();
@@ -416,6 +438,8 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
             .find((cell) => cell.kind == NotebookCellKind.Code)!;
         await waitForExecutionCompletedSuccessfully(lastCodeCell);
         const sysExecutable = Uri.file(getCellOutputs(lastCodeCell).trim());
+
+        console.log('IANHU Executed successfully.');
 
         assert.ok(
             areInterpreterPathsSame(venvNoRegPath, sysExecutable),
