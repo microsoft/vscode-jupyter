@@ -331,10 +331,19 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
 
         console.log('IANHU Pre Sleep');
 
-        //await sleep(1_000);
-        await sleep(10_000);
+        // await sleep(1_000);
+        // await sleep(10_000);
 
         console.log('IANHU Post Sleep');
+
+        // Wait for the prompt to display
+        await waitForCondition(
+            () => {
+                return prompt.displayed;
+            },
+            10_000,
+            'Failed to display prompt'
+        );
 
         // Verify we didn't get a prompt again.
         // In the past when we dismissed the prompt, we would get a prompt again.
