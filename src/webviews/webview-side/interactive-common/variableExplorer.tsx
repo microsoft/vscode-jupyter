@@ -350,11 +350,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 }
                 let value = variable.value;
                 if (variable.type === 'str' && variable.value) {
-                    if (variable.value[0] === ' ') {
-                        value = `'${variable.value.slice(1)}'`;
-                    } else {
-                        value = `'${variable.value}'`;
-                    }
+                    value = `'${variable.value}'`;
                 }
                 return {
                     buttons: {
