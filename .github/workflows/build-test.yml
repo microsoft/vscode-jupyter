@@ -562,10 +562,12 @@ jobs:
         run: |
             # Uninstall pythreejs from the sys prefix folder and ensure the widget scripts are installed
             # into the user directory.
+            export PYTHON_EXECUTABLE=$(which python)
+            echo $PYTHON_EXECUTABLE
             python -m jupyter nbextension uninstall --sys-prefix --py pythreejs
             python -m jupyter nbextension install --user --py pythreejs
             python -m jupyter nbextension uninstall --sys-prefix --py ipympl
-            sudo python -m jupyter nbextension install --system --py ipympl
+            sudo $PYTHON_EXECUTABLE -m jupyter nbextension install --system --py ipympl
 
         # This step is slow.
       - name: Install dependencies (npm ci)
