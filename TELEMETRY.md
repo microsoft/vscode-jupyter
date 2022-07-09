@@ -7553,7 +7553,7 @@ No description provided
     private async installPythonViaKernelPicker(): Promise<void> {
         sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'displayed' });
         const selection = await this.appShell.showErrorMessage(
-            DataScience.pythonNotInstalledNonMarkdown(),
+            DataScience.pythonNotInstalled(),
             { modal: true },
 ```
 
@@ -7564,16 +7564,16 @@ No description provided
 
         if (selection === Common.install()) {
             sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'download' });
-            // Direct the user to download from python.org
-            this.appShell.openUrl('https://www.python.org/downloads');
+            // Activate the python extension command to show how to install python
+            await this.commandManager.executeCommand('python.installPython');
         } else {
 ```
 
 
 [src/notebooks/controllers/commands/installPythonControllerCommands.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/controllers/commands/installPythonControllerCommands.ts)
 ```typescript
-            // Direct the user to download from python.org
-            this.appShell.openUrl('https://www.python.org/downloads');
+            // Activate the python extension command to show how to install python
+            await this.commandManager.executeCommand('python.installPython');
         } else {
             sendTelemetryEvent(Telemetry.PythonNotInstalled, undefined, { action: 'dismissed' });
         }
