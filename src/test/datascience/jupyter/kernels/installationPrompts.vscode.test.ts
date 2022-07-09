@@ -330,7 +330,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         // delayForUITest,
         // 'Failed to display prompt'
         // );
-        await sleep(3_000);
+        await sleep(10_000);
 
         // Verify we didn't get a prompt again.
         // In the past when we dismissed the prompt, we would get a prompt again.
