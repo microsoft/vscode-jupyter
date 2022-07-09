@@ -313,12 +313,14 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         // Submitting code again should display the same prompt again.
         prompt.reset();
         await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0).catch(noop);
+        await waitForCondition(async () => prompt.displayed.then(() => true), delayForUITest, 'Prompt not displayed');
         await verifyIPyKernelPromptDisplayed(prompt, venvPythonPath.fsPath);
         await verifyErrorInCellOutput(notebookDocument, venvPythonPath.fsPath);
 
         // Submitting code again should display the same prompt again.
         prompt.reset();
         await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0).catch(noop);
+        await waitForCondition(async () => prompt.displayed.then(() => true), delayForUITest, 'Prompt not displayed');
         await verifyIPyKernelPromptDisplayed(prompt, venvPythonPath.fsPath);
         await verifyErrorInCellOutput(notebookDocument, venvPythonPath.fsPath);
 
@@ -330,7 +332,7 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
         // delayForUITest,
         // 'Failed to display prompt'
         // );
-        await sleep(10_000);
+        await sleep(3_000);
 
         // Verify we didn't get a prompt again.
         // In the past when we dismissed the prompt, we would get a prompt again.
