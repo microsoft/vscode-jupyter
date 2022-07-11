@@ -11,6 +11,7 @@ import { disposeAllDisposables } from '../../../../platform/common/helpers';
 import { IFileSystem, IPlatformService } from '../../../../platform/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../../platform/common/process/types.node';
 import { IDisposable } from '../../../../platform/common/types';
+import { isWeb } from '../../../../platform/common/utils/misc';
 import { OSType } from '../../../../platform/common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../../../platform/common/variables/types';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
@@ -39,7 +40,11 @@ suite('Jupyter Paths', () => {
     };
     const unixHomeDir = Uri.file('/users/username');
     const macHomeDir = Uri.file('/users/username');
-
+    suiteSetup(function () {
+        if (isWeb()) {
+            return this.skip();
+        }
+    });
     setup(() => {
         const pythonExecFactory = mock<IPythonExecutionFactory>();
         pythonExecService = mock<IPythonExecutionService>();
