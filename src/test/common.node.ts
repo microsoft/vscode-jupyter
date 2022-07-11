@@ -5,11 +5,9 @@
 /* eslint-disable no-console, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 
 import * as assert from 'assert';
-import * as hashjs from 'hash.js';
 import * as fs from 'fs-extra';
 import * as path from '../platform/vscode-path/path';
 import * as tmp from 'tmp';
-import * as uuid from 'uuid/v4';
 import { coerce, SemVer } from 'semver';
 import { IProcessService } from '../platform/common/process/types.node';
 import {
@@ -314,6 +312,9 @@ export async function openFile(file: string): Promise<TextDocument> {
     assert(vscode.window.activeTextEditor, 'No active editor');
     return textDocument;
 }
+
+let screenShotIndex = 0;
+
 /**
  * Captures screenshots (png format) & dumpts into root directory (only on CI).
  * If there's a failure, it will be logged (errors are swallowed).
@@ -322,21 +323,15 @@ export async function captureScreenShot(contextOrFileName: string | Mocha.Contex
     if (!isCI) {
         return;
     }
-    const fullTestNameHash =
-        typeof contextOrFileName === 'string'
-            ? ''
-            : hashjs
-                  .sha256()
-                  .update(contextOrFileName.currentTest?.fullTitle() || '')
-                  .digest('hex');
     const testTitle = typeof contextOrFileName === 'string' ? '' : contextOrFileName.currentTest?.title || '';
     const fileNamePrefix =
-        typeof contextOrFileName === 'string' ? contextOrFileName : `${testTitle}_${fullTestNameHash}`;
-    const name = `${fileNamePrefix}_${uuid()}`.replace(/[\W]+/g, '_');
+        typeof contextOrFileName === 'string' ? contextOrFileName : `${testTitle}_${screenShotIndex}`;
+    const name = fileNamePrefix.replace(/[\W]+/g, '_');
     const filename = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, `${name}-screenshot.png`);
     try {
         const screenshot = require('screenshot-desktop');
         await screenshot({ filename });
+        screenShotIndex++;
         console.info(`Screenshot captured into ${filename}`);
     } catch (ex) {
         console.error(`Failed to capture screenshot into ${filename}`, ex);

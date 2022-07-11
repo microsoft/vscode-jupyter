@@ -50,6 +50,7 @@ nodeLanguageServer.*/**
 src/test/datascience/.venv*
 !src/test/pythonEnvironments/**/*.*
 .vscode-test-web
+testresults.json
 # translation files
 *.xlf
 *.nls.*.json
