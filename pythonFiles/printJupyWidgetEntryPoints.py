@@ -213,3 +213,5 @@ def __vsc_print_nbextension_widgets():
 
 
 __vsc_print_nbextension_widgets()
+
+del __vsc_print_nbextension_widgets
