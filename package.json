@@ -2388,7 +2388,7 @@
         "gulp-typescript": "^6.0.0-alpha.1",
         "html-webpack-plugin": "^5.5.0",
         "husky": "^7.0.0",
-        "jsdom": "^15.0.0",
+        "jsdom": "^16.5.0",
         "jsonschema": "^1.4.1",
         "keyv": "^4.1.0",
         "less": "^3.9.0",
