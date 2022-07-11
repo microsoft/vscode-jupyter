@@ -8,7 +8,7 @@ import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken, Memento, Uri } from 'vscode';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { traceError } from '../../../platform/logging';
+import { traceError, traceWarning } from '../../../platform/logging';
 import {
     IDisposableRegistry,
     IMemento,
@@ -136,6 +136,7 @@ export class JupyterPaths {
     /**
      * Gets the DATA_DIR folder for Jupyter.
      * Source for priority & paths can be found in jupyter_path function in site-packages/jupyter_core/paths.py
+     * Documentation can be found here https://docs.jupyter.org/en/latest/use/jupyter-directories.html#data-files
      */
     public async getDataDirs(options: { resource: Resource; interpreter?: PythonEnvironment }): Promise<Uri[]> {
         const key = options.interpreter ? options.interpreter.uri.toString() : '';
@@ -157,16 +158,20 @@ export class JupyterPaths {
 
         // 1. Add the JUPYTER_PATH
         if (process.env['JUPYTER_PATH']) {
-            (process.env['JUPYTER_PATH'] || '')
+            for (const jupyterPathItem of (process.env['JUPYTER_PATH'] || '')
                 .split(path.delimiter)
                 .map((item) => item.trim())
                 .filter((item) => item.length)
-                .map((item) => Uri.file(item))
-                .forEach((item) => {
-                    if (dataDir.has(item)) {
-                        dataDir.set(item, dataDir.size);
+                .map((item) => Uri.file(item))) {
+                try {
+                    const realPath = await tryGetRealPath(jupyterPathItem);
+                    if (realPath && !dataDir.has(realPath)) {
+                        dataDir.set(realPath, dataDir.size);
                     }
-                });
+                } catch (ex) {
+                    traceWarning(`Failed to get real path for JUPYTER_PATH ${jupyterPathItem}`, ex);
+                }
+            }
         }
 
         // 2. Add the paths based on ENABLE_USER_SITE
@@ -182,9 +187,11 @@ export class JupyterPaths {
                 if (result.stdout.trim().length) {
                     const sitePath = Uri.file(result.stdout.trim());
                     if (await this.fs.exists(sitePath)) {
-                        if (dataDir.has(sitePath)) {
+                        if (!dataDir.has(sitePath)) {
                             dataDir.set(sitePath, dataDir.size);
                         }
+                    } else {
+                        traceWarning(`Got a non-existent Jupyer Data Dir ${sitePath}`);
                     }
                 }
             } catch (ex) {
@@ -230,15 +237,15 @@ export class JupyterPaths {
     }
     private getJupyterConfigDir() {
         if (process.env['JUPYTER_CONFIG_DIR']) {
-            return Uri.file(path.resolve(process.env['JUPYTER_CONFIG_DIR']));
+            return Uri.file(path.normalize(process.env['JUPYTER_CONFIG_DIR']));
         }
         return this.platformService.homeDir ? Uri.joinPath(this.platformService.homeDir, '.jupyter') : undefined;
     }
     private getSystemJupyterPaths(interpreter?: PythonEnvironment) {
         if (this.platformService.isWindows) {
-            const programData = process.env['PROGRAMDATA'] ? path.resolve(process.env['PROGRAMDATA']) : undefined;
+            const programData = process.env['PROGRAMDATA'] ? path.normalize(process.env['PROGRAMDATA']) : undefined;
             if (programData) {
-                return [Uri.file(programData)];
+                return [Uri.joinPath(Uri.file(programData), 'jupyter')];
             }
             if (interpreter) {
                 return [Uri.joinPath(Uri.file(interpreter.sysPrefix), 'share', 'jupyter')];
@@ -250,7 +257,7 @@ export class JupyterPaths {
     }
     private getJupyterDataDir() {
         if (process.env['JUPYTER_DATA_DIR']) {
-            return Uri.file(path.resolve(process.env['JUPYTER_DATA_DIR']));
+            return Uri.file(path.normalize(process.env['JUPYTER_DATA_DIR']));
         }
         if (!this.platformService.homeDir) {
             return;
@@ -259,7 +266,7 @@ export class JupyterPaths {
             case OSType.OSX:
                 return Uri.joinPath(this.platformService.homeDir, 'Library', 'Jupyter');
             case OSType.Windows:
-                const appData = process.env['APPDATA'] ? Uri.file(path.resolve(process.env['APPDATA'])) : '';
+                const appData = process.env['APPDATA'] ? Uri.file(path.normalize(process.env['APPDATA'])) : '';
                 if (appData) {
                     return Uri.joinPath(appData, 'jupyter');
                 }
@@ -271,7 +278,7 @@ export class JupyterPaths {
             default: {
                 // Linux, non-OS X Unix, AIX, etc.
                 const xdgDataHome = process.env['XDG_DATA_HOME']
-                    ? Uri.file(path.resolve(process.env['XDG_DATA_HOME']))
+                    ? Uri.file(path.normalize(process.env['XDG_DATA_HOME']))
                     : Uri.joinPath(this.platformService.homeDir, '.local', 'share');
                 return Uri.joinPath(xdgDataHome, 'jupyter');
             }
