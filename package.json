@@ -272,19 +272,19 @@
         "commands": [
             {
                 "command": "dataScience.ClearCache",
-                "title": "%jupyter.command.dataScience.clearCache.title%",
+                "title": "Clear Cache",
                 "category": "Jupyter (Dev)",
                 "enablement": "jupyter.development"
             },
             {
                 "command": "jupyter.replayPylanceLog",
-                "title": "%jupyter.command.jupyter.replayPylanceLog.title%",
+                "title": "Replay Pylance Log",
                 "category": "Jupyter (Dev)",
                 "enablement": "jupyter.development && notebookType == jupyter-notebook && isWorkspaceTrusted && !jupyter.webExtension"
             },
             {
                 "command": "jupyter.replayPylanceLogStep",
-                "title": "%jupyter.command.jupyter.replayPylanceLogStep.title%",
+                "title": "Step Pylance Log",
                 "category": "Jupyter (Dev)",
                 "icon": "$(debug-start)",
                 "enablement": "jupyter.development && notebookType == jupyter-notebook && isWorkspaceTrusted && jupyter.replayLogLoaded && !jupyter.webExtension"
@@ -298,7 +298,7 @@
             },
             {
                 "command": "jupyter.filterKernels",
-                "title": "%jupyter.command.jupyter.filterKernels.title%",
+                "title": "Filter Kernels",
                 "category": "Jupyter",
                 "enablement": "!jupyter.webExtension"
             },
@@ -730,7 +730,7 @@
             },
             {
                 "command": "jupyter.createnewnotebook",
-                "title": "%jupyter.command.jupyter.createnewnotebook.title%",
+                "title": "Create New Jupyter Notebook",
                 "category": "Jupyter",
                 "enablement": "!jupyter.webExtension"
             },
