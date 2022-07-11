@@ -729,7 +729,7 @@ import { getUserHomeDir } from '../../../platform/common/utils/platform.node';
             });
             assert.deepEqual(actualKernel, expectedKernel, 'Incorrect kernels');
         }
-        test.only('Discover global kernelspecs (without Python)', async () => {
+        test('Discover global kernelspecs (without Python)', async () => {
             const testData: TestData = {
                 globalKernelSpecs: [juliaKernelSpec, javaKernelSpec, fullyQualifiedPythonKernelSpec],
                 interpreters: []
