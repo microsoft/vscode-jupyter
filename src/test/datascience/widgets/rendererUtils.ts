@@ -190,7 +190,8 @@ function hijackLogging() {
         });
         rendererContext.postMessage!({
             command: 'log',
-            message: `Handled message in Widget renderer ${message}`
+            message: `Handled message in Widget renderer ${message}`,
+            category: channel
         });
     };
     ['log', 'error', 'warn'].forEach((channel) => {
