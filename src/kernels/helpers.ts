@@ -1079,9 +1079,7 @@ export function getKernelId(spec: IJupyterKernelSpec, interpreter?: PythonEnviro
     }
     const prefixForRemoteKernels = serverId ? `${serverId}.` : '';
     const specPath = getFilePath(
-        getNormalizedInterpreterPath(
-            spec.interpreterPath ? Uri.file(spec.interpreterPath) : Uri.file(spec.executable)
-        )
+        getNormalizedInterpreterPath(spec.interpreterPath ? Uri.file(spec.interpreterPath) : Uri.file(spec.executable))
     );
     const interpreterPath = getFilePath(getNormalizedInterpreterPath(interpreter?.uri)) || '';
     return `${prefixForRemoteKernels}${
