@@ -57,6 +57,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 import { IJupyterRemoteCachedKernelValidator, IServerConnectionType } from '../../../kernels/jupyter/types';
 import { uriEquals } from '../helpers';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/common/process/types.node';
+import { getUserHomeDir } from '../../../platform/common/utils/platform.node';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -128,6 +129,7 @@ import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platf
             when(platformService.isWindows).thenReturn(isWindows);
             when(platformService.isLinux).thenReturn(!isWindows);
             when(platformService.isMac).thenReturn(false);
+            when(platformService.homeDir).thenReturn(getUserHomeDir());
             fs = mock(FileSystem);
             when(fs.delete(anything())).thenResolve();
             when(fs.exists(anything())).thenResolve(true);
@@ -148,7 +150,12 @@ import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platf
             const memento = mock<Memento>();
             const context = mock<IExtensionContext>();
             when(context.extensionUri).thenReturn(Uri.file(EXTENSION_ROOT_DIR));
-            when(memento.get(anything(), anything())).thenReturn(false);
+            when(memento.get(anything(), anything())).thenCall((_, defaultValue) => {
+                if (Array.isArray(defaultValue)) {
+                    return defaultValue;
+                }
+                return false;
+            });
             when(memento.update(anything(), anything())).thenResolve();
             const pythonExecFactory = mock<IPythonExecutionFactory>();
             pythonExecService = mock<IPythonExecutionService>();
@@ -722,7 +729,7 @@ import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platf
             });
             assert.deepEqual(actualKernel, expectedKernel, 'Incorrect kernels');
         }
-        test('Discover global kernelspecs (without Python)', async () => {
+        test.only('Discover global kernelspecs (without Python)', async () => {
             const testData: TestData = {
                 globalKernelSpecs: [juliaKernelSpec, javaKernelSpec, fullyQualifiedPythonKernelSpec],
                 interpreters: []

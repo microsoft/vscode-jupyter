@@ -22,12 +22,12 @@ export function getPathEnvironmentVariable(): string | undefined {
     return getEnvironmentVariable('Path') || getEnvironmentVariable('PATH');
 }
 
-export function getUserHomeDir(): Uri | undefined {
+export function getUserHomeDir(): Uri {
     if (getOSType() === OSType.Windows) {
-        return fsPathToUri(getEnvironmentVariable('USERPROFILE') || homePath);
+        return fsPathToUri(getEnvironmentVariable('USERPROFILE') || homePath)!;
     }
     const homeVar = getEnvironmentVariable('HOME') || getEnvironmentVariable('HOMEPATH') || homePath;
 
     // Make sure if linux, it uses linux separators
-    return fsPathToUri(homeVar?.replace(/\\/g, '/'));
+    return fsPathToUri(homeVar?.replace(/\\/g, '/'))!;
 }
