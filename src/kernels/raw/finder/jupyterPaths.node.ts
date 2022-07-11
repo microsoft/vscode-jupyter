@@ -203,7 +203,9 @@ export class JupyterPaths {
                 : possibleEnvJupyterPath
             : undefined;
         const userDataDirectory = this.getJupyterDataDir();
-        const jupyterPreferEnvPath = (process.env.JUPYTER_PREFER_ENV_PATH || '').toLowerCase();
+        // If the JUPYTER_PREFER_ENV_PATH environment variable is set, the environment-level
+        // directories will have priority over user-level directories.
+        const jupyterPreferEnvPath = (process.env.JUPYTER_PREFER_ENV_PATH || 'no').toLowerCase();
         // Using same logic from path.py (as this env variable is specific to Jupyter).
         // An environment variable is considered set if it is assigned to a value
         // other than 'no', 'n', 'false', 'off', '0', or '0.0' (case insensitive)
