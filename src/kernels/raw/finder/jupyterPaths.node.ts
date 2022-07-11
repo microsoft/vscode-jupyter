@@ -34,7 +34,7 @@ const macJupyterRuntimePath = path.join('Library', 'Jupyter', 'runtime');
 
 export const baseKernelPath = path.join('share', 'jupyter', 'kernels');
 const CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH = 'CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH.';
-const CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS = 'CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS_.';
+export const CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS = 'CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS_.';
 
 @injectable()
 export class JupyterPaths {

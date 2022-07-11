@@ -6,7 +6,7 @@
 import { assert } from 'chai';
 import { anything, deepEqual, instance, mock, when } from 'ts-mockito';
 import { ExtensionContext, Memento, Uri } from 'vscode';
-import { JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths.node';
+import { CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths.node';
 import { disposeAllDisposables } from '../../../../platform/common/helpers';
 import { IFileSystem, IPlatformService } from '../../../../platform/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../../platform/common/process/types.node';
@@ -294,4 +294,30 @@ suite('Jupyter Paths', () => {
         );
     });
 
+    test('Get kernelspec root paths on Windows', async () => {
+        when(platformService.osType).thenReturn(OSType.Windows);
+        when(platformService.homeDir).thenReturn(windowsHomeDir);
+        when(memento.get(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, anything())).thenReturn([]);
+
+        const paths = await jupyterPaths.getKernelSpecRootPaths();
+        const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
+
+        assert.strictEqual(paths.length, 1);
+        assert.strictEqual(paths[0].toString(), Uri.joinPath(windowsHomeDir, winJupyterPath).toString());
+    });
+
+    test('Get kernelspec root paths on Windows with JUPYTER_PATH env variable', async () => {
+        when(platformService.osType).thenReturn(OSType.Windows);
+        when(platformService.homeDir).thenReturn(windowsHomeDir);
+        when(memento.get(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, anything())).thenReturn([]);
+        const jupyter_Paths = [__filename];
+        process.env['JUPYTER_PATH'] = jupyter_Paths.join(path.delimiter);
+
+        const paths = await jupyterPaths.getKernelSpecRootPaths();
+        const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
+
+        assert.strictEqual(paths.length, 2);
+        assert.strictEqual(paths[0].toString(), Uri.joinPath(Uri.file(__filename), 'kernels').toString());
+        assert.strictEqual(paths[1].toString(), Uri.joinPath(windowsHomeDir, winJupyterPath).toString());
+    });
 });
