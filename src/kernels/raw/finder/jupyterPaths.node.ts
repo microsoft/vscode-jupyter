@@ -19,7 +19,7 @@ import {
 import { tryGetRealPath } from '../../../platform/common/utils.node';
 import { IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
 import { traceDecoratorVerbose } from '../../../platform/logging';
-import { getUserHomeDir, OSType } from '../../../platform/common/utils/platform.node';
+import { OSType } from '../../../platform/common/utils/platform.node';
 import { fsPathToUri } from '../../../platform/vscode-path/utils';
 import { ResourceMap, ResourceSet } from '../../../platform/vscode-path/map';
 import { noop } from '../../../platform/common/utils/misc';
@@ -77,7 +77,7 @@ export class JupyterPaths {
         this.cachedKernelSpecRootPath =
             this.cachedKernelSpecRootPath ||
             (async () => {
-                const userHomeDir = getUserHomeDir();
+                const userHomeDir = this.platformService.homeDir;
                 if (userHomeDir) {
                     if (this.platformService.isWindows) {
                         // On windows the path is not correct if we combine those variables.
@@ -106,7 +106,7 @@ export class JupyterPaths {
      */
     public async getRuntimeDir(): Promise<Uri | undefined> {
         let runtimeDir: Uri | undefined;
-        const userHomeDir = getUserHomeDir();
+        const userHomeDir = this.platformService.homeDir;
         if (userHomeDir) {
             if (this.platformService.isWindows) {
                 // On windows the path is not correct if we combine those variables.
@@ -232,8 +232,7 @@ export class JupyterPaths {
         if (process.env['JUPYTER_CONFIG_DIR']) {
             return Uri.file(path.resolve(process.env['JUPYTER_CONFIG_DIR']));
         }
-        const home = getUserHomeDir();
-        return home ? Uri.joinPath(home, '.jupyter') : undefined;
+        return this.platformService.homeDir ? Uri.joinPath(this.platformService.homeDir, '.jupyter') : undefined;
     }
     private getSystemJupyterPaths(interpreter?: PythonEnvironment) {
         if (this.platformService.isWindows) {
@@ -253,13 +252,12 @@ export class JupyterPaths {
         if (process.env['JUPYTER_DATA_DIR']) {
             return Uri.file(path.resolve(process.env['JUPYTER_DATA_DIR']));
         }
-        const home = getUserHomeDir();
-        if (!home) {
+        if (!this.platformService.homeDir) {
             return;
         }
         switch (this.platformService.osType) {
             case OSType.OSX:
-                return Uri.joinPath(home, 'Library', 'Jupyter');
+                return Uri.joinPath(this.platformService.homeDir, 'Library', 'Jupyter');
             case OSType.Windows:
                 const appData = process.env['APPDATA'] ? Uri.file(path.resolve(process.env['APPDATA'])) : '';
                 if (appData) {
@@ -269,12 +267,12 @@ export class JupyterPaths {
                 if (configDir) {
                     return Uri.joinPath(configDir, 'data');
                 }
-                return Uri.joinPath(home, 'Library', 'Jupyter');
+                return Uri.joinPath(this.platformService.homeDir, 'Library', 'Jupyter');
             default: {
                 // Linux, non-OS X Unix, AIX, etc.
                 const xdgDataHome = process.env['XDG_DATA_HOME']
                     ? Uri.file(path.resolve(process.env['XDG_DATA_HOME']))
-                    : Uri.joinPath(home, '.local', 'share');
+                    : Uri.joinPath(this.platformService.homeDir, '.local', 'share');
                 return Uri.joinPath(xdgDataHome, 'jupyter');
             }
         }
@@ -303,9 +301,8 @@ export class JupyterPaths {
 
             paths.add(Uri.file(path.join('/', 'usr', 'share', 'jupyter', 'kernels')));
             paths.add(Uri.file(path.join('/', 'usr', 'local', 'share', 'jupyter', 'kernels')));
-            const userHome = getUserHomeDir();
-            if (userHome) {
-                paths.add(uriPath.joinPath(userHome, secondPart));
+            if (this.platformService.homeDir) {
+                paths.add(uriPath.joinPath(this.platformService.homeDir, secondPart));
             }
         }
 
