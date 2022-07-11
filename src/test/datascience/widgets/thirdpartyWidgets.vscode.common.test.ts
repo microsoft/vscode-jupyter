@@ -238,36 +238,5 @@ import { IS_CONDA_TEST } from '../../constants';
             await assertOutputContainsHtml(cell2, comms, ['>Figure 1<', '<canvas', 'Download plot']);
             await assertOutputContainsHtml(cell3, comms, ['>Figure 2<', '<canvas', 'Download plot']);
         });
-        test('Chemiscope widget', async function () {
-            // Chemiscope widget is special, because by default the widget scripts for this is
-            // installed into the users home directory instead of the sys-prefix/share/jupyter/nbextensions directory.
-            if (IS_CONDA_TEST()) {
-                // No need to run on Conda, running in non-conda is sufficient.
-                return this.skip();
-            }
-            const comms = await initializeNotebookForWidgetTest(api, disposables, {
-                templateFile: 'chemiscope_widget.ipynb'
-            });
-            const cell1 = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0);
-
-            await executeCellAndWaitForOutput(cell1, comms);
-            await assertOutputContainsHtml(cell1, comms, ['<svg']);
-        });
-        test('mobilechelonian Turtle widget', async function () {
-            // mobilechelonian turtle widget is special, because by default the widget scripts for this is
-            // installed into the users home directory instead of the sys-prefix/share/jupyter/nbextensions directory.
-            // This widget also requries jquery to function correctly.
-            if (IS_CONDA_TEST()) {
-                // No need to run on Conda, running in non-conda is sufficient.
-                return this.skip();
-            }
-            const comms = await initializeNotebookForWidgetTest(api, disposables, {
-                templateFile: 'mobilechelonian_turtle_widget.ipynb'
-            });
-            const cell1 = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0);
-
-            await executeCellAndWaitForOutput(cell1, comms);
-            await assertOutputContainsHtml(cell1, comms, ['<canvas', '<button>']);
-        });
     });
 });
