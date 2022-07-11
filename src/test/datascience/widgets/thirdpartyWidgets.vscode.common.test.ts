@@ -34,7 +34,6 @@ import {
     initializeNotebookForWidgetTest
 } from './standardWidgets.vscode.common.test';
 import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../kernels/ipywidgets/cdnWidgetScriptSourceProvider';
-import { IS_CONDA_TEST } from '../../constants';
 
 [true, false].forEach((useCDN) => {
     /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
