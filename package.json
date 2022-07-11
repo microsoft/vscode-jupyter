@@ -2176,7 +2176,7 @@
         "validateTelemetryMD": "gulp validateTelemetryMD",
         "verifyUnhandledErrors": "gulp verifyUnhandledErrors",
         "printTestResults": "gulp printTestResults",
-        "prepare": "husky install"
+        "setup-precommit-hook": "husky install"
     },
     "dependencies": {
         "@enonic/fnv-plus": "^1.3.0",
