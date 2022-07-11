@@ -34,6 +34,7 @@ import {
     initializeNotebookForWidgetTest
 } from './standardWidgets.vscode.common.test';
 import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../kernels/ipywidgets/cdnWidgetScriptSourceProvider';
+import { IS_CONDA_TEST } from '../../constants';
 
 [true, false].forEach((useCDN) => {
     /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
@@ -102,8 +103,10 @@ import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../ke
             await assertOutputContainsHtml(cell0, comms, ['>Figure 1<', '<canvas', 'Download plot']);
         });
         test('Render IPySheets', async function () {
-            // https://github.com/microsoft/vscode-jupyter/issues/10506
-            return this.skip();
+            if (useCDN) {
+                // https://github.com/microsoft/vscode-jupyter/issues/10506
+                return this.skip();
+            }
             const comms = await initializeNotebookForWidgetTest(api, disposables, {
                 templateFile: 'ipySheet_widgets.ipynb'
             });
@@ -113,8 +116,10 @@ import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../ke
             await assertOutputContainsHtml(cell1, comms, ['Hello', 'World', '42.000']);
         });
         test('Render IPySheets & search', async function () {
-            // https://github.com/microsoft/vscode-jupyter/issues/10506
-            return this.skip();
+            if (useCDN) {
+                // https://github.com/microsoft/vscode-jupyter/issues/10506
+                return this.skip();
+            }
             const comms = await initializeNotebookForWidgetTest(api, disposables, {
                 templateFile: 'ipySheet_widgets_search.ipynb'
             });
@@ -130,8 +135,10 @@ import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../ke
             await assertOutputContainsHtml(cell2, comms, ['class="htSearchResult">train<']);
         });
         test('Render IPySheets & slider', async function () {
-            // https://github.com/microsoft/vscode-jupyter/issues/10506
-            return this.skip();
+            if (useCDN) {
+                // https://github.com/microsoft/vscode-jupyter/issues/10506
+                return this.skip();
+            }
             const comms = await initializeNotebookForWidgetTest(api, disposables, {
                 templateFile: 'ipySheet_widgets_slider.ipynb'
             });
@@ -230,6 +237,37 @@ import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../ke
             await executeCellAndWaitForOutput(cell3, comms);
             await assertOutputContainsHtml(cell2, comms, ['>Figure 1<', '<canvas', 'Download plot']);
             await assertOutputContainsHtml(cell3, comms, ['>Figure 2<', '<canvas', 'Download plot']);
+        });
+        test('Chemiscope widget', async function () {
+            // Chemiscope widget is special, because by default the widget scripts for this is
+            // installed into the users home directory instead of the sys-prefix/share/jupyter/nbextensions directory.
+            if (IS_CONDA_TEST()) {
+                // No need to run on Conda, running in non-conda is sufficient.
+                return this.skip();
+            }
+            const comms = await initializeNotebookForWidgetTest(api, disposables, {
+                templateFile: 'chemiscope_widget.ipynb'
+            });
+            const cell1 = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0);
+
+            await executeCellAndWaitForOutput(cell1, comms);
+            await assertOutputContainsHtml(cell1, comms, ['<svg']);
+        });
+        test('mobilechelonian Turtle widget', async function () {
+            // mobilechelonian turtle widget is special, because by default the widget scripts for this is
+            // installed into the users home directory instead of the sys-prefix/share/jupyter/nbextensions directory.
+            // This widget also requries jquery to function correctly.
+            if (IS_CONDA_TEST()) {
+                // No need to run on Conda, running in non-conda is sufficient.
+                return this.skip();
+            }
+            const comms = await initializeNotebookForWidgetTest(api, disposables, {
+                templateFile: 'mobilechelonian_turtle_widget.ipynb'
+            });
+            const cell1 = vscodeNotebook.activeNotebookEditor!.notebook.cellAt(0);
+
+            await executeCellAndWaitForOutput(cell1, comms);
+            await assertOutputContainsHtml(cell1, comms, ['<canvas', '<button>']);
         });
     });
 });
