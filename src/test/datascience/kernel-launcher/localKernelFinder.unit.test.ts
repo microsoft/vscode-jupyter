@@ -56,6 +56,8 @@ import { RemoteKernelFinder } from '../../../kernels/jupyter/remoteKernelFinder'
 import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serverUriStorage';
 import { IJupyterRemoteCachedKernelValidator, IServerConnectionType } from '../../../kernels/jupyter/types';
 import { uriEquals } from '../helpers';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../../platform/common/process/types.node';
+import { getUserHomeDir } from '../../../platform/common/utils/platform.node';
 
 [false, true].forEach((isWindows) => {
     suite(`Local Kernel Finder ${isWindows ? 'Windows' : 'Unix'}`, () => {
@@ -71,6 +73,7 @@ import { uriEquals } from '../helpers';
         let tempDirForKernelSpecs: Uri;
         let jupyterPaths: JupyterPaths;
         let preferredRemote: PreferredRemoteKernelIdProvider;
+        let pythonExecService: IPythonExecutionService;
         let cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator;
         type TestData = {
             interpreters?: (
@@ -126,6 +129,7 @@ import { uriEquals } from '../helpers';
             when(platformService.isWindows).thenReturn(isWindows);
             when(platformService.isLinux).thenReturn(!isWindows);
             when(platformService.isMac).thenReturn(false);
+            when(platformService.homeDir).thenReturn(getUserHomeDir());
             fs = mock(FileSystem);
             when(fs.delete(anything())).thenResolve();
             when(fs.exists(anything())).thenResolve(true);
@@ -146,15 +150,25 @@ import { uriEquals } from '../helpers';
             const memento = mock<Memento>();
             const context = mock<IExtensionContext>();
             when(context.extensionUri).thenReturn(Uri.file(EXTENSION_ROOT_DIR));
-            when(memento.get(anything(), anything())).thenReturn(false);
+            when(memento.get(anything(), anything())).thenCall((_, defaultValue) => {
+                if (Array.isArray(defaultValue)) {
+                    return defaultValue;
+                }
+                return false;
+            });
             when(memento.update(anything(), anything())).thenResolve();
+            const pythonExecFactory = mock<IPythonExecutionFactory>();
+            pythonExecService = mock<IPythonExecutionService>();
+            (instance(pythonExecService) as any).then = undefined;
+            when(pythonExecFactory.create(anything())).thenResolve(instance(pythonExecService));
             jupyterPaths = new JupyterPaths(
                 instance(platformService),
                 instance(envVarsProvider),
                 disposables,
                 instance(memento),
                 instance(fs),
-                instance(context)
+                instance(context),
+                instance(pythonExecFactory)
             );
 
             const kernelSpecsBySpecFile = new Map<string, KernelSpec.ISpecModel>();

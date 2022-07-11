@@ -31,7 +31,6 @@ import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { areInterpreterPathsSame } from '../../../platform/pythonEnvironments/info/interpreter';
 import { captureTelemetry, Telemetry } from '../../../telemetry';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { fsPathToUri } from '../../../platform/vscode-path/utils';
 import { ResourceSet } from '../../../platform/vscode-path/map';
 
 /**
@@ -384,7 +383,7 @@ export class LocalPythonAndRelatedNonPythonKernelSpecFinder extends LocalKernelS
             const matchBasedOnInterpreterPath = interpreters.find((i) => {
                 if (
                     kernelSpec.interpreterPath &&
-                    areInterpreterPathsSame(fsPathToUri(kernelSpec.interpreterPath), i.uri)
+                    areInterpreterPathsSame(Uri.file(kernelSpec.interpreterPath), i.uri)
                 ) {
                     traceVerbose(`Kernel ${kernelSpec.name} matches ${i.displayName} based on interpreter path.`);
                     return true;

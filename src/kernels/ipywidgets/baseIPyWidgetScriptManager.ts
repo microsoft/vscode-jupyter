@@ -115,9 +115,6 @@ export function extractRequireConfigFromWidgetEntry(baseUrl: Uri, widgetFolderNa
 
 export abstract class BaseIPyWidgetScriptManager implements IIPyWidgetScriptManager {
     protected readonly disposables: IDisposable[] = [];
-    protected abstract getWidgetEntryPoints(): Promise<{ uri: Uri; widgetFolderName: string }[]>;
-    protected abstract getWidgetScriptSource(source: Uri): Promise<string>;
-    protected abstract getNbExtensionsParentPath(): Promise<Uri | undefined>;
     private widgetModuleMappings?: Promise<Record<string, Uri> | undefined>;
     constructor(protected readonly kernel: IKernel) {
         // If user installs new python packages, & they restart the kernel, then look for changes to nbextensions folder once again.
@@ -129,6 +126,9 @@ export abstract class BaseIPyWidgetScriptManager implements IIPyWidgetScriptMana
         disposeAllDisposables(this.disposables);
     }
     abstract getBaseUrl(): Promise<Uri | undefined>;
+    protected abstract getWidgetEntryPoints(): Promise<{ uri: Uri; widgetFolderName: string }[]>;
+    protected abstract getWidgetScriptSource(source: Uri): Promise<string>;
+    protected abstract getNbExtensionsParentPath(): Promise<Uri | undefined>;
     public async getWidgetModuleMappings(): Promise<Record<string, Uri> | undefined> {
         if (!this.widgetModuleMappings) {
             this.widgetModuleMappings = this.getWidgetModuleMappingsImpl();

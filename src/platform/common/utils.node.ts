@@ -6,7 +6,6 @@ import * as path from '../../platform/vscode-path/path';
 import * as fsExtra from 'fs-extra';
 import { SemVer, parse } from 'semver';
 import { Uri } from 'vscode';
-import { fsPathToUri } from '../vscode-path/utils';
 import { IWorkspaceService } from './application/types';
 import { IConfigurationService, Resource } from './types';
 import { getOSType, OSType } from './utils/platform';
@@ -14,7 +13,7 @@ import { IFileSystem } from './platform/types';
 // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
 const untildify = require('untildify');
 
-export async function tryGetRealPath(expectedPath: Uri): Promise<Uri | undefined> {
+export async function tryGetRealPath(expectedPath: Uri): Promise<Uri> {
     try {
         // Real path throws if the expected path is not actually created yet.
         let realPath = await fsExtra.realpath(expectedPath.fsPath);
@@ -24,7 +23,7 @@ export async function tryGetRealPath(expectedPath: Uri): Promise<Uri | undefined
             realPath = realPath.replace(/\\/g, '/');
         }
 
-        return fsPathToUri(realPath);
+        return Uri.file(realPath);
     } catch {
         // So if that happens, just return the original path.
         return expectedPath;

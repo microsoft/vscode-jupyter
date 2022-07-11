@@ -143,7 +143,7 @@ suite('IPyWidget Script Manager', function () {
         assert.deepEqual(newFiles, files);
     });
     test('Get a list of Widgets and script paths', async () => {
-        const baseUrl = (await scriptManager.getBaseUrl!())!;
+        const baseUrl = await scriptManager.getBaseUrl!()!;
         const moduleMappings = await scriptManager.getWidgetModuleMappings();
 
         assert.isObject(moduleMappings);
@@ -160,14 +160,14 @@ suite('IPyWidget Script Manager', function () {
                     return;
                 }
                 assert.isTrue(
-                    uri.toString().startsWith(baseUrl.toString()),
-                    `Script uri ${uri.toString()} does not start with base url ${baseUrl.toString()}`
+                    uri.toString().startsWith(baseUrl!.toString()),
+                    `Script uri ${uri.toString()} does not start with base url ${baseUrl!.toString()}`
                 );
                 if (isLocalConnection(kernel.kernelConnectionMetadata)) {
                     // Since we're on the local machine, such a file should exist on disc.
                     const file = `${uri.fsPath}.js`;
-                    const fileEixsts = await fs.exists(Uri.file(file));
-                    assert.isTrue(fileEixsts, `File '${file}' does not exist on disc`);
+                    const fileExists = await fs.exists(Uri.file(file));
+                    assert.isTrue(fileExists, `File '${file}' does not exist on disc`);
                 } else {
                     // Verify this is a valid Uri.
                     const file = `${uri.toString()}.js`;

@@ -9,13 +9,14 @@ import { Uri } from 'vscode';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName, PlatformErrors } from '../../telemetry/constants';
 import { getOSType, OSType } from '../utils/platform';
+import { getUserHomeDir } from '../utils/platform.node';
 import { parseVersion } from '../utils/version.node';
 import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from './constants.node';
 import { IPlatformService } from './types';
 
 @injectable()
 export class PlatformService implements IPlatformService {
-    private readonly _homeDir = Uri.file(os.homedir());
+    private readonly _homeDir = getUserHomeDir() || Uri.file(os.homedir());
     private readonly _tempDir = Uri.file(os.tmpdir());
     public get homeDir() {
         return this._homeDir;

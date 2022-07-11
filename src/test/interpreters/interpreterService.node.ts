@@ -9,7 +9,6 @@ import { IPythonExtensionChecker } from '../../platform/api/types';
 import { Resource } from '../../platform/common/types';
 import { IInterpreterService } from '../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
-import { fsPathToUri } from '../../platform/vscode-path/utils';
 import { ResourceSet } from '../../platform/vscode-path/map';
 
 let interpretersCache: Promise<PythonEnvironment[]> | undefined;
@@ -43,7 +42,7 @@ export class InterpreterService implements IInterpreterService {
         this.validatePythonExtension();
         const pythonPath = this.customInterpretersPerUri.has(resource?.fsPath || '')
             ? this.customInterpretersPerUri.get(resource?.fsPath || '')!
-            : fsPathToUri(process.env.CI_PYTHON_PATH || 'python');
+            : Uri.file(process.env.CI_PYTHON_PATH || 'python');
         return getInterpreterInfo(pythonPath);
     }
 
@@ -68,9 +67,9 @@ export class InterpreterService implements IInterpreterService {
 
 async function getAllInterpreters(): Promise<PythonEnvironment[]> {
     const allInterpreters = await Promise.all([
-        getInterpreterInfo(fsPathToUri(process.env.CI_PYTHON_PATH)),
-        getInterpreterInfo(fsPathToUri(process.env.CI_PYTHON_PATH2)),
-        getInterpreterInfo(fsPathToUri('python'))
+        getInterpreterInfo(process.env.CI_PYTHON_PATH ? Uri.file(process.env.CI_PYTHON_PATH) : undefined),
+        getInterpreterInfo(process.env.CI_PYTHON_PATH2 ? Uri.file(process.env.CI_PYTHON_PATH2) : undefined),
+        getInterpreterInfo(Uri.file('python'))
     ]);
     const interpreters: PythonEnvironment[] = [];
     const items = new ResourceSet();

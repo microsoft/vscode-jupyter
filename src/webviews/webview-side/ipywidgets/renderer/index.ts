@@ -4,41 +4,29 @@
 import './styles.css';
 import { ActivationFunction, OutputItem, RendererContext } from 'vscode-notebook-renderer';
 export const activate: ActivationFunction = (context) => {
-    if (context.postMessage) {
-        context.postMessage({
-            command: 'log',
-            message: 'Jupyter IPyWidget Renderer Activated'
-        });
-    }
-    hookupTestScripts(context);
-    const logger = (message: string) => {
+    const logger = (message: string, category?: 'info' | 'error') => {
         if (context.postMessage) {
             context.postMessage({
                 command: 'log',
-                message
+                message,
+                category
             });
         }
     };
+    logger('Jupyter IPyWidget Renderer Activated');
+    hookupTestScripts(context);
     return {
         renderOutputItem(outputItem: OutputItem, element: HTMLElement) {
-            if (context.postMessage) {
-                context.postMessage({
-                    command: 'log',
-                    message: `Rendering ${outputItem.id}`
-                });
-            }
+            logger(`Rendering ${outputItem.id}`);
             try {
                 const renderOutputFunc =
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     (window as any).ipywidgetsKernel?.renderOutput || (global as any).ipywidgetsKernel?.renderOutput;
                 if (renderOutputFunc) {
                     element.className = (element.className || '') + ' cell-output-ipywidget-background';
-                    if (context.postMessage) {
-                        context.postMessage({
-                            command: 'log',
-                            message: `Rendering ${outputItem.id} for ${element.className} and widget renderer found *************`
-                        });
-                    }
+                    logger(
+                        `Rendering ${outputItem.id} for ${element.className} and widget renderer found *************`
+                    );
                     return renderOutputFunc(outputItem, element, logger);
                 }
                 console.error('Rendering widgets on notebook open is not supported.');
@@ -68,12 +56,6 @@ function hookupTestScripts(context: RendererContext<unknown>) {
             });
         }
         return;
-    }
-    if (context.postMessage) {
-        context.postMessage({
-            command: 'log',
-            message: 'Hook registered'
-        });
     }
     anyWindow.widgetEntryPoint.initialize(context);
 }

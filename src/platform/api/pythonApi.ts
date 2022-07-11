@@ -6,7 +6,6 @@
 // Licensed under the MIT License.
 
 import { Disposable, EventEmitter, Event, Uri, workspace, ExtensionMode } from 'vscode';
-import { fsPathToUri } from '../vscode-path/utils';
 import {
     IPythonApiProvider,
     IPythonExtensionChecker,
@@ -39,7 +38,7 @@ export function deserializePythonEnvironment(
             ...pythonVersion,
             sysPrefix: pythonVersion.sysPrefix || '',
             uri: Uri.file(pythonVersion.path || ''),
-            envPath: fsPathToUri(pythonVersion.envPath)
+            envPath: pythonVersion.envPath ? Uri.file(pythonVersion.envPath) : undefined
         };
 
         // Cleanup stuff that shouldn't be there.

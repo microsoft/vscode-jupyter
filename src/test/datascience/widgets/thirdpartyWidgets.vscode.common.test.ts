@@ -102,8 +102,10 @@ import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../ke
             await assertOutputContainsHtml(cell0, comms, ['>Figure 1<', '<canvas', 'Download plot']);
         });
         test('Render IPySheets', async function () {
-            // https://github.com/microsoft/vscode-jupyter/issues/10506
-            return this.skip();
+            if (useCDN) {
+                // https://github.com/microsoft/vscode-jupyter/issues/10506
+                return this.skip();
+            }
             const comms = await initializeNotebookForWidgetTest(api, disposables, {
                 templateFile: 'ipySheet_widgets.ipynb'
             });
@@ -113,8 +115,10 @@ import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../ke
             await assertOutputContainsHtml(cell1, comms, ['Hello', 'World', '42.000']);
         });
         test('Render IPySheets & search', async function () {
-            // https://github.com/microsoft/vscode-jupyter/issues/10506
-            return this.skip();
+            if (useCDN) {
+                // https://github.com/microsoft/vscode-jupyter/issues/10506
+                return this.skip();
+            }
             const comms = await initializeNotebookForWidgetTest(api, disposables, {
                 templateFile: 'ipySheet_widgets_search.ipynb'
             });
@@ -130,8 +134,10 @@ import { GlobalStateKeyToTrackIfUserConfiguredCDNAtLeastOnce } from '../../../ke
             await assertOutputContainsHtml(cell2, comms, ['class="htSearchResult">train<']);
         });
         test('Render IPySheets & slider', async function () {
-            // https://github.com/microsoft/vscode-jupyter/issues/10506
-            return this.skip();
+            if (useCDN) {
+                // https://github.com/microsoft/vscode-jupyter/issues/10506
+                return this.skip();
+            }
             const comms = await initializeNotebookForWidgetTest(api, disposables, {
                 templateFile: 'ipySheet_widgets_slider.ipynb'
             });

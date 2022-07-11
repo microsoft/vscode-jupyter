@@ -8,6 +8,7 @@ import { IDisposable, IDisposableRegistry } from '../../../platform/common/types
 import { createDeferred } from '../../../platform/common/utils/async';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { noop } from '../../core';
+import * as colors from 'colors';
 
 export function initializeWidgetComms(serviceContainer: IServiceContainer): Utils {
     const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
@@ -20,7 +21,10 @@ export function initializeWidgetComms(serviceContainer: IServiceContainer): Util
     const utils = new Utils(messageChannel, deferred.promise);
     disposables.push(utils);
     const disposable = messageChannel.onDidReceiveMessage(async ({ editor, message }) => {
-        traceInfo(`Received message from Widget renderer ${JSON.stringify(message)}`);
+        if (message && message.command === 'log') {
+            const messageToLog = message.category === 'error' ? colors.red(message.message) : message.message;
+            traceInfo(`${colors.yellow('Widget renderer')}: ${messageToLog}`);
+        }
         if (message && message.command === 'INIT') {
             deferred.resolve(editor);
             // Redirect all of console.log, console.warn & console.error messages from
@@ -57,7 +61,6 @@ export class Utils {
         this.messageChannel.postMessage!(request, editor).then(noop, noop);
         return new Promise<string>((resolve, reject) => {
             const disposable = this.messageChannel.onDidReceiveMessage(({ message }) => {
-                traceInfo(`Received message (query) from Widget renderer ${JSON.stringify(message)}`);
                 if (message && message.requestId === request.requestId) {
                     disposable.dispose();
                     if (message.error) {
