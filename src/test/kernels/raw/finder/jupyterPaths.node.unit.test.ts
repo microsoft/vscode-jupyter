@@ -16,6 +16,7 @@ import { OSType } from '../../../../platform/common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../../../platform/common/variables/types';
 import { PythonEnvironment } from '../../../../platform/pythonEnvironments/info';
 import * as path from '../../../../platform/vscode-path/path';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants.node';
 import { uriEquals } from '../../../datascience/helpers';
 
 suite('Jupyter Paths', () => {
@@ -32,6 +33,7 @@ suite('Jupyter Paths', () => {
     const oldPROGRAMDATA = process.env['PROGRAMDATA'];
     const oldJUPYTER_CONFIG_DIR = process.env['JUPYTER_CONFIG_DIR'];
     const oldJUPYTER_DATA_DIR = process.env['JUPYTER_DATA_DIR'];
+    const oldALLUSERSPROFILE = process.env['ALLUSERSPROFILE'];
     const windowsHomeDir = Uri.file('C:/users/username');
     const extensionUri = Uri.file('extension');
     const interpreter: PythonEnvironment = {
@@ -71,6 +73,7 @@ suite('Jupyter Paths', () => {
         delete process.env['PROGRAMDATA'];
         delete process.env['JUPYTER_CONFIG_DIR'];
         delete process.env['JUPYTER_DATA_DIR'];
+        delete process.env['ALLUSERSPROFILE'];
     });
     teardown(async () => {
         disposeAllDisposables(disposables);
@@ -81,6 +84,7 @@ suite('Jupyter Paths', () => {
         process.env['PROGRAMDATA'] = oldPROGRAMDATA;
         process.env['JUPYTER_CONFIG_DIR'] = oldJUPYTER_CONFIG_DIR;
         process.env['JUPYTER_DATA_DIR'] = oldJUPYTER_DATA_DIR;
+        process.env['ALLUSERSPROFILE'] = oldALLUSERSPROFILE;
     });
     test('Get datadir for non-python kernel on Windows with APPDATA', async () => {
         when(platformService.homeDir).thenReturn(windowsHomeDir);
@@ -324,5 +328,24 @@ suite('Jupyter Paths', () => {
         assert.strictEqual(paths.length, 2, `Expected 2 path, got ${paths.length}, ${JSON.stringify(paths)}`);
         assert.strictEqual(paths[0].toString(), Uri.joinPath(Uri.file(__filename), 'kernels').toString());
         assert.strictEqual(paths[1].toString(), Uri.joinPath(windowsHomeDir, winJupyterPath).toString());
+    });
+    test('Get kernelspec root paths on Windows with JUPYTER_PATH & ALLUSERSPROFILE env variable', async function () {
+        when(platformService.osType).thenReturn(OSType.Windows);
+        when(platformService.homeDir).thenReturn(windowsHomeDir);
+        when(memento.get(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, anything())).thenReturn([]);
+        const jupyter_Paths = [__filename];
+        process.env['JUPYTER_PATH'] = jupyter_Paths.join(path.delimiter);
+        const allUserProfilePath = (process.env['ALLUSERSPROFILE'] = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'temp'));
+
+        const paths = await jupyterPaths.getKernelSpecRootPaths();
+        const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
+
+        assert.strictEqual(paths.length, 3, `Expected 3 path, got ${paths.length}, ${JSON.stringify(paths)}`);
+        assert.strictEqual(paths[0].toString(), Uri.joinPath(Uri.file(__filename), 'kernels').toString());
+        assert.strictEqual(paths[1].toString(), Uri.joinPath(windowsHomeDir, winJupyterPath).toString());
+        assert.strictEqual(
+            paths[2].toString(),
+            Uri.file(path.join(allUserProfilePath, 'jupyter', 'kernels')).toString()
+        );
     });
 });
