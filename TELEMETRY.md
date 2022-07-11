@@ -903,7 +903,7 @@ No properties for event
 
     @captureTelemetry(Telemetry.EnterJupyterURI)
     @traceDecoratorError('Failed to enter Jupyter Uri')
-    public async setJupyterURIToRemote(userURI: string, ignoreValidation?: boolean): Promise<void> {
+    public async setJupyterURIToRemote(userURI: string | undefined, ignoreValidation?: boolean): Promise<void> {
         // Double check this server can be connected to. Might need a password, might need a allowUnauthorized
 ```
 
@@ -4315,13 +4315,13 @@ No description provided
 
 [src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
 ```typescript
-        await this.serverUriStorage.setUriToRemote(userURI, connection.displayName);
+            await this.serverUriStorage.setUriToRemote(userURI, connection.displayName);
 
-        // Indicate setting a jupyter URI to a remote setting. Check if an azure remote or not
-        sendTelemetryEvent(Telemetry.SetJupyterURIToUserSpecified, undefined, {
-            azure: userURI.toLowerCase().includes('azure')
-        });
-    }
+            // Indicate setting a jupyter URI to a remote setting. Check if an azure remote or not
+            sendTelemetryEvent(Telemetry.SetJupyterURIToUserSpecified, undefined, {
+                azure: userURI.toLowerCase().includes('azure')
+            });
+        } else {
 ```
 
 </details>
@@ -8894,7 +8894,7 @@ No properties for event
 [src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
 ```typescript
                 }
-            } else {
+            } else if (userURI) {
                 if (err.message.includes('Failed to fetch') && this.isWebExtension) {
                     sendTelemetryEvent(Telemetry.FetchError, undefined, { currentTask: 'connecting' });
                 }
