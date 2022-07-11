@@ -241,6 +241,7 @@ export interface IJupyterServerUriStorage {
     getRemoteUri(): Promise<string | undefined>;
     setUriToLocal(): Promise<void>;
     setUriToRemote(uri: string, displayName: string): Promise<void>;
+    setUriToNone(): Promise<void>;
 }
 
 export interface IBackupFile {

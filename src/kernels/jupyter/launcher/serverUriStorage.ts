@@ -25,7 +25,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
     private lastSavedList?: Promise<
         { uri: string; serverId: string; time: number; displayName?: string | undefined }[]
     >;
-    private currentUriPromise: Promise<string> | undefined;
+    private currentUriPromise: Promise<string | undefined> | undefined;
     private _currentServerId: string | undefined;
     private _localOnly: boolean = false;
     private _onDidChangeUri = new EventEmitter<void>();
@@ -190,7 +190,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
             })
         );
     }
-    public getUri(): Promise<string> {
+    public getUri(): Promise<string | undefined> {
         if (!this.currentUriPromise) {
             this.currentUriPromise = this.getUriInternal();
         }
@@ -226,18 +226,22 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
         await this.setUri(uri);
     }
 
-    public async setUri(uri: string) {
+    public async setUriToNone(): Promise<void> {
+        return this.setUri(undefined);
+    }
+
+    public async setUri(uri: string | undefined) {
         // Set the URI as our current state
         this.currentUriPromise = Promise.resolve(uri);
-        this._currentServerId = await computeServerId(uri);
-        this._localOnly = uri === Settings.JupyterServerLocalLaunch || uri === undefined;
+        this._currentServerId = uri ? await computeServerId(uri) : undefined;
+        this._localOnly = (uri === Settings.JupyterServerLocalLaunch || uri === undefined) && !this.isWebExtension;
         this._onDidChangeUri.fire(); // Needs to happen as soon as we change so that dependencies update synchronously
 
         // No update the async parts
         await this.globalMemento.update(mementoKeyToIndicateIfConnectingToLocalKernelsOnly, this._localOnly);
         await this.globalMemento.update(currentServerHashKey, this._currentServerId);
 
-        if (!this._localOnly) {
+        if (!this._localOnly && uri) {
             await this.addToUriList(uri, Date.now(), uri);
 
             // Save in the storage (unique account per workspace)
@@ -245,7 +249,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
             await this.encryptedStorage.store(Settings.JupyterServerRemoteLaunchService, key, uri);
         }
     }
-    private async getUriInternal(): Promise<string> {
+    private async getUriInternal(): Promise<string | undefined> {
         if (this.isLocalLaunch) {
             return Settings.JupyterServerLocalLaunch;
         } else {
@@ -258,7 +262,7 @@ export class JupyterServerUriStorage implements IJupyterServerUriStorage, IServe
                 this._currentServerId = await computeServerId(storedUri);
             }
 
-            return storedUri || Settings.JupyterServerLocalLaunch;
+            return storedUri;
         }
     }
 
