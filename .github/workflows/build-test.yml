@@ -482,7 +482,7 @@ jobs:
           conda install pytorch cpuonly -c pytorch
 
       - name: Install pythreejs and matplotlib widgets into user and system paths
-        if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython'
+        if: matrix.os == 'ubuntu-latest' && matrix.python != 'conda' && matrix.python != 'noPython' && matrix.packageVersion != 'prerelease'
         # This test will ensure widgets work when installed in 3 places
         # 1. In python environments site-packages folder (we have other 3rd party widgets in the python env)
         # 2. In user's home folder (pythreejs will be installed in there)
