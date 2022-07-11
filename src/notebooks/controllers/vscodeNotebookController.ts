@@ -71,7 +71,6 @@ import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/ut
 import { ConsoleForegroundColors, TraceOptions } from '../../platform/logging/types';
 import { KernelConnector } from './kernelConnector';
 import { IVSCodeNotebookController } from './types';
-import { ILocalResourceUriConverter } from '../../kernels/ipywidgets/types';
 import { isCancellationError } from '../../platform/common/cancellation';
 import { CellExecutionCreator } from '../../kernels/execution/cellExecutionCreator';
 import {
@@ -154,7 +153,6 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         private readonly appShell: IApplicationShell,
         private readonly browser: IBrowserService,
         private readonly extensionChecker: IPythonExtensionChecker,
-        scriptConverter: ILocalResourceUriConverter,
         private serviceContainer: IServiceContainer
     ) {
         disposableRegistry.push(this);
@@ -170,7 +168,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             label,
             this.handleExecution.bind(this),
             this.getRendererScripts(),
-            [scriptConverter.rootScriptFolder]
+            []
         );
 
         // Fill in extended info for our controller

@@ -4,7 +4,6 @@
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
-import { ILocalResourceUriConverter } from '../../kernels/ipywidgets/types';
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
 import { IJupyterServerUriStorage, IServerConnectionType } from '../../kernels/jupyter/types';
 import { IKernelProvider, isLocalConnection, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
@@ -68,7 +67,6 @@ export class ControllerRegistration implements IControllerRegistration {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IBrowserService) private readonly browser: IBrowserService,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(ILocalResourceUriConverter) private readonly resourceConverter: ILocalResourceUriConverter,
         @inject(IServerConnectionType) private readonly serverConnectionType: IServerConnectionType,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
     ) {
@@ -130,7 +128,6 @@ export class ControllerRegistration implements IControllerRegistration {
                         this.appShell,
                         this.browser,
                         this.extensionChecker,
-                        this.resourceConverter,
                         this.serviceContainer
                     );
                     controller.onDidDispose(

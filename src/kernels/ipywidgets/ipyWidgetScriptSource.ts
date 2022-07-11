@@ -14,7 +14,9 @@ import { ILocalResourceUriConverter, IWidgetScriptSourceProviderFactory, WidgetS
 import { ConsoleForegroundColors } from '../../platform/logging/types';
 import { getAssociatedNotebookDocument } from '../helpers';
 import { noop } from '../../platform/common/utils/misc';
-import { createDeferred } from '../../platform/common/utils/async';
+import { createDeferred, Deferred } from '../../platform/common/utils/async';
+import { ScriptUriConverter } from './scriptUriConverter';
+import { ResourceMap } from '../../platform/vscode-path/map';
 
 export class IPyWidgetScriptSource {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -40,6 +42,8 @@ export class IPyWidgetScriptSource {
      * Key value pair of widget modules along with the version that needs to be loaded.
      */
     private pendingModuleRequests = new Map<string, { moduleVersion?: string; requestId?: string }>();
+    private readonly uriConverter: ILocalResourceUriConverter;
+    private readonly uriTranslationRequests = new ResourceMap<Deferred<Uri>>();
     constructor(
         private readonly document: NotebookDocument,
         private readonly kernelProvider: IKernelProvider,
@@ -47,17 +51,17 @@ export class IPyWidgetScriptSource {
         private readonly configurationSettings: IConfigurationService,
         private readonly httpClient: IHttpClient,
         private readonly sourceProviderFactory: IWidgetScriptSourceProviderFactory,
-        private readonly uriConverter: ILocalResourceUriConverter
+        isWebExtension: boolean
     ) {
-        uriConverter.requestUri(
-            (e) =>
-                this.postEmitter.fire({
-                    message: InteractiveWindowMessages.ConvertUriForUseInWebViewRequest,
-                    payload: e
-                }),
-            undefined,
-            disposables
-        );
+        this.uriConverter = new ScriptUriConverter(isWebExtension, (resource) => {
+            if (!this.uriTranslationRequests.has(resource))
+                this.uriTranslationRequests.set(resource, createDeferred<Uri>());
+            this.postEmitter.fire({
+                message: InteractiveWindowMessages.ConvertUriForUseInWebViewRequest,
+                payload: resource
+            });
+            return this.uriTranslationRequests.get(resource)!.promise;
+        });
         // Don't leave dangling promises.
         this.isWebViewOnline.promise.ignoreErrors();
         disposables.push(this);
@@ -82,8 +86,8 @@ export class IPyWidgetScriptSource {
     public onMessage(message: string, payload?: any): void {
         if (message === InteractiveWindowMessages.ConvertUriForUseInWebViewResponse) {
             const response: undefined | { request: Uri; response: Uri } = payload;
-            if (response) {
-                this.uriConverter.resolveUri(response.request, response.response);
+            if (response && this.uriTranslationRequests.has(response.request)) {
+                this.uriTranslationRequests.get(response.request)!.resolve(response.response);
             }
         } else if (message === IPyWidgetMessages.IPyWidgets_Ready) {
             this.sendBaseUrl();
