@@ -635,13 +635,8 @@ export namespace DataScience {
         localize('DataScience.jupyterSelectPasswordPrompt', 'Enter your password');
     export const pythonNotInstalled = () =>
         localize(
-            'DataScience.installPython',
-            'Python is not installed. \nPlease [download](https://www.python.org/downloads) and install Python in order to execute cells in this notebook.'
-        );
-    export const pythonNotInstalledNonMarkdown = () =>
-        localize(
-            'DataScience.installPythonNonMarkdown',
-            'Python is not installed. \nPlease download and install Python in order to execute cells in this notebook from here https://www.python.org/downloads.'
+            'DataScience.pythonNotInstalled',
+            'Python is not installed. \nPlease download and install Python in order to execute cells in this notebook.'
         );
     export const kernelNotInstalled = () =>
         localize(

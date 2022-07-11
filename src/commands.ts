@@ -91,6 +91,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['revealLine']: [{ lineNumber: number; at: 'top' | 'center' | 'bottom' }];
     ['python._loadLanguageServerExtension']: {}[];
     ['python.SelectAndInsertDebugConfiguration']: [TextDocument, Position, CancellationToken];
+    ['python.installPython']: [];
     ['vscode.open']: [Uri];
     ['notebook.execute']: [];
     ['notebook.cell.edit']: [];
