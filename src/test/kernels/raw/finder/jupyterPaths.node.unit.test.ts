@@ -307,7 +307,7 @@ suite('Jupyter Paths', () => {
         const paths = await jupyterPaths.getKernelSpecRootPaths();
         const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 
-        assert.strictEqual(paths.length, 1);
+        assert.strictEqual(paths.length, 1, `Expected 1 path, got ${paths.length}, ${JSON.stringify(paths)}`);
         assert.strictEqual(paths[0].toString(), Uri.joinPath(windowsHomeDir, winJupyterPath).toString());
     });
 
@@ -321,7 +321,7 @@ suite('Jupyter Paths', () => {
         const paths = await jupyterPaths.getKernelSpecRootPaths();
         const winJupyterPath = path.join('AppData', 'Roaming', 'jupyter', 'kernels');
 
-        assert.strictEqual(paths.length, 2);
+        assert.strictEqual(paths.length, 2, `Expected 2 path, got ${paths.length}, ${JSON.stringify(paths)}`);
         assert.strictEqual(paths[0].toString(), Uri.joinPath(Uri.file(__filename), 'kernels').toString());
         assert.strictEqual(paths[1].toString(), Uri.joinPath(windowsHomeDir, winJupyterPath).toString());
     });
