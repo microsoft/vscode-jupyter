@@ -3,6 +3,7 @@
 
 # Source borrowed from site-packages/jupyter_core/paths.py
 
+
 def __vsc_print_nbextension_widgets():
     import os as __vscode_os
     import site as __vscode_site
@@ -12,15 +13,20 @@ def __vsc_print_nbextension_widgets():
 
     pjoin = __vscode_os.path.join
 
-
     def envset(name):
         """Return True if the given environment variable is set
 
         An environment variable is considered set if it is assigned to a value
         other than 'no', 'n', 'false', 'off', '0', or '0.0' (case insensitive)
         """
-        return __vscode_os.environ.get(name, "no").lower() not in ["no", "n", "false", "off", "0", "0.0"]
-
+        return __vscode_os.environ.get(name, "no").lower() not in [
+            "no",
+            "n",
+            "false",
+            "off",
+            "0",
+            "0.0",
+        ]
 
     def get_home_dir():
         """Get the real path of the home directory"""
@@ -30,9 +36,7 @@ def __vsc_print_nbextension_widgets():
         homedir = str(__vscode_Path(homedir).resolve())
         return homedir
 
-
     _dtemps: dict = {}
-
 
     def _mkdtemp_once(name):
         """Make or reuse a temporary directory.
@@ -45,7 +49,6 @@ def __vsc_print_nbextension_widgets():
         except KeyError:
             d = _dtemps[name] = __vscode_tempfile.mkdtemp(prefix=name + "-")
             return d
-
 
     def jupyter_config_dir():
         """Get the Jupyter config directory for this platform and user.
@@ -62,7 +65,6 @@ def __vsc_print_nbextension_widgets():
 
         home_dir = get_home_dir()
         return pjoin(home_dir, ".jupyter")
-
 
     def jupyter_data_dir():
         """Get the config directory for Jupyter data files for this platform and user.
@@ -93,13 +95,14 @@ def __vsc_print_nbextension_widgets():
                 xdg = pjoin(home, ".local", "share")
             return pjoin(xdg, "jupyter")
 
-
     if __vscode_os.name == "nt":
         programdata = __vscode_os.environ.get("PROGRAMDATA", None)
         if programdata:
             SYSTEM_JUPYTER_PATH = [pjoin(programdata, "jupyter")]
         else:  # PROGRAMDATA is not defined by default on XP.
-            SYSTEM_JUPYTER_PATH = [__vscode_os.path.join(__vscode_sys.prefix, "share", "jupyter")]
+            SYSTEM_JUPYTER_PATH = [
+                __vscode_os.path.join(__vscode_sys.prefix, "share", "jupyter")
+            ]
     else:
         SYSTEM_JUPYTER_PATH = [
             "/usr/local/share/jupyter",
@@ -107,7 +110,6 @@ def __vsc_print_nbextension_widgets():
         ]
 
     ENV_JUPYTER_PATH = [__vscode_os.path.join(__vscode_sys.prefix, "share", "jupyter")]
-
 
     def jupyter_path(*subdirs):
         """Return a list of directories to search for data files
@@ -135,7 +137,10 @@ def __vsc_print_nbextension_widgets():
 
         # highest priority is explicit environment variable
         if __vscode_os.environ.get("JUPYTER_PATH"):
-            paths.extend(p.rstrip(__vscode_os.sep) for p in __vscode_os.environ["JUPYTER_PATH"].split(__vscode_os.pathsep))
+            paths.extend(
+                p.rstrip(__vscode_os.sep)
+                for p in __vscode_os.environ["JUPYTER_PATH"].split(__vscode_os.pathsep)
+            )
 
         # Next is environment or user, depending on the JUPYTER_PREFER_ENV_PATH flag
         user = [jupyter_data_dir()]
@@ -169,17 +174,24 @@ def __vsc_print_nbextension_widgets():
             paths = [pjoin(p, *subdirs) for p in paths]
         return paths
 
-
-
     __vsc_nbextension_widgets = []
-    __vsc_file = ''
-    __vsc_nbextension_Folder = ''
-    __vscode_widget_folder = ''
+    __vsc_file = ""
+    __vsc_nbextension_Folder = ""
+    __vscode_widget_folder = ""
     import glob as _VSCODE_glob
+
     try:
-        for __vsc_nbextension_Folder in jupyter_path('nbextensions'):
-            for __vsc_file in _VSCODE_glob.glob(__vsc_nbextension_Folder + __vscode_os.path.sep + '*' +  __vscode_os.path.sep + 'extension.js'):
-                __vscode_widget_folder = __vsc_file.replace(__vsc_nbextension_Folder, "")
+        for __vsc_nbextension_Folder in jupyter_path("nbextensions"):
+            for __vsc_file in _VSCODE_glob.glob(
+                __vsc_nbextension_Folder
+                + __vscode_os.path.sep
+                + "*"
+                + __vscode_os.path.sep
+                + "extension.js"
+            ):
+                __vscode_widget_folder = __vsc_file.replace(
+                    __vsc_nbextension_Folder, ""
+                )
                 if not __vscode_widget_folder in __vsc_nbextension_widgets:
                     __vsc_nbextension_widgets.append(__vscode_widget_folder)
 
@@ -198,7 +210,6 @@ def __vsc_print_nbextension_widgets():
     del __vscode_sys
     del __vscode_tempfile
     del __vscode_Path
-
 
 
 __vsc_print_nbextension_widgets()
