@@ -22,6 +22,8 @@ const { spawnSync } = require('child_process');
 const isCI = process.env.TF_BUILD !== undefined || process.env.GITHUB_ACTIONS === 'true';
 const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
 const { dumpTestSummary } = require('./build/webTestReporter');
+const { Validator } = require('jsonschema');
+
 gulp.task('compile', async (done) => {
     // Use tsc so we can generate source maps that look just like tsc does (gulp-sourcemap does not generate them the same way)
     try {
@@ -46,12 +48,47 @@ gulp.task('createNycFolder', async (done) => {
 });
 
 gulp.task('validateTranslationFiles', (done) => {
+    const validator = new Validator();
+    const schema = {
+        type: 'object',
+        patternProperties: {
+            '^[a-z0-9.]*': {
+                anyOf: [
+                    {
+                        type: ['string'],
+                        additionalProperties: false
+                    },
+                    {
+                        type: ['object'],
+                        properties: {
+                            message: { type: 'string' },
+                            comment: {
+                                type: 'array',
+                                items: {
+                                    type: 'string'
+                                }
+                            }
+                        },
+                        required: ['message'],
+                        additionalProperties: false
+                    }
+                ]
+            }
+        },
+        additionalProperties: false
+    };
+
     glob.sync('package.nls.*.json', { sync: true }).forEach((file) => {
         // Verify we can open and parse as JSON.
         try {
-            JSON.parse(fs.readFileSync(file));
+            const js = JSON.parse(fs.readFileSync(file));
+            const result = validator.validate(js, schema);
+            if (Array.isArray(result.errors) && result.errors.length) {
+                console.error(result.errors);
+                throw new Error(result.errors.map((err) => `${err.property} ${err.message}`).join('\n'));
+            }
         } catch (ex) {
-            throw new Error(`Error parsing Translation File ${file}`);
+            throw new Error(`Error parsing Translation File ${file}, ${ex.message}`);
         }
     });
     done();
