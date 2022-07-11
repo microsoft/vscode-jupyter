@@ -2389,6 +2389,7 @@
         "html-webpack-plugin": "^5.5.0",
         "husky": "^7.0.0",
         "jsdom": "^15.0.0",
+        "jsonschema": "^1.4.1",
         "keyv": "^4.1.0",
         "less": "^3.9.0",
         "less-loader": "^10.2.0",
