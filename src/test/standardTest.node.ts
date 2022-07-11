@@ -58,7 +58,7 @@ async function installPythonExtension(vscodeExecutablePath: string) {
     // Pick python extension to use based on environment variable. Insiders can be flakey so
     // have the capability to turn it off/on.
     const pythonVSIX =
-        process.env.VSC_JUPTYER_PYTHON_EXTENSION_VERSION === 'insiders'
+        process.env.VSC_JUPYTER_PYTHON_EXTENSION_VERSION === 'insiders'
             ? process.env.VSIX_NAME_PYTHON
             : PythonExtension;
     if (!requiresPythonExtensionToBeInstalled() || !pythonVSIX) {
