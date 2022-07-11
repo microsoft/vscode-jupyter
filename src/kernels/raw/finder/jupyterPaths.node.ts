@@ -203,14 +203,18 @@ export class JupyterPaths {
                 : possibleEnvJupyterPath
             : undefined;
         const userDataDirectory = this.getJupyterDataDir();
-        if (process.env.JUPYTER_PREFER_ENV_PATH) {
-            [envJupyterPath, userDataDirectory].forEach((item) => {
+        const jupyterPreferEnvPath = (process.env.JUPYTER_PREFER_ENV_PATH || '').toLowerCase();
+        // Using same logic from path.py (as this env variable is specific to Jupyter).
+        // An environment variable is considered set if it is assigned to a value
+        // other than 'no', 'n', 'false', 'off', '0', or '0.0' (case insensitive)
+        if (['no', 'n', 'false', 'off', '0', '0.0'].includes(jupyterPreferEnvPath)) {
+            [userDataDirectory, envJupyterPath].forEach((item) => {
                 if (item && !dataDir.has(item)) {
                     dataDir.set(item, dataDir.size);
                 }
             });
         } else {
-            [userDataDirectory, envJupyterPath].forEach((item) => {
+            [envJupyterPath, userDataDirectory].forEach((item) => {
                 if (item && !dataDir.has(item)) {
                     dataDir.set(item, dataDir.size);
                 }
