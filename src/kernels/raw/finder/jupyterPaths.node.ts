@@ -34,11 +34,12 @@ const macJupyterRuntimePath = path.join('Library', 'Jupyter', 'runtime');
 
 export const baseKernelPath = path.join('share', 'jupyter', 'kernels');
 const CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH = 'CACHE_KEY_FOR_JUPYTER_KERNELSPEC_ROOT_PATH.';
-const CACHE_KEY_FOR_JUPYTER_PATHS = 'CACHE_KEY_FOR_JUPYTER_PATHS_.';
+const CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS = 'CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS_.';
 
 @injectable()
 export class JupyterPaths {
     private cachedKernelSpecRootPath?: Promise<Uri | undefined>;
+    private cachedJupyterKernelPaths?: Promise<Uri[]>;
     private cachedJupyterPaths?: Promise<Uri[]>;
     private cachedDataDirs = new Map<string, Promise<Uri[]>>();
     constructor(
@@ -52,6 +53,7 @@ export class JupyterPaths {
     ) {
         this.envVarsProvider.onDidEnvironmentVariablesChange(
             () => {
+                this.cachedJupyterKernelPaths = undefined;
                 this.cachedJupyterPaths = undefined;
             },
             this,
@@ -157,20 +159,10 @@ export class JupyterPaths {
         const dataDir = new ResourceMap<number>();
 
         // 1. Add the JUPYTER_PATH
-        if (process.env['JUPYTER_PATH']) {
-            for (const jupyterPathItem of (process.env['JUPYTER_PATH'] || '')
-                .split(path.delimiter)
-                .map((item) => item.trim())
-                .filter((item) => item.length)
-                .map((item) => Uri.file(item))) {
-                try {
-                    const realPath = await tryGetRealPath(jupyterPathItem);
-                    if (realPath && !dataDir.has(realPath)) {
-                        dataDir.set(realPath, dataDir.size);
-                    }
-                } catch (ex) {
-                    traceWarning(`Failed to get real path for JUPYTER_PATH ${jupyterPathItem}`, ex);
-                }
+        const jupyterPaths = await this.getJupyterPaths();
+        for (const jupyterPathItem of jupyterPaths) {
+            if (jupyterPathItem && !dataDir.has(jupyterPathItem)) {
+                dataDir.set(jupyterPathItem, dataDir.size);
             }
         }
 
@@ -291,7 +283,7 @@ export class JupyterPaths {
     @traceDecoratorVerbose('Get KernelSpec root path')
     public async getKernelSpecRootPaths(cancelToken?: CancellationToken): Promise<Uri[]> {
         // Paths specified in JUPYTER_PATH are supposed to come first in searching
-        const paths = new ResourceSet(await this.getJupyterPathPaths(cancelToken));
+        const paths = new ResourceSet(await this.getJupyterPathKernelPaths(cancelToken));
 
         if (this.platformService.isWindows) {
             const winPath = await this.getKernelSpecRootPath();
@@ -316,55 +308,65 @@ export class JupyterPaths {
         return Array.from(paths);
     }
 
+    @traceDecoratorVerbose('Get Jupyter Kernel Paths')
+    private async getJupyterPathKernelPaths(cancelToken?: CancellationToken): Promise<Uri[]> {
+        this.cachedJupyterKernelPaths =
+            this.cachedJupyterKernelPaths || this.getJupyterPathSubPaths(cancelToken, 'kernels');
+        this.cachedJupyterKernelPaths.then((value) => {
+            if (value.length > 0) {
+                this.updateCachedPaths(value).then(noop, noop);
+            }
+        }, noop);
+        if (this.getCachedPaths().length > 0) {
+            return this.getCachedPaths();
+        }
+        return this.cachedJupyterKernelPaths;
+    }
+
+    @traceDecoratorVerbose('Get Jupyter Paths')
+    private async getJupyterPaths(cancelToken?: CancellationToken): Promise<Uri[]> {
+        this.cachedJupyterPaths = this.cachedJupyterPaths || this.getJupyterPathSubPaths(cancelToken);
+        return this.cachedJupyterPaths;
+    }
+
     /**
      * Find any paths associated with the JUPYTER_PATH env var. Can be a list of dirs.
      * We need to look at the 'kernels' sub-directory and these paths are supposed to come first in the searching
      * https://jupyter.readthedocs.io/en/latest/projects/jupyter-directories.html#envvar-JUPYTER_PATH
      */
-    @traceDecoratorVerbose('Get Jupyter Paths')
-    private async getJupyterPathPaths(cancelToken?: CancellationToken): Promise<Uri[]> {
-        this.cachedJupyterPaths =
-            this.cachedJupyterPaths ||
-            (async () => {
-                const paths = new ResourceSet();
-                const vars = await this.envVarsProvider.getEnvironmentVariables();
-                if (cancelToken?.isCancellationRequested) {
-                    return [];
-                }
-                const jupyterPathVars = vars.JUPYTER_PATH
-                    ? vars.JUPYTER_PATH.split(path.delimiter).map((jupyterPath) => {
-                          return path.join(jupyterPath, 'kernels');
-                      })
-                    : [];
+    @traceDecoratorVerbose('Get Jupyter Sub Paths')
+    private async getJupyterPathSubPaths(cancelToken?: CancellationToken, subDir?: string): Promise<Uri[]> {
+        const paths = new ResourceSet();
+        const vars = await this.envVarsProvider.getEnvironmentVariables();
+        if (cancelToken?.isCancellationRequested) {
+            return [];
+        }
+        const jupyterPathVars = vars.JUPYTER_PATH
+            ? vars.JUPYTER_PATH.split(path.delimiter).map((jupyterPath) => {
+                  return subDir ? path.join(jupyterPath, subDir) : jupyterPath;
+              })
+            : [];
 
-                if (jupyterPathVars.length > 0) {
-                    jupyterPathVars.forEach(async (jupyterPath) => {
-                        const realPath = await tryGetRealPath(Uri.file(jupyterPath));
-                        if (realPath) {
-                            paths.add(realPath);
-                        }
-                    });
-                }
+        if (jupyterPathVars.length > 0) {
+            await Promise.all(
+                jupyterPathVars.map(async (jupyterPath) => {
+                    const realPath = await tryGetRealPath(Uri.file(jupyterPath));
+                    if (realPath) {
+                        paths.add(realPath);
+                    }
+                })
+            );
+        }
 
-                return Array.from(paths);
-            })();
-        this.cachedJupyterPaths.then((value) => {
-            if (value.length > 0) {
-                this.updateCachedPaths(value).then(noop, noop);
-            }
-            if (this.getCachedPaths().length > 0) {
-                return this.getCachedPaths();
-            }
-        }, noop);
-        return this.cachedJupyterPaths;
+        return Array.from(paths);
     }
 
     private getCachedPaths(): Uri[] {
-        return this.globalState.get<string[]>(CACHE_KEY_FOR_JUPYTER_PATHS, []).map((s) => Uri.parse(s));
+        return this.globalState.get<string[]>(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, []).map((s) => Uri.parse(s));
     }
 
     private updateCachedPaths(paths: Uri[]) {
-        return this.globalState.update(CACHE_KEY_FOR_JUPYTER_PATHS, paths.map(Uri.toString));
+        return this.globalState.update(CACHE_KEY_FOR_JUPYTER_KERNEL_PATHS, paths.map(Uri.toString));
     }
 
     private getCachedRootPath(): Uri | undefined {
