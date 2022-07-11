@@ -20,7 +20,6 @@ import { tryGetRealPath } from '../../../platform/common/utils.node';
 import { IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
 import { traceDecoratorVerbose } from '../../../platform/logging';
 import { OSType } from '../../../platform/common/utils/platform.node';
-import { fsPathToUri } from '../../../platform/vscode-path/utils';
 import { ResourceMap, ResourceSet } from '../../../platform/vscode-path/map';
 import { noop } from '../../../platform/common/utils/misc';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
@@ -118,7 +117,7 @@ export class JupyterPaths {
                 runtimeDir = uriPath.joinPath(userHomeDir, macJupyterRuntimePath);
             } else {
                 runtimeDir = process.env['$XDG_RUNTIME_DIR']
-                    ? fsPathToUri(path.join(process.env['$XDG_RUNTIME_DIR'], 'jupyter', 'runtime'))
+                    ? Uri.file(path.join(process.env['$XDG_RUNTIME_DIR'], 'jupyter', 'runtime'))
                     : uriPath.joinPath(userHomeDir, '.local', 'share', 'jupyter', 'runtime');
             }
         }
@@ -354,14 +353,15 @@ export class JupyterPaths {
             : [];
 
         if (jupyterPathVars.length > 0) {
-            await Promise.all(
-                jupyterPathVars.map(async (jupyterPath) => {
-                    const realPath = await tryGetRealPath(Uri.file(jupyterPath));
-                    if (realPath) {
-                        paths.add(realPath);
-                    }
-                })
+            // Preserve the order of the items.
+            const jupyterPaths = await Promise.all(
+                jupyterPathVars.map(async (jupyterPath) => tryGetRealPath(Uri.file(jupyterPath)))
             );
+            jupyterPaths.forEach((jupyterPath) => {
+                if (jupyterPath) {
+                    paths.add(jupyterPath);
+                }
+            });
         }
 
         return Array.from(paths);

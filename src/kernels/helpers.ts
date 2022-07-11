@@ -29,7 +29,6 @@ import { SysInfoReason } from '../messageTypes';
 import { getNormalizedInterpreterPath, getInterpreterHash } from '../platform/pythonEnvironments/info/interpreter';
 import { getTelemetrySafeVersion } from '../platform/telemetry/helpers';
 import { EnvironmentType, PythonEnvironment } from '../platform/pythonEnvironments/info';
-import { fsPathToUri } from '../platform/vscode-path/utils';
 import { deserializePythonEnvironment, serializePythonEnvironment } from '../platform/api/pythonApi';
 import { JupyterKernelSpec } from './jupyter/jupyterKernelSpec';
 import { Resource } from '../platform/common/types';
@@ -1080,7 +1079,9 @@ export function getKernelId(spec: IJupyterKernelSpec, interpreter?: PythonEnviro
     }
     const prefixForRemoteKernels = serverId ? `${serverId}.` : '';
     const specPath = getFilePath(
-        getNormalizedInterpreterPath(fsPathToUri(spec.interpreterPath) || Uri.file(spec.executable))
+        getNormalizedInterpreterPath(
+            spec.interpreterPath ? Uri.file(spec.interpreterPath) : Uri.file(spec.executable)
+        )
     );
     const interpreterPath = getFilePath(getNormalizedInterpreterPath(interpreter?.uri)) || '';
     return `${prefixForRemoteKernels}${
@@ -1220,18 +1221,18 @@ export function getKernelPathFromKernelConnection(kernelConnection?: KernelConne
             kernelConnection.kind === 'startUsingLocalKernelSpec') &&
             kernelConnection.kernelSpec.language === PYTHON_LANGUAGE)
     ) {
-        return fsPathToUri(
-            kernelSpec?.metadata?.interpreter?.path || kernelSpec?.interpreterPath || kernelSpec?.executable
-        );
+        const pathValue =
+            kernelSpec?.metadata?.interpreter?.path || kernelSpec?.interpreterPath || kernelSpec?.executable;
+        return pathValue ? Uri.file(pathValue) : undefined;
     } else {
         // For non python kernels, give preference to the executable path in the kernelspec
         // E.g. if we have a rust kernel, we should show the path to the rust executable not the interpreter (such as conda env that owns the rust runtime).
-        return fsPathToUri(
+        const pathValue =
             model?.executable ||
-                kernelSpec?.executable ||
-                kernelSpec?.metadata?.interpreter?.path ||
-                kernelSpec?.interpreterPath
-        );
+            kernelSpec?.executable ||
+            kernelSpec?.metadata?.interpreter?.path ||
+            kernelSpec?.interpreterPath;
+        return pathValue ? Uri.file(pathValue) : undefined;
     }
 }
 
