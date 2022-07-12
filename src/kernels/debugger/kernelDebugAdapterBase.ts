@@ -201,11 +201,11 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
 
     public async disconnect() {
         if (!this.disconnected) {
+            this.disconnected = true;
             if (this.debugService.activeDebugSession === this.session) {
                 await this.session.customRequest('disconnect', { restart: false });
             }
             this.endSession.fire(this.session);
-            this.disconnected = true;
             this.kernel?.removeEventHook(this.kernelEventHook);
         }
     }
