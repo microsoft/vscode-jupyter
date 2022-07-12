@@ -211,6 +211,8 @@
             }
         },
         {
+            // Run this first: https://github.com/microsoft/vscode-jupyter/blob/main/src/test/datascience/setupTestEnvs.cmd
+            // Then specify either a grep below or mark a test as 'test.only' to run the test that's failing.
             "name": "Tests (Jupyter+Python Extension installed, *.vscode.test.ts)",
             "type": "extensionHost",
             "request": "launch",
