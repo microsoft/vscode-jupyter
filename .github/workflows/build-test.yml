@@ -780,11 +780,6 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python: [3.9]
     steps:
-      - name: Set environment variables
-        run: |
-          echo "GIT_SHA=${GITHUB_SHA}" >> $GITHUB_ENV
-          echo "GIT_BRANCH=${GITHUB_REF##*/}" >> $GITHUB_ENV
-
       - name: Checkout
         uses: actions/checkout@v2
 

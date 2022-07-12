@@ -10,6 +10,7 @@ let telemetryReporter: TelemetryReporter;
 
 export const rootHooks: Mocha.RootHookObject = {
     beforeAll() {
+        traceInfoIfCI(`Environment Variable dump: ${JSON.stringify(process.env)}`);
         if (!IS_CI_SERVER) {
             return;
         }
@@ -25,7 +26,8 @@ export const rootHooks: Mocha.RootHookObject = {
     afterEach(this: Context) {
         if (
             !IS_CI_SERVER ||
-            (process.env.GIT_BRANCH && process.env.GIT_BRANCH !== 'main') ||
+            !process.env.GITHUB_HEAD_REF ||
+            process.env.GITHUB_HEAD_REF !== 'main' ||
             (process.env.VSC_JUPYTER_WARMUP && process.env.VSC_JUPYTER_WARMUP == 'true')
         ) {
             return;
@@ -44,11 +46,11 @@ export const rootHooks: Mocha.RootHookObject = {
             dimensions = { ...dimensions, timedCheckpoints: JSON.stringify(this.currentTest?.perfCheckpoints) };
         }
 
-        if (process.env.GIT_SHA) {
-            dimensions = { ...dimensions, commitHash: process.env.GIT_SHA };
+        if (process.env.GITHUB_SHA) {
+            dimensions = { ...dimensions, commitHash: process.env.GITHUB_SHA };
         }
 
-        traceInfoIfCI(`Sending telemetry event ${Telemetry.RunTest} with dimensions ${dimensions}`);
+        traceInfoIfCI(`Sending telemetry event ${Telemetry.RunTest} with dimensions ${JSON.stringify(dimensions)}`);
         telemetryReporter.sendDangerousTelemetryEvent(Telemetry.RunTest, dimensions, measures);
     },
     afterAll: async () => {
