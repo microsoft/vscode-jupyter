@@ -84,11 +84,11 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
         this.disposables.push(
             this.commandManager.registerCommand(Commands.SwitchToAnotherRemoteKernels, this.switchToRemoteKernels, this)
         );
-        this.disposables.push(this.serverConnectionType.onDidChange(this.onConnectionTypeChanged, this));
-        this.onConnectionTypeChanged().ignoreErrors;
+        this.disposables.push(this.serverConnectionType.onDidChange(this.updateContextKeys, this));
+        this.updateContextKeys().ignoreErrors;
     }
 
-    private async onConnectionTypeChanged() {
+    private async updateContextKeys() {
         const isLocal = this.serverConnectionType.isLocalLaunch;
         await (this.isWeb ? this.controllerLoader.loaded : Promise.resolve(true));
 
@@ -96,12 +96,15 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
             .set(isLocal || (this.isWeb && this.controllerRegistration.values.length === 0))
             .ignoreErrors();
         this.showingRemoteNotWebContext.set(!isLocal && !this.isWeb).ignoreErrors();
-        this.showingRemoteContext.set(!isLocal).ignoreErrors();
+        this.showingRemoteContext.set(!isLocal && this.controllerRegistration.values.length > 0).ignoreErrors();
     }
 
     private async showVsCodeKernelPicker() {
         const activeEditor = this.notebooks.activeNotebookEditor;
         if (activeEditor) {
+            // Need to wait for controller to reupdate after
+            // switching local/remote
+            await this.controllerLoader.loaded;
             this.commandManager
                 .executeCommand('notebook.selectKernel', { notebookEditor: activeEditor })
                 .then(noop, noop);
@@ -111,9 +114,13 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
     private async switchToRemoteKernels() {
         const activeNotebookType = this.notebooks.activeNotebookEditor ? JupyterNotebookView : InteractiveWindowView;
         const startingLocal = this.serverConnectionType.isLocalLaunch;
+        const startingUri = await this.serverUriStorage.getRemoteUri();
         const multiStep = this.multiStepFactory.create<{}>();
         return multiStep.run(
-            this.startSwitchRun.bind(this, this.startSwitchingToRemote.bind(this, activeNotebookType, startingLocal)),
+            this.startSwitchRun.bind(
+                this,
+                this.startSwitchingToRemote.bind(this, activeNotebookType, startingLocal, startingUri)
+            ),
             {}
         );
     }
@@ -126,11 +133,12 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
     private async startSwitchingToRemote(
         activeNotebookType: typeof JupyterNotebookView | typeof InteractiveWindowView,
         startedLocal: boolean,
+        startingUri: string | undefined,
         input: IMultiStepInput<{}>
     ): Promise<InputStep<{}> | void> {
         try {
             await this.serverSelector.selectJupyterURI('nonUser', input);
-            return this.showRemoteKernelPicker(activeNotebookType, startedLocal, input);
+            return this.showRemoteKernelPicker(activeNotebookType, startedLocal, startingUri, input);
         } catch (e) {
             if (e === InputFlowAction.back) {
                 return this.showVsCodeKernelPicker();
@@ -141,6 +149,7 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
     private async showRemoteKernelPicker(
         activeNotebookType: typeof JupyterNotebookView | typeof InteractiveWindowView,
         startedLocal: boolean,
+        startedUri: string | undefined,
         input: IMultiStepInput<{}>
     ): Promise<InputStep<{}> | void> {
         try {
@@ -155,6 +164,9 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
             // They backed out. Put back to local
             if (startedLocal) {
                 await this.serverSelector.setJupyterURIToLocal();
+            } else {
+                // Web case is never local but we might have an empty URI
+                await this.serverSelector.setJupyterURIToRemote(startedUri);
             }
             throw e;
         }
@@ -199,7 +211,7 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
                 input
             );
         } catch (e) {
-            // They backed out. Put back to local
+            // They backed out. Put back to remote
             if (!startedLocal && startedUri) {
                 await this.serverSelector.setJupyterURIToRemote(startedUri, true);
             }
@@ -302,6 +314,10 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
                 id: controller.id,
                 extension: JVSC_EXTENSION_ID
             });
+
+            // Update our context keys as they might have changed when
+            // moving to a new kernel
+            await this.updateContextKeys();
         }
     }
 }

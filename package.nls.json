@@ -780,7 +780,7 @@
         "comment": ["{Locked='python -m jupyter notebook --version'}"]
     },
     "DataScience.savePngTitle": "Save Image",
-    "DataScience.jupyterSelectURIQuickPickTitle": "Pick how to connect to Jupyter",
+    "DataScience.jupyterSelectURIQuickPickTitle": "Enter the URI of the running Jupyter server",
     "DataScience.jupyterSelectURIQuickPickPlaceholder": "Choose an option",
     "DataScience.jupyterSelectURIQuickPickCurrent": "Current: {0}",
     "DataScience.jupyterSelectURINoneLabel": "None",
