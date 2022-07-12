@@ -23,7 +23,12 @@ import { IKernelProvider } from '../../../kernels/types';
 import { IpykernelCheckResult, assertIsDebugConfig } from '../../../kernels/debugger/helper';
 import { KernelDebugAdapter } from './kernelDebugAdapter';
 import { IExtensionSingleActivationService } from '../../../platform/activation/types';
-import { ICommandManager, IApplicationShell, IVSCodeNotebook } from '../../../platform/common/application/types';
+import {
+    ICommandManager,
+    IApplicationShell,
+    IVSCodeNotebook,
+    IDebugService
+} from '../../../platform/common/application/types';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { traceInfoIfCI, traceInfo, traceError } from '../../../platform/logging';
@@ -55,7 +60,8 @@ export class InteractiveWindowDebuggingManager
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IDebugLocationTrackerFactory)
         private readonly debugLocationTrackerFactory: IDebugLocationTrackerFactory,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService
+        @inject(IConfigurationService) private readonly configService: IConfigurationService,
+        @inject(IDebugService) private readonly debugService: IDebugService
     ) {
         super(kernelProvider, controllerLoader, controllerSelection, commandManager, appShell, vscNotebook);
     }
@@ -168,6 +174,7 @@ export class InteractiveWindowDebuggingManager
             kernel.session,
             kernel,
             this.platform,
+            this.debugService,
             this.debugLocationTrackerFactory
         );
 
