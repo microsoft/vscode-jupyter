@@ -93,6 +93,7 @@ import { ConsoleLogger } from './platform/logging/consoleLogger';
 import { FileLogger } from './platform/logging/fileLogger.node';
 import { createWriteStream } from 'fs-extra';
 import { initializeGlobals as initializeTelemetryGlobals } from './platform/telemetry/telemetry';
+import { IInterpreterPackages } from './telemetry';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -169,7 +170,9 @@ async function activateUnsafe(
 
         const [serviceManager, serviceContainer] = initializeGlobals(context);
         activatedServiceContainer = serviceContainer;
-        initializeTelemetryGlobals(serviceContainer);
+        initializeTelemetryGlobals((interpreter) =>
+            serviceContainer.get<IInterpreterPackages>(IInterpreterPackages).getPackageVersions(interpreter)
+        );
         const activationPromise = activateComponents(context, serviceManager, serviceContainer);
 
         //===============================================

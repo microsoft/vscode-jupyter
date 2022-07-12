@@ -5,23 +5,23 @@
 import cloneDeep = require('lodash/cloneDeep');
 import { Uri } from 'vscode';
 import { Resource } from '../common/types';
-import { IInterpreterPackages, ResourceSpecificTelemetryProperties } from '../../telemetry';
+import { ResourceSpecificTelemetryProperties } from '../../telemetry';
 import { getTelemetrySafeHashedString } from './helpers';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { createDeferred } from '../common/utils/async';
 import { getResourceType } from '../common/utils';
-import { IServiceContainer } from '../ioc/types';
 import { getComparisonKey } from '../vscode-path/resources';
+import { traceError } from '../logging';
 
 type Context = {
     previouslySelectedKernelConnectionId: string;
 };
 export const trackedInfo = new Map<string, [ResourceSpecificTelemetryProperties, Context]>();
 export const pythonEnvironmentsByHash = new Map<string, PythonEnvironment>();
-let globalContainer: IServiceContainer | undefined = undefined;
-
-export function initializeGlobals(serviceContainer: IServiceContainer) {
-    globalContainer = serviceContainer;
+type InterpreterPackageProvider = (interpreter: PythonEnvironment) => Promise<Map<string, string>>;
+let _interpreterPackageProvider: InterpreterPackageProvider | undefined;
+export function initializeGlobals(interpreterPackageProvider: InterpreterPackageProvider) {
+    _interpreterPackageProvider = interpreterPackageProvider;
 }
 
 /**
@@ -67,6 +67,10 @@ export function updatePythonPackages(
  * Gets a JSON with hashed keys of some python packages along with their versions.
  */
 async function getPythonEnvironmentPackages(options: { interpreter: PythonEnvironment } | { interpreterHash: string }) {
+    if (!_interpreterPackageProvider) {
+        traceError(`Python package provider is not initialized.`);
+        return '{}';
+    }
     let interpreter: PythonEnvironment | undefined;
     if ('interpreter' in options) {
         interpreter = options.interpreter;
@@ -76,10 +80,7 @@ async function getPythonEnvironmentPackages(options: { interpreter: PythonEnviro
     if (!interpreter) {
         return '{}';
     }
-    const intepreterPackages = globalContainer?.get<IInterpreterPackages>(IInterpreterPackages);
-    const packages = intepreterPackages
-        ? await intepreterPackages.getPackageVersions(interpreter).catch(() => new Map<string, string>())
-        : new Map<string, string>();
+    const packages = await _interpreterPackageProvider(interpreter);
     if (!packages || packages.size === 0) {
         return '{}';
     }

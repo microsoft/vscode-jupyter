@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { InterpreterUri } from './platform/common/types';
+import { InterpreterUri, Resource } from './platform/common/types';
 import type { JSONObject } from '@lumino/coreutils';
 // eslint-disable-next-line
 import {
@@ -108,6 +108,7 @@ export type ResourceSpecificTelemetryProperties = Partial<{
 
 export const IInterpreterPackages = Symbol('IInterpreterPackages');
 export interface IInterpreterPackages {
+    listPackages(resource?: Resource): Promise<Set<string>>;
     getPackageVersions(interpreter: PythonEnvironment): Promise<Map<string, string>>;
     getPackageVersion(interpreter: PythonEnvironment, packageName: string): Promise<string | undefined>;
     trackPackages(interpreterUri: InterpreterUri, ignoreCache?: boolean): void;

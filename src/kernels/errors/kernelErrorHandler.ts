@@ -26,6 +26,7 @@ import { ProductNames } from '../installer/productNames';
 import { Product } from '../installer/types';
 import {
     IKernelDependencyService,
+    isLocalConnection,
     KernelAction,
     KernelActionSource,
     KernelConnectionMetadata,
@@ -162,7 +163,25 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                 if (failureInfo.moreInfoLink) {
                     messageParts.push(Common.clickHereForMoreInfoWithHtml().format(failureInfo.moreInfoLink));
                 }
+                if (
+                    isLocalConnection(error.kernelConnectionMetadata) &&
+                    failureInfo.reason === KernelFailureReason.moduleNotFoundFailure &&
+                    !['ipykernel_launcher', 'ipykernel'].includes(failureInfo.moduleName)
+                ) {
+                    // Looks like some other module is missing.
+                    // Sometimes when you create files like xml.py, then kernel startup fails due to xml.dom module not being found.
+                    // TODO
+                }
                 return messageParts.join('\n');
+            } else if (
+                isLocalConnection(error.kernelConnectionMetadata) &&
+                !failureInfo &&
+                error.category === 'invalidkernel'
+            ) {
+                // In the case when we're using non-zmq, we don't have much error information, as jupyter doesn't provide this.
+                // If the kernel fails to start, treat that as a scenario where kernel failed to start
+                // due to some overriding modules.
+                // TODO:
             }
         } else if (
             error instanceof RemoteJupyterServerConnectionError ||

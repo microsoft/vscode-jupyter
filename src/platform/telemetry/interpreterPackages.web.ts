@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
-import { InterpreterUri } from '../common/types';
+import { InterpreterUri, Resource } from '../common/types';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { IInterpreterPackages } from '../../telemetry';
 
@@ -11,6 +11,9 @@ import { IInterpreterPackages } from '../../telemetry';
  */
 @injectable()
 export class InterpreterPackages implements IInterpreterPackages {
+    public async listPackages(_resource?: Resource): Promise<Set<string>> {
+        return new Set();
+    }
     public async getPackageVersions(_interpreter: PythonEnvironment): Promise<Map<string, string>> {
         return new Map<string, string>();
     }

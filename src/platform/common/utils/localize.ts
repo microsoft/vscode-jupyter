@@ -51,6 +51,7 @@ if (osType === OSType.Unknown) {
 // External callers of localize use these tables to retrieve localized values.
 
 export namespace Common {
+    export const jupyter = () => localize('Common.jupyter', 'Jupyter');
     export const bannerLabelYes = () => localize('Common.bannerLabelYes', 'Yes');
     export const bannerLabelNo = () => localize('Common.bannerLabelNo', 'No');
     export const yesPlease = () => localize('Common.yesPlease', 'Yes, please');
@@ -1361,6 +1362,28 @@ export namespace DataScience {
         localize('DataScience.pickRemoteKernelPlaceholder', `type to filter`);
     export const failedToInstallPythonExtension = () =>
         localize('DataScience.failedToInstallPythonExtension', `Failed to install the Python Extension.`);
+    export const pythonFileOverridesPythonPackage = () =>
+        localize(
+            'DataScience.pythonFileOverridesPythonPackage',
+            'This file could override an existing Python package, consider renaming it.'
+        );
+    export const alwaysIgnoreWarningsAboutOverridingPythonPackages = () =>
+        localize(
+            'DataScience.alwaysIgnoreWarningsAboutOverridingPythonPackages',
+            'Always ignore warnings about overriding Python packages'
+        );
+    export const ignoreWarningAboutOverridingPythonPackage = () =>
+        localize('DataScience.ignoreWarningAboutOverridingPythonPackage', 'Ignore warning for {0}');
+    export const moreInfoAboutFileNamesOverridingPythonPackages = () =>
+        localize(
+            'DataScience.moreInfoAboutFileNamesOverridingPythonPackages',
+            'More information on overriding Python packages'
+        );
+    export const reservedPythonFileNamesDiagnosticCollectionName = () =>
+        localize(
+            'DataScience.reservedPythonFileNamesDiagnosticCollectionName',
+            'Reserved Python Filenames'
+        );
 }
 
 export namespace Deprecated {

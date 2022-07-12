@@ -162,7 +162,7 @@ async function activateUnsafe(
 
         const [serviceManager, serviceContainer] = initializeGlobals(context);
         activatedServiceContainer = serviceContainer;
-        initializeTelemetryGlobals(serviceContainer);
+        initializeTelemetryGlobals(() => Promise.resolve(new Map()));
         const activationPromise = activateComponents(context, serviceManager, serviceContainer);
 
         //===============================================

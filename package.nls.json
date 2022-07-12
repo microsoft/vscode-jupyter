@@ -1106,5 +1106,11 @@
     "DataScience.switchToLocalKernelsTitle": "Connect to Local Kernels",
     "DataScience.switchToRemoteKernelsTitle": "Connect to Your Own Jupyter Server",
     "DataScience.switchToAnotherRemoteKernelsTitle": "Connect to Another Jupyter Server",
-    "DataScience.failedToInstallPythonExtension": "Failed to install the Python Extension."
+    "DataScience.failedToInstallPythonExtension": "Failed to install the Python Extension.",
+    "DataScience.pythonFileOverridesPythonPackage": "This file could potentially override an existing Python package and interfere with kernel execution, consider renaming it.",
+    "DataScience.alwaysIgnoreWarningsAboutOverridingPythonPackages": "Always ignore warnings about overriding Python packages",
+    "DataScience.ignoreWarningAboutOverridingPythonPackage": "Ignore reserved file warning for '{0}'",
+    "DataScience.moreInfoAboutFileNamesOverridingPythonPackages": "More information on overriding Python packages",
+    "jupyter.configuration.jupyter.diagnostics.reservedPythonNames.enabled.markdownDescription": "Whether to show warnings about Python file names that could potentially [override Python packages](https://aka.ms/JupyterKernelStartFailureOverrideReservedName).",
+    "jupyter.configuration.jupyter.diagnostics.reservedPythonNames.exclude.markdownDescription": "Configure [glob patterns](https://code.visualstudio.com/docs/editor/codebasics#_advanced-search-options) for excluding files and folders from from being warned about [overriding Python packages](https://aka.ms/JupyterKernelStartFailureOverrideReservedName)."
 }
