@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable, Event, NotebookCell, NotebookDocument, NotebookEditor, Uri } from 'vscode';
+import { Disposable, Event, NotebookCell, NotebookDocument, NotebookEditor, Tab, Uri } from 'vscode';
 import { IDebuggingManager } from '../kernels/debugger/types';
 import { IKernel, KernelConnectionMetadata } from '../kernels/types';
+import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { Resource, InteractiveWindowMode, ICell } from '../platform/common/types';
 import { IFileGeneratedCodes } from './editor-integration/types';
 
@@ -66,6 +67,7 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly inputUri?: Uri;
     readonly notebookDocument?: NotebookDocument;
     closed: Event<void>;
+    start(preferredController: IVSCodeNotebookController | undefined): Promise<void>;
     addCode(code: string, file: Uri, line: number): Promise<boolean>;
     addErrorMessage(message: string, cell: NotebookCell): Promise<void>;
     debugCode(code: string, file: Uri, line: number): Promise<boolean>;
@@ -74,6 +76,22 @@ export interface IInteractiveWindow extends IInteractiveBase {
     scrollToCell(id: string): void;
     exportAs(cells?: ICell[]): void;
     export(cells?: ICell[]): void;
+}
+
+export interface IInteractiveWindowCache {
+    owner: Resource;
+    mode: InteractiveWindowMode;
+    uri: Uri;
+    inputBoxUri: Uri;
+}
+
+export interface TabInputInteractiveWindow {
+    readonly uri: Uri;
+    readonly inputBoxUri: Uri;
+}
+
+export interface InteractiveTab extends Tab {
+    readonly input: TabInputInteractiveWindow;
 }
 
 export interface IInteractiveWindowLoadable extends IInteractiveWindow {
