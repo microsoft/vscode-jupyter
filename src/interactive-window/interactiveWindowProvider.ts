@@ -111,13 +111,13 @@ export class InteractiveWindowProvider
         window.tabGroups.all.forEach((group) => {
             group.tabs.forEach((tab) => {
                 if (isInteractiveInputTab(tab) && tab.input.uri) {
-                    interactiveWindowMapping.set(tab.input.uri.path, tab);
+                    interactiveWindowMapping.set(tab.input.uri.toString(), tab);
                 }
             });
         });
 
         this.workspaceMemento.get(InteractiveWindowCacheKey, [] as IInteractiveWindowCache[]).forEach((iw) => {
-            if (!iw.uri || !interactiveWindowMapping.get(iw.uri.path)) {
+            if (!iw.uriString || !interactiveWindowMapping.get(iw.uriString)) {
                 return;
             }
 
@@ -126,8 +126,8 @@ export class InteractiveWindowProvider
                 iw.owner !== undefined ? Uri.from(iw.owner) : undefined,
                 iw.mode,
                 undefined,
-                interactiveWindowMapping.get(iw.uri.path)!,
-                Uri.from(iw.inputBoxUri)
+                interactiveWindowMapping.get(iw.uriString)!,
+                Uri.parse(iw.inputBoxUriString)
             );
             this._windows.push(result);
         });
@@ -297,8 +297,8 @@ export class InteractiveWindowProvider
                 ({
                     owner: iw.owner,
                     mode: iw.mode,
-                    uri: iw.notebookUri,
-                    inputBoxUri: iw.inputUri
+                    uriString: iw.notebookUri.toString(),
+                    inputBoxUriString: iw.inputUri.toString()
                 } as IInteractiveWindowCache)
         );
         this.workspaceMemento.update(InteractiveWindowCacheKey, windowCache).then(noop, noop);

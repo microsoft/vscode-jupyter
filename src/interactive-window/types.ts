@@ -81,8 +81,8 @@ export interface IInteractiveWindow extends IInteractiveBase {
 export interface IInteractiveWindowCache {
     owner: Resource;
     mode: InteractiveWindowMode;
-    uri: Uri;
-    inputBoxUri: Uri;
+    uriString: string;
+    inputBoxUriString: string;
 }
 
 export interface TabInputInteractiveWindow {
