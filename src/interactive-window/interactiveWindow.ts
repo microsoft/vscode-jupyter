@@ -159,6 +159,9 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         this._notebookUri = isInteractiveInputTab(notebookEditorOrTab)
             ? notebookEditorOrTab.input.uri
             : notebookEditorOrTab.notebook.uri;
+        if (!isInteractiveInputTab(notebookEditorOrTab)) {
+            this._notebookEditor = notebookEditorOrTab;
+        }
 
         // Set our owner and first submitter
         if (this._owner) {
