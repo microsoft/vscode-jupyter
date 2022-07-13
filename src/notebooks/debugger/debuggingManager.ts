@@ -21,7 +21,12 @@ import { Commands as DSCommands, EditorContexts } from '../../platform/common/co
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { ContextKey } from '../../platform/common/contextKey';
 import { RunByLineController } from './runByLineController';
-import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IDebugService,
+    IVSCodeNotebook
+} from '../../platform/common/application/types';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { DebuggingTelemetry, pythonKernelDebugAdapter } from '../../kernels/debugger/constants';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -55,7 +60,8 @@ export class DebuggingManager
         @inject(IApplicationShell) appShell: IApplicationShell,
         @inject(IVSCodeNotebook) vscNotebook: IVSCodeNotebook,
         @inject(IConfigurationService) private readonly settings: IConfigurationService,
-        @inject(IPlatformService) private readonly platform: IPlatformService
+        @inject(IPlatformService) private readonly platform: IPlatformService,
+        @inject(IDebugService) private readonly debugService: IDebugService
     ) {
         super(kernelProvider, controllerLoader, controllerSelection, commandManager, appShell, vscNotebook);
         this.debuggingInProgress = new ContextKey(EditorContexts.DebuggingInProgress, commandManager);
@@ -309,7 +315,8 @@ export class DebuggingManager
                         debug.document,
                         kernel.session,
                         kernel,
-                        this.platform
+                        this.platform,
+                        this.debugService
                     );
 
                     if (config.__mode === KernelDebugMode.RunByLine && typeof config.__cellIndex === 'number') {
