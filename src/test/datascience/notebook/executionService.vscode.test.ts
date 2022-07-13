@@ -120,10 +120,7 @@ suite.only('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
         if (this.currentTest?.isFailed()) {
-            traceInfoIfCI('TEst failed need to capture screenshot');
             await captureScreenShot(this);
-        } else {
-            traceInfoIfCI('TEst did not fail, no need to capture screenshot');
         }
         await closeNotebooksAndCleanUpAfterTests(disposables);
         traceInfo(`Ended Test (completed) ${this.currentTest?.title}`);

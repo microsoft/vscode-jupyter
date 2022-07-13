@@ -321,12 +321,8 @@ const screenShotCount = new Map<string, number>();
  */
 export async function captureScreenShot(contextOrFileName: string | Mocha.Context) {
     if (!isCI) {
-        console.error('Not Capturing screenshot');
-        traceInfoIfCI('Not Capturing screenshot');
         return;
     }
-    console.error('Capturing screenshot');
-    traceInfoIfCI('Capturing screenshot');
     const fullTestNameHash =
         typeof contextOrFileName === 'string'
             ? ''
@@ -343,16 +339,10 @@ export async function captureScreenShot(contextOrFileName: string | Mocha.Contex
     const name = `${fileNamePrefix}_${counter}`.replace(/[\W]+/g, '_');
     const filename = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, `${name}-screenshot.png`);
     try {
-        console.error('Capturing screenshot 2', filename);
-        traceInfoIfCI('Capturing screenshot 2', filename);
         const screenshot = require('screenshot-desktop');
         await screenshot({ filename });
-        console.error('Screenshot captured into 3', filename);
-        traceInfoIfCI('Screenshot captured into 3', filename);
         console.info(`Screenshot captured into ${filename}`);
     } catch (ex) {
-        console.error('Capturing screenshot failed 4', ex);
-        traceInfoIfCI('Capturing screenshot failed 4', ex);
         console.error(`Failed to capture screenshot into ${filename}`, ex);
     }
 }
