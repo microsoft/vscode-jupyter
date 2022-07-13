@@ -2033,6 +2033,15 @@
                     "default": false,
                     "markdownDescription": "%jupyter.configuration.jupyter.enableExtendedKernelCompletions.markdownDescription%",
                     "scope": "machine"
+                },
+                "jupyter.showOnlyOneTypeOfKernel": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "%jupyter.configuration.jupyter.showOnlyOneTypeOfKernel.description%",
+                    "scope": "machine",
+                    "tags": [
+                        "experimental"
+                    ]
                 }
             }
         },

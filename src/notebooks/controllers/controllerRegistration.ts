@@ -49,6 +49,9 @@ export class ControllerRegistration implements IControllerRegistration {
     public get values(): IVSCodeNotebookController[] {
         return [...this.registeredControllers.values()];
     }
+    public get all(): KernelConnectionMetadata[] {
+        return this.metadatas;
+    }
     private get metadatas(): KernelConnectionMetadata[] {
         return [...this.registeredMetadatas.values()];
     }
@@ -183,7 +186,12 @@ export class ControllerRegistration implements IControllerRegistration {
         const userFiltered = this.kernelFilter.isKernelHidden(metadata);
         const connectionTypeFiltered = isLocalConnection(metadata) !== this.isLocalLaunch;
         const urlFiltered = isRemoteConnection(metadata) && this.serverUriStorage.currentServerId !== metadata.serverId;
-        return userFiltered || connectionTypeFiltered || urlFiltered;
+
+        if (this.configuration.getSettings().showOnlyOneTypeOfKernel) {
+            return userFiltered || connectionTypeFiltered || urlFiltered;
+        }
+
+        return userFiltered || urlFiltered;
     }
 
     private getControllerId(

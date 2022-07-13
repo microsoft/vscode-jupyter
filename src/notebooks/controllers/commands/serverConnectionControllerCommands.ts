@@ -12,7 +12,7 @@ import {
     JVSC_EXTENSION_ID
 } from '../../../platform/common/constants';
 import { ContextKey } from '../../../platform/common/contextKey';
-import { IDisposableRegistry, IsWebExtension } from '../../../platform/common/types';
+import { IConfigurationService, IDisposableRegistry, IsWebExtension } from '../../../platform/common/types';
 import { JupyterServerSelector } from '../../../kernels/jupyter/serverSelector';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { IControllerLoader, IControllerRegistration, IVSCodeNotebookController } from '../types';
@@ -67,7 +67,8 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
         @inject(IControllerLoader) private readonly controllerLoader: IControllerLoader,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
-        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
+        @inject(IConfigurationService) private readonly configurationService: IConfigurationService
     ) {
         // Context keys to control when these commands are shown
         this.showingRemoteNotWebContext = new ContextKey('jupyter.showingRemoteNotWeb', this.commandManager);
@@ -89,14 +90,20 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
     }
 
     private async updateContextKeys() {
-        const isLocal = this.serverConnectionType.isLocalLaunch;
-        await (this.isWeb ? this.controllerLoader.loaded : Promise.resolve(true));
+        if (this.configurationService.getSettings().showOnlyOneTypeOfKernel) {
+            const isLocal = this.serverConnectionType.isLocalLaunch;
+            await (this.isWeb ? this.controllerLoader.loaded : Promise.resolve(true));
 
-        this.showingLocalOrWebEmptyContext
-            .set(isLocal || (this.isWeb && this.controllerRegistration.values.length === 0))
-            .ignoreErrors();
-        this.showingRemoteNotWebContext.set(!isLocal && !this.isWeb).ignoreErrors();
-        this.showingRemoteContext.set(!isLocal && this.controllerRegistration.values.length > 0).ignoreErrors();
+            this.showingLocalOrWebEmptyContext
+                .set(isLocal || (this.isWeb && this.controllerRegistration.values.length === 0))
+                .ignoreErrors();
+            this.showingRemoteNotWebContext.set(!isLocal && !this.isWeb).ignoreErrors();
+            this.showingRemoteContext.set(!isLocal && this.controllerRegistration.values.length > 0).ignoreErrors();
+        } else {
+            this.showingLocalOrWebEmptyContext.set(false).ignoreErrors();
+            this.showingRemoteNotWebContext.set(false).ignoreErrors();
+            this.showingRemoteContext.set(false).ignoreErrors();
+        }
     }
 
     private async showVsCodeKernelPicker() {

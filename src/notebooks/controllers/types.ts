@@ -34,9 +34,13 @@ export const IControllerRegistration = Symbol('IControllerRegistration');
 
 export interface IControllerRegistration {
     /**
-     * Gets the list of all of the controllers
+     * Gets the filtered list of all of the controllers
      */
     values: IVSCodeNotebookController[];
+    /**
+     * Gets every registered connection metadata
+     */
+    all: KernelConnectionMetadata[];
     /**
      * Registers a new controller. Disposing a controller unregisters it.
      * @param metadata
