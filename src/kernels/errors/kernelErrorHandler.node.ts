@@ -79,6 +79,6 @@ export class DataScienceErrorHandlerNode extends DataScienceErrorHandler {
     protected override async getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(
         resource: Resource
     ): Promise<Uri[]> {
-        return resource ? this.reservedPythonNames.getFilesOverridingReservedPythonNames(resource) : [];
+        return resource ? this.reservedPythonNames.getFilesOverridingReservedPythonNames(path.dirname(resource)) : [];
     }
 }
