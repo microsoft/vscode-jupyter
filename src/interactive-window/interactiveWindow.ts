@@ -362,7 +362,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     private async finishSysInfoWithFailureMessage(error: Error, cellPromise: Promise<NotebookCell>) {
-        let message = await this.errorHandler.getErrorMessageForDisplayInCell(error, 'start');
+        let message = await this.errorHandler.getErrorMessageForDisplayInCell(error, 'start', this.owningResource);
         // As message is displayed in markdown, ensure linebreaks are formatted accordingly.
         message = message.split('\n').join('  \n');
         this.updateSysInfoMessage(message, true, cellPromise);
@@ -543,7 +543,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                         .then((cell) =>
                             // If our cell result was a failure show an error
                             this.errorHandler
-                                .getErrorMessageForDisplayInCell(ex, 'execution')
+                                .getErrorMessageForDisplayInCell(ex, 'execution', this.owningResource)
                                 .then((message) => this.addErrorMessage(message, cell))
                         )
                         .catch(noop);

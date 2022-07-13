@@ -34,6 +34,9 @@ import { RemoteJupyterServerConnectionError } from '../../platform/errors/remote
 import { computeServerId, generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 import { Commands } from '../../platform/common/constants';
 import { RemoteJupyterServerUriProviderError } from '../../kernels/errors/remoteJupyterServerUriProviderError';
+import { IFileSystemNode } from '../../platform/common/platform/types.node';
+import { IReservedPythonNamedProvider } from '../../platform/interpreter/types';
+import { DataScienceErrorHandlerNode } from '../../kernels/errors/kernelErrorHandler.node';
 
 suite('DataScience Error Handler Unit Tests', () => {
     let applicationShell: IApplicationShell;
@@ -47,6 +50,8 @@ suite('DataScience Error Handler Unit Tests', () => {
     let uriStorage: IJupyterServerUriStorage;
     let cmdManager: ICommandManager;
     let extensions: IExtensions;
+    let fs: IFileSystemNode;
+    let reservedPythonNames: IReservedPythonNamedProvider;
     const jupyterInterpreter: PythonEnvironment = {
         displayName: 'Hello',
         uri: Uri.file('Some Path'),
@@ -63,12 +68,17 @@ suite('DataScience Error Handler Unit Tests', () => {
         cmdManager = mock<ICommandManager>();
         jupyterInterpreterService = mock<JupyterInterpreterService>();
         extensions = mock<IExtensions>();
+        extensions = mock<IExtensions>();
         when(dependencyManager.installMissingDependencies(anything())).thenResolve();
         when(workspaceService.workspaceFolders).thenReturn([]);
         kernelDependencyInstaller = mock<IKernelDependencyService>();
         when(kernelDependencyInstaller.areDependenciesInstalled(anything(), anything(), anything())).thenResolve(true);
         when(extensions.getExtension(anything())).thenReturn({ packageJSON: { displayName: '' } } as any);
-        dataScienceErrorHandler = new DataScienceErrorHandler(
+        fs = mock<IFileSystemNode>();
+        when(fs.searchLocal(anything(), anything(), anything())).thenResolve([]);
+        reservedPythonNames = mock<IReservedPythonNamedProvider>();
+        when(reservedPythonNames.isReserved(anything())).thenResolve(false);
+        dataScienceErrorHandler = new DataScienceErrorHandlerNode(
             instance(applicationShell),
             instance(dependencyManager),
             instance(browser),
@@ -78,7 +88,9 @@ suite('DataScience Error Handler Unit Tests', () => {
             instance(uriStorage),
             instance(cmdManager),
             false,
-            instance(extensions)
+            instance(extensions),
+            instance(fs),
+            instance(reservedPythonNames)
         );
         when(applicationShell.showErrorMessage(anything())).thenResolve();
         when(applicationShell.showErrorMessage(anything(), anything())).thenResolve();
@@ -554,7 +566,8 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                         envName: 'condaEnv1'
                     }
                 }),
-                'start'
+                'start',
+                undefined
             );
             assert.strictEqual(
                 result,
@@ -579,7 +592,8 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     undefined,
                     kernelConnection
                 ),
-                'start'
+                'start',
+                undefined
             );
             const command =
                 getOSType() === OSType.Windows
@@ -606,7 +620,8 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     undefined,
                     kernelConnection
                 ),
-                'start'
+                'start',
+                undefined
             );
             assert.strictEqual(
                 result,
@@ -628,7 +643,8 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                     undefined,
                     kernelConnection
                 ),
-                'restart'
+                'restart',
+                undefined
             );
             assert.strictEqual(
                 result,

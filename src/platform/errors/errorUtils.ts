@@ -579,11 +579,18 @@ export function createOutputWithErrorMessageForDisplay(errorMessage: string) {
             errorMessage = errorMessage.replace(matches[0], `<a href='${matches[2]}'>${matches[1]}</a>`);
         }
     }
+    // Ensure all lines are colored red as errors (except for lines containing hyperlinks).
+    const stack = errorMessage
+        .splitLines({ removeEmptyEntries: false, trim: false })
+        .map((line) => {
+            return line.includes('<a href') ? line : `\u001b[1;31m${line}`;
+        })
+        .join('\n');
     return new NotebookCellOutput([
         NotebookCellOutputItem.error({
             message: '',
             name: '',
-            stack: `\u001b[1;31m${errorMessage.trim()}`
+            stack
         })
     ]);
 }

@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+export const JupyterKernelStartFailureOverrideReservedName =
+    'https://aka.ms/JupyterKernelStartFailureOverrideReservedName';
+
 // Sum of __builtins__ and stdlib_list('3.9') (stdlib_list is a separate python package).
 // This has been generated and hard-coded to prevent unnecessarily launching the Python process.
 export const BuiltInModules = [

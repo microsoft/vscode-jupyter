@@ -34,6 +34,7 @@ import * as path from '../../platform/vscode-path/path';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { IReservedPythonNamedProvider } from '../../platform/interpreter/types';
+import { JupyterKernelStartFailureOverrideReservedName } from '../../platform/interpreter/constants';
 
 const enabledSettingName = 'diagnostics.reservedPythonNames.enabled';
 
@@ -164,7 +165,7 @@ export class ReservedFileNamesDiagnosticProvider
                 DiagnosticSeverity.Warning
             );
             diagnostic.code = {
-                target: Uri.parse('https://aka.ms/JupyterKernelStartFailureOverrideReservedName'),
+                target: Uri.parse(JupyterKernelStartFailureOverrideReservedName),
                 value: Common.learnMore()
             };
             diagnostic.source = Common.jupyter();
@@ -193,7 +194,7 @@ export class ReservedFileNamesDiagnosticProvider
                 DiagnosticSeverity.Warning
             );
             diagnostic.code = {
-                target: Uri.parse('https://aka.ms/JupyterKernelStartFailureOverrideReservedName'),
+                target: Uri.parse(JupyterKernelStartFailureOverrideReservedName),
                 value: Common.learnMore()
             };
             diagnostic.source = Common.jupyter();

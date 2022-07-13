@@ -32,7 +32,7 @@ export interface IDataScienceErrorHandler {
      * The value of `errorContext` is used to determine the context of the error message, whether it applies to starting or interrupting kernels or the like.
      * Thus based on the context the error message would be different.
      */
-    getErrorMessageForDisplayInCell(err: Error, errorContext: KernelAction): Promise<string>;
+    getErrorMessageForDisplayInCell(err: Error, errorContext: KernelAction, resource: Resource): Promise<string>;
 }
 
 export abstract class BaseKernelError extends BaseError {

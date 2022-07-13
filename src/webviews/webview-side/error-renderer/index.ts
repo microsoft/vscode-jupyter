@@ -34,6 +34,12 @@ const handleInnerClick = (target: HTMLAnchorElement, context: RendererContext<an
                 payload: target.href
             });
             return;
+        } else if (target.href.indexOf('https://aka.ms/') === 0) {
+            context.postMessage({
+                message: 'open_link',
+                payload: target.href
+            });
+            return;
         }
     }
 };
@@ -230,11 +236,11 @@ export const activate: ActivationFunction = (context) => {
 
             // there is traceback
             // Fix links in tracebacks.
-            // RegEx `<a href='<file path>?line=<linenumber>'>line number</a>`
+            // RegEx `<a href='<file path>?line=<linenumber>'>line number or file name</a>`
             // When we escape, the links would be escaped as well.
             // We need to unescape them.
             const fileLinkRegExp = new RegExp(
-                /&lt;a href=&#39;(file|vscode-notebook-cell):(.*(?=\?))\?line=(\d*)&#39;&gt;(\d*)&lt;\/a&gt;/
+                /&lt;a href=&#39;(file|vscode-notebook-cell):(.*(?=\?))\?line=(\d*)&#39;&gt;(.*)&lt;\/a&gt;/
             );
             const commandRegEx = new RegExp(/&lt;a href=&#39;command:(.*)&#39;&gt;(.*)&lt;\/a&gt;/);
             const akaMsLinks = new RegExp(/&lt;a href=&#39;https:\/\/aka.ms\/(.*)&#39;&gt;(.*)&lt;\/a&gt;/);
@@ -244,7 +250,7 @@ export const activate: ActivationFunction = (context) => {
                     if (matches.length === 5) {
                         line = line.replace(
                             matches[0],
-                            `<a href='${matches[1]}:${matches[2]}?line=${matches[3]}'>${matches[4]}<a>`
+                            `<a href='${matches[1]}:${matches[2]}?line=${matches[3]}'>${matches[4]}</a>`
                         );
                     }
                 }

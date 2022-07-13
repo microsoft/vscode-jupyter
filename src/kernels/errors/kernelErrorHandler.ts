@@ -112,7 +112,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             this.applicationShell.showErrorMessage(message).then(noop, noop);
         }
     }
-    public async getErrorMessageForDisplayInCell(error: Error, errorContext: KernelAction) {
+    public async getErrorMessageForDisplayInCell(error: Error, errorContext: KernelAction, resource: Resource) {
         error = WrappedError.unwrap(error);
         if (!isCancellationError(error)) {
             traceError(`Error in execution (get message for cell)`, error);
@@ -168,9 +168,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                     failureInfo.reason === KernelFailureReason.moduleNotFoundFailure &&
                     !['ipykernel_launcher', 'ipykernel'].includes(failureInfo.moduleName)
                 ) {
-                    // Looks like some other module is missing.
-                    // Sometimes when you create files like xml.py, then kernel startup fails due to xml.dom module not being found.
-                    // TODO
+                    await this.addErrorMessageIfPythonArePossiblyOverridingPythonModules(messageParts, resource);
                 }
                 return messageParts.join('\n');
             } else if (
@@ -179,9 +177,11 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                 error.category === 'invalidkernel'
             ) {
                 // In the case when we're using non-zmq, we don't have much error information, as jupyter doesn't provide this.
-                // If the kernel fails to start, treat that as a scenario where kernel failed to start
-                // due to some overriding modules.
-                // TODO:
+                // If the kernel fails to start, treat that as a scenario where kernel failed to start due to some overriding modules.
+                const messageParts: string[] = [];
+                await this.addErrorMessageIfPythonArePossiblyOverridingPythonModules(messageParts, resource);
+                messageParts.push(getUserFriendlyErrorMessage(error, errorContext));
+                return messageParts.join('\n');
             }
         } else if (
             error instanceof RemoteJupyterServerConnectionError ||
@@ -374,6 +374,13 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             return KernelInterpreterDependencyResponse.failed;
         }
     }
+    protected async addErrorMessageIfPythonArePossiblyOverridingPythonModules(
+        _messages: string[],
+        _resource: Resource
+    ): Promise<void> {
+        //
+    }
+
     private async showMessageWithMoreInfo(message: string, moreInfoLink?: string) {
         if (!message.includes(Commands.ViewJupyterOutput)) {
             message = `${message} \n${DataScience.viewJupyterLogForFurtherInfo()}`;
