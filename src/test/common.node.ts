@@ -26,7 +26,6 @@ import { IDisposable } from '../platform/common/types';
 import { swallowExceptions } from '../platform/common/utils/misc';
 import { JupyterServer } from './datascience/jupyterServer.node';
 import type { ConfigurationTarget, NotebookDocument, TextDocument, Uri } from 'vscode';
-import { traceInfoIfCI } from '../platform/logging';
 
 export { createEventHandler } from './common';
 
@@ -330,7 +329,7 @@ export async function captureScreenShot(contextOrFileName: string | Mocha.Contex
                   .sha256()
                   .update(contextOrFileName.currentTest?.fullTitle() || '')
                   .digest('hex')
-                  .substring(0, 10);
+                  .substring(0, 10); // Ensure file names are short enough for windows.
     const testTitle = typeof contextOrFileName === 'string' ? '' : contextOrFileName.currentTest?.title || '';
     const counter = (screenShotCount.get(fullTestNameHash) || 0) + 1;
     screenShotCount.set(fullTestNameHash, counter);
