@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { inject, injectable, optional } from 'inversify';
+import { inject, optional } from 'inversify';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
 import { CancellationTokenSource, ConfigurationTarget, Uri, workspace } from 'vscode';
@@ -58,8 +58,7 @@ import { RemoteJupyterServerUriProviderError } from './remoteJupyterServerUriPro
 import { InvalidRemoteJupyterServerUriHandleError } from './invalidRemoteJupyterServerUriHandleError';
 import { BaseKernelError, IDataScienceErrorHandler, WrappedKernelError } from './types';
 
-@injectable()
-export class DataScienceErrorHandler implements IDataScienceErrorHandler {
+export abstract class DataScienceErrorHandler implements IDataScienceErrorHandler {
     constructor(
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IJupyterInterpreterDependencyManager)
@@ -378,17 +377,13 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             return KernelInterpreterDependencyResponse.failed;
         }
     }
-    protected async addErrorMessageIfPythonArePossiblyOverridingPythonModules(
+    protected abstract addErrorMessageIfPythonArePossiblyOverridingPythonModules(
         _messages: string[],
         _resource: Resource
-    ): Promise<void> {
-        //
-    }
-    protected async getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(
+    ): Promise<void>;
+    protected abstract getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(
         _resource: Resource
-    ): Promise<Uri[]> {
-        return [];
-    }
+    ): Promise<Uri[]>;
 
     private async showMessageWithMoreInfo(message: string, moreInfoLink?: string) {
         if (!message.includes(Commands.ViewJupyterOutput)) {
