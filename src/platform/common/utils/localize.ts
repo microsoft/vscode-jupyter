@@ -1386,7 +1386,8 @@ export namespace DataScience {
             'DataScience.filesPossiblyOverridingPythonModulesMayHavePreventedKernelFromStarting',
             'Some of the following files found in the working directory may have prevented the Kernel from starting. Consider renaming them.'
         );
-    export const listOfFilesWithLinksThatMightNeedToBeRenamed = () => localize('DataScience.listOfFilesWithLinksThatMightNeedToBeRenamed', 'File(s): {0} might need to be renamed.');
+    export const listOfFilesWithLinksThatMightNeedToBeRenamed = () =>
+        localize('DataScience.listOfFilesWithLinksThatMightNeedToBeRenamed', 'File(s): {0} might need to be renamed.');
 }
 
 export namespace Deprecated {
