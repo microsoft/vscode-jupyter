@@ -68,7 +68,8 @@ import { InteractiveWindowMessages } from '../../../messageTypes';
 const expectedPromptMessageSuffix = `requires ${ProductNames.get(Product.ipykernel)!} to be installed.`;
 
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
-suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
+// eslint-disable-next-line no-only-tests/no-only-tests
+suite.only('DataScience - VSCode Notebook - (Execution) (slow)', function () {
     let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
     let vscodeNotebook: IVSCodeNotebook;
@@ -211,7 +212,7 @@ suite('DataScience - VSCode Notebook - (Execution) (slow)', function () {
 
         await Promise.all([
             runCell(cell),
-            waitForTextOutput(cell, 'HelloWorldEnvVariable', 0, false),
+            waitForTextOutput(cell, 'HelloWorldEnvVariable1', 0, false),
             waitForTextOutput(cell, 'dummyFolderForPythonPath', 0, false)
         ]);
     });
