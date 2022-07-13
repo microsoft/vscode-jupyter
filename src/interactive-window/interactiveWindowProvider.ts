@@ -156,15 +156,14 @@ export class InteractiveWindowProvider
         if (!result) {
             // No match. Create a new item.
             result = await this.create(resource, mode, connection);
-            // We already check preferred kernel before creating the interactive window
-            // no need to update it anymore.
-            await result.start(undefined);
+            // start the kernel
+            result.start();
         } else {
             const preferredController = connection
                 ? this.controllerRegistration.get(connection, InteractiveWindowView)
                 : await this.controllerDefaultService.computeDefaultController(resource, InteractiveWindowView);
 
-            await result.start(preferredController);
+            await result.restore(preferredController);
         }
 
         return result;

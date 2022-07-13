@@ -166,26 +166,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
     }
 
-    public async start(preferredController: IVSCodeNotebookController | undefined) {
-        if (preferredController) {
-            this.preferredController = preferredController;
-        }
-        if (!this.notebookEditor) {
-            if (isInteractiveInputTab(this.notebookEditorOrTab)) {
-                const document = await workspace.openNotebookDocument(this.notebookEditorOrTab.input.uri);
-                const editor = await window.showNotebookDocument(document, {
-                    viewColumn: this.notebookEditorOrTab.group.viewColumn
-                });
-                this._notebookEditor = editor;
-                await this.startKernel(
-                    this.preferredController?.controller,
-                    this.preferredController?.connection
-                ).ignoreErrors();
-            } else {
-                this._notebookEditor = this.notebookEditorOrTab;
-            }
-        }
-
+    public start() {
         window.onDidChangeActiveNotebookEditor((e) => {
             if (e === this.notebookEditor) {
                 this._onDidChangeViewState.fire();
@@ -209,6 +190,25 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         } else if (this.isWebExtension) {
             this.insertInfoMessage(DataScience.noKernelsSpecifyRemote()).ignoreErrors();
         }
+    }
+
+    public async restore(preferredController: IVSCodeNotebookController | undefined) {
+        if (preferredController) {
+            this.preferredController = preferredController;
+        }
+        if (!this.notebookEditor) {
+            if (isInteractiveInputTab(this.notebookEditorOrTab)) {
+                const document = await workspace.openNotebookDocument(this.notebookEditorOrTab.input.uri);
+                const editor = await window.showNotebookDocument(document, {
+                    viewColumn: this.notebookEditorOrTab.group.viewColumn
+                });
+                this._notebookEditor = editor;
+            } else {
+                this._notebookEditor = this.notebookEditorOrTab;
+            }
+        }
+
+        this.start();
     }
 
     private async startKernel(

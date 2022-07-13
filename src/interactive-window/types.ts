@@ -67,7 +67,8 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly inputUri?: Uri;
     readonly notebookDocument?: NotebookDocument;
     closed: Event<void>;
-    start(preferredController: IVSCodeNotebookController | undefined): Promise<void>;
+    start(): void;
+    restore(preferredController: IVSCodeNotebookController | undefined): Promise<void>;
     addCode(code: string, file: Uri, line: number): Promise<boolean>;
     addErrorMessage(message: string, cell: NotebookCell): Promise<void>;
     debugCode(code: string, file: Uri, line: number): Promise<boolean>;
