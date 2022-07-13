@@ -1365,7 +1365,7 @@ export namespace DataScience {
     export const pythonFileOverridesPythonPackage = () =>
         localize(
             'DataScience.pythonFileOverridesPythonPackage',
-            'This file could override an existing Python package, consider renaming it.'
+            'This file could potentially override an existing Python package and interfere with kernel execution, consider renaming it.'
         );
     export const alwaysIgnoreWarningsAboutOverridingPythonPackages = () =>
         localize(
