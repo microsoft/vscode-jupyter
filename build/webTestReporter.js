@@ -138,7 +138,8 @@ exports.dumpTestSummary = () => {
                     const fullTestNameHash = hashjs
                         .sha256()
                         .update(output.fullTitle() || '')
-                        .digest('hex');
+                        .digest('hex')
+                        .substring(0, 10);
                     const fileNamePrefix = `${output.title}_${fullTestNameHash}`.replace(/[\W]+/g, '_');
                     const assertionError = {
                         ename: '',

@@ -9,7 +9,6 @@ import * as hashjs from 'hash.js';
 import * as fs from 'fs-extra';
 import * as path from '../platform/vscode-path/path';
 import * as tmp from 'tmp';
-import * as uuid from 'uuid/v4';
 import { coerce, SemVer } from 'semver';
 import { IProcessService } from '../platform/common/process/types.node';
 import {
@@ -314,6 +313,7 @@ export async function openFile(file: string): Promise<TextDocument> {
     assert(vscode.window.activeTextEditor, 'No active editor');
     return textDocument;
 }
+const screenShotCount = new Map<string, number>();
 /**
  * Captures screenshots (png format) & dumpts into root directory (only on CI).
  * If there's a failure, it will be logged (errors are swallowed).
@@ -328,11 +328,14 @@ export async function captureScreenShot(contextOrFileName: string | Mocha.Contex
             : hashjs
                   .sha256()
                   .update(contextOrFileName.currentTest?.fullTitle() || '')
-                  .digest('hex');
+                  .digest('hex')
+                  .substring(0, 10);
     const testTitle = typeof contextOrFileName === 'string' ? '' : contextOrFileName.currentTest?.title || '';
+    const counter = (screenShotCount.get(fullTestNameHash) || 0) + 1;
+    screenShotCount.set(fullTestNameHash, counter);
     const fileNamePrefix =
         typeof contextOrFileName === 'string' ? contextOrFileName : `${testTitle}_${fullTestNameHash}`;
-    const name = `${fileNamePrefix}_${uuid()}`.replace(/[\W]+/g, '_');
+    const name = `${fileNamePrefix}_${counter}`.replace(/[\W]+/g, '_');
     const filename = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, `${name}-screenshot.png`);
     try {
         const screenshot = require('screenshot-desktop');
