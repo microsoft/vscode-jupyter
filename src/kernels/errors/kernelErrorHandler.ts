@@ -361,7 +361,6 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             }
         } else {
             const files = await this.getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(resource);
-            console.error('files', files);
             const failureInfo = analyzeKernelErrors(
                 this.workspaceService.workspaceFolders || [],
                 err,

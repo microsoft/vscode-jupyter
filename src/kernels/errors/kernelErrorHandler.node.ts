@@ -13,7 +13,6 @@ import {
 import { DataScience, Common } from '../../platform/common/utils/localize';
 import { IKernelDependencyService } from '../types';
 import { IJupyterInterpreterDependencyManager, IJupyterServerUriStorage } from '../jupyter/types';
-import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import * as path from '../../platform/vscode-path/resources';
 import { IReservedPythonNamedProvider } from '../../platform/interpreter/types';
 import { JupyterKernelStartFailureOverrideReservedName } from '../../platform/interpreter/constants';
@@ -36,7 +35,6 @@ export class DataScienceErrorHandlerNode extends DataScienceErrorHandler {
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(IsWebExtension) isWebExtension: boolean,
         @inject(IExtensions) extensions: IExtensions,
-        @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
         @inject(IReservedPythonNamedProvider) private readonly reservedPythonNames: IReservedPythonNamedProvider
     ) {
         super(
@@ -81,21 +79,6 @@ export class DataScienceErrorHandlerNode extends DataScienceErrorHandler {
     protected override async getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(
         resource: Resource
     ): Promise<Uri[]> {
-        if (!resource) {
-            return [];
-        }
-        // eslint-disable-next-line local-rules/dont-use-fspath
-        const files = await this.fs.searchLocal('*.py', path.dirname(resource).fsPath, true);
-        const problematicFiles: Uri[] = [];
-        await Promise.all(
-            files.map(async (file) => {
-                const uri = Uri.file(file);
-                if (await this.reservedPythonNames.isReserved(uri)) {
-                    // eslint-disable-next-line local-rules/dont-use-fspath
-                    problematicFiles.push(Uri.joinPath(path.dirname(resource), uri.fsPath));
-                }
-            })
-        );
-        return problematicFiles;
+        return resource ? this.reservedPythonNames.getFilesOverridingReservedPythonNames(resource) : [];
     }
 }

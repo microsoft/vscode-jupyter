@@ -6,7 +6,6 @@ import { ConfigurationTarget, Memento, Uri } from 'vscode';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IMemento, GLOBAL_MEMENTO, IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { BuiltInModules } from './constants';
-import * as path from '../../platform/vscode-path/path';
 import { noop } from '../../platform/common/utils/misc';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { IPlatformService } from '../../platform/common/platform/types';
@@ -14,6 +13,8 @@ import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IReservedPythonNamedProvider } from './types';
 import { IInterpreterPackages } from '../../telemetry';
 import * as minimatch from 'minimatch';
+import { IFileSystemNode } from '../common/platform/types.node';
+import * as path from '../../platform/vscode-path/resources';
 
 const PYTHON_PACKAGES_MEMENTO_KEY = 'jupyter.pythonPackages';
 const ignoreListSettingName = 'diagnostics.reservedPythonNames.exclude';
@@ -29,7 +30,8 @@ export class ReservedNamedProvider implements IReservedPythonNamedProvider {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private cache: Memento,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IPlatformService) private platform: IPlatformService,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+        @inject(IFileSystemNode) private readonly fs: IFileSystemNode
     ) {
         disposables.push(this);
         this.cachedModules = new Set(
@@ -43,6 +45,20 @@ export class ReservedNamedProvider implements IReservedPythonNamedProvider {
         disposeAllDisposables(this.disposables);
     }
 
+    public async getFilesOverridingReservedPythonNames(cwd: Uri): Promise<Uri[]> {
+        const files = await this.fs.searchLocal('*.py', cwd.fsPath, true);
+        const problematicFiles: Uri[] = [];
+        await Promise.all(
+            files.map(async (file) => {
+                const uri = Uri.file(file);
+                if (await this.isReserved(uri)) {
+                    // eslint-disable-next-line local-rules/dont-use-fspath
+                    problematicFiles.push(Uri.joinPath(cwd, uri.fsPath));
+                }
+            })
+        );
+        return problematicFiles;
+    }
     public async isReserved(uri: Uri): Promise<boolean> {
         // Lets keep it simple and focus only on plain text python files.
         if (!uri.fsPath.toLowerCase().endsWith('.py')) {
@@ -60,7 +76,7 @@ export class ReservedNamedProvider implements IReservedPythonNamedProvider {
         }
 
         // Use the name of the file as the module name.
-        const possibleModule = path.basename(uri.fsPath, path.extname(uri.fsPath)).toLowerCase();
+        const possibleModule = path.basename(uri, path.extname(uri)).toLowerCase();
         if (this.cachedModules.has(possibleModule)) {
             return true;
         }

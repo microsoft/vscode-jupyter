@@ -34,7 +34,6 @@ import { RemoteJupyterServerConnectionError } from '../../platform/errors/remote
 import { computeServerId, generateUriFromRemoteProvider } from '../../kernels/jupyter/jupyterUtils';
 import { Commands } from '../../platform/common/constants';
 import { RemoteJupyterServerUriProviderError } from '../../kernels/errors/remoteJupyterServerUriProviderError';
-import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { IReservedPythonNamedProvider } from '../../platform/interpreter/types';
 import { DataScienceErrorHandlerNode } from '../../kernels/errors/kernelErrorHandler.node';
 
@@ -50,7 +49,6 @@ suite('DataScience Error Handler Unit Tests', () => {
     let uriStorage: IJupyterServerUriStorage;
     let cmdManager: ICommandManager;
     let extensions: IExtensions;
-    let fs: IFileSystemNode;
     let reservedPythonNames: IReservedPythonNamedProvider;
     const jupyterInterpreter: PythonEnvironment = {
         displayName: 'Hello',
@@ -74,8 +72,6 @@ suite('DataScience Error Handler Unit Tests', () => {
         kernelDependencyInstaller = mock<IKernelDependencyService>();
         when(kernelDependencyInstaller.areDependenciesInstalled(anything(), anything(), anything())).thenResolve(true);
         when(extensions.getExtension(anything())).thenReturn({ packageJSON: { displayName: '' } } as any);
-        fs = mock<IFileSystemNode>();
-        when(fs.searchLocal(anything(), anything(), anything())).thenResolve([]);
         reservedPythonNames = mock<IReservedPythonNamedProvider>();
         when(reservedPythonNames.isReserved(anything())).thenResolve(false);
         dataScienceErrorHandler = new DataScienceErrorHandlerNode(
@@ -89,7 +85,6 @@ suite('DataScience Error Handler Unit Tests', () => {
             instance(cmdManager),
             false,
             instance(extensions),
-            instance(fs),
             instance(reservedPythonNames)
         );
         when(applicationShell.showErrorMessage(anything())).thenResolve();
@@ -342,8 +337,9 @@ suite('DataScience Error Handler Unit Tests', () => {
                 }
             ];
             when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
-            when(fs.searchLocal('*.py', anything(), anything())).thenResolve(['xml.py', 'another_file.py']);
-            when(reservedPythonNames.isReserved(anything())).thenCall((uri: Uri) => uri.toString().endsWith('xml.py'));
+            when(reservedPythonNames.getFilesOverridingReservedPythonNames(anything())).thenResolve([
+                Uri.file('/Users/donjayamanne/crap/kernel_issues/xml.py')
+            ]);
             await dataScienceErrorHandler.handleKernelError(
                 new KernelDiedError(
                     'Hello',
@@ -370,10 +366,9 @@ suite('DataScience Error Handler Unit Tests', () => {
                 }
             ];
             when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
-            when(fs.searchLocal('*.py', anything(), anything())).thenResolve(['xml.py', 'another_file.py']);
             // Lets mark everything as not being reserved, in this case, we should not
             // treat files such as xml.py as overriding the builtin python modules
-            when(reservedPythonNames.isReserved(anything())).thenResolve(false);
+            when(reservedPythonNames.getFilesOverridingReservedPythonNames(anything())).thenResolve([]);
             await dataScienceErrorHandler.handleKernelError(
                 new KernelDiedError(
                     'Hello',
