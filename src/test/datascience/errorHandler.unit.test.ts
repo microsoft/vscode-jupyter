@@ -4,7 +4,7 @@
 'use strict';
 import * as dedent from 'dedent';
 import { assert } from 'chai';
-import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
+import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../platform/common/application/types';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
@@ -225,6 +225,41 @@ suite('DataScience Error Handler Unit Tests', () => {
                     from random import Random as _Random
                 ImportError: cannot import name 'Random' from 'random' (c:\\Development\\samples\\pySamples\\sample1\\kernel_issues\\start\\random.py)
                 `,
+            userOverridingXmlPyFile_Linux: `
+                Info 14:16:26: Cancel pending cells
+                Info 14:16:26: KernelProcess Exit Exit - 1 Traceback (most recent call last):\n' +
+                '  File "/opt/homebrew/Cellar/python@3.9/3.9.13_1/Frameworks/Python.framework/Versions/3.9/lib/python3.9/runpy.py", line 197, in _run_module_as_main\n' +
+                '    return _run_code(code, main_globals, None,\n' +
+                '  File "/opt/homebrew/Cellar/python@3.9/3.9.13_1/Frameworks/Python.framework/Versions/3.9/lib/python3.9/runpy.py", line 87, in _run_code\n' +
+                '    exec(code, run_globals)\n' +
+                '  File "/Users/donjayamanne/crap/.venvWidgets/lib/python3.9/site-packages/ipykernel_launcher.py", line 15, in <module>\n' +
+                '    from ipykernel import kernelapp as app\n' +
+                '  File "/Users/donjayamanne/crap/.venvWidgets/lib/python3.9/site-packages/ipykernel/kernelapp.py", line 18, in <module>\n' +
+                '    from IPython.core.application import (\n' +
+                '  File "/Users/donjayamanne/crap/.venvWidgets/lib/python3.9/site-packages/IPython/__init__.py", line 53, in <module>\n' +
+                '    from .terminal.embed import embed\n' +
+                '  File "/Users/donjayamanne/crap/.venvWidgets/lib/python3.9/site-packages/IPython/terminal/embed.py", line 16, in <module>\n' +
+                '    from IPython.terminal.interactiveshell import TerminalInteractiveShell\n' +
+                '  File "/Users/donjayamanne/crap/.venvWidgets/lib/python3.9/site-packages/IPython/terminal/interactiveshell.py", line 29, in <module>\n' +
+                '    from prompt_toolkit.auto_suggest import AutoSuggestFromHistory\n' +
+                '  File "/Users/donjayamanne/crap/.venvWidgets/lib/python3.9/site-packages/prompt_toolkit/__init__.py", line 16, in <module>\n' +
+                '    from .application import Application\n' +
+                '  File "/Users/donjayamanne/crap/.venvWidgets/lib/python3.9/site-packages/prompt_toolkit/application/__init__.py", line 1, in <module>\n' +
+                '    from .application import Application\n' +
+                '  File "/Users/donjayamanne/crap/.venvWidgets/lib/python3.9/site-packages/prompt_toolkit/application/application.py", line 41, in <module>\n' +
+                '    from prompt_toolkit.buffer import Buffer\n' +
+                '  File "/Users/donjayamanne/crap/.venvWidgets/lib/python3.9/site-packages/prompt_toolkit/buffer.py", line 36, in <module>\n' +
+                '    from .completion import (\n' +
+                '  File "/Users/donjayamanne/crap/.venvWidgets/lib/python3.9/site-packages/prompt_toolkit/completion/__init__.py", line 1, in <module>\n' +
+                '    from .base import (\n' +
+                '  File "/Users/donjayamanne/crap/.venvWidgets/lib/python3.9/site-packages/prompt_toolkit/completion/base.py", line 9, in <module>\n' +
+                '    from prompt_toolkit.formatted_text import AnyFormattedText, StyleAndTextTuples\n' +
+                '  File "/Users/donjayamanne/crap/.venvWidgets/lib/python3.9/site-packages/prompt_toolkit/formatted_text/__init__.py", line 23, in <module>\n' +
+                '    from .html import HTML\n' +
+                '  File "/Users/donjayamanne/crap/.venvWidgets/lib/python3.9/site-packages/prompt_toolkit/formatted_text/html.py", line 1, in <module>\n' +
+                '    import xml.dom.minidom as minidom\n' +
+                "ModuleNotFoundError: No module named 'xml.dom'; 'xml' is not a package\n"
+                `,
             failureToStartJupyter: `namespace, args = self._parse_known_args(args, namespace)
                 File "/home/don/miniconda3/envs/tf/lib/python3.9/argparse.py", line 2062, in _parse_known_args
                     start_index = consume_optional(start_index)
@@ -297,6 +332,64 @@ suite('DataScience Error Handler Unit Tests', () => {
             );
 
             verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresOverridingBuiltInModules');
+        });
+        test('Module not found due to user file overriding overriding a module', async () => {
+            const workspaceFolders: WorkspaceFolder[] = [
+                {
+                    index: 0,
+                    name: '',
+                    uri: Uri.file('/Users/donjayamanne/crap/kernel_issues')
+                }
+            ];
+            when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
+            when(fs.searchLocal('*.py', anything(), anything())).thenResolve(['xml.py', 'another_file.py']);
+            when(reservedPythonNames.isReserved(anything())).thenCall((uri: Uri) => uri.toString().endsWith('xml.py'));
+            await dataScienceErrorHandler.handleKernelError(
+                new KernelDiedError(
+                    'Hello',
+                    stdErrorMessages.userOverridingXmlPyFile_Linux,
+                    undefined,
+                    kernelConnection
+                ),
+                'start',
+                kernelConnection,
+                Uri.file('/Users/donjayamanne/crap/kernel_issues'),
+                'jupyterExtension'
+            );
+
+            const expectedMessage = DataScience.fileSeemsToBeInterferingWithKernelStartup().format('xml.py');
+
+            verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresOverridingBuiltInModules');
+        });
+        test('Module not found and missing module is not overridden by user files', async () => {
+            const workspaceFolders: WorkspaceFolder[] = [
+                {
+                    index: 0,
+                    name: '',
+                    uri: Uri.file('/Users/donjayamanne/crap/kernel_issues')
+                }
+            ];
+            when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
+            when(fs.searchLocal('*.py', anything(), anything())).thenResolve(['xml.py', 'another_file.py']);
+            // Lets mark everything as not being reserved, in this case, we should not
+            // treat files such as xml.py as overriding the builtin python modules
+            when(reservedPythonNames.isReserved(anything())).thenResolve(false);
+            await dataScienceErrorHandler.handleKernelError(
+                new KernelDiedError(
+                    'Hello',
+                    stdErrorMessages.userOverridingXmlPyFile_Linux,
+                    undefined,
+                    kernelConnection
+                ),
+                'start',
+                kernelConnection,
+                Uri.file('/Users/donjayamanne/crap/kernel_issues'),
+                'jupyterExtension'
+            );
+
+            const expectedMessage = DataScience.failedToStartKernelDueToMissingModule().format('xml.dom');
+
+            verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresMissingModule');
         });
         test('Unable to import <name> from user overriding module (linux)', async () => {
             await dataScienceErrorHandler.handleKernelError(
@@ -841,10 +934,14 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
                 ? message
                 : `${message} \n${DataScience.viewJupyterLogForFurtherInfo()}`;
             if (linkInfo) {
-                verify(applicationShell.showErrorMessage(message, Common.learnMore())).once();
-                verify(browser.launch(linkInfo)).once();
+                verify(applicationShell.showErrorMessage(anything(), Common.learnMore())).once();
             } else {
-                verify(applicationShell.showErrorMessage(message)).once();
+                verify(applicationShell.showErrorMessage(anything())).once();
+            }
+            const displayedMessage = capture(applicationShell.showErrorMessage).first();
+            assert.strictEqual(displayedMessage[0], message);
+            if (linkInfo) {
+                verify(browser.launch(linkInfo)).once();
             }
         }
     });

@@ -3,7 +3,7 @@
 import { inject, injectable, optional } from 'inversify';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
-import { CancellationTokenSource, ConfigurationTarget, workspace } from 'vscode';
+import { CancellationTokenSource, ConfigurationTarget, Uri, workspace } from 'vscode';
 import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError';
 import { KernelDiedError } from './kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError';
@@ -145,11 +145,13 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             // its possible the kernel failed to start due to missing dependencies.
             return getIPyKernelMissingErrorMessageForCell(error.kernelConnectionMetadata) || error.message;
         } else if (error instanceof BaseKernelError || error instanceof WrappedKernelError) {
+            const files = await this.getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(resource);
             const failureInfo = analyzeKernelErrors(
                 workspace.workspaceFolders || [],
                 error,
                 getDisplayNameOrNameOfKernelConnection(error.kernelConnectionMetadata),
-                error.kernelConnectionMetadata.interpreter?.sysPrefix
+                error.kernelConnectionMetadata.interpreter?.sysPrefix,
+                files
             );
             if (failureInfo) {
                 // Special case for ipykernel module missing.
@@ -358,11 +360,14 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                 tokenSource.dispose();
             }
         } else {
+            const files = await this.getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(resource);
+            console.error('files', files);
             const failureInfo = analyzeKernelErrors(
                 this.workspaceService.workspaceFolders || [],
                 err,
                 getDisplayNameOrNameOfKernelConnection(kernelConnection),
-                kernelConnection.interpreter?.sysPrefix
+                kernelConnection.interpreter?.sysPrefix,
+                files
             );
             if (failureInfo) {
                 this.showMessageWithMoreInfo(failureInfo?.message, failureInfo?.moreInfoLink).catch(noop);
@@ -379,6 +384,11 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         _resource: Resource
     ): Promise<void> {
         //
+    }
+    protected async getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(
+        _resource: Resource
+    ): Promise<Uri[]> {
+        return [];
     }
 
     private async showMessageWithMoreInfo(message: string, moreInfoLink?: string) {

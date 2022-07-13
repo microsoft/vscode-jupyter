@@ -58,7 +58,9 @@ export class DataScienceErrorHandlerNode extends DataScienceErrorHandler {
     ) {
         // Looks like some other module is missing.
         // Sometimes when you create files like xml.py, then kernel startup fails due to xml.dom module not being found.
-        const problematicFiles = await this.getProblematicPythonFilesInSameDirectoryAsResource(resource);
+        const problematicFiles = await this.getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(
+            resource
+        );
         if (problematicFiles.length > 0) {
             const fileLinks = problematicFiles.map(
                 (file) => `<a href='${file.toString()}?line=1'>${path.basename(file)}</a>`
@@ -76,7 +78,9 @@ export class DataScienceErrorHandlerNode extends DataScienceErrorHandler {
             messages.push(Common.clickHereForMoreInfoWithHtml().format(JupyterKernelStartFailureOverrideReservedName));
         }
     }
-    private async getProblematicPythonFilesInSameDirectoryAsResource(resource: Resource): Promise<Uri[]> {
+    protected override async getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(
+        resource: Resource
+    ): Promise<Uri[]> {
         if (!resource) {
             return [];
         }

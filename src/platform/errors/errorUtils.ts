@@ -258,7 +258,8 @@ export function analyzeKernelErrors(
     workspaceFolders: readonly WorkspaceFolder[],
     error: Error | string,
     kernelDisplayName: string | undefined,
-    pythonSysPrefix: string = ''
+    pythonSysPrefix: string = '',
+    filesInCwd: Uri[] = []
 ): KernelFailure | undefined {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const stdErrOrStackTrace = error instanceof BaseError ? error.stdErr || error.stack || '' : error.toString();
@@ -423,22 +424,11 @@ export function analyzeKernelErrors(
             };
         }
     }
-    if (lastTwolinesOfError && lastTwolinesOfError[1].toLowerCase().startsWith('ModuleNotFoundError'.toLowerCase())) {
-        const info = extractModuleAndFileFromImportError(lastTwolinesOfError[1]);
-        if (info) {
-            return {
-                reason: KernelFailureReason.moduleNotFoundFailure,
-                moduleName: info.moduleName,
-                message: DataScience.failedToStartKernelDueToMissingModule().format(info.moduleName),
-                moreInfoLink: 'https://aka.ms/kernelFailuresMissingModule',
-                telemetrySafeTags: ['module.notfound.error']
-            };
-        }
-    }
     // This happens when ipykernel is not installed and we attempt to run without checking for ipykernel.
     // '/home/don/samples/pySamples/crap/.venv/bin/python: No module named ipykernel_launcher\n'
     const noModule = 'No module named'.toLowerCase();
-    if (stdErr.includes(noModule)) {
+    const isNotAPackage = `is not a package`.toLowerCase();
+    if (stdErr.includes(noModule) && !isNotAPackage) {
         const line = stdErrOrStackTrace
             .splitLines()
             .map((line) => line.trim())
@@ -450,6 +440,60 @@ export function analyzeKernelErrors(
                 reason: KernelFailureReason.moduleNotFoundFailure,
                 moduleName,
                 message: DataScience.failedToStartKernelDueToMissingModule().format(moduleName),
+                moreInfoLink: 'https://aka.ms/kernelFailuresMissingModule',
+                telemetrySafeTags: ['module.notfound.error']
+            };
+        }
+    } else if (stdErr.includes(noModule) && isNotAPackage) {
+        const line = stdErrOrStackTrace
+            .splitLines()
+            .map((line) => line.trim())
+            .filter((line) => line.length)
+            .find((line) => line.toLowerCase().includes(noModule));
+        let moduleName = line ? line.substring(line.toLowerCase().indexOf(noModule) + noModule.length).trim() : '';
+        console.error('ModuleName', moduleName, moduleName.split("'").length);
+        let fileName = '';
+        if (moduleName.split("'").length > 2) {
+            fileName = moduleName.split("'").slice(-2)[0] || '';
+            fileName = fileName ? `${fileName}.py` : '';
+            moduleName = moduleName.split("'")[1] || moduleName;
+        }
+        console.error('1');
+        if (
+            moduleName &&
+            fileName &&
+            moduleName !== fileName &&
+            filesInCwd.some((file) => file.toString().endsWith(fileName))
+        ) {
+            console.error('2');
+            return {
+                reason: KernelFailureReason.overridingBuiltinModules,
+                fileName,
+                moduleName,
+                message: DataScience.fileSeemsToBeInterferingWithKernelStartup().format(fileName),
+                moreInfoLink: 'https://aka.ms/kernelFailuresOverridingBuiltInModules',
+                telemetrySafeTags: ['import.error', 'override.modules']
+            };
+        } else {
+            console.error('3');
+            return {
+                reason: KernelFailureReason.moduleNotFoundFailure,
+                moduleName,
+                message: DataScience.failedToStartKernelDueToMissingModule().format(moduleName),
+                moreInfoLink: 'https://aka.ms/kernelFailuresMissingModule',
+                telemetrySafeTags: ['module.notfound.error']
+            };
+        }
+    } else if (
+        lastTwolinesOfError &&
+        lastTwolinesOfError[1].toLowerCase().startsWith('ModuleNotFoundError'.toLowerCase())
+    ) {
+        const info = extractModuleAndFileFromImportError(lastTwolinesOfError[1]);
+        if (info) {
+            return {
+                reason: KernelFailureReason.moduleNotFoundFailure,
+                moduleName: info.moduleName,
+                message: DataScience.failedToStartKernelDueToMissingModule().format(info.moduleName),
                 moreInfoLink: 'https://aka.ms/kernelFailuresMissingModule',
                 telemetrySafeTags: ['module.notfound.error']
             };
