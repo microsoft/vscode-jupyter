@@ -8210,10 +8210,10 @@ No description provided
 
 [src/test/testHooks.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/test/testHooks.node.ts)
 ```typescript
-            dimensions = { ...dimensions, commitHash: process.env.GIT_SHA };
+            dimensions = { ...dimensions, commitHash: process.env.GITHUB_SHA };
         }
 
-        traceInfoIfCI(`Sending telemetry event ${Telemetry.RunTest} with dimensions ${dimensions}`);
+        traceInfoIfCI(`Sending telemetry event ${Telemetry.RunTest} with dimensions ${JSON.stringify(dimensions)}`);
         telemetryReporter.sendDangerousTelemetryEvent(Telemetry.RunTest, dimensions, measures);
     },
     afterAll: async () => {
@@ -8224,7 +8224,7 @@ No description provided
 ```typescript
         }
 
-        traceInfoIfCI(`Sending telemetry event ${Telemetry.RunTest} with dimensions ${dimensions}`);
+        traceInfoIfCI(`Sending telemetry event ${Telemetry.RunTest} with dimensions ${JSON.stringify(dimensions)}`);
         telemetryReporter.sendDangerousTelemetryEvent(Telemetry.RunTest, dimensions, measures);
     },
     afterAll: async () => {
