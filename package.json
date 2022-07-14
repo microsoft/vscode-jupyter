@@ -593,7 +593,7 @@
             },
             {
                 "command": "jupyter.importnotebook",
-                "title": "Import Jupyter Notebook",
+                "title": "%jupyter.command.jupyter.importnotebook.title%",
                 "category": "Jupyter",
                 "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
             },
@@ -605,19 +605,19 @@
             },
             {
                 "command": "jupyter.exportoutputasnotebook",
-                "title": "Export Interactive Window as Jupyter Notebook",
+                "title": "%jupyter.command.jupyter.exportoutputasnotebook.title%",
                 "category": "Jupyter",
                 "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
             },
             {
                 "command": "jupyter.exportfileasnotebook",
-                "title": "Export Current Python File as Jupyter Notebook",
+                "title": "%jupyter.command.jupyter.exportfileasnotebook.title%",
                 "category": "Jupyter",
                 "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
             },
             {
                 "command": "jupyter.exportfileandoutputasnotebook",
-                "title": "Export Current Python File and Output as Jupyter Notebook",
+                "title": "%jupyter.command.jupyter.exportfileandoutputasnotebook.title%",
                 "category": "Jupyter",
                 "enablement": "isWorkspaceTrusted && !jupyter.webExtension"
             },
@@ -635,8 +635,8 @@
             },
             {
                 "command": "jupyter.interruptkernel",
-                "title": "Interrupt Kernel",
-                "shortTitle": "Interrupt",
+                "title": "%jupyter.command.jupyter.interruptkernel.title%",
+                "shortTitle": "%jupyter.command.jupyter.interruptkernel.shorttitle%",
                 "category": "Jupyter",
                 "icon": {
                     "light": "resources/light/interrupt.svg",
@@ -646,7 +646,7 @@
             },
             {
                 "command": "jupyter.restartkernel",
-                "title": "Restart Kernel",
+                "title": "%jupyter.command.jupyter.restartkernel.title%",
                 "shortTitle": "%jupyter.command.jupyter.restartkernel.shorttitle%",
                 "category": "Jupyter",
                 "icon": {
@@ -657,8 +657,8 @@
             },
             {
                 "command": "jupyter.notebookeditor.interruptkernel",
-                "title": "Interrupt Kernel",
-                "shortTitle": "Interrupt",
+                "title": "%jupyter.command.jupyter.interruptkernel.title%",
+                "shortTitle": "%jupyter.command.jupyter.interruptkernel.shorttitle%",
                 "category": "Notebook",
                 "icon": {
                     "light": "resources/light/interrupt.svg",
@@ -668,7 +668,7 @@
             },
             {
                 "command": "jupyter.notebookeditor.restartkernel",
-                "title": "Restart Kernel",
+                "title": "%jupyter.command.jupyter.restartkernel.title%",
                 "shortTitle": "%jupyter.command.jupyter.restartkernel.shorttitle%",
                 "category": "Notebook",
                 "icon": {
@@ -686,38 +686,38 @@
             },
             {
                 "command": "jupyter.notebookeditor.addcellbelow",
-                "title": "Add Empty Cell to Notebook File",
+                "title": "%jupyter.command.jupyter.notebookeditor.addcellbelow.title%",
                 "category": "Notebook",
                 "enablement": "!jupyter.webExtension"
             },
             {
                 "command": "jupyter.notebookeditor.removeallcells",
-                "title": "Delete All Notebook Editor Cells",
+                "title": "%jupyter.command.jupyter.notebookeditor.removeallcells.title%",
                 "category": "Notebook",
                 "enablement": "!jupyter.webExtension"
             },
             {
                 "command": "jupyter.notebookeditor.expandallcells",
-                "title": "Expand All Notebook Cells",
+                "title": "%jupyter.command.jupyter.notebookeditor.expandallcells.title%",
                 "category": "Notebook",
                 "enablement": "!jupyter.webExtension"
             },
             {
                 "command": "jupyter.notebookeditor.collapseallcells",
-                "title": "Collapse All Notebook Cells",
+                "title": "%jupyter.command.jupyter.notebookeditor.collapseallcells.title%",
                 "category": "Notebook",
                 "enablement": "!jupyter.webExtension"
             },
             {
                 "command": "jupyter.expandallcells",
-                "title": "Expand All Interactive Cells",
+                "title": "%jupyter.command.jupyter.expandallcells.title%",
                 "shortTitle": "%jupyter.command.jupyter.expandallcells.shorttitle%",
                 "category": "Jupyter",
                 "icon": "$(expand-all)"
             },
             {
                 "command": "jupyter.collapseallcells",
-                "title": "Collapse All Interactive Cells",
+                "title": "%jupyter.command.jupyter.collapseallcells.title%",
                 "shortTitle": "%jupyter.command.jupyter.collapseallcells.shorttitle%",
                 "category": "Jupyter",
                 "icon": "$(collapse-all)"
@@ -811,8 +811,8 @@
             },
             {
                 "command": "jupyter.interactive.exportasnotebook",
-                "title": "Export to Jupyter Notebook",
-                "shortTitle": "Save",
+                "title": "%DataScience.exportDialogTitle%",
+                "shortTitle": "%DataScience.exportAsNotebook.shorttitle%",
                 "icon": "$(save-as)",
                 "enablement": "notebookType == interactive",
                 "category": "Jupyter"
@@ -916,13 +916,13 @@
             "editor/title": [
                 {
                     "command": "jupyter.notebookeditor.restartkernel",
-                    "title": "Restart Kernel",
+                    "title": "%jupyter.command.jupyter.restartkernel.title%",
                     "group": "navigation@1",
                     "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canrestartNotebookkernel && config.notebook.globalToolbar != true"
                 },
                 {
                     "command": "jupyter.notebookeditor.interruptkernel",
-                    "title": "Interrupt Kernel",
+                    "title": "%jupyter.command.jupyter.interruptkernel.title%",
                     "group": "overflow@1",
                     "when": "notebookKernel =~ /^ms-toolsai.jupyter\\// && notebookType == 'jupyter-notebook' && isWorkspaceTrusted && jupyter.notebookeditor.canInterruptNotebookKernel && config.notebook.globalToolbar != true"
                 },
@@ -1335,31 +1335,31 @@
                 },
                 {
                     "command": "jupyter.importnotebook",
-                    "title": "Import Jupyter Notebook",
+                    "title": "%jupyter.command.jupyter.importnotebook.title%",
                     "category": "Jupyter",
                     "when": "isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.exportfileasnotebook",
-                    "title": "Export Current Python File as Jupyter Notebook",
+                    "title": "%jupyter.command.jupyter.exportfileasnotebook.title%",
                     "category": "Jupyter",
                     "when": "jupyter.hascodecells && jupyter.ispythonorinteractiveeactive && !notebookEditorFocused && isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.exportfileandoutputasnotebook",
-                    "title": "Export Current Python File and Output as Jupyter Notebook",
+                    "title": "%jupyter.command.jupyter.exportfileandoutputasnotebook.title%",
                     "category": "Jupyter",
                     "when": "jupyter.hascodecells && jupyter.ispythonorinteractiveeactive && !notebookEditorFocused && isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.interruptkernel",
-                    "title": "Interrupt Kernel",
+                    "title": "%jupyter.command.jupyter.interruptkernel.title%",
                     "category": "Jupyter",
                     "when": "jupyter.ispythonorinteractiveeactive && isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.restartkernel",
-                    "title": "Restart Kernel",
+                    "title": "%jupyter.command.jupyter.restartkernel.title%",
                     "category": "Jupyter",
                     "when": "jupyter.ispythonorinteractiveeactive && isWorkspaceTrusted"
                 },
@@ -1377,57 +1377,57 @@
                 },
                 {
                     "command": "jupyter.notebookeditor.removeallcells",
-                    "title": "Delete All Notebook Editor Cells",
+                    "title": "%jupyter.command.jupyter.notebookeditor.removeallcells.title%",
                     "category": "Notebook",
                     "when": "jupyter.havenativecells && jupyter.isnativeactive && isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.notebookeditor.interruptkernel",
-                    "title": "Interrupt Kernel",
+                    "title": "%jupyter.command.jupyter.interruptkernel.title%",
                     "category": "Notebook",
                     "when": "notebookType == 'jupyter-notebook' && isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.notebookeditor.restartkernel",
-                    "title": "Restart Kernel",
+                    "title": "%jupyter.command.jupyter.restartkernel.title%",
                     "category": "Notebook",
                     "when": "jupyter.isnativeactive && isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.notebookeditor.addcellbelow",
-                    "title": "Add Empty Cell to Notebook File",
+                    "title": "%jupyter.command.jupyter.notebookeditor.addcellbelow.title%",
                     "category": "Notebook",
                     "when": "jupyter.isnativeactive && isWorkspaceTrusted"
                 },
                 {
                     "command": "jupyter.notebookeditor.expandallcells",
-                    "title": "Expand All Interactive Cells",
+                    "title": "%jupyter.command.jupyter.expandallcells.title%",
                     "category": "Notebook",
                     "when": "notebookEditorFocused && notebookType == 'jupyter-notebook'"
                 },
                 {
                     "command": "jupyter.notebookeditor.collapseallcells",
-                    "title": "Collapse All Interactive Cells",
+                    "title": "%jupyter.command.jupyter.collapseallcells.title%",
                     "category": "Notebook",
                     "when": "notebookEditorFocused && notebookType == 'jupyter-notebook'"
                 },
                 {
                     "command": "jupyter.expandallcells",
-                    "title": "Expand All Interactive Cells",
+                    "title": "%jupyter.command.jupyter.expandallcells.title%",
                     "shortTitle": "%jupyter.command.jupyter.expandallcells.shorttitle%",
                     "category": "Jupyter",
                     "when": "jupyter.isinteractiveactive"
                 },
                 {
                     "command": "jupyter.collapseallcells",
-                    "title": "Collapse All Interactive Cells",
+                    "title": "%jupyter.command.jupyter.collapseallcells.title%",
                     "shortTitle": "%jupyter.command.jupyter.collapseallcells.shorttitle%",
                     "category": "Jupyter",
                     "when": "jupyter.isinteractiveactive"
                 },
                 {
                     "command": "jupyter.exportoutputasnotebook",
-                    "title": "Export Interactive Window as Jupyter Notebook",
+                    "title": "%jupyter.command.jupyter.exportoutputasnotebook.title%",
                     "category": "Jupyter",
                     "when": "jupyter.isinteractiveactive"
                 },
