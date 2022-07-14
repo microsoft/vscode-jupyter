@@ -35,8 +35,9 @@ import { IFileSystem } from '../../platform/common/platform/types';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { IReservedPythonNamedProvider } from '../../platform/interpreter/types';
 import { JupyterKernelStartFailureOverrideReservedName } from '../../platform/interpreter/constants';
+import { swallowExceptions } from '../../platform/common/utils/decorators';
 
-const enabledSettingName = 'diagnostics.reservedPythonNames.enabled';
+export const enabledSettingName = 'diagnostics.reservedPythonNames.enabled';
 
 @injectable()
 export class ReservedFileNamesDiagnosticProvider
@@ -182,6 +183,7 @@ export class ReservedFileNamesDiagnosticProvider
         this._onDidChangeFileDecorations.fire(undefined);
     }
 
+    @swallowExceptions()
     private async provideDiagnosticsForEditor(editor?: TextEditor) {
         if (!this.enabled || !editor || editor.document.languageId !== PYTHON_LANGUAGE) {
             return;

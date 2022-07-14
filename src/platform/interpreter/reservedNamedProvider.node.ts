@@ -17,7 +17,7 @@ import { IFileSystemNode } from '../common/platform/types.node';
 import * as path from '../../platform/vscode-path/resources';
 
 const PYTHON_PACKAGES_MEMENTO_KEY = 'jupyter.pythonPackages';
-const ignoreListSettingName = 'diagnostics.reservedPythonNames.exclude';
+export const ignoreListSettingName = 'diagnostics.reservedPythonNames.exclude';
 @injectable()
 export class ReservedNamedProvider implements IReservedPythonNamedProvider {
     private ignoredFiles = new Set<string>();
@@ -37,7 +37,15 @@ export class ReservedNamedProvider implements IReservedPythonNamedProvider {
         this.cachedModules = new Set(
             this.cache.get<string[]>(PYTHON_PACKAGES_MEMENTO_KEY, BuiltInModules).map((item) => item.toLowerCase())
         );
-
+        workspace.onDidChangeConfiguration(
+            (e) => {
+                if (e.affectsConfiguration(`jupyter.${ignoreListSettingName}`)) {
+                    this.initializeIgnoreList();
+                }
+            },
+            this,
+            this.disposables
+        );
         this.initializeIgnoreList();
     }
 
@@ -54,20 +62,22 @@ export class ReservedNamedProvider implements IReservedPythonNamedProvider {
         ]);
         const problematicFiles: { uri: Uri; type: 'file' | '__init__' }[] = [];
         const filePromises = Promise.all(
-            files.map(async (file) => {
-                const uri = Uri.file(file);
-                if (await this.isReserved(uri)) {
-                    problematicFiles.push({ uri: Uri.joinPath(cwd, uri.fsPath), type: 'file' });
-                }
-            })
+            files
+                .map((file) => Uri.joinPath(cwd, file))
+                .map(async (uri) => {
+                    if (await this.isReserved(uri)) {
+                        problematicFiles.push({ uri, type: 'file' });
+                    }
+                })
         );
         const initFilePromises = Promise.all(
-            initFile.map(async (file) => {
-                const uri = Uri.file(file);
-                if (await this.isReserved(uri)) {
-                    problematicFiles.push({ uri: Uri.joinPath(cwd, uri.fsPath), type: '__init__' });
-                }
-            })
+            initFile
+                .map((file) => Uri.joinPath(cwd, file))
+                .map(async (uri) => {
+                    if (await this.isReserved(uri)) {
+                        problematicFiles.push({ uri, type: '__init__' });
+                    }
+                })
         );
         await Promise.all([filePromises, initFilePromises]);
         return problematicFiles;
@@ -81,9 +91,11 @@ export class ReservedNamedProvider implements IReservedPythonNamedProvider {
         await this.pendingUpdate;
         const filePath = this.platform.isWindows ? uri.fsPath.toLowerCase() : uri.fsPath;
         if (
-            Array.from(this.ignoredFiles).some(
-                (item) => item === filePath || minimatch(uri.fsPath, item, { dot: true })
-            )
+            Array.from(this.ignoredFiles).some((item) => {
+                if (item === filePath || minimatch(filePath, item, { dot: true })) {
+                    return true;
+                }
+            })
         ) {
             return false;
         }
@@ -99,7 +111,7 @@ export class ReservedNamedProvider implements IReservedPythonNamedProvider {
         if (this.extensionChecker.isPythonExtensionInstalled) {
             const packages = await this.packages.listPackages(uri);
             const previousCount = this.cachedModules.size;
-            packages.forEach((item) => this.cachedModules.add(item));
+            packages.forEach((item) => this.cachedModules.add(item.toLowerCase()));
             if (previousCount < this.cachedModules.size) {
                 this.cache.update(PYTHON_PACKAGES_MEMENTO_KEY, Array.from(this.cachedModules)).then(noop, noop);
             }
@@ -109,22 +121,12 @@ export class ReservedNamedProvider implements IReservedPythonNamedProvider {
         }
     }
     public async addToIgnoreList(uri: Uri) {
-        await this.updateIgnoreList(uri, 'add');
-    }
-    private async updateIgnoreList(uri: Uri, operation: 'add' | 'remove') {
         await this.pendingUpdate;
         const jupyterConfig = this.workspace.getConfiguration('jupyter');
         const filePath = this.platform.isWindows ? uri.fsPath.toLowerCase() : uri.fsPath;
         this.initializeIgnoreList();
-        if (this.ignoredFiles.size === 0 && operation === 'remove') {
-            return;
-        }
         const originalSizeOfList = this.ignoredFiles.size;
-        if (operation === 'add') {
-            this.ignoredFiles.add(filePath);
-        } else {
-            this.ignoredFiles.delete(filePath);
-        }
+        this.ignoredFiles.add(filePath);
         if (originalSizeOfList === this.ignoredFiles.size) {
             return;
         }
