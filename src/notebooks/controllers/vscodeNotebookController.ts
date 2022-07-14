@@ -183,6 +183,13 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         this.controller.supportedLanguages = this.languageService.getSupportedLanguages(kernelConnection);
         // Hook up to see when this NotebookController is selected by the UI
         this.controller.onDidChangeSelectedNotebooks(this.onDidChangeSelectedNotebooks, this, this.disposables);
+        this.notebookApi.onDidCloseNotebookDocument(
+            (n) => {
+                this.associatedDocuments.delete(n);
+            },
+            this,
+            this.disposables
+        );
     }
     public updateConnection(kernelConnection: KernelConnectionMetadata) {
         if (kernelConnection.kind === 'connectToLiveRemoteKernel') {

@@ -42,6 +42,7 @@ export class ControllerRegistration implements IControllerRegistration {
     private registeredControllers = new Map<string, VSCodeNotebookController>();
     private creationEmitter = new EventEmitter<IVSCodeNotebookController>();
     private registeredMetadatas = new Map<string, KernelConnectionMetadata>();
+    private inKernelExperiment = false;
 
     public get onCreated(): Event<IVSCodeNotebookController> {
         return this.creationEmitter.event;
@@ -78,6 +79,7 @@ export class ControllerRegistration implements IControllerRegistration {
         this.serverUriStorage.onDidChangeUri(this.onDidChangeUri, this, this.disposables);
         this.serverUriStorage.onDidRemoveUris(this.onDidRemoveUris, this, this.disposables);
         this.workspace.onDidChangeConfiguration(this.onDidChangeConfiguration, this, this.disposables);
+        this.inKernelExperiment = this.configuration.getSettings().showOnlyOneTypeOfKernel;
     }
     add(
         metadata: KernelConnectionMetadata,
@@ -188,9 +190,7 @@ export class ControllerRegistration implements IControllerRegistration {
         const connectionTypeFiltered = isLocalConnection(metadata) !== this.isLocalLaunch;
         const urlFiltered = isRemoteConnection(metadata) && this.serverUriStorage.currentServerId !== metadata.serverId;
 
-        // Dont use config service here because this function will be called in the change handler for config changes.
-        const inExperiment = this.workspace.getConfiguration('jupyter')?.get('showOnlyOneTypeOfKernel', false);
-        if (inExperiment) {
+        if (this.inKernelExperiment) {
             return userFiltered || connectionTypeFiltered || urlFiltered;
         }
 
@@ -241,6 +241,7 @@ export class ControllerRegistration implements IControllerRegistration {
 
     private onDidChangeConfiguration(e: ConfigurationChangeEvent) {
         if (e.affectsConfiguration('jupyter.showOnlyOneTypeOfKernel')) {
+            this.inKernelExperiment = this.workspace.getConfiguration('jupyter')?.get('showOnlyOneTypeOfKernel', false);
             this.onDidChangeFilter();
         }
     }
