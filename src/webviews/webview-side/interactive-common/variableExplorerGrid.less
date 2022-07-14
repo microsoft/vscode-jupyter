@@ -119,21 +119,15 @@ body.vscode-high-contrast #variable-explorer-data-grid .react-grid-Cell {
 
 // HC inverts selection colors, so use the selection foreground color on hover
 body.vscode-high-contrast #variable-explorer-data-grid .react-grid-Cell:hover {
-    color: var(--override-selection-foreground, var(--vscode-editor-selectionForeground));
+    color: var(--vscode-editor-foreground);
+    filter: opacity(70%);
 }
 
 body.vscode-high-contrast #variable-explorer-data-grid .react-grid-Row:hover {
-    color: var(--override-selection-foreground, var(--vscode-editor-selectionForeground));
-}
-
-body.vscode-high-contrast #variable-explorer-data-grid .react-grid-Row:hover .react-grid-Cell {
-    color: var(--override-selection-foreground, var(--vscode-editor-selectionForeground));
-}
-
-// HC inverts selection, which messes up our icons, just keep them with the same foreground / background combo
-body.vscode-high-contrast #variable-explorer-data-grid .react-grid-Row:hover .react-grid-Cell .variable-explorer-button-cell {
     color: var(--vscode-editor-foreground);
-    background-color: var(--vscode-editor-background);
+    filter: opacity(70%);
 }
 
-
+body.vscode-high-contrast #variable-explorer-data-grid .react-grid-Row:hover > * {
+    color: var(--vscode-editor-foreground);
+}
