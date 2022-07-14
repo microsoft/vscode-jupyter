@@ -97,8 +97,8 @@ suite('DataScience - VariableView', function () {
 
         // Parse the HTML for our expected variables
         const expectedVariables = [
-            { name: 'test', type: 'str', length: '11', value: 'MYTESTVALUE' },
-            { name: 'test2', type: 'str', length: '12', value: 'MYTESTVALUE2' }
+            { name: 'test', type: 'str', length: '11', value: "'MYTESTVALUE'" },
+            { name: 'test2', type: 'str', length: '12', value: "'MYTESTVALUE2'" }
         ];
         await waitForVariablesToMatch(expectedVariables, variableView);
 
@@ -142,7 +142,7 @@ suite('DataScience - VariableView', function () {
         await runCell(cell2);
 
         // Parse the HTML for our expected variables
-        const expectedVariables = [{ name: 'test2', type: 'str', length: '12', value: 'MYTESTVALUE2' }];
+        const expectedVariables = [{ name: 'test2', type: 'str', length: '12', value: "'MYTESTVALUE2'" }];
         await waitForVariablesToMatch(expectedVariables, variableView);
     });
 
@@ -162,7 +162,7 @@ suite('DataScience - VariableView', function () {
         await Promise.all([runCell(cell), waitForExecutionCompletedSuccessfully(cell)]);
 
         // Parse the HTML for our expected variables
-        const expectedVariables = [{ name: 'test', type: 'str', length: '11', value: 'MYTESTVALUE' }];
+        const expectedVariables = [{ name: 'test', type: 'str', length: '11', value: "'MYTESTVALUE'" }];
         await waitForVariablesToMatch(expectedVariables, variableView);
 
         // Now create a second document
@@ -183,8 +183,8 @@ suite('DataScience - VariableView', function () {
 
         // Parse the HTML for our expected variables
         const expectedVariables2 = [
-            { name: 'test2', type: 'str', length: '12', value: 'MYTESTVALUE2' },
-            { name: 'test3', type: 'str', length: '12', value: 'MYTESTVALUE3' }
+            { name: 'test2', type: 'str', length: '12', value: "'MYTESTVALUE2'" },
+            { name: 'test3', type: 'str', length: '12', value: "'MYTESTVALUE3'" }
         ];
         await waitForVariablesToMatch(expectedVariables2, variableView);
     });
