@@ -81,7 +81,10 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['vscode.openWith']: [Uri, string];
     ['jupyter.filterKernels']: [never];
     ['workbench.action.quickOpen']: [string];
-    ['workbench.extensions.installExtension']: [Uri | 'ms-toolsai.jupyter' | 'ms-python.python'];
+    ['workbench.extensions.installExtension']: [
+        Uri | 'ms-toolsai.jupyter' | 'ms-python.python',
+        { context: { skipWalkthrough: boolean } }
+    ];
     ['workbench.action.files.openFolder']: [];
     ['workbench.action.openWorkspace']: [];
     ['extension.open']: [string];

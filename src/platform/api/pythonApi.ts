@@ -206,7 +206,9 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
 
     // Directly install the python extension instead of just showing the extension open page
     public async directlyInstallPythonExtension(): Promise<void> {
-        return this.commandManager.executeCommand('workbench.extensions.installExtension', PythonExtension);
+        return this.commandManager.executeCommand('workbench.extensions.installExtension', PythonExtension, {
+            context: { skipWalkthrough: true }
+        });
     }
 
     // Notify the user that Python is require, and open up the Extension installation page to the
