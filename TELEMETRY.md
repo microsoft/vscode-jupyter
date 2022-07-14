@@ -634,7 +634,7 @@ No properties for event
 
 [src/notebooks/debugger/debugCellControllers.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/debugger/debugCellControllers.ts)
 ```typescript
-        private readonly kernel: INotebookKernel,
+        private readonly kernel: IKernel,
         private readonly commandManager: ICommandManager
     ) {
         sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunAndDebugCell);
@@ -647,7 +647,7 @@ No properties for event
 [src/interactive-window/debugger/jupyter/debugCellControllers.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/debugger/jupyter/debugCellControllers.ts)
 ```typescript
         public readonly debugCell: NotebookCell,
-        private readonly kernel: INotebookKernel
+        private readonly kernel: IKernel
     ) {
         sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunAndDebugCell);
     }
@@ -674,7 +674,7 @@ No properties for event
 
 [src/notebooks/debugger/runByLineController.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/debugger/runByLineController.ts)
 ```typescript
-        private readonly kernel: INotebookKernel,
+        private readonly kernel: IKernel,
         private readonly settings: IConfigurationService
     ) {
         sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunByLine);
@@ -1822,7 +1822,7 @@ No properties for event
 [src/kernels/kernelCrashMonitor.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelCrashMonitor.ts)
 ```typescript
     }
-    private async endCellAndDisplayErrorsInCell(kernel: IKernel) {
+    private async endCellAndDisplayErrorsInCell(kernel: IBaseKernel) {
         const lastExecutedCell = this.lastExecutedCellPerKernel.get(kernel);
         sendKernelTelemetryEvent(kernel.resourceUri, Telemetry.KernelCrash);
         if (!lastExecutedCell) {
@@ -8786,9 +8786,9 @@ No properties for event
 
     // IJupyterVariables implementation
     @captureTelemetry(Telemetry.VariableExplorerFetchTime, undefined, true)
-    public async getVariables(
-        request: IJupyterVariablesRequest,
-        kernel?: INotebookKernel
+    public async getVariables(request: IJupyterVariablesRequest, kernel?: IKernel): Promise<IJupyterVariablesResponse> {
+        return this.variableHandler.getVariables(request, kernel);
+    }
 ```
 
 </details>
