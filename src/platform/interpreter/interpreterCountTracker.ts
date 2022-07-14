@@ -3,7 +3,7 @@
 
 import { IExtensionSingleActivationService } from '../activation/types';
 import { inject, injectable } from 'inversify';
-import { IInterpreterService } from '../interpreter/contracts';
+import { IInterpreterService } from './contracts';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../api/types';
 import { noop } from '../common/utils/misc';
 import { IDisposableRegistry } from '../common/types';

@@ -34,6 +34,8 @@ import { WebviewPanelProvider } from './webviews/webviewPanelProvider';
 import { IInterpreterPackages, IReservedPythonNamedProvider } from './interpreter/types';
 import { ReservedNamedProvider } from './interpreter/reservedNamedProvider.node';
 import { InterpreterPackages } from './interpreter/interpreterPackages.node';
+import { WorkspaceInterpreterTracker } from './interpreter/workspaceInterpreterTracker';
+import { InterpreterCountTracker } from './interpreter/interpreterCountTracker';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<FileSystem>(FileSystem, FileSystem);
@@ -67,4 +69,12 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IWebviewPanelProvider>(IWebviewPanelProvider, WebviewPanelProvider);
     serviceManager.addSingleton<IReservedPythonNamedProvider>(IReservedPythonNamedProvider, ReservedNamedProvider);
     serviceManager.addSingleton<IInterpreterPackages>(IInterpreterPackages, InterpreterPackages);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        WorkspaceInterpreterTracker
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        InterpreterCountTracker
+    );
 }

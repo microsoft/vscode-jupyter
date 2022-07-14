@@ -70,7 +70,6 @@ import { registerTypes as registerKernelTypes } from './kernels/serviceRegistry.
 import { registerTypes as registerNotebookTypes } from './notebooks/serviceRegistry.node';
 import { registerTypes as registerInteractiveTypes } from './interactive-window/serviceRegistry.node';
 import { registerTypes as registerStandaloneTypes } from './standalone/serviceRegistry.node';
-import { registerTypes as registerTelemetryTypes } from './platform/telemetry/serviceRegistry.node';
 import { registerTypes as registerWebviewTypes } from './webviews/extension-side/serviceRegistry.node';
 import { IExtensionActivationManager } from './platform/activation/types';
 import {
@@ -320,7 +319,6 @@ async function activateLegacy(
 
     // Register the rest of the types (platform is first because it's needed by others)
     registerPlatformTypes(serviceManager);
-    registerTelemetryTypes(serviceManager);
     registerKernelTypes(serviceManager, isDevMode);
     registerNotebookTypes(serviceManager);
     registerInteractiveTypes(serviceManager);

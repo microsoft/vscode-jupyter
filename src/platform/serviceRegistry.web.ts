@@ -22,7 +22,7 @@ import { ProgressReporter } from './progress/progressReporter';
 import { StatusProvider } from './progress/statusProvider';
 import { IStatusProvider } from './progress/types';
 import { WorkspaceService } from './common/application/workspace.web';
-import { IExtensionSyncActivationService } from './activation/types';
+import { IExtensionSingleActivationService, IExtensionSyncActivationService } from './activation/types';
 import { OutputCommandListener } from './logging/outputCommandListener';
 
 import { IFileSystem } from './common/platform/types';
@@ -32,6 +32,8 @@ import { WebviewPanelProvider } from './webviews/webviewPanelProvider';
 import { WebviewViewProvider } from './webviews/webviewViewProvider';
 import { InterpreterPackages } from './interpreter/interpreterPackages.web';
 import { IInterpreterPackages } from './interpreter/types';
+import { WorkspaceInterpreterTracker } from './interpreter/workspaceInterpreterTracker';
+import { InterpreterCountTracker } from './interpreter/interpreterCountTracker';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
@@ -53,6 +55,14 @@ export function registerTypes(serviceManager: IServiceManager) {
     );
 
     serviceManager.addSingleton<IInterpreterPackages>(IInterpreterPackages, InterpreterPackages);
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        WorkspaceInterpreterTracker
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        InterpreterCountTracker
+    );
     // Webview Provider
     serviceManager.add<IWebviewViewProvider>(IWebviewViewProvider, WebviewViewProvider);
     serviceManager.add<IWebviewPanelProvider>(IWebviewPanelProvider, WebviewPanelProvider);
