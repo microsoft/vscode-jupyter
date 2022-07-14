@@ -30,6 +30,8 @@ import { FileSystem } from './common/platform/fileSystem';
 import { KernelProgressReporter } from './progress/kernelProgressReporter';
 import { WebviewPanelProvider } from './webviews/webviewPanelProvider';
 import { WebviewViewProvider } from './webviews/webviewViewProvider';
+import { InterpreterPackages } from './interpreter/interpreterPackages.web';
+import { IInterpreterPackages } from './interpreter/types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
@@ -50,6 +52,7 @@ export function registerTypes(serviceManager: IServiceManager) {
         KernelProgressReporter
     );
 
+    serviceManager.addSingleton<IInterpreterPackages>(IInterpreterPackages, InterpreterPackages);
     // Webview Provider
     serviceManager.add<IWebviewViewProvider>(IWebviewViewProvider, WebviewViewProvider);
     serviceManager.add<IWebviewPanelProvider>(IWebviewPanelProvider, WebviewPanelProvider);

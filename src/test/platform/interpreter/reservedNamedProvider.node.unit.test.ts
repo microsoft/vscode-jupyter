@@ -19,9 +19,9 @@ import { IPlatformService } from '../../../platform/common/platform/types';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { IDisposable } from '../../../platform/common/types';
 import { ignoreListSettingName, ReservedNamedProvider } from '../../../platform/interpreter/reservedNamedProvider.node';
-import { IInterpreterPackages } from '../../../telemetry';
 import * as path from '../../../platform/vscode-path/path';
 import { BuiltInModules } from '../../../platform/interpreter/constants';
+import { IInterpreterPackages } from '../../../platform/interpreter/types';
 
 suite('Reserved Names Provider', () => {
     const disposables: IDisposable[] = [];
@@ -47,9 +47,7 @@ suite('Reserved Names Provider', () => {
         when(workspace.getConfiguration('jupyter')).thenReturn(instance(workspaceConfig));
         when(workspaceConfig.get(ignoreListSettingName, anything())).thenReturn(defaultIgnoreList);
         when(memento.get(anything(), anything())).thenCall((_, defaultValue) => defaultValue as any);
-        when(interpreterPackages.listPackages(anything())).thenResolve(
-            new Set(BuiltInModules.map((m) => m.toLowerCase()))
-        );
+        when(interpreterPackages.listPackages(anything())).thenResolve(BuiltInModules.map((m) => m.toLowerCase()));
         settingsChanged = new EventEmitter<ConfigurationChangeEvent>();
         disposables.push(settingsChanged);
         when(workspace.onDidChangeConfiguration).thenReturn(settingsChanged.event);
@@ -85,7 +83,7 @@ suite('Reserved Names Provider', () => {
         let listPackagesCallCount = 0;
         when(interpreterPackages.listPackages(anything())).thenCall(() => {
             listPackagesCallCount += 1;
-            return new Set(BuiltInModules.concat(['overrideThirdPartyModule']).map((m) => m.toLowerCase()));
+            return BuiltInModules.concat(['overrideThirdPartyModule']).map((m) => m.toLowerCase());
         });
 
         const uris = await reservedNamedProvider.getUriOverridingReservedPythonNames(cwd);

@@ -7,14 +7,14 @@ import { IPythonExecutionFactory } from '../common/process/types.node';
 import { IDisposableRegistry, InterpreterUri, Resource } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import { isResource, noop } from '../common/utils/misc';
-import { IInterpreterService } from '../interpreter/contracts';
+import { IInterpreterService } from './contracts';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { getComparisonKey } from '../vscode-path/resources';
-import { getTelemetrySafeHashedString, getTelemetrySafeVersion } from './helpers';
-import { IInterpreterPackages } from '../../telemetry';
+import { getTelemetrySafeHashedString, getTelemetrySafeVersion } from '../telemetry/helpers';
 import { IWorkspaceService } from '../common/application/types';
 import { traceError, traceWarning } from '../logging';
 import { getDisplayPath } from '../common/platform/fs-paths.node';
+import { IInterpreterPackages } from './types';
 
 const interestedPackages = new Set(
     [
@@ -88,7 +88,7 @@ export class InterpreterPackages implements IInterpreterPackages {
     /**
      * Lists all packages that are accessible from the interpreter.
      */
-    public async listPackages(resource?: Resource): Promise<Set<string>> {
+    public async listPackages(resource?: Resource): Promise<string[]> {
         const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
         if (!this.interpreterPackages.has(workspaceKey)) {
             const promise = this.listPackagesImpl(resource);
@@ -100,7 +100,7 @@ export class InterpreterPackages implements IInterpreterPackages {
                 traceWarning(`Failed to get list of installed packages for ${workspaceKey}`, ex);
             });
         }
-        return this.interpreterPackages.get(workspaceKey)!;
+        return this.interpreterPackages.get(workspaceKey)!.then((items) => Array.from(items));
     }
     private async listPackagesImpl(resource?: Resource): Promise<Set<string>> {
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);

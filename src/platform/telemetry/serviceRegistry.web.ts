@@ -7,11 +7,8 @@ import { IExtensionSingleActivationService, IExtensionSyncActivationService } fr
 import { IServiceManager } from '../ioc/types';
 import { InterpreterCountTracker } from './interpreterCountTracker';
 import { WorkspaceInterpreterTracker } from './workspaceInterpreterTracker';
-import { IInterpreterPackages } from '../../telemetry';
-import { InterpreterPackages } from './interpreterPackages.web';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<IInterpreterPackages>(IInterpreterPackages, InterpreterPackages);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         WorkspaceInterpreterTracker

@@ -10,8 +10,7 @@ import { noop } from '../../platform/common/utils/misc';
 import { IWorkspaceService } from '../../platform/common/application/types';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
-import { IReservedPythonNamedProvider } from './types';
-import { IInterpreterPackages } from '../../telemetry';
+import { IInterpreterPackages, IReservedPythonNamedProvider } from './types';
 import * as minimatch from 'minimatch';
 import { IFileSystemNode } from '../common/platform/types.node';
 import * as path from '../../platform/vscode-path/resources';
@@ -109,7 +108,7 @@ export class ReservedNamedProvider implements IReservedPythonNamedProvider {
         }
 
         if (this.extensionChecker.isPythonExtensionInstalled) {
-            const packages = await this.packages.listPackages(uri);
+            const packages = new Set(await this.packages.listPackages(uri));
             const previousCount = this.cachedModules.size;
             packages.forEach((item) => this.cachedModules.add(item.toLowerCase()));
             if (previousCount < this.cachedModules.size) {
