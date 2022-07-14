@@ -36,7 +36,7 @@ export class GeneratedCodeStorageManager implements IExtensionSyncActivationServ
     }
     private onDidCreateKernel(kernel: INotebookKernel) {
         const notebook = kernel.notebook;
-        if (kernel.creator !== 'jupyterExtension' || notebook?.notebookType !== InteractiveWindowView) {
+        if (kernel.creator !== 'jupyterExtension' || notebook.notebookType !== InteractiveWindowView) {
             return;
         }
         // Possible we changed kernels for the same document.
