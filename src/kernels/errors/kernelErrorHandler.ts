@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { inject, injectable, optional } from 'inversify';
+import { inject, optional } from 'inversify';
 import { JupyterInstallError } from '../../platform/errors/jupyterInstallError';
 import { JupyterSelfCertsError } from '../../platform/errors/jupyterSelfCertsError';
-import { CancellationTokenSource, ConfigurationTarget, workspace } from 'vscode';
+import { CancellationTokenSource, ConfigurationTarget, Uri, workspace } from 'vscode';
 import { KernelConnectionTimeoutError } from './kernelConnectionTimeoutError';
 import { KernelDiedError } from './kernelDiedError';
 import { KernelPortNotUsedTimeoutError } from './kernelPortNotUsedTimeoutError';
@@ -26,6 +26,7 @@ import { ProductNames } from '../installer/productNames';
 import { Product } from '../installer/types';
 import {
     IKernelDependencyService,
+    isLocalConnection,
     KernelAction,
     KernelActionSource,
     KernelConnectionMetadata,
@@ -57,8 +58,7 @@ import { RemoteJupyterServerUriProviderError } from './remoteJupyterServerUriPro
 import { InvalidRemoteJupyterServerUriHandleError } from './invalidRemoteJupyterServerUriHandleError';
 import { BaseKernelError, IDataScienceErrorHandler, WrappedKernelError } from './types';
 
-@injectable()
-export class DataScienceErrorHandler implements IDataScienceErrorHandler {
+export abstract class DataScienceErrorHandler implements IDataScienceErrorHandler {
     constructor(
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IJupyterInterpreterDependencyManager)
@@ -111,7 +111,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             this.applicationShell.showErrorMessage(message).then(noop, noop);
         }
     }
-    public async getErrorMessageForDisplayInCell(error: Error, errorContext: KernelAction) {
+    public async getErrorMessageForDisplayInCell(error: Error, errorContext: KernelAction, resource: Resource) {
         error = WrappedError.unwrap(error);
         if (!isCancellationError(error)) {
             traceError(`Error in execution (get message for cell)`, error);
@@ -144,11 +144,13 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             // its possible the kernel failed to start due to missing dependencies.
             return getIPyKernelMissingErrorMessageForCell(error.kernelConnectionMetadata) || error.message;
         } else if (error instanceof BaseKernelError || error instanceof WrappedKernelError) {
+            const files = await this.getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(resource);
             const failureInfo = analyzeKernelErrors(
                 workspace.workspaceFolders || [],
                 error,
                 getDisplayNameOrNameOfKernelConnection(error.kernelConnectionMetadata),
-                error.kernelConnectionMetadata.interpreter?.sysPrefix
+                error.kernelConnectionMetadata.interpreter?.sysPrefix,
+                files.map((f) => f.uri)
             );
             if (failureInfo) {
                 // Special case for ipykernel module missing.
@@ -162,6 +164,24 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                 if (failureInfo.moreInfoLink) {
                     messageParts.push(Common.clickHereForMoreInfoWithHtml().format(failureInfo.moreInfoLink));
                 }
+                if (
+                    isLocalConnection(error.kernelConnectionMetadata) &&
+                    failureInfo.reason === KernelFailureReason.moduleNotFoundFailure &&
+                    !['ipykernel_launcher', 'ipykernel'].includes(failureInfo.moduleName)
+                ) {
+                    await this.addErrorMessageIfPythonArePossiblyOverridingPythonModules(messageParts, resource);
+                }
+                return messageParts.join('\n');
+            } else if (
+                isLocalConnection(error.kernelConnectionMetadata) &&
+                !failureInfo &&
+                error.category === 'invalidkernel'
+            ) {
+                // In the case when we're using non-zmq, we don't have much error information, as jupyter doesn't provide this.
+                // If the kernel fails to start, treat that as a scenario where kernel failed to start due to some overriding modules.
+                const messageParts: string[] = [];
+                await this.addErrorMessageIfPythonArePossiblyOverridingPythonModules(messageParts, resource);
+                messageParts.push(getUserFriendlyErrorMessage(error, errorContext));
                 return messageParts.join('\n');
             }
         } else if (
@@ -339,11 +359,13 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                 tokenSource.dispose();
             }
         } else {
+            const files = await this.getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(resource);
             const failureInfo = analyzeKernelErrors(
                 this.workspaceService.workspaceFolders || [],
                 err,
                 getDisplayNameOrNameOfKernelConnection(kernelConnection),
-                kernelConnection.interpreter?.sysPrefix
+                kernelConnection.interpreter?.sysPrefix,
+                files.map((f) => f.uri)
             );
             if (failureInfo) {
                 this.showMessageWithMoreInfo(failureInfo?.message, failureInfo?.moreInfoLink).catch(noop);
@@ -355,6 +377,14 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
             return KernelInterpreterDependencyResponse.failed;
         }
     }
+    protected abstract addErrorMessageIfPythonArePossiblyOverridingPythonModules(
+        _messages: string[],
+        _resource: Resource
+    ): Promise<void>;
+    protected abstract getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(
+        _resource: Resource
+    ): Promise<{ uri: Uri; type: 'file' | '__init__' }[]>;
+
     private async showMessageWithMoreInfo(message: string, moreInfoLink?: string) {
         if (!message.includes(Commands.ViewJupyterOutput)) {
             message = `${message} \n${DataScience.viewJupyterLogForFurtherInfo()}`;

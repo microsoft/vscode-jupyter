@@ -2252,4 +2252,16 @@ export namespace vscMockExtHostedTypes {
     export class NotebookRendererScript {
         constructor(public uri: vscode.Uri, public provides: string | string[] = []) {}
     }
+    export class FileDecoration {
+        badge?: string;
+        tooltip?: string;
+        color?: vscode.ThemeColor;
+        propagate?: boolean;
+
+        constructor(badge?: string, tooltip?: string, color?: ThemeColor) {
+            this.badge = badge;
+            this.tooltip = tooltip;
+            this.color = color;
+        }
+    }
 }

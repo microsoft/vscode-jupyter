@@ -21,19 +21,14 @@ import {
     NotebookController,
     NotebookEdit
 } from 'vscode';
-import {
-    IApplicationShell,
-    ICommandManager,
-    IDocumentManager,
-    IWorkspaceService
-} from '../platform/common/application/types';
+import { ICommandManager, IDocumentManager, IWorkspaceService } from '../platform/common/application/types';
 import { Commands, defaultNotebookFormat, MARKDOWN_LANGUAGE, PYTHON_LANGUAGE } from '../platform/common/constants';
 import '../platform/common/extensions';
 import { traceError, traceInfoIfCI } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
 import * as uuid from 'uuid/v4';
 
-import { IConfigurationService, InteractiveWindowMode, Resource } from '../platform/common/types';
+import { IConfigurationService, InteractiveWindowMode, IsWebExtension, Resource } from '../platform/common/types';
 import { noop } from '../platform/common/utils/misc';
 import {
     IKernel,
@@ -53,8 +48,13 @@ import { INotebookExporter } from '../kernels/jupyter/types';
 import { IExportDialog, ExportFormat } from '../notebooks/export/types';
 import { generateCellsFromNotebookDocument } from './editor-integration/cellFactory';
 import { CellMatcher } from './editor-integration/cellMatcher';
-import { IInteractiveWindowLoadable, IInteractiveWindowDebugger, IInteractiveWindowDebuggingManager } from './types';
-import { generateInteractiveCode } from './helpers';
+import {
+    IInteractiveWindowLoadable,
+    IInteractiveWindowDebugger,
+    IInteractiveWindowDebuggingManager,
+    InteractiveTab
+} from './types';
+import { generateInteractiveCode, isInteractiveInputTab } from './helpers';
 import { IControllerSelection, IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { DisplayOptions } from '../kernels/displayOptions';
 import { getInteractiveCellMetadata } from './helpers';
@@ -85,9 +85,6 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     public get submitters(): Uri[] {
         return this._submitters;
     }
-    public get notebookUri(): Uri {
-        return this.notebookEditor.notebook.uri;
-    }
     public get notebookDocument(): NotebookDocument {
         return this.notebookEditor.notebook;
     }
@@ -98,7 +95,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private closedEvent = new EventEmitter<void>();
     private _submitters: Uri[] = [];
     private fileInKernel: Uri | undefined;
-    private cellMatcher;
+    private cellMatcher: CellMatcher;
 
     private internalDisposables: Disposable[] = [];
     private kernelDisposables: Disposable[] = [];
@@ -110,33 +107,69 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     } = {};
     private pendingNotebookScrolls: NotebookRange[] = [];
 
+    private _notebookEditor!: NotebookEditor;
+    public get notebookEditor(): NotebookEditor {
+        return this._notebookEditor;
+    }
+
+    private _notebookUri: Uri;
+    public get notebookUri(): Uri {
+        return this._notebookUri;
+    }
+
+    private readonly documentManager: IDocumentManager;
+    private readonly fs: IFileSystem;
+    private readonly configuration: IConfigurationService;
+    private readonly jupyterExporter: INotebookExporter;
+    private readonly workspaceService: IWorkspaceService;
+    private readonly exportDialog: IExportDialog;
+    private readonly notebookControllerSelection: IControllerSelection;
+    private readonly interactiveWindowDebugger: IInteractiveWindowDebugger | undefined;
+    private readonly errorHandler: IDataScienceErrorHandler;
+    private readonly codeGeneratorFactory: ICodeGeneratorFactory;
+    private readonly storageFactory: IGeneratedCodeStorageFactory;
+    private readonly debuggingManager: IInteractiveWindowDebuggingManager;
+    private readonly isWebExtension: boolean;
+    private readonly commandManager: ICommandManager;
     constructor(
-        private readonly documentManager: IDocumentManager,
-        private readonly fs: IFileSystem,
-        private readonly configuration: IConfigurationService,
-        private readonly commandManager: ICommandManager,
-        private readonly jupyterExporter: INotebookExporter,
-        private readonly workspaceService: IWorkspaceService,
-        private _owner: Resource,
-        private mode: InteractiveWindowMode,
-        private readonly exportDialog: IExportDialog,
-        private readonly notebookControllerSelection: IControllerSelection,
         private readonly serviceContainer: IServiceContainer,
-        private readonly interactiveWindowDebugger: IInteractiveWindowDebugger | undefined,
-        private readonly errorHandler: IDataScienceErrorHandler,
-        preferredController: IVSCodeNotebookController | undefined,
-        public readonly notebookEditor: NotebookEditor,
-        public readonly inputUri: Uri,
-        public readonly appShell: IApplicationShell,
-        private readonly codeGeneratorFactory: ICodeGeneratorFactory,
-        private readonly storageFactory: IGeneratedCodeStorageFactory,
-        private readonly debuggingManager: IInteractiveWindowDebuggingManager,
-        private readonly isWebExtension: boolean
+        private _owner: Resource,
+        public mode: InteractiveWindowMode,
+        private preferredController: IVSCodeNotebookController | undefined,
+        private readonly notebookEditorOrTab: NotebookEditor | InteractiveTab,
+        public readonly inputUri: Uri
     ) {
+        this.documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
+        this.commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
+        this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
+        this.configuration = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        this.jupyterExporter = this.serviceContainer.get<INotebookExporter>(INotebookExporter);
+        this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        this.exportDialog = this.serviceContainer.get<IExportDialog>(IExportDialog);
+        this.notebookControllerSelection = this.serviceContainer.get<IControllerSelection>(IControllerSelection);
+        this.interactiveWindowDebugger =
+            this.serviceContainer.tryGet<IInteractiveWindowDebugger>(IInteractiveWindowDebugger);
+        this.errorHandler = this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
+        this.codeGeneratorFactory = this.serviceContainer.get<ICodeGeneratorFactory>(ICodeGeneratorFactory);
+        this.storageFactory = this.serviceContainer.get<IGeneratedCodeStorageFactory>(IGeneratedCodeStorageFactory);
+        this.debuggingManager = this.serviceContainer.get<IInteractiveWindowDebuggingManager>(
+            IInteractiveWindowDebuggingManager
+        );
+        this.isWebExtension = this.serviceContainer.get<boolean>(IsWebExtension);
+        this._notebookUri = isInteractiveInputTab(notebookEditorOrTab)
+            ? notebookEditorOrTab.input.uri
+            : notebookEditorOrTab.notebook.uri;
+        if (!isInteractiveInputTab(notebookEditorOrTab)) {
+            this._notebookEditor = notebookEditorOrTab;
+        }
+
         // Set our owner and first submitter
         if (this._owner) {
             this._submitters.push(this._owner);
         }
+    }
+
+    public start() {
         window.onDidChangeActiveNotebookEditor((e) => {
             if (e === this.notebookEditor) {
                 this._onDidChangeViewState.fire();
@@ -154,15 +187,34 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         }
 
         this.listenForControllerSelection();
-        if (preferredController) {
+        if (this.preferredController) {
             // Also start connecting to our kernel but don't wait for it to finish
-            this.startKernel(preferredController.controller, preferredController.connection).ignoreErrors();
+            this.startKernel(this.preferredController.controller, this.preferredController.connection).ignoreErrors();
         } else if (this.isWebExtension) {
             this.insertInfoMessage(DataScience.noKernelsSpecifyRemote()).ignoreErrors();
         }
 
         // Create the code generator right away to start watching the notebook
         this.codeGeneratorFactory.getOrCreate(this.notebookDocument);
+    }
+
+    public async restore(preferredController: IVSCodeNotebookController | undefined) {
+        if (preferredController) {
+            this.preferredController = preferredController;
+        }
+        if (!this.notebookEditor) {
+            if (isInteractiveInputTab(this.notebookEditorOrTab)) {
+                const document = await workspace.openNotebookDocument(this.notebookEditorOrTab.input.uri);
+                const editor = await window.showNotebookDocument(document, {
+                    viewColumn: this.notebookEditorOrTab.group.viewColumn
+                });
+                this._notebookEditor = editor;
+            } else {
+                this._notebookEditor = this.notebookEditorOrTab;
+            }
+        }
+
+        this.start();
     }
 
     private async startKernel(
@@ -362,7 +414,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     }
 
     private async finishSysInfoWithFailureMessage(error: Error, cellPromise: Promise<NotebookCell>) {
-        let message = await this.errorHandler.getErrorMessageForDisplayInCell(error, 'start');
+        let message = await this.errorHandler.getErrorMessageForDisplayInCell(error, 'start', this.owningResource);
         // As message is displayed in markdown, ensure linebreaks are formatted accordingly.
         message = message.split('\n').join('  \n');
         this.updateSysInfoMessage(message, true, cellPromise);
@@ -543,7 +595,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
                         .then((cell) =>
                             // If our cell result was a failure show an error
                             this.errorHandler
-                                .getErrorMessageForDisplayInCell(ex, 'execution')
+                                .getErrorMessageForDisplayInCell(ex, 'execution', this.owningResource)
                                 .then((message) => this.addErrorMessage(message, cell))
                         )
                         .catch(noop);

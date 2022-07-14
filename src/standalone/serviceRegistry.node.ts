@@ -28,6 +28,7 @@ import { DataScienceSurveyBanner, ISurveyBanner } from './survey/dataScienceSurv
 import { IExtensionContext } from '../platform/common/types';
 import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
 import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry.node';
+import { registerTypes as registerDiagnosticTypes } from './diagnostics/serviceRegistry.node';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
@@ -73,6 +74,8 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
         JupyterKernelServiceFactory
     );
     serviceManager.addSingleton<ApiAccessService>(ApiAccessService, ApiAccessService);
+
+    registerDiagnosticTypes(serviceManager);
 
     // Intellisense
     registerIntellisenseTypes(serviceManager, isDevMode);

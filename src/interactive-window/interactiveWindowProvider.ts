@@ -14,12 +14,7 @@ import {
     window
 } from 'vscode';
 
-import {
-    IApplicationShell,
-    ICommandManager,
-    IDocumentManager,
-    IWorkspaceService
-} from '../platform/common/application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../platform/common/application/types';
 import { traceInfo, traceVerbose } from '../platform/logging';
 import { IFileSystem } from '../platform/common/platform/types';
 
@@ -31,8 +26,8 @@ import {
     IDisposableRegistry,
     IMemento,
     InteractiveWindowMode,
-    IsWebExtension,
-    Resource
+    Resource,
+    WORKSPACE_MEMENTO
 } from '../platform/common/types';
 import { chainable } from '../platform/common/utils/decorators';
 import * as localize from '../platform/common/utils/localize';
@@ -44,28 +39,25 @@ import { InteractiveWindow } from './interactiveWindow';
 import { InteractiveWindowView, JVSC_EXTENSION_ID, NotebookCellScheme } from '../platform/common/constants';
 import {
     IInteractiveWindow,
-    IInteractiveWindowDebugger,
-    IInteractiveWindowDebuggingManager,
+    IInteractiveWindowCache,
     IInteractiveWindowProvider,
-    INativeInteractiveWindow
+    INativeInteractiveWindow,
+    InteractiveTab
 } from './types';
 import { getInteractiveWindowTitle } from './identity';
 import { createDeferred } from '../platform/common/utils/async';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
-import { INotebookExporter } from '../kernels/jupyter/types';
-import { IDataScienceErrorHandler } from '../kernels/errors/types';
-import { IExportDialog } from '../notebooks/export/types';
 import {
     IControllerDefaultService,
     IControllerRegistration,
-    IControllerSelection,
     IVSCodeNotebookController
 } from '../notebooks/controllers/types';
-import { ICodeGeneratorFactory, IGeneratedCodeStorageFactory } from './editor-integration/types';
 import { getResourceType } from '../platform/common/utils';
+import { isInteractiveInputTab } from './helpers';
 
 // Export for testing
 export const AskedForPerFileSettingKey = 'ds_asked_per_file_interactive';
+export const InteractiveWindowCacheKey = 'ds_interactive_window_cache';
 
 @injectable()
 export class InteractiveWindowProvider
@@ -100,6 +92,7 @@ export class InteractiveWindowProvider
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento,
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceMemento: Memento,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
@@ -109,6 +102,37 @@ export class InteractiveWindowProvider
         asyncRegistry.push(this);
 
         this.notebookEditorProvider.registerEmbedNotebookProvider(this);
+        this.restoreWindows();
+    }
+
+    private restoreWindows() {
+        // VS Code controls if interactive windows are restored.
+        const interactiveWindowMapping = new Map<string, InteractiveTab>();
+        window.tabGroups.all.forEach((group) => {
+            group.tabs.forEach((tab) => {
+                if (isInteractiveInputTab(tab) && tab.input.uri) {
+                    interactiveWindowMapping.set(tab.input.uri.toString(), tab);
+                }
+            });
+        });
+
+        this.workspaceMemento.get(InteractiveWindowCacheKey, [] as IInteractiveWindowCache[]).forEach((iw) => {
+            if (!iw.uriString || !interactiveWindowMapping.get(iw.uriString)) {
+                return;
+            }
+
+            const result = new InteractiveWindow(
+                this.serviceContainer,
+                iw.owner !== undefined ? Uri.from(iw.owner) : undefined,
+                iw.mode,
+                undefined,
+                interactiveWindowMapping.get(iw.uriString)!,
+                Uri.parse(iw.inputBoxUriString)
+            );
+            this._windows.push(result);
+        });
+
+        this._updateWindowCache();
     }
 
     @chainable()
@@ -132,6 +156,14 @@ export class InteractiveWindowProvider
         if (!result) {
             // No match. Create a new item.
             result = await this.create(resource, mode, connection);
+            // start the kernel
+            result.start();
+        } else {
+            const preferredController = connection
+                ? this.controllerRegistration.get(connection, InteractiveWindowView)
+                : await this.controllerDefaultService.computeDefaultController(resource, InteractiveWindowView);
+
+            await result.restore(preferredController);
         }
 
         return result;
@@ -169,32 +201,17 @@ export class InteractiveWindowProvider
                 : await this.controllerDefaultService.computeDefaultController(resource, InteractiveWindowView);
 
             const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
-
             const [inputUri, editor] = await this.createEditor(preferredController, resource, mode, commandManager);
             const result = new InteractiveWindow(
-                this.serviceContainer.get<IDocumentManager>(IDocumentManager),
-                this.serviceContainer.get<IFileSystem>(IFileSystem),
-                this.serviceContainer.get<IConfigurationService>(IConfigurationService),
-                commandManager,
-                this.serviceContainer.get<INotebookExporter>(INotebookExporter),
-                this.serviceContainer.get<IWorkspaceService>(IWorkspaceService),
+                this.serviceContainer,
                 resource,
                 mode,
-                this.serviceContainer.get<IExportDialog>(IExportDialog),
-                this.serviceContainer.get<IControllerSelection>(IControllerSelection),
-                this.serviceContainer,
-                this.serviceContainer.tryGet<IInteractiveWindowDebugger>(IInteractiveWindowDebugger),
-                this.serviceContainer.get<IDataScienceErrorHandler>(IDataScienceErrorHandler),
                 preferredController,
                 editor,
-                inputUri,
-                this.appShell,
-                this.serviceContainer.get<ICodeGeneratorFactory>(ICodeGeneratorFactory),
-                this.serviceContainer.get<IGeneratedCodeStorageFactory>(IGeneratedCodeStorageFactory),
-                this.serviceContainer.get<IInteractiveWindowDebuggingManager>(IInteractiveWindowDebuggingManager),
-                this.serviceContainer.get<boolean>(IsWebExtension)
+                inputUri
             );
             this._windows.push(result);
+            this._updateWindowCache();
 
             // This is the last interactive window at the moment (as we're about to create it)
             this.lastActiveInteractiveWindow = result;
@@ -273,6 +290,18 @@ export class InteractiveWindowProvider
         }
         return result;
     }
+    private _updateWindowCache() {
+        const windowCache = this._windows.map(
+            (iw) =>
+                ({
+                    owner: iw.owner,
+                    mode: iw.mode,
+                    uriString: iw.notebookUri.toString(),
+                    inputBoxUriString: iw.inputUri.toString()
+                } as IInteractiveWindowCache)
+        );
+        this.workspaceMemento.update(InteractiveWindowCacheKey, windowCache).then(noop, noop);
+    }
 
     public getExisting(
         owner: Resource,
@@ -316,6 +345,7 @@ export class InteractiveWindowProvider
         traceVerbose(`Closing interactive window: ${interactiveWindow.notebookUri?.toString()}`);
         interactiveWindow.dispose();
         this._windows = this._windows.filter((w) => w !== interactiveWindow);
+        this._updateWindowCache();
         if (this.lastActiveInteractiveWindow === interactiveWindow) {
             this.lastActiveInteractiveWindow = this._windows[0];
         }

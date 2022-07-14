@@ -1,7 +1,7 @@
 import { Resource } from '../../platform/common/types';
-import { WorkspaceInterpreterTracker } from '../../platform/telemetry/workspaceInterpreterTracker';
+import { WorkspaceInterpreterTracker } from '../../platform/interpreter/workspaceInterpreterTracker';
 import { PYTHON_LANGUAGE } from '../../platform/common/constants';
-import { InterpreterCountTracker } from '../../platform/telemetry/interpreterCountTracker';
+import { InterpreterCountTracker } from '../../platform/interpreter/interpreterCountTracker';
 import { getTelemetrySafeHashedString, getTelemetrySafeLanguage } from '../../platform/telemetry/helpers';
 import { getNormalizedInterpreterPath } from '../../platform/pythonEnvironments/info/interpreter';
 import { getResourceType } from '../../platform/common/utils';

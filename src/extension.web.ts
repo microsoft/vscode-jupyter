@@ -63,7 +63,6 @@ import { IServiceContainer, IServiceManager } from './platform/ioc/types';
 import { sendErrorTelemetry, sendStartupTelemetry } from './platform/telemetry/startupTelemetry';
 import { noop } from './platform/common/utils/misc';
 import { registerTypes as registerPlatformTypes } from './platform/serviceRegistry.web';
-import { registerTypes as registerTelemetryTypes } from './platform/telemetry/serviceRegistry.web';
 import { registerTypes as registerKernelTypes } from './kernels/serviceRegistry.web';
 import { registerTypes as registerNotebookTypes } from './notebooks/serviceRegistry.web';
 import { registerTypes as registerInteractiveTypes } from './interactive-window/serviceRegistry.web';
@@ -162,7 +161,7 @@ async function activateUnsafe(
 
         const [serviceManager, serviceContainer] = initializeGlobals(context);
         activatedServiceContainer = serviceContainer;
-        initializeTelemetryGlobals(serviceContainer);
+        initializeTelemetryGlobals(() => Promise.resolve(new Map()));
         const activationPromise = activateComponents(context, serviceManager, serviceContainer);
 
         //===============================================
@@ -287,7 +286,6 @@ async function activateLegacy(
 
     // Register the rest of the types (platform is first because it's needed by others)
     registerPlatformTypes(serviceManager);
-    registerTelemetryTypes(serviceManager);
     registerNotebookTypes(serviceManager);
     registerKernelTypes(serviceManager, isDevMode);
     registerInteractiveTypes(serviceManager);

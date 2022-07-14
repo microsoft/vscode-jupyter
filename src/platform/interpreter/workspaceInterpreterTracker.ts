@@ -7,7 +7,7 @@ import { PythonEnvironment } from '../pythonEnvironments/info';
 import { IExtensionSyncActivationService } from '../activation/types';
 import { IWorkspaceService } from '../common/application/types';
 import { inject, injectable } from 'inversify';
-import { IInterpreterService } from '../interpreter/contracts';
+import { IInterpreterService } from './contracts';
 import { IPythonExtensionChecker } from '../api/types';
 import { areInterpreterPathsSame } from '../pythonEnvironments/info/interpreter';
 

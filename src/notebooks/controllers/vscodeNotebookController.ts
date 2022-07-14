@@ -491,7 +491,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
             await endCellAndDisplayErrorsInCell(
                 cell,
                 controller,
-                await errorHandler.getErrorMessageForDisplayInCell(ex, currentContext),
+                await errorHandler.getErrorMessageForDisplayInCell(ex, currentContext, doc.uri),
                 isCancelled
             );
         }

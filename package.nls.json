@@ -854,6 +854,10 @@
         "message": "The file '{0}' seems to be overriding built in modules and interfering with the startup of the kernel. Consider renaming the file and starting the kernel again.",
         "comment": ["{Locked='kernel'}"]
     },
+    "DataScience.DataScience.moduleSeemsToBeInterferingWithKernelStartup": {
+        "message": "The module '{0}' seems to be overriding built in modules and interfering with the startup of the kernel. Consider renaming the folder and starting the kernel again.",
+        "comment": ["{Locked='kernel'}"]
+    },
     "DataScience.failedToStartKernelDueToMissingModule": {
         "message": "The kernel failed to start due to the missing module '{0}'. Consider installing this module.",
         "comment": ["{Locked='kernel'}"]
@@ -1109,5 +1113,14 @@
     "DataScience.switchToRemoteKernelsTitle": "Connect to Your Own Jupyter Server",
     "DataScience.switchToAnotherRemoteKernelsTitle": "Connect to Another Jupyter Server",
     "DataScience.failedToInstallPythonExtension": "Failed to install the Python Extension.",
-    "DataScience.kernelPrefixForRemote": "(Remote)"
+    "DataScience.kernelPrefixForRemote": "(Remote)",
+    "DataScience.pythonFileOverridesPythonPackage": "This file could potentially override an existing Python package and interfere with kernel execution, consider renaming it.",
+    "DataScience.alwaysIgnoreWarningsAboutOverridingPythonPackages": "Always ignore warnings about overriding Python packages",
+    "DataScience.ignoreWarningAboutOverridingPythonPackage": "Ignore warning for '{0}'",
+    "DataScience.moreInfoAboutFileNamesOverridingPythonPackages": "More information on overriding Python packages",
+    "DataScience.reservedPythonFileNamesDiagnosticCollectionName": "Reserved Python Filenames",
+    "DataScience.filesPossiblyOverridingPythonModulesMayHavePreventedKernelFromStarting": "Some of the following files found in the working directory may have prevented the Kernel from starting. Consider renaming them.",
+    "DataScience.listOfFilesWithLinksThatMightNeedToBeRenamed": "File(s): {0} might need to be renamed.",
+    "jupyter.configuration.jupyter.diagnostics.reservedPythonNames.enabled.markdownDescription": "Whether to show warnings about Python file names that could potentially [override Python packages](https://aka.ms/JupyterKernelStartFailureOverrideReservedName).",
+    "jupyter.configuration.jupyter.diagnostics.reservedPythonNames.exclude.markdownDescription": "Configure [glob patterns](https://code.visualstudio.com/docs/editor/codebasics#_advanced-search-options) for excluding files and folders from from being warned about [overriding Python packages](https://aka.ms/JupyterKernelStartFailureOverrideReservedName)."
 }
