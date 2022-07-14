@@ -10,7 +10,7 @@ import { startJupyterServer } from '../../common';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants';
 import { initialize } from '../../initialize';
 
-suite('DataScience - Kernel Process', () => {
+suite('DataScience - Interpreter Packages', () => {
     let packages: IInterpreterPackages;
     suiteSetup(async function () {
         if (IS_REMOTE_NATIVE_TEST() || isWeb()) {
@@ -20,13 +20,12 @@ suite('DataScience - Kernel Process', () => {
         packages = api.serviceContainer.get<IInterpreterPackages>(IInterpreterPackages);
         await startJupyterServer();
     });
-    test.only('Returns installed modules', async function () {
+    test('Returns installed modules', async function () {
         const uri = workspace.workspaceFolders?.length ? workspace.workspaceFolders[0].uri : undefined;
         const installedModules = new Set((await packages.listPackages(uri)).map((item) => item.toLowerCase()));
 
         assert.isTrue(installedModules.has('xml'));
         assert.isTrue(installedModules.has('os'));
-        assert.isTrue(installedModules.has('sys'));
         assert.isTrue(installedModules.has('random'));
 
         assert.isTrue(installedModules.has('ipykernel')); // Installed on CI
