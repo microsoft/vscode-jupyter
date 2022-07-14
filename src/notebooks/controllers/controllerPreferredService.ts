@@ -163,7 +163,7 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                     )}`
                 );
 
-                const targetController = this.registration.values.find(
+                const targetController = this.registration.registered.find(
                     (value) => preferredConnection?.id === value.connection.id
                 );
                 // If the controller doesn't exist, then it means we're still loading them.

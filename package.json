@@ -2034,6 +2034,15 @@
                     "markdownDescription": "%jupyter.configuration.jupyter.enableExtendedKernelCompletions.markdownDescription%",
                     "scope": "machine"
                 },
+                "jupyter.showOnlyOneTypeOfKernel": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "%jupyter.configuration.jupyter.showOnlyOneTypeOfKernel.markdownDescription%",
+                    "scope": "machine",
+                    "tags": [
+                        "experimental"
+                    ]
+                },
                 "jupyter.diagnostics.reservedPythonNames.enabled": {
                     "type": "boolean",
                     "default": true,

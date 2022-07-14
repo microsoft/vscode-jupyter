@@ -62,7 +62,7 @@ export class RemoteKernelControllerWatcher implements IExtensionSyncActivationSe
                 }
             })
         );
-        const controllers = this.controllers.values;
+        const controllers = this.controllers.registered;
         controllers.forEach((controller) => {
             const connection = controller.connection;
             if (isLocalConnection(connection)) {

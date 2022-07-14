@@ -4034,13 +4034,25 @@ No properties for event
 
 [src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
 ```typescript
-        @inject(IsWebExtension) private readonly isWebExtension: boolean
+        private readonly isWebExtension: boolean
     ) {}
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
     public selectJupyterURI(
         commandSource: SelectJupyterUriCommandSource = 'nonUser',
         existingMultiStep?: IMultiStepInput<{}>
+```
+
+
+[src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
+```typescript
+        @inject(IsWebExtension) private readonly isWebExtension: boolean
+    ) {}
+
+    @captureTelemetry(Telemetry.SelectJupyterURI)
+    @traceDecoratorError('Failed to select Jupyter Uri')
+    public selectJupyterURI(
+        commandSource: SelectJupyterUriCommandSource = 'nonUser'
 ```
 
 
@@ -4267,6 +4279,18 @@ No properties for event
     }
 ```
 
+
+[src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
+```typescript
+        return multiStep.run(this.startSelectingURI.bind(this, allowLocal), {});
+    }
+
+    @captureTelemetry(Telemetry.SetJupyterURIToLocal)
+    public async setJupyterURIToLocal(): Promise<void> {
+        await this.serverUriStorage.setUriToLocal();
+    }
+```
+
 </details>
 <details>
   <summary>DATASCIENCE.SET_JUPYTER_URI_UI_DISPLAYED</summary>
@@ -4297,6 +4321,18 @@ No properties for event
         if (existingMultiStep) {
 ```
 
+
+[src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
+```typescript
+        commandSource: SelectJupyterUriCommandSource = 'nonUser'
+    ): Promise<InputFlowAction | undefined | InputStep<{}> | void> {
+        const allowLocal = commandSource !== 'nonUser';
+        sendTelemetryEvent(Telemetry.SetJupyterURIUIDisplayed, undefined, {
+            commandSource
+        });
+        const multiStep = this.multiStepFactory.create<{}>();
+```
+
 </details>
 <details>
   <summary>DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED</summary>
@@ -4322,6 +4358,18 @@ No description provided
                 azure: userURI.toLowerCase().includes('azure')
             });
         } else {
+```
+
+
+[src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
+```typescript
+        await this.serverUriStorage.setUriToRemote(userURI, connection.displayName);
+
+        // Indicate setting a jupyter URI to a remote setting. Check if an azure remote or not
+        sendTelemetryEvent(Telemetry.SetJupyterURIToUserSpecified, undefined, {
+            azure: userURI.toLowerCase().includes('azure')
+        });
+    }
 ```
 
 </details>
@@ -5124,6 +5172,54 @@ No properties for event
 
 
 ## Locations Used
+
+[src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
+```typescript
+            }
+        } catch (err) {
+            if (JupyterSelfCertsError.isSelfCertsError(err)) {
+                sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
+                const handled = await handleSelfCertsError(this.applicationShell, this.configService, err.message);
+                if (!handled) {
+                    return;
+```
+
+
+[src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
+```typescript
+                    return;
+                }
+            } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(err)) {
+                sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
+                const handled = await handleExpiredCertsError(this.applicationShell, this.configService, err.message);
+                if (!handled) {
+                    return;
+```
+
+
+[src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
+```typescript
+        } catch (err) {
+            traceWarning('Uri verification error', err);
+            if (JupyterSelfCertsError.isSelfCertsError(err)) {
+                sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
+                const handled = await handleSelfCertsError(this.applicationShell, this.configService, err.message);
+                if (!handled) {
+                    return DataScience.jupyterSelfCertFailErrorMessageOnly();
+```
+
+
+[src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
+```typescript
+                    return DataScience.jupyterSelfCertFailErrorMessageOnly();
+                }
+            } else if (JupyterSelfCertsExpiredError.isSelfCertsExpiredError(err)) {
+                sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
+                const handled = await handleExpiredCertsError(this.applicationShell, this.configService, err.message);
+                if (!handled) {
+                    return DataScience.jupyterSelfCertExpiredErrorMessageOnly();
+```
+
 
 [src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
 ```typescript
@@ -8867,9 +8963,9 @@ No properties for event
     }
 
     @captureTelemetry(Telemetry.WaitForIdleJupyter, undefined, true)
-    public waitForIdle(timeout: number): Promise<void> {
+    public waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
         // Wait for idle on this session
-        return this.waitForIdleOnSession(this.session, timeout);
+        return this.waitForIdleOnSession(this.session, timeout, token);
 ```
 
 </details>
@@ -8895,6 +8991,18 @@ No properties for event
 ```typescript
                 }
             } else if (userURI) {
+                if (err.message.includes('Failed to fetch') && this.isWebExtension) {
+                    sendTelemetryEvent(Telemetry.FetchError, undefined, { currentTask: 'connecting' });
+                }
+                const serverId = await computeServerId(userURI);
+                await this.errorHandler.handleError(new RemoteJupyterServerConnectionError(userURI, serverId, err));
+```
+
+
+[src/kernels/jupyter/serverSelector.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/serverSelector.ts)
+```typescript
+                }
+            } else {
                 if (err.message.includes('Failed to fetch') && this.isWebExtension) {
                     sendTelemetryEvent(Telemetry.FetchError, undefined, { currentTask: 'connecting' });
                 }

@@ -114,11 +114,11 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
                     // because it's the combined result of cached and non cached.
                     sendKernelListTelemetry(
                         vscode.Uri.file('test.ipynb'), // Give a dummy ipynb value, we need this as its used in telemetry to determine the resource.
-                        this.registration.values.map((v) => v.connection),
+                        this.registration.registered.map((v) => v.connection),
                         stopWatch
                     );
 
-                    traceInfoIfCI(`Providing notebook controllers with length ${this.registration.values.length}.`);
+                    traceInfoIfCI(`Providing notebook controllers with length ${this.registration.registered.length}.`);
                 });
         }
         return this.controllersPromise;
@@ -172,7 +172,7 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         this.createNotebookControllers(nonCachedConnections);
 
         // Look for any controllers that we have disposed (no longer found when fetching)
-        const disposedControllers = Array.from(this.registration.values).filter((controller) => {
+        const disposedControllers = Array.from(this.registration.registered).filter((controller) => {
             const connectionIsNoLongerValid = !nonCachedConnections.some((connection) => {
                 return connection.id === controller.connection.id;
             });

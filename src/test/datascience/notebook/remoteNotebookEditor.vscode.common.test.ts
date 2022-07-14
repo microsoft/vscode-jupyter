@@ -129,7 +129,7 @@ suite('DataScience - VSCode Notebook - Remote Execution', function () {
 
     test('Can run against a remote kernelspec', async function () {
         await controllerLoader.loadControllers();
-        const controllers = controllerRegistration.values;
+        const controllers = controllerRegistration.registered;
 
         // Verify we have a remote kernel spec.
         assert.ok(

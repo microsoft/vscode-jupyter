@@ -886,14 +886,14 @@ suite('DataScience Install IPyKernel (slow) (install)', function () {
     ) {
         // Get the controller that should be selected.
         const controllerManager = api.serviceContainer.get<IControllerRegistration>(IControllerRegistration);
-        const controller = controllerManager.values.find(
+        const controller = controllerManager.registered.find(
             (item) =>
                 item.controller.notebookType === JupyterNotebookView &&
                 item.connection.kind === 'startUsingPythonInterpreter' &&
                 areInterpreterPathsSame(item.connection.interpreter.uri, pythonPathToNewKernel)
         );
         if (!controller) {
-            const registeredControllers = controllerManager.values.map((item) => item.id).join(',');
+            const registeredControllers = controllerManager.registered.map((item) => item.id).join(',');
             throw new Error(
                 `Unable to find a controller for ${pythonPathToNewKernel}, registered controllers ids are ${registeredControllers}`
             );

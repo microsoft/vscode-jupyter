@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter } from 'vscode';
+import { ConfigurationChangeEvent, Event, EventEmitter } from 'vscode';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
 import { IJupyterServerUriStorage, IServerConnectionType } from '../../kernels/jupyter/types';
@@ -42,12 +42,16 @@ export class ControllerRegistration implements IControllerRegistration {
     private registeredControllers = new Map<string, VSCodeNotebookController>();
     private creationEmitter = new EventEmitter<IVSCodeNotebookController>();
     private registeredMetadatas = new Map<string, KernelConnectionMetadata>();
+    private inKernelExperiment = false;
 
     public get onCreated(): Event<IVSCodeNotebookController> {
         return this.creationEmitter.event;
     }
-    public get values(): IVSCodeNotebookController[] {
+    public get registered(): IVSCodeNotebookController[] {
         return [...this.registeredControllers.values()];
+    }
+    public get all(): KernelConnectionMetadata[] {
+        return this.metadatas;
     }
     private get metadatas(): KernelConnectionMetadata[] {
         return [...this.registeredMetadatas.values()];
@@ -74,6 +78,8 @@ export class ControllerRegistration implements IControllerRegistration {
         this.serverConnectionType.onDidChange(this.onDidChangeFilter, this, this.disposables);
         this.serverUriStorage.onDidChangeUri(this.onDidChangeUri, this, this.disposables);
         this.serverUriStorage.onDidRemoveUris(this.onDidRemoveUris, this, this.disposables);
+        this.workspace.onDidChangeConfiguration(this.onDidChangeConfiguration, this, this.disposables);
+        this.inKernelExperiment = this.configuration.getSettings().showOnlyOneTypeOfKernel;
     }
     add(
         metadata: KernelConnectionMetadata,
@@ -183,7 +189,12 @@ export class ControllerRegistration implements IControllerRegistration {
         const userFiltered = this.kernelFilter.isKernelHidden(metadata);
         const connectionTypeFiltered = isLocalConnection(metadata) !== this.isLocalLaunch;
         const urlFiltered = isRemoteConnection(metadata) && this.serverUriStorage.currentServerId !== metadata.serverId;
-        return userFiltered || connectionTypeFiltered || urlFiltered;
+
+        if (this.inKernelExperiment) {
+            return userFiltered || connectionTypeFiltered || urlFiltered;
+        }
+
+        return userFiltered || urlFiltered;
     }
 
     private getControllerId(
@@ -228,6 +239,13 @@ export class ControllerRegistration implements IControllerRegistration {
         this.onDidChangeFilter();
     }
 
+    private onDidChangeConfiguration(e: ConfigurationChangeEvent) {
+        if (e.affectsConfiguration('jupyter.showOnlyOneTypeOfKernel')) {
+            this.inKernelExperiment = this.workspace.getConfiguration('jupyter')?.get('showOnlyOneTypeOfKernel', false);
+            this.onDidChangeFilter();
+        }
+    }
+
     private onDidChangeFilter() {
         // Give our list of metadata should be up to date, just remove the filtered ones
         const metadatas = this.metadatas.filter((item) => !this.isFiltered(item));
@@ -237,7 +255,7 @@ export class ControllerRegistration implements IControllerRegistration {
 
         // Go through all controllers that have been created and hide them.
         // Unless they are attached to an existing document.
-        this.values.forEach((item) => {
+        this.registered.forEach((item) => {
             // TODO: Don't hide controllers that are already associated with a notebook.
             // If we have a notebook opened and its using a kernel.
             // Else we end up killing the execution as well.
