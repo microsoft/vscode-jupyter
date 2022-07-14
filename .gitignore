@@ -37,6 +37,7 @@ src/test/datascience/temp/**
 .python-version
 .vs/
 test-results*.xml
+testresults.json
 xunit-test-results.xml
 build/ci/performance/performance-results.json
 !build/
