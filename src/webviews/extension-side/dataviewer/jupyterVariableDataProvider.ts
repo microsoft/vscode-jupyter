@@ -12,7 +12,7 @@ import {
     IJupyterVariableDataProvider,
     IRowsResponse
 } from './types';
-import { IKernel } from '../../../kernels/types';
+import { INotebookKernel } from '../../../kernels/types';
 import { IJupyterVariable, IJupyterVariables } from '../../../kernels/variables/types';
 import { traceError } from '../../../platform/logging';
 import { Identifiers } from '../../../platform/common/constants';
@@ -21,7 +21,7 @@ import { getFilePath } from '../../../platform/common/platform/fs-paths';
 @injectable()
 export class JupyterVariableDataProvider implements IJupyterVariableDataProvider {
     private initialized: boolean = false;
-    private _kernel: IKernel | undefined;
+    private _kernel: INotebookKernel | undefined;
     private variable: IJupyterVariable | undefined;
 
     constructor(
@@ -31,7 +31,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
         private dependencyService: IDataViewerDependencyService | undefined
     ) {}
 
-    public get kernel(): IKernel | undefined {
+    public get kernel(): INotebookKernel | undefined {
         return this._kernel;
     }
 
@@ -86,7 +86,7 @@ export class JupyterVariableDataProvider implements IJupyterVariableDataProvider
         return;
     }
 
-    public setDependencies(variable: IJupyterVariable, kernel?: IKernel): void {
+    public setDependencies(variable: IJupyterVariable, kernel?: INotebookKernel): void {
         this._kernel = kernel;
         this.variable = variable;
     }

@@ -4,7 +4,7 @@
 'use strict';
 
 import { Uri } from 'vscode';
-import { IKernel, RemoteKernelConnectionMetadata } from '../types';
+import { INotebookKernel, RemoteKernelConnectionMetadata } from '../types';
 import {
     IIPyWidgetScriptManager,
     IIPyWidgetScriptManagerFactory,
@@ -20,7 +20,7 @@ export class RemoteWidgetScriptSourceProvider implements IWidgetScriptSourceProv
     public static validUrls = new Map<string, boolean>();
     private readonly kernelConnection: RemoteKernelConnectionMetadata;
     private readonly scriptManager: IIPyWidgetScriptManager;
-    constructor(kernel: IKernel, scriptManagerFactory: IIPyWidgetScriptManagerFactory) {
+    constructor(kernel: INotebookKernel, scriptManagerFactory: IIPyWidgetScriptManagerFactory) {
         if (
             kernel.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel' &&
             kernel.kernelConnectionMetadata.kind !== 'startUsingRemoteKernelSpec'

@@ -7,7 +7,7 @@ import { CancellationToken, Event, EventEmitter } from 'vscode';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { Identifiers } from '../../platform/common/constants';
 import { captureTelemetry, Telemetry } from '../../telemetry';
-import { IKernel } from '../types';
+import { INotebookKernel } from '../types';
 import {
     IJupyterVariables,
     IConditionalJupyterVariables,
@@ -40,17 +40,20 @@ export class JupyterVariables implements IJupyterVariables {
 
     // IJupyterVariables implementation
     @captureTelemetry(Telemetry.VariableExplorerFetchTime, undefined, true)
-    public async getVariables(request: IJupyterVariablesRequest, kernel?: IKernel): Promise<IJupyterVariablesResponse> {
+    public async getVariables(
+        request: IJupyterVariablesRequest,
+        kernel?: INotebookKernel
+    ): Promise<IJupyterVariablesResponse> {
         return this.variableHandler.getVariables(request, kernel);
     }
 
-    public async getFullVariable(variable: IJupyterVariable, kernel?: IKernel): Promise<IJupyterVariable> {
+    public async getFullVariable(variable: IJupyterVariable, kernel?: INotebookKernel): Promise<IJupyterVariable> {
         return this.variableHandler.getFullVariable(variable, kernel);
     }
 
     public async getMatchingVariable(
         name: string,
-        kernel?: IKernel,
+        kernel?: INotebookKernel,
         cancelToken?: CancellationToken
     ): Promise<IJupyterVariable | undefined> {
         return this.variableHandler.getMatchingVariable(name, kernel, cancelToken);
@@ -58,7 +61,7 @@ export class JupyterVariables implements IJupyterVariables {
 
     public async getDataFrameInfo(
         targetVariable: IJupyterVariable,
-        kernel?: IKernel,
+        kernel?: INotebookKernel,
         sliceExpression?: string,
         isRefresh?: boolean
     ): Promise<IJupyterVariable> {
@@ -69,7 +72,7 @@ export class JupyterVariables implements IJupyterVariables {
         targetVariable: IJupyterVariable,
         start: number,
         end: number,
-        kernel?: IKernel,
+        kernel?: INotebookKernel,
         sliceExpression?: string
     ): Promise<{ data: Record<string, unknown>[] }> {
         return this.variableHandler.getDataFrameRows(targetVariable, start, end, kernel, sliceExpression);

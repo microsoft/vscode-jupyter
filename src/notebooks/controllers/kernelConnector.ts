@@ -10,7 +10,8 @@ import {
     isLocalConnection,
     KernelInterpreterDependencyResponse,
     KernelAction,
-    KernelActionSource
+    KernelActionSource,
+    INotebookKernel
 } from '../../kernels/types';
 import { Memento, NotebookDocument, NotebookController, Uri } from 'vscode';
 import { ICommandManager, IApplicationShell } from '../../platform/common/application/types';
@@ -182,7 +183,7 @@ export class KernelConnector {
         NotebookDocument,
         {
             kernel: Deferred<{
-                kernel: IKernel;
+                kernel: INotebookKernel;
                 deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted';
             }>;
             options: IDisplayOptions;
@@ -203,14 +204,19 @@ export class KernelConnector {
         serviceContainer: IServiceContainer,
         notebookResource: NotebookResource,
         options: IDisplayOptions,
-        promise: Promise<{
-            kernel: IKernel;
-            deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted';
-        }>,
+        promise:
+            | Promise<{
+                  kernel: IKernel;
+                  deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted';
+              }>
+            | Promise<{
+                  kernel: INotebookKernel;
+                  deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted';
+              }>,
         actionSource: KernelActionSource,
         onAction: (action: KernelAction, kernel: IKernel) => void,
         disposables: IDisposable[]
-    ): Promise<IKernel> {
+    ): Promise<INotebookKernel | IKernel> {
         const { kernel, deadKernelAction } = await promise;
         // Before returning, but without disposing the kernel, double check it's still valid
         // If a restart didn't happen, then we can't connect. Throw an error.
@@ -249,8 +255,8 @@ export class KernelConnector {
         notebookResource: NotebookResource,
         options: IDisplayOptions,
         disposables: IDisposable[],
-        onAction: (action: KernelAction, kernel: IKernel) => void = () => noop()
-    ): Promise<IKernel> {
+        onAction: (action: KernelAction, kernel: IKernel | INotebookKernel) => void = () => noop()
+    ): Promise<IKernel | INotebookKernel> {
         traceVerbose(`${initialContext} the kernel, options.disableUI=${options.disableUI}`);
 
         let currentPromise = this.getKernelInfo(notebookResource);
@@ -333,7 +339,13 @@ export class KernelConnector {
         options: IDisplayOptions
     ) {
         if (notebookResource.notebook) {
-            KernelConnector.connectionsByNotebook.set(notebookResource.notebook, { kernel: deferred, options });
+            KernelConnector.connectionsByNotebook.set(notebookResource.notebook, {
+                kernel: deferred as Deferred<{
+                    kernel: INotebookKernel;
+                    deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted' | undefined;
+                }>,
+                options
+            });
         } else {
             KernelConnector.connectionsByUri.set(notebookResource.resource.toString(), { kernel: deferred, options });
         }
@@ -378,7 +390,7 @@ export class KernelConnector {
         actionSource: KernelActionSource,
         onAction: (action: KernelAction, kernel: IKernel) => void
     ): Promise<{
-        kernel: IKernel;
+        kernel: IKernel | INotebookKernel;
         deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted';
     }> {
         const kernelProvider = serviceContainer.get<IKernelProvider>(IKernelProvider);
@@ -458,11 +470,34 @@ export class KernelConnector {
         return { kernel };
     }
 
+    public static async connectToNotebookKernel(
+        controller: NotebookController,
+        metadata: KernelConnectionMetadata,
+        serviceContainer: IServiceContainer,
+        notebookResource: { resource: Resource; notebook: NotebookDocument },
+        options: IDisplayOptions,
+        disposables: IDisposable[],
+        actionSource: KernelActionSource = 'jupyterExtension',
+        onAction: (action: KernelAction, kernel: INotebookKernel) => void = () => noop()
+    ): Promise<INotebookKernel> {
+        return KernelConnector.wrapKernelMethod(
+            controller,
+            metadata,
+            'start',
+            actionSource,
+            serviceContainer,
+            notebookResource,
+            options,
+            disposables,
+            onAction as (action: KernelAction, kernel: IKernel) => void
+        ) as Promise<INotebookKernel>;
+    }
+
     public static async connectToKernel(
         controller: NotebookController,
         metadata: KernelConnectionMetadata,
         serviceContainer: IServiceContainer,
-        notebookResource: NotebookResource,
+        resource: { resource: Uri; notebook: undefined },
         options: IDisplayOptions,
         disposables: IDisposable[],
         actionSource: KernelActionSource = 'jupyterExtension',
@@ -474,7 +509,7 @@ export class KernelConnector {
             'start',
             actionSource,
             serviceContainer,
-            notebookResource,
+            resource,
             options,
             disposables,
             onAction

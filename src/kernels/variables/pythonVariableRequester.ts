@@ -6,8 +6,8 @@ import { DataScience } from '../../platform/common/utils/localize';
 import { stripAnsi } from '../../platform/common/utils/regexp';
 import { JupyterDataRateLimitError } from '../../platform/errors/jupyterDataRateLimitError';
 import { Telemetry } from '../../telemetry';
-import { executeSilently, getAssociatedNotebookDocument, SilentExecutionErrorOptions } from '../helpers';
-import { IKernel } from '../types';
+import { executeSilently, SilentExecutionErrorOptions } from '../helpers';
+import { INotebookKernel } from '../types';
 import { IKernelVariableRequester, IJupyterVariable } from './types';
 import { IDataFrameScriptGenerator, IVariableScriptGenerator } from '../../platform/common/types';
 import { SessionDisposedError } from '../../platform/errors/sessionDisposedError';
@@ -35,7 +35,7 @@ export function parseDataFrame(df: DataFrameSplitFormat) {
 }
 
 async function safeExecuteSilently(
-    kernel: IKernel,
+    kernel: INotebookKernel,
     { code, initializeCode, cleanupCode }: { code: string; initializeCode?: string; cleanupCode?: string },
     errorOptions?: SilentExecutionErrorOptions
 ): Promise<nbformat.IOutput[]> {
@@ -68,7 +68,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
 
     public async getDataFrameInfo(
         targetVariable: IJupyterVariable,
-        kernel: IKernel,
+        kernel: INotebookKernel,
         expression: string
     ): Promise<IJupyterVariable> {
         // Then execute a call to get the info and turn it into JSON
@@ -86,7 +86,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
             }
         );
 
-        const fileName = getAssociatedNotebookDocument(kernel)?.uri || kernel.resourceUri || kernel.uri;
+        const fileName = kernel.notebook?.uri || kernel.resourceUri || kernel.uri;
 
         // Combine with the original result (the call only returns the new fields)
         return {
@@ -99,7 +99,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
     public async getDataFrameRows(
         start: number,
         end: number,
-        kernel: IKernel,
+        kernel: INotebookKernel,
         expression: string
     ): Promise<{ data: Record<string, unknown>[] }> {
         // Then execute a call to get the rows and turn it into JSON
@@ -124,7 +124,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
 
     public async getVariableProperties(
         word: string,
-        kernel: IKernel,
+        kernel: INotebookKernel,
         _cancelToken: CancellationToken | undefined,
         matchingVariable: IJupyterVariable | undefined,
         languageSettings: { [typeNameKey: string]: string[] },
@@ -161,7 +161,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
     }
 
     public async getVariableNamesAndTypesFromKernel(
-        kernel: IKernel,
+        kernel: INotebookKernel,
         _token?: CancellationToken
     ): Promise<IJupyterVariable[]> {
         if (kernel.session) {
@@ -206,7 +206,7 @@ export class PythonVariablesRequester implements IKernelVariableRequester {
 
     public async getFullVariable(
         targetVariable: IJupyterVariable,
-        kernel: IKernel,
+        kernel: INotebookKernel,
         _token?: CancellationToken
     ): Promise<IJupyterVariable> {
         // Then execute a call to get the info and turn it into JSON

@@ -3,7 +3,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { GLOBAL_MEMENTO, IConfigurationService, IHttpClient, IMemento } from '../../platform/common/types';
-import { IKernel } from '../types';
+import { INotebookKernel } from '../types';
 import { LocalWidgetScriptSourceProvider } from './localWidgetScriptSourceProvider.node';
 import { RemoteWidgetScriptSourceProvider } from './remoteWidgetScriptSourceProvider';
 import {
@@ -26,7 +26,7 @@ export class ScriptSourceProviderFactory implements IWidgetScriptSourceProviderF
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalMemento: Memento
     ) {}
 
-    public getProviders(kernel: IKernel, uriConverter: ILocalResourceUriConverter, httpClient: IHttpClient) {
+    public getProviders(kernel: INotebookKernel, uriConverter: ILocalResourceUriConverter, httpClient: IHttpClient) {
         const scriptProviders: IWidgetScriptSourceProvider[] = [];
 
         // Give preference to CDN.

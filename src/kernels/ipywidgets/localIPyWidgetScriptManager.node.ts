@@ -8,7 +8,7 @@ import { IExtensionContext } from '../../platform/common/types';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
-import { IKernel } from '../types';
+import { INotebookKernel } from '../types';
 import { BaseIPyWidgetScriptManager } from './baseIPyWidgetScriptManager';
 import { IIPyWidgetScriptManager, INbExtensionsPathProvider } from './types';
 import { JupyterPaths } from '../raw/finder/jupyterPaths.node';
@@ -34,7 +34,7 @@ export class LocalIPyWidgetScriptManager extends BaseIPyWidgetScriptManager impl
     static nbExtensionsCopiedKernelConnectionList = new Set<KernelConnectionId>();
     private nbExtensionsParentPath?: Promise<Uri | undefined>;
     constructor(
-        kernel: IKernel,
+        kernel: INotebookKernel,
         private readonly fs: IFileSystemNode,
         private readonly nbExtensionsPathProvider: INbExtensionsPathProvider,
         private readonly context: IExtensionContext,

@@ -1,7 +1,7 @@
 import { Event } from 'vscode';
 import { IVariableExplorerHeight } from '../../../webviews/webview-side/interactive-common/redux/reducers/types';
 import { InteractiveWindowMessages, IShowDataViewer, IFinishCell, SharedMessages } from '../../../messageTypes';
-import { IKernel } from '../../../kernels/types';
+import { INotebookKernel } from '../../../kernels/types';
 import { IJupyterVariablesRequest, IJupyterVariablesResponse } from '../../../kernels/variables/types';
 import { IVSCWebviewViewProvider } from '../../../platform/webviews/types';
 
@@ -33,7 +33,7 @@ export interface IActiveNotebookChangedEvent {
 
 export const INotebookWatcher = Symbol('INotebookWatcher');
 export interface INotebookWatcher {
-    readonly activeKernel?: IKernel;
+    readonly activeKernel?: INotebookKernel;
     readonly activeNotebookExecutionCount?: number;
     readonly onDidChangeActiveNotebook: Event<IActiveNotebookChangedEvent>;
     readonly onDidExecuteActiveNotebook: Event<{ executionCount: number }>;

@@ -8,7 +8,7 @@ import { Uri, CancellationToken, NotebookDocument } from 'vscode';
 import * as path from '../../platform/vscode-path/path';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import { executeSilently } from '../../kernels/helpers';
-import { IKernel, IKernelProvider } from '../../kernels/types';
+import { INotebookKernel, IKernelProvider } from '../../kernels/types';
 import { concatMultilineString } from '../../platform/common/utils';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
@@ -44,7 +44,7 @@ export class ExportBase implements INbConvertExport, IExportBase {
         _interpreter: PythonEnvironment,
         _token: CancellationToken
     ): Promise<void> {
-        const kernel = this.kernelProvider.get(sourceDocument.uri);
+        const kernel = this.kernelProvider.get(sourceDocument);
         if (!kernel) {
             // trace error
             return;
@@ -158,7 +158,7 @@ export class ExportBase implements INbConvertExport, IExportBase {
         return text;
     }
 
-    private async getCWD(kernel: IKernel) {
+    private async getCWD(kernel: INotebookKernel) {
         const outputs = await executeSilently(kernel.session!, `import os;os.getcwd();`);
         if (outputs.length === 0) {
             return;

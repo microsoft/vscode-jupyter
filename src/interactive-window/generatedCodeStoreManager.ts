@@ -3,8 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
-import { getAssociatedNotebookDocument } from '../kernels/helpers';
-import { IKernel, IKernelProvider } from '../kernels/types';
+import { INotebookKernel, IKernelProvider } from '../kernels/types';
 import { IControllerSelection } from '../notebooks/controllers/types';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { InteractiveWindowView } from '../platform/common/constants';
@@ -28,15 +27,15 @@ export class GeneratedCodeStorageManager implements IExtensionSyncActivationServ
         disposeAllDisposables(this.disposables);
     }
     activate(): void {
-        this.kernelProvider.onDidCreateKernel(this.onDidCreateKernel, this, this.disposables);
+        this.kernelProvider.onDidCreateNotebookKernel(this.onDidCreateKernel, this, this.disposables);
         this.controllers.onControllerSelected(this.onNotebookControllerSelected, this, this.disposables);
     }
     private onNotebookControllerSelected({ notebook }: { notebook: NotebookDocument }) {
         this.storageFactory.get({ notebook })?.clear();
         this.codeGeneratorFactory.get(notebook)?.reset();
     }
-    private onDidCreateKernel(kernel: IKernel) {
-        const notebook = getAssociatedNotebookDocument(kernel);
+    private onDidCreateKernel(kernel: INotebookKernel) {
+        const notebook = kernel.notebook;
         if (kernel.creator !== 'jupyterExtension' || notebook?.notebookType !== InteractiveWindowView) {
             return;
         }

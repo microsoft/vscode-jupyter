@@ -3,7 +3,7 @@
 'use strict';
 
 import { Event } from 'vscode';
-import { IKernel } from '../../../kernels/types';
+import { INotebookKernel } from '../../../kernels/types';
 import { IJupyterVariable } from '../../../kernels/variables/types';
 import { IDisposable } from '../../../platform/common/types';
 import { SharedMessages } from '../../../messageTypes';
@@ -109,7 +109,7 @@ export interface IDataViewerFactory {
 export const IDataViewer = Symbol('IDataViewer');
 export interface IDataViewer extends IDisposable {
     readonly active: boolean;
-    readonly kernel?: IKernel | undefined;
+    readonly kernel?: INotebookKernel | undefined;
     readonly title: string;
     readonly onDidDisposeDataViewer: Event<IDataViewer>;
     readonly onDidChangeDataViewerViewState: Event<void>;
@@ -119,13 +119,13 @@ export interface IDataViewer extends IDisposable {
 
 export const IJupyterVariableDataProvider = Symbol('IJupyterVariableDataProvider');
 export interface IJupyterVariableDataProvider extends IDataViewerDataProvider {
-    readonly kernel: IKernel | undefined;
-    setDependencies(variable: IJupyterVariable, kernel?: IKernel): void;
+    readonly kernel: INotebookKernel | undefined;
+    setDependencies(variable: IJupyterVariable, kernel?: INotebookKernel): void;
 }
 
 export const IJupyterVariableDataProviderFactory = Symbol('IJupyterVariableDataProviderFactory');
 export interface IJupyterVariableDataProviderFactory {
-    create(variable: IJupyterVariable, kernel?: IKernel): Promise<IJupyterVariableDataProvider>;
+    create(variable: IJupyterVariable, kernel?: INotebookKernel): Promise<IJupyterVariableDataProvider>;
 }
 
 export const IDataViewerDependencyService = Symbol('IDataViewerDependencyService');

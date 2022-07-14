@@ -3,12 +3,12 @@
 
 import { injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { IKernel } from '../types';
+import { INotebookKernel } from '../types';
 import { INbExtensionsPathProvider } from './types';
 
 @injectable()
 export class NbExtensionsPathProvider implements INbExtensionsPathProvider {
-    getNbExtensionsParentPath(kernel: IKernel): Uri | undefined {
+    getNbExtensionsParentPath(kernel: INotebookKernel): Uri | undefined {
         switch (kernel.kernelConnectionMetadata.kind) {
             case 'connectToLiveRemoteKernel':
             case 'startUsingRemoteKernelSpec': {

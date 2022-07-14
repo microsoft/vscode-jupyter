@@ -13,7 +13,7 @@ import { PersistentState, PersistentStateFactory } from '../../../platform/commo
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { IConfigurationService, IExtensionContext, IJupyterSettings, ReadWrite } from '../../../platform/common/types';
 import {
-    IKernel,
+    INotebookKernel,
     LocalKernelSpecConnectionMetadata,
     RemoteKernelSpecConnectionMetadata
 } from '../../../platform/../kernels/types';
@@ -31,7 +31,7 @@ import { JupyterPaths } from '../../../kernels/raw/finder/jupyterPaths.node';
 
 suite('DataScience - ipywidget - Widget Script Source Provider', () => {
     let scriptSourceProvider: IPyWidgetScriptSourceProvider;
-    let kernel: IKernel;
+    let kernel: INotebookKernel;
     let configService: IConfigurationService;
     let settings: ReadWrite<IJupyterSettings>;
     let appShell: IApplicationShell;
@@ -52,7 +52,7 @@ suite('DataScience - ipywidget - Widget Script Source Provider', () => {
         when(workspaceService.onDidChangeConfiguration).thenReturn(onDidChangeWorkspaceSettings.event);
         const stateFactory = mock(PersistentStateFactory);
         userSelectedOkOrDoNotShowAgainInPrompt = mock<PersistentState<boolean>>();
-        kernel = mock<IKernel>();
+        kernel = mock<INotebookKernel>();
         when(stateFactory.createGlobalPersistentState(anything(), anything())).thenReturn(
             instance(userSelectedOkOrDoNotShowAgainInPrompt)
         );

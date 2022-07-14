@@ -26,7 +26,6 @@ import {
 import { traceCellMessage } from './helpers';
 import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { CellExecutionMessageHandlerService } from './cellExecutionMessageHandlerService';
-import { getAssociatedNotebookDocument } from '../helpers';
 import { noop } from '../../platform/common/utils/misc';
 
 /**
@@ -63,7 +62,7 @@ export class KernelExecution implements IDisposable {
         return this._onPreExecute.event;
     }
     public get queue() {
-        const notebook = getAssociatedNotebookDocument(this.kernel);
+        const notebook = this.kernel.notebook;
         return notebook ? this.documentExecutions.get(notebook)?.queue || [] : [];
     }
     public async executeCell(
@@ -89,7 +88,7 @@ export class KernelExecution implements IDisposable {
         return result[0];
     }
     public async cancel() {
-        const notebook = getAssociatedNotebookDocument(this.kernel);
+        const notebook = this.kernel.notebook;
         if (!notebook) {
             return;
         }
@@ -105,7 +104,7 @@ export class KernelExecution implements IDisposable {
      */
     public async interrupt(sessionPromise?: Promise<IKernelConnectionSession>): Promise<InterruptResult> {
         trackKernelResourceInformation(this.kernel.resourceUri, { interruptKernel: true });
-        const notebook = getAssociatedNotebookDocument(this.kernel);
+        const notebook = this.kernel.notebook;
         const executionQueue = notebook ? this.documentExecutions.get(notebook) : undefined;
         if (notebook && !executionQueue && this.kernel.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
             return InterruptResult.Success;
@@ -144,7 +143,7 @@ export class KernelExecution implements IDisposable {
      */
     public async restart(sessionPromise?: Promise<IKernelConnectionSession>): Promise<void> {
         trackKernelResourceInformation(this.kernel.resourceUri, { restartKernel: true });
-        const notebook = getAssociatedNotebookDocument(this.kernel);
+        const notebook = this.kernel.notebook;
         const executionQueue = notebook ? this.documentExecutions.get(notebook) : undefined;
         // Possible we don't have a notebook.
         const session = sessionPromise ? await sessionPromise.catch(() => undefined) : undefined;

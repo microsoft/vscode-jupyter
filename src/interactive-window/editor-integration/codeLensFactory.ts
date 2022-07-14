@@ -20,11 +20,10 @@ import { traceWarning, traceInfoIfCI } from '../../platform/logging';
 import { ICellRange, IConfigurationService, IDisposableRegistry, Resource } from '../../platform/common/types';
 import * as localize from '../../platform/common/utils/localize';
 import { getInteractiveCellMetadata } from '../helpers';
-import { IKernelProvider } from '../../kernels/types';
+import { INotebookKernel, IKernelProvider } from '../../kernels/types';
 import { CodeLensCommands, Commands, InteractiveWindowView } from '../../platform/common/constants';
 import { generateCellRangesFromDocument } from './cellFactory';
 import { ICodeLensFactory, IGeneratedCode, IGeneratedCodeStorageFactory } from './types';
-import { getAssociatedNotebookDocument } from '../../kernels/helpers';
 
 type CodeLensCacheData = {
     cachedDocumentVersion: number | undefined;
@@ -62,12 +61,9 @@ export class CodeLensFactory implements ICodeLensFactory {
         this.workspace.onDidGrantWorkspaceTrust(() => this.codeLensCache.clear(), this, disposables);
         this.configService.getSettings(undefined).onDidChange(this.onChangedSettings, this, disposables);
         notebook.onDidChangeNotebookCellExecutionState(this.onDidChangeNotebookCellExecutionState, this, disposables);
-        kernelProvider.onDidDisposeKernel(
+        kernelProvider.onDidDisposeNotebookKernel(
             (kernel) => {
-                const notebook = getAssociatedNotebookDocument(kernel);
-                if (notebook) {
-                    this.notebookData.delete(notebook.uri.toString());
-                }
+                this.notebookData.delete((kernel as INotebookKernel).notebook.uri.toString());
             },
             this,
             disposables

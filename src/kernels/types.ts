@@ -12,6 +12,7 @@ import type {
     Event,
     NotebookCell,
     NotebookController,
+    NotebookDocument,
     QuickPickItem,
     Uri
 } from 'vscode';
@@ -131,12 +132,17 @@ export function isRemoteConnection(
     );
 }
 
+export interface INotebookKernel extends IKernel {
+    readonly notebook: NotebookDocument;
+}
+
 export interface IKernel extends IAsyncDisposable {
     /**
      * Total execution count on this kernel
      */
     readonly executionCount: number;
     readonly uri: Uri;
+    readonly notebook: NotebookDocument | undefined;
     /**
      * In the case of Notebooks, this is the same as the Notebook Uri.
      * But in the case of Interactive Window, this is the Uri of the file (such as the Python file).
@@ -223,20 +229,34 @@ export type KernelOptions = {
 export const IKernelProvider = Symbol('IKernelProvider');
 export interface IKernelProvider extends IAsyncDisposable {
     readonly kernels: Readonly<IKernel[]>;
+    readonly notebookKernels: Readonly<INotebookKernel[]>;
     onDidCreateKernel: Event<IKernel>;
+    onDidCreateNotebookKernel: Event<INotebookKernel>;
     onDidStartKernel: Event<IKernel>;
+    onDidStartNotebookKernel: Event<INotebookKernel>;
     onDidRestartKernel: Event<IKernel>;
+    onDidRestartNotebookKernel: Event<INotebookKernel>;
     onDidDisposeKernel: Event<IKernel>;
+    onDidDisposeNotebookKernel: Event<INotebookKernel>;
     onKernelStatusChanged: Event<{ status: KernelMessage.Status; kernel: IKernel }>;
     /**
-     * Get hold of the active kernel for a given Notebook.
+     * Get hold of the active kernel for a given resource uri.
      */
     get(uri: Uri): IKernel | undefined;
+    /**
+     * Get hold of the active kernel for a given notebook document.
+     */
+    get(notebook: NotebookDocument): INotebookKernel | undefined;
+    /**
+     * Gets or creates a kernel for a given resource uri.
+     * WARNING: If called with different options for same resource uri, old kernel associated with the Uri will be disposed.
+     */
+    getOrCreate(uri: Uri, options: KernelOptions): IKernel;
     /**
      * Gets or creates a kernel for a given Notebook.
      * WARNING: If called with different options for same Notebook, old kernel associated with the Uri will be disposed.
      */
-    getOrCreate(uri: Uri, options: KernelOptions): IKernel;
+    getOrCreate(notebook: NotebookDocument, options: KernelOptions): INotebookKernel;
 }
 
 export interface IRawConnection {

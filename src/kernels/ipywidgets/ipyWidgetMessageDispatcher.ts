@@ -15,10 +15,9 @@ import { noop } from '../../platform/common/utils/misc';
 import { deserializeDataViews, serializeDataViews } from '../../platform/common/utils/serializers';
 import { IPyWidgetMessages, IInteractiveWindowMapping } from '../../messageTypes';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { IKernel, IKernelProvider, KernelSocketInformation } from '../types';
+import { INotebookKernel, IKernelProvider, KernelSocketInformation } from '../types';
 import { WIDGET_MIMETYPE } from './constants';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
-import { getAssociatedNotebookDocument } from '../helpers';
 
 type PendingMessage = {
     resultPromise: Deferred<void>;
@@ -36,7 +35,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private readonly commTargetsRegistered = new Set<string>();
     private jupyterLab?: typeof import('@jupyterlab/services');
     private pendingTargetNames = new Set<string>();
-    private kernel?: IKernel;
+    private kernel?: INotebookKernel;
     private _postMessageEmitter = new EventEmitter<IPyWidgetMessage>();
     private messageHooks = new Map<string, (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>>();
     private pendingHookRemovals = new Map<string, string>();
@@ -77,9 +76,9 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         // Possible auto start is disabled, and when cell is executed with widget stuff, this comm target will not have
         // been registered, in which case kaboom. As we know this is always required, pre-register this.
         this.pendingTargetNames.add('jupyter.widget');
-        kernelProvider.onDidStartKernel(
+        kernelProvider.onDidStartNotebookKernel(
             (e) => {
-                if (getAssociatedNotebookDocument(e) === document) {
+                if (e.notebook === document) {
                     this.initialize();
                 }
             },
@@ -177,7 +176,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     ) {
         this._postMessageEmitter.fire({ message, payload });
     }
-    private subscribeToKernelSocket(kernel: IKernel) {
+    private subscribeToKernelSocket(kernel: INotebookKernel) {
         if (this.subscribedToKernelSocket || !kernel.session) {
             return;
         }
@@ -359,7 +358,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
     }
 
-    private registerCommTargets(kernel: IKernel) {
+    private registerCommTargets(kernel: INotebookKernel) {
         while (this.pendingTargetNames.size > 0) {
             const targetNames = Array.from([...this.pendingTargetNames.values()]);
             const targetName = targetNames.shift();
@@ -384,9 +383,9 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
     }
 
-    private getKernel(): IKernel | undefined {
+    private getKernel(): INotebookKernel | undefined {
         if (this.document && !this.kernel?.session) {
-            this.kernel = this.kernelProvider.get(this.document.uri);
+            this.kernel = this.kernelProvider.get(this.document);
             this.kernel?.onDisposed(() => (this.kernel = undefined));
         }
         if (this.kernel && !this.kernelRestartHandlerAttached) {

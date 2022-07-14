@@ -5,19 +5,19 @@
 import { injectable, inject } from 'inversify';
 import { IFileSystem } from '../../platform/common/platform/types';
 import { IExtensionContext, IHttpClient } from '../../platform/common/types';
-import { IKernel } from '../types';
+import { INotebookKernel } from '../types';
 import { RemoteIPyWidgetScriptManager } from './remoteIPyWidgetScriptManager';
 import { IIPyWidgetScriptManager, IIPyWidgetScriptManagerFactory } from './types';
 
 @injectable()
 export class IPyWidgetScriptManagerFactory implements IIPyWidgetScriptManagerFactory {
-    private readonly managers = new WeakMap<IKernel, IIPyWidgetScriptManager>();
+    private readonly managers = new WeakMap<INotebookKernel, IIPyWidgetScriptManager>();
     constructor(
         @inject(IHttpClient) private readonly httpClient: IHttpClient,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}
-    getOrCreate(kernel: IKernel): IIPyWidgetScriptManager {
+    getOrCreate(kernel: INotebookKernel): IIPyWidgetScriptManager {
         if (!this.managers.has(kernel)) {
             if (
                 kernel.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel' ||

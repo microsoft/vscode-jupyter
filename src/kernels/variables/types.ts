@@ -3,7 +3,7 @@
 'use strict';
 
 import { CancellationToken, Event, Uri } from 'vscode';
-import { IKernel } from '../types';
+import { INotebookKernel } from '../types';
 import type { JSONObject } from '@lumino/coreutils';
 
 // Get variables from the currently running active Jupyter server or debugger
@@ -30,15 +30,15 @@ export interface IJupyterVariable {
 export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
     readonly refreshRequired: Event<void>;
-    getVariables(request: IJupyterVariablesRequest, kernel?: IKernel): Promise<IJupyterVariablesResponse>;
+    getVariables(request: IJupyterVariablesRequest, kernel?: INotebookKernel): Promise<IJupyterVariablesResponse>;
     getFullVariable(
         variable: IJupyterVariable,
-        kernel?: IKernel,
+        kernel?: INotebookKernel,
         cancelToken?: CancellationToken
     ): Promise<IJupyterVariable>;
     getDataFrameInfo(
         targetVariable: IJupyterVariable,
-        kernel?: IKernel,
+        kernel?: INotebookKernel,
         sliceExpression?: string,
         isRefresh?: boolean
     ): Promise<IJupyterVariable>;
@@ -46,16 +46,20 @@ export interface IJupyterVariables {
         targetVariable: IJupyterVariable,
         start: number,
         end: number,
-        kernel?: IKernel,
+        kernel?: INotebookKernel,
         sliceExpression?: string
     ): Promise<{ data: Record<string, unknown>[] }>;
     getMatchingVariable(
         name: string,
-        kernel?: IKernel,
+        kernel?: INotebookKernel,
         cancelToken?: CancellationToken
     ): Promise<IJupyterVariable | undefined>;
     // This is currently only defined in kernelVariables.ts
-    getVariableProperties?(name: string, kernel?: IKernel, cancelToken?: CancellationToken): Promise<JSONObject>;
+    getVariableProperties?(
+        name: string,
+        kernel?: INotebookKernel,
+        cancelToken?: CancellationToken
+    ): Promise<JSONObject>;
 }
 
 export interface IConditionalJupyterVariables extends IJupyterVariables {
@@ -84,25 +88,29 @@ export interface IJupyterVariablesResponse {
 export const IKernelVariableRequester = Symbol('IKernelVariableRequester');
 
 export interface IKernelVariableRequester {
-    getVariableNamesAndTypesFromKernel(kernel: IKernel, token?: CancellationToken): Promise<IJupyterVariable[]>;
+    getVariableNamesAndTypesFromKernel(kernel: INotebookKernel, token?: CancellationToken): Promise<IJupyterVariable[]>;
     getFullVariable(
         targetVariable: IJupyterVariable,
-        kernel: IKernel,
+        kernel: INotebookKernel,
         token?: CancellationToken
     ): Promise<IJupyterVariable>;
     getDataFrameRows(
         start: number,
         end: number,
-        kernel: IKernel,
+        kernel: INotebookKernel,
         expression: string
     ): Promise<{ data: Record<string, unknown>[] }>;
     getVariableProperties(
         word: string,
-        kernel: IKernel,
+        kernel: INotebookKernel,
         cancelToken: CancellationToken | undefined,
         matchingVariable: IJupyterVariable | undefined,
         languageSettings: { [typeNameKey: string]: string[] },
         inEnhancedTooltipsExperiment: boolean
     ): Promise<{ [attributeName: string]: string }>;
-    getDataFrameInfo(targetVariable: IJupyterVariable, kernel: IKernel, expression: string): Promise<IJupyterVariable>;
+    getDataFrameInfo(
+        targetVariable: IJupyterVariable,
+        kernel: INotebookKernel,
+        expression: string
+    ): Promise<IJupyterVariable>;
 }

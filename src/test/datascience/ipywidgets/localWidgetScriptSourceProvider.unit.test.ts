@@ -3,7 +3,7 @@
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { IKernel } from '../../../platform/../kernels/types';
+import { INotebookKernel } from '../../../platform/../kernels/types';
 import { LocalWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/localWidgetScriptSourceProvider.node';
 import {
     ILocalResourceUriConverter,
@@ -16,7 +16,7 @@ import {
 suite('DataScience - ipywidget - Local Widget Script Source', () => {
     let scriptSourceProvider: IWidgetScriptSourceProvider;
     let resourceConverter: ILocalResourceUriConverter;
-    let kernel: IKernel;
+    let kernel: INotebookKernel;
     let scriptManagerFactory: IIPyWidgetScriptManagerFactory;
     let scriptManager: IIPyWidgetScriptManager;
     function asVSCodeUri(uri: Uri) {
@@ -27,7 +27,7 @@ suite('DataScience - ipywidget - Local Widget Script Source', () => {
         scriptManagerFactory = mock<IIPyWidgetScriptManagerFactory>();
         scriptManager = mock<IIPyWidgetScriptManager>();
         when(scriptManagerFactory.getOrCreate(anything())).thenReturn(instance(scriptManager));
-        kernel = mock<IKernel>();
+        kernel = mock<INotebookKernel>();
         when(resourceConverter.asWebviewUri(anything())).thenCall((uri) => Promise.resolve(asVSCodeUri(uri)));
         scriptSourceProvider = new LocalWidgetScriptSourceProvider(
             instance(kernel),

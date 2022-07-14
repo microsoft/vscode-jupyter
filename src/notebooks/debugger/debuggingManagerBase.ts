@@ -14,7 +14,7 @@ import {
     EventEmitter,
     NotebookCell
 } from 'vscode';
-import { IKernel, IKernelProvider } from '../../kernels/types';
+import { INotebookKernel, IKernelProvider } from '../../kernels/types';
 import { IDisposable } from '../../platform/common/types';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { DebuggingTelemetry } from '../../kernels/debugger/constants';
@@ -142,13 +142,13 @@ export abstract class DebuggingManagerBase implements IDisposable {
         }
     }
 
-    protected async ensureKernelIsRunning(doc: NotebookDocument): Promise<IKernel | undefined> {
+    protected async ensureKernelIsRunning(doc: NotebookDocument): Promise<INotebookKernel | undefined> {
         await this.notebookControllerLoader.loaded;
         const controller = this.notebookControllerSelection.getSelected(doc);
 
-        let kernel = this.kernelProvider.get(doc.uri);
+        let kernel = this.kernelProvider.get(doc);
         if (!kernel && controller) {
-            kernel = this.kernelProvider.getOrCreate(doc.uri, {
+            kernel = this.kernelProvider.getOrCreate(doc, {
                 metadata: controller.connection,
                 controller: controller?.controller,
                 resourceUri: doc.uri,
@@ -164,13 +164,13 @@ export abstract class DebuggingManagerBase implements IDisposable {
 
     protected async checkForIpykernel6(doc: NotebookDocument): Promise<IpykernelCheckResult> {
         try {
-            let kernel = this.kernelProvider.get(doc.uri);
+            let kernel = this.kernelProvider.get(doc);
             if (!kernel) {
                 const controller = this.notebookControllerSelection.getSelected(doc);
                 if (!controller) {
                     return IpykernelCheckResult.ControllerNotSelected;
                 }
-                kernel = this.kernelProvider.getOrCreate(doc.uri, {
+                kernel = this.kernelProvider.getOrCreate(doc, {
                     metadata: controller.connection,
                     controller: controller?.controller,
                     resourceUri: doc.uri,

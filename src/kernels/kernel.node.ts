@@ -2,14 +2,14 @@
 // Licensed under the MIT License.
 
 'use strict';
-import { NotebookController, Uri } from 'vscode';
+import { NotebookController, NotebookDocument, Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../platform/common/application/types';
 import { CodeSnippets, InteractiveWindowView } from '../platform/common/constants';
 import { traceInfo, traceError } from '../platform/logging';
 import { IPythonExecutionFactory } from '../platform/common/process/types.node';
 import { Resource, IConfigurationService, IExtensionContext } from '../platform/common/types';
 import { calculateWorkingDirectory } from '../platform/common/utils.node';
-import { getAssociatedNotebookDocument, isLocalHostConnection, isPythonKernelConnection } from './helpers';
+import { isLocalHostConnection, isPythonKernelConnection } from './helpers';
 import { expandWorkingDir } from './jupyter/jupyterUtils';
 import {
     INotebookProvider,
@@ -30,6 +30,7 @@ export class Kernel extends BaseKernel {
     constructor(
         uri: Uri,
         resourceUri: Resource,
+        notebook: NotebookDocument | undefined,
         kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
         notebookProvider: INotebookProvider,
         launchTimeout: number,
@@ -49,6 +50,7 @@ export class Kernel extends BaseKernel {
         super(
             uri,
             resourceUri,
+            notebook,
             kernelConnectionMetadata,
             notebookProvider,
             launchTimeout,
@@ -75,7 +77,7 @@ export class Kernel extends BaseKernel {
         }
         // Only do this for interactive windows. IPYKERNEL_CELL_NAME is set other ways in
         // notebooks
-        if (getAssociatedNotebookDocument(this)?.notebookType === InteractiveWindowView) {
+        if (this.notebook?.notebookType === InteractiveWindowView) {
             // If using ipykernel 6, we need to set the IPYKERNEL_CELL_NAME so that
             // debugging can work. However this code is harmless for IPYKERNEL 5 so just always do it
             const scriptPath = AddRunCellHook.getScriptPath(this.context);

@@ -5,7 +5,7 @@
 import { injectable, inject } from 'inversify';
 import { IFileSystemNode } from '../../platform/common/platform/types.node';
 import { IExtensionContext, IHttpClient } from '../../platform/common/types';
-import { IKernel } from '../types';
+import { INotebookKernel } from '../types';
 import { IIPyWidgetScriptManager, IIPyWidgetScriptManagerFactory, INbExtensionsPathProvider } from './types';
 import { RemoteIPyWidgetScriptManager } from './remoteIPyWidgetScriptManager';
 import { LocalIPyWidgetScriptManager } from './localIPyWidgetScriptManager.node';
@@ -13,7 +13,7 @@ import { JupyterPaths } from '../raw/finder/jupyterPaths.node';
 
 @injectable()
 export class IPyWidgetScriptManagerFactory implements IIPyWidgetScriptManagerFactory {
-    private readonly managers = new WeakMap<IKernel, IIPyWidgetScriptManager>();
+    private readonly managers = new WeakMap<INotebookKernel, IIPyWidgetScriptManager>();
     constructor(
         @inject(INbExtensionsPathProvider) private readonly nbExtensionsPathProvider: INbExtensionsPathProvider,
         @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
@@ -21,7 +21,7 @@ export class IPyWidgetScriptManagerFactory implements IIPyWidgetScriptManagerFac
         @inject(IHttpClient) private readonly httpClient: IHttpClient,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths
     ) {}
-    getOrCreate(kernel: IKernel): IIPyWidgetScriptManager {
+    getOrCreate(kernel: INotebookKernel): IIPyWidgetScriptManager {
         if (!this.managers.has(kernel)) {
             if (
                 kernel.kernelConnectionMetadata.kind === 'connectToLiveRemoteKernel' ||

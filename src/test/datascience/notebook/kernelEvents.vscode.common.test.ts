@@ -81,8 +81,8 @@ suite('Kernel Event', function () {
         const kernelStatusChanged = createEventHandler(kernelProvider, 'onKernelStatusChanged', disposables);
 
         const nb = await createEmptyPythonNotebook(disposables);
-        await waitForCondition(async () => !!kernelProvider.get(nb.uri), 5_000, 'Kernel not created');
-        const kernel = kernelProvider.get(nb.uri)!;
+        await waitForCondition(async () => !!kernelProvider.get(nb), 5_000, 'Kernel not created');
+        const kernel = kernelProvider.get(nb)!;
         const startedEvent = createEventHandler(kernel, 'onStarted', disposables);
         const onPreExecuteEvent = createEventHandler(kernel, 'onPreExecute', disposables);
         const onStatusChangeEvent = createEventHandler(kernel, 'onStatusChanged', disposables);
@@ -117,14 +117,14 @@ suite('Kernel Event', function () {
     });
     test('Kernel.IKernelConnection Events', async () => {
         const nb = await createEmptyPythonNotebook(disposables);
-        await waitForCondition(async () => !!kernelProvider.get(nb.uri), 5_000, 'Kernel not created');
-        const kernel = kernelProvider.get(nb.uri)!;
+        await waitForCondition(async () => !!kernelProvider.get(nb), 5_000, 'Kernel not created');
+        const kernel = kernelProvider.get(nb)!;
         const onPreExecuteEvent = createEventHandler(kernel, 'onPreExecute', disposables);
 
         const cell = await insertCodeCell('print("cell1")', { index: 0 });
         await Promise.all([runCell(cell), waitForTextOutput(cell, 'cell1')]);
 
-        const kernelConnection = kernelProvider.get(nb.uri)!.session!.kernel!;
+        const kernelConnection = kernelProvider.get(nb)!.session!.kernel!;
         assert.strictEqual(onPreExecuteEvent.count, 1, 'Pre-execute should be fired once');
         assert.equal(onPreExecuteEvent.first, cell, 'Incorrect cell');
 

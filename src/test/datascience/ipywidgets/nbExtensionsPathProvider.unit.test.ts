@@ -11,7 +11,7 @@ import { NbExtensionsPathProvider as WebNbExtensionsPathProvider } from '../../.
 import { INbExtensionsPathProvider } from '../../../kernels/ipywidgets/types';
 import {
     IJupyterKernelSpec,
-    IKernel,
+    INotebookKernel,
     LiveKernelModel,
     LocalKernelSpecConnectionMetadata,
     PythonKernelConnectionMetadata,
@@ -49,9 +49,9 @@ import {
     };
     suite(`NBExtension Path Provider for ${isWeb ? 'Web' : 'Node'}`, () => {
         let provider: INbExtensionsPathProvider;
-        let kernel: IKernel;
+        let kernel: INotebookKernel;
         setup(() => {
-            kernel = mock<IKernel>();
+            kernel = mock<INotebookKernel>();
             provider = isWeb ? new WebNbExtensionsPathProvider() : new NbExtensionsPathProvider();
         });
         test('Returns base url for local non-python kernelspec', async () => {

@@ -8,11 +8,10 @@ import { traceError, traceInfo, traceVerbose, traceWarning } from '../../platfor
 import { IDisposableRegistry, IConfigurationService, IHttpClient, IDisposable } from '../../platform/common/types';
 import { InteractiveWindowMessages, IPyWidgetMessages } from '../../messageTypes';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { IKernel, IKernelProvider } from '../types';
+import { INotebookKernel, IKernelProvider } from '../types';
 import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider';
 import { ILocalResourceUriConverter, IWidgetScriptSourceProviderFactory, WidgetScriptSource } from './types';
 import { ConsoleForegroundColors } from '../../platform/logging/types';
-import { getAssociatedNotebookDocument } from '../helpers';
 import { noop } from '../../platform/common/utils/misc';
 import { createDeferred, Deferred } from '../../platform/common/utils/async';
 import { ScriptUriConverter } from './scriptUriConverter';
@@ -28,7 +27,7 @@ export class IPyWidgetScriptSource {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         payload: any;
     }>();
-    private kernel?: IKernel;
+    private kernel?: INotebookKernel;
     private jupyterLab?: typeof jupyterlabService;
     private scriptProvider?: IPyWidgetScriptSourceProvider;
     private allWidgetScriptsSent?: boolean;
@@ -65,9 +64,9 @@ export class IPyWidgetScriptSource {
         // Don't leave dangling promises.
         this.isWebViewOnline.promise.ignoreErrors();
         disposables.push(this);
-        this.kernelProvider.onDidStartKernel(
+        this.kernelProvider.onDidStartNotebookKernel(
             (e) => {
-                if (getAssociatedNotebookDocument(e) === this.document) {
+                if (e.notebook === this.document) {
                     this.initialize();
                 }
             },
@@ -110,7 +109,7 @@ export class IPyWidgetScriptSource {
         }
 
         if (!this.kernel) {
-            this.kernel = this.kernelProvider.get(this.document.uri);
+            this.kernel = this.kernelProvider.get(this.document);
         }
         if (!this.kernel?.session) {
             return;

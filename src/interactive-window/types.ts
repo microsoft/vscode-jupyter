@@ -3,7 +3,7 @@
 
 import { Disposable, Event, NotebookCell, NotebookDocument, NotebookEditor, Tab, Uri } from 'vscode';
 import { IDebuggingManager } from '../kernels/debugger/types';
-import { IKernel, KernelConnectionMetadata } from '../kernels/types';
+import { INotebookKernel, KernelConnectionMetadata } from '../kernels/types';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { Resource, InteractiveWindowMode, ICell } from '../platform/common/types';
 import { IFileGeneratedCodes } from './editor-integration/types';
@@ -12,10 +12,10 @@ export type INativeInteractiveWindow = { notebookUri: Uri; inputUri: Uri; notebo
 
 export const IInteractiveWindowDebugger = Symbol('IInteractiveWindowDebugger');
 export interface IInteractiveWindowDebugger {
-    attach(kernel: IKernel): Promise<void>;
-    detach(kernel: IKernel): Promise<void>;
-    enable(kernel: IKernel): void;
-    disable(kernel: IKernel): void;
+    attach(kernel: INotebookKernel): Promise<void>;
+    detach(kernel: INotebookKernel): Promise<void>;
+    enable(kernel: INotebookKernel): void;
+    disable(kernel: INotebookKernel): void;
     updateSourceMaps(generatedCodes: IFileGeneratedCodes[]): Promise<void>;
 }
 

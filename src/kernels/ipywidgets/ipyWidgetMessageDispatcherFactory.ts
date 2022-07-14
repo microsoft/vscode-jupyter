@@ -7,8 +7,7 @@ import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, NotebookDocument } from 'vscode';
 import { IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { IPyWidgetMessages } from '../../messageTypes';
-import { getAssociatedNotebookDocument } from '../helpers';
-import { IKernel, IKernelProvider } from '../types';
+import { INotebookKernel, IKernelProvider } from '../types';
 import { IPyWidgetMessageDispatcher } from './ipyWidgetMessageDispatcher';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
 
@@ -87,7 +86,7 @@ export class IPyWidgetMessageDispatcherFactory implements IDisposable {
     ) {
         disposables.push(this);
 
-        kernelProvider.onDidDisposeKernel(this.trackDisposingOfKernels, this, disposables);
+        kernelProvider.onDidDisposeNotebookKernel(this.trackDisposingOfKernels, this, disposables);
     }
 
     public dispose() {
@@ -118,16 +117,14 @@ export class IPyWidgetMessageDispatcherFactory implements IDisposable {
         this.disposables.push(dispatcher);
         return dispatcher;
     }
-    private trackDisposingOfKernels(kernel: IKernel) {
+    private trackDisposingOfKernels(kernel: INotebookKernel) {
         if (this.disposed) {
             return;
         }
-        const notebook = getAssociatedNotebookDocument(kernel);
-        if (notebook) {
-            const item = this.messageDispatchers.get(notebook);
-            this.messageDispatchers.delete(notebook);
-            item?.dispose(); // NOSONAR
-        }
+        const notebook = kernel.notebook;
+        const item = this.messageDispatchers.get(notebook);
+        this.messageDispatchers.delete(notebook);
+        item?.dispose(); // NOSONAR
     }
 
     private onMessage(message: IPyWidgetMessage, document?: NotebookDocument) {

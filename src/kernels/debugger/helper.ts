@@ -3,7 +3,7 @@
 
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IKernelDebugAdapter, IKernelDebugAdapterConfig, KernelDebugMode } from './types';
-import { IKernel } from '../types';
+import { INotebookKernel } from '../types';
 
 export enum IpykernelCheckResult {
     Unknown,
@@ -13,7 +13,7 @@ export enum IpykernelCheckResult {
     ControllerNotSelected
 }
 
-export async function isUsingIpykernel6OrLater(kernel: IKernel): Promise<IpykernelCheckResult> {
+export async function isUsingIpykernel6OrLater(kernel: INotebookKernel): Promise<IpykernelCheckResult> {
     const code = 'import ipykernel\nprint(ipykernel.__version__)';
     const output = await kernel.executeHidden(code);
 
@@ -149,7 +149,7 @@ export function shortNameMatchesLongName(shortNamePath: string, longNamePath: st
     return r.test(longNamePath);
 }
 
-export async function cellDebugSetup(kernel: IKernel, debugAdapter: IKernelDebugAdapter): Promise<void> {
+export async function cellDebugSetup(kernel: INotebookKernel, debugAdapter: IKernelDebugAdapter): Promise<void> {
     // remove this if when https://github.com/microsoft/debugpy/issues/706 is fixed and ipykernel ships it
     // executing this code restarts debugpy and fixes https://github.com/microsoft/vscode-jupyter/issues/7251
     const code = 'import debugpy\ndebugpy.debug_this_thread()';
