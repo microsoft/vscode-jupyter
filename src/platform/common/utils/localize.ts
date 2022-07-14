@@ -1393,6 +1393,32 @@ export namespace DataScience {
         );
     export const listOfFilesWithLinksThatMightNeedToBeRenamed = () =>
         localize('DataScience.listOfFilesWithLinksThatMightNeedToBeRenamed', 'File(s): {0} might need to be renamed.');
+    export const noKernelFoundInInterpreter = () =>
+        localize('DataScience.noKernelFoundInInterpreter', 'No kernel found in interpreter.');
+    export const noActiveKernelSession = () =>
+        localize('DataScience.noActiveKernelSession', 'No no active kernel session.');
+    export const insufficientParameters = () =>
+        localize('DataScience.insufficientParameters', 'Insufficient parameters.');
+    export const webInterpreterInsufficient = () =>
+        localize(
+            'DataScience.webInterpreterInsufficient',
+            'The interpreter alone is not sufficient to execute this method on the web.'
+        );
+    export const noDebuggerSessionAndFrameId = () =>
+        localize(
+            'DataScience.noDebuggerSessionAndFrameId',
+            'The debugger session as well as the frame Id are necessary.'
+        );
+    export const failedToGetVersionOfPandas = () =>
+        localize(
+            { key: 'DataScience.failedToGetVersionOfPandas', comment: ['{Locked="Pandas"}'] },
+            'Failed to get version of Pandas to use the Data Viewer'
+        );
+    export const failedToInstallPandas = () =>
+        localize(
+            { key: 'DataScience.failedToInstallPandas', comment: ['{Locked="Pandas"}'] },
+            'Failed to install Pandas to use the Data Viewer'
+        );
 }
 
 export namespace Deprecated {

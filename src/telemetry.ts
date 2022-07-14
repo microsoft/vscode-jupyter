@@ -494,6 +494,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.UserInstalledPandas]: never | undefined;
     [Telemetry.UserDidNotInstallJupyter]: never | undefined;
     [Telemetry.UserDidNotInstallPandas]: never | undefined;
+    [Telemetry.FailedToInstallPandas]: never | undefined;
     [Telemetry.PythonNotInstalled]: {
         action:
             | 'displayed' // Message displayed.
@@ -1374,4 +1375,17 @@ export interface IEventNamePropertyMapping {
      * Total time take to copy the nb extensions folder.
      */
     [Telemetry.IPyWidgetNbExtensionCopyTime]: never | undefined;
+    /**
+     * Useful when we need an active kernel session in order to execute commands silently.
+     * Used by the dataViewerDependencyService.
+     */
+    [Telemetry.NoActiveKernelSession]: never | undefined;
+    /**
+     * Error in case none of the necessary parameters are provided.
+     */
+    [Telemetry.InsufficientParameters]: never | undefined;
+    /**
+     * Error in case the provided interpreter is not sufficient in the web.
+     */
+    [Telemetry.WebInterpreterInsufficient]: never | undefined;
 }

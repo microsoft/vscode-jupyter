@@ -129,6 +129,15 @@ export interface IJupyterVariableDataProviderFactory {
 }
 
 export const IDataViewerDependencyService = Symbol('IDataViewerDependencyService');
+export type IDataViewerDependencyServiceOptions =
+    | {
+          interpreter: PythonEnvironment;
+          kernel: undefined;
+      }
+    | {
+          interpreter: undefined;
+          kernel: IKernel;
+      };
 export interface IDataViewerDependencyService {
-    checkAndInstallMissingDependencies(interpreter: PythonEnvironment): Promise<void>;
+    checkAndInstallMissingDependencies(options: IDataViewerDependencyServiceOptions): Promise<void>;
 }

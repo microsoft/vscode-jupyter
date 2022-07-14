@@ -13,12 +13,12 @@ import { Cancellation, createPromiseFromCancellation } from '../../../platform/c
 import { traceWarning } from '../../../platform/logging';
 import { IPythonExecutionFactory } from '../../../platform/common/process/types.node';
 import { IsCodeSpace } from '../../../platform/common/types';
-import { parseSemVer } from '../../../platform/common/utils.node';
+import { parseSemVer } from '../../../platform/common/utils';
 import { DataScience, Common } from '../../../platform/common/utils/localize';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
-import { IDataViewerDependencyService } from './types';
+import { IDataViewerDependencyService, IDataViewerDependencyServiceOptions } from './types';
 
 const minimumSupportedPandaVersion = '0.20.0';
 
@@ -39,7 +39,18 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
         @inject(IsCodeSpace) private isCodeSpace: boolean
     ) {}
 
-    public async checkAndInstallMissingDependencies(interpreter: PythonEnvironment): Promise<void> {
+    public async checkAndInstallMissingDependencies(options: IDataViewerDependencyServiceOptions): Promise<void> {
+        const kernel = options.kernel;
+        let interpreter = options.interpreter;
+
+        if (!interpreter && kernel?.kernelConnectionMetadata.interpreter) {
+            interpreter = kernel.kernelConnectionMetadata.interpreter;
+        }
+
+        if (!interpreter) {
+            throw new Error('Kernel dependency installer is not available in Node.js. Use an interpreter.');
+        }
+
         const tokenSource = new CancellationTokenSource();
         try {
             const pandasVersion = await this.getVersionOfPandas(interpreter, tokenSource.token);
