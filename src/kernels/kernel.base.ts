@@ -140,7 +140,7 @@ export abstract class BaseKernel implements IKernel {
     constructor(
         public readonly uri: Uri,
         public readonly resourceUri: Resource,
-        public notebook: NotebookDocument | undefined,
+        public readonly notebook: NotebookDocument | undefined,
         public readonly kernelConnectionMetadata: Readonly<KernelConnectionMetadata>,
         private readonly notebookProvider: INotebookProvider,
         private readonly launchTimeout: number,
