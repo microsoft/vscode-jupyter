@@ -6,7 +6,7 @@ import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { KernelConnectionWrapper } from './kernelConnectionWrapper';
 import {
     IKernelProvider,
-    IKernel,
+    IBaseKernel,
     KernelConnectionMetadata as IKernelKernelConnectionMetadata
 } from '../../kernels/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
@@ -89,7 +89,7 @@ class JupyterKernelService implements IExportedKernelService {
         });
         return this._onDidChangeKernels.event;
     }
-    private static readonly wrappedKernelConnections = new WeakMap<IKernel, IKernelConnectionInfo>();
+    private static readonly wrappedKernelConnections = new WeakMap<IBaseKernel, IKernelConnectionInfo>();
     constructor(
         private readonly callingExtensionId: string,
         @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider,
@@ -206,7 +206,7 @@ class JupyterKernelService implements IExportedKernelService {
         }
         return this.wrapKernelConnection(kernel);
     }
-    private wrapKernelConnection(kernel: IKernel): IKernelConnectionInfo {
+    private wrapKernelConnection(kernel: IBaseKernel): IKernelConnectionInfo {
         if (JupyterKernelService.wrappedKernelConnections.get(kernel)) {
             return JupyterKernelService.wrappedKernelConnections.get(kernel)!;
         }
@@ -252,7 +252,7 @@ class KernelSocketWrapper implements IKernelSocket {
     public get onDidChange(): Event<void> {
         return this._onDidSocketChange.event;
     }
-    constructor(kernel: IKernel) {
+    constructor(kernel: IBaseKernel) {
         const subscription = kernel.kernelSocket.subscribe((socket) => {
             this.removeHooks();
             this.socket = socket?.socket;

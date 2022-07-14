@@ -44,7 +44,7 @@ import {
 import { sendTelemetryEvent, Telemetry } from '../telemetry';
 import { executeSilently, getDisplayNameOrNameOfKernelConnection, isPythonKernelConnection } from './helpers';
 import {
-    IKernel,
+    IBaseKernel,
     IKernelConnectionSession,
     INotebookProvider,
     InterruptResult,
@@ -64,7 +64,7 @@ import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { traceCellMessage } from './execution/helpers';
 import { KernelExecution } from './execution/kernelExecution';
 
-export abstract class BaseKernel implements IKernel {
+export abstract class BaseKernel implements IBaseKernel {
     private readonly disposables: IDisposable[] = [];
     get onStatusChanged(): Event<KernelMessage.Status> {
         return this._onStatusChanged.event;

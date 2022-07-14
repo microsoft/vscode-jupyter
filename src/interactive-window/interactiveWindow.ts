@@ -31,7 +31,7 @@ import * as uuid from 'uuid/v4';
 import { IConfigurationService, InteractiveWindowMode, IsWebExtension, Resource } from '../platform/common/types';
 import { noop } from '../platform/common/utils/misc';
 import {
-    INotebookKernel,
+    IKernel,
     isLocalConnection,
     KernelAction,
     KernelConnectionMetadata,
@@ -101,7 +101,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private kernelDisposables: Disposable[] = [];
     private _insertSysInfoPromise: Promise<NotebookCell> | undefined;
     private currentKernelInfo: {
-        kernel?: Deferred<INotebookKernel>;
+        kernel?: Deferred<IKernel>;
         controller?: NotebookController;
         metadata?: KernelConnectionMetadata;
     } = {};
@@ -220,7 +220,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
     private async startKernel(
         controller: NotebookController | undefined = this.currentKernelInfo.controller,
         metadata: KernelConnectionMetadata | undefined = this.currentKernelInfo.metadata
-    ): Promise<INotebookKernel> {
+    ): Promise<IKernel> {
         if (!controller || !metadata) {
             // This cannot happen, but we need to make typescript happy.
             throw new Error('Controller not selected');
@@ -228,7 +228,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         if (this.currentKernelInfo.kernel) {
             return this.currentKernelInfo.kernel.promise;
         }
-        const kernelPromise = createDeferred<INotebookKernel>();
+        const kernelPromise = createDeferred<IKernel>();
         kernelPromise.promise.catch(noop);
         this.currentKernelInfo = { controller, metadata, kernel: kernelPromise };
 
@@ -237,7 +237,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             // Try creating a kernel
             initializeInteractiveOrNotebookTelemetryBasedOnUserAction(this.owner, metadata);
 
-            const onStartKernel = (action: KernelAction, k: INotebookKernel) => {
+            const onStartKernel = (action: KernelAction, k: IKernel) => {
                 if (action !== 'start' && action !== 'restart') {
                     return;
                 }
@@ -404,7 +404,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
             .ignoreErrors();
     }
 
-    private finishSysInfoMessage(kernel: INotebookKernel, cellPromise: Promise<NotebookCell>, reason: SysInfoReason) {
+    private finishSysInfoMessage(kernel: IKernel, cellPromise: Promise<NotebookCell>, reason: SysInfoReason) {
         const kernelName = 'info' in kernel ? kernel.kernelConnectionMetadata.interpreter?.displayName : '';
         const kernelInfo = 'info' in kernel && kernel.info?.status === 'ok' ? kernel.info : undefined;
         const banner = kernelInfo ? kernelInfo.banner.split('\n').join('  \n') : kernel.toString();
@@ -662,7 +662,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         return success;
     }
 
-    private async runInitialization(kernel: INotebookKernel, fileUri: Resource) {
+    private async runInitialization(kernel: IKernel, fileUri: Resource) {
         if (!fileUri) {
             traceInfoIfCI('Unable to run initialization for IW');
             return;
@@ -735,7 +735,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         return undefined;
     }
 
-    private async setFileInKernel(file: Uri, kernel: INotebookKernel): Promise<void> {
+    private async setFileInKernel(file: Uri, kernel: IKernel): Promise<void> {
         // If in perFile mode, set only once
         const path = getFilePath(file);
         if (this.mode === 'perFile' && !this.fileInKernel) {
@@ -805,7 +805,7 @@ export class InteractiveWindow implements IInteractiveWindowLoadable {
         });
         return notebookDocument.cellAt(notebookDocument.cellCount - 1);
     }
-    private async generateCodeAndAddMetadata(cell: NotebookCell, isDebug: boolean, kernel: INotebookKernel) {
+    private async generateCodeAndAddMetadata(cell: NotebookCell, isDebug: boolean, kernel: IKernel) {
         const metadata = getInteractiveCellMetadata(cell);
         if (!metadata) {
             return;

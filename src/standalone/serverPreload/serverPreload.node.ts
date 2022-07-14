@@ -9,7 +9,7 @@ import { PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { traceInfo, traceError } from '../../platform/logging';
 import { IConfigurationService, IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../platform/common/types';
 import { getKernelConnectionLanguage } from '../../kernels/helpers';
-import { IKernel, IKernelProvider, INotebookProvider } from '../../kernels/types';
+import { IBaseKernel, IKernelProvider, INotebookProvider } from '../../kernels/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../interactive-window/types';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import { IRawNotebookProvider } from '../../kernels/raw/types';
@@ -116,7 +116,7 @@ export class ServerPreload implements IExtensionSingleActivationService {
 
     // Callback for when a notebook is created by the notebook provider
     // Note the time as well as an extra time for python specific notebooks
-    private kernelStarted(kernel: IKernel) {
+    private kernelStarted(kernel: IBaseKernel) {
         const language = getKernelConnectionLanguage(kernel.kernelConnectionMetadata);
 
         this.mementoStorage.update(LastNotebookCreatedKey, Date.now()).then(noop, noop);

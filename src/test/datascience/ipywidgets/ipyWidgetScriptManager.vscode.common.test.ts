@@ -18,7 +18,7 @@ import {
 import { initialize } from '../../initialize';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfo } from '../../../platform/logging';
-import { INotebookKernel, IKernelProvider, isLocalConnection } from '../../../kernels/types';
+import { IKernel, IKernelProvider, isLocalConnection } from '../../../kernels/types';
 import { IIPyWidgetScriptManager, IIPyWidgetScriptManagerFactory } from '../../../kernels/ipywidgets/types';
 import { getTelemetrySafeHashedString } from '../../../platform/telemetry/helpers';
 import { IFileSystem } from '../../../platform/common/platform/types';
@@ -31,7 +31,7 @@ suite('IPyWidget Script Manager', function () {
     let kernelProvider: IKernelProvider;
     let widgetScriptManagerFactory: IIPyWidgetScriptManagerFactory;
     let testWidgetNb: Uri;
-    let kernel: INotebookKernel;
+    let kernel: IKernel;
     let scriptManager: IIPyWidgetScriptManager;
     let httpClient: IHttpClient;
     let fs: IFileSystem;

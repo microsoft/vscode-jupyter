@@ -19,7 +19,7 @@ import {
 import { DebugLocationTracker } from '../debugger/debugLocationTracker';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { IDebuggingManager, IJupyterDebugService, KernelDebugMode } from '../debugger/types';
-import { INotebookKernel } from '../types';
+import { IKernel } from '../types';
 import { parseDataFrame } from './pythonVariableRequester';
 import {
     IConditionalJupyterVariables,
@@ -71,10 +71,7 @@ export class DebuggerVariables
     }
 
     // IJupyterVariables implementation
-    public async getVariables(
-        request: IJupyterVariablesRequest,
-        kernel?: INotebookKernel
-    ): Promise<IJupyterVariablesResponse> {
+    public async getVariables(request: IJupyterVariablesRequest, kernel?: IKernel): Promise<IJupyterVariablesResponse> {
         // Listen to notebook events if we haven't already
         if (kernel) {
             this.watchKernel(kernel);
@@ -122,7 +119,7 @@ export class DebuggerVariables
         return result;
     }
 
-    public async getMatchingVariable(name: string, kernel?: INotebookKernel): Promise<IJupyterVariable | undefined> {
+    public async getMatchingVariable(name: string, kernel?: IKernel): Promise<IJupyterVariable | undefined> {
         if (this.active) {
             // Note, full variable results isn't necessary for this call. It only really needs the variable value.
             const result = this.lastKnownVariables.find((v) => v.name === name);
@@ -135,7 +132,7 @@ export class DebuggerVariables
 
     public async getDataFrameInfo(
         targetVariable: IJupyterVariable,
-        kernel?: INotebookKernel,
+        kernel?: IKernel,
         sliceExpression?: string,
         isRefresh?: boolean
     ): Promise<IJupyterVariable> {
@@ -189,7 +186,7 @@ export class DebuggerVariables
         targetVariable: IJupyterVariable,
         start: number,
         end: number,
-        kernel?: INotebookKernel,
+        kernel?: IKernel,
         sliceExpression?: string
     ): Promise<{ data: Record<string, unknown>[] }> {
         // Developer error. The debugger cannot eval more than 100 rows at once.
@@ -288,7 +285,7 @@ export class DebuggerVariables
         }
     }
 
-    private watchKernel(kernel: INotebookKernel) {
+    private watchKernel(kernel: IKernel) {
         const key = kernel.notebook?.uri.toString();
         if (key && !this.watchedNotebooks.has(key)) {
             const disposables: Disposable[] = [];

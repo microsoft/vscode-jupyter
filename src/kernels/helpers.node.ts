@@ -4,7 +4,7 @@
 'use strict';
 
 import * as nbformat from '@jupyterlab/nbformat';
-import { IKernel, KernelConnectionMetadata } from './types';
+import { IBaseKernel, KernelConnectionMetadata } from './types';
 import { Uri } from 'vscode';
 import { traceError, traceVerbose } from '../platform/logging';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
@@ -17,7 +17,7 @@ import { sendTelemetryEvent, Telemetry } from '../telemetry';
 import { executeSilently, isPythonKernelConnection } from './helpers';
 
 export async function sendTelemetryForPythonKernelExecutable(
-    kernel: IKernel,
+    kernel: IBaseKernel,
     resource: Resource,
     kernelConnection: KernelConnectionMetadata,
     executionService: IPythonExecutionFactory

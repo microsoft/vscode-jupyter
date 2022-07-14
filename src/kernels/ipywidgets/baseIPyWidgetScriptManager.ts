@@ -8,7 +8,7 @@ import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 import { IDisposable } from '../../platform/common/types';
 import { traceError, traceInfoIfCI, traceWarning } from '../../platform/logging';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { INotebookKernel, isLocalConnection } from '../types';
+import { IKernel, isLocalConnection } from '../types';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
 import * as stripComments from 'strip-comments';
 import { IIPyWidgetScriptManager } from './types';
@@ -116,7 +116,7 @@ export function extractRequireConfigFromWidgetEntry(baseUrl: Uri, widgetFolderNa
 export abstract class BaseIPyWidgetScriptManager implements IIPyWidgetScriptManager {
     protected readonly disposables: IDisposable[] = [];
     private widgetModuleMappings?: Promise<Record<string, Uri> | undefined>;
-    constructor(protected readonly kernel: INotebookKernel) {
+    constructor(protected readonly kernel: IKernel) {
         // If user installs new python packages, & they restart the kernel, then look for changes to nbextensions folder once again.
         // No need to look for changes in nbextensions folder if its not restarted.
         // This is expected, jupyter nb/lab and other parts of Jupyter recommend users to restart kernels after installing python packages.

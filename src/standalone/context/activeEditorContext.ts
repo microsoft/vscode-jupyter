@@ -4,7 +4,7 @@
 'use strict';
 import { inject, injectable, optional } from 'inversify';
 import { NotebookEditor, TextEditor } from 'vscode';
-import { IKernel, IKernelProvider } from '../../kernels/types';
+import { IBaseKernel, IKernelProvider } from '../../kernels/types';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { ICommandManager, IDocumentManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { EditorContexts, PYTHON_LANGUAGE } from '../../platform/common/constants';
@@ -205,7 +205,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         }
         this.updateSelectedKernelContext();
     }
-    private onDidKernelStatusChange({ kernel }: { kernel: IKernel }) {
+    private onDidKernelStatusChange({ kernel }: { kernel: IBaseKernel }) {
         const notebook = kernel.notebook;
         if (notebook?.notebookType === InteractiveWindowView) {
             this.updateContextOfActiveInteractiveWindowKernel();

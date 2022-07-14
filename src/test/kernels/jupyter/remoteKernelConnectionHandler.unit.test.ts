@@ -11,7 +11,7 @@ import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
 import * as chaiAsPromised from 'chai-as-promised';
 import {
-    IKernel,
+    IBaseKernel,
     IKernelProvider,
     isLocalConnection,
     KernelActionSource,
@@ -30,7 +30,7 @@ use(chaiAsPromised);
 suite('Remote kernel connection handler', async () => {
     let tracker: ILiveRemoteKernelConnectionUsageTracker;
     let preferredRemoteKernelProvider: PreferredRemoteKernelIdProvider;
-    let onDidStartKernel: EventEmitter<IKernel>;
+    let onDidStartKernel: EventEmitter<IBaseKernel>;
     let onNotebookControllerSelectionChanged: EventEmitter<{
         selected: boolean;
         notebook: NotebookDocument;
@@ -86,7 +86,7 @@ suite('Remote kernel connection handler', async () => {
         }
     };
     setup(() => {
-        onDidStartKernel = new EventEmitter<IKernel>();
+        onDidStartKernel = new EventEmitter<IBaseKernel>();
         kernelProvider = mock<IKernelProvider>();
         controllers = mock<IControllerSelection>();
         tracker = mock<ILiveRemoteKernelConnectionUsageTracker>();
@@ -122,7 +122,7 @@ suite('Remote kernel connection handler', async () => {
         verify(kernelProvider.onDidStartKernel).once();
     });
     function verifyRemoteKernelTracking(connection: KernelConnectionMetadata, source: KernelActionSource) {
-        const kernel1 = mock<IKernel>();
+        const kernel1 = mock<IBaseKernel>();
         when(kernel1.kernelConnectionMetadata).thenReturn(connection);
         when(kernel1.creator).thenReturn(source);
         const subject = new Subject<KernelSocketInformation>();

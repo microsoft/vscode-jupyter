@@ -18,7 +18,7 @@ import { captureTelemetry, Telemetry } from '../../telemetry';
 import { CellOutputDisplayIdTracker } from './cellDisplayIdTracker';
 import {
     IKernelConnectionSession,
-    IKernel,
+    IBaseKernel,
     InterruptResult,
     ITracebackFormatter,
     NotebookCellRunState
@@ -40,7 +40,7 @@ export class KernelExecution implements IDisposable {
     private _restartPromise?: Promise<void>;
     private readonly _onPreExecute = new EventEmitter<NotebookCell>();
     constructor(
-        private readonly kernel: IKernel,
+        private readonly kernel: IBaseKernel,
         appShell: IApplicationShell,
         private readonly interruptTimeout: number,
         outputTracker: CellOutputDisplayIdTracker,

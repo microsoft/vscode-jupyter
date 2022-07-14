@@ -5,7 +5,7 @@ import type { Kernel } from '@jupyterlab/services';
 import { IDisposable } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { BaseKernelConnectionWrapper } from '../../kernels/jupyter/baseKernelConnectionWrapper';
-import { IKernel } from '../../kernels/types';
+import { IBaseKernel } from '../../kernels/types';
 
 export class KernelConnectionWrapper extends BaseKernelConnectionWrapper {
     /**
@@ -24,7 +24,7 @@ export class KernelConnectionWrapper extends BaseKernelConnectionWrapper {
         }
     }
 
-    constructor(readonly kernel: IKernel, disposables: IDisposable[]) {
+    constructor(readonly kernel: IBaseKernel, disposables: IDisposable[]) {
         super(kernel.session!.kernel!, disposables);
         const emiStatusChangeEvents = () => {
             this.statusChanged.emit(kernel.status);

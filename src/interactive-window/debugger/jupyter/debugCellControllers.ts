@@ -5,7 +5,7 @@ import { DebugProtocolMessage, NotebookCell } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IDebuggingDelegate, IKernelDebugAdapter } from '../../../kernels/debugger/types';
 import { DebuggingTelemetry } from '../../../kernels/debugger/constants';
-import { INotebookKernel } from '../../../kernels/types';
+import { IKernel } from '../../../kernels/types';
 import { cellDebugSetup } from '../../../kernels/debugger/helper';
 import { createDeferred } from '../../../platform/common/utils/async';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -18,7 +18,7 @@ export class DebugCellController implements IDebuggingDelegate {
     constructor(
         private readonly debugAdapter: IKernelDebugAdapter,
         public readonly debugCell: NotebookCell,
-        private readonly kernel: INotebookKernel
+        private readonly kernel: IKernel
     ) {
         sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunAndDebugCell);
     }

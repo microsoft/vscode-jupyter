@@ -13,7 +13,7 @@ import { Identifiers } from '../../platform/common/constants';
 import { Telemetry } from '../../telemetry';
 import { JupyterDebuggerNotInstalledError } from '../../kernels/errors/jupyterDebuggerNotInstalledError';
 import { getPlainTextOrStreamOutput } from '../../kernels/kernel.base';
-import { INotebookKernel, isLocalConnection } from '../../kernels/types';
+import { IKernel, isLocalConnection } from '../../kernels/types';
 import { IInteractiveWindowDebugger } from '../types';
 import { IFileGeneratedCodes } from '../editor-integration/types';
 import { IJupyterDebugService } from '../../kernels/debugger/types';
@@ -46,7 +46,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
         this.tracingEnableCode = `from debugpy import trace_this_thread;trace_this_thread(True)`;
         this.tracingDisableCode = `from debugpy import trace_this_thread;trace_this_thread(False)`;
     }
-    public async attach(kernel: INotebookKernel): Promise<void> {
+    public async attach(kernel: IKernel): Promise<void> {
         if (!kernel.session) {
             throw new Error('Notebook not initialized');
         }
@@ -64,7 +64,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
         });
     }
 
-    public async detach(kernel: INotebookKernel): Promise<void> {
+    public async detach(kernel: IKernel): Promise<void> {
         if (!kernel.session) {
             return;
         }
@@ -102,7 +102,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
         }
     }
 
-    public enable(kernel: INotebookKernel) {
+    public enable(kernel: IKernel) {
         if (!kernel.session) {
             return;
         }
@@ -113,7 +113,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
         }).ignoreErrors();
     }
 
-    public disable(kernel: INotebookKernel) {
+    public disable(kernel: IKernel) {
         if (!kernel.session) {
             return;
         }
@@ -126,7 +126,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
 
     private async startDebugSession(
         startCommand: (config: DebugConfiguration) => Thenable<boolean>,
-        kernel: INotebookKernel,
+        kernel: IKernel,
         extraConfig: Partial<DebugConfiguration>
     ) {
         traceInfo('start debugging');
@@ -164,7 +164,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
     }
 
     private async connect(
-        kernel: INotebookKernel,
+        kernel: IKernel,
         extraConfig: Partial<DebugConfiguration>
     ): Promise<DebugConfiguration | undefined> {
         const notebook = kernel.notebook;
@@ -209,7 +209,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
         return result;
     }
 
-    private async calculateDebuggerPathList(kernel: INotebookKernel): Promise<string | undefined> {
+    private async calculateDebuggerPathList(kernel: IKernel): Promise<string | undefined> {
         const extraPaths: string[] = [];
 
         // Add the settings path first as it takes precedence over the ptvsd extension path
@@ -252,7 +252,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
     }
 
     // Append our local debugger path and debugger settings path to sys.path
-    private async appendDebuggerPaths(kernel: INotebookKernel): Promise<void> {
+    private async appendDebuggerPaths(kernel: IKernel): Promise<void> {
         const debuggerPathList = await this.calculateDebuggerPathList(kernel);
 
         if (debuggerPathList && debuggerPathList.length > 0) {
@@ -271,7 +271,7 @@ export class InteractiveWindowDebugger implements IInteractiveWindowDebugger {
         }
     }
 
-    private async connectToLocal(kernel: INotebookKernel): Promise<{ port: number; host: string }> {
+    private async connectToLocal(kernel: IKernel): Promise<{ port: number; host: string }> {
         const outputs = kernel.session
             ? await executeSilently(kernel.session, this.enableDebuggerCode, {
                   traceErrors: true,

@@ -12,7 +12,7 @@ import {
     NotebookEditor
 } from 'vscode';
 import '../../../platform/common/extensions';
-import { INotebookKernel, IKernelProvider } from '../../../kernels/types';
+import { IKernel, IKernelProvider } from '../../../kernels/types';
 import { IActiveNotebookChangedEvent, INotebookWatcher } from './types';
 import { IInteractiveWindowProvider } from '../../../interactive-window/types';
 import { IVSCodeNotebook } from '../../../platform/common/application/types';
@@ -45,7 +45,7 @@ export class NotebookWatcher implements INotebookWatcher {
     public get onDidRestartActiveNotebook(): Event<void> {
         return this._onDidRestartActiveNotebook.event;
     }
-    public get activeKernel(): INotebookKernel | undefined {
+    public get activeKernel(): IKernel | undefined {
         const activeNotebook = this.notebooks.activeNotebookEditor?.notebook;
         const activeJupyterNotebookKernel =
             activeNotebook?.notebookType == JupyterNotebookView ? this.kernelProvider.get(activeNotebook) : undefined;

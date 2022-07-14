@@ -5,7 +5,7 @@ import '../../../platform/common/extensions';
 
 import { inject, injectable } from 'inversify';
 
-import { INotebookKernel } from '../../../kernels/types';
+import { IKernel } from '../../../kernels/types';
 import { IJupyterVariable } from '../../../kernels/variables/types';
 import { IServiceContainer } from '../../../platform/ioc/types';
 import { IJupyterVariableDataProviderFactory, IJupyterVariableDataProvider } from './types';
@@ -14,7 +14,7 @@ import { IJupyterVariableDataProviderFactory, IJupyterVariableDataProvider } fro
 export class JupyterVariableDataProviderFactory implements IJupyterVariableDataProviderFactory {
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
 
-    public async create(variable: IJupyterVariable, kernel?: INotebookKernel): Promise<IJupyterVariableDataProvider> {
+    public async create(variable: IJupyterVariable, kernel?: IKernel): Promise<IJupyterVariableDataProvider> {
         const jupyterVariableDataProvider =
             this.serviceContainer.get<IJupyterVariableDataProvider>(IJupyterVariableDataProvider);
         jupyterVariableDataProvider.setDependencies(variable, kernel);

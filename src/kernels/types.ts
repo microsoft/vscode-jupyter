@@ -132,11 +132,11 @@ export function isRemoteConnection(
     );
 }
 
-export interface INotebookKernel extends IKernel {
+export interface IKernel extends IBaseKernel {
     readonly notebook: NotebookDocument;
 }
 
-export interface IKernel extends IAsyncDisposable {
+export interface IBaseKernel extends IAsyncDisposable {
     /**
      * Total execution count on this kernel
      */
@@ -228,35 +228,35 @@ export type KernelOptions = {
 };
 export const IKernelProvider = Symbol('IKernelProvider');
 export interface IKernelProvider extends IAsyncDisposable {
-    readonly kernels: Readonly<IKernel[]>;
-    readonly notebookKernels: Readonly<INotebookKernel[]>;
-    onDidCreateKernel: Event<IKernel>;
-    onDidCreateNotebookKernel: Event<INotebookKernel>;
-    onDidStartKernel: Event<IKernel>;
-    onDidStartNotebookKernel: Event<INotebookKernel>;
-    onDidRestartKernel: Event<IKernel>;
-    onDidRestartNotebookKernel: Event<INotebookKernel>;
-    onDidDisposeKernel: Event<IKernel>;
-    onDidDisposeNotebookKernel: Event<INotebookKernel>;
-    onKernelStatusChanged: Event<{ status: KernelMessage.Status; kernel: IKernel }>;
+    readonly kernels: Readonly<IBaseKernel[]>;
+    readonly notebookKernels: Readonly<IKernel[]>;
+    onDidCreateKernel: Event<IBaseKernel>;
+    onDidCreateNotebookKernel: Event<IKernel>;
+    onDidStartKernel: Event<IBaseKernel>;
+    onDidStartNotebookKernel: Event<IKernel>;
+    onDidRestartKernel: Event<IBaseKernel>;
+    onDidRestartNotebookKernel: Event<IKernel>;
+    onDidDisposeKernel: Event<IBaseKernel>;
+    onDidDisposeNotebookKernel: Event<IKernel>;
+    onKernelStatusChanged: Event<{ status: KernelMessage.Status; kernel: IBaseKernel }>;
     /**
      * Get hold of the active kernel for a given resource uri.
      */
-    get(uri: Uri): IKernel | undefined;
+    get(uri: Uri): IBaseKernel | undefined;
     /**
      * Get hold of the active kernel for a given notebook document.
      */
-    get(notebook: NotebookDocument): INotebookKernel | undefined;
+    get(notebook: NotebookDocument): IKernel | undefined;
     /**
      * Gets or creates a kernel for a given resource uri.
      * WARNING: If called with different options for same resource uri, old kernel associated with the Uri will be disposed.
      */
-    getOrCreate(uri: Uri, options: KernelOptions): IKernel;
+    getOrCreate(uri: Uri, options: KernelOptions): IBaseKernel;
     /**
      * Gets or creates a kernel for a given Notebook.
      * WARNING: If called with different options for same Notebook, old kernel associated with the Uri will be disposed.
      */
-    getOrCreate(notebook: NotebookDocument, options: KernelOptions): INotebookKernel;
+    getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel;
 }
 
 export interface IRawConnection {

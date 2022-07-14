@@ -13,7 +13,7 @@ import {
     IExtensionContext
 } from '../platform/common/types';
 import { Kernel } from './kernel.node';
-import { IKernel, INotebookKernel, INotebookProvider, ITracebackFormatter, KernelOptions } from './types';
+import { IBaseKernel, IKernel, INotebookProvider, ITracebackFormatter, KernelOptions } from './types';
 import { IStatusProvider } from '../platform/progress/types';
 import { BaseKernelProvider } from './kernelProvider.base';
 import { InteractiveWindowView } from '../platform/common/constants';
@@ -41,12 +41,12 @@ export class KernelProvider extends BaseKernelProvider {
         super(asyncDisposables, disposables, notebook);
     }
 
-    public getOrCreate(uri: Uri, options: KernelOptions): IKernel;
-    public getOrCreate(notebook: NotebookDocument, options: KernelOptions): INotebookKernel;
+    public getOrCreate(uri: Uri, options: KernelOptions): IBaseKernel;
+    public getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel;
     public getOrCreate(
         uriOrNotebook: Uri | NotebookDocument,
         options: KernelOptions
-    ): IKernel | INotebookKernel | undefined {
+    ): IBaseKernel | IKernel | undefined {
         const uri = isUri(uriOrNotebook) ? uriOrNotebook : uriOrNotebook.uri;
         const notebook = isUri(uriOrNotebook)
             ? workspace.notebookDocuments.find((nb) => nb.uri.toString() === uri.toString())
@@ -92,7 +92,7 @@ export class KernelProvider extends BaseKernelProvider {
         if (isUri(uriOrNotebook)) {
             this.storeKernelByUri(uriOrNotebook, options, kernel);
         } else {
-            this.storeKernelByNotebook(uriOrNotebook, options, kernel as INotebookKernel);
+            this.storeKernelByNotebook(uriOrNotebook, options, kernel as IKernel);
         }
         this.deleteMappingIfKernelIsDisposed(uri, kernel);
         return kernel;

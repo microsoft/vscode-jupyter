@@ -7,7 +7,7 @@ import { KernelMessage } from '@jupyterlab/services';
 import * as path from '../../../platform/vscode-path/path';
 import { DebugAdapterTracker, DebugSession, NotebookDocument, Uri } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IKernelConnectionSession, INotebookKernel } from '../../../kernels/types';
+import { IKernel, IKernelConnectionSession } from '../../../kernels/types';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IDumpCellResponse, IDebugLocationTrackerFactory } from '../../../kernels/debugger/types';
 import { traceError, traceInfo, traceInfoIfCI } from '../../../platform/logging';
@@ -29,7 +29,7 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
         session: DebugSession,
         notebookDocument: NotebookDocument,
         jupyterSession: IKernelConnectionSession,
-        kernel: INotebookKernel | undefined,
+        kernel: IKernel | undefined,
         platformService: IPlatformService,
         debugService: IDebugService,
         debugLocationTrackerFactory?: IDebugLocationTrackerFactory

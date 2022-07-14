@@ -10,7 +10,7 @@ import {
     IInteractiveWindowCodeGenerator
 } from '../../interactive-window/editor-integration/types';
 import { GeneratedCodeStorageManager } from '../../interactive-window/generatedCodeStoreManager';
-import { IKernel, IKernelProvider } from '../../kernels/types';
+import { IBaseKernel, IKernelProvider } from '../../kernels/types';
 import { IControllerSelection, IVSCodeNotebookController } from '../../notebooks/controllers/types';
 import { InteractiveWindowView } from '../../platform/common/constants';
 import { disposeAllDisposables } from '../../platform/common/helpers';
@@ -24,13 +24,13 @@ suite('GeneratedCodeStorageManager', () => {
     let storageFactory: IGeneratedCodeStorageFactory;
     let codeGeneratorFactory: ICodeGeneratorFactory;
     let controllers: IControllerSelection;
-    let onDidCreateKernel: EventEmitter<IKernel>;
+    let onDidCreateKernel: EventEmitter<IBaseKernel>;
     let onNotebookControllerSelected: EventEmitter<{
         notebook: NotebookDocument;
         controller: IVSCodeNotebookController;
     }>;
     setup(() => {
-        onDidCreateKernel = new EventEmitter<IKernel>();
+        onDidCreateKernel = new EventEmitter<IBaseKernel>();
         onNotebookControllerSelected = new EventEmitter<{
             notebook: NotebookDocument;
             controller: IVSCodeNotebookController;
@@ -88,7 +88,7 @@ suite('GeneratedCodeStorageManager', () => {
         const codeGenerator = mock<IInteractiveWindowCodeGenerator>();
         const iwNotebook = mock<NotebookDocument>();
         const iwNotebookInstance = instance(iwNotebook);
-        const kernel = mock<IKernel>();
+        const kernel = mock<IBaseKernel>();
         const iwKernelRestart = new EventEmitter<void>();
         disposables.push(iwKernelRestart);
         when(kernel.onRestarted).thenReturn(iwKernelRestart.event);
@@ -109,12 +109,12 @@ suite('GeneratedCodeStorageManager', () => {
         when(codeGeneratorFactory.getOrCreate(iwNotebookInstance)).thenReturn(instance(codeGenerator));
 
         // Creating some random kernel will have no effect.
-        onDidCreateKernel.fire(instance(mock<IKernel>()));
+        onDidCreateKernel.fire(instance(mock<IBaseKernel>()));
         verify(storage.clear()).never();
         verify(codeGenerator.reset()).never();
 
         // Creating some kernel for a ipynb notebook will have no effect.
-        const nbKernel = mock<IKernel>();
+        const nbKernel = mock<IBaseKernel>();
         when(nbKernel.uri).thenReturn(ipynbUri);
         onDidCreateKernel.fire(instance(nbKernel));
         verify(storage.clear()).never();

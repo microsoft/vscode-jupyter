@@ -9,7 +9,7 @@ import { Experiments } from '../../platform/common/experiments/groups';
 import { IConfigurationService, IExperimentService, IDisposableRegistry } from '../../platform/common/types';
 import { createDeferred } from '../../platform/common/utils/async';
 import { getKernelConnectionLanguage, isPythonKernelConnection } from '../helpers';
-import { IKernelConnectionSession, INotebookKernel } from '../types';
+import { IKernel, IKernelConnectionSession } from '../types';
 import {
     IJupyterVariable,
     IJupyterVariables,
@@ -67,17 +67,14 @@ export class KernelVariables implements IJupyterVariables {
     }
 
     // IJupyterVariables implementation
-    public async getVariables(
-        request: IJupyterVariablesRequest,
-        kernel: INotebookKernel
-    ): Promise<IJupyterVariablesResponse> {
+    public async getVariables(request: IJupyterVariablesRequest, kernel: IKernel): Promise<IJupyterVariablesResponse> {
         // Run the language appropriate variable fetch
         return this.getVariablesBasedOnKernel(kernel, request);
     }
 
     public async getMatchingVariable(
         name: string,
-        kernel: INotebookKernel,
+        kernel: IKernel,
         token?: CancellationToken
     ): Promise<IJupyterVariable | undefined> {
         // See if in the cache
@@ -115,7 +112,7 @@ export class KernelVariables implements IJupyterVariables {
 
     public async getDataFrameInfo(
         targetVariable: IJupyterVariable,
-        kernel: INotebookKernel,
+        kernel: IKernel,
         sliceExpression?: string,
         isRefresh?: boolean
     ): Promise<IJupyterVariable> {
@@ -139,7 +136,7 @@ export class KernelVariables implements IJupyterVariables {
         targetVariable: IJupyterVariable,
         start: number,
         end: number,
-        kernel: INotebookKernel,
+        kernel: IKernel,
         sliceExpression?: string
     ): Promise<{ data: Record<string, unknown>[] }> {
         const language = getKernelConnectionLanguage(kernel?.kernelConnectionMetadata) || PYTHON_LANGUAGE;
@@ -156,7 +153,7 @@ export class KernelVariables implements IJupyterVariables {
 
     public async getFullVariable(
         targetVariable: IJupyterVariable,
-        kernel: INotebookKernel,
+        kernel: IKernel,
         token?: CancellationToken
     ): Promise<IJupyterVariable> {
         const languageId = getKernelConnectionLanguage(kernel?.kernelConnectionMetadata) || PYTHON_LANGUAGE;
@@ -168,7 +165,7 @@ export class KernelVariables implements IJupyterVariables {
     }
 
     private async getVariablesBasedOnKernel(
-        kernel: INotebookKernel,
+        kernel: IKernel,
         request: IJupyterVariablesRequest
     ): Promise<IJupyterVariablesResponse> {
         // See if we already have the name list
@@ -258,7 +255,7 @@ export class KernelVariables implements IJupyterVariables {
 
     public async getVariableProperties(
         word: string,
-        kernel: INotebookKernel,
+        kernel: IKernel,
         cancelToken: CancellationToken | undefined
     ): Promise<{ [attributeName: string]: string }> {
         const matchingVariable = await this.getMatchingVariable(word, kernel, cancelToken);
@@ -283,7 +280,7 @@ export class KernelVariables implements IJupyterVariables {
     }
 
     private async getVariableNamesAndTypesFromKernel(
-        kernel: INotebookKernel,
+        kernel: IKernel,
         token?: CancellationToken
     ): Promise<IJupyterVariable[]> {
         // Get our query and parser
@@ -332,7 +329,7 @@ export class KernelVariables implements IJupyterVariables {
     // eslint-disable-next-line complexity
     private async getVariableValueFromKernel(
         targetVariable: IJupyterVariable,
-        kernel: INotebookKernel,
+        kernel: IKernel,
         token?: CancellationToken
     ): Promise<IJupyterVariable> {
         let result = { ...targetVariable };

@@ -14,7 +14,7 @@ import {
     EventEmitter,
     NotebookCell
 } from 'vscode';
-import { INotebookKernel, IKernelProvider } from '../../kernels/types';
+import { IKernel, IKernelProvider } from '../../kernels/types';
 import { IDisposable } from '../../platform/common/types';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
 import { DebuggingTelemetry } from '../../kernels/debugger/constants';
@@ -142,7 +142,7 @@ export abstract class DebuggingManagerBase implements IDisposable {
         }
     }
 
-    protected async ensureKernelIsRunning(doc: NotebookDocument): Promise<INotebookKernel | undefined> {
+    protected async ensureKernelIsRunning(doc: NotebookDocument): Promise<IKernel | undefined> {
         await this.notebookControllerLoader.loaded;
         const controller = this.notebookControllerSelection.getSelected(doc);
 

@@ -6,7 +6,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { EventEmitter } from 'vscode';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { KernelAutoRestartMonitor } from '../../kernels/kernelAutoRestartMonitor.node';
-import { IKernel, IKernelConnectionSession, IKernelProvider, KernelConnectionMetadata } from '../../kernels/types';
+import { IBaseKernel, IKernelConnectionSession, IKernelProvider, KernelConnectionMetadata } from '../../kernels/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { IDisposable } from '../../platform/common/types';
 import { DataScience } from '../../platform/common/utils/localize';
@@ -16,10 +16,10 @@ suite('Jupyter Execution', async () => {
     let statusProvider: IStatusProvider;
     let kernelProvider: IKernelProvider;
     let restartMonitor: KernelAutoRestartMonitor;
-    let onKernelStatusChanged = new EventEmitter<{ status: KernelMessage.Status; kernel: IKernel }>();
-    let onDidStartKernel = new EventEmitter<IKernel>();
-    let onDidReStartKernel = new EventEmitter<IKernel>();
-    let onDidDisposeKernel = new EventEmitter<IKernel>();
+    let onKernelStatusChanged = new EventEmitter<{ status: KernelMessage.Status; kernel: IBaseKernel }>();
+    let onDidStartKernel = new EventEmitter<IBaseKernel>();
+    let onDidReStartKernel = new EventEmitter<IBaseKernel>();
+    let onDidDisposeKernel = new EventEmitter<IBaseKernel>();
     const disposables: IDisposable[] = [];
     const connectionMetadata: KernelConnectionMetadata = {
         id: '123',
@@ -65,7 +65,7 @@ suite('Jupyter Execution', async () => {
             getDisplayNameOrNameOfKernelConnection(connectionMetadata)
         );
 
-        const kernel = mock<IKernel>();
+        const kernel = mock<IBaseKernel>();
         const session = mock<IKernelConnectionSession>();
         const disposable = mock<IDisposable>();
         when(kernel.kernelConnectionMetadata).thenReturn(connectionMetadata);

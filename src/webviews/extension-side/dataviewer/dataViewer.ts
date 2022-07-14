@@ -21,7 +21,7 @@ import {
 } from './types';
 import { isValidSliceExpression, preselectedSliceExpression } from '../../webview-side/data-explorer/helpers';
 import { CheckboxState } from '../../../platform/telemetry/constants';
-import { INotebookKernel } from '../../../kernels/types';
+import { IKernel } from '../../../kernels/types';
 import {
     IWebviewPanelProvider,
     IWorkspaceService,
@@ -127,7 +127,7 @@ export class DataViewer extends WebviewPanelHost<IDataViewerMapping> implements 
         }
     }
 
-    public get kernel(): INotebookKernel | undefined {
+    public get kernel(): IKernel | undefined {
         if (this.dataProvider && 'kernel' in this.dataProvider) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return this.dataProvider.kernel;

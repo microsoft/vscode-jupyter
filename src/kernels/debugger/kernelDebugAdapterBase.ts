@@ -23,7 +23,7 @@ import {
     workspace
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IKernelConnectionSession, INotebookKernel } from '../types';
+import { IKernelConnectionSession, IKernel } from '../types';
 import { IPlatformService } from '../../platform/common/platform/types';
 import { DebuggingTelemetry } from './constants';
 import {
@@ -62,7 +62,7 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         protected session: DebugSession,
         protected notebookDocument: NotebookDocument,
         protected readonly jupyterSession: IKernelConnectionSession,
-        private readonly kernel: INotebookKernel | undefined,
+        private readonly kernel: IKernel | undefined,
         private readonly platformService: IPlatformService,
         private readonly debugService: IDebugService
     ) {

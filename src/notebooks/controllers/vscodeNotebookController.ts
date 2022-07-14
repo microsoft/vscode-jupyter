@@ -64,7 +64,7 @@ import {
     areKernelConnectionsEqual,
     getKernelRegistrationInfo
 } from '../../kernels/helpers';
-import { INotebookKernel, IKernelProvider, isLocalConnection, KernelConnectionMetadata } from '../../kernels/types';
+import { IKernel, IKernelProvider, isLocalConnection, KernelConnectionMetadata } from '../../kernels/types';
 import { KernelDeadError } from '../../kernels/errors/kernelDeadError';
 import { DisplayOptions } from '../../kernels/displayOptions';
 import { getNotebookMetadata, isJupyterNotebook } from '../../platform/common/utils';
@@ -95,7 +95,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
     }>();
     private readonly _onDidDispose = new EventEmitter<void>();
     private readonly disposables: IDisposable[] = [];
-    private notebookKernels = new WeakMap<NotebookDocument, INotebookKernel>();
+    private notebookKernels = new WeakMap<NotebookDocument, IKernel>();
     public readonly controller: NotebookController;
     /**
      * Used purely for testing purposes.
@@ -453,7 +453,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
 
         // Connect to a matching kernel if possible (but user may pick a different one)
         let currentContext: 'start' | 'execution' = 'start';
-        let kernel: INotebookKernel | undefined;
+        let kernel: IKernel | undefined;
         let controller = this.controller;
         let kernelStarted = false;
         try {
@@ -492,7 +492,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         // Execution should be ended elsewhere
     }
 
-    private async connectToKernel(doc: NotebookDocument, options: IDisplayOptions): Promise<INotebookKernel> {
+    private async connectToKernel(doc: NotebookDocument, options: IDisplayOptions): Promise<IKernel> {
         return KernelConnector.connectToNotebookKernel(
             this.controller,
             this.kernelConnection,
@@ -503,7 +503,7 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         );
     }
 
-    private updateKernelInfoInNotebookWhenAvailable(kernel: INotebookKernel, doc: NotebookDocument) {
+    private updateKernelInfoInNotebookWhenAvailable(kernel: IKernel, doc: NotebookDocument) {
         if (this.notebookKernels.get(doc) === kernel) {
             return;
         }

@@ -8,7 +8,7 @@ import { traceError, traceInfo } from '../../platform/logging';
 import { WidgetCDNs, IConfigurationService, IHttpClient } from '../../platform/common/types';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { getTelemetrySafeHashedString } from '../../platform/telemetry/helpers';
-import { INotebookKernel } from '../types';
+import { IKernel } from '../types';
 import {
     ILocalResourceUriConverter,
     IWidgetScriptSourceProvider,
@@ -29,7 +29,7 @@ export class IPyWidgetScriptSourceProvider implements IWidgetScriptSourceProvide
         return settings.widgetScriptSources;
     }
     constructor(
-        private readonly kernel: INotebookKernel,
+        private readonly kernel: IKernel,
         private readonly localResourceUriConverter: ILocalResourceUriConverter,
         private readonly configurationSettings: IConfigurationService,
         private readonly httpClient: IHttpClient,

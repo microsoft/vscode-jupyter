@@ -5,7 +5,7 @@ import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { GLOBAL_MEMENTO, IConfigurationService, IHttpClient, IMemento } from '../../platform/common/types';
-import { INotebookKernel } from '../types';
+import { IKernel } from '../types';
 import { CDNWidgetScriptSourceProvider } from './cdnWidgetScriptSourceProvider';
 import { RemoteWidgetScriptSourceProvider } from './remoteWidgetScriptSourceProvider';
 import {
@@ -25,7 +25,7 @@ export class ScriptSourceProviderFactory implements IWidgetScriptSourceProviderF
         private readonly widgetScriptManagerFactory: IIPyWidgetScriptManagerFactory
     ) {}
 
-    public getProviders(kernel: INotebookKernel, _uriConverter: ILocalResourceUriConverter, httpClient: IHttpClient) {
+    public getProviders(kernel: IKernel, _uriConverter: ILocalResourceUriConverter, httpClient: IHttpClient) {
         const scriptProviders: IWidgetScriptSourceProvider[] = [];
 
         // Give preference to CDN.

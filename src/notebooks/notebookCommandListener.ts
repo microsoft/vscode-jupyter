@@ -20,7 +20,7 @@ import { Commands } from '../platform/common/constants';
 import { noop } from '../platform/common/utils/misc';
 import { NotebookCellLanguageService } from './languages/cellLanguageService';
 import { DisplayOptions } from '../kernels/displayOptions';
-import { INotebookKernel, IKernelProvider } from '../kernels/types';
+import { IKernel, IKernelProvider } from '../kernels/types';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { DataScience } from '../platform/common/utils/localize';
 import { traceInfoIfCI, traceInfo } from '../platform/logging';
@@ -233,8 +233,8 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
         }
     }
 
-    private readonly pendingRestartInterrupt = new WeakMap<INotebookKernel, Promise<void>>();
-    private async wrapKernelMethod(currentContext: 'interrupt' | 'restart', kernel: INotebookKernel) {
+    private readonly pendingRestartInterrupt = new WeakMap<IKernel, Promise<void>>();
+    private async wrapKernelMethod(currentContext: 'interrupt' | 'restart', kernel: IKernel) {
         const notebook = kernel.notebook;
         // We don't want to create multiple restarts/interrupt requests for the same kernel.
         const pendingPromise = this.pendingRestartInterrupt.get(kernel);

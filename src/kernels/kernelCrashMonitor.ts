@@ -13,13 +13,13 @@ import { noop } from '../platform/common/utils/misc';
 import { sendKernelTelemetryEvent } from './telemetry/sendKernelTelemetryEvent';
 import { endCellAndDisplayErrorsInCell } from './execution/helpers';
 import { getDisplayNameOrNameOfKernelConnection } from './helpers';
-import { IKernel, IKernelProvider } from './types';
+import { IBaseKernel, IKernelProvider } from './types';
 import { swallowExceptions } from '../platform/common/utils/decorators';
 
 @injectable()
 export class KernelCrashMonitor implements IExtensionSyncActivationService {
-    private lastExecutedCellPerKernel = new WeakMap<IKernel, NotebookCell | undefined>();
-    private kernelsStartedSuccessfully = new WeakSet<IKernel>();
+    private lastExecutedCellPerKernel = new WeakMap<IBaseKernel, NotebookCell | undefined>();
+    private kernelsStartedSuccessfully = new WeakSet<IBaseKernel>();
 
     constructor(
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
@@ -30,13 +30,13 @@ export class KernelCrashMonitor implements IExtensionSyncActivationService {
         this.kernelProvider.onKernelStatusChanged(this.onKernelStatusChanged, this, this.disposableRegistry);
         this.kernelProvider.onDidStartKernel(this.onDidStartKernel, this, this.disposableRegistry);
     }
-    private onDidStartKernel(kernel: IKernel) {
+    private onDidStartKernel(kernel: IBaseKernel) {
         this.kernelsStartedSuccessfully.add(kernel);
         kernel.onPreExecute((cell) => this.lastExecutedCellPerKernel.set(kernel, cell), this, this.disposableRegistry);
     }
 
     @swallowExceptions()
-    private async onKernelStatusChanged({ kernel }: { status: KernelMessage.Status; kernel: IKernel }) {
+    private async onKernelStatusChanged({ kernel }: { status: KernelMessage.Status; kernel: IBaseKernel }) {
         // We're only interested in kernels that started successfully.
         if (!this.kernelsStartedSuccessfully.has(kernel)) {
             return;
@@ -75,7 +75,7 @@ export class KernelCrashMonitor implements IExtensionSyncActivationService {
             await this.endCellAndDisplayErrorsInCell(kernel);
         }
     }
-    private async endCellAndDisplayErrorsInCell(kernel: IKernel) {
+    private async endCellAndDisplayErrorsInCell(kernel: IBaseKernel) {
         const lastExecutedCell = this.lastExecutedCellPerKernel.get(kernel);
         sendKernelTelemetryEvent(kernel.resourceUri, Telemetry.KernelCrash);
         if (!lastExecutedCell) {

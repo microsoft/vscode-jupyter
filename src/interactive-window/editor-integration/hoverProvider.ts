@@ -14,7 +14,7 @@ import { IDisposableRegistry } from '../../platform/common/types';
 import { sleep } from '../../platform/common/utils/async';
 import { StopWatch } from '../../platform/common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
-import { INotebookKernel, IKernelProvider } from '../../kernels/types';
+import { IKernel, IKernelProvider } from '../../kernels/types';
 import { IJupyterVariables } from '../../kernels/variables/types';
 import { IInteractiveWindowProvider } from '../types';
 import { getInteractiveCellMetadata } from '../helpers';
@@ -123,7 +123,7 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
         }, token);
     }
 
-    private getMatchingKernels(document: vscode.TextDocument): INotebookKernel[] {
+    private getMatchingKernels(document: vscode.TextDocument): IKernel[] {
         // First see if we have an interactive window who's owner is this document
         let notebookUris = this.interactiveProvider.windows
             .filter((w) => w.owner && urlPath.isEqual(w.owner, document.uri))
@@ -131,7 +131,7 @@ export class HoverProvider implements IExtensionSyncActivationService, vscode.Ho
         if (!Array.isArray(notebookUris) || notebookUris.length == 0) {
             return [];
         }
-        const kernels = new Set<INotebookKernel>();
+        const kernels = new Set<IKernel>();
         this.notebook.notebookDocuments
             .filter((item) => notebookUris.includes(item.uri.toString()))
             .forEach((item) => {

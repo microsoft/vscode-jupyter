@@ -15,7 +15,7 @@ import { noop } from '../../platform/common/utils/misc';
 import { deserializeDataViews, serializeDataViews } from '../../platform/common/utils/serializers';
 import { IPyWidgetMessages, IInteractiveWindowMapping } from '../../messageTypes';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { INotebookKernel, IKernelProvider, KernelSocketInformation } from '../types';
+import { IKernel, IKernelProvider, KernelSocketInformation } from '../types';
 import { WIDGET_MIMETYPE } from './constants';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
 
@@ -35,7 +35,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private readonly commTargetsRegistered = new Set<string>();
     private jupyterLab?: typeof import('@jupyterlab/services');
     private pendingTargetNames = new Set<string>();
-    private kernel?: INotebookKernel;
+    private kernel?: IKernel;
     private _postMessageEmitter = new EventEmitter<IPyWidgetMessage>();
     private messageHooks = new Map<string, (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>>();
     private pendingHookRemovals = new Map<string, string>();
@@ -176,7 +176,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     ) {
         this._postMessageEmitter.fire({ message, payload });
     }
-    private subscribeToKernelSocket(kernel: INotebookKernel) {
+    private subscribeToKernelSocket(kernel: IKernel) {
         if (this.subscribedToKernelSocket || !kernel.session) {
             return;
         }
@@ -358,7 +358,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
     }
 
-    private registerCommTargets(kernel: INotebookKernel) {
+    private registerCommTargets(kernel: IKernel) {
         while (this.pendingTargetNames.size > 0) {
             const targetNames = Array.from([...this.pendingTargetNames.values()]);
             const targetName = targetNames.shift();
@@ -383,7 +383,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
     }
 
-    private getKernel(): INotebookKernel | undefined {
+    private getKernel(): IKernel | undefined {
         if (this.document && !this.kernel?.session) {
             this.kernel = this.kernelProvider.get(this.document);
             this.kernel?.onDisposed(() => (this.kernel = undefined));

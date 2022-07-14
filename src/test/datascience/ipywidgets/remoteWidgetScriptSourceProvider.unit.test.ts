@@ -3,11 +3,7 @@
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import {
-    IJupyterKernelSpec,
-    INotebookKernel,
-    RemoteKernelConnectionMetadata
-} from '../../../platform/../kernels/types';
+import { IJupyterKernelSpec, IKernel, RemoteKernelConnectionMetadata } from '../../../platform/../kernels/types';
 import { IWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/types';
 import { IIPyWidgetScriptManager, IIPyWidgetScriptManagerFactory } from '../../../kernels/ipywidgets/types';
 import { RemoteWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/remoteWidgetScriptSourceProvider';
@@ -15,7 +11,7 @@ import { RemoteWidgetScriptSourceProvider } from '../../../kernels/ipywidgets/re
 /* eslint-disable , @typescript-eslint/no-explicit-any */
 suite('DataScience - ipywidget - Remote Widget Script Source', () => {
     let scriptSourceProvider: IWidgetScriptSourceProvider;
-    let kernel: INotebookKernel;
+    let kernel: IKernel;
     let scriptManagerFactory: IIPyWidgetScriptManagerFactory;
     let scriptManager: IIPyWidgetScriptManager;
     const baseUrl = 'http://hello.com/';
@@ -23,7 +19,7 @@ suite('DataScience - ipywidget - Remote Widget Script Source', () => {
         scriptManagerFactory = mock<IIPyWidgetScriptManagerFactory>();
         scriptManager = mock<IIPyWidgetScriptManager>();
         when(scriptManagerFactory.getOrCreate(anything())).thenReturn(instance(scriptManager));
-        kernel = mock<INotebookKernel>();
+        kernel = mock<IKernel>();
         const kernelConnection: RemoteKernelConnectionMetadata = {
             baseUrl,
             id: '1',

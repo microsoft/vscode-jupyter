@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { INotebookKernel } from '../types';
+import { IKernel } from '../types';
 import {
     IIPyWidgetScriptManagerFactory,
     ILocalResourceUriConverter,
@@ -20,7 +20,7 @@ import {
  */
 export class LocalWidgetScriptSourceProvider implements IWidgetScriptSourceProvider {
     constructor(
-        private readonly kernel: INotebookKernel,
+        private readonly kernel: IKernel,
         private readonly localResourceUriConverter: ILocalResourceUriConverter,
         private readonly scriptManagerFactory: IIPyWidgetScriptManagerFactory
     ) {}

@@ -7,7 +7,7 @@ import { IDisposable, IDisposableRegistry } from '../platform/common/types';
 import { DataScience } from '../platform/common/utils/localize';
 import { IStatusProvider } from '../platform/progress/types';
 import { getDisplayNameOrNameOfKernelConnection } from './helpers';
-import { IKernel, IKernelProvider } from './types';
+import { IBaseKernel, IKernelProvider } from './types';
 
 /**
  * In the case of Jupyter kernels, when a kernel dies Jupyter will automatically restart that kernel.
@@ -15,8 +15,8 @@ import { IKernel, IKernelProvider } from './types';
  */
 @injectable()
 export class KernelAutoRestartMonitor implements IExtensionSyncActivationService {
-    private kernelsStartedSuccessfully = new WeakSet<IKernel>();
-    private kernelRestartProgress = new WeakMap<IKernel, IDisposable>();
+    private kernelsStartedSuccessfully = new WeakSet<IBaseKernel>();
+    private kernelRestartProgress = new WeakMap<IBaseKernel, IDisposable>();
 
     constructor(
         @inject(IStatusProvider) private statusProvider: IStatusProvider,
@@ -39,11 +39,11 @@ export class KernelAutoRestartMonitor implements IExtensionSyncActivationService
             }, this)
         );
     }
-    private onDidStartKernel(kernel: IKernel) {
+    private onDidStartKernel(kernel: IBaseKernel) {
         this.kernelsStartedSuccessfully.add(kernel);
     }
 
-    private onKernelStatusChanged({ kernel }: { status: KernelMessage.Status; kernel: IKernel }) {
+    private onKernelStatusChanged({ kernel }: { status: KernelMessage.Status; kernel: IBaseKernel }) {
         // We're only interested in kernels that started successfully.
         if (!this.kernelsStartedSuccessfully.has(kernel) || !kernel.session || kernel.session.kind === 'localRaw') {
             return;

@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { NotebookDocument } from 'vscode';
-import { INotebookKernel, IKernelProvider } from '../kernels/types';
+import { IKernel, IKernelProvider } from '../kernels/types';
 import { IControllerSelection } from '../notebooks/controllers/types';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 import { InteractiveWindowView } from '../platform/common/constants';
@@ -34,7 +34,7 @@ export class GeneratedCodeStorageManager implements IExtensionSyncActivationServ
         this.storageFactory.get({ notebook })?.clear();
         this.codeGeneratorFactory.get(notebook)?.reset();
     }
-    private onDidCreateKernel(kernel: INotebookKernel) {
+    private onDidCreateKernel(kernel: IKernel) {
         const notebook = kernel.notebook;
         if (kernel.creator !== 'jupyterExtension' || notebook.notebookType !== InteractiveWindowView) {
             return;

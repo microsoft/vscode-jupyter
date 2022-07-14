@@ -6,7 +6,7 @@
 import { Event, Uri } from 'vscode';
 import { IDisposable, IHttpClient } from '../../platform/common/types';
 import { IPyWidgetMessages } from '../../messageTypes';
-import { INotebookKernel } from '../types';
+import { IKernel } from '../types';
 
 export interface IPyWidgetMessage {
     message: IPyWidgetMessages;
@@ -74,7 +74,7 @@ export const IWidgetScriptSourceProviderFactory = Symbol('IWidgetScriptSourcePro
 
 export interface IWidgetScriptSourceProviderFactory {
     getProviders(
-        kernel: INotebookKernel,
+        kernel: IKernel,
         uriConverter: ILocalResourceUriConverter,
         httpClient: IHttpClient
     ): IWidgetScriptSourceProvider[];
@@ -100,12 +100,12 @@ export interface ILocalResourceUriConverter {
 
 export const INbExtensionsPathProvider = Symbol('INbExtensionsPathProvider');
 export interface INbExtensionsPathProvider {
-    getNbExtensionsParentPath(kernel: INotebookKernel): Uri | undefined;
+    getNbExtensionsParentPath(kernel: IKernel): Uri | undefined;
 }
 
 export const IIPyWidgetScriptManagerFactory = Symbol('IIPyWidgetScriptManagerFactory');
 export interface IIPyWidgetScriptManagerFactory {
-    getOrCreate(kernel: INotebookKernel): IIPyWidgetScriptManager;
+    getOrCreate(kernel: IKernel): IIPyWidgetScriptManager;
 }
 export const IIPyWidgetScriptManager = Symbol('IIPyWidgetScriptManager');
 export interface IIPyWidgetScriptManager {

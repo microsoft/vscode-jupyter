@@ -7,7 +7,7 @@ import { ExtensionMode, Uri } from 'vscode';
 import { IExtensionContext, IHttpClient } from '../../platform/common/types';
 import { traceError, traceInfoIfCI } from '../../platform/logging';
 import { executeSilently, isPythonKernelConnection } from '../helpers';
-import { INotebookKernel, RemoteKernelConnectionMetadata } from '../types';
+import { IKernel, RemoteKernelConnectionMetadata } from '../types';
 import { IIPyWidgetScriptManager } from './types';
 import { BaseIPyWidgetScriptManager } from './baseIPyWidgetScriptManager';
 import { isCI } from '../../platform/common/constants';
@@ -20,7 +20,7 @@ export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager imp
     private code?: Promise<string>;
     private widgetEntryPointsPromise?: Promise<{ uri: Uri; widgetFolderName: string }[]>;
     constructor(
-        kernel: INotebookKernel,
+        kernel: IKernel,
         private readonly httpClient: IHttpClient,
         private readonly context: IExtensionContext,
         private readonly fs: IFileSystem

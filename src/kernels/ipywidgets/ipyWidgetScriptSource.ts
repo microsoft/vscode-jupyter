@@ -8,7 +8,7 @@ import { traceError, traceInfo, traceVerbose, traceWarning } from '../../platfor
 import { IDisposableRegistry, IConfigurationService, IHttpClient, IDisposable } from '../../platform/common/types';
 import { InteractiveWindowMessages, IPyWidgetMessages } from '../../messageTypes';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { INotebookKernel, IKernelProvider } from '../types';
+import { IKernel, IKernelProvider } from '../types';
 import { IPyWidgetScriptSourceProvider } from './ipyWidgetScriptSourceProvider';
 import { ILocalResourceUriConverter, IWidgetScriptSourceProviderFactory, WidgetScriptSource } from './types';
 import { ConsoleForegroundColors } from '../../platform/logging/types';
@@ -27,7 +27,7 @@ export class IPyWidgetScriptSource {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         payload: any;
     }>();
-    private kernel?: INotebookKernel;
+    private kernel?: IKernel;
     private jupyterLab?: typeof jupyterlabService;
     private scriptProvider?: IPyWidgetScriptSourceProvider;
     private allWidgetScriptsSent?: boolean;
