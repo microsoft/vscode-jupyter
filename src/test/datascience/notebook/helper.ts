@@ -369,7 +369,7 @@ async function waitForKernelToChangeImpl(
 
     // Get the list of NotebookControllers for this document
     await controllerLoader.loadControllers();
-    const notebookControllers = controllerRegistration.values;
+    const notebookControllers = controllerRegistration.registered;
 
     // Find the kernel id that matches the name we want
     let controller: IVSCodeNotebookController | undefined;
@@ -473,7 +473,7 @@ export async function waitForKernelToGetAutoSelected(
     // Get the list of NotebookControllers for this document
     await controllerLoader.loadControllers();
     traceInfoIfCI(`Wait for kernel - got notebook controllers`);
-    const notebookControllers = controllerRegistration.values;
+    const notebookControllers = controllerRegistration.registered;
 
     // Make sure we don't already have a selection (this function gets run even after opening a document)
     if (controllerSelection.getSelected(vscodeNotebook.activeNotebookEditor!.notebook)) {

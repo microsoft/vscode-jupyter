@@ -97,10 +97,10 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
             await (this.isWeb ? this.controllerLoader.loaded : Promise.resolve(true));
 
             this.showingLocalOrWebEmptyContext
-                .set(isLocal || (this.isWeb && this.controllerRegistration.values.length === 0))
+                .set(isLocal || (this.isWeb && this.controllerRegistration.registered.length === 0))
                 .ignoreErrors();
             this.showingRemoteNotWebContext.set(!isLocal && !this.isWeb).ignoreErrors();
-            this.showingRemoteContext.set(!isLocal && this.controllerRegistration.values.length > 0).ignoreErrors();
+            this.showingRemoteContext.set(!isLocal && this.controllerRegistration.registered.length > 0).ignoreErrors();
         } else {
             this.showingLocalOrWebEmptyContext.set(false).ignoreErrors();
             this.showingRemoteNotWebContext.set(false).ignoreErrors();
@@ -247,7 +247,7 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
     ): Promise<void> {
         // Get the current list. We will dynamically update the list as
         // more and more controllers are found.
-        const controllers = this.controllerRegistration.values.filter(
+        const controllers = this.controllerRegistration.registered.filter(
             (c) => isLocalConnection(c.connection) === local && c.viewType === viewType
         );
 

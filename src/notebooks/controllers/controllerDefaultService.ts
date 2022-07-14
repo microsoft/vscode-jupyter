@@ -67,7 +67,7 @@ export class ControllerDefaultService implements IControllerDefaultService {
         const kernelName = metadata ? metadata.kernelspec?.name : undefined;
         // Get all remote kernels
         await this.loader.loaded;
-        const controllers = this.registration.values.filter((item) => {
+        const controllers = this.registration.registered.filter((item) => {
             // Sort out interactive or non-interactive controllers
             if (
                 item.connection.kind !== 'startUsingRemoteKernelSpec' ||

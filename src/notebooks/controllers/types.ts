@@ -34,9 +34,9 @@ export const IControllerRegistration = Symbol('IControllerRegistration');
 
 export interface IControllerRegistration {
     /**
-     * Gets the filtered list of all of the controllers
+     * Gets the registered list of all of the controllers (the ones shown by VS code)
      */
-    values: IVSCodeNotebookController[];
+    registered: IVSCodeNotebookController[];
     /**
      * Gets every registered connection metadata
      */

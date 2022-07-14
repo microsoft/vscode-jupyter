@@ -378,8 +378,8 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
 
     async function verifyExpectedCounts(localIsExpected: boolean) {
         await controllerLoader.loaded;
-        const remotes = controllerRegistration.values.filter((c) => isRemoteConnection(c.connection));
-        const locals = controllerRegistration.values.filter((c) => isLocalConnection(c.connection));
+        const remotes = controllerRegistration.registered.filter((c) => isRemoteConnection(c.connection));
+        const locals = controllerRegistration.registered.filter((c) => isLocalConnection(c.connection));
 
         if (localIsExpected) {
             assert.ok(locals.length > 1, 'Expected at least two local controller');
@@ -412,7 +412,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await createEmptyPythonNotebook(disposables);
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
-        let locals = controllerRegistration.values.filter((c) => isLocalConnection(c.connection));
+        let locals = controllerRegistration.registered.filter((c) => isLocalConnection(c.connection));
         // We should start off with locals
         assert.ok(locals.length > 0, 'No locals found');
 
@@ -435,7 +435,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await controllerLoader.loaded;
 
         // At this point we should have remote kernels
-        let remotes = controllerRegistration.values.filter((c) => isRemoteConnection(c.connection));
+        let remotes = controllerRegistration.registered.filter((c) => isRemoteConnection(c.connection));
         assert.ok(remotes.length > 0, 'No remote kernels found');
 
         // Trigger the back button on the remote list
@@ -466,7 +466,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         const notebook = await createEmptyPythonNotebook(disposables);
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
-        let locals = controllerRegistration.values.filter((c) => isLocalConnection(c.connection));
+        let locals = controllerRegistration.registered.filter((c) => isLocalConnection(c.connection));
         // We should start off with locals
         assert.ok(locals.length > 0, 'No locals found');
 
@@ -489,7 +489,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await controllerLoader.loaded;
 
         // At this point we should have remote kernels
-        let remotes = controllerRegistration.values.filter((c) => isRemoteConnection(c.connection));
+        let remotes = controllerRegistration.registered.filter((c) => isRemoteConnection(c.connection));
         assert.ok(remotes.length > 0, 'No remote kernels found');
 
         // Pick a remote kernel
@@ -520,7 +520,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await createEmptyPythonNotebook(disposables);
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
-        let locals = controllerRegistration.values.filter((c) => isLocalConnection(c.connection));
+        let locals = controllerRegistration.registered.filter((c) => isLocalConnection(c.connection));
         // We should start off with locals
         assert.ok(locals.length > 0, 'No locals found');
 
@@ -555,7 +555,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await createEmptyPythonNotebook(disposables);
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
-        let locals = controllerRegistration.values.filter((c) => isLocalConnection(c.connection));
+        let locals = controllerRegistration.registered.filter((c) => isLocalConnection(c.connection));
         // We should start off with locals
         assert.ok(locals.length > 0, 'No locals found');
 
@@ -578,7 +578,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await controllerLoader.loaded;
 
         // At this point we should have remote kernels
-        let remotes = controllerRegistration.values.filter((c) => isRemoteConnection(c.connection));
+        let remotes = controllerRegistration.registered.filter((c) => isRemoteConnection(c.connection));
         assert.ok(remotes.length > 0, 'No remote kernels found');
 
         // Trigger a cancel
@@ -600,7 +600,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await createEmptyPythonNotebook(disposables);
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
-        let remotes = controllerRegistration.values.filter((c) => isRemoteConnection(c.connection));
+        let remotes = controllerRegistration.registered.filter((c) => isRemoteConnection(c.connection));
         // We should start off with remotes
         assert.ok(remotes.length > 0, 'No remotes found');
 
@@ -616,7 +616,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await controllerLoader.loaded;
 
         // Should have all locals at the moment
-        let locals = controllerRegistration.values.filter((c) => isLocalConnection(c.connection));
+        let locals = controllerRegistration.registered.filter((c) => isLocalConnection(c.connection));
         assert.ok(locals.length > 1, 'No local connections');
 
         // Cancel locals
@@ -639,7 +639,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await createEmptyPythonNotebook(disposables);
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
-        let remotes = controllerRegistration.values.filter((c) => isRemoteConnection(c.connection));
+        let remotes = controllerRegistration.registered.filter((c) => isRemoteConnection(c.connection));
         // We should start off with remotes
         assert.ok(remotes.length > 0, 'No remotes found');
 
@@ -655,7 +655,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await controllerLoader.loaded;
 
         // Should have all locals at the moment
-        let locals = controllerRegistration.values.filter((c) => isLocalConnection(c.connection));
+        let locals = controllerRegistration.registered.filter((c) => isLocalConnection(c.connection));
         assert.ok(locals.length > 0, 'No local connections');
 
         // Hit back
@@ -677,7 +677,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         const notebook = await createEmptyPythonNotebook(disposables);
         await insertCodeCell('import sys\nsys.executable', { index: 0 });
 
-        let remotes = controllerRegistration.values.filter((c) => isRemoteConnection(c.connection));
+        let remotes = controllerRegistration.registered.filter((c) => isRemoteConnection(c.connection));
         // We should start off with remotes
         assert.ok(remotes.length > 0, 'No remotes found');
 
@@ -693,7 +693,7 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
         await controllerLoader.loaded;
 
         // Should have all locals at the moment
-        let locals = controllerRegistration.values.filter((c) => isLocalConnection(c.connection));
+        let locals = controllerRegistration.registered.filter((c) => isLocalConnection(c.connection));
         assert.ok(locals.length > 1, 'No local connections');
 
         // Pick a local connection
@@ -717,24 +717,24 @@ suite('DataScience - VSCode Notebook - Kernel Selection', function () {
             this.skip(); // Test only works when have a remote server mode and we can connect to locals
         }
         await controllerLoader.loaded;
-        let locals = controllerRegistration.values.filter((c) => isLocalConnection(c.connection));
-        let remotes = controllerRegistration.values.filter((c) => isRemoteConnection(c.connection));
+        let locals = controllerRegistration.registered.filter((c) => isLocalConnection(c.connection));
+        let remotes = controllerRegistration.registered.filter((c) => isRemoteConnection(c.connection));
         // We should start off with locals and remotes
         assert.ok(remotes.length > 0, 'No remotes found');
         assert.ok(locals.length > 0, 'No locals found');
 
         // Switch to remote only
         await changeShowOnlyOneTypeOfKernel(true);
-        locals = controllerRegistration.values.filter((c) => isLocalConnection(c.connection));
-        remotes = controllerRegistration.values.filter((c) => isRemoteConnection(c.connection));
+        locals = controllerRegistration.registered.filter((c) => isLocalConnection(c.connection));
+        remotes = controllerRegistration.registered.filter((c) => isRemoteConnection(c.connection));
         assert.ok(remotes.length > 0, 'No remotes found in single mode');
         assert.ok(locals.length === 0, 'Locals found in single mode');
 
         // Force to local
         await serverUriStorage.setUriToLocal();
         await controllerLoader.loaded;
-        locals = controllerRegistration.values.filter((c) => isLocalConnection(c.connection));
-        remotes = controllerRegistration.values.filter((c) => isRemoteConnection(c.connection));
+        locals = controllerRegistration.registered.filter((c) => isLocalConnection(c.connection));
+        remotes = controllerRegistration.registered.filter((c) => isRemoteConnection(c.connection));
         assert.ok(remotes.length === 0, 'Remotes found in single mode');
         assert.ok(locals.length > 0, 'No locals found in single mode');
     });

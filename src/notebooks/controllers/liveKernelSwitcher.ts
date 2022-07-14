@@ -45,7 +45,7 @@ export class LiveKernelSwitcher implements IExtensionSingleActivationService {
                 const active = this.controllerSelection.getSelected(n);
                 const preferredRemote = this.preferredRemoteKernelIdProvider.getPreferredRemoteKernelId(n.uri);
                 const matching = preferredRemote
-                    ? this.controllerRegistration.values.find((l) => l.id === preferredRemote)
+                    ? this.controllerRegistration.registered.find((l) => l.id === preferredRemote)
                     : undefined;
                 if (matching && active?.id !== matching.id) {
                     traceInfo(`Switching remote kernel to ${preferredRemote} for ${n.uri}`);
