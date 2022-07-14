@@ -3,7 +3,7 @@
 -   Python 3.7 and higher
 -   run `python3 -m pip install --user -r news/requirements.txt`
 
-# Move open issues (Tuesday of VS Code endgame week)
+# Move open issues (Tuesday of VS Code endgame week, XXX XX)
 
 - [ ] Move all open issues to next milestone or remove milestone and put back in triage. This allows endgame champ to have a better understanding of done state.
 
