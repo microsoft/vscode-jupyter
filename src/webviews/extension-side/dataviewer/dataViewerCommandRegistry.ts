@@ -147,7 +147,7 @@ export class DataViewerCommandRegistry implements IExtensionSingleActivationServ
         }
 
         if (pythonPath) {
-            let untildePath = debugConfiguration.python;
+            let untildePath = pythonPath;
             if (untildePath.startsWith('~') && this.platformService.homeDir) {
                 untildePath = untildify(untildePath, this.platformService.homeDir.path);
             }
