@@ -20,7 +20,7 @@ import { traceWarning, traceInfoIfCI } from '../../platform/logging';
 import { ICellRange, IConfigurationService, IDisposableRegistry, Resource } from '../../platform/common/types';
 import * as localize from '../../platform/common/utils/localize';
 import { getInteractiveCellMetadata } from '../helpers';
-import { INotebookKernel, IKernelProvider } from '../../kernels/types';
+import { IKernelProvider } from '../../kernels/types';
 import { CodeLensCommands, Commands, InteractiveWindowView } from '../../platform/common/constants';
 import { generateCellRangesFromDocument } from './cellFactory';
 import { ICodeLensFactory, IGeneratedCode, IGeneratedCodeStorageFactory } from './types';
@@ -63,7 +63,7 @@ export class CodeLensFactory implements ICodeLensFactory {
         notebook.onDidChangeNotebookCellExecutionState(this.onDidChangeNotebookCellExecutionState, this, disposables);
         kernelProvider.onDidDisposeNotebookKernel(
             (kernel) => {
-                this.notebookData.delete((kernel as INotebookKernel).notebook.uri.toString());
+                this.notebookData.delete(kernel.notebook.uri.toString());
             },
             this,
             disposables
