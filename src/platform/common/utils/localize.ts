@@ -606,6 +606,8 @@ export namespace DataScience {
         localize('DataScience.jupyterSelectURIPrompt', 'Enter the URI of the running Jupyter server');
     export const jupyterSelectURIQuickPickTitle = () =>
         localize('DataScience.jupyterSelectURIQuickPickTitle', 'Enter the URI of the running Jupyter server');
+    export const jupyterSelectURIQuickPickTitleOld = () =>
+        localize('DataScience.jupyterSelectURIQuickPickTitleOld', 'Pick how to connect to Jupyter');
     export const jupyterSelectURIQuickPickPlaceholder = () =>
         localize('DataScience.jupyterSelectURIQuickPickPlaceholder', 'Choose an option');
     export const jupyterSelectURIQuickPickCurrent = () =>

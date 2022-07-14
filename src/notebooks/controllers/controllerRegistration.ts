@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter } from 'vscode';
+import { ConfigurationChangeEvent, Event, EventEmitter } from 'vscode';
 import { getDisplayNameOrNameOfKernelConnection } from '../../kernels/helpers';
 import { computeServerId } from '../../kernels/jupyter/jupyterUtils';
 import { IJupyterServerUriStorage, IServerConnectionType } from '../../kernels/jupyter/types';
@@ -77,6 +77,7 @@ export class ControllerRegistration implements IControllerRegistration {
         this.serverConnectionType.onDidChange(this.onDidChangeFilter, this, this.disposables);
         this.serverUriStorage.onDidChangeUri(this.onDidChangeUri, this, this.disposables);
         this.serverUriStorage.onDidRemoveUris(this.onDidRemoveUris, this, this.disposables);
+        this.workspace.onDidChangeConfiguration(this.onDidChangeConfiguration, this, this.disposables);
     }
     add(
         metadata: KernelConnectionMetadata,
@@ -187,7 +188,9 @@ export class ControllerRegistration implements IControllerRegistration {
         const connectionTypeFiltered = isLocalConnection(metadata) !== this.isLocalLaunch;
         const urlFiltered = isRemoteConnection(metadata) && this.serverUriStorage.currentServerId !== metadata.serverId;
 
-        if (this.configuration.getSettings().showOnlyOneTypeOfKernel) {
+        // Dont use config service here because this function will be called in the change handler for config changes.
+        const inExperiment = this.workspace.getConfiguration('jupyter')?.get('showOnlyOneTypeOfKernel', false);
+        if (inExperiment) {
             return userFiltered || connectionTypeFiltered || urlFiltered;
         }
 
@@ -234,6 +237,12 @@ export class ControllerRegistration implements IControllerRegistration {
 
         // Update list of controllers
         this.onDidChangeFilter();
+    }
+
+    private onDidChangeConfiguration(e: ConfigurationChangeEvent) {
+        if (e.affectsConfiguration('jupyter.showOnlyOneTypeOfKernel')) {
+            this.onDidChangeFilter();
+        }
     }
 
     private onDidChangeFilter() {

@@ -4,7 +4,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import { IExtensionSingleActivationService } from '../../../platform/activation/types';
-import { ICommandManager, IVSCodeNotebook } from '../../../platform/common/application/types';
+import { ICommandManager, IVSCodeNotebook, IWorkspaceService } from '../../../platform/common/application/types';
 import {
     Commands,
     InteractiveWindowView,
@@ -22,7 +22,7 @@ import {
     InputFlowAction,
     InputStep
 } from '../../../platform/common/utils/multiStepInput';
-import { EventEmitter, QuickPickItem, QuickPickItemKind } from 'vscode';
+import { ConfigurationChangeEvent, EventEmitter, QuickPickItem, QuickPickItemKind } from 'vscode';
 import { noop } from '../../../platform/common/utils/misc';
 import { isLocalConnection } from '../../../kernels/types';
 import { IJupyterServerUriStorage, IServerConnectionType } from '../../../kernels/jupyter/types';
@@ -68,7 +68,8 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
         @inject(IControllerRegistration) private readonly controllerRegistration: IControllerRegistration,
         @inject(IVSCodeNotebook) private readonly notebooks: IVSCodeNotebook,
         @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
-        @inject(IConfigurationService) private readonly configurationService: IConfigurationService
+        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
     ) {
         // Context keys to control when these commands are shown
         this.showingRemoteNotWebContext = new ContextKey('jupyter.showingRemoteNotWeb', this.commandManager);
@@ -87,6 +88,7 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
         );
         this.disposables.push(this.serverConnectionType.onDidChange(this.updateContextKeys, this));
         this.updateContextKeys().ignoreErrors;
+        this.disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration, this));
     }
 
     private async updateContextKeys() {
@@ -103,6 +105,14 @@ export class ServerConnectionControllerCommands implements IExtensionSingleActiv
             this.showingLocalOrWebEmptyContext.set(false).ignoreErrors();
             this.showingRemoteNotWebContext.set(false).ignoreErrors();
             this.showingRemoteContext.set(false).ignoreErrors();
+        }
+    }
+
+    private onDidChangeConfiguration(e: ConfigurationChangeEvent) {
+        if (e.affectsConfiguration('jupyter.showOnlyOneTypeOfKernel')) {
+            setTimeout(() => {
+                this.updateContextKeys().ignoreErrors;
+            }, 0); // Has to be async so the update event fires on the config service
         }
     }
 

@@ -7,7 +7,7 @@
 import { inject, injectable } from 'inversify';
 import isNil = require('lodash/isNil');
 import { EventEmitter, QuickPickItem, ThemeIcon, Uri } from 'vscode';
-import { IApplicationShell, IClipboard } from '../../platform/common/application/types';
+import { IApplicationShell, IClipboard, IWorkspaceService } from '../../platform/common/application/types';
 import { traceDecoratorError, traceError, traceWarning } from '../../platform/logging';
 import { DataScience } from '../../platform/common/utils/localize';
 import {
@@ -26,7 +26,7 @@ import {
     JupyterServerUriHandle
 } from './types';
 import { IDataScienceErrorHandler } from '../errors/types';
-import { IConfigurationService, IsWebExtension } from '../../platform/common/types';
+import { IConfigurationService, IDisposableRegistry, IsWebExtension } from '../../platform/common/types';
 import {
     handleExpiredCertsError,
     handleSelfCertsError,
@@ -67,42 +67,33 @@ export type SelectJupyterUriCommandSource =
 export class JupyterServerSelector {
     private impl: IJupyterServerSelector;
     constructor(
-        @inject(IClipboard) clipboard: IClipboard,
-        @inject(IMultiStepInputFactory) readonly multiStepFactory: IMultiStepInputFactory,
+        @inject(IClipboard) private readonly clipboard: IClipboard,
+        @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
         @inject(IJupyterUriProviderRegistration)
-        extraUriProviders: IJupyterUriProviderRegistration,
-        @inject(IJupyterServerUriStorage) readonly serverUriStorage: IJupyterServerUriStorage,
+        private readonly extraUriProviders: IJupyterUriProviderRegistration,
+        @inject(IJupyterServerUriStorage) private readonly serverUriStorage: IJupyterServerUriStorage,
         @inject(IDataScienceErrorHandler)
-        readonly errorHandler: IDataScienceErrorHandler,
-        @inject(IApplicationShell) readonly applicationShell: IApplicationShell,
-        @inject(IConfigurationService) readonly configService: IConfigurationService,
-        @inject(JupyterConnection) readonly jupyterConnection: JupyterConnection,
-        @inject(IsWebExtension) readonly isWebExtension: boolean
+        private readonly errorHandler: IDataScienceErrorHandler,
+        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
+        @inject(IConfigurationService) private readonly configService: IConfigurationService,
+        @inject(JupyterConnection) private readonly jupyterConnection: JupyterConnection,
+        @inject(IsWebExtension) private readonly isWebExtension: boolean,
+        @inject(IWorkspaceService) readonly workspaceService: IWorkspaceService,
+        @inject(IDisposableRegistry) readonly disposableRegistry: IDisposableRegistry
     ) {
-        if (this.configService.getSettings().showOnlyOneTypeOfKernel) {
-            this.impl = new JupyterServerSelector_Experimental(
-                multiStepFactory,
-                extraUriProviders,
-                serverUriStorage,
-                errorHandler,
-                applicationShell,
-                configService,
-                jupyterConnection,
-                isWebExtension
-            );
-        } else {
-            this.impl = new JupyterServerSelector_Original(
-                clipboard,
-                multiStepFactory,
-                extraUriProviders,
-                serverUriStorage,
-                errorHandler,
-                applicationShell,
-                configService,
-                jupyterConnection,
-                isWebExtension
-            );
-        }
+        this.createImpl(this.configService.getSettings().showOnlyOneTypeOfKernel);
+        workspaceService.onDidChangeConfiguration(
+            (e) => {
+                if (e.affectsConfiguration('jupyter.showOnlyOneTypeOfKernel')) {
+                    // Cant use config service here because it may not have updated yet.
+                    this.createImpl(
+                        workspaceService.getConfiguration('jupyter')?.get('showOnlyOneTypeOfKernel', false)
+                    );
+                }
+            },
+            undefined,
+            disposableRegistry
+        );
     }
 
     public selectJupyterURI(
@@ -118,6 +109,33 @@ export class JupyterServerSelector {
 
     public setJupyterURIToRemote(userURI: string | undefined, ignoreValidation?: boolean): Promise<void> {
         return this.impl.setJupyterURIToRemote(userURI, ignoreValidation);
+    }
+
+    private createImpl(useExperimental: boolean) {
+        if (useExperimental) {
+            this.impl = new JupyterServerSelector_Experimental(
+                this.multiStepFactory,
+                this.extraUriProviders,
+                this.serverUriStorage,
+                this.errorHandler,
+                this.applicationShell,
+                this.configService,
+                this.jupyterConnection,
+                this.isWebExtension
+            );
+        } else {
+            this.impl = new JupyterServerSelector_Original(
+                this.clipboard,
+                this.multiStepFactory,
+                this.extraUriProviders,
+                this.serverUriStorage,
+                this.errorHandler,
+                this.applicationShell,
+                this.configService,
+                this.jupyterConnection,
+                this.isWebExtension
+            );
+        }
     }
 }
 
@@ -459,7 +477,7 @@ class JupyterServerSelector_Original implements IJupyterServerSelector {
             items,
             activeItem,
             title: allowLocal
-                ? DataScience.jupyterSelectURIQuickPickTitle()
+                ? DataScience.jupyterSelectURIQuickPickTitleOld()
                 : DataScience.jupyterSelectURIQuickPickTitleRemoteOnly(),
             onDidTriggerItemButton: (e) => {
                 const url = e.item.url;

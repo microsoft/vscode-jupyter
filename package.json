@@ -2037,7 +2037,7 @@
                 "jupyter.showOnlyOneTypeOfKernel": {
                     "type": "boolean",
                     "default": false,
-                    "description": "%jupyter.configuration.jupyter.showOnlyOneTypeOfKernel.description%",
+                    "description": "%jupyter.configuration.jupyter.showOnlyOneTypeOfKernel.markdownDescription%",
                     "scope": "machine",
                     "tags": [
                         "experimental"

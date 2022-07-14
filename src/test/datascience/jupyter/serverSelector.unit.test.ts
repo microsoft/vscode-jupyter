@@ -5,7 +5,7 @@ import { anyString, anything, instance, mock, when, verify, deepEqual } from 'ts
 
 import * as sinon from 'sinon';
 import * as os from 'os';
-import { EventEmitter, QuickPickItem } from 'vscode';
+import { ConfigurationChangeEvent, EventEmitter, QuickPickItem } from 'vscode';
 import { ApplicationShell } from '../../../platform/common/application/applicationShell';
 import { ClipboardService } from '../../../platform/common/application/clipboard';
 import { IApplicationShell, IClipboard } from '../../../platform/common/application/types';
@@ -62,6 +62,8 @@ suite('DataScience - Jupyter Server URI Selector', () => {
         const multiStepFactory = new MultiStepInputFactory(instance(applicationShell));
         when(workspaceService.getWorkspaceFolderIdentifier(anything())).thenReturn('1');
         when(workspaceService.hasWorkspaceFolders).thenReturn(hasFolders);
+        const configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
+        when(workspaceService.onDidChangeConfiguration).thenReturn(configChangeEvent.event);
         const encryptedStorage = new MockEncryptedStorage();
         connection = mock<JupyterConnection>();
         when(connection.createConnectionInfo(anything())).thenResolve({ displayName: '' } as any);
@@ -93,7 +95,9 @@ suite('DataScience - Jupyter Server URI Selector', () => {
             instance(applicationShell),
             instance(configService),
             instance(connection),
-            false
+            false,
+            instance(workspaceService),
+            disposables
         );
         return { selector, storage };
     }

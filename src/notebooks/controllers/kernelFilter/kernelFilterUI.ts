@@ -21,7 +21,7 @@ import { IControllerLoader, IControllerRegistration } from '../types';
 
 function getKernelLabel(metadata: KernelConnectionMetadata): string {
     if (isRemoteConnection(metadata)) {
-        return `${DataScience.kernelPrefixForRemote()}${getDisplayNameOrNameOfKernelConnection(metadata)}`;
+        return `${DataScience.kernelPrefixForRemote()} ${getDisplayNameOrNameOfKernelConnection(metadata)}`;
     }
     return getDisplayNameOrNameOfKernelConnection(metadata);
 }
