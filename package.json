@@ -2120,7 +2120,8 @@
         "notebookCellExecutionState",
         "portsAttributes",
         "quickPickSortByLabel",
-        "notebookKernelSource"
+        "notebookKernelSource",
+        "interactiveWindow"
     ],
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-toolsai-jupyter-insiders.vsix",
