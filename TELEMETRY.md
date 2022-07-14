@@ -634,7 +634,7 @@ No properties for event
 
 [src/notebooks/debugger/debugCellControllers.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/debugger/debugCellControllers.ts)
 ```typescript
-        private readonly kernel: IKernel,
+        private readonly kernel: INotebookKernel,
         private readonly commandManager: ICommandManager
     ) {
         sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunAndDebugCell);
@@ -647,7 +647,7 @@ No properties for event
 [src/interactive-window/debugger/jupyter/debugCellControllers.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/interactive-window/debugger/jupyter/debugCellControllers.ts)
 ```typescript
         public readonly debugCell: NotebookCell,
-        private readonly kernel: IKernel
+        private readonly kernel: INotebookKernel
     ) {
         sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunAndDebugCell);
     }
@@ -674,7 +674,7 @@ No properties for event
 
 [src/notebooks/debugger/runByLineController.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/debugger/runByLineController.ts)
 ```typescript
-        private readonly kernel: IKernel,
+        private readonly kernel: INotebookKernel,
         private readonly settings: IConfigurationService
     ) {
         sendTelemetryEvent(DebuggingTelemetry.successfullyStartedRunByLine);
@@ -3181,7 +3181,7 @@ No properties for event
         }
 
         sendTelemetryEvent(Telemetry.RestartKernelCommand);
-        const kernel = this.kernelProvider.get(document.uri);
+        const kernel = this.kernelProvider.get(document);
 
         if (kernel) {
 ```
@@ -8786,9 +8786,9 @@ No properties for event
 
     // IJupyterVariables implementation
     @captureTelemetry(Telemetry.VariableExplorerFetchTime, undefined, true)
-    public async getVariables(request: IJupyterVariablesRequest, kernel?: IKernel): Promise<IJupyterVariablesResponse> {
-        return this.variableHandler.getVariables(request, kernel);
-    }
+    public async getVariables(
+        request: IJupyterVariablesRequest,
+        kernel?: INotebookKernel
 ```
 
 </details>
@@ -8867,9 +8867,9 @@ No properties for event
     }
 
     @captureTelemetry(Telemetry.WaitForIdleJupyter, undefined, true)
-    public waitForIdle(timeout: number): Promise<void> {
+    public waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
         // Wait for idle on this session
-        return this.waitForIdleOnSession(this.session, timeout);
+        return this.waitForIdleOnSession(this.session, timeout, token);
 ```
 
 </details>
