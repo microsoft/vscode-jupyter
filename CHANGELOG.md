@@ -1,5 +1,12 @@
 # Changelog
 
+## 2022.6.120 (14 July 2022)
+
+### Fixes
+
+1. Stop incorrectly looking at .python property in the python debug configuration.
+   ([#10789](https://github.com/Microsoft/vscode-jupyter/issues/10789))
+
 ## 2022.6.110 (11 July 2022)
 
 ### Fixes
