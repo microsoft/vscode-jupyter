@@ -544,7 +544,6 @@ suite('DataScience - JupyterKernelService', () => {
             foo: 'bar',
             [pathVariable]: `Path1${path.delimiter}Path2`
         });
-        when(appEnv.hasActivationCommands(anything(), anything())).thenResolve(true);
         when(fs.writeFile(anything(), anything())).thenCall((f: Uri) => {
             filesCreated.add(f.fsPath);
             return Promise.resolve();
