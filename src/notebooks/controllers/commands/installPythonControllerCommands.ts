@@ -15,13 +15,7 @@ import { isPythonKernelConnection } from '../../../kernels/helpers';
 import { IExtensionSingleActivationService } from '../../../platform/activation/types';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../../../platform/api/types';
 import { IApplicationShell, ICommandManager } from '../../../platform/common/application/types';
-import {
-    Commands,
-    JupyterNotebookView,
-    PythonExtension,
-    PYTHON_LANGUAGE,
-    Telemetry
-} from '../../../platform/common/constants';
+import { Commands, JupyterNotebookView, PYTHON_LANGUAGE, Telemetry } from '../../../platform/common/constants';
 import { ContextKey } from '../../../platform/common/contextKey';
 import { IDisposableRegistry, IsWebExtension } from '../../../platform/common/types';
 import { sleep } from '../../../platform/common/utils/async';
@@ -175,8 +169,7 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
             // Now start to indicate that we are performing the install and locating kernels
             const reporter = this.progressReporter.createProgressIndicator(DataScience.installingPythonExtension());
             try {
-                // Directly install the python extension
-                await this.commandManager.executeCommand('workbench.extensions.installExtension', PythonExtension);
+                await this.extensionChecker.directlyInstallPythonExtension();
 
                 // Don't move forward until we have hooked the API
                 // Note extensions.installExtension seems to return "mostly" after the install is done, but at that

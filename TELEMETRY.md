@@ -534,13 +534,13 @@ No description provided
 
 [src/kernels/debugger/kernelDebugAdapterBase.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/debugger/kernelDebugAdapterBase.ts)
 ```typescript
-                this.kernel.onDisposed(() => {
-                    debug.stopDebugging(this.session).then(noop, noop);
-                    this.endSession.fire(this.session);
-                    sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'onKernelDisposed' });
+                    if (!this.disconnected) {
+                        debug.stopDebugging(this.session).then(noop, noop);
+                        this.disconnect().ignoreErrors();
+                        sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'onKernelDisposed' });
+                    }
                 })
             );
-        }
 ```
 
 

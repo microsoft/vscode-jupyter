@@ -39,6 +39,7 @@ import { assertIsDebugConfig, isShortNamePath, shortNameMatchesLongName, getMess
 import { IDisposable } from '../../platform/common/types';
 import { executeSilently } from '../helpers';
 import { noop } from '../../platform/common/utils/misc';
+import { IDebugService } from '../../platform/common/application/types';
 
 /**
  * For info on the custom requests implemented by jupyter see:
@@ -62,7 +63,8 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
         protected notebookDocument: NotebookDocument,
         protected readonly jupyterSession: IKernelConnectionSession,
         private readonly kernel: IKernel | undefined,
-        private readonly platformService: IPlatformService
+        private readonly platformService: IPlatformService,
+        private readonly debugService: IDebugService
     ) {
         traceInfoIfCI(`Creating kernel debug adapter for debugging notebooks`);
         const configuration = this.session.configuration;
@@ -85,9 +87,11 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
             this.kernel.addEventHook(this.kernelEventHook);
             this.disposables.push(
                 this.kernel.onDisposed(() => {
-                    debug.stopDebugging(this.session).then(noop, noop);
-                    this.endSession.fire(this.session);
-                    sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'onKernelDisposed' });
+                    if (!this.disconnected) {
+                        debug.stopDebugging(this.session).then(noop, noop);
+                        this.disconnect().ignoreErrors();
+                        sendTelemetryEvent(DebuggingTelemetry.endedSession, undefined, { reason: 'onKernelDisposed' });
+                    }
                 })
             );
         }
@@ -124,6 +128,13 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
                 this,
                 this.disposables
             )
+        );
+        this.disposables.push(
+            this.debugService.onDidTerminateDebugSession((e) => {
+                if (e === this.session) {
+                    this.disconnect().ignoreErrors();
+                }
+            })
         );
     }
 
@@ -189,10 +200,14 @@ export abstract class KernelDebugAdapterBase implements DebugAdapter, IKernelDeb
     }
 
     public async disconnect() {
-        await this.session.customRequest('disconnect', { restart: false });
-        this.endSession.fire(this.session);
-        this.disconnected = true;
-        this.kernel?.removeEventHook(this.kernelEventHook);
+        if (!this.disconnected) {
+            this.disconnected = true;
+            if (this.debugService.activeDebugSession === this.session) {
+                await this.session.customRequest('disconnect', { restart: false });
+            }
+            this.endSession.fire(this.session);
+            this.kernel?.removeEventHook(this.kernelEventHook);
+        }
     }
 
     dispose() {

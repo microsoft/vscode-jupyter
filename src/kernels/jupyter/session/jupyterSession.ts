@@ -25,7 +25,7 @@ import {
 } from '../../types';
 import { DisplayOptions } from '../../displayOptions';
 import { IBackupFile, IJupyterBackingFileCreator, IJupyterKernelService, IJupyterRequestCreator } from '../types';
-import { Uri } from 'vscode';
+import { CancellationError, Uri } from 'vscode';
 import { generateBackingIPyNbFileName } from './backingFileCreator.base';
 import { noop } from '../../../platform/common/utils/misc';
 
@@ -58,9 +58,9 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
     }
 
     @captureTelemetry(Telemetry.WaitForIdleJupyter, undefined, true)
-    public waitForIdle(timeout: number): Promise<void> {
+    public waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
         // Wait for idle on this session
-        return this.waitForIdleOnSession(this.session, timeout);
+        return this.waitForIdleOnSession(this.session, timeout, token);
     }
     public async connect(options: { token: CancellationToken; ui: IDisplayOptions }): Promise<void> {
         // Start a new session
@@ -106,17 +106,21 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
 
                 // newSession.kernel?.connectionStatus
                 await waitForCondition(
-                    async () => newSession?.kernel?.connectionStatus === 'connected',
+                    async () =>
+                        newSession?.kernel?.connectionStatus === 'connected' || options.token.isCancellationRequested,
                     this.idleTimeout,
                     100
                 );
+                if (options.token.isCancellationRequested) {
+                    throw new CancellationError();
+                }
             } else {
                 traceVerbose(`createNewKernelSession ${this.kernelConnectionMetadata?.id}`);
                 newSession = await this.createSession(options);
                 newSession.resource = this.resource;
 
                 // Make sure it is idle before we return
-                await this.waitForIdleOnSession(newSession, this.idleTimeout);
+                await this.waitForIdleOnSession(newSession, this.idleTimeout, options.token);
             }
         } catch (exc) {
             // Don't log errors if UI is disabled (e.g. auto starting a kernel)
@@ -152,7 +156,7 @@ export class JupyterSession extends BaseJupyterSession implements IJupyterKernel
                 `JupyterSession.createNewKernelSession ${tryCount}, id is ${this.kernelConnectionMetadata?.id}`
             );
             result = await this.createSession({ token: cancelToken, ui });
-            await this.waitForIdleOnSession(result, this.idleTimeout);
+            await this.waitForIdleOnSession(result, this.idleTimeout, cancelToken);
             return result;
         } catch (exc) {
             traceInfo(`Error waiting for restart session: ${exc}`);

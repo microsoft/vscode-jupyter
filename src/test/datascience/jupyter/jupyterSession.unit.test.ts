@@ -306,17 +306,19 @@ suite('DataScience - JupyterSession', () => {
             });
         });
         suite('Wait for session idle', () => {
+            const token = new CancellationTokenSource();
+            suiteTeardown(() => token.dispose());
             test('Will timeout', async () => {
                 when(kernel.status).thenReturn('unknown');
 
-                const promise = jupyterSession.waitForIdle(100);
+                const promise = jupyterSession.waitForIdle(100, token.token);
 
                 await assert.isRejected(promise, DataScience.jupyterLaunchTimedOut());
             });
             test('Will succeed', async () => {
                 when(kernel.status).thenReturn('idle');
 
-                await jupyterSession.waitForIdle(100);
+                await jupyterSession.waitForIdle(100, token.token);
 
                 verify(kernel.status).atLeast(1);
             });

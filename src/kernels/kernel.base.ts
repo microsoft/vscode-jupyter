@@ -600,7 +600,7 @@ export abstract class BaseKernel implements IKernel {
         }
         if (this.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel') {
             traceVerbose('End running kernel initialization, now waiting for idle');
-            await session.waitForIdle(this.launchTimeout);
+            await session.waitForIdle(this.launchTimeout, this.startCancellation.token);
             traceVerbose('End running kernel initialization, session is idle');
         }
     }

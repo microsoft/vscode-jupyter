@@ -14,6 +14,7 @@ import { traceError, traceInfo, traceInfoIfCI } from '../../../platform/logging'
 import { getInteractiveCellMetadata } from '../../../interactive-window/helpers';
 import { KernelDebugAdapterBase } from '../../../kernels/debugger/kernelDebugAdapterBase';
 import { InteractiveCellMetadata } from '../../editor-integration/types';
+import { IDebugService } from '../../../platform/common/application/types';
 
 export class KernelDebugAdapter extends KernelDebugAdapterBase {
     private readonly debugLocationTracker?: DebugAdapterTracker;
@@ -30,9 +31,10 @@ export class KernelDebugAdapter extends KernelDebugAdapterBase {
         jupyterSession: IKernelConnectionSession,
         kernel: IKernel | undefined,
         platformService: IPlatformService,
+        debugService: IDebugService,
         debugLocationTrackerFactory?: IDebugLocationTrackerFactory
     ) {
-        super(session, notebookDocument, jupyterSession, kernel, platformService);
+        super(session, notebookDocument, jupyterSession, kernel, platformService, debugService);
         if (debugLocationTrackerFactory) {
             this.debugLocationTracker = debugLocationTrackerFactory.createDebugAdapterTracker(
                 session
