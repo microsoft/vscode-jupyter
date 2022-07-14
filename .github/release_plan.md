@@ -22,7 +22,7 @@
         -   [ ] Touch up news entries (e.g. add missing periods)
         -   [ ] Check the Markdown rendering to make sure everything looks good
     -   [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-jupyter/blob/main/ThirdPartyNotices-Repository.txt) as appropriate. This file is manually edited so you can check with the teams if anything needs to be added here.
-    -   [ ] Merge pull request into `release/release-YYYY.MM`
+    -   [ ] Merge pull request into `release/release-YYYY.MM.100`
 -   [ ] Update the [`release` branch](https://github.com/microsoft/vscode-jupyter/branches)
     -   [ ] If there are `release` branches that are two versions old (e.g. release-2020.[current month - 2]) you can delete them at this time (you would have to un-protect the release branches temporarily to delete them).
 -   [ ] Update `main` after creating the release branch. (Warning: this should happen right after creating the release branch. If this is deferred till later, the `main` and `release` branches can diverge significantly, which may cause merge conflicts.)
@@ -33,7 +33,6 @@
         -   [ ] `package.json`
         -   [ ] `package-lock.json`
         -   [ ] Confirm the 3rd part of the version ends with `100`.
-    -   [ ] Update the VS Code engine version in package.json (for release version) to target the upcoming stable release. This will allow us to release before VS Code and be ready in the marketplace. [Example](https://github.com/microsoft/vscode-jupyter/pull/9494/files)
     -   [ ] Create a pull request against `main`
     -   [ ] Merge pull request into `main`
 -   [ ] GDPR bookkeeping (@greazer) (🤖; Notes in OneNote under Python VS Code -> Dev Process -> GDPR)
