@@ -2146,7 +2146,5 @@ console.warn('Registering custom require.js for Jupyter Kernel');
     //Set up with config info.
     req(cfg);
 }(this, (typeof setTimeout === 'undefined' ? undefined : setTimeout)));
-console.log(`Window.require = ${typeof require}`)
-console.log(`Window.requirejs = ${typeof requirejs}`)
 window.require = require;
 window.requirejs = requirejs;

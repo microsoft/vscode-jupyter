@@ -269,7 +269,7 @@ export class NotebookCommandListener implements IDataScienceCommandListener {
                     await endCellAndDisplayErrorsInCell(
                         currentCell,
                         kernel.controller,
-                        await this.errorHandler.getErrorMessageForDisplayInCell(ex, currentContext),
+                        await this.errorHandler.getErrorMessageForDisplayInCell(ex, currentContext, kernel.resourceUri),
                         false
                     );
                 } else {

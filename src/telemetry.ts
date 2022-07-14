@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { InterpreterUri } from './platform/common/types';
 import type { JSONObject } from '@lumino/coreutils';
 // eslint-disable-next-line
 import {
@@ -14,7 +13,7 @@ import {
 } from './platform/common/constants';
 import { CheckboxState, EventName, PlatformErrors, SliceOperationSource } from './platform/telemetry/constants';
 import { DebuggingTelemetry } from './kernels/debugger/constants';
-import { EnvironmentType, PythonEnvironment } from './platform/pythonEnvironments/info';
+import { EnvironmentType } from './platform/pythonEnvironments/info';
 import { TelemetryErrorProperties, ErrorCategory } from './platform/errors/types';
 import { ExportFormat } from './notebooks/export/types';
 import { InterruptResult, KernelConnectionMetadata, KernelInterpreterDependencyResponse } from './kernels/types';
@@ -105,13 +104,6 @@ export type ResourceSpecificTelemetryProperties = Partial<{
      */
     kernelLiveCount: number;
 }>;
-
-export const IInterpreterPackages = Symbol('IInterpreterPackages');
-export interface IInterpreterPackages {
-    getPackageVersions(interpreter: PythonEnvironment): Promise<Map<string, string>>;
-    getPackageVersion(interpreter: PythonEnvironment, packageName: string): Promise<string | undefined>;
-    trackPackages(interpreterUri: InterpreterUri, ignoreCache?: boolean): void;
-}
 
 export interface IEventNamePropertyMapping {
     /**

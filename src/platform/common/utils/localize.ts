@@ -51,6 +51,7 @@ if (osType === OSType.Unknown) {
 // External callers of localize use these tables to retrieve localized values.
 
 export namespace Common {
+    export const jupyter = () => localize('Common.jupyter', 'Jupyter');
     export const bannerLabelYes = () => localize('Common.bannerLabelYes', 'Yes');
     export const bannerLabelNo = () => localize('Common.bannerLabelNo', 'No');
     export const yesPlease = () => localize('Common.yesPlease', 'Yes, please');
@@ -1247,7 +1248,12 @@ export namespace DataScience {
     export const fileSeemsToBeInterferingWithKernelStartup = () =>
         localize(
             { key: 'DataScience.fileSeemsToBeInterferingWithKernelStartup', comment: ['{Locked="kernel"}'] },
-            "The file '{0}' seems to be overriding built in modules and interfering with the startup of the kernel. Consider renaming the file and starting the kernel again.."
+            "The file '{0}' seems to be overriding built in modules and interfering with the startup of the kernel. Consider renaming the file and starting the kernel again."
+        );
+    export const moduleSeemsToBeInterferingWithKernelStartup = () =>
+        localize(
+            { key: 'DataScience.moduleSeemsToBeInterferingWithKernelStartup', comment: ['{Locked="kernel"}'] },
+            "The module '{0}' seems to be overriding built in modules and interfering with the startup of the kernel. Consider renaming the folder and starting the kernel again."
         );
     export const pipCondaInstallHoverWarning = () =>
         localize(
@@ -1361,6 +1367,32 @@ export namespace DataScience {
         localize('DataScience.pickRemoteKernelPlaceholder', `type to filter`);
     export const failedToInstallPythonExtension = () =>
         localize('DataScience.failedToInstallPythonExtension', `Failed to install the Python Extension.`);
+    export const pythonFileOverridesPythonPackage = () =>
+        localize(
+            'DataScience.pythonFileOverridesPythonPackage',
+            'This file could potentially override an existing Python package and interfere with kernel execution, consider renaming it.'
+        );
+    export const alwaysIgnoreWarningsAboutOverridingPythonPackages = () =>
+        localize(
+            'DataScience.alwaysIgnoreWarningsAboutOverridingPythonPackages',
+            'Always ignore warnings about overriding Python packages'
+        );
+    export const ignoreWarningAboutOverridingPythonPackage = () =>
+        localize('DataScience.ignoreWarningAboutOverridingPythonPackage', 'Ignore warning for {0}');
+    export const moreInfoAboutFileNamesOverridingPythonPackages = () =>
+        localize(
+            'DataScience.moreInfoAboutFileNamesOverridingPythonPackages',
+            'More information on overriding Python packages'
+        );
+    export const reservedPythonFileNamesDiagnosticCollectionName = () =>
+        localize('DataScience.reservedPythonFileNamesDiagnosticCollectionName', 'Reserved Python Filenames');
+    export const filesPossiblyOverridingPythonModulesMayHavePreventedKernelFromStarting = () =>
+        localize(
+            'DataScience.filesPossiblyOverridingPythonModulesMayHavePreventedKernelFromStarting',
+            'Some of the following files found in the working directory may have prevented the Kernel from starting. Consider renaming them.'
+        );
+    export const listOfFilesWithLinksThatMightNeedToBeRenamed = () =>
+        localize('DataScience.listOfFilesWithLinksThatMightNeedToBeRenamed', 'File(s): {0} might need to be renamed.');
 }
 
 export namespace Deprecated {

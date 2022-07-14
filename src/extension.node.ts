@@ -70,7 +70,6 @@ import { registerTypes as registerKernelTypes } from './kernels/serviceRegistry.
 import { registerTypes as registerNotebookTypes } from './notebooks/serviceRegistry.node';
 import { registerTypes as registerInteractiveTypes } from './interactive-window/serviceRegistry.node';
 import { registerTypes as registerStandaloneTypes } from './standalone/serviceRegistry.node';
-import { registerTypes as registerTelemetryTypes } from './platform/telemetry/serviceRegistry.node';
 import { registerTypes as registerWebviewTypes } from './webviews/extension-side/serviceRegistry.node';
 import { IExtensionActivationManager } from './platform/activation/types';
 import {
@@ -93,6 +92,7 @@ import { ConsoleLogger } from './platform/logging/consoleLogger';
 import { FileLogger } from './platform/logging/fileLogger.node';
 import { createWriteStream } from 'fs-extra';
 import { initializeGlobals as initializeTelemetryGlobals } from './platform/telemetry/telemetry';
+import { IInterpreterPackages } from './platform/interpreter/types';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -169,7 +169,9 @@ async function activateUnsafe(
 
         const [serviceManager, serviceContainer] = initializeGlobals(context);
         activatedServiceContainer = serviceContainer;
-        initializeTelemetryGlobals(serviceContainer);
+        initializeTelemetryGlobals((interpreter) =>
+            serviceContainer.get<IInterpreterPackages>(IInterpreterPackages).getPackageVersions(interpreter)
+        );
         const activationPromise = activateComponents(context, serviceManager, serviceContainer);
 
         //===============================================
@@ -317,7 +319,6 @@ async function activateLegacy(
 
     // Register the rest of the types (platform is first because it's needed by others)
     registerPlatformTypes(serviceManager);
-    registerTelemetryTypes(serviceManager);
     registerKernelTypes(serviceManager, isDevMode);
     registerNotebookTypes(serviceManager);
     registerInteractiveTypes(serviceManager);

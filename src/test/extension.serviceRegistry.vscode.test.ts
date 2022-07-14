@@ -146,10 +146,13 @@ suite('DataScience - Verify serviceRegistry is correct', function () {
             `Service container not created. Extension should fail to activate. See inversify output`
         );
         const files = await getSourceFiles();
-        const classes = await getInjectableClasses(files, {
-            target: ts.ScriptTarget.ES5,
-            module: ts.ModuleKind.CommonJS
-        });
+        const classes = await getInjectableClasses(
+            files.filter((file) => !file.endsWith('.web.ts')),
+            {
+                target: ts.ScriptTarget.ES5,
+                module: ts.ModuleKind.CommonJS
+            }
+        );
         const map = (api.serviceManager.getContainer() as any)._bindingDictionary._map as Map<
             number,
             Array<interfaces.Binding<any>>

@@ -4,14 +4,17 @@
 import { inject, injectable } from 'inversify';
 import { IPythonApiProvider, IPythonExtensionChecker } from '../api/types';
 import { IPythonExecutionFactory } from '../common/process/types.node';
-import { IDisposableRegistry, InterpreterUri } from '../common/types';
+import { IDisposableRegistry, InterpreterUri, Resource } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import { isResource, noop } from '../common/utils/misc';
-import { IInterpreterService } from '../interpreter/contracts';
+import { IInterpreterService } from './contracts';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { getComparisonKey } from '../vscode-path/resources';
-import { getTelemetrySafeHashedString, getTelemetrySafeVersion } from './helpers';
-import { IInterpreterPackages } from '../../telemetry';
+import { getTelemetrySafeHashedString, getTelemetrySafeVersion } from '../telemetry/helpers';
+import { IWorkspaceService } from '../common/application/types';
+import { traceError, traceWarning } from '../logging';
+import { getDisplayPath } from '../common/platform/fs-paths.node';
+import { IInterpreterPackages } from './types';
 
 const interestedPackages = new Set(
     [
@@ -38,12 +41,14 @@ export class InterpreterPackages implements IInterpreterPackages {
     private pendingInterpreterInformation = new Map<string, Promise<void>>();
     private pendingInterpreterBeforeActivation = new Set<InterpreterUri>();
     private static _instance: InterpreterPackages | undefined;
+    private readonly interpreterPackages = new Map<string, Promise<Set<string>>>();
     constructor(
         @inject(IPythonExtensionChecker) private readonly pythonExtensionChecker: IPythonExtensionChecker,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IPythonExecutionFactory) private readonly executionFactory: IPythonExecutionFactory,
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
         InterpreterPackages._instance = this;
         this.apiProvider.onDidActivatePythonExtension(
@@ -80,6 +85,48 @@ export class InterpreterPackages implements IInterpreterPackages {
     public trackPackages(interpreterUri: InterpreterUri, ignoreCache?: boolean) {
         this.trackPackagesInternal(interpreterUri, ignoreCache).catch(noop);
     }
+    /**
+     * Lists all packages that are accessible from the interpreter.
+     */
+    public async listPackages(resource?: Resource): Promise<string[]> {
+        if (!this.pythonExtensionChecker.isPythonExtensionInstalled) {
+            return [];
+        }
+
+        const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
+        if (!this.interpreterPackages.has(workspaceKey)) {
+            const promise = this.listPackagesImpl(resource);
+            this.interpreterPackages.set(workspaceKey, promise);
+            promise.catch((ex) => {
+                if (this.interpreterPackages.get(workspaceKey) === promise) {
+                    this.interpreterPackages.delete(workspaceKey)!;
+                }
+                traceWarning(`Failed to get list of installed packages for ${workspaceKey}`, ex);
+            });
+        }
+        return this.interpreterPackages.get(workspaceKey)!.then((items) => Array.from(items));
+    }
+    private async listPackagesImpl(resource?: Resource): Promise<Set<string>> {
+        const interpreter = await this.interpreterService.getActiveInterpreter(resource);
+        if (!interpreter) {
+            return new Set<string>();
+        }
+        const service = await this.executionFactory.createActivatedEnvironment({ interpreter, resource });
+        const separator = '389a87b7-288f-4235-92bf-73bf19bf6491';
+        const code = `import pkgutil;import json;print("${separator}");print(json.dumps(list([x.name for x in pkgutil.iter_modules()])));print("${separator}");`;
+        const modulesOutput = await service.exec(['-c', code], { throwOnStdErr: false });
+        if (modulesOutput.stdout) {
+            const modules = JSON.parse(modulesOutput.stdout.split(separator)[1].trim()) as string[];
+            return new Set(modules.concat(modules.map((item) => item.toLowerCase())));
+        } else {
+            traceError(
+                `Failed to get list of installed packages for ${getDisplayPath(interpreter.uri)}`,
+                modulesOutput.stderr
+            );
+            return new Set<string>();
+        }
+    }
+
     private async trackPackagesInternal(interpreterUri: InterpreterUri, ignoreCache?: boolean) {
         if (!this.pythonExtensionChecker.isPythonExtensionActive) {
             this.pendingInterpreterBeforeActivation.add(interpreterUri);
