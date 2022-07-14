@@ -201,16 +201,36 @@ async function buildWebPackForDevOrProduction(configFile, configNameForProductio
         await spawnAsync('npm', ['run', 'webpack', '--', '--config', configFile, '--mode', 'development'], webpackEnv);
     }
 }
-gulp.task('webpack', async () => {
-    // Build node_modules.
+
+gulp.task('webpack-dependencies', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.dependencies.config.js', 'production');
-    // Build DS stuff (separately as it uses far too much memory and slows down CI).
-    // Individually is faster on CI.
+});
+
+gulp.task('webpack-renderers', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-renderers.config.js', 'production');
+});
+
+gulp.task('webpack-viewers', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.datascience-ui-viewers.config.js', 'production');
+});
+
+gulp.task('webpack-extension-node', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.node.config.js', 'extension');
+});
+
+gulp.task('webpack-extension-web', async () => {
     await buildWebPackForDevOrProduction('./build/webpack/webpack.extension.web.config.js', 'extension');
 });
+
+gulp.task(
+    'webpack',
+    gulp.series(
+        // Dependencies first
+        gulp.parallel('webpack-dependencies', 'webpack-renderers', 'webpack-viewers'),
+        // Then the two extensions
+        gulp.parallel('webpack-extension-node', 'webpack-extension-web')
+    )
+);
 
 gulp.task('updateBuildNumber', async () => {
     await updateBuildNumber();
