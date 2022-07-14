@@ -3,7 +3,7 @@
 -   Python 3.7 and higher
 -   run `python3 -m pip install --user -r news/requirements.txt`
 
-# Move open issues (Tuesday of VS Code endgame week)
+# Move open issues (Tuesday of VS Code endgame week, XXX XX)
 
 - [ ] Move all open issues to next milestone or remove milestone and put back in triage. This allows endgame champ to have a better understanding of done state.
 
@@ -13,7 +13,7 @@
 
     -   [ ] Manually add any repository dependencies (if you can't add manually, refer [here](https://docs.opensource.microsoft.com/tools/cg/features/cgmanifest/)). Only add a cgmanifest.json if the components are not NPM or are not dev only.
 -   [ ] Create new release branch with format `release/release-YYYY.MM.100`
-    -   [ ] Create a pull request against `release/release-YYYY.MM` for changes
+    -   [ ] Create a pull request against `release/release-YYYY.MM.100` for changes
     -   [ ] Run `npm install` to verify `package-lock.json` did not get updated.
     -   [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-jupyter/blob/main/CHANGELOG.md)
         -   [ ] Run [`news`](https://github.com/Microsoft/vscode-jupyter/tree/main/news) (typically `python news --final --update CHANGELOG.md | code-insiders -`)
@@ -22,9 +22,9 @@
         -   [ ] Touch up news entries (e.g. add missing periods)
         -   [ ] Check the Markdown rendering to make sure everything looks good
     -   [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-jupyter/blob/main/ThirdPartyNotices-Repository.txt) as appropriate. This file is manually edited so you can check with the teams if anything needs to be added here.
-    -   [ ] Merge pull request into `release/release-YYYY.MM`
+    -   [ ] Merge pull request into `release/release-YYYY.MM.100`
 -   [ ] Update the [`release` branch](https://github.com/microsoft/vscode-jupyter/branches)
-    -   [ ] If there are `release` branches that are two versions old (e.g. release-2020.[current month - 2]) you can delete them at this time (you would have to un-protect the release branches temporarily to delete them).
+    -   [ ] If there are `release` branches that are two versions old (e.g. `release-2020.[current month - 2].100`) you can delete them at this time (you would have to un-protect the release branches temporarily to delete them).
 -   [ ] Update `main` after creating the release branch. (Warning: this should happen right after creating the release branch. If this is deferred till later, the `main` and `release` branches can diverge significantly, which may cause merge conflicts.)
     -   [ ] Merge the changes from release (Changelog, delete news, ThirdPartyNotices) into `main` branch
     -   [ ] Bump the version number to the next monthly ("YYYY.M.100") release in the `main` branch
@@ -33,7 +33,6 @@
         -   [ ] `package.json`
         -   [ ] `package-lock.json`
         -   [ ] Confirm the 3rd part of the version ends with `100`.
-    -   [ ] Update the VS Code engine version in package.json (for release version) to target the upcoming stable release. This will allow us to release before VS Code and be ready in the marketplace. [Example](https://github.com/microsoft/vscode-jupyter/pull/9494/files)
     -   [ ] Create a pull request against `main`
     -   [ ] Merge pull request into `main`
 -   [ ] GDPR bookkeeping (@greazer) (🤖; Notes in OneNote under Python VS Code -> Dev Process -> GDPR)
@@ -69,7 +68,7 @@
 
 -   [ ] Publish the release
     -   [ ] Verify the PR Pipeline on Github actions is green against the release branch.
-    -   [ ] Manually run the [Stable pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=284) against the `release/release-xxxx.xx` branch
+    -   [ ] Manually run the [Stable pipeline](https://dev.azure.com/monacotools/Monaco/_build?definitionId=284) against the `release/release-YYYY.MM.100` branch
     -   [ ] Approve the `Publish` stage
     -   [ ] For manual (if needed as automatic should be tried first)
     -   [ ] Go to https://github.com/microsoft/vscode-jupyter/releases and add a new release
