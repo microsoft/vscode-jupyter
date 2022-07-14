@@ -345,7 +345,7 @@
     "jupyter.configuration.jupyter.magicCommandsAsComments.description": "Uncomment shell assignments (#!), line magic (#!%) and cell magic (#!%%) when parsing code cells.",
     "jupyter.configuration.jupyter.pythonExportMethod.description": {
         "message": "The method to use when exporting a notebook to a Python file. 'direct' will copy over the code directly as is. 'commentMagics' will comment out lines starting with line magics (%), cell magics (%%), and shell commands(!). 'nbconvert' will install nbconvert and use that for the conversion which can translate iPython syntax into Python syntax.",
-        "comment": ["{Locked='direct'}", "{Locked=\"'commentMagics'\"}", "{Locked=\"'nbconvert'\"}"]
+        "comment": ["{Locked=\"'direct'\"}", "{Locked=\"'commentMagics'\"}", "{Locked=\"'nbconvert'\"}"]
     },
     "jupyter.configuration.jupyter.runStartupCommands.description": {
         "message": "A series of Python instructions or iPython magic commands. Can be either an array of strings or a single string with commands separated by '\\n'. Commands will be silently executed whenever the interactive window loads. For instance, set this to '%load_ext autoreload\\n%autoreload 2' to automatically reload changes made to imported files without having to restart the interactive session.",
