@@ -6,6 +6,7 @@ import { getDisplayPath } from '../common/platform/fs-paths';
 import { DataScience } from '../common/utils/localize';
 import { JupyterConnectError } from './jupyterConnectError';
 import { BaseError } from './types';
+import * as path from '../../platform/vscode-path/resources';
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export class ErrorUtils {
@@ -188,16 +189,26 @@ type BaseFailure<Reason extends KernelFailureReason, ExtraData = {}> = {
 } & ExtraData;
 export type OverridingBuiltInModulesFailure = BaseFailure<
     KernelFailureReason.overridingBuiltinModules,
-    {
-        /**
-         * The module that has been overwritten.
-         */
-        moduleName: string;
-        /**
-         * Fully qualified path to the module.
-         */
-        fileName: string;
-    }
+    | {
+          /**
+           * The module that has been overwritten.
+           */
+          moduleName: string;
+          /**
+           * Fully qualified path to the module.
+           */
+          fileName: string;
+      }
+    | {
+          /**
+           * The module that has been overwritten.
+           */
+          moduleName: string;
+          /**
+           * Folder created by user (that contains a __init__.py) that is overriding the build in module/package.
+           */
+          folderName: string;
+      }
 >;
 export type ImportErrorFailure = BaseFailure<
     KernelFailureReason.importFailure,
@@ -451,21 +462,23 @@ export function analyzeKernelErrors(
             .filter((line) => line.length)
             .find((line) => line.toLowerCase().includes(noModule));
         let moduleName = line ? line.substring(line.toLowerCase().indexOf(noModule) + noModule.length).trim() : '';
-        console.error('ModuleName', moduleName, moduleName.split("'").length);
         let fileName = '';
+        let folderName = '';
         if (moduleName.split("'").length > 2) {
             fileName = moduleName.split("'").slice(-2)[0] || '';
             fileName = fileName ? `${fileName}.py` : '';
+            folderName = fileName ? fileName : '';
             moduleName = moduleName.split("'")[1] || moduleName;
         }
-        console.error('1');
+        const modulesInCwd = filesInCwd
+            .filter((file) => file.toString().toLowerCase().endsWith('__init__.py'))
+            .map((file) => path.basename(path.dirname(file)));
         if (
             moduleName &&
             fileName &&
             moduleName !== fileName &&
-            filesInCwd.some((file) => file.toString().endsWith(fileName))
+            filesInCwd.some((file) => path.basename(file).toLowerCase() === fileName.toLowerCase())
         ) {
-            console.error('2');
             return {
                 reason: KernelFailureReason.overridingBuiltinModules,
                 fileName,
@@ -474,8 +487,21 @@ export function analyzeKernelErrors(
                 moreInfoLink: 'https://aka.ms/kernelFailuresOverridingBuiltInModules',
                 telemetrySafeTags: ['import.error', 'override.modules']
             };
+        } else if (
+            moduleName &&
+            modulesInCwd &&
+            moduleName !== folderName &&
+            modulesInCwd.some((folder) => folder.toLowerCase() === folderName.toLowerCase())
+        ) {
+            return {
+                reason: KernelFailureReason.overridingBuiltinModules,
+                folderName,
+                moduleName,
+                message: DataScience.moduleSeemsToBeInterferingWithKernelStartup().format(folderName),
+                moreInfoLink: 'https://aka.ms/kernelFailuresOverridingBuiltInModules',
+                telemetrySafeTags: ['import.error', 'override.modules']
+            };
         } else {
-            console.error('3');
             return {
                 reason: KernelFailureReason.moduleNotFoundFailure,
                 moduleName,

@@ -45,18 +45,31 @@ export class ReservedNamedProvider implements IReservedPythonNamedProvider {
         disposeAllDisposables(this.disposables);
     }
 
-    public async getFilesOverridingReservedPythonNames(cwd: Uri): Promise<Uri[]> {
-        const files = await this.fs.searchLocal('*.py', cwd.fsPath, true);
-        const problematicFiles: Uri[] = [];
-        await Promise.all(
+    public async getUriOverridingReservedPythonNames(cwd: Uri): Promise<{ uri: Uri; type: 'file' | '__init__' }[]> {
+        const [files, initFile] = await Promise.all([
+            this.fs.searchLocal('*.py', cwd.fsPath, true),
+            // Look for packages in the current directory (only interested in top level).
+            // Just as xml.py could end up overriding the built in xml module, so can xml/__init__.py.
+            this.fs.searchLocal('*/__init__.py', cwd.fsPath, true)
+        ]);
+        const problematicFiles: { uri: Uri; type: 'file' | '__init__' }[] = [];
+        const filePromises = Promise.all(
             files.map(async (file) => {
                 const uri = Uri.file(file);
                 if (await this.isReserved(uri)) {
-                    // eslint-disable-next-line local-rules/dont-use-fspath
-                    problematicFiles.push(Uri.joinPath(cwd, uri.fsPath));
+                    problematicFiles.push({ uri: Uri.joinPath(cwd, uri.fsPath), type: 'file' });
                 }
             })
         );
+        const initFilePromises = Promise.all(
+            initFile.map(async (file) => {
+                const uri = Uri.file(file);
+                if (await this.isReserved(uri)) {
+                    problematicFiles.push({ uri: Uri.joinPath(cwd, uri.fsPath), type: '__init__' });
+                }
+            })
+        );
+        await Promise.all([filePromises, initFilePromises]);
         return problematicFiles;
     }
     public async isReserved(uri: Uri): Promise<boolean> {
@@ -76,7 +89,9 @@ export class ReservedNamedProvider implements IReservedPythonNamedProvider {
         }
 
         // Use the name of the file as the module name.
-        const possibleModule = path.basename(uri, path.extname(uri)).toLowerCase();
+        const baseName = path.basename(uri, path.extname(uri)).toLowerCase();
+        // If its a __init__.py, get name of parent folder (as its a module).
+        const possibleModule = baseName === '__init__' ? path.basename(path.dirname(uri)).toLowerCase() : baseName;
         if (this.cachedModules.has(possibleModule)) {
             return true;
         }

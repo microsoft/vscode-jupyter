@@ -6,7 +6,7 @@ import { IDisposable } from '../../platform/common/types';
 
 export const IReservedPythonNamedProvider = Symbol('IReservedPythonNamedProvider');
 export interface IReservedPythonNamedProvider extends IDisposable {
-    getFilesOverridingReservedPythonNames(cwd: Uri): Promise<Uri[]>;
+    getUriOverridingReservedPythonNames(cwd: Uri): Promise<{ uri: Uri; type: 'file' | '__init__' }[]>;
     isReserved(uri: Uri): Promise<boolean>;
     /**
      * Keeps track of a Uri as a file that should be ignored from all warnings related to reserved names.

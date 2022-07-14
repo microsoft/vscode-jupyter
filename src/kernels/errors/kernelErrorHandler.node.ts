@@ -60,9 +60,13 @@ export class DataScienceErrorHandlerNode extends DataScienceErrorHandler {
             resource
         );
         if (problematicFiles.length > 0) {
-            const fileLinks = problematicFiles.map(
-                (file) => `<a href='${file.toString()}?line=1'>${path.basename(file)}</a>`
-            );
+            const fileLinks = problematicFiles.map((item) => {
+                if (item.type === 'file') {
+                    return `<a href='${item.uri.toString()}?line=1'>${path.basename(item.uri)}</a>`;
+                } else {
+                    return `<a href='${item.uri.toString()}?line=1'>${path.basename(path.dirname(item.uri))}</a>`;
+                }
+            });
             let files = '';
             if (fileLinks.length === 1) {
                 files = fileLinks[0];
@@ -78,7 +82,7 @@ export class DataScienceErrorHandlerNode extends DataScienceErrorHandler {
     }
     protected override async getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(
         resource: Resource
-    ): Promise<Uri[]> {
-        return resource ? this.reservedPythonNames.getFilesOverridingReservedPythonNames(path.dirname(resource)) : [];
+    ): Promise<{ uri: Uri; type: 'file' | '__init__' }[]> {
+        return resource ? this.reservedPythonNames.getUriOverridingReservedPythonNames(path.dirname(resource)) : [];
     }
 }

@@ -150,7 +150,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                 error,
                 getDisplayNameOrNameOfKernelConnection(error.kernelConnectionMetadata),
                 error.kernelConnectionMetadata.interpreter?.sysPrefix,
-                files
+                files.map((f) => f.uri)
             );
             if (failureInfo) {
                 // Special case for ipykernel module missing.
@@ -365,7 +365,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
                 err,
                 getDisplayNameOrNameOfKernelConnection(kernelConnection),
                 kernelConnection.interpreter?.sysPrefix,
-                files
+                files.map((f) => f.uri)
             );
             if (failureInfo) {
                 this.showMessageWithMoreInfo(failureInfo?.message, failureInfo?.moreInfoLink).catch(noop);
@@ -383,7 +383,7 @@ export abstract class DataScienceErrorHandler implements IDataScienceErrorHandle
     ): Promise<void>;
     protected abstract getFilesInWorkingDirectoryThatCouldPotentiallyOverridePythonModules(
         _resource: Resource
-    ): Promise<Uri[]>;
+    ): Promise<{ uri: Uri; type: 'file' | '__init__' }[]>;
 
     private async showMessageWithMoreInfo(message: string, moreInfoLink?: string) {
         if (!message.includes(Commands.ViewJupyterOutput)) {

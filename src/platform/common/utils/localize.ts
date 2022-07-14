@@ -1248,7 +1248,12 @@ export namespace DataScience {
     export const fileSeemsToBeInterferingWithKernelStartup = () =>
         localize(
             { key: 'DataScience.fileSeemsToBeInterferingWithKernelStartup', comment: ['{Locked="kernel"}'] },
-            "The file '{0}' seems to be overriding built in modules and interfering with the startup of the kernel. Consider renaming the file and starting the kernel again.."
+            "The file '{0}' seems to be overriding built in modules and interfering with the startup of the kernel. Consider renaming the file and starting the kernel again."
+        );
+    export const moduleSeemsToBeInterferingWithKernelStartup = () =>
+        localize(
+            { key: 'DataScience.moduleSeemsToBeInterferingWithKernelStartup', comment: ['{Locked="kernel"}'] },
+            "The module '{0}' seems to be overriding built in modules and interfering with the startup of the kernel. Consider renaming the folder and starting the kernel again."
         );
     export const pipCondaInstallHoverWarning = () =>
         localize(

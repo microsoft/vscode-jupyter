@@ -852,6 +852,10 @@
         "message": "The file '{0}' seems to be overriding built in modules and interfering with the startup of the kernel. Consider renaming the file and starting the kernel again.",
         "comment": ["{Locked='kernel'}"]
     },
+    "DataScience.DataScience.moduleSeemsToBeInterferingWithKernelStartup": {
+        "message": "The module '{0}' seems to be overriding built in modules and interfering with the startup of the kernel. Consider renaming the folder and starting the kernel again.",
+        "comment": ["{Locked='kernel'}"]
+    },
     "DataScience.failedToStartKernelDueToMissingModule": {
         "message": "The kernel failed to start due to the missing module '{0}'. Consider installing this module.",
         "comment": ["{Locked='kernel'}"]
