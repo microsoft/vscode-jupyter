@@ -8963,9 +8963,9 @@ No properties for event
     }
 
     @captureTelemetry(Telemetry.WaitForIdleJupyter, undefined, true)
-    public waitForIdle(timeout: number): Promise<void> {
+    public waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
         // Wait for idle on this session
-        return this.waitForIdleOnSession(this.session, timeout);
+        return this.waitForIdleOnSession(this.session, timeout, token);
 ```
 
 </details>
