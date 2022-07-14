@@ -89,6 +89,10 @@ export class InterpreterPackages implements IInterpreterPackages {
      * Lists all packages that are accessible from the interpreter.
      */
     public async listPackages(resource?: Resource): Promise<string[]> {
+        if (!this.pythonExtensionChecker.isPythonExtensionInstalled) {
+            return [];
+        }
+
         const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
         if (!this.interpreterPackages.has(workspaceKey)) {
             const promise = this.listPackagesImpl(resource);

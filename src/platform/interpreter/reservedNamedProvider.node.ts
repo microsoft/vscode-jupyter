@@ -3,7 +3,6 @@
 
 import { inject, injectable, named } from 'inversify';
 import { ConfigurationTarget, Memento, Uri } from 'vscode';
-import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IMemento, GLOBAL_MEMENTO, IDisposable, IDisposableRegistry } from '../../platform/common/types';
 import { BuiltInModules } from './constants';
 import { noop } from '../../platform/common/utils/misc';
@@ -25,7 +24,6 @@ export class ReservedNamedProvider implements IReservedPythonNamedProvider {
     private readonly disposables: IDisposable[] = [];
     constructor(
         @inject(IInterpreterPackages) private readonly packages: IInterpreterPackages,
-        @inject(IPythonExtensionChecker) private extensionChecker: IPythonExtensionChecker,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private cache: Memento,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IPlatformService) private platform: IPlatformService,
@@ -107,17 +105,13 @@ export class ReservedNamedProvider implements IReservedPythonNamedProvider {
             return true;
         }
 
-        if (this.extensionChecker.isPythonExtensionInstalled) {
-            const packages = new Set(await this.packages.listPackages(uri));
-            const previousCount = this.cachedModules.size;
-            packages.forEach((item) => this.cachedModules.add(item.toLowerCase()));
-            if (previousCount < this.cachedModules.size) {
-                this.cache.update(PYTHON_PACKAGES_MEMENTO_KEY, Array.from(this.cachedModules)).then(noop, noop);
-            }
-            return packages.has(possibleModule);
-        } else {
-            return false;
+        const packages = new Set(await this.packages.listPackages(uri));
+        const previousCount = this.cachedModules.size;
+        packages.forEach((item) => this.cachedModules.add(item.toLowerCase()));
+        if (previousCount < this.cachedModules.size) {
+            this.cache.update(PYTHON_PACKAGES_MEMENTO_KEY, Array.from(this.cachedModules)).then(noop, noop);
         }
+        return packages.has(possibleModule);
     }
     public async addToIgnoreList(uri: Uri) {
         await this.pendingUpdate;

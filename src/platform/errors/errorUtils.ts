@@ -471,7 +471,7 @@ export function analyzeKernelErrors(
             moduleName = moduleName.split("'")[1] || moduleName;
         }
         const modulesInCwd = filesInCwd
-            .filter((file) => file.toString().toLowerCase().endsWith('__init__.py'))
+            .filter((file) => path.basename(file).toLowerCase() === '__init__.py')
             .map((file) => path.basename(path.dirname(file)));
         if (
             moduleName &&

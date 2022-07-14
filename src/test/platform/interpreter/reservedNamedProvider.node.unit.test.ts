@@ -12,7 +12,6 @@ import {
     Uri,
     WorkspaceConfiguration
 } from 'vscode';
-import { IPythonExtensionChecker } from '../../../platform/api/types';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IPlatformService } from '../../../platform/common/platform/types';
@@ -27,7 +26,6 @@ suite('Reserved Names Provider', () => {
     const disposables: IDisposable[] = [];
     let reservedNamedProvider: ReservedNamedProvider;
     let interpreterPackages: IInterpreterPackages;
-    let extensionChecker: IPythonExtensionChecker;
     let memento: Memento;
     let workspace: IWorkspaceService;
     let platform: IPlatformService;
@@ -37,7 +35,6 @@ suite('Reserved Names Provider', () => {
     const defaultIgnoreList = ['**/site-packages/**', '**/lib/python/**', '**/lib64/python/**'];
     setup(() => {
         interpreterPackages = mock<IInterpreterPackages>();
-        extensionChecker = mock<IPythonExtensionChecker>();
         memento = mock<Memento>();
         workspace = mock<IWorkspaceService>();
         platform = mock<IPlatformService>();
@@ -59,7 +56,6 @@ suite('Reserved Names Provider', () => {
     function createProvider() {
         reservedNamedProvider = new ReservedNamedProvider(
             instance(interpreterPackages),
-            instance(extensionChecker),
             instance(memento),
             instance(workspace),
             instance(platform),
