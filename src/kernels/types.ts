@@ -283,7 +283,7 @@ export interface IBaseKernelConnectionSession extends IAsyncDisposable {
     onDidDispose: Event<void>;
     interrupt(): Promise<void>;
     restart(): Promise<void>;
-    waitForIdle(timeout: number): Promise<void>;
+    waitForIdle(timeout: number, token: CancellationToken): Promise<void>;
     requestExecute(
         content: KernelMessage.IExecuteRequestMsg['content'],
         disposeOnDone?: boolean,
