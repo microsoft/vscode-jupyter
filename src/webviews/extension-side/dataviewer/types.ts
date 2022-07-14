@@ -132,10 +132,10 @@ export const IDataViewerDependencyService = Symbol('IDataViewerDependencyService
 export type IDataViewerDependencyServiceOptions =
     | {
           interpreter: PythonEnvironment;
-          kernel: undefined;
+          kernel?: never;
       }
     | {
-          interpreter: undefined;
+          interpreter?: never;
           kernel: IKernel;
       };
 export interface IDataViewerDependencyService {

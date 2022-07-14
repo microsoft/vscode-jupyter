@@ -99,7 +99,10 @@ export class DataViewerCommandRegistry implements IExtensionSingleActivationServ
                         this.debugService.activeDebugSession.configuration
                     );
 
-                    pythonEnv && (await this.dataViewerDependencyService.checkAndInstallMissingDependencies(pythonEnv));
+                    pythonEnv &&
+                        (await this.dataViewerDependencyService.checkAndInstallMissingDependencies({
+                            interpreter: pythonEnv
+                        }));
                 }
 
                 const variable = convertDebugProtocolVariableToIJupyterVariable(

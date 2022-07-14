@@ -806,7 +806,7 @@ export namespace DataScience {
                 key: 'DataScience.pandasRequiredForViewing',
                 comment: ["{Locked='pandas'", 'This is the name of the pandas package']
             },
-            "Python package 'pandas' is required for viewing data."
+            "Python package 'pandas' is required for viewing data. Please ensure you have installed 'pandas' version 0.20.0 or above."
         );
     export const valuesColumn = () => localize('DataScience.valuesColumn', 'values');
     export const liveShareInvalid = () =>

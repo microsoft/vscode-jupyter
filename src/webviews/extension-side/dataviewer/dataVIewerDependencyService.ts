@@ -21,26 +21,8 @@ import { Identifiers } from '../../../platform/common/constants';
 import { IJupyterVariables } from '../../../kernels/variables/types';
 
 export const minimumSupportedPandaVersion = '0.20.0';
-export const kernelGetPandasVersion = [
-    'import pandas as _VSCODE_pandas;print(_VSCODE_pandas.__version__);del _VSCODE_pandas'
-];
-export const debuggerGetPandasVersion = [
-    'import pandas as _VSCODE_pandas',
-    '_VSCODE_pandas.__version__',
-    'del _VSCODE_pandas'
-];
-
-// TODO: Installing pandas does not work with the debugger.
-// It takes a long time, then it breaks with:
-// error: Command \"clang -Wno-unused-result -Wsign-compare -Wunreachable-code...
-export const debuggerInstallPandas = [
-    'import subprocess as _VSCODE_subprocess',
-    'import sys as _VSCODE_sys',
-    `def _VSCODE_install_pandas():
-  _VSCODE_subprocess.check_call([_VSCODE_sys.executable, "-m", "pip", "install", "pandas"])`,
-    '_VSCODE_install_pandas()',
-    'del _VSCODE_subprocess, _VSCODE_sys, _VSCODE_install_pandas'
-];
+export const kernelGetPandasVersion =
+    'import pandas as _VSCODE_pandas;print(_VSCODE_pandas.__version__);del _VSCODE_pandas';
 
 function isVersionOfPandaSupported(version: SemVer) {
     return version.compare(minimumSupportedPandaVersion) > 0;
@@ -110,7 +92,11 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
 
     private async getVersionOfPandas(options: IDataViewerDependencyServiceOptions): Promise<SemVer | undefined> {
         const kernel = options.kernel;
-        const command = kernel ? kernelGetPandasVersion : debuggerGetPandasVersion;
+
+        if (!kernel) {
+            return undefined;
+        }
+        const command = kernelGetPandasVersion;
 
         try {
             const outputs = await this.executeSilently(command, options);
@@ -145,16 +131,15 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
             await this.applicationShell.showErrorMessage(DataScience.pandasRequiredForViewing());
         }
 
-        let commands: string[];
-        if (kernel) {
-            commands = [`${this.kernelPackaging(kernel)} install pandas`];
-        } else {
-            commands = debuggerInstallPandas;
+        if (!kernel) {
+            return;
         }
+
+        const command = `${this.kernelPackaging(kernel)} install pandas`;
 
         if (selection === Common.install()) {
             try {
-                await this.executeSilently(commands, options);
+                await this.executeSilently(command, options);
                 sendTelemetryEvent(Telemetry.UserInstalledPandas);
             } catch (e) {
                 sendTelemetryEvent(Telemetry.FailedToInstallPandas);
@@ -167,30 +152,24 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
     }
 
     private async executeSilently(
-        commands: string[],
+        command: string,
         options: IDataViewerDependencyServiceOptions
     ): Promise<(string | undefined)[]> {
         const kernel = options.kernel;
 
-        let results: (string | undefined)[] = [];
-
-        for (const command of commands) {
-            if (kernel) {
-                if (!kernel.session) {
-                    sendTelemetryEvent(Telemetry.NoActiveKernelSession);
-                    throw new Error(DataScience.noActiveKernelSession());
-                }
-                const outputs = await executeSilently(kernel.session, command);
-                const error = outputs.find((item) => item.output_type === 'error');
-                if (error) {
-                    traceWarning(DataScience.failedToGetVersionOfPandas(), error.message);
-                }
-                results = results.concat(outputs.map((item) => item.text?.toString()));
-            } else if (this.variableProvider) {
-                const response = await this.variableProvider.evaluate(command);
-                results.push(response.result);
-            }
+        if (!kernel) {
+            throw new Error('The Data Viewer dependency service only supports Kernels at this time.');
         }
-        return results;
+
+        if (!kernel.session) {
+            sendTelemetryEvent(Telemetry.NoActiveKernelSession);
+            throw new Error(DataScience.noActiveKernelSession());
+        }
+        const outputs = await executeSilently(kernel.session, command);
+        const error = outputs.find((item) => item.output_type === 'error');
+        if (error) {
+            traceWarning(DataScience.failedToGetVersionOfPandas(), error.message);
+        }
+        return outputs.map((item) => item.text?.toString());
     }
 }
