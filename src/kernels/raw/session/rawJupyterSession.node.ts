@@ -63,10 +63,10 @@ export class RawJupyterSession extends BaseJupyterSession implements IRawKernelC
         super(resource, kernelConnection, workingDirectory, interruptTimeout);
     }
 
-    public async waitForIdle(timeout: number): Promise<void> {
+    public async waitForIdle(timeout: number, token: CancellationToken): Promise<void> {
         // Wait until status says idle.
         if (this.session) {
-            return this.waitForIdleOnSession(this.session, timeout);
+            return this.waitForIdleOnSession(this.session, timeout, token);
         }
     }
 

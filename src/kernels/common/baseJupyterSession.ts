@@ -6,7 +6,7 @@ import type { JSONObject } from '@lumino/coreutils';
 import type { Slot } from '@lumino/signaling';
 import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
-import { CancellationTokenSource, Event, EventEmitter, Uri } from 'vscode';
+import { CancellationError, CancellationToken, CancellationTokenSource, Event, EventEmitter, Uri } from 'vscode';
 import { WrappedError } from '../../platform/errors/types';
 import { disposeAllDisposables } from '../../platform/common/helpers';
 import { traceInfo, traceVerbose, traceError, traceWarning, traceInfoIfCI } from '../../platform/logging';
@@ -146,7 +146,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
         await this.shutdownImplementation(false);
     }
     // Abstracts for each Session type to implement
-    public abstract waitForIdle(timeout: number): Promise<void>;
+    public abstract waitForIdle(timeout: number, token: CancellationToken): Promise<void>;
 
     public async shutdown(): Promise<void> {
         await this.shutdownImplementation(true);
@@ -303,6 +303,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
     protected async waitForIdleOnSession(
         session: ISessionWithSocket | undefined,
         timeout: number,
+        token?: CancellationToken,
         isRestartSession?: boolean
     ): Promise<void> {
         if (session && session.kernel) {
@@ -312,11 +313,18 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                       this.resource,
                       localize.DataScience.waitingForJupyterSessionToBeIdle()
                   );
+            const disposables: IDisposable[] = [];
+            if (progress) {
+                disposables.push(progress);
+            }
             try {
                 traceInfo(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
                 // When our kernel connects and gets a status message it triggers the ready promise
                 const deferred = createDeferred<string>();
+                if (token) {
+                    token.onCancellationRequested(() => deferred.reject(new CancellationError()), this, disposables);
+                }
                 const handler = (_session: Kernel.IKernelConnection, status: KernelMessage.Status) => {
                     traceVerbose(`Got status ${status} in waitForIdleOnSession`);
                     if (status == 'idle') {
@@ -341,7 +349,7 @@ export abstract class BaseJupyterSession implements IBaseKernelConnectionSession
                 this.shutdownSession(session, this.statusHandler, isRestartSession).ignoreErrors();
                 throw new JupyterWaitForIdleError(this.kernelConnectionMetadata);
             } finally {
-                progress?.dispose();
+                disposeAllDisposables(disposables);
             }
         } else {
             throw new JupyterInvalidKernelError(this.kernelConnectionMetadata);
