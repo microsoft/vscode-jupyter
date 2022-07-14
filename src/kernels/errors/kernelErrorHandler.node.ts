@@ -17,6 +17,7 @@ import * as path from '../../platform/vscode-path/resources';
 import { IReservedPythonNamedProvider } from '../../platform/interpreter/types';
 import { JupyterKernelStartFailureOverrideReservedName } from '../../platform/interpreter/constants';
 import { DataScienceErrorHandler } from './kernelErrorHandler';
+import { getDisplayPath } from '../../platform/common/platform/fs-paths';
 
 @injectable()
 export class DataScienceErrorHandlerNode extends DataScienceErrorHandler {
@@ -60,11 +61,16 @@ export class DataScienceErrorHandlerNode extends DataScienceErrorHandler {
             resource
         );
         if (problematicFiles.length > 0) {
+            const cwd = resource ? path.dirname(resource) : undefined;
             const fileLinks = problematicFiles.map((item) => {
                 if (item.type === 'file') {
-                    return `<a href='${item.uri.toString()}?line=1'>${path.basename(item.uri)}</a>`;
+                    const displayPath = resource ? getDisplayPath(item.uri, [], cwd) : path.basename(item.uri);
+                    return `<a href='${item.uri.toString()}?line=1'>${displayPath}</a>`;
                 } else {
-                    return `<a href='${item.uri.toString()}?line=1'>${path.basename(path.dirname(item.uri))}</a>`;
+                    const displayPath = resource
+                        ? getDisplayPath(item.uri, [], cwd)
+                        : `${path.basename(path.dirname(item.uri))}/__init__.py`;
+                    return `<a href='${item.uri.toString()}?line=1'>${displayPath}</a>`;
                 }
             });
             let files = '';

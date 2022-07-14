@@ -337,8 +337,8 @@ suite('DataScience Error Handler Unit Tests', () => {
                 }
             ];
             when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
-            when(reservedPythonNames.getFilesOverridingReservedPythonNames(anything())).thenResolve([
-                Uri.file('/Users/donjayamanne/crap/kernel_issues/xml.py')
+            when(reservedPythonNames.getUriOverridingReservedPythonNames(anything())).thenResolve([
+                { uri: Uri.file('/Users/donjayamanne/crap/kernel_issues/xml.py'), type: 'file' }
             ]);
             await dataScienceErrorHandler.handleKernelError(
                 new KernelDiedError(
@@ -357,6 +357,35 @@ suite('DataScience Error Handler Unit Tests', () => {
 
             verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresOverridingBuiltInModules');
         });
+        test('Module not found due to user module with __init__.py overriding overriding a module', async () => {
+            const workspaceFolders: WorkspaceFolder[] = [
+                {
+                    index: 0,
+                    name: '',
+                    uri: Uri.file('/Users/donjayamanne/crap/kernel_issues')
+                }
+            ];
+            when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
+            when(reservedPythonNames.getUriOverridingReservedPythonNames(anything())).thenResolve([
+                { uri: Uri.file('/Users/donjayamanne/crap/kernel_issues/xml/__init__.py'), type: '__init__' }
+            ]);
+            await dataScienceErrorHandler.handleKernelError(
+                new KernelDiedError(
+                    'Hello',
+                    stdErrorMessages.userOverridingXmlPyFile_Linux,
+                    undefined,
+                    kernelConnection
+                ),
+                'start',
+                kernelConnection,
+                Uri.file('/Users/donjayamanne/crap/kernel_issues'),
+                'jupyterExtension'
+            );
+
+            const expectedMessage = DataScience.failedToStartKernelDueToMissingModule().format('xml.dom');
+
+            verifyErrorMessage(expectedMessage, 'https://aka.ms/kernelFailuresMissingModule');
+        });
         test('Module not found and missing module is not overridden by user files', async () => {
             const workspaceFolders: WorkspaceFolder[] = [
                 {
@@ -368,7 +397,7 @@ suite('DataScience Error Handler Unit Tests', () => {
             when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
             // Lets mark everything as not being reserved, in this case, we should not
             // treat files such as xml.py as overriding the builtin python modules
-            when(reservedPythonNames.getFilesOverridingReservedPythonNames(anything())).thenResolve([]);
+            when(reservedPythonNames.getUriOverridingReservedPythonNames(anything())).thenResolve([]);
             await dataScienceErrorHandler.handleKernelError(
                 new KernelDiedError(
                     'Hello',
@@ -936,7 +965,8 @@ Failed to run jupyter as observable with args notebook --no-browser --notebook-d
             const displayedMessage = capture(applicationShell.showErrorMessage).first();
             assert.strictEqual(displayedMessage[0], message);
             if (linkInfo) {
-                verify(browser.launch(linkInfo)).once();
+                verify(browser.launch(anything())).once();
+                assert.strictEqual(capture(browser.launch).first()[0], linkInfo);
             }
         }
     });
