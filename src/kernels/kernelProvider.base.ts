@@ -16,12 +16,7 @@ export abstract class BaseKernelProvider implements IKernelProvider {
      * Use a separate dictionary to track kernels by Notebook, so that
      * the ref to kernel is lost when the notebook is closed.
      */
-    protected readonly kernelsByNotebook = new WeakMap<NotebookDocument, { options: KernelOptions; kernel: IKernel }>();
-    /**
-     * The life time of kernels not tied to a notebook will be managed by callers of the API.
-     * Where as if a kernel is tied to a notebook, then the kernel dies along with notebooks.
-     */
-    // private readonly kernelsByUri = new Map<string, { options: KernelOptions; kernel: IBaseKernel }>();
+    private readonly kernelsByNotebook = new WeakMap<NotebookDocument, { options: KernelOptions; kernel: IKernel }>();
     private readonly pendingDisposables = new Set<IAsyncDisposable>();
     protected readonly _onDidRestartKernel = new EventEmitter<IKernel>();
     protected readonly _onDidStartKernel = new EventEmitter<IKernel>();
