@@ -4,7 +4,7 @@
 'use strict';
 
 import * as nbformat from '@jupyterlab/nbformat';
-import { IBaseKernel, KernelConnectionMetadata } from './types';
+import { IKernelConnectionSession, KernelConnectionMetadata } from './types';
 import { Uri } from 'vscode';
 import { traceError, traceVerbose } from '../platform/logging';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
@@ -17,14 +17,11 @@ import { sendTelemetryEvent, Telemetry } from '../telemetry';
 import { executeSilently, isPythonKernelConnection } from './helpers';
 
 export async function sendTelemetryForPythonKernelExecutable(
-    kernel: IBaseKernel,
+    session: IKernelConnectionSession,
     resource: Resource,
     kernelConnection: KernelConnectionMetadata,
     executionService: IPythonExecutionFactory
 ) {
-    if (!kernel.session) {
-        return;
-    }
     if (!kernelConnection.interpreter || !isPythonKernelConnection(kernelConnection)) {
         return;
     }
@@ -36,7 +33,7 @@ export async function sendTelemetryForPythonKernelExecutable(
     }
     try {
         traceVerbose('Begin sendTelemetryForPythonKernelExecutable');
-        const outputs = await executeSilently(kernel.session, 'import sys\nprint(sys.executable)');
+        const outputs = await executeSilently(session, 'import sys\nprint(sys.executable)');
         if (outputs.length === 0) {
             return;
         }

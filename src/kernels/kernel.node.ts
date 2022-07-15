@@ -137,12 +137,14 @@ export class Kernel extends BaseKernel {
         return [];
     }
 
-    protected override sendTelemetryForPythonKernelExecutable() {
-        return sendTelemetryForPythonKernelExecutable(
-            this,
-            this.resourceUri,
-            this.kernelConnectionMetadata,
-            this.pythonExecutionFactory
-        );
+    protected override async sendTelemetryForPythonKernelExecutable() {
+        if (this.session) {
+            return sendTelemetryForPythonKernelExecutable(
+                this.session,
+                this.resourceUri,
+                this.kernelConnectionMetadata,
+                this.pythonExecutionFactory
+            );
+        }
     }
 }
