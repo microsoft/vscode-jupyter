@@ -15,7 +15,7 @@ import { traceInfoIfCI, traceInfo } from '../../../platform/logging';
 import { captureScreenShot, IExtensionTestApi, initialize, waitForCondition } from '../../common';
 import { openNotebook } from '../helpers';
 import { JupyterServer } from '../jupyterServer.node';
-import { closeNotebooksAndCleanUpAfterTests, hijackPrompt } from './helper';
+import { changeShowOnlyOneTypeOfKernel, closeNotebooksAndCleanUpAfterTests, hijackPrompt } from './helper';
 import {
     createEmptyPythonNotebook,
     createTemporaryNotebook,
@@ -95,6 +95,7 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
     });
     teardown(async function () {
         traceInfo(`Ended Test ${this.currentTest?.title}`);
+        await changeShowOnlyOneTypeOfKernel(false);
         if (this.currentTest?.isFailed()) {
             await captureScreenShot(this);
         }
@@ -158,6 +159,7 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
     });
 
     test('Local and Remote kernels are not listed', async function () {
+        await changeShowOnlyOneTypeOfKernel(true);
         await controllerLoader.loadControllers();
         const controllers = controllerRegistration.registered;
         assert.ok(
@@ -234,8 +236,8 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
     });
 
     test('Remote kernels support intellisense', async function () {
-        await openNotebook(ipynbFile);
-        await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
+        const { editor } = await openNotebook(ipynbFile);
+        await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE);
         let nbEditor = vscodeNotebook.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');
         // Cell 1 = `a = "Hello World"`
@@ -271,9 +273,9 @@ suite('DataScience - VSCode Notebook - (Remote Execution)', function () {
             { result: DataScience.jupyterSelfCertEnable(), clickImmediately: true }
         );
         await startJupyterServer(undefined, true);
-        await openNotebook(ipynbFile);
+        const { editor } = await openNotebook(ipynbFile);
         await waitForCondition(() => prompt.displayed, defaultNotebookTestTimeout, 'Prompt not displayed');
-        await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE, true);
+        await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE, true);
         let nbEditor = vscodeNotebook.activeNotebookEditor!;
         assert.isOk(nbEditor, 'No active notebook');
         // Cell 1 = `a = "Hello World"`

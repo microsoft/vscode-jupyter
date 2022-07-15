@@ -25,13 +25,17 @@ import { IS_REMOTE_NATIVE_TEST } from '../constants';
 import { isWeb } from '../../platform/common/utils/misc';
 import { IControllerSelection } from '../../notebooks/controllers/types';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
+import { KernelConnectionMetadata, PythonKernelConnectionMetadata } from '../../kernels/types';
+import { createInterpreterKernelSpec, getKernelId } from '../../kernels/helpers';
+import { IInterpreterService } from '../../platform/interpreter/contracts';
+import { isEqual } from '../../platform/vscode-path/resources';
 
 export async function openNotebook(ipynbFile: vscode.Uri) {
     traceInfo(`Opening notebook ${getFilePath(ipynbFile)}`);
-    const nb = await vscode.workspace.openNotebookDocument(ipynbFile);
-    await vscode.window.showNotebookDocument(nb);
+    const notebook = await vscode.workspace.openNotebookDocument(ipynbFile);
+    const editor = await vscode.window.showNotebookDocument(notebook);
     traceInfo(`Opened notebook ${getFilePath(ipynbFile)}`);
-    return nb;
+    return { notebook, editor };
 }
 
 // The default base set of data science settings to use
@@ -138,15 +142,29 @@ export async function submitFromPythonFile(
     apiProvider?: IPythonApiProvider,
     activeInterpreterPath?: vscode.Uri
 ) {
+    const api = await initialize();
     const tempFile = await createTemporaryFile({ contents: source, extension: '.py' });
     disposables.push(tempFile);
     const untitledPythonFile = await vscode.workspace.openTextDocument(tempFile.file);
     await vscode.window.showTextDocument(untitledPythonFile);
+    let connection: KernelConnectionMetadata | undefined;
     if (apiProvider && activeInterpreterPath) {
+        const interpreterService = await api.serviceContainer.get<IInterpreterService>(IInterpreterService);
         await setActiveInterpreter(apiProvider, untitledPythonFile.uri, activeInterpreterPath);
+        await interpreterService.refreshInterpreters();
+        const interpreter = await interpreterService.getActiveInterpreter();
+        assert.ok(isEqual(interpreter?.uri, activeInterpreterPath), `Active interpreter not set`);
+        const spec = createInterpreterKernelSpec(interpreter);
+        connection = <PythonKernelConnectionMetadata>{
+            kind: 'startUsingPythonInterpreter',
+            kernelSpec: spec,
+            interpreter,
+            id: getKernelId(spec, interpreter)
+        };
     }
     const activeInteractiveWindow = (await interactiveWindowProvider.getOrCreate(
-        untitledPythonFile.uri
+        untitledPythonFile.uri,
+        connection
     )) as InteractiveWindow;
     await activeInteractiveWindow.addCode(source, untitledPythonFile.uri, 0).catch(noop);
     const notebook = await waitForInteractiveWindow(activeInteractiveWindow);

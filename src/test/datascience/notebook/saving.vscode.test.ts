@@ -6,14 +6,13 @@
 /* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
-import { NotebookCell, Uri } from 'vscode';
-import { IVSCodeNotebook } from '../../../platform/common/application/types';
+import { NotebookCell, NotebookDocument, Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../platform/common/constants';
 import { traceInfo } from '../../../platform/logging';
 import { IDisposable } from '../../../platform/common/types';
-import { IExtensionTestApi, waitForCondition } from '../../common.node';
+import { waitForCondition } from '../../common.node';
 import { IS_REMOTE_NATIVE_TEST } from '../../constants.node';
-import { closeActiveWindows, initialize } from '../../initialize.node';
+import { closeActiveWindows } from '../../initialize.node';
 import { openNotebook } from '../helpers.node';
 import {
     assertHasTextOutputInVSCode,
@@ -35,16 +34,12 @@ import cloneDeep = require('lodash/cloneDeep');
 /* eslint-disable @typescript-eslint/no-explicit-any, no-invalid-this */
 suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
     this.timeout(60_000);
-    let api: IExtensionTestApi;
     const disposables: IDisposable[] = [];
-    let vscodeNotebook: IVSCodeNotebook;
     let testEmptyIPynb: Uri;
     suiteSetup(async function () {
-        api = await initialize();
         if (IS_REMOTE_NATIVE_TEST()) {
             return this.skip();
         }
-        vscodeNotebook = api.serviceContainer.get<IVSCodeNotebook>(IVSCodeNotebook);
     });
     setup(async function () {
         traceInfo(`Start Test ${this.currentTest?.title}`);
@@ -61,7 +56,7 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
     });
     suiteTeardown(closeNotebooksAndCleanUpAfterTests);
     test('Verify output & metadata when re-opening (slow)', async () => {
-        const notebook = await openNotebook(testEmptyIPynb);
+        const { notebook, editor } = await openNotebook(testEmptyIPynb);
 
         await insertCodeCell('print(1)', { index: 0 });
         await insertCodeCell('print(a)', { index: 1 });
@@ -72,15 +67,15 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
         let cell3: NotebookCell;
         let cell4: NotebookCell;
 
-        function initializeCells() {
-            cell1 = vscodeNotebook.activeNotebookEditor?.notebook.cellAt(0)!;
-            cell2 = vscodeNotebook.activeNotebookEditor?.notebook.getCells()![1]!;
-            cell3 = vscodeNotebook.activeNotebookEditor?.notebook.getCells()![2]!;
-            cell4 = vscodeNotebook.activeNotebookEditor?.notebook.getCells()![3]!;
+        function initializeCells(n: NotebookDocument) {
+            cell1 = n.cellAt(0)!;
+            cell2 = n.getCells()![1]!;
+            cell3 = n.getCells()![2]!;
+            cell4 = n.getCells()![3]!;
         }
-        initializeCells();
-        await waitForKernelToGetAutoSelected(PYTHON_LANGUAGE);
-        await runAllCellsInActiveNotebook();
+        initializeCells(notebook);
+        await waitForKernelToGetAutoSelected(editor, PYTHON_LANGUAGE);
+        await runAllCellsInActiveNotebook(false, editor);
         // Wait till 1 & 2 finish & 3rd cell starts executing.
         await waitForExecutionCompletedSuccessfully(cell1!);
         await waitForExecutionCompletedWithErrors(cell2!);
@@ -122,8 +117,8 @@ suite('DataScience - VSCode Notebook - (Saving) (slow)', function () {
 
         // Reopen the notebook & validate the metadata.
         const secondNotebook = await openNotebook(testEmptyIPynb);
-        initializeCells();
+        initializeCells(secondNotebook.notebook);
         verifyCellMetadata();
-        assert.deepEqual(notebookMetadata, secondNotebook.metadata);
+        assert.deepEqual(notebookMetadata, secondNotebook.notebook.metadata);
     });
 });
