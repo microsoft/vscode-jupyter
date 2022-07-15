@@ -161,7 +161,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         );
     }
     @traceDecoratorVerbose('Getting activated env variables impl', TraceOptions.BeforeCall | TraceOptions.Arguments)
-    public async getActivatedEnvironmentVariablesImpl(
+    private async getActivatedEnvironmentVariablesImpl(
         resource: Resource,
         @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment
     ): Promise<NodeJS.ProcessEnv | undefined> {
@@ -527,10 +527,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         return ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX.format(
             `${workspaceKey}_${interpreter && getInterpreterHash(interpreter)}`
         );
-    }
-    public async hasActivationCommands(resource: Resource, interpreter?: PythonEnvironment): Promise<boolean> {
-        const commands = await this.getActivationCommands(resource, interpreter);
-        return Array.isArray(commands) && commands.length > 0;
     }
 
     /**
