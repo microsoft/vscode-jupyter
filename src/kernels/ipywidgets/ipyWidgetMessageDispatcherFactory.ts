@@ -86,7 +86,7 @@ export class IPyWidgetMessageDispatcherFactory implements IDisposable {
     ) {
         disposables.push(this);
 
-        kernelProvider.onDidDisposeNotebookKernel(this.trackDisposingOfKernels, this, disposables);
+        kernelProvider.onDidDisposeKernel(this.trackDisposingOfKernels, this, disposables);
     }
 
     public dispose() {

@@ -63,7 +63,7 @@ export class NotebookWatcher implements INotebookWatcher {
         }
         const activeDataViewer = this.dataViewerFactory.activeViewer;
         return activeDataViewer
-            ? this.kernelProvider.notebookKernels.find((item) => item === activeDataViewer.kernel)
+            ? this.kernelProvider.kernels.find((item) => item === activeDataViewer.kernel)
             : undefined;
     }
 
@@ -91,7 +91,7 @@ export class NotebookWatcher implements INotebookWatcher {
         // We need to know if kernel state changes or if the active notebook editor is changed
         this.notebooks.onDidChangeActiveNotebookEditor(this.activeEditorChanged, this, this.disposables);
         this.notebooks.onDidCloseNotebookDocument(this.notebookEditorClosed, this, this.disposables);
-        this.kernelProvider.onDidRestartNotebookKernel(
+        this.kernelProvider.onDidRestartKernel(
             (kernel) => {
                 this.handleRestart({ state: KernelState.restarted, notebook: kernel.notebook });
             },

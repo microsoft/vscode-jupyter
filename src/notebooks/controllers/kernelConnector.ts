@@ -11,7 +11,8 @@ import {
     isLocalConnection,
     KernelInterpreterDependencyResponse,
     KernelAction,
-    KernelActionSource
+    KernelActionSource,
+    IThirdPartyKernelProvider
 } from '../../kernels/types';
 import { Memento, NotebookDocument, NotebookController, Uri } from 'vscode';
 import { ICommandManager, IApplicationShell } from '../../platform/common/application/types';
@@ -394,20 +395,25 @@ export class KernelConnector {
         deadKernelAction?: 'deadKernelWasRestarted' | 'deadKernelWasNoRestarted';
     }> {
         const kernelProvider = serviceContainer.get<IKernelProvider>(IKernelProvider);
+        const thirdPartyKernelProvider = serviceContainer.get<IThirdPartyKernelProvider>(IThirdPartyKernelProvider);
         let kernel: IBaseKernel | undefined;
         let currentMethod = KernelConnector.convertContextToFunction(initialContext, options);
         let currentContext = initialContext;
         while (kernel === undefined) {
             // Try to create the kernel (possibly again)
-            kernel = kernelProvider.getOrCreate(
-                notebookResource.notebook ? notebookResource.notebook.uri : notebookResource.resource,
-                {
-                    metadata,
-                    controller,
-                    resourceUri: notebookResource.resource,
-                    creator: actionSource
-                }
-            );
+            kernel = notebookResource.notebook
+                ? kernelProvider.getOrCreate(notebookResource.notebook, {
+                      metadata,
+                      controller,
+                      resourceUri: notebookResource.resource,
+                      creator: actionSource
+                  })
+                : thirdPartyKernelProvider.getOrCreate(notebookResource.resource, {
+                      metadata,
+                      controller,
+                      resourceUri: notebookResource.resource,
+                      creator: actionSource
+                  });
 
             const isKernelDead = (k: IBaseKernel) =>
                 k.status === 'dead' || (k.status === 'terminating' && !k.disposed && !k.disposing);

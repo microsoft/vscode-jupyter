@@ -27,7 +27,7 @@ export class GeneratedCodeStorageManager implements IExtensionSyncActivationServ
         disposeAllDisposables(this.disposables);
     }
     activate(): void {
-        this.kernelProvider.onDidCreateNotebookKernel(this.onDidCreateKernel, this, this.disposables);
+        this.kernelProvider.onDidCreateKernel(this.onDidCreateKernel, this, this.disposables);
         this.controllers.onControllerSelected(this.onNotebookControllerSelected, this, this.disposables);
     }
     private onNotebookControllerSelected({ notebook }: { notebook: NotebookDocument }) {

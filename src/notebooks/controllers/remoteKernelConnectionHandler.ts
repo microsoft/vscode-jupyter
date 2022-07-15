@@ -8,7 +8,7 @@ import { IExtensionSyncActivationService } from '../../platform/activation/types
 import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
 import { traceInfo } from '../../platform/logging';
-import { IBaseKernel, IKernelProvider, isLocalConnection } from '../../kernels/types';
+import { IKernel, IKernelProvider, isLocalConnection } from '../../kernels/types';
 import { PreferredRemoteKernelIdProvider } from '../../kernels/jupyter/preferredRemoteKernelIdProvider';
 import { ILiveRemoteKernelConnectionUsageTracker } from '../../kernels/jupyter/types';
 
@@ -59,7 +59,8 @@ export class RemoteKernelConnectionHandler implements IExtensionSyncActivationSe
             this.preferredRemoteKernelIdProvider.clearPreferredRemoteKernelId(notebook.uri).catch(noop);
         }
     }
-    private onDidStartKernel(kernel: IBaseKernel) {
+    private onDidStartKernel(kernel: IKernel) {
+        // TODO@rebornix, IKernel is already created by Jupyter Extension
         if (kernel.creator !== 'jupyterExtension' || !kernel.resourceUri) {
             return;
         }

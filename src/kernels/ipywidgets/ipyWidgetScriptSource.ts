@@ -64,7 +64,7 @@ export class IPyWidgetScriptSource {
         // Don't leave dangling promises.
         this.isWebViewOnline.promise.ignoreErrors();
         disposables.push(this);
-        this.kernelProvider.onDidStartNotebookKernel(
+        this.kernelProvider.onDidStartKernel(
             (e) => {
                 if (e.notebook === this.document) {
                     this.initialize();

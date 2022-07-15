@@ -37,7 +37,7 @@ import { MockJupyterSettings } from '../mockJupyterSettings';
 import { MockEditor } from '../mockTextEditor';
 import { createDocument } from './helpers';
 import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { IBaseKernel, IKernelProvider } from '../../../platform/../kernels/types';
+import { IKernel, IKernelProvider } from '../../../platform/../kernels/types';
 import { InteractiveCellResultError } from '../../../platform/errors/interactiveCellResultError';
 import { ICodeWatcher, IGeneratedCodeStorageFactory } from '../../../interactive-window/editor-integration/types';
 import { IInteractiveWindowProvider, IInteractiveWindow } from '../../../interactive-window/types';
@@ -151,7 +151,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         when(notebook.onDidChangeNotebookCellExecutionState).thenReturn(execStateChangeEvent.event);
         const storageFactory = mock<IGeneratedCodeStorageFactory>();
         const kernelProvider = mock<IKernelProvider>();
-        const kernelDisposedEvent = new EventEmitter<IBaseKernel>();
+        const kernelDisposedEvent = new EventEmitter<IKernel>();
         when(kernelProvider.onDidDisposeKernel).thenReturn(kernelDisposedEvent.event);
         disposables.push(trustedEvent);
         disposables.push(execStateChangeEvent);

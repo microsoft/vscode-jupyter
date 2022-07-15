@@ -227,36 +227,38 @@ export type KernelOptions = {
     creator: KernelActionSource;
 };
 export const IKernelProvider = Symbol('IKernelProvider');
-export interface IKernelProvider extends IAsyncDisposable {
-    readonly kernels: Readonly<IBaseKernel[]>;
-    readonly notebookKernels: Readonly<IKernel[]>;
-    onDidCreateKernel: Event<IBaseKernel>;
-    onDidCreateNotebookKernel: Event<IKernel>;
-    onDidStartKernel: Event<IBaseKernel>;
-    onDidStartNotebookKernel: Event<IKernel>;
-    onDidRestartKernel: Event<IBaseKernel>;
-    onDidRestartNotebookKernel: Event<IKernel>;
-    onDidDisposeKernel: Event<IBaseKernel>;
-    onDidDisposeNotebookKernel: Event<IKernel>;
-    onKernelStatusChanged: Event<{ status: KernelMessage.Status; kernel: IBaseKernel }>;
-    /**
-     * Get hold of the active kernel for a given resource uri.
-     */
-    get(uri: Uri): IBaseKernel | undefined;
+export interface IKernelProvider extends IBaseKernelProvider<IKernel> {
     /**
      * Get hold of the active kernel for a given notebook document.
      */
     get(notebook: NotebookDocument): IKernel | undefined;
     /**
-     * Gets or creates a kernel for a given resource uri.
-     * WARNING: If called with different options for same resource uri, old kernel associated with the Uri will be disposed.
-     */
-    getOrCreate(uri: Uri, options: KernelOptions): IBaseKernel;
-    /**
      * Gets or creates a kernel for a given Notebook.
      * WARNING: If called with different options for same Notebook, old kernel associated with the Uri will be disposed.
      */
     getOrCreate(notebook: NotebookDocument, options: KernelOptions): IKernel;
+}
+
+export const IThirdPartyKernelProvider = Symbol('IThirdPartyKernelProvider');
+export interface IThirdPartyKernelProvider extends IBaseKernelProvider<IBaseKernel> {
+    /**
+     * Get hold of the active kernel for a given resource uri.
+     */
+    get(uri: Uri): IBaseKernel | undefined;
+    /**
+     * Gets or creates a kernel for a given resource uri.
+     * WARNING: If called with different options for same resource uri, old kernel associated with the Uri will be disposed.
+     */
+    getOrCreate(uri: Uri, options: KernelOptions): IBaseKernel;
+}
+
+export interface IBaseKernelProvider<T extends IBaseKernel> extends IAsyncDisposable {
+    readonly kernels: Readonly<T[]>;
+    onDidCreateKernel: Event<T>;
+    onDidStartKernel: Event<T>;
+    onDidRestartKernel: Event<T>;
+    onDidDisposeKernel: Event<T>;
+    onKernelStatusChanged: Event<{ status: KernelMessage.Status; kernel: T }>;
 }
 
 export interface IRawConnection {

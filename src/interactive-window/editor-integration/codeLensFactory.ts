@@ -61,7 +61,7 @@ export class CodeLensFactory implements ICodeLensFactory {
         this.workspace.onDidGrantWorkspaceTrust(() => this.codeLensCache.clear(), this, disposables);
         this.configService.getSettings(undefined).onDidChange(this.onChangedSettings, this, disposables);
         notebook.onDidChangeNotebookCellExecutionState(this.onDidChangeNotebookCellExecutionState, this, disposables);
-        kernelProvider.onDidDisposeNotebookKernel(
+        kernelProvider.onDidDisposeKernel(
             (kernel) => {
                 this.notebookData.delete(kernel.notebook.uri.toString());
             },
