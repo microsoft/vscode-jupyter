@@ -1822,7 +1822,7 @@ No properties for event
 [src/kernels/kernelCrashMonitor.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelCrashMonitor.ts)
 ```typescript
     }
-    private async endCellAndDisplayErrorsInCell(kernel: IBaseKernel) {
+    private async endCellAndDisplayErrorsInCell(kernel: IKernel) {
         const lastExecutedCell = this.lastExecutedCellPerKernel.get(kernel);
         sendKernelTelemetryEvent(kernel.resourceUri, Telemetry.KernelCrash);
         if (!lastExecutedCell) {
