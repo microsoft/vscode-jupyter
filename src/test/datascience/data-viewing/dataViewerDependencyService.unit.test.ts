@@ -5,6 +5,7 @@
 
 import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
+import * as path from '../../../platform/vscode-path/path';
 import { ApplicationShell } from '../../../platform/common/application/applicationShell';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import {
@@ -15,6 +16,9 @@ import { IKernel } from '../../../kernels/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import * as helpers from '../../../kernels/helpers';
 import * as sinon from 'sinon';
+import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
+import { Uri } from 'vscode';
+import { SemVer } from 'semver';
 
 suite('DataScience - DataViewerDependencyService', () => {
     let dependencyService: DataViewerDependencyService;
@@ -31,6 +35,23 @@ suite('DataScience - DataViewerDependencyService', () => {
         sinon.restore();
     });
 
+    test('What if an interpreter is passed?', async () => {
+        const interpreter: PythonEnvironment = {
+            displayName: '',
+            uri: Uri.file(path.join('users', 'python', 'bin', 'python.exe')),
+            sysPrefix: '',
+            sysVersion: '',
+            version: new SemVer('3.3.3')
+        };
+
+        const resultPromise = dependencyService.checkAndInstallMissingDependencies({ interpreter });
+
+        await assert.isRejected(
+            resultPromise,
+            DataScience.interpreterNotSupportedOnTheWeb(),
+            'Failed to throw if an interpreter is provided on the web'
+        );
+    });
     test('What if there are no kernel sessions?', async () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (kernel.session as any) = undefined;

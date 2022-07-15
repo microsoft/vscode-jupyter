@@ -47,12 +47,12 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
         const kernel = options.kernel;
         const interpreter = options.interpreter;
 
-        if (kernel) {
-            console.log('Checking and installing missing dependencies using the kernel.');
-        }
-
         // Providing feedback as soon as possible.
-        if (!kernel && !interpreter) {
+        if (!kernel && interpreter) {
+            sendTelemetryEvent(Telemetry.InterpreterNotSupportedOnTheWeb);
+            throw new Error(DataScience.interpreterNotSupportedOnTheWeb());
+        }
+        if (!kernel) {
             sendTelemetryEvent(Telemetry.InsufficientParameters);
             throw new Error(DataScience.insufficientParameters());
         }

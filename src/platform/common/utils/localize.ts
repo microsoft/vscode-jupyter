@@ -1393,6 +1393,8 @@ export namespace DataScience {
         );
     export const listOfFilesWithLinksThatMightNeedToBeRenamed = () =>
         localize('DataScience.listOfFilesWithLinksThatMightNeedToBeRenamed', 'File(s): {0} might need to be renamed.');
+    export const interpreterNotSupportedOnTheWeb = () =>
+        localize('DataScience.interpreterNotSupportedOnTheWeb', 'Interpreter not supported on the web.');
     export const noActiveKernelSession = () =>
         localize('DataScience.noActiveKernelSession', 'No no active kernel session.');
     export const insufficientParameters = () =>
