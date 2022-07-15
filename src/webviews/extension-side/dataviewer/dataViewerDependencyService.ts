@@ -39,6 +39,7 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
     private kernelPackaging(kernel: IKernel): '%conda' | '%pip' {
         const envType = kernel.kernelConnectionMetadata.interpreter?.envType;
         const isConda = envType === EnvironmentType.Conda;
+        console.log({ envType, isConda });
         // From https://ipython.readthedocs.io/en/stable/interactive/magics.html#magic-pip (%conda is here as well).
         return isConda ? '%conda' : '%pip';
     }
@@ -112,9 +113,6 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
                       Common.install()
                   );
         } else {
-            // TODO: Installing pandas does not work with the debugger.
-            // It takes a long time, then it breaks with:
-            // error: Command \"clang -Wno-unused-result -Wsign-compare -Wunreachable-code...
             await this.applicationShell.showErrorMessage(DataScience.pandasRequiredForViewing());
         }
 
