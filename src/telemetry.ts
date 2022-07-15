@@ -1384,8 +1384,4 @@ export interface IEventNamePropertyMapping {
      * Error in case none of the necessary parameters are provided.
      */
     [Telemetry.InsufficientParameters]: never | undefined;
-    /**
-     * Error in case the provided interpreter is not sufficient in the web.
-     */
-    [Telemetry.WebInterpreterInsufficient]: never | undefined;
 }

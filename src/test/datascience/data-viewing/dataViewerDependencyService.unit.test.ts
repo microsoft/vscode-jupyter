@@ -24,7 +24,7 @@ suite('DataScience - DataViewerDependencyService', () => {
     setup(async () => {
         appShell = mock(ApplicationShell);
         kernel = instance(mock<IKernel>());
-        dependencyService = new DataViewerDependencyService(instance(appShell), false, undefined);
+        dependencyService = new DataViewerDependencyService(instance(appShell), false);
     });
 
     teardown(() => {

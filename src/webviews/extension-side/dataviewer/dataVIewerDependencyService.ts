@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject, injectable, named, optional } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { SemVer } from 'semver';
 import { ProductNames } from '../../../kernels/installer/productNames';
 import { Product } from '../../../kernels/installer/types';
@@ -17,8 +17,6 @@ import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { IDataViewerDependencyService, IDataViewerDependencyServiceOptions } from './types';
 import { executeSilently } from '../../../kernels/helpers';
 import { IKernel } from '../../../kernels/types';
-import { Identifiers } from '../../../platform/common/constants';
-import { IJupyterVariables } from '../../../kernels/variables/types';
 
 export const minimumSupportedPandaVersion = '0.20.0';
 export const kernelGetPandasVersion =
@@ -35,11 +33,7 @@ function isVersionOfPandaSupported(version: SemVer) {
 export class DataViewerDependencyService implements IDataViewerDependencyService {
     constructor(
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(IsCodeSpace) private isCodeSpace: boolean,
-        @inject(IJupyterVariables)
-        @optional()
-        @named(Identifiers.DEBUGGER_VARIABLES)
-        private variableProvider: IJupyterVariables | undefined
+        @inject(IsCodeSpace) private isCodeSpace: boolean
     ) {}
 
     private kernelPackaging(kernel: IKernel): '%conda' | '%pip' {
@@ -56,18 +50,11 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
         if (kernel) {
             console.log('Checking and installing missing dependencies using the kernel.');
         }
-        if (!kernel && this.variableProvider) {
-            console.log('Checking and installing missing dependencies using the variableProvider');
-        }
 
         // Providing feedback as soon as possible.
-        if (!kernel && !this.variableProvider && !interpreter) {
+        if (!kernel && !interpreter) {
             sendTelemetryEvent(Telemetry.InsufficientParameters);
             throw new Error(DataScience.insufficientParameters());
-        }
-        if (!kernel && !this.variableProvider && interpreter) {
-            sendTelemetryEvent(Telemetry.WebInterpreterInsufficient);
-            throw new Error(DataScience.webInterpreterInsufficient());
         }
         if (kernel && !kernel.session) {
             sendTelemetryEvent(Telemetry.NoActiveKernelSession);
