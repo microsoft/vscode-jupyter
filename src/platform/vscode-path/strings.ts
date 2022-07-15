@@ -7,7 +7,7 @@
 
 import { LRUCachedComputed } from './cache';
 import { CharCode } from './charCode';
-import { Lazy } from './lazy';
+import { Lazy } from '../common/utils/lazy';
 
 export function compare(a: string, b: string): number {
     if (a < b) {
