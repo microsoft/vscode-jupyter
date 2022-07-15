@@ -8,7 +8,7 @@ import { IVSCodeNotebook } from '../platform/common/application/types';
 import { traceInfoIfCI, traceVerbose, traceWarning } from '../platform/logging';
 import { getDisplayPath } from '../platform/common/platform/fs-paths';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from '../platform/common/types';
-import { noop } from '../platform/common/utils/misc';
+import { isUri, noop } from '../platform/common/utils/misc';
 import { IBaseKernel, IKernelProvider, IKernel, KernelOptions, IThirdPartyKernelProvider } from './types';
 
 export abstract class BaseCoreKernelProvider implements IKernelProvider {
@@ -61,8 +61,15 @@ export abstract class BaseCoreKernelProvider implements IKernelProvider {
     public get onDidCreateKernel(): Event<IKernel> {
         return this._onDidCreateKernel.event;
     }
-    public get(notebook: NotebookDocument): IKernel | undefined {
-        return this.kernelsByNotebook.get(notebook)?.kernel;
+    public get(uriOrNotebook: Uri | NotebookDocument): IKernel | undefined {
+        if (isUri(uriOrNotebook)) {
+            const notebook = this.notebook.notebookDocuments.find(
+                (item) => item.uri.toString() === uriOrNotebook.toString()
+            );
+            return notebook ? this.get(notebook) : undefined;
+        } else {
+            return this.kernelsByNotebook.get(uriOrNotebook)?.kernel;
+        }
     }
 
     public getInternal(notebook: NotebookDocument):

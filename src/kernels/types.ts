@@ -231,7 +231,7 @@ export interface IKernelProvider extends IBaseKernelProvider<IKernel> {
     /**
      * Get hold of the active kernel for a given notebook document.
      */
-    get(notebook: NotebookDocument): IKernel | undefined;
+    get(uriOrNotebook: Uri | NotebookDocument): IKernel | undefined;
     /**
      * Gets or creates a kernel for a given Notebook.
      * WARNING: If called with different options for same Notebook, old kernel associated with the Uri will be disposed.
