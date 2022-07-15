@@ -13,14 +13,14 @@ import {
 } from '../platform/common/types';
 import { Kernel } from './kernel.web';
 import { IBaseKernel, IKernel, INotebookProvider, ITracebackFormatter, KernelOptions } from './types';
-import { BaseKernelProvider, BaseThirdPartyKernelProvider } from './kernelProvider.base';
+import { BaseCoreKernelProvider, BaseThirdPartyKernelProvider } from './kernelProvider.base';
 import { IStatusProvider } from '../platform/progress/types';
 import { InteractiveWindowView } from '../platform/common/constants';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { IFileSystem } from '../platform/common/platform/types';
 
 @injectable()
-export class KernelProvider extends BaseKernelProvider {
+export class KernelProvider extends BaseCoreKernelProvider {
     constructor(
         @inject(IAsyncDisposableRegistry) asyncDisposables: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,

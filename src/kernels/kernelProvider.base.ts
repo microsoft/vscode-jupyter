@@ -11,7 +11,7 @@ import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from 
 import { noop } from '../platform/common/utils/misc';
 import { IBaseKernel, IKernelProvider, IKernel, KernelOptions, IThirdPartyKernelProvider } from './types';
 
-export abstract class BaseKernelProvider implements IKernelProvider {
+export abstract class BaseCoreKernelProvider implements IKernelProvider {
     /**
      * Use a separate dictionary to track kernels by Notebook, so that
      * the ref to kernel is lost when the notebook is closed.
@@ -22,10 +22,7 @@ export abstract class BaseKernelProvider implements IKernelProvider {
     protected readonly _onDidStartKernel = new EventEmitter<IKernel>();
     protected readonly _onDidCreateKernel = new EventEmitter<IKernel>();
     protected readonly _onDidDisposeKernel = new EventEmitter<IKernel>();
-    protected readonly _onKernelStatusChanged = new EventEmitter<{
-        status: KernelMessage.Status;
-        kernel: IKernel;
-    }>();
+    protected readonly _onKernelStatusChanged = new EventEmitter<{ status: KernelMessage.Status; kernel: IKernel }>();
     public readonly onKernelStatusChanged = this._onKernelStatusChanged.event;
     public get kernels() {
         const kernels = new Set<IKernel>();
@@ -35,7 +32,6 @@ export abstract class BaseKernelProvider implements IKernelProvider {
                 kernels.add(kernel);
             }
         });
-        // Array.from(this.kernelsByUri.values()).forEach((item) => kernels.add(item.kernel));
         return Array.from(kernels);
     }
     constructor(
