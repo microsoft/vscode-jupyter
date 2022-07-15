@@ -8,6 +8,7 @@ import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IApplicationShell } from '../../platform/common/application/types';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
+import { IKernelProvider } from '../../kernels/types';
 
 // This class is responsible for watching if the Python Extension installation status changes, and if it does
 // update the users if any notebooks are running and need to be restarted.
@@ -16,7 +17,8 @@ export class PythonExtensionRestartNotification implements IExtensionSyncActivat
     constructor(
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell
+        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
+        @inject(IKernelProvider) private readonly kernelProvider: IKernelProvider
     ) {}
     activate(): void {
         this.extensionChecker.onPythonExtensionInstallationStatusChanged(
@@ -39,6 +41,6 @@ export class PythonExtensionRestartNotification implements IExtensionSyncActivat
 
     // Return true if any kernels are currently active
     private anyKernelsAreActive(): boolean {
-        return true;
+        return this.kernelProvider.kernels.length > 0;
     }
 }
