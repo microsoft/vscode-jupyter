@@ -1110,7 +1110,7 @@
     "DataScience.installPythonTitle": "Install Python",
     "DataScience.installPythonExtensionViaKernelPickerTitle": "Install Python Extension",
     "DataScience.switchToLocalKernelsTitle": "Connect to Local Kernels",
-    "DataScience.switchToRemoteKernelsTitle": "Connect to Your Own Jupyter Server",
+    "DataScience.switchToRemoteKernelsTitle": "Connect to a Jupyter Server",
     "DataScience.switchToAnotherRemoteKernelsTitle": "Connect to Another Jupyter Server",
     "DataScience.failedToInstallPythonExtension": "Failed to install the Python Extension.",
     "DataScience.kernelPrefixForRemote": "(Remote)",
