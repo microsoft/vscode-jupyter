@@ -28,10 +28,10 @@ import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 
 export async function openNotebook(ipynbFile: vscode.Uri) {
     traceInfo(`Opening notebook ${getFilePath(ipynbFile)}`);
-    const nb = await vscode.workspace.openNotebookDocument(ipynbFile);
-    await vscode.window.showNotebookDocument(nb);
+    const notebook = await vscode.workspace.openNotebookDocument(ipynbFile);
+    const editor = await vscode.window.showNotebookDocument(notebook);
     traceInfo(`Opened notebook ${getFilePath(ipynbFile)}`);
-    return nb;
+    return { notebook, editor };
 }
 
 // The default base set of data science settings to use
