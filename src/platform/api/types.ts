@@ -31,6 +31,7 @@ export interface IPythonExtensionChecker {
     readonly isPythonExtensionActive: boolean;
     showPythonExtensionInstallRequiredPrompt(): Promise<void>;
     directlyInstallPythonExtension(): Promise<void>;
+    onPythonExtensionInstallationStatusChanged: Event<'installed' | 'uninstalled'>;
 }
 
 /**

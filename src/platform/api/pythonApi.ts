@@ -1,11 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable class-methods-use-this */
-// eslint-disable-next-line
-/* eslint-disable consistent-return */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable, EventEmitter, Event, Uri, workspace, ExtensionMode } from 'vscode';
+import { EventEmitter, Event, Uri, workspace, ExtensionMode } from 'vscode';
 import {
     IPythonApiProvider,
     IPythonExtensionChecker,
@@ -180,7 +177,11 @@ export class PythonApiProvider implements IPythonApiProvider {
 
 @injectable()
 export class PythonExtensionChecker implements IPythonExtensionChecker {
-    private extensionChangeHandler: Disposable | undefined;
+    private previousInstallState: boolean;
+    private readonly pythonExtensionInstallationStatusChanged = new EventEmitter<'installed' | 'uninstalled'>();
+    public get onPythonExtensionInstallationStatusChanged() {
+        return this.pythonExtensionInstallationStatusChanged.event;
+    }
     /**
      * Used only for testsing
      */
@@ -189,12 +190,15 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) {
-        // If the python extension is not installed listen to see if anything does install it
-        if (!this.isPythonExtensionInstalled) {
-            this.extensionChangeHandler = this.extensions.onDidChange(this.extensionsChangeHandler.bind(this));
-        }
+        // Listen for the python extension being installed or uninstalled
+        this.extensions.onDidChange(this.extensionsChangeHandler.bind(this), this, this.disposables);
+
+        // Name is a bit different here as we use the isPythonExtensionInstalled property for checking the current state.
+        // This property is to see if we change it during extension actions.
+        this.previousInstallState = this.isPythonExtensionInstalled;
     }
 
     public get isPythonExtensionInstalled() {
@@ -243,15 +247,12 @@ export class PythonExtensionChecker implements IPythonExtensionChecker {
     }
 
     private async extensionsChangeHandler(): Promise<void> {
-        // On extension change see if python was installed, if so unhook our extension change watcher and
-        // notify the user that they might need to restart notebooks or interactive windows
-        if (this.isPythonExtensionInstalled && this.extensionChangeHandler) {
-            this.extensionChangeHandler.dispose();
-            this.extensionChangeHandler = undefined;
+        // Check to see if we changed states, if so signal
+        const newInstallState = this.isPythonExtensionInstalled;
 
-            this.appShell
-                .showInformationMessage(localize.DataScience.pythonExtensionInstalled(), localize.Common.ok())
-                .then(noop, noop);
+        if (newInstallState !== this.previousInstallState) {
+            this.pythonExtensionInstallationStatusChanged.fire(newInstallState ? 'installed' : 'uninstalled');
+            this.previousInstallState = newInstallState;
         }
     }
 }

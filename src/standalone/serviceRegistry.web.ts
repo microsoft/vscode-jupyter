@@ -3,7 +3,11 @@
 'use strict';
 
 import { IServiceManager } from '../platform/ioc/types';
-import { IExtensionActivationManager, IExtensionSingleActivationService } from '../platform/activation/types';
+import {
+    IExtensionActivationManager,
+    IExtensionSingleActivationService,
+    IExtensionSyncActivationService
+} from '../platform/activation/types';
 import { CommandRegistry as ExportCommandRegistry } from './import-export/commandRegistry';
 import { ExtensionSideRenderer, IExtensionSideRenderer } from './renderer';
 import { ActiveEditorContextService } from './context/activeEditorContext';
@@ -17,6 +21,7 @@ import { ExtensionActivationManager } from './activation/activationManager';
 import { registerTypes as registerDevToolTypes } from './devTools/serviceRegistry';
 import { IExtensionContext } from '../platform/common/types';
 import { registerTypes as registerIntellisenseTypes } from './intellisense/serviceRegistry.web';
+import { PythonExtensionRestartNotification } from './notification/pythonExtensionRestartNotification';
 
 export function registerTypes(context: IExtensionContext, serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, GlobalActivation);
@@ -42,6 +47,12 @@ export function registerTypes(context: IExtensionContext, serviceManager: IServi
         JupyterKernelServiceFactory
     );
     serviceManager.addSingleton<ApiAccessService>(ApiAccessService, ApiAccessService);
+
+    // Notification
+    serviceManager.addSingleton<IExtensionSyncActivationService>(
+        IExtensionSyncActivationService,
+        PythonExtensionRestartNotification
+    );
 
     // Intellisense
     registerIntellisenseTypes(serviceManager, isDevMode);
