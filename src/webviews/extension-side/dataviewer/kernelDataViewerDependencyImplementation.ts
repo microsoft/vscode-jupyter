@@ -3,7 +3,6 @@
 
 'use strict';
 
-import { injectable } from 'inversify';
 import { SemVer } from 'semver';
 import { ProductNames } from '../../../kernels/installer/productNames';
 import { Product } from '../../../kernels/installer/types';
@@ -36,7 +35,6 @@ function kernelPackaging(kernel: IKernel): '%conda' | '%pip' {
 /**
  * Uses the Kernel to manage the dependencies of a Data Viewer.
  */
-@injectable()
 export class KernelDataViewerDependencyImplementation implements IDataViewerDependencyService {
     constructor(private readonly applicationShell: IApplicationShell, private isCodeSpace: boolean) {}
 

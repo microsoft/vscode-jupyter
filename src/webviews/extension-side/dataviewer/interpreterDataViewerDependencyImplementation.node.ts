@@ -3,7 +3,6 @@
 
 'use strict';
 
-import { injectable } from 'inversify';
 import { SemVer } from 'semver';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { ProductNames } from '../../../kernels/installer/productNames';
@@ -28,7 +27,6 @@ function isVersionOfPandasSupported(version: SemVer) {
 /**
  * Uses the Python interpreter to manage dependencies of a Data Viewer.
  */
-@injectable()
 export class InterpreterDataViewerDependencyImplementation implements IDataViewerDependencyService {
     constructor(
         private readonly applicationShell: IApplicationShell,
