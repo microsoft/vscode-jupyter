@@ -83,6 +83,8 @@ export class KernelProvider extends BaseCoreKernelProvider {
         return kernel;
     }
 }
+
+@injectable()
 export class ThirdPartyKernelProvider extends BaseThirdPartyKernelProvider {
     constructor(
         @inject(IAsyncDisposableRegistry) asyncDisposables: IAsyncDisposableRegistry,
