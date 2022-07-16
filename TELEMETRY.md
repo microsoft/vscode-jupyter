@@ -1709,7 +1709,7 @@ No description provided
 
 [src/standalone/api/kernelApi.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/standalone/api/kernelApi.ts)
 ```typescript
-        return this.startOrConnect(spec, uri);
+        return this.startOrConnect(undefined, kernel, uri);
     }
     async connect(spec: ActiveKernel, uri: Uri): Promise<IKernelConnectionInfo> {
         sendTelemetryEvent(Telemetry.JupyterKernelApiUsage, undefined, {
