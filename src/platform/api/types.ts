@@ -81,6 +81,15 @@ export interface IInterpreterQuickPickItem_PythonApi extends QuickPickItem {
      */
     interpreter: PythonEnvironment_PythonApi;
 }
+export enum ProgressReportStage {
+    discoveryStarted = 'discoveryStarted',
+    allPathsDiscovered = 'allPathsDiscovered',
+    discoveryFinished = 'discoveryFinished'
+}
+
+export type ProgressNotificationEvent = {
+    stage: ProgressReportStage;
+};
 
 export type PythonApi = {
     /**
@@ -157,6 +166,10 @@ export type PythonApi = {
      * @param resource
      */
     setActiveInterpreter(interpreterPath: string, resource?: Resource): Promise<void>;
+    /***
+     * Returns a promise if a refresh is going on.
+     */
+    getRefreshPromise?(): Promise<void> | undefined;
 };
 
 export type RefreshInterpretersOptions = {

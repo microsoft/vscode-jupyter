@@ -50,22 +50,12 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
     }
 
     public activate(): void {
-        let timer: NodeJS.Timeout | number | undefined;
         this.interpreters.onDidChangeInterpreters(
-            () => {
-                if (timer) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    clearTimeout(timer as any);
+            async () => {
+                // Don't do anything if the interpreter list is still being refreshed
+                if (!this.interpreters.refreshing) {
+                    await this.loadControllers(true);
                 }
-                timer = setTimeout(
-                    () =>
-                        this.loadControllers(true).catch((ex) =>
-                            traceError('Failed to re-query python kernels after changes to list of interpreters', ex)
-                        ),
-                    // This hacky solution should be removed in favor of https://github.com/microsoft/vscode-jupyter/issues/7583
-                    // as a proper fix for https://github.com/microsoft/vscode-jupyter/issues/5319
-                    1_000
-                );
             },
             this,
             this.disposables
@@ -74,7 +64,11 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         // Make sure to reload whenever we do something that changes state
         const forceLoad = () => this.loadControllers(true);
         this.serverUriStorage.onDidChangeUri(forceLoad, this, this.disposables);
-        this.kernelProvider.onDidStartKernel(forceLoad, this, this.disposables);
+
+        // If we create a new kernel, we should add a new controller for it (we don't need to refresh the entire list)
+        this.kernelProvider.onDidStartKernel((k) => {
+            this.createNotebookControllers([k.kernelConnectionMetadata]);
+        });
 
         // For kernel dispose we need to wait a bit, otherwise the list comes back the
         // same
