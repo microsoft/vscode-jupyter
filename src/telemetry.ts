@@ -1381,11 +1381,11 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.NoActiveKernelSession]: never | undefined;
     /**
-     * Error in case none of the necessary parameters are provided.
+     * When the Data Viewer installer is using the Python interpreter.
      */
-    [Telemetry.InsufficientParameters]: never | undefined;
+    [Telemetry.DataViewerUsingInterpreter]: never | undefined;
     /**
-     * Error in case the interpreter cannot be used on the web.
+     * When the Data Viewer installer is using the Kernel.
      */
-    [Telemetry.InterpreterNotSupportedOnTheWeb]: never | undefined;
+    [Telemetry.DataViewerUsingKernel]: never | undefined;
 }

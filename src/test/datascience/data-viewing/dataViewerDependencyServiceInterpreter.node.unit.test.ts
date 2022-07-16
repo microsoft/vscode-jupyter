@@ -19,7 +19,7 @@ import { IInstaller, Product } from '../../../kernels/installer/types';
 import { DataViewerDependencyService } from '../../../webviews/extension-side/dataviewer/dataViewerDependencyService.node';
 import { Uri } from 'vscode';
 
-suite('DataScience - DataViewerDependencyService (Node)', () => {
+suite('DataScience - DataViewerDependencyService (PythonEnvironment, Node)', () => {
     let dependencyService: DataViewerDependencyService;
     let appShell: IApplicationShell;
     let pythonExecFactory: IPythonExecutionFactory;
@@ -27,6 +27,7 @@ suite('DataScience - DataViewerDependencyService (Node)', () => {
     let interpreter: PythonEnvironment;
     let interpreterService: IInterpreterService;
     let pythonExecService: IPythonExecutionService;
+
     setup(async () => {
         interpreter = {
             displayName: '',
@@ -61,14 +62,14 @@ suite('DataScience - DataViewerDependencyService (Node)', () => {
         when(
             pythonExecService.exec(deepEqual(['-c', 'import pandas;print(pandas.__version__)']), anything())
         ).thenResolve({ stdout: '0.30.0' });
-        await dependencyService.checkAndInstallMissingDependencies({ interpreter });
+        await dependencyService.checkAndInstallMissingDependencies(interpreter);
     });
     test('Throw exception if pandas is installed and version is = 0.20', async () => {
         when(
             pythonExecService.exec(deepEqual(['-c', 'import pandas;print(pandas.__version__)']), anything())
         ).thenResolve({ stdout: '0.20.0' });
 
-        const promise = dependencyService.checkAndInstallMissingDependencies({ interpreter });
+        const promise = dependencyService.checkAndInstallMissingDependencies(interpreter);
 
         await assert.isRejected(promise, DataScience.pandasTooOldForViewingFormat().format('0.20.'));
     });
@@ -77,7 +78,7 @@ suite('DataScience - DataViewerDependencyService (Node)', () => {
             pythonExecService.exec(deepEqual(['-c', 'import pandas;print(pandas.__version__)']), anything())
         ).thenResolve({ stdout: '0.10.0' });
 
-        const promise = dependencyService.checkAndInstallMissingDependencies({ interpreter });
+        const promise = dependencyService.checkAndInstallMissingDependencies(interpreter);
 
         await assert.isRejected(promise, DataScience.pandasTooOldForViewingFormat().format('0.10.'));
     });
@@ -89,7 +90,7 @@ suite('DataScience - DataViewerDependencyService (Node)', () => {
         when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(Common.install() as any);
         when(installer.install(Product.pandas, interpreter, anything())).thenResolve();
 
-        await dependencyService.checkAndInstallMissingDependencies({ interpreter });
+        await dependencyService.checkAndInstallMissingDependencies(interpreter);
 
         verify(
             appShell.showErrorMessage(
@@ -106,7 +107,7 @@ suite('DataScience - DataViewerDependencyService (Node)', () => {
         ).thenReject(new Error('Not Found'));
         when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve();
 
-        const promise = dependencyService.checkAndInstallMissingDependencies({ interpreter });
+        const promise = dependencyService.checkAndInstallMissingDependencies(interpreter);
 
         await assert.isRejected(promise, DataScience.pandasRequiredForViewing());
         verify(

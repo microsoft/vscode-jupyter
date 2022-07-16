@@ -644,8 +644,8 @@ export enum Telemetry {
     TerminalEnvVariableExtraction = 'TERMINAL_ENV_VAR_EXTRACTION',
     JupyterInstalled = 'JUPYTER_IS_INSTALLED',
     NoActiveKernelSession = 'DATASCIENCE.NO_ACTIVE_KERNEL_SESSION',
-    InsufficientParameters = 'DATASCIENCE.INSUFFICIENT_PARAMETERS',
-    InterpreterNotSupportedOnTheWeb = 'DATASCIENCE.INTERPRETER_NOT_SUPPORTED_ON_WEB'
+    DataViewerUsingInterpreter = 'DATAVIEWER.USING_INTERPRETER',
+    DataViewerUsingKernel = 'DATAVIEWER.USING_KERNEL'
 }
 
 export enum NativeKeyboardCommandTelemetry {
