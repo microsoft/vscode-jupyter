@@ -27,7 +27,6 @@ function isVersionOfPandaSupported(version: SemVer) {
 function kernelPackaging(kernel: IKernel): '%conda' | '%pip' {
     const envType = kernel.kernelConnectionMetadata.interpreter?.envType;
     const isConda = envType === EnvironmentType.Conda;
-    console.log({ envType, isConda });
     // From https://ipython.readthedocs.io/en/stable/interactive/magics.html#magic-pip (%conda is here as well).
     return isConda ? '%conda' : '%pip';
 }
@@ -63,22 +62,13 @@ export class KernelDataViewerDependencyImplementation implements IDataViewerDepe
             moduleName: ProductNames.get(Product.pandas)!
         });
 
-        let selection: string | undefined;
-        if (kernel) {
-            selection = this.isCodeSpace
-                ? Common.install()
-                : await this.applicationShell.showErrorMessage(
-                      DataScience.pandasRequiredForViewing(),
-                      { modal: true },
-                      Common.install()
-                  );
-        } else {
-            await this.applicationShell.showErrorMessage(DataScience.pandasRequiredForViewing());
-        }
-
-        if (!kernel) {
-            return;
-        }
+        let selection = this.isCodeSpace
+            ? Common.install()
+            : await this.applicationShell.showErrorMessage(
+                  DataScience.pandasRequiredForViewing(),
+                  { modal: true },
+                  Common.install()
+              );
 
         const command = `${kernelPackaging(kernel)} install pandas`;
 
@@ -88,7 +78,7 @@ export class KernelDataViewerDependencyImplementation implements IDataViewerDepe
                 sendTelemetryEvent(Telemetry.UserInstalledPandas);
             } catch (e) {
                 sendTelemetryEvent(Telemetry.FailedToInstallPandas);
-                throw new Error(DataScience.failedToInstallPandas());
+                throw new Error(DataScience.failedToInstallPandas().format(e.message));
             }
         } else {
             sendTelemetryEvent(Telemetry.UserDidNotInstallPandas);
@@ -97,7 +87,7 @@ export class KernelDataViewerDependencyImplementation implements IDataViewerDepe
     }
 
     async checkAndInstallMissingDependencies(kernel: IKernel): Promise<void> {
-        if (kernel && !kernel.session) {
+        if (!kernel.session) {
             sendTelemetryEvent(Telemetry.NoActiveKernelSession);
             throw new Error(DataScience.noActiveKernelSession());
         }
