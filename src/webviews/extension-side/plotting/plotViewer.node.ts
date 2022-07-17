@@ -9,22 +9,20 @@ import { Event, EventEmitter, Uri, ViewColumn } from 'vscode';
 
 import { traceError, traceInfo } from '../../../platform/logging';
 import { createDeferred } from '../../../platform/common/utils/async';
-import { PlotViewerMessageListener } from './plotViewerMessageListener.node';
+import { PlotViewerMessageListener } from './plotViewerMessageListener';
 import { IExportPlotRequest, IPlotViewer, IPlotViewerMapping, PlotViewerMessages } from './types';
 import {
     IWebviewPanelProvider,
     IWorkspaceService,
     IApplicationShell
 } from '../../../platform/common/application/types';
-import { IConfigurationService, IDisposable } from '../../../platform/common/types';
-import { IFileSystemNode } from '../../../platform/common/platform/types.node';
+import { IConfigurationService, IDisposable, IExtensionContext } from '../../../platform/common/types';
+import { IFileSystem } from '../../../platform/common/platform/types';
 import * as localize from '../../../platform/common/utils/localize';
-import { EXTENSION_ROOT_DIR } from '../../../platform/constants.node';
 import { WebviewPanelHost } from '../../../platform/webviews/webviewPanelHost';
 import { joinPath } from '../../../platform/vscode-path/resources';
 import { noop } from '../../../platform/common/utils/misc';
 
-const plotDir = joinPath(Uri.file(EXTENSION_ROOT_DIR), 'out', 'webviews', 'webview-side', 'viewers');
 @injectable()
 export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements IPlotViewer, IDisposable {
     private closedEvent: EventEmitter<IPlotViewer> = new EventEmitter<IPlotViewer>();
@@ -35,8 +33,10 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
         @inject(IConfigurationService) configuration: IConfigurationService,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
-        @inject(IFileSystemNode) private fs: IFileSystemNode
+        @inject(IFileSystem) private fs: IFileSystem,
+        @inject(IExtensionContext) readonly context: IExtensionContext
     ) {
+        const plotDir = joinPath(context.extensionUri, 'out', 'webviews', 'webview-side', 'viewers');
         super(
             configuration,
             provider,
@@ -158,7 +158,7 @@ export class PlotViewer extends WebviewPanelHost<IPlotViewerMapping> implements 
     }
 }
 
-export async function saveSvgToPdf(svg: string, fs: IFileSystemNode, file: Uri) {
+export async function saveSvgToPdf(svg: string, fs: IFileSystem, file: Uri) {
     traceInfo('Attempting pdf write...');
     // Import here since pdfkit is so huge.
     // eslint-disable-next-line @typescript-eslint/no-require-imports
