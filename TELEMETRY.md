@@ -1303,7 +1303,7 @@ No properties for event
                 sendTelemetryEvent(Telemetry.UserInstalledPandas);
             } catch (e) {
                 sendTelemetryEvent(Telemetry.FailedToInstallPandas);
-                throw new Error(DataScience.failedToInstallPandas());
+                throw new Error(DataScience.failedToInstallPandas().format(e.message));
             }
         } else {
 ```
@@ -2688,7 +2688,7 @@ No properties for event
 ```typescript
 
     async checkAndInstallMissingDependencies(kernel: IKernel): Promise<void> {
-        if (kernel && !kernel.session) {
+        if (!kernel.session) {
             sendTelemetryEvent(Telemetry.NoActiveKernelSession);
             throw new Error(DataScience.noActiveKernelSession());
         }
@@ -4563,7 +4563,7 @@ No properties for event
             }
         } else {
             sendTelemetryEvent(Telemetry.UserDidNotInstallPandas);
-            throw new Error(DataScience.pandasRequiredForViewing());
+            throw new Error(DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupported));
         }
     }
 ```
@@ -4571,11 +4571,11 @@ No properties for event
 
 [src/webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation.ts)
 ```typescript
-                throw new Error(DataScience.failedToInstallPandas());
+                throw new Error(DataScience.failedToInstallPandas().format(e.message));
             }
         } else {
             sendTelemetryEvent(Telemetry.UserDidNotInstallPandas);
-            throw new Error(DataScience.pandasRequiredForViewing());
+            throw new Error(DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupported));
         }
     }
 ```
@@ -4669,7 +4669,7 @@ No properties for event
                 sendTelemetryEvent(Telemetry.UserInstalledPandas);
             } catch (e) {
                 sendTelemetryEvent(Telemetry.FailedToInstallPandas);
-                throw new Error(DataScience.failedToInstallPandas());
+                throw new Error(DataScience.failedToInstallPandas().format(e.message));
 ```
 
 </details>
@@ -8624,7 +8624,7 @@ No properties for event
 
 [src/webviews/extension-side/dataviewer/interpreterDataViewerDependencyImplementation.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/interpreterDataViewerDependencyImplementation.node.ts)
 ```typescript
-                if (isVersionOfPandasSupported(pandasVersion)) {
+                if (pandasVersion.compare(pandasMinimumVersionSupported) > 0) {
                     return;
                 }
                 sendTelemetryEvent(Telemetry.PandasTooOld);
@@ -8636,7 +8636,7 @@ No properties for event
 
 [src/webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation.ts)
 ```typescript
-            if (isVersionOfPandaSupported(pandasVersion)) {
+            if (pandasVersion.compare(pandasMinimumVersionSupported) > 0) {
                 return;
             }
             sendTelemetryEvent(Telemetry.PandasTooOld);
