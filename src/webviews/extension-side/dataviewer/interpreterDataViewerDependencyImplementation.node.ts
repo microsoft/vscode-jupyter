@@ -17,12 +17,7 @@ import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { IDataViewerDependencyService } from './types';
-
-const minimumSupportedPandaVersion = '0.20.0';
-
-function isVersionOfPandasSupported(version: SemVer) {
-    return version.compare(minimumSupportedPandaVersion) > 0;
-}
+import { pandasMinimumVersionSupported } from './constants';
 
 /**
  * Uses the Python interpreter to manage dependencies of a Data Viewer.
@@ -46,7 +41,7 @@ export class InterpreterDataViewerDependencyImplementation implements IDataViewe
             }
 
             if (pandasVersion) {
-                if (isVersionOfPandasSupported(pandasVersion)) {
+                if (pandasVersion.compare(pandasMinimumVersionSupported) > 0) {
                     return;
                 }
                 sendTelemetryEvent(Telemetry.PandasTooOld);
@@ -104,7 +99,7 @@ export class InterpreterDataViewerDependencyImplementation implements IDataViewe
             }
         } else {
             sendTelemetryEvent(Telemetry.UserDidNotInstallPandas);
-            throw new Error(DataScience.pandasRequiredForViewing());
+            throw new Error(DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupported));
         }
     }
 

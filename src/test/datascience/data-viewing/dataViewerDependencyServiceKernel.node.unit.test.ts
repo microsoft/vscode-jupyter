@@ -18,6 +18,7 @@ import { IInstaller } from '../../../kernels/installer/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { ProductInstaller } from '../../../kernels/installer/productInstaller.node';
 import { PythonExecutionFactory } from '../../../platform/common/process/pythonExecutionFactory.node';
+import { pandasMinimumVersionSupported } from '../../../webviews/extension-side/dataviewer/constants';
 
 suite('DataScience - DataViewerDependencyService (IKernel, Node)', () => {
     let dependencyService: DataViewerDependencyService;
@@ -146,7 +147,10 @@ suite('DataScience - DataViewerDependencyService (IKernel, Node)', () => {
         when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve();
 
         const resultPromise = dependencyService.checkAndInstallMissingDependencies(kernel);
-        await assert.isRejected(resultPromise, DataScience.pandasRequiredForViewing());
+        await assert.isRejected(
+            resultPromise,
+            DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupported)
+        );
         assert.deepEqual(
             stub.getCalls().map((call) => call.lastArg),
             [kernelGetPandasVersion]

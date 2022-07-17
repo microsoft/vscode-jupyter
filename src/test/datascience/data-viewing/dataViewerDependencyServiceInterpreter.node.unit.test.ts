@@ -18,6 +18,7 @@ import { ProductInstaller } from '../../../kernels/installer/productInstaller.no
 import { IInstaller, Product } from '../../../kernels/installer/types';
 import { DataViewerDependencyService } from '../../../webviews/extension-side/dataviewer/dataViewerDependencyService.node';
 import { Uri } from 'vscode';
+import { pandasMinimumVersionSupported } from '../../../webviews/extension-side/dataviewer/constants';
 
 suite('DataScience - DataViewerDependencyService (PythonEnvironment, Node)', () => {
     let dependencyService: DataViewerDependencyService;
@@ -94,7 +95,7 @@ suite('DataScience - DataViewerDependencyService (PythonEnvironment, Node)', () 
 
         verify(
             appShell.showErrorMessage(
-                DataScience.pandasRequiredForViewing(),
+                DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupported),
                 deepEqual({ modal: true }),
                 Common.install()
             )
@@ -109,10 +110,10 @@ suite('DataScience - DataViewerDependencyService (PythonEnvironment, Node)', () 
 
         const promise = dependencyService.checkAndInstallMissingDependencies(interpreter);
 
-        await assert.isRejected(promise, DataScience.pandasRequiredForViewing());
+        await assert.isRejected(promise, DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupported));
         verify(
             appShell.showErrorMessage(
-                DataScience.pandasRequiredForViewing(),
+                DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupported),
                 deepEqual({ modal: true }),
                 Common.install()
             )
