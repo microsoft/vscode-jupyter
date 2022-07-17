@@ -69,7 +69,7 @@ export class InterpreterDataViewerDependencyImplementation implements IDataViewe
         const selection = this.isCodeSpace
             ? Common.install()
             : await this.applicationShell.showErrorMessage(
-                  DataScience.pandasRequiredForViewing(),
+                  DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupported),
                   { modal: true },
                   Common.install()
               );
