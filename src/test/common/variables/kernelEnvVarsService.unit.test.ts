@@ -49,7 +49,6 @@ suite('Kernel Environment Variables Service', () => {
     setup(() => {
         fs = mock<IFileSystemNode>();
         envActivation = mock<IEnvironmentActivationService>();
-        when(envActivation.hasActivationCommands(anything(), anything())).thenResolve(false);
         customVariablesService = mock<IEnvironmentVariablesProvider>();
         interpreterService = mock<IInterpreterService>();
         variablesService = new EnvironmentVariablesService(instance(fs));
@@ -127,7 +126,6 @@ suite('Kernel Environment Variables Service', () => {
             when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
                 PATH: 'foobar'
             });
-            when(envActivation.hasActivationCommands(anything(), anything())).thenResolve(true);
             when(customVariablesService.getCustomEnvironmentVariables(anything())).thenResolve({ PATH: 'foobaz' });
             when(settings.excludeUserSitePackages).thenReturn(shouldBeSet);
 

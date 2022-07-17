@@ -125,9 +125,7 @@ export class InstallPythonControllerCommands implements IExtensionSingleActivati
 
     // Check if we actually found python connections after loading controllers
     private async onNotebookControllersLoaded() {
-        this.foundPythonConnections = this.controllerRegistration.values.some((item) =>
-            isPythonKernelConnection(item.connection)
-        );
+        this.foundPythonConnections = this.controllerRegistration.all.some((item) => isPythonKernelConnection(item));
 
         // If we just finished loading, make sure to check the active document
         await this.onDidChangeActiveNotebookEditor(window.activeNotebookEditor);

@@ -607,6 +607,8 @@ export namespace DataScience {
         localize('DataScience.jupyterSelectURIPrompt', 'Enter the URI of the running Jupyter server');
     export const jupyterSelectURIQuickPickTitle = () =>
         localize('DataScience.jupyterSelectURIQuickPickTitle', 'Enter the URI of the running Jupyter server');
+    export const jupyterSelectURIQuickPickTitleOld = () =>
+        localize('DataScience.jupyterSelectURIQuickPickTitleOld', 'Pick how to connect to Jupyter');
     export const jupyterSelectURIQuickPickPlaceholder = () =>
         localize('DataScience.jupyterSelectURIQuickPickPlaceholder', 'Choose an option');
     export const jupyterSelectURIQuickPickCurrent = () =>
@@ -1228,6 +1230,7 @@ export namespace DataScience {
     export const exportingToFormat = () => localize('DataScience.exportingToFormat', 'Exporting to {0}');
     export const kernelCategoryForJupyterSession = () =>
         localize('jupyter.kernel.category.jupyterSession', '(Remote) Jupyter Session');
+    export const kernelPrefixForRemote = () => localize('DataScience.kernelPrefixForRemote', '(Remote)');
     export const kernelCategoryForJupyterKernel = () =>
         localize({ key: 'jupyter.kernel.category.jupyterKernel', comment: ['{Locked="Kernel"}'] }, 'Jupyter Kernel');
     export const kernelCategoryForRemoteJupyterKernel = () =>

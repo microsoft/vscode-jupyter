@@ -105,7 +105,7 @@ suite('RemoteKernelControllerWatcher', () => {
             kernelModel: mock<LiveKernelModel>(),
             serverId
         });
-        when(controllers.values).thenReturn([
+        when(controllers.registered).thenReturn([
             instance(localKernel),
             instance(remoteKernelSpec),
             instance(remoteLiveKernel)
