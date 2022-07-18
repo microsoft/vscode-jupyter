@@ -500,7 +500,7 @@ export class InterpreterService implements IInterpreterService {
             }
         }
         if (!this.canFindRefreshPromise) {
-            return Promise.resolve(); // If no getRefreshPromise, then we're always refreshing. Meaning always out of date.
+            return undefined; // If API isn't supported, then just assume we're not in the middle of a refresh.
         } else {
             const api = this.tryGetApi();
             const apiRefreshPromise = api?.getRefreshPromise ? api.getRefreshPromise() : undefined;
