@@ -36,10 +36,10 @@ suite('DataScience - DataViewerDependencyService (IKernel, Node)', () => {
         kernel = instance(mock<IKernel>());
 
         dependencyService = new DataViewerDependencyService(
-            instance(appShell),
             instance(installer),
             instance(pythonExecFactory),
             instance(interpreterService),
+            instance(appShell),
             false
         );
     });

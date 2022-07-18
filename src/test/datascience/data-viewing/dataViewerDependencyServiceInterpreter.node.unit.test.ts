@@ -44,10 +44,10 @@ suite('DataScience - DataViewerDependencyService (PythonEnvironment, Node)', () 
         interpreterService = mock<IInterpreterService>();
 
         dependencyService = new DataViewerDependencyService(
-            instance(appShell),
             instance(installer),
             instance(pythonExecFactory),
             instance(interpreterService),
+            instance(appShell),
             false
         );
 

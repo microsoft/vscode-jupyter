@@ -6,16 +6,15 @@
 import { SemVer } from 'semver';
 import { ProductNames } from '../../../kernels/installer/productNames';
 import { Product } from '../../../kernels/installer/types';
-import { IApplicationShell } from '../../../platform/common/application/types';
 import { traceWarning } from '../../../platform/logging';
-import { DataScience, Common } from '../../../platform/common/utils/localize';
+import { DataScience } from '../../../platform/common/utils/localize';
 import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { executeSilently } from '../../../kernels/helpers';
 import { IKernel } from '../../../kernels/types';
 import { parseSemVer } from '../../../platform/common/utils';
-import { IDataViewerDependencyService } from './types';
 import { pandasMinimumVersionSupportedByVariableViewer } from './constants';
+import { BaseDataViewerDependencyImplementation } from './baseDataViewerDependencyImplementation';
 
 export const kernelGetPandasVersion =
     'import pandas as _VSCODE_pandas;print(_VSCODE_pandas.__version__);del _VSCODE_pandas';
@@ -30,9 +29,7 @@ function kernelPackaging(kernel: IKernel): '%conda' | '%pip' {
 /**
  * Uses the Kernel to manage the dependencies of a Data Viewer.
  */
-export class KernelDataViewerDependencyImplementation implements IDataViewerDependencyService {
-    constructor(private readonly applicationShell: IApplicationShell, private isCodeSpace: boolean) {}
-
+export class KernelDataViewerDependencyImplementation extends BaseDataViewerDependencyImplementation {
     protected async execute(command: string, kernel: IKernel): Promise<(string | undefined)[]> {
         const outputs = await executeSilently(kernel.session!, command);
         const error = outputs.find((item) => item.output_type === 'error');
@@ -58,17 +55,9 @@ export class KernelDataViewerDependencyImplementation implements IDataViewerDepe
             moduleName: ProductNames.get(Product.pandas)!
         });
 
-        let selection = this.isCodeSpace
-            ? Common.install()
-            : await this.applicationShell.showErrorMessage(
-                  DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupportedByVariableViewer),
-                  { modal: true },
-                  Common.install()
-              );
-
         const command = `${kernelPackaging(kernel)} install pandas`;
 
-        if (selection === Common.install()) {
+        if (await this.promptInstall()) {
             try {
                 await this.execute(command, kernel);
                 sendTelemetryEvent(Telemetry.UserInstalledPandas);

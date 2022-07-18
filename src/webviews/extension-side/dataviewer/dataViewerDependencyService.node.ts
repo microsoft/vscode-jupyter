@@ -30,18 +30,18 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
     private withInterpreter: IDataViewerDependencyService;
 
     constructor(
-        @inject(IApplicationShell) applicationShell: IApplicationShell,
         @inject(IInstaller) installer: IInstaller,
         @inject(IPythonExecutionFactory) pythonFactory: IPythonExecutionFactory,
         @inject(IInterpreterService) interpreterService: IInterpreterService,
+        @inject(IApplicationShell) applicationShell: IApplicationShell,
         @inject(IsCodeSpace) isCodeSpace: boolean
     ) {
         this.withKernel = new KernelDataViewerDependencyImplementation(applicationShell, isCodeSpace);
         this.withInterpreter = new InterpreterDataViewerDependencyImplementation(
-            applicationShell,
             installer,
             pythonFactory,
             interpreterService,
+            applicationShell,
             isCodeSpace
         );
     }

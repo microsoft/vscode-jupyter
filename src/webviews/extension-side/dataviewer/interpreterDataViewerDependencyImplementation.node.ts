@@ -12,24 +12,26 @@ import { Cancellation, createPromiseFromCancellation } from '../../../platform/c
 import { traceWarning } from '../../../platform/logging';
 import { IPythonExecutionFactory } from '../../../platform/common/process/types.node';
 import { parseSemVer } from '../../../platform/common/utils';
-import { DataScience, Common } from '../../../platform/common/utils/localize';
+import { DataScience } from '../../../platform/common/utils/localize';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
-import { IDataViewerDependencyService } from './types';
 import { pandasMinimumVersionSupportedByVariableViewer } from './constants';
+import { BaseDataViewerDependencyImplementation } from './baseDataViewerDependencyImplementation';
 
 /**
  * Uses the Python interpreter to manage dependencies of a Data Viewer.
  */
-export class InterpreterDataViewerDependencyImplementation implements IDataViewerDependencyService {
+export class InterpreterDataViewerDependencyImplementation extends BaseDataViewerDependencyImplementation {
     constructor(
-        private readonly applicationShell: IApplicationShell,
         private readonly installer: IInstaller,
         private pythonFactory: IPythonExecutionFactory,
         private interpreterService: IInterpreterService,
-        private isCodeSpace: boolean
-    ) {}
+        applicationShell: IApplicationShell,
+        isCodeSpace: boolean
+    ) {
+        super(applicationShell, isCodeSpace);
+    }
 
     public async checkAndInstallMissingDependencies(interpreter: PythonEnvironment): Promise<void> {
         sendTelemetryEvent(Telemetry.DataViewerUsingInterpreter);
@@ -68,13 +70,8 @@ export class InterpreterDataViewerDependencyImplementation implements IDataViewe
             moduleName: ProductNames.get(Product.pandas)!,
             pythonEnvType: interpreter?.envType
         });
-        const selection = this.isCodeSpace
-            ? Common.install()
-            : await this.applicationShell.showErrorMessage(
-                  DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupportedByVariableViewer),
-                  { modal: true },
-                  Common.install()
-              );
+
+        const doInstall = await this.promptInstall();
 
         // All data science dependencies require an interpreter to be passed in
         // Default to the active interpreter if no interpreter is available
@@ -85,7 +82,7 @@ export class InterpreterDataViewerDependencyImplementation implements IDataViewe
             return;
         }
 
-        if (selection === Common.install()) {
+        if (doInstall) {
             const cancellationPromise = createPromiseFromCancellation({
                 cancelAction: 'resolve',
                 defaultValue: InstallerResponse.Ignore,
