@@ -61,6 +61,9 @@ export class InterpreterPackages implements IInterpreterPackages {
         return InterpreterPackages._instance;
     }
     public getPackageVersions(interpreter: PythonEnvironment): Promise<Map<string, string>> {
+        if (!this.pythonExtensionChecker.isPythonExtensionInstalled) {
+            return Promise.resolve(new Map<string, string>());
+        }
         const key = getComparisonKey(interpreter.uri);
         let deferred = this.interpreterInformation.get(key);
         if (!deferred) {
@@ -71,6 +74,9 @@ export class InterpreterPackages implements IInterpreterPackages {
         return deferred.promise;
     }
     public async getPackageVersion(interpreter: PythonEnvironment, packageName: string): Promise<string | undefined> {
+        if (!this.pythonExtensionChecker.isPythonExtensionInstalled) {
+            return Promise.resolve(undefined);
+        }
         const packages = await this.getPackageVersions(interpreter);
         const telemetrySafeString = getTelemetrySafeHashedString(packageName.toLocaleLowerCase());
         if (!packages.has(telemetrySafeString)) {
