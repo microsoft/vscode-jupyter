@@ -56,7 +56,7 @@ suite('DataScience - DataViewerDependencyService (IKernel, Node)', () => {
 
         await assert.isRejected(
             resultPromise,
-            DataScience.noActiveKernelSession(),
+            'No no active kernel session.',
             'Failed to determine if there was an active kernel session'
         );
     });

@@ -85,7 +85,7 @@ export class KernelDataViewerDependencyImplementation extends BaseDataViewerDepe
 
         if (!kernelHasSession(kernel)) {
             sendTelemetryEvent(Telemetry.NoActiveKernelSession);
-            throw new Error(DataScience.noActiveKernelSession());
+            throw new Error('No no active kernel session.');
         }
 
         const pandasVersion = await this.getVersion(kernel);

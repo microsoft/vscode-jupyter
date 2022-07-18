@@ -1396,8 +1396,6 @@ export namespace DataScience {
         );
     export const listOfFilesWithLinksThatMightNeedToBeRenamed = () =>
         localize('DataScience.listOfFilesWithLinksThatMightNeedToBeRenamed', 'File(s): {0} might need to be renamed.');
-    export const noActiveKernelSession = () =>
-        localize('DataScience.noActiveKernelSession', 'No no active kernel session.');
     export const failedToGetVersionOfPandas = () =>
         localize(
             { key: 'DataScience.failedToGetVersionOfPandas', comment: ['{Locked="Pandas"}'] },
