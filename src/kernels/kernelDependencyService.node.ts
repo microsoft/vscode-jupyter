@@ -228,10 +228,11 @@ export class KernelDependencyService implements IKernelDependencyService {
             defaultValue: undefined,
             token: cancelTokenSource.token
         });
+
+        // Build our set of prompt actions
         const installOption = Common.install();
         const selectKernelOption = DataScience.selectKernel();
         const moreInfoOption = Common.moreInfo();
-
         const options = [installOption];
         if (resource && !cannotChangeKernels) {
             // Due to a bug in our code, if we don't have a resource, don't display the option to change kernels.
@@ -239,6 +240,7 @@ export class KernelDependencyService implements IKernelDependencyService {
             options.push(selectKernelOption);
         }
         options.push(moreInfoOption);
+
         try {
             if (!this.isCodeSpace) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
@@ -272,6 +274,7 @@ export class KernelDependencyService implements IKernelDependencyService {
                     // https://github.com/microsoft/vscode-jupyter/wiki/Jupyter-Kernels-and-the-Jupyter-Extension#python-extension-and-ipykernel
                     this.appShell.openUrl('https://aka.ms/AAhi594');
                 }
+                // "More Info" isn't a full valid response here, so reprompt after showing it
             } while (selection === moreInfoOption);
             if (cancelTokenSource.token.isCancellationRequested) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
