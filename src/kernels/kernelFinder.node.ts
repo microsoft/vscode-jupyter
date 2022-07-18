@@ -9,6 +9,7 @@ import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernel
 import { ILocalKernelFinder, IRemoteKernelFinder } from './raw/types';
 import { INotebookProvider, KernelConnectionMetadata } from './types';
 import { IFileSystem } from '../platform/common/platform/types';
+import { IApplicationEnvironment } from '../platform/common/application/types';
 
 @injectable()
 export class KernelFinder extends BaseKernelFinder {
@@ -22,7 +23,8 @@ export class KernelFinder extends BaseKernelFinder {
         @inject(IJupyterServerUriStorage) serverUriStorage: IJupyterServerUriStorage,
         @inject(IServerConnectionType) serverConnectionType: IServerConnectionType,
         @inject(IJupyterRemoteCachedKernelValidator)
-        protected readonly cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator
+        protected readonly cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator,
+        @inject(IApplicationEnvironment) env: IApplicationEnvironment
     ) {
         super(
             preferredRemoteFinder,
@@ -31,7 +33,8 @@ export class KernelFinder extends BaseKernelFinder {
             remoteKernelFinder,
             globalState,
             serverUriStorage,
-            serverConnectionType
+            serverConnectionType,
+            env
         );
     }
 

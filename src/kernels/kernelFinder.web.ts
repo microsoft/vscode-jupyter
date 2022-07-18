@@ -8,6 +8,7 @@ import { BaseKernelFinder } from './kernelFinder.base';
 import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
 import { IRemoteKernelFinder } from './raw/types';
 import { INotebookProvider, KernelConnectionMetadata } from './types';
+import { IApplicationEnvironment } from '../platform/common/application/types';
 
 @injectable()
 export class KernelFinder extends BaseKernelFinder {
@@ -19,7 +20,8 @@ export class KernelFinder extends BaseKernelFinder {
         @inject(IJupyterServerUriStorage) serverUriStorage: IJupyterServerUriStorage,
         @inject(IServerConnectionType) serverConnectionType: IServerConnectionType,
         @inject(IJupyterRemoteCachedKernelValidator)
-        protected readonly cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator
+        protected readonly cachedRemoteKernelValidator: IJupyterRemoteCachedKernelValidator,
+        @inject(IApplicationEnvironment) env: IApplicationEnvironment
     ) {
         super(
             preferredRemoteFinder,
@@ -28,7 +30,8 @@ export class KernelFinder extends BaseKernelFinder {
             remoteKernelFinder,
             globalState,
             serverUriStorage,
-            serverConnectionType
+            serverConnectionType,
+            env
         );
     }
     protected async isValidCachedKernel(kernel: KernelConnectionMetadata): Promise<boolean> {

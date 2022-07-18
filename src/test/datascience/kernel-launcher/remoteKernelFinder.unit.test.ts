@@ -42,6 +42,7 @@ import { JupyterServerUriStorage } from '../../../kernels/jupyter/launcher/serve
 import { FileSystem } from '../../../platform/common/platform/fileSystem.node';
 import { takeTopRankKernel } from './localKernelFinder.unit.test';
 import { LocalKernelSpecsCacheKey, RemoteKernelSpecsCacheKey } from '../../../kernels/kernelFinder.base';
+import { IApplicationEnvironment } from '../../../platform/common/application/types';
 
 suite(`Remote Kernel Finder`, () => {
     let disposables: Disposable[] = [];
@@ -120,7 +121,12 @@ suite(`Remote Kernel Finder`, () => {
 
     setup(() => {
         memento = mock<Memento>();
-        when(memento.get(ActiveKernelIdList, anything())).thenReturn([]);
+        when(memento.get(anything(), anything())).thenCall((key: string, defaultValue: unknown) => {
+            if (key === ActiveKernelIdList) {
+                return [];
+            }
+            return defaultValue;
+        });
         const crypto = mock(CryptoUtils);
         when(crypto.createHash(anything(), anything())).thenCall((d, _c) => {
             return d.toLowerCase();
@@ -157,6 +163,8 @@ suite(`Remote Kernel Finder`, () => {
         when(connectionType.onDidChange).thenReturn(onDidChangeEvent.event);
         cachedRemoteKernelValidator = mock<IJupyterRemoteCachedKernelValidator>();
         when(cachedRemoteKernelValidator.isValid(anything())).thenResolve(true);
+        const env = mock<IApplicationEnvironment>();
+        when(env.extensionVersion).thenReturn('');
         kernelFinder = new KernelFinder(
             instance(localKernelFinder),
             remoteKernelFinder,
@@ -166,7 +174,8 @@ suite(`Remote Kernel Finder`, () => {
             instance(fs),
             instance(serverUriStorage),
             instance(connectionType),
-            instance(cachedRemoteKernelValidator)
+            instance(cachedRemoteKernelValidator),
+            instance(env)
         );
     });
     teardown(() => {
@@ -316,8 +325,18 @@ suite(`Remote Kernel Finder`, () => {
             liveRemoteKernel
         ];
         when(cachedRemoteKernelValidator.isValid(anything())).thenResolve(false);
-        when(memento.get<KernelConnectionMetadata[]>(LocalKernelSpecsCacheKey, anything())).thenReturn([]);
-        when(memento.get<KernelConnectionMetadata[]>(RemoteKernelSpecsCacheKey, anything())).thenReturn(cachedKernels);
+        when(
+            memento.get<{ kernels: KernelConnectionMetadata[]; extensionVersion: string }>(
+                LocalKernelSpecsCacheKey,
+                anything()
+            )
+        ).thenReturn({ kernels: [], extensionVersion: '' });
+        when(
+            memento.get<{ kernels: KernelConnectionMetadata[]; extensionVersion: string }>(
+                RemoteKernelSpecsCacheKey,
+                anything()
+            )
+        ).thenReturn({ kernels: cachedKernels, extensionVersion: '' });
         when(jupyterSessionManager.getRunningKernels()).thenResolve([]);
         when(jupyterSessionManager.getRunningSessions()).thenResolve([]);
         when(jupyterSessionManager.getKernelSpecs()).thenResolve([]);
@@ -366,8 +385,18 @@ suite(`Remote Kernel Finder`, () => {
         ];
         when(cachedRemoteKernelValidator.isValid(anything())).thenResolve(false);
         when(cachedRemoteKernelValidator.isValid(liveRemoteKernel)).thenResolve(true);
-        when(memento.get<KernelConnectionMetadata[]>(LocalKernelSpecsCacheKey, anything())).thenReturn([]);
-        when(memento.get<KernelConnectionMetadata[]>(RemoteKernelSpecsCacheKey, anything())).thenReturn(cachedKernels);
+        when(
+            memento.get<{ kernels: KernelConnectionMetadata[]; extensionVersion: string }>(
+                LocalKernelSpecsCacheKey,
+                anything()
+            )
+        ).thenReturn({ kernels: [], extensionVersion: '' });
+        when(
+            memento.get<{ kernels: KernelConnectionMetadata[]; extensionVersion: string }>(
+                RemoteKernelSpecsCacheKey,
+                anything()
+            )
+        ).thenReturn({ kernels: cachedKernels, extensionVersion: '' });
         when(jupyterSessionManager.getRunningKernels()).thenResolve([]);
         when(jupyterSessionManager.getRunningSessions()).thenResolve([]);
         when(jupyterSessionManager.getKernelSpecs()).thenResolve([]);

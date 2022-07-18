@@ -963,6 +963,12 @@ export interface IApplicationEnvironment {
      * @readonly
      */
     readonly extensionName: string;
+    /**
+     * The extension name.
+     *
+     * @readonly
+     */
+    readonly extensionVersion: string;
 
     /**
      * The application root folder from which the editor is running.
