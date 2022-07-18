@@ -11,7 +11,7 @@ import { DataScience } from '../../../platform/common/utils/localize';
 import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { executeSilently } from '../../../kernels/helpers';
-import { IKernel } from '../../../kernels/types';
+import { IKernel, IKernelConnectionSession } from '../../../kernels/types';
 import { parseSemVer } from '../../../platform/common/utils';
 import { pandasMinimumVersionSupportedByVariableViewer } from './constants';
 import { BaseDataViewerDependencyImplementation } from './baseDataViewerDependencyImplementation';
@@ -26,12 +26,19 @@ function kernelPackaging(kernel: IKernel): '%conda' | '%pip' {
     return isConda ? '%conda' : '%pip';
 }
 
+type IKernelWithSession = IKernel & { session: IKernelConnectionSession };
+
+// TypeScript will narrow the type to PythonEnvironment in any block guarded by a call to isPythonEnvironment
+function kernelHasSession(kernel: IKernel): kernel is IKernelWithSession {
+    return Boolean(kernel.session);
+}
+
 /**
  * Uses the Kernel to manage the dependencies of a Data Viewer.
  */
 export class KernelDataViewerDependencyImplementation extends BaseDataViewerDependencyImplementation {
-    protected async execute(command: string, kernel: IKernel): Promise<(string | undefined)[]> {
-        const outputs = await executeSilently(kernel.session!, command);
+    protected async execute(command: string, kernel: IKernelWithSession): Promise<(string | undefined)[]> {
+        const outputs = await executeSilently(kernel.session, command);
         const error = outputs.find((item) => item.output_type === 'error');
         if (error) {
             traceWarning(DataScience.failedToGetVersionOfPandas(), error.message);
@@ -39,7 +46,7 @@ export class KernelDataViewerDependencyImplementation extends BaseDataViewerDepe
         return outputs.map((item) => item.text?.toString());
     }
 
-    protected async getVersion(kernel: IKernel): Promise<SemVer | undefined> {
+    protected async getVersion(kernel: IKernelWithSession): Promise<SemVer | undefined> {
         try {
             const outputs = await this.execute(kernelGetPandasVersion, kernel);
             return outputs.map((text) => (text ? parseSemVer(text.toString()) : undefined)).find((item) => item);
@@ -49,7 +56,7 @@ export class KernelDataViewerDependencyImplementation extends BaseDataViewerDepe
         }
     }
 
-    private async installMissingDependencies(kernel: IKernel): Promise<void> {
+    private async installMissingDependencies(kernel: IKernelWithSession): Promise<void> {
         sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
             action: 'displayed',
             moduleName: ProductNames.get(Product.pandas)!
@@ -76,7 +83,7 @@ export class KernelDataViewerDependencyImplementation extends BaseDataViewerDepe
     async checkAndInstallMissingDependencies(kernel: IKernel): Promise<void> {
         sendTelemetryEvent(Telemetry.DataViewerUsingKernel);
 
-        if (!kernel.session) {
+        if (!kernelHasSession(kernel)) {
             sendTelemetryEvent(Telemetry.NoActiveKernelSession);
             throw new Error(DataScience.noActiveKernelSession());
         }
