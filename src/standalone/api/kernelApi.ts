@@ -104,6 +104,8 @@ class JupyterKernelService implements IExportedKernelService {
     ) {
         this.kernelProvider.onDidDisposeKernel(() => this._onDidChangeKernels.fire(), this, disposables);
         this.kernelProvider.onDidStartKernel(() => this._onDidChangeKernels.fire(), this, disposables);
+        this.thirdPartyKernelProvider.onDidDisposeKernel(() => this._onDidChangeKernels.fire(), this, disposables);
+        this.thirdPartyKernelProvider.onDidStartKernel(() => this._onDidChangeKernels.fire(), this, disposables);
         this.controllerLoader.refreshed(() => this._onDidChangeKernelSpecifications.fire(), this, disposables);
     }
     async getKernelSpecifications(refresh?: boolean): Promise<KernelConnectionMetadata[]> {
@@ -177,7 +179,7 @@ class JupyterKernelService implements IExportedKernelService {
             extensionId: this.callingExtensionId,
             pemUsed: 'getKernel'
         });
-        const kernel = this.thirdPartyKernelProvider.get(uri);
+        const kernel = this.thirdPartyKernelProvider.get(uri) ?? this.kernelProvider.get(uri);
         if (kernel?.session?.kernel) {
             const connection = this.wrapKernelConnection(kernel);
             return {
