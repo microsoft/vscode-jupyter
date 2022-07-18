@@ -12,11 +12,11 @@ import { calculateWorkingDirectory } from '../platform/common/utils.node';
 import { traceInfo } from '../platform/logging';
 import { isLocalHostConnection, isPythonKernelConnection } from './helpers';
 import { expandWorkingDir } from './jupyter/jupyterUtils';
-import { IKernel, isLocalConnection, IStartupCodeProvider } from './types';
+import { IKernel, isLocalConnection, IStartupCodeProvider, StartupCodePriority } from './types';
 
 @injectable()
 export class KernelStartupCodeProvider implements IStartupCodeProvider {
-    public priority: number = 0;
+    public priority = StartupCodePriority.Base;
 
     constructor(
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
