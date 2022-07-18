@@ -47,6 +47,11 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
             if (api.registerJupyterPythonPathFunction !== undefined) {
                 api.registerJupyterPythonPathFunction((uri) => this._jupyterPythonPathFunction(uri));
             }
+            if (api.registerGetNotebookUriForTextDocumentUriFunction !== undefined) {
+                api.registerGetNotebookUriForTextDocumentUriFunction((uri) =>
+                    this._getNotebookUriForTextDocumentUri(uri)
+                );
+            }
         });
     }
 
@@ -137,5 +142,15 @@ export class NotebookPythonPathService implements IExtensionSingleActivationServ
         traceVerbose(`_jupyterPythonPathFunction: Giving Pylance "${pythonPath}" as python path for "${uri}"`);
 
         return pythonPath;
+    }
+
+    private _getNotebookUriForTextDocumentUri(textDocumentUri: Uri): Uri | undefined {
+        if (textDocumentUri.scheme !== 'vscode-interactive-input') {
+            return undefined;
+        }
+
+        const notebookPath = `${textDocumentUri.fsPath.replace('\\InteractiveInput-', 'Interactive-')}.interactive`;
+        const notebookUri = textDocumentUri.with({ scheme: 'vscode-interactive', path: notebookPath });
+        return notebookUri;
     }
 }
