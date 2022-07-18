@@ -2,9 +2,11 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
+import { Uri } from 'vscode';
 import { IWorkspaceService } from '../platform/common/application/types';
 import { CodeSnippets } from '../platform/common/constants';
-import { IFileSystemNode } from '../platform/common/platform/types.node';
+import { getFilePath } from '../platform/common/platform/fs-paths';
+import { IFileSystem } from '../platform/common/platform/types';
 import { IConfigurationService } from '../platform/common/types';
 import { calculateWorkingDirectory } from '../platform/common/utils.node';
 import { traceInfo } from '../platform/logging';
@@ -18,7 +20,7 @@ export class KernelStartupCodeProvider implements IStartupCodeProvider {
 
     constructor(
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
-        @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
     ) {}
 
@@ -43,19 +45,21 @@ export class KernelStartupCodeProvider implements IStartupCodeProvider {
                 this.fs,
                 kernel.resourceUri
             );
-            if (suggestedDir && (await this.fs.localDirectoryExists(suggestedDir))) {
+            if (suggestedDir && (await this.fs.exists(suggestedDir))) {
                 traceInfo('UpdateWorkingDirectoryAndPath in Kernel');
                 // We should use the launch info directory. It trumps the possible dir
                 return this.getChangeDirectoryCode(kernel, suggestedDir);
-            } else if (kernel.resourceUri && (await this.fs.localFileExists(kernel.resourceUri.fsPath))) {
+            } else if (kernel.resourceUri && (await this.fs.exists(kernel.resourceUri))) {
                 // Combine the working directory with this file if possible.
-                suggestedDir = expandWorkingDir(
-                    suggestedDir,
-                    kernel.resourceUri,
-                    this.workspaceService,
-                    this.configService.getSettings(kernel.resourceUri)
+                suggestedDir = Uri.file(
+                    expandWorkingDir(
+                        getFilePath(suggestedDir),
+                        kernel.resourceUri,
+                        this.workspaceService,
+                        this.configService.getSettings(kernel.resourceUri)
+                    )
                 );
-                if (suggestedDir && (await this.fs.localDirectoryExists(suggestedDir))) {
+                if (suggestedDir && (await this.fs.exists(suggestedDir))) {
                     traceInfo('UpdateWorkingDirectoryAndPath in Kernel');
                     return this.getChangeDirectoryCode(kernel, suggestedDir);
                 }
@@ -64,13 +68,13 @@ export class KernelStartupCodeProvider implements IStartupCodeProvider {
         return [];
     }
 
-    private getChangeDirectoryCode(kernel: IKernel, directory: string): string[] {
+    private getChangeDirectoryCode(kernel: IKernel, directory: Uri): string[] {
         if (
             (isLocalConnection(kernel.kernelConnectionMetadata) ||
                 isLocalHostConnection(kernel.kernelConnectionMetadata)) &&
             isPythonKernelConnection(kernel.kernelConnectionMetadata)
         ) {
-            return CodeSnippets.UpdateCWDAndPath.format(directory).splitLines({ trim: false });
+            return CodeSnippets.UpdateCWDAndPath.format(getFilePath(directory)).splitLines({ trim: false });
         }
         return [];
     }

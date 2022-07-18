@@ -1,22 +1,41 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
+import { Uri } from 'vscode';
 import { getAssociatedNotebookDocument } from '../../kernels/helpers';
 import { IKernel, IStartupCodeProvider, StartupCodePriority } from '../../kernels/types';
 import { InteractiveWindowView } from '../../platform/common/constants';
-const addRunCellHook = require('../../pythonFiles/vscode_datascience_helpers/kernel/addRunCellHook.py');
+import { IFileSystem } from '../../platform/common/platform/types';
+import { IExtensionContext } from '../../platform/common/types';
 
 @injectable()
 export class InteractiveWindowDebuggingStartupCodeProvider implements IStartupCodeProvider {
     public priority = StartupCodePriority.Debugging;
+    private addRunCellHookContents?: Promise<string>;
 
-    constructor() {}
+    constructor(
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IExtensionContext) private readonly context: IExtensionContext
+    ) {}
 
     async getCode(kernel: IKernel): Promise<string[]> {
         if (getAssociatedNotebookDocument(kernel)?.notebookType === InteractiveWindowView) {
             // If using ipykernel 6, we need to set the IPYKERNEL_CELL_NAME so that
             // debugging can work. However this code is harmless for IPYKERNEL 5 so just always do it
+            if (!this.addRunCellHookContents) {
+                this.addRunCellHookContents = this.fs.readFile(
+                    Uri.joinPath(
+                        this.context.extensionUri,
+                        'pythonFiles',
+                        'vscode_datascience_helpers',
+                        'kernel',
+                        'addRunCellHook.py'
+                    )
+                );
+            }
+            const addRunCellHook = await this.addRunCellHookContents;
+
             return addRunCellHook.splitLines({ trim: false });
         }
         return [];

@@ -6,7 +6,6 @@ import { inject, injectable, multiInject } from 'inversify';
 import { Uri, workspace } from 'vscode';
 import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../platform/common/application/types';
 import { InteractiveWindowView } from '../platform/common/constants';
-import { IFileSystem } from '../platform/common/platform/types';
 import { IPythonExecutionFactory } from '../platform/common/process/types.node';
 import {
     IAsyncDisposableRegistry,
@@ -29,7 +28,6 @@ export class KernelProvider extends BaseKernelProvider {
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(CellOutputDisplayIdTracker) private readonly outputTracker: CellOutputDisplayIdTracker,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IVSCodeNotebook) notebook: IVSCodeNotebook,

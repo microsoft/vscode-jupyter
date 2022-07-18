@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { getAssociatedNotebookDocument } from '../../kernels/helpers';
 import { IKernel, isLocalConnection, IStartupCodeProvider } from '../../kernels/types';
 import { InteractiveWindowView } from '../../platform/common/constants';
-import { IFileSystemNode } from '../../platform/common/platform/types.node';
+import { IFileSystem } from '../../platform/common/platform/types';
 import { AddRunCellHook } from '../../platform/common/scriptConstants';
 import { IConfigurationService, IExtensionContext } from '../../platform/common/types';
 import { traceError } from '../../platform/logging';
@@ -15,7 +15,7 @@ export class InteractiveWindowDebuggingStartupCodeProvider implements IStartupCo
     public priority: number = 10;
     constructor(
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
-        @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IExtensionContext) private readonly context: IExtensionContext
     ) {}
 
@@ -33,8 +33,8 @@ export class InteractiveWindowDebuggingStartupCodeProvider implements IStartupCo
             // If using ipykernel 6, we need to set the IPYKERNEL_CELL_NAME so that
             // debugging can work. However this code is harmless for IPYKERNEL 5 so just always do it
             const scriptPath = AddRunCellHook.getScriptPath(this.context);
-            if (await this.fs.localFileExists(scriptPath.fsPath)) {
-                const fileContents = await this.fs.readLocalFile(scriptPath.fsPath);
+            if (await this.fs.exists(scriptPath)) {
+                const fileContents = await this.fs.readFile(scriptPath);
                 return fileContents.splitLines({ trim: false });
             }
             traceError(`Cannot run non-existent script file: ${scriptPath}`);
