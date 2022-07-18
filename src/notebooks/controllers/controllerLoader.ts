@@ -62,7 +62,11 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         );
 
         // Make sure to reload whenever we do something that changes state
-        const forceLoad = () => this.loadControllers(true);
+        const forceLoad = () => {
+            this.loadControllers(true)
+                .then(noop)
+                .catch((ex) => traceError('Error reloading notebook controllers', ex));
+        };
         this.serverUriStorage.onDidChangeUri(forceLoad, this, this.disposables);
 
         // If we create a new kernel, we need to refresh if the kernel is remote (because
@@ -71,7 +75,7 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         // to check for remote if the future when we support live sessions on local
         this.kernelProvider.onDidStartKernel((k) => {
             if (isRemoteConnection(k.kernelConnectionMetadata)) {
-                forceLoad().ignoreErrors();
+                forceLoad();
             }
         });
 
