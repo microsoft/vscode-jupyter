@@ -53,6 +53,12 @@ export const IEnvironmentVariablesProvider = Symbol('IEnvironmentVariablesProvid
 
 export interface IEnvironmentVariablesProvider {
     onDidEnvironmentVariablesChange: Event<Uri | undefined>;
+    /**
+     * Gets merged result of process.env and env variables defined in the .env file.
+     */
     getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables>;
+    /**
+     * Gets the env variables defined in the .env file.
+     */
     getCustomEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables | undefined>;
 }

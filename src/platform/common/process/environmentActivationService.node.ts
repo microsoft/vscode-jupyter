@@ -574,7 +574,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             return;
         }
         this.updateWithLatestVSCodeVariables(cachedData.activatedEnvVariables);
-        return cachedData.activatedEnvVariables;
+        // Temporarily disabled, until we address issue #10359
+        // return cachedData.activatedEnvVariables;
+        return;
     }
     private async storeActivatedEnvVariablesInCache(
         resource: Resource,
