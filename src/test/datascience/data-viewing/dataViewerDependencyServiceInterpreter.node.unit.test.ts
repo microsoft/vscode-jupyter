@@ -72,7 +72,10 @@ suite('DataScience - DataViewerDependencyService (PythonEnvironment, Node)', () 
 
         const promise = dependencyService.checkAndInstallMissingDependencies(interpreter);
 
-        await assert.isRejected(promise, DataScience.pandasTooOldForViewingFormat().format('0.20.'));
+        await assert.isRejected(
+            promise,
+            DataScience.pandasTooOldForViewingFormat().format('0.20.', pandasMinimumVersionSupportedByVariableViewer)
+        );
     });
     test('Throw exception if pandas is installed and version is < 0.20', async () => {
         when(
@@ -81,7 +84,10 @@ suite('DataScience - DataViewerDependencyService (PythonEnvironment, Node)', () 
 
         const promise = dependencyService.checkAndInstallMissingDependencies(interpreter);
 
-        await assert.isRejected(promise, DataScience.pandasTooOldForViewingFormat().format('0.10.'));
+        await assert.isRejected(
+            promise,
+            DataScience.pandasTooOldForViewingFormat().format('0.10.', pandasMinimumVersionSupportedByVariableViewer)
+        );
     });
     test('Prompt to install pandas and install pandas', async () => {
         when(

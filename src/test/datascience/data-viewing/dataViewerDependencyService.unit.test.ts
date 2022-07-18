@@ -80,7 +80,7 @@ suite('DataScience - DataViewerDependencyService (IKernel, Web)', () => {
         const resultPromise = dependencyService.checkAndInstallMissingDependencies(kernel);
         await assert.isRejected(
             resultPromise,
-            DataScience.pandasTooOldForViewingFormat().format('0.20.'),
+            DataScience.pandasTooOldForViewingFormat().format('0.20.', pandasMinimumVersionSupportedByVariableViewer),
             'Failed to identify too old pandas'
         );
         assert.deepEqual(
@@ -98,7 +98,7 @@ suite('DataScience - DataViewerDependencyService (IKernel, Web)', () => {
         const resultPromise = dependencyService.checkAndInstallMissingDependencies(kernel);
         await assert.isRejected(
             resultPromise,
-            DataScience.pandasTooOldForViewingFormat().format('0.10.'),
+            DataScience.pandasTooOldForViewingFormat().format('0.10.', pandasMinimumVersionSupportedByVariableViewer),
             'Failed to identify too old pandas'
         );
         assert.deepEqual(
