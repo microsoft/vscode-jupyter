@@ -141,7 +141,7 @@ suite('KernelProvider Node', () => {
 
         const onKernelCreated = createEventHandler(kernelProvider, 'onDidCreateKernel', disposables);
         const onKernelDisposed = createEventHandler(kernelProvider, 'onDidDisposeKernel', disposables);
-        const kernel = kernelProvider.getOrCreate(sampleNotebook1, options);
+        const kernel = kernelProvider.getOrCreate(instance(sampleNotebook1), options);
         asyncDisposables.push(kernel);
 
         assert.equal(kernel.uri, sampleUri1, 'Kernel id should match the uri');
@@ -151,7 +151,11 @@ suite('KernelProvider Node', () => {
         assert.equal(onKernelDisposed.count, 0, 'Should not have triggered the event');
         assert.isOk(kernel, 'Should be an object');
         assert.equal(kernel, kernelProvider.get(sampleUri1), 'Should return the same instance');
-        assert.equal(kernel, kernelProvider.getOrCreate(sampleNotebook1, options), 'Should return the same instance');
+        assert.equal(
+            kernel,
+            kernelProvider.getOrCreate(instance(sampleNotebook1), options),
+            'Should return the same instance'
+        );
 
         await kernel.dispose();
         assert.isTrue(kernel.disposed, 'Kernel should be disposed');
@@ -231,7 +235,7 @@ suite('KernelProvider Node', () => {
             resourceUri: sampleUri1
         };
 
-        const kernel = kernelProvider.getOrCreate(sampleNotebook1, options);
+        const kernel = kernelProvider.getOrCreate(instance(sampleNotebook1), options);
         assert.isOk(kernel);
         const onKernelDisposed = createEventHandler(kernelProvider, 'onDidDisposeKernel', disposables);
         assert.isOk(kernelProvider.get(sampleUri1), 'Should return an instance');
@@ -243,7 +247,7 @@ suite('KernelProvider Node', () => {
         assert.isUndefined(kernelProvider.get(sampleUri1), 'Should not return an instance');
 
         // Calling getOrCreate again will return a whole new instance.
-        const newKernel = kernelProvider.getOrCreate(sampleNotebook1, options);
+        const newKernel = kernelProvider.getOrCreate(instance(sampleNotebook1), options);
         asyncDisposables.push(newKernel);
         assert.notEqual(kernel, newKernel, 'Should return a different instance');
     });
