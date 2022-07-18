@@ -241,8 +241,7 @@ export class JupyterKernelService implements IJupyterKernelService {
         interpreter: PythonEnvironment,
         kernel: IJupyterKernelSpec,
         specFile: string,
-        cancelToken?: CancellationToken,
-        forceWrite?: boolean
+        cancelToken?: CancellationToken
     ) {
         const kernelSpecRootPath = await this.jupyterPaths.getKernelSpecTempRegistrationFolder();
         const specedKernel = kernel as JupyterKernelSpec;
@@ -266,7 +265,7 @@ export class JupyterKernelService implements IJupyterKernelService {
 
             // Make sure the specmodel has an interpreter or already in the metadata or we
             // may overwrite a kernel created by the user
-            if (specModel.metadata?.interpreter || forceWrite) {
+            if (specModel.metadata?.interpreter) {
                 // Ensure we use a fully qualified path to the python interpreter in `argv`.
                 if (specModel.argv[0].toLowerCase() === 'conda') {
                     // If conda is the first word, its possible its a conda activation command.
