@@ -121,20 +121,17 @@ export class ControllerPreferredService implements IControllerPreferredService, 
                     serverId
                 ));
 
-                // Also start the search to refresh the cache, don't need to await on this
-                // unless we don't find a match. It will update the cache after running
-                const ignoreCacheFindPreferredPromise = this.findPreferredKernelExactMatch(
-                    document.uri,
-                    notebookMetadata,
-                    preferredSearchToken.token,
-                    'ignoreCache',
-                    preferredInterpreter,
-                    serverId
-                );
-
                 // If we didn't find an exact match in the cache, try awaiting for the non-cache version
                 if (!preferredConnection) {
-                    ({ preferredConnection } = await ignoreCacheFindPreferredPromise);
+                    // Don't start this ahead of time to save some CPU cycles
+                    ({ preferredConnection } = await this.findPreferredKernelExactMatch(
+                        document.uri,
+                        notebookMetadata,
+                        preferredSearchToken.token,
+                        'ignoreCache',
+                        preferredInterpreter,
+                        serverId
+                    ));
                 }
 
                 // Send telemetry on looking for preferred don't await for sending it

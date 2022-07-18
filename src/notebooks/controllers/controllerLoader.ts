@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { isPythonNotebook } from '../../kernels/helpers';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
-import { IKernelFinder, IKernelProvider, KernelConnectionMetadata } from '../../kernels/types';
+import { IKernelFinder, IKernelProvider, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
@@ -50,36 +50,43 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
     }
 
     public activate(): void {
-        let timer: NodeJS.Timeout | number | undefined;
         this.interpreters.onDidChangeInterpreters(
-            () => {
-                if (timer) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    clearTimeout(timer as any);
+            async () => {
+                // Don't do anything if the interpreter list is still being refreshed
+                if (!this.interpreters.refreshing) {
+                    await this.loadControllers(true);
                 }
-                timer = setTimeout(
-                    () =>
-                        this.loadControllers(true).catch((ex) =>
-                            traceError('Failed to re-query python kernels after changes to list of interpreters', ex)
-                        ),
-                    // This hacky solution should be removed in favor of https://github.com/microsoft/vscode-jupyter/issues/7583
-                    // as a proper fix for https://github.com/microsoft/vscode-jupyter/issues/5319
-                    1_000
-                );
             },
             this,
             this.disposables
         );
 
         // Make sure to reload whenever we do something that changes state
-        const forceLoad = () => this.loadControllers(true);
+        const forceLoad = () => {
+            this.loadControllers(true)
+                .then(noop)
+                .catch((ex) => traceError('Error reloading notebook controllers', ex));
+        };
         this.serverUriStorage.onDidChangeUri(forceLoad, this, this.disposables);
-        this.kernelProvider.onDidStartKernel(forceLoad, this, this.disposables);
+
+        // If we create a new kernel, we need to refresh if the kernel is remote (because
+        // we have live sessions possible)
+        // Note, this is a perf optimization for right now. We should not need
+        // to check for remote if the future when we support live sessions on local
+        this.kernelProvider.onDidStartKernel((k) => {
+            if (isRemoteConnection(k.kernelConnectionMetadata)) {
+                forceLoad();
+            }
+        });
 
         // For kernel dispose we need to wait a bit, otherwise the list comes back the
         // same
         this.kernelProvider.onDidDisposeKernel(
-            () => setTimeout(forceLoad, REMOTE_KERNEL_REFRESH_INTERVAL),
+            (k) => {
+                if (k && isRemoteConnection(k.kernelConnectionMetadata)) {
+                    setTimeout(forceLoad, REMOTE_KERNEL_REFRESH_INTERVAL);
+                }
+            },
             this,
             this.disposables
         );
