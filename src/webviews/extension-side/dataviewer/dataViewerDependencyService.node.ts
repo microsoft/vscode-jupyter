@@ -16,6 +16,12 @@ import { InterpreterDataViewerDependencyImplementation } from './interpreterData
 import { KernelDataViewerDependencyImplementation } from './kernelDataViewerDependencyImplementation';
 import { IDataViewerDependencyService } from './types';
 
+// TypeScript will narrow the type to PythonEnvironment in any block guarded by a call to isPythonEnvironment
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function isPythonEnvironment(env: any): env is PythonEnvironment {
+    return 'sysPrefix' in env && typeof env.sysPrefix === 'string';
+}
+
 /**
  * Responsible for managing dependencies of a Data Viewer.
  */
@@ -43,7 +49,7 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
 
     async checkAndInstallMissingDependencies(executionEnvironment: IKernel | PythonEnvironment): Promise<void> {
         // IKernel and PythonEnvironment are only types, so I can't compare prototypes or instances of.
-        if (typeof (executionEnvironment as PythonEnvironment).sysPrefix === 'string') {
+        if (isPythonEnvironment(executionEnvironment)) {
             sendTelemetryEvent(Telemetry.DataViewerUsingInterpreter);
             return this.withInterpreter.checkAndInstallMissingDependencies(executionEnvironment);
         } else {
