@@ -69,7 +69,7 @@ export class KernelEnvironmentVariablesService {
         }
         // Merge the env variables with that of the kernel env.
         interpreterEnv = interpreterEnv || {};
-        const mergedVars = { ...process.env }; // clone the vars, do not update the original.;
+        const mergedVars = { ...process.env };
         kernelEnv = kernelEnv || {};
         customEnvVars = customEnvVars || {};
         this.envVarsService.mergeVariables(interpreterEnv, mergedVars); // interpreter vars win over proc.

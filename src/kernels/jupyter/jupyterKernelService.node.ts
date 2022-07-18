@@ -257,6 +257,9 @@ export class JupyterKernelService implements IJupyterKernelService {
             let specModel: ReadWrite<KernelSpec.ISpecModel> = JSON.parse(
                 await this.fs.readFile(Uri.file(kernelSpecFilePath))
             );
+            if (Cancellation.isCanceled(cancelToken)) {
+                return;
+            }
 
             // Make sure the specmodel has an interpreter or already in the metadata or we
             // may overwrite a kernel created by the user
@@ -278,9 +281,6 @@ export class JupyterKernelService implements IJupyterKernelService {
                 specModel.metadata = specModel.metadata || {};
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 specModel.metadata.interpreter = interpreter as any;
-            }
-            if (Cancellation.isCanceled(cancelToken)) {
-                return;
             }
 
             specModel.env = await this.kernelEnvVars.getEnvironmentVariables(resource, interpreter, specedKernel);
