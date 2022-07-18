@@ -6,6 +6,9 @@ import { Uri } from 'vscode';
 import { IKernel } from '../types';
 import { INbExtensionsPathProvider } from './types';
 
+/**
+ * Returns the path to the nbExtensions folder for a given kernel (node)
+ */
 @injectable()
 export class NbExtensionsPathProvider implements INbExtensionsPathProvider {
     getNbExtensionsParentPath(kernel: IKernel): Uri | undefined {

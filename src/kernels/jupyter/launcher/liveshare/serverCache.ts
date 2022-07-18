@@ -15,6 +15,9 @@ interface IServerData {
     resolved: boolean;
 }
 
+/**
+ * Cache of connections to notebook servers.
+ */
 export class ServerCache implements IAsyncDisposable {
     private cache: Map<string, IServerData> = new Map<string, IServerData>();
     private disposed = false;

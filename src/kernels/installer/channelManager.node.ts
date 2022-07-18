@@ -9,6 +9,9 @@ import { Installer } from '../../platform/common/utils/localize';
 import { IServiceContainer } from '../../platform/ioc/types';
 import { IInstallationChannelManager, IModuleInstaller, Product } from './types';
 
+/**
+ * Finds IModuleInstaller instances for a particular environment (like pip, poetry, conda).
+ */
 @injectable()
 export class InstallationChannelManager implements IInstallationChannelManager {
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}

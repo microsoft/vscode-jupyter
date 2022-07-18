@@ -14,6 +14,9 @@ import { IInstaller, Product } from '../../installer/types';
 import { INbConvertInterpreterDependencyChecker } from '../types';
 import { IJupyterCommandFactory } from '../types.node';
 
+/**
+ * Checks the dependencies for nbconvert.
+ */
 @injectable()
 export class NbConvertInterpreterDependencyChecker implements INbConvertInterpreterDependencyChecker {
     // Track interpreters that nbconvert has been installed into

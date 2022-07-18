@@ -10,6 +10,9 @@ import { ILocalKernelFinder, IRemoteKernelFinder } from './raw/types';
 import { INotebookProvider, KernelConnectionMetadata } from './types';
 import { IFileSystem } from '../platform/common/platform/types';
 
+/**
+ * Node version of a KernelFinder. Node has different ways to validate than web.
+ */
 @injectable()
 export class KernelFinder extends BaseKernelFinder {
     constructor(

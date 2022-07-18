@@ -42,7 +42,7 @@ import { IJupyterKernelService } from './types';
 import { arePathsSame } from '../../platform/common/platform/fileUtils';
 
 /**
- * Responsible for registering and updating kernels
+ * Responsible for registering and updating kernels in a non ZMQ situation (kernel specs)
  *
  * @export
  * @class JupyterKernelService

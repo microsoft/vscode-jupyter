@@ -18,6 +18,10 @@ import {
 } from './types';
 
 const REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY = 'REGISTRATION_ID_EXTENSION_OWNER_MEMENTO_KEY';
+
+/**
+ * Handles registration of 3rd party URI providers.
+ */
 @injectable()
 export class JupyterUriProviderRegistration implements IJupyterUriProviderRegistration {
     private readonly _onProvidersChanged = new EventEmitter<void>();

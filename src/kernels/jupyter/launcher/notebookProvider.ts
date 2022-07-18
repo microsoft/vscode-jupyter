@@ -22,6 +22,9 @@ import { IRawNotebookProvider } from '../../raw/types';
 import { IJupyterNotebookProvider, IServerConnectionType } from '../types';
 import { sendKernelTelemetryWhenDone } from '../../telemetry/sendKernelTelemetryEvent';
 
+/**
+ * Generic class for connecting to a server. Probably could be renamed as it doesn't provide notebooks, but rather connections.
+ */
 @injectable()
 export class NotebookProvider implements INotebookProvider {
     private readonly startupUi = new DisplayOptions(true);

@@ -4,6 +4,9 @@
 import { Event, EventEmitter } from 'vscode';
 import { IDisplayOptions } from '../platform/common/types';
 
+/**
+ * Settings used when doing auto starts to determine if messages should be shown to the user or not.
+ */
 export class DisplayOptions implements IDisplayOptions {
     private _disableUI: boolean;
     public get disableUI(): boolean {

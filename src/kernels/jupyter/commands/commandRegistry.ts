@@ -9,6 +9,9 @@ import { IWorkspaceService } from '../../../platform/common/application/types';
 import { IDisposable } from '../../../platform/common/types';
 import { JupyterCommandLineSelectorCommand } from './commandLineSelector';
 
+/**
+ * Registers jupyter (non ZMQ) specific commands
+ */
 @injectable()
 export class CommandRegistry implements IExtensionSingleActivationService {
     private readonly disposables: IDisposable[] = [];

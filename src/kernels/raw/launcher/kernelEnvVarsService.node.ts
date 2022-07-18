@@ -14,6 +14,9 @@ import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IJupyterKernelSpec } from '../../types';
 import { Uri } from 'vscode';
 
+/**
+ * Class used to fetch environment variables for a kernel.
+ */
 @injectable()
 export class KernelEnvironmentVariablesService {
     constructor(

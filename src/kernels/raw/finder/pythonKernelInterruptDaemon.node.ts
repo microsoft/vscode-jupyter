@@ -12,6 +12,11 @@ import { IPythonExecutionService } from '../../../platform/common/process/types.
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { IPythonKernelDaemon } from '../types';
 
+/**
+ * Special daemon (process) creator to handle allowing interrupt on windows.
+ * On windows we need a separate process to handle an interrupt signal that we custom send from the extension.
+ * Things like SIGTERM don't work on windows.
+ */
 export class PythonKernelInterruptDaemon extends BasePythonDaemon implements IPythonKernelDaemon {
     private killed?: boolean;
     // eslint-disable-next-line @typescript-eslint/no-useless-constructor

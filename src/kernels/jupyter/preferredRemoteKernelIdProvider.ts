@@ -19,6 +19,9 @@ type KernelIdListEntry = {
     kernelId: string | undefined;
 };
 
+/**
+ * Saves the preferred kernel for a given notebook
+ */
 @injectable()
 export class PreferredRemoteKernelIdProvider {
     constructor(

@@ -17,6 +17,9 @@ type CacheInfo = {
     state: IPersistentState<string | undefined>;
 };
 
+/**
+ * Old way to store the global jupyter interpreter
+ */
 @injectable()
 export class JupyterInterpreterOldCacheStateStore {
     private readonly workspaceJupyterInterpreter: CacheInfo;

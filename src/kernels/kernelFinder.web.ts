@@ -9,6 +9,9 @@ import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernel
 import { IRemoteKernelFinder } from './raw/types';
 import { INotebookProvider, KernelConnectionMetadata } from './types';
 
+/**
+ * Web version of a KernelFinder. Web has different ways to validate than node.
+ */
 @injectable()
 export class KernelFinder extends BaseKernelFinder {
     constructor(

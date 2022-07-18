@@ -33,6 +33,9 @@ import { CellExecutionMessageHandlerService } from './cellExecutionMessageHandle
 import { IKernelConnectionSession, KernelConnectionMetadata, NotebookCellRunState } from '../../kernels/types';
 import { NotebookCellStateTracker, traceCellMessage } from './helpers';
 
+/**
+ * Factory for CellExecution objects.
+ */
 export class CellExecutionFactory {
     constructor(
         private readonly controller: NotebookController,

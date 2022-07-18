@@ -60,7 +60,10 @@ export async function isModulePresentInEnvironment(memento: Memento, product: Pr
     }
 }
 
-abstract class BaseInstaller {
+/**
+ * Installer for this extension. Finds the installer for a module and then runs it.
+ */
+export class DataScienceInstaller {
     protected readonly appShell: IApplicationShell;
 
     protected readonly configService: IConfigurationService;
@@ -147,8 +150,9 @@ abstract class BaseInstaller {
     }
 }
 
-export class DataScienceInstaller extends BaseInstaller {}
-
+/**
+ * Main interface to installing.
+ */
 @injectable()
 export class ProductInstaller implements IInstaller {
     private readonly productService: IProductService;
@@ -230,7 +234,7 @@ export class ProductInstaller implements IInstaller {
         return translateProductToModule(product);
     }
 
-    private createInstaller(product: Product): BaseInstaller {
+    private createInstaller(product: Product): DataScienceInstaller {
         const productType = this.productService.getProductType(product);
         switch (productType) {
             case ProductType.DataScience:

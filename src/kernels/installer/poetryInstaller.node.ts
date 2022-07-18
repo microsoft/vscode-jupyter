@@ -15,6 +15,9 @@ import { ModuleInstallerType } from './types';
 
 export const poetryName = 'poetry';
 
+/**
+ * Installer for poetry environments.
+ */
 @injectable()
 export class PoetryInstaller extends ModuleInstaller {
     // eslint-disable-next-line class-methods-use-this

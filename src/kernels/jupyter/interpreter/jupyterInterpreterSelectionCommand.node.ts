@@ -10,6 +10,9 @@ import { IDisposableRegistry } from '../../../platform/common/types';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { JupyterInterpreterService } from './jupyterInterpreterService.node';
 
+/**
+ * Registers the command for setting the interpreter to launch jupyter with
+ */
 @injectable()
 export class JupyterInterpreterSelectionCommand implements IExtensionSingleActivationService {
     constructor(
