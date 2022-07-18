@@ -9,12 +9,10 @@ import { FileSystem } from '../../../../platform/common/platform/fileSystem.node
 import { IFileSystemNode } from '../../../../platform/common/platform/types.node';
 import { KernelDependencyService } from '../../../../platform/../kernels/kernelDependencyService.node';
 import { IKernelDependencyService, LocalKernelConnectionMetadata } from '../../../../platform/../kernels/types';
-import { IEnvironmentActivationService } from '../../../../platform/interpreter/activation/types';
 import { EnvironmentType } from '../../../../platform/pythonEnvironments/info';
 import { EXTENSION_ROOT_DIR } from '../../../../platform/constants.node';
 import * as path from '../../../../platform/vscode-path/path';
 import { CancellationTokenSource, Uri } from 'vscode';
-import { EnvironmentVariablesService } from '../../../../platform/common/variables/environment.node';
 import { JupyterKernelService } from '../../../../kernels/jupyter/jupyterKernelService.node';
 import { JupyterPaths } from '../../../../kernels/raw/finder/jupyterPaths.node';
 import { DisplayOptions } from '../../../../kernels/displayOptions';
@@ -23,15 +21,16 @@ import { IConfigurationService, IWatchableJupyterSettings } from '../../../../pl
 import { ConfigurationService } from '../../../../platform/common/configuration/service.node';
 import { JupyterSettings } from '../../../../platform/common/configSettings';
 import { uriEquals } from '../../helpers';
+import { KernelEnvironmentVariablesService } from '../../../../kernels/raw/launcher/kernelEnvVarsService.node';
 
 // eslint-disable-next-line
 suite('DataScience - JupyterKernelService', () => {
     let kernelService: JupyterKernelService;
     let kernelDependencyService: IKernelDependencyService;
+    let kernelEnvService: KernelEnvironmentVariablesService;
     let configService: IConfigurationService;
     let settings: IWatchableJupyterSettings;
     let fs: IFileSystemNode;
-    let appEnv: IEnvironmentActivationService;
     let testWorkspaceFolder: Uri;
     const pathVariable = getOSType() === OSType.Windows ? 'PATH' : 'Path';
 
@@ -379,8 +378,7 @@ suite('DataScience - JupyterKernelService', () => {
             return Promise.reject('Invalid file');
         });
         when(fs.searchLocal(anything(), anything())).thenResolve([]);
-        appEnv = mock<IEnvironmentActivationService>();
-        when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({});
+        kernelEnvService = mock<KernelEnvironmentVariablesService>();
         testWorkspaceFolder = Uri.file(path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience'));
         const jupyterPaths = mock<JupyterPaths>();
         when(jupyterPaths.getKernelSpecTempRegistrationFolder()).thenResolve(testWorkspaceFolder);
@@ -390,10 +388,8 @@ suite('DataScience - JupyterKernelService', () => {
         kernelService = new JupyterKernelService(
             instance(kernelDependencyService),
             instance(fs),
-            instance(appEnv),
-            new EnvironmentVariablesService(instance(fs)),
             instance(jupyterPaths),
-            instance(configService)
+            instance(kernelEnvService)
         );
     });
     test('Dependencies checked on all kernels with interpreters', async () => {
@@ -442,7 +438,6 @@ suite('DataScience - JupyterKernelService', () => {
         const kernelsWithInterpreters = kernels.filter((k) => k.interpreter && k.kernelSpec?.metadata?.interpreter);
         let updateCount = 0;
         when(fs.exists(anything())).thenResolve(true);
-        when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({ foo: 'bar' });
         when(fs.writeFile(anything(), anything())).thenCall((f: Uri, c) => {
             if (f.fsPath.endsWith('.json')) {
                 const obj = JSON.parse(c);
@@ -465,10 +460,6 @@ suite('DataScience - JupyterKernelService', () => {
     test('Kernel environment preserves env variables from original Python kernelspec', async () => {
         const spec: LocalKernelConnectionMetadata = kernels.find((item) => item.id === '12')!;
         when(fs.exists(anything())).thenResolve(true);
-        when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
-            foo: 'bar',
-            [pathVariable]: `Path1${path.delimiter}Path2`
-        });
         when(fs.writeFile(anything(), anything())).thenResolve();
         const token = new CancellationTokenSource();
         await kernelService.ensureKernelIsUsable(undefined, spec, new DisplayOptions(true), token.token);
@@ -488,10 +479,6 @@ suite('DataScience - JupyterKernelService', () => {
     test('Kernel environment preserves env variables from original non-python kernelspec', async () => {
         const spec: LocalKernelConnectionMetadata = kernels.find((item) => item.id === '13')!;
         when(fs.exists(anything())).thenResolve(true);
-        when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
-            foo: 'bar',
-            [pathVariable]: `Path1${path.delimiter}Path2`
-        });
         when(fs.writeFile(anything(), anything())).thenResolve();
         const token = new CancellationTokenSource();
         await kernelService.ensureKernelIsUsable(undefined, spec, new DisplayOptions(true), token.token);
@@ -512,10 +499,6 @@ suite('DataScience - JupyterKernelService', () => {
         const spec: LocalKernelConnectionMetadata = kernels.find((item) => item.id === '14')!;
         const filesCreated = new Set<string>([spec.kernelSpec.specFile!]);
         when(fs.exists(anything())).thenCall((f: Uri) => Promise.resolve(filesCreated.has(f.fsPath)));
-        when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
-            foo: 'bar',
-            [pathVariable]: `Path1${path.delimiter}Path2`
-        });
         when(fs.writeFile(anything(), anything())).thenCall((f: Uri) => {
             filesCreated.add(f.fsPath);
             return Promise.resolve();
@@ -540,10 +523,6 @@ suite('DataScience - JupyterKernelService', () => {
         const spec: LocalKernelConnectionMetadata = kernels.find((item) => item.id === '14')!;
         const filesCreated = new Set<string>([spec.kernelSpec.specFile!]);
         when(fs.exists(anything())).thenCall((f: Uri) => Promise.resolve(filesCreated.has(f.fsPath)));
-        when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
-            foo: 'bar',
-            [pathVariable]: `Path1${path.delimiter}Path2`
-        });
         when(fs.writeFile(anything(), anything())).thenCall((f: Uri) => {
             filesCreated.add(f.fsPath);
             return Promise.resolve();
@@ -568,7 +547,6 @@ suite('DataScience - JupyterKernelService', () => {
     test('Kernel environment not updated when not custom interpreter', async () => {
         const kernelsWithoutInterpreters = kernels.filter((k) => k.interpreter && !k.kernelSpec?.metadata?.interpreter);
         let updateCount = 0;
-        when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({ foo: 'bar' });
         when(fs.exists(anything())).thenResolve(true);
         when(fs.writeFile(anything(), anything())).thenCall((f: Uri, c) => {
             if (f.fsPath.endsWith('.json')) {

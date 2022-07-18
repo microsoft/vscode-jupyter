@@ -318,29 +318,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             return;
         }
 
-        // If this is a conda environment that supports conda run, then we don't need conda activation commands.
-        const [activationCommands, customEnvVars] = await Promise.all([
-            interpreter.envType === EnvironmentType.Conda
-                ? Promise.resolve([])
-                : this.getActivationCommands(resource, interpreter),
-            this.envVarsService.getCustomEnvironmentVariables(resource)
-        ]);
-
-        // Check cache.
-        const customEnvVariablesHash = getTelemetrySafeHashedString(JSON.stringify(customEnvVars));
-        const cachedVariables = this.getActivatedEnvVariablesFromCache(
-            resource,
-            interpreter,
-            customEnvVariablesHash,
-            activationCommands
-        );
-        if (cachedVariables) {
-            traceVerbose(`Got activation Env Vars from cache`);
-            return cachedVariables && customEnvVars
-                ? { ...cachedVariables, ...customEnvVars }
-                : cachedVariables || customEnvVars;
-        }
-
         if (this.activatedEnvVariablesCache.has(key)) {
             traceVerbose(`Got activation Env Vars from cached promise with key ${key}`);
             return this.activatedEnvVariablesCache.get(key);
@@ -529,55 +506,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         );
     }
 
-    /**
-     * We cache activated environment variables.
-     * When activating environments, all activation scripts update environment variables, nothing else (after all they don't start a process).
-     * The env variables can change based on the activation script, current env variables on the machine & python interpreter information.
-     * If any of these change, then the env variables are invalidated.
-     */
-    private getActivatedEnvVariablesFromCache(
-        resource: Resource,
-        @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment,
-        customEnvVariablesHash: string,
-        activationCommandsForNonCondaEnvironments: string[] = []
-    ) {
-        const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
-        const key = ENVIRONMENT_ACTIVATED_ENV_VARS_KEY_PREFIX.format(
-            `${workspaceKey}_${interpreter && getInterpreterHash(interpreter)}`
-        );
-        const interpreterVersion = `${interpreter.sysVersion || ''}#${interpreter.version?.raw || ''}`;
-        const cachedData = this.memento.get<EnvironmentVariablesCacheInformation>(key);
-        if (!cachedData || !cachedData.activatedEnvVariables) {
-            return;
-        }
-        if (
-            cachedData.interpreterVersion !== interpreterVersion ||
-            cachedData.customEnvVariablesHash !== customEnvVariablesHash
-        ) {
-            return;
-        }
-        // We're interested in activation commands only for non-conda environments.
-        // For conda environments, we don't care about the activation commands (as we activate either using conda activation commands
-        // Or use conda run).
-        // Hence for purposes of caching we don't care about the commands.
-        if (
-            interpreter.envType !== EnvironmentType.Conda &&
-            cachedData.activationCommands.join(',').toLowerCase() !==
-                (activationCommandsForNonCondaEnvironments || []).join(',').toLowerCase()
-        ) {
-            return;
-        }
-        if (
-            cachedData.originalProcEnvVariablesHash !==
-            getTelemetrySafeHashedString(JSON.stringify(this.sanitizedCurrentProcessEnvVars))
-        ) {
-            return;
-        }
-        this.updateWithLatestVSCodeVariables(cachedData.activatedEnvVariables);
-        // Temporarily disabled, until we address issue #10359
-        // return cachedData.activatedEnvVariables;
-        return;
-    }
     private async storeActivatedEnvVariablesInCache(
         resource: Resource,
         @logValue<PythonEnvironment>('uri') interpreter: PythonEnvironment,
@@ -621,16 +549,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         });
         return vars;
     }
-    private updateWithLatestVSCodeVariables(envVars: EnvironmentVariables) {
-        // Restore the env vars we removed.
-        const vars = JSON.parse(JSON.stringify(this.currentProcess.env));
-        Object.keys(vars).forEach((key) => {
-            if (key.startsWith('VSCODE_')) {
-                envVars[key] = vars[key];
-            }
-        });
-    }
-
     @traceDecoratorVerbose('getCondaEnvVariables', TraceOptions.BeforeCall)
     public async getCondaEnvVariables(
         resource: Resource,

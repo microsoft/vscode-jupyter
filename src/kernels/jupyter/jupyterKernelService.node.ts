@@ -20,14 +20,11 @@ import {
 } from '../../platform/logging';
 import { getDisplayPath, getFilePath } from '../../platform/common/platform/fs-paths';
 import { IFileSystemNode } from '../../platform/common/platform/types.node';
-import { Resource, ReadWrite, IDisplayOptions, IConfigurationService } from '../../platform/common/types';
-import { noop } from '../../platform/common/utils/misc';
-import { IEnvironmentVariablesService } from '../../platform/common/variables/types';
-import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
+import { Resource, ReadWrite, IDisplayOptions } from '../../platform/common/types';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { captureTelemetry, sendTelemetryEvent, Telemetry } from '../../telemetry';
 import { JupyterKernelDependencyError } from '../errors/jupyterKernelDependencyError';
-import { getKernelRegistrationInfo, cleanEnvironment } from '../helpers';
+import { cleanEnvironment } from '../helpers';
 import { JupyterPaths } from '../raw/finder/jupyterPaths.node';
 import {
     IJupyterKernelSpec,
@@ -53,10 +50,7 @@ export class JupyterKernelService implements IJupyterKernelService {
     constructor(
         @inject(IKernelDependencyService) private readonly kernelDependencyService: IKernelDependencyService,
         @inject(IFileSystemNode) private readonly fs: IFileSystemNode,
-        @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
-        @inject(IEnvironmentVariablesService) private readonly envVarsService: IEnvironmentVariablesService,
         @inject(JupyterPaths) private readonly jupyterPaths: JupyterPaths,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(KernelEnvironmentVariablesService) private readonly kernelEnvVars: KernelEnvironmentVariablesService
     ) {}
 
