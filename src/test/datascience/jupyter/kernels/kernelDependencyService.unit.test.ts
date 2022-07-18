@@ -186,6 +186,9 @@ suite('DataScience - Kernel Dependency Service', () => {
                 when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
                     Common.install() as any
                 );
+                when(
+                    appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())
+                ).thenResolve(Common.install() as any);
 
                 const result = await dependencyService.installMissingDependencies(
                     resource,
@@ -203,9 +206,9 @@ suite('DataScience - Kernel Dependency Service', () => {
 
                 when(memento.get(anything(), anything())).thenReturn(false);
                 when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
-                when(appShell.showInformationMessage(anything(), anything(), anything(), anything())).thenResolve(
-                    DataScience.selectKernel() as any
-                );
+                when(
+                    appShell.showInformationMessage(anything(), anything(), anything(), anything(), anything())
+                ).thenResolve(DataScience.selectKernel() as any);
 
                 const result = await dependencyService.installMissingDependencies(
                     resource,
