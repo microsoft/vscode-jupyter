@@ -13,7 +13,7 @@ import { Common, DataScience } from '../../../platform/common/utils/localize';
 import * as helpers from '../../../kernels/helpers';
 import * as sinon from 'sinon';
 import { kernelGetPandasVersion } from '../../../webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation';
-import { pandasMinimumVersionSupported } from '../../../webviews/extension-side/dataviewer/constants';
+import { pandasMinimumVersionSupportedByVariableViewer } from '../../../webviews/extension-side/dataviewer/constants';
 
 suite('DataScience - DataViewerDependencyService (IKernel, Web)', () => {
     let dependencyService: DataViewerDependencyService;
@@ -131,7 +131,7 @@ suite('DataScience - DataViewerDependencyService (IKernel, Web)', () => {
         const resultPromise = dependencyService.checkAndInstallMissingDependencies(kernel);
         await assert.isRejected(
             resultPromise,
-            DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupported)
+            DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupportedByVariableViewer)
         );
         assert.deepEqual(
             stub.getCalls().map((call) => call.lastArg),

@@ -15,7 +15,7 @@ import { executeSilently } from '../../../kernels/helpers';
 import { IKernel } from '../../../kernels/types';
 import { parseSemVer } from '../../../platform/common/utils';
 import { IDataViewerDependencyService } from './types';
-import { pandasMinimumVersionSupported } from './constants';
+import { pandasMinimumVersionSupportedByVariableViewer } from './constants';
 
 export const kernelGetPandasVersion =
     'import pandas as _VSCODE_pandas;print(_VSCODE_pandas.__version__);del _VSCODE_pandas';
@@ -61,7 +61,7 @@ export class KernelDataViewerDependencyImplementation implements IDataViewerDepe
         let selection = this.isCodeSpace
             ? Common.install()
             : await this.applicationShell.showErrorMessage(
-                  DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupported),
+                  DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupportedByVariableViewer),
                   { modal: true },
                   Common.install()
               );
@@ -78,7 +78,9 @@ export class KernelDataViewerDependencyImplementation implements IDataViewerDepe
             }
         } else {
             sendTelemetryEvent(Telemetry.UserDidNotInstallPandas);
-            throw new Error(DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupported));
+            throw new Error(
+                DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupportedByVariableViewer)
+            );
         }
     }
 
@@ -91,7 +93,7 @@ export class KernelDataViewerDependencyImplementation implements IDataViewerDepe
         const pandasVersion = await this.getVersion(kernel);
 
         if (pandasVersion) {
-            if (pandasVersion.compare(pandasMinimumVersionSupported) > 0) {
+            if (pandasVersion.compare(pandasMinimumVersionSupportedByVariableViewer) > 0) {
                 return;
             }
             sendTelemetryEvent(Telemetry.PandasTooOld);

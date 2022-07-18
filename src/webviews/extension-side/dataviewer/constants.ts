@@ -3,4 +3,4 @@
 
 'use strict';
 
-export const pandasMinimumVersionSupported = '0.20.0';
+export const pandasMinimumVersionSupportedByVariableViewer = '0.20.0';

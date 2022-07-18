@@ -17,7 +17,7 @@ import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { IDataViewerDependencyService } from './types';
-import { pandasMinimumVersionSupported } from './constants';
+import { pandasMinimumVersionSupportedByVariableViewer } from './constants';
 
 /**
  * Uses the Python interpreter to manage dependencies of a Data Viewer.
@@ -41,7 +41,7 @@ export class InterpreterDataViewerDependencyImplementation implements IDataViewe
             }
 
             if (pandasVersion) {
-                if (pandasVersion.compare(pandasMinimumVersionSupported) > 0) {
+                if (pandasVersion.compare(pandasMinimumVersionSupportedByVariableViewer) > 0) {
                     return;
                 }
                 sendTelemetryEvent(Telemetry.PandasTooOld);
@@ -69,7 +69,7 @@ export class InterpreterDataViewerDependencyImplementation implements IDataViewe
         const selection = this.isCodeSpace
             ? Common.install()
             : await this.applicationShell.showErrorMessage(
-                  DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupported),
+                  DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupportedByVariableViewer),
                   { modal: true },
                   Common.install()
               );
@@ -99,7 +99,9 @@ export class InterpreterDataViewerDependencyImplementation implements IDataViewe
             }
         } else {
             sendTelemetryEvent(Telemetry.UserDidNotInstallPandas);
-            throw new Error(DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupported));
+            throw new Error(
+                DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupportedByVariableViewer)
+            );
         }
     }
 
