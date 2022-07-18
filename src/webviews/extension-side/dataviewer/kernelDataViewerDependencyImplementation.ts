@@ -85,6 +85,8 @@ export class KernelDataViewerDependencyImplementation implements IDataViewerDepe
     }
 
     async checkAndInstallMissingDependencies(kernel: IKernel): Promise<void> {
+        sendTelemetryEvent(Telemetry.DataViewerUsingKernel);
+
         if (!kernel.session) {
             sendTelemetryEvent(Telemetry.NoActiveKernelSession);
             throw new Error(DataScience.noActiveKernelSession());

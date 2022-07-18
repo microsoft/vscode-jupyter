@@ -32,6 +32,8 @@ export class InterpreterDataViewerDependencyImplementation implements IDataViewe
     ) {}
 
     public async checkAndInstallMissingDependencies(interpreter: PythonEnvironment): Promise<void> {
+        sendTelemetryEvent(Telemetry.DataViewerUsingInterpreter);
+
         const tokenSource = new CancellationTokenSource();
         try {
             const pandasVersion = await this.getVersion(interpreter, tokenSource.token);

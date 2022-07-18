@@ -11,7 +11,6 @@ import { IPythonExecutionFactory } from '../../../platform/common/process/types.
 import { IsCodeSpace } from '../../../platform/common/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
-import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { InterpreterDataViewerDependencyImplementation } from './interpreterDataViewerDependencyImplementation.node';
 import { KernelDataViewerDependencyImplementation } from './kernelDataViewerDependencyImplementation';
 import { IDataViewerDependencyService } from './types';
@@ -50,10 +49,8 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
     async checkAndInstallMissingDependencies(executionEnvironment: IKernel | PythonEnvironment): Promise<void> {
         // IKernel and PythonEnvironment are only types, so I can't compare prototypes or instances of.
         if (isPythonEnvironment(executionEnvironment)) {
-            sendTelemetryEvent(Telemetry.DataViewerUsingInterpreter);
             return this.withInterpreter.checkAndInstallMissingDependencies(executionEnvironment);
         } else {
-            sendTelemetryEvent(Telemetry.DataViewerUsingKernel);
             return this.withKernel.checkAndInstallMissingDependencies(executionEnvironment);
         }
     }

@@ -7,7 +7,6 @@ import { inject, injectable } from 'inversify';
 import { IKernel } from '../../../kernels/types';
 import { IApplicationShell } from '../../../platform/common/application/types';
 import { IsCodeSpace } from '../../../platform/common/types';
-import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { KernelDataViewerDependencyImplementation } from './kernelDataViewerDependencyImplementation';
 import { IDataViewerDependencyService } from './types';
 
@@ -25,7 +24,6 @@ export class DataViewerDependencyService implements IDataViewerDependencyService
     }
 
     async checkAndInstallMissingDependencies(kernel: IKernel): Promise<void> {
-        sendTelemetryEvent(Telemetry.DataViewerUsingKernel);
         return this.withKernel.checkAndInstallMissingDependencies(kernel);
     }
 }
