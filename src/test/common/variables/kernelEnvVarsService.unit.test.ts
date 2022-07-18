@@ -184,7 +184,9 @@ suite('Kernel Environment Variables Service', () => {
         assert.isOk(processPath);
         assert.strictEqual(
             vars![processPath!],
-            `${path.dirname(Uri.joinPath(Uri.file('env'), 'foopath').fsPath)}${path.delimiter}pathInInterpreterEnv${path.delimiter}foobaz`
+            `${path.dirname(Uri.joinPath(Uri.file('env'), 'foopath').fsPath)}${path.delimiter}pathInInterpreterEnv${
+                path.delimiter
+            }foobaz`
         );
     });
 

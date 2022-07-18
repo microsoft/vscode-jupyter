@@ -5443,13 +5443,13 @@ No properties for event
 
 [src/kernels/jupyter/jupyterKernelService.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/jupyter/jupyterKernelService.node.ts)
 ```typescript
-                    await this.fs.writeFile(Uri.file(kernelSpecFilePath), JSON.stringify(specModel, undefined, 2));
-                } catch (ex) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any, true);
-                    throw ex;
+                    return;
                 }
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                sendTelemetryEvent(Telemetry.FailedToUpdateKernelSpec, undefined, undefined, ex as any, true);
+                throw ex;
             }
+
 ```
 
 </details>
