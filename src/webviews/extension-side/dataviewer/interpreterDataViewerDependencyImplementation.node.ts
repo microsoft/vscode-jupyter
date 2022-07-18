@@ -41,11 +41,13 @@ export class InterpreterDataViewerDependencyImplementation extends BaseDataViewe
             const pandasVersion = await this.getVersion(interpreter, tokenSource.token);
 
             if (Cancellation.isCanceled(tokenSource.token)) {
+                sendTelemetryEvent(Telemetry.PandasInstallCanceled);
                 return;
             }
 
             if (pandasVersion) {
                 if (pandasVersion.compare(pandasMinimumVersionSupportedByVariableViewer) > 0) {
+                    sendTelemetryEvent(Telemetry.PandasOK);
                     return;
                 }
                 sendTelemetryEvent(Telemetry.PandasTooOld);

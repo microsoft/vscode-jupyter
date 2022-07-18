@@ -92,6 +92,7 @@ export class KernelDataViewerDependencyImplementation extends BaseDataViewerDepe
 
         if (pandasVersion) {
             if (pandasVersion.compare(pandasMinimumVersionSupportedByVariableViewer) > 0) {
+                sendTelemetryEvent(Telemetry.PandasOK);
                 return;
             }
             sendTelemetryEvent(Telemetry.PandasTooOld);

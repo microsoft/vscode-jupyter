@@ -408,6 +408,8 @@ export interface IEventNamePropertyMapping {
     [Telemetry.NotebookOpenTime]: number;
     [Telemetry.PandasNotInstalled]: never | undefined;
     [Telemetry.PandasTooOld]: never | undefined;
+    [Telemetry.PandasOK]: never | undefined;
+    [Telemetry.PandasInstallCanceled]: { version: string };
     [Telemetry.DebugpyInstallCancelled]: never | undefined;
     [Telemetry.DebugpyInstallFailed]: never | undefined;
     [Telemetry.DebugpyPromptToInstall]: never | undefined;

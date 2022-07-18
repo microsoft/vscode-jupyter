@@ -449,6 +449,8 @@ export enum Telemetry {
     DebugFileInteractive = 'DATASCIENCE.DEBUG_FILE_INTERACTIVE',
     PandasNotInstalled = 'DS_INTERNAL.SHOW_DATA_NO_PANDAS',
     PandasTooOld = 'DS_INTERNAL.SHOW_DATA_PANDAS_TOO_OLD',
+    PandasOK = 'DS_INTERNAL.SHOW_DATA_PANDAS_OK',
+    PandasInstallCanceled = 'DS_INTERNAL.SHOW_DATA_PANDAS_INSTALL_CANCELED',
     DataScienceSettings = 'DS_INTERNAL.SETTINGS',
     VariableExplorerToggled = 'DATASCIENCE.VARIABLE_EXPLORER_TOGGLE',
     VariableExplorerVariableCount = 'DS_INTERNAL.VARIABLE_EXPLORER_VARIABLE_COUNT',
