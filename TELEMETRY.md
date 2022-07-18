@@ -7507,7 +7507,7 @@ No description provided
 
 [src/kernels/kernelDependencyService.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelDependencyService.node.ts)
 ```typescript
-        options.push(moreInfoOption);
+
         try {
             if (!this.isCodeSpace) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
@@ -7531,7 +7531,7 @@ No description provided
 
 [src/kernels/kernelDependencyService.node.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/kernelDependencyService.node.ts)
 ```typescript
-                }
+                // "More Info" isn't a full valid response here, so reprompt after showing it
             } while (selection === moreInfoOption);
             if (cancelTokenSource.token.isCancellationRequested) {
                 sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
