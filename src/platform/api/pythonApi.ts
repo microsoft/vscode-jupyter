@@ -286,7 +286,8 @@ export class InterpreterService implements IInterpreterService {
     private readonly didChangeInterpreters = new EventEmitter<void>();
     private eventHandlerAdded?: boolean;
     private interpreterListCachePromise: Promise<PythonEnvironment[]> | undefined = undefined;
-    private refreshPromise: Promise<void> | undefined;
+    private canFindRefreshPromise: boolean | undefined = undefined;
+    private refreshPromise: Promise<void> | undefined = undefined;
     private api: PythonApi | undefined;
     constructor(
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
@@ -410,9 +411,6 @@ export class InterpreterService implements IInterpreterService {
         if (!this.extensionChecker.isPythonExtensionInstalled) {
             return;
         }
-        if (!this.extensionChecker.isPythonExtensionActive) {
-            return;
-        }
         if (!this.api) {
             this.api = await this.apiProvider.getApi();
         }
@@ -432,8 +430,6 @@ export class InterpreterService implements IInterpreterService {
     private async getInterpretersImpl(resource?: Uri): Promise<PythonEnvironment[]> {
         // Python uses the resource to look up the workspace folder. For Jupyter
         // we want all interpreters regardless of workspace folder so call this multiple times
-        const refreshDeferred = createDeferred<void>();
-        this.refreshPromise = refreshDeferred.promise;
         const folders = this.workspace.workspaceFolders;
         const activeInterpreterPromise = this.getActiveInterpreter(resource);
         const all = folders
@@ -456,9 +452,6 @@ export class InterpreterService implements IInterpreterService {
                 result.push(interpreter);
             }
         });
-        // We are definitely ready after we get all of the interpreters
-        refreshDeferred.resolve();
-        this.refreshPromise = undefined;
         return result;
     }
 
@@ -493,16 +486,31 @@ export class InterpreterService implements IInterpreterService {
             .catch(noop);
     }
     private getRefreshPromise(): Promise<void> | undefined {
-        if (!this.refreshPromise) {
+        if (this.canFindRefreshPromise === undefined) {
+            this.canFindRefreshPromise = false;
             const api = this.tryGetApi();
             if (!api) {
-                this.refreshPromise = this.getApi().then((api) =>
-                    api?.getRefreshPromise ? api.getRefreshPromise() : undefined
-                );
+                this.getApi()
+                    .then((a) => {
+                        this.canFindRefreshPromise = a?.getRefreshPromise !== undefined;
+                    })
+                    .ignoreErrors();
             } else {
-                this.refreshPromise = api.getRefreshPromise ? api.getRefreshPromise() : undefined;
+                this.canFindRefreshPromise = api.getRefreshPromise !== undefined;
             }
         }
-        return this.refreshPromise;
+        if (!this.canFindRefreshPromise) {
+            return Promise.resolve(); // If no getRefreshPromise, then we're always refreshing. Meaning always out of date.
+        } else {
+            const api = this.tryGetApi();
+            const apiRefreshPromise = api?.getRefreshPromise ? api.getRefreshPromise() : undefined;
+            if (apiRefreshPromise != this.refreshPromise) {
+                this.refreshPromise = apiRefreshPromise;
+                // When we first capture the refresh promise, make sure it fires an event to
+                // refresh when done.
+                this.refreshPromise?.then(() => this.didChangeInterpreters.fire()).ignoreErrors;
+            }
+            return this.refreshPromise;
+        }
     }
 }

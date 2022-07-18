@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 import { isPythonNotebook } from '../../kernels/helpers';
 import { IJupyterServerUriStorage } from '../../kernels/jupyter/types';
-import { IKernelFinder, IKernelProvider, KernelConnectionMetadata } from '../../kernels/types';
+import { IKernelFinder, IKernelProvider, isRemoteConnection, KernelConnectionMetadata } from '../../kernels/types';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 import { IPythonExtensionChecker } from '../../platform/api/types';
 import { IVSCodeNotebook } from '../../platform/common/application/types';
@@ -65,15 +65,24 @@ export class ControllerLoader implements IControllerLoader, IExtensionSyncActiva
         const forceLoad = () => this.loadControllers(true);
         this.serverUriStorage.onDidChangeUri(forceLoad, this, this.disposables);
 
-        // If we create a new kernel, we should add a new controller for it (we don't need to refresh the entire list)
+        // If we create a new kernel, we need to refresh if the kernel is remote (because
+        // we have live sessions possible)
+        // Note, this is a perf optimization for right now. We should not need
+        // to check for remote if the future when we support live sessions on local
         this.kernelProvider.onDidStartKernel((k) => {
-            this.createNotebookControllers([k.kernelConnectionMetadata]);
+            if (isRemoteConnection(k.kernelConnectionMetadata)) {
+                forceLoad().ignoreErrors();
+            }
         });
 
         // For kernel dispose we need to wait a bit, otherwise the list comes back the
         // same
         this.kernelProvider.onDidDisposeKernel(
-            () => setTimeout(forceLoad, REMOTE_KERNEL_REFRESH_INTERVAL),
+            (k) => {
+                if (k && isRemoteConnection(k.kernelConnectionMetadata)) {
+                    setTimeout(forceLoad, REMOTE_KERNEL_REFRESH_INTERVAL);
+                }
+            },
             this,
             this.disposables
         );
