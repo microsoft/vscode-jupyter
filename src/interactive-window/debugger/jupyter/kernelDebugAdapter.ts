@@ -15,7 +15,11 @@ import { getInteractiveCellMetadata } from '../../../interactive-window/helpers'
 import { KernelDebugAdapterBase } from '../../../kernels/debugger/kernelDebugAdapterBase';
 import { InteractiveCellMetadata } from '../../editor-integration/types';
 import { IDebugService } from '../../../platform/common/application/types';
-
+/**
+ * KernelDebugAdapter listens to debug messages in order to translate file requests into real files
+ * (Interactive Window generally executes against a real file)
+ * Files from the kernel are pointing to cells, whereas the user is looking at a real file.
+ */
 export class KernelDebugAdapter extends KernelDebugAdapterBase {
     private readonly debugLocationTracker?: DebugAdapterTracker;
     private readonly cellToDebugFileSortedInReverseOrderByLineNumber: {

@@ -53,6 +53,10 @@ function getIndex(index: number, length: number): number {
     }
 }
 
+/**
+ * CodeWatchers watch source files, provide code lenses in them, and handle the execution of
+ * the code lenses.
+ */
 @injectable()
 export class CodeWatcher implements ICodeWatcher {
     private static sentExecuteCellTelemetry: boolean = false;

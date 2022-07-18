@@ -16,6 +16,11 @@ import { InteractiveWindowView } from '../../platform/common/constants';
 const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp'); // NOSONAR
 const LineNumberMatchRegex = /(;32m[ ->]*?)(\d+)(.*)/g;
 
+/**
+ * Modifies error tracebacks from running cells in the Interactive Window. Modification can include:
+ * - Providing links to files
+ * - Removing ANSI escape sequences
+ */
 @injectable()
 export class InteractiveWindowTracebackFormatter implements ITracebackFormatter {
     constructor(
