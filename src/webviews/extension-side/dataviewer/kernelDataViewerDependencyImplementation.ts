@@ -73,8 +73,8 @@ export class KernelDataViewerDependencyImplementation implements IDataViewerDepe
                 await this.execute(command, kernel);
                 sendTelemetryEvent(Telemetry.UserInstalledPandas);
             } catch (e) {
-                sendTelemetryEvent(Telemetry.FailedToInstallPandas);
-                throw new Error(DataScience.failedToInstallPandas().format(e.message));
+                sendTelemetryEvent(Telemetry.UserInstalledPandas, undefined, undefined, e);
+                throw new Error(DataScience.failedToInstallPandas());
             }
         } else {
             sendTelemetryEvent(Telemetry.UserDidNotInstallPandas);

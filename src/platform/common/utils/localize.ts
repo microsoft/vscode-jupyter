@@ -1406,7 +1406,7 @@ export namespace DataScience {
     export const failedToInstallPandas = () =>
         localize(
             { key: 'DataScience.failedToInstallPandas', comment: ['{Locked="Pandas"}'] },
-            'Failed to install Pandas to use the Data Viewer. Error: {0}'
+            'Failed to install Pandas to use the Data Viewer.'
         );
 }
 
