@@ -4,21 +4,22 @@
 'use strict';
 import { inject, injectable, multiInject } from 'inversify';
 import { Uri, workspace } from 'vscode';
-import { IApplicationShell, IWorkspaceService, IVSCodeNotebook } from '../platform/common/application/types';
+import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../platform/common/application/types';
+import { InteractiveWindowView } from '../platform/common/constants';
+import { IFileSystem } from '../platform/common/platform/types';
 import { IPythonExecutionFactory } from '../platform/common/process/types.node';
 import {
     IAsyncDisposableRegistry,
-    IDisposableRegistry,
     IConfigurationService,
+    IDisposableRegistry,
     IExtensionContext
 } from '../platform/common/types';
-import { Kernel } from './kernel.node';
-import { IKernel, INotebookProvider, ITracebackFormatter, KernelOptions } from './types';
 import { IStatusProvider } from '../platform/progress/types';
-import { BaseKernelProvider } from './kernelProvider.base';
-import { InteractiveWindowView } from '../platform/common/constants';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
-import { IFileSystem } from '../platform/common/platform/types';
+import { sendTelemetryForPythonKernelExecutable } from './helpers.node';
+import { Kernel } from './kernel';
+import { BaseKernelProvider } from './kernelProvider.base';
+import { IKernel, INotebookProvider, IStartupCodeProvider, ITracebackFormatter, KernelOptions } from './types';
 
 @injectable()
 export class KernelProvider extends BaseKernelProvider {
@@ -35,7 +36,8 @@ export class KernelProvider extends BaseKernelProvider {
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
-        @multiInject(ITracebackFormatter) private readonly formatters: ITracebackFormatter[]
+        @multiInject(ITracebackFormatter) private readonly formatters: ITracebackFormatter[],
+        @multiInject(IStartupCodeProvider) private readonly startupCodeProviders: IStartupCodeProvider[]
     ) {
         super(asyncDisposables, disposables, notebook);
     }
@@ -51,7 +53,8 @@ export class KernelProvider extends BaseKernelProvider {
         const resourceUri = notebook?.notebookType === InteractiveWindowView ? options.resourceUri : uri;
         const waitForIdleTimeout = this.configService.getSettings(resourceUri).jupyterLaunchTimeout;
         const interruptTimeout = this.configService.getSettings(resourceUri).jupyterInterruptTimeout;
-        const kernel = new Kernel(
+        let kernel: Kernel;
+        kernel = new Kernel(
             uri,
             resourceUri,
             options.metadata,
@@ -59,16 +62,23 @@ export class KernelProvider extends BaseKernelProvider {
             waitForIdleTimeout,
             interruptTimeout,
             this.appShell,
-            this.fs,
             options.controller,
             this.configService,
             this.outputTracker,
             this.workspaceService,
-            this.pythonExecutionFactory,
             this.statusProvider,
             options.creator,
             this.context,
-            this.formatters
+            this.formatters,
+            this.startupCodeProviders,
+            () => {
+                return sendTelemetryForPythonKernelExecutable(
+                    kernel,
+                    kernel.resourceUri,
+                    kernel.kernelConnectionMetadata,
+                    this.pythonExecutionFactory
+                );
+            }
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);

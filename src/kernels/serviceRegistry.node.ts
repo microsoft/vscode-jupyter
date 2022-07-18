@@ -30,7 +30,7 @@ import { PreWarmActivatedJupyterEnvironmentVariables } from './variables/preWarm
 import { PythonVariablesRequester } from './variables/pythonVariableRequester';
 import { MultiplexingDebugService } from './debugger/multiplexingDebugService';
 import { IDebugLocationTracker, IDebugLocationTrackerFactory, IJupyterDebugService } from './debugger/types';
-import { IKernelDependencyService, IKernelFinder, IKernelProvider } from './types';
+import { IKernelDependencyService, IKernelFinder, IKernelProvider, IStartupCodeProvider } from './types';
 import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
 import { KernelCrashMonitor } from './kernelCrashMonitor';
 import { KernelAutoRestartMonitor } from './kernelAutoRestartMonitor.node';
@@ -43,6 +43,7 @@ import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFact
 import { Activation } from './activation.node';
 import { PortAttributesProviders } from './port/portAttributeProvider.node';
 import { IServerConnectionType } from './jupyter/types';
+import { KernelStartupCodeProvider } from './kernelStartupCodeProvider.node';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Activation);
@@ -137,4 +138,5 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory, undefined, [
         IDebugLocationTrackerFactory
     ]);
+    serviceManager.addSingleton<IStartupCodeProvider>(IStartupCodeProvider, KernelStartupCodeProvider);
 }

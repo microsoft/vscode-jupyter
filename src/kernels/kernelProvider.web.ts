@@ -4,20 +4,19 @@
 'use strict';
 import { inject, injectable, multiInject } from 'inversify';
 import { Uri, workspace } from 'vscode';
-import { IApplicationShell, IWorkspaceService, IVSCodeNotebook } from '../platform/common/application/types';
+import { IApplicationShell, IVSCodeNotebook, IWorkspaceService } from '../platform/common/application/types';
+import { InteractiveWindowView } from '../platform/common/constants';
 import {
     IAsyncDisposableRegistry,
-    IDisposableRegistry,
     IConfigurationService,
+    IDisposableRegistry,
     IExtensionContext
 } from '../platform/common/types';
-import { Kernel } from './kernel.web';
-import { IKernel, INotebookProvider, ITracebackFormatter, KernelOptions } from './types';
-import { BaseKernelProvider } from './kernelProvider.base';
 import { IStatusProvider } from '../platform/progress/types';
-import { InteractiveWindowView } from '../platform/common/constants';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
-import { IFileSystem } from '../platform/common/platform/types';
+import { Kernel } from './kernel';
+import { BaseKernelProvider } from './kernelProvider.base';
+import { IKernel, INotebookProvider, IStartupCodeProvider, ITracebackFormatter, KernelOptions } from './types';
 
 @injectable()
 export class KernelProvider extends BaseKernelProvider {
@@ -33,7 +32,7 @@ export class KernelProvider extends BaseKernelProvider {
         @inject(IStatusProvider) private readonly statusProvider: IStatusProvider,
         @inject(IExtensionContext) private readonly context: IExtensionContext,
         @multiInject(ITracebackFormatter) private readonly formatters: ITracebackFormatter[],
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @multiInject(IStartupCodeProvider) private readonly startupCodeProviders: IStartupCodeProvider[]
     ) {
         super(asyncDisposables, disposables, notebook);
     }
@@ -65,7 +64,8 @@ export class KernelProvider extends BaseKernelProvider {
             options.creator,
             this.context,
             this.formatters,
-            this.fs
+            this.startupCodeProviders,
+            () => Promise.resolve()
         );
         kernel.onRestarted(() => this._onDidRestartKernel.fire(kernel), this, this.disposables);
         kernel.onDisposed(() => this._onDidDisposeKernel.fire(kernel), this, this.disposables);

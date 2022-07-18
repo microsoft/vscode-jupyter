@@ -12,7 +12,7 @@ import { DataScience } from '../../platform/common/utils/localize';
 import { Identifiers } from '../../platform/common/constants';
 import { Telemetry } from '../../telemetry';
 import { JupyterDebuggerNotInstalledError } from '../../kernels/errors/jupyterDebuggerNotInstalledError';
-import { getPlainTextOrStreamOutput } from '../../kernels/kernel.base';
+import { getPlainTextOrStreamOutput } from '../../kernels/kernel';
 import { IKernel, isLocalConnection } from '../../kernels/types';
 import { IInteractiveWindowDebugger } from '../types';
 import { IFileGeneratedCodes } from '../editor-integration/types';
