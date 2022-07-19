@@ -51,8 +51,7 @@ export class KernelProvider extends BaseKernelProvider {
         const resourceUri = notebook?.notebookType === InteractiveWindowView ? options.resourceUri : uri;
         const waitForIdleTimeout = this.configService.getSettings(resourceUri).jupyterLaunchTimeout;
         const interruptTimeout = this.configService.getSettings(resourceUri).jupyterInterruptTimeout;
-        let kernel: Kernel;
-        kernel = new Kernel(
+        let kernel: Kernel = new Kernel(
             uri,
             resourceUri,
             options.metadata,
