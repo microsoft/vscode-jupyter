@@ -800,7 +800,7 @@ export namespace DataScience {
                 key: 'DataScience.pandasTooOldForViewingFormat',
                 comment: ["{Locked='pandas'", 'This is the name of the pandas package']
             },
-            "Python package 'pandas' is version {0}. Version 0.20 or greater is required for viewing data."
+            "Python package 'pandas' is version {0}. Version {1} or greater is required for viewing data."
         );
     export const pandasRequiredForViewing = () =>
         localize(
@@ -808,7 +808,7 @@ export namespace DataScience {
                 key: 'DataScience.pandasRequiredForViewing',
                 comment: ["{Locked='pandas'", 'This is the name of the pandas package']
             },
-            "Python package 'pandas' is required for viewing data. Please ensure you have installed 'pandas' version {0} or above."
+            "Python package 'pandas' version {0} (or above) is required for viewing data."
         );
     export const valuesColumn = () => localize('DataScience.valuesColumn', 'values');
     export const liveShareInvalid = () =>

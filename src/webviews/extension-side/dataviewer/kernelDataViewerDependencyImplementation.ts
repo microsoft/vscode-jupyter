@@ -3,17 +3,12 @@
 
 'use strict';
 
-import { SemVer } from 'semver';
-import { ProductNames } from '../../../kernels/installer/productNames';
-import { Product } from '../../../kernels/installer/types';
 import { traceWarning } from '../../../platform/logging';
 import { DataScience } from '../../../platform/common/utils/localize';
 import { EnvironmentType } from '../../../platform/pythonEnvironments/info';
 import { sendTelemetryEvent, Telemetry } from '../../../telemetry';
 import { executeSilently } from '../../../kernels/helpers';
 import { IKernel, IKernelConnectionSession } from '../../../kernels/types';
-import { parseSemVer } from '../../../platform/common/utils';
-import { pandasMinimumVersionSupportedByVariableViewer } from './constants';
 import { BaseDataViewerDependencyImplementation } from './baseDataViewerDependencyImplementation';
 
 export const kernelGetPandasVersion =
@@ -36,7 +31,7 @@ function kernelHasSession(kernel: IKernel): kernel is IKernelWithSession {
 /**
  * Uses the Kernel to manage the dependencies of a Data Viewer.
  */
-export class KernelDataViewerDependencyImplementation extends BaseDataViewerDependencyImplementation {
+export class KernelDataViewerDependencyImplementation extends BaseDataViewerDependencyImplementation<IKernel> {
     protected async execute(command: string, kernel: IKernelWithSession): Promise<(string | undefined)[]> {
         const outputs = await executeSilently(kernel.session, command);
         const error = outputs.find((item) => item.output_type === 'error');
@@ -46,37 +41,20 @@ export class KernelDataViewerDependencyImplementation extends BaseDataViewerDepe
         return outputs.map((item) => item.text?.toString());
     }
 
-    protected async getVersion(kernel: IKernelWithSession): Promise<SemVer | undefined> {
-        try {
-            const outputs = await this.execute(kernelGetPandasVersion, kernel);
-            return outputs.map((text) => (text ? parseSemVer(text.toString()) : undefined)).find((item) => item);
-        } catch (e) {
-            traceWarning(DataScience.failedToGetVersionOfPandas(), e.message);
-            return;
-        }
+    protected async _getVersion(kernel: IKernelWithSession): Promise<string | undefined> {
+        const outputs = await this.execute(kernelGetPandasVersion, kernel);
+        return outputs.map((text) => (text ? text.toString() : undefined)).find((item) => item);
     }
 
-    private async installMissingDependencies(kernel: IKernelWithSession): Promise<void> {
-        sendTelemetryEvent(Telemetry.PythonModuleInstall, undefined, {
-            action: 'displayed',
-            moduleName: ProductNames.get(Product.pandas)!
-        });
-
+    protected async _doInstall(kernel: IKernelWithSession): Promise<void> {
         const command = `${kernelPackaging(kernel)} install pandas`;
 
-        if (await this.promptInstall()) {
-            try {
-                await this.execute(command, kernel);
-                sendTelemetryEvent(Telemetry.UserInstalledPandas);
-            } catch (e) {
-                sendTelemetryEvent(Telemetry.UserInstalledPandas, undefined, undefined, e);
-                throw new Error(DataScience.failedToInstallPandas());
-            }
-        } else {
-            sendTelemetryEvent(Telemetry.UserDidNotInstallPandas);
-            throw new Error(
-                DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupportedByVariableViewer)
-            );
+        try {
+            await this.execute(command, kernel);
+            sendTelemetryEvent(Telemetry.UserInstalledPandas);
+        } catch (e) {
+            sendTelemetryEvent(Telemetry.UserInstalledPandas, undefined, undefined, e);
+            throw new Error(DataScience.failedToInstallPandas());
         }
     }
 
@@ -88,21 +66,6 @@ export class KernelDataViewerDependencyImplementation extends BaseDataViewerDepe
             throw new Error('No no active kernel session.');
         }
 
-        const pandasVersion = await this.getVersion(kernel);
-
-        if (pandasVersion) {
-            if (pandasVersion.compare(pandasMinimumVersionSupportedByVariableViewer) > 0) {
-                sendTelemetryEvent(Telemetry.PandasOK);
-                return;
-            }
-            sendTelemetryEvent(Telemetry.PandasTooOld);
-            // Warn user that we cannot start because pandas is too old.
-            const versionStr = `${pandasVersion.major}.${pandasVersion.minor}.${pandasVersion.build}`;
-            throw new Error(DataScience.pandasTooOldForViewingFormat().format(versionStr));
-        }
-
-        sendTelemetryEvent(Telemetry.PandasNotInstalled);
-
-        await this.installMissingDependencies(kernel);
+        await this.checkOrInstall(kernel);
     }
 }
