@@ -4,7 +4,7 @@
 
 import { ITracebackFormatter } from '../kernels/types';
 import { IExtensionSyncActivationService, IExtensionSingleActivationService } from '../platform/activation/types';
-import { IDataScienceCommandListener, IJupyterExtensionBanner } from '../platform/common/types';
+import { IJupyterExtensionBanner } from '../platform/common/types';
 import { IServiceManager } from '../platform/ioc/types';
 import { CommandRegistry } from './commands/commandRegistry';
 import { CodeGeneratorFactory } from './editor-integration/codeGeneratorFactory';
@@ -14,7 +14,6 @@ import { CodeWatcher } from './editor-integration/codewatcher';
 import { Decorator } from './editor-integration/decorator';
 import { GeneratedCodeStorageFactory } from './editor-integration/generatedCodeStorageFactory';
 import { HoverProvider } from './editor-integration/hoverProvider';
-import { InteractiveWindowCommandListener } from './interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from './interactiveWindowProvider';
 import {
     ICodeWatcher,
@@ -32,10 +31,6 @@ import { BANNER_NAME_INTERACTIVE_SHIFTENTER, InteractiveShiftEnterBanner } from 
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
-    serviceManager.addSingleton<IDataScienceCommandListener>(
-        IDataScienceCommandListener,
-        InteractiveWindowCommandListener
-    );
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, CommandRegistry);
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, HoverProvider);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);

@@ -5,6 +5,12 @@ import { Uri } from 'vscode';
 import { ResourceMap } from '../../platform/vscode-path/map';
 import { IGeneratedCode, IFileGeneratedCodes, IGeneratedCodeStore } from './types';
 
+/**
+ * Stores an IGeneratedCode for each file that is sent to the Interactive Window.
+ * IGeneratedCode is a struct describing:
+ * - line and file numbers for the code
+ * - the real code sent to jupyter (minus cell markers)
+ */
 export class GeneratedCodeStorage implements IGeneratedCodeStore {
     private codeGeneratorsByFile = new ResourceMap<IGeneratedCode[]>();
     clear(): void {

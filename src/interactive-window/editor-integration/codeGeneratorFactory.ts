@@ -9,6 +9,9 @@ import { ICodeGeneratorFactory, IGeneratedCodeStorageFactory, IInteractiveWindow
 import { NotebookDocument } from 'vscode';
 import { IExtensionSyncActivationService } from '../../platform/activation/types';
 
+/**
+ * The CodeGeneratorFactory creates CodeGenerators for a given notebook document.
+ */
 @injectable()
 export class CodeGeneratorFactory implements ICodeGeneratorFactory, IExtensionSyncActivationService {
     private readonly codeGenerators = new WeakMap<NotebookDocument, IInteractiveWindowCodeGenerator>();
