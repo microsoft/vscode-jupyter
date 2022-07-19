@@ -20,6 +20,9 @@ import { InteractiveWindowView } from '../platform/common/constants';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { IFileSystem } from '../platform/common/platform/types';
 
+/**
+ * Node version of a kernel provider. Needed in order to create the node version of a kernel.
+ */
 @injectable()
 export class KernelProvider extends BaseKernelProvider {
     constructor(

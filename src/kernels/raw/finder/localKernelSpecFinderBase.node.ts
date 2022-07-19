@@ -30,6 +30,9 @@ type KernelSpecFileWithContainingInterpreter = { interpreter?: PythonEnvironment
 export const isDefaultPythonKernelSpecSpecName = /python\s\d*.?\d*$/;
 export const oldKernelsSpecFolderName = '__old_vscode_kernelspecs';
 
+/**
+ * Base class for searching for local kernels that are based on a kernel spec file.
+ */
 export abstract class LocalKernelSpecFinderBase {
     private _oldKernelSpecsFolder?: string;
     private findKernelSpecsInPathCache = new Map<string, Promise<KernelSpecFileWithContainingInterpreter[]>>();

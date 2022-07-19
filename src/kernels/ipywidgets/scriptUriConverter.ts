@@ -4,6 +4,9 @@
 import { Uri } from 'vscode';
 import { ILocalResourceUriConverter } from './types';
 
+/**
+ * Converts the uri of a widget script for loading in a vscode webview
+ */
 export class ScriptUriConverter implements ILocalResourceUriConverter {
     constructor(private readonly isWebExtension: boolean, private readonly converter: (input: Uri) => Promise<Uri>) {}
 

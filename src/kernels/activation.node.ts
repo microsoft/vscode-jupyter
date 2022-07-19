@@ -17,6 +17,9 @@ import { sendTelemetryEvent } from '../telemetry';
 import { JupyterInterpreterService } from './jupyter/interpreter/jupyterInterpreterService.node';
 import { IRawNotebookSupportedService } from './raw/types';
 
+/**
+ * Starts up a bunch of objects when running in a node environment.
+ */
 @injectable()
 export class Activation implements IExtensionSingleActivationService {
     private notebookOpened = false;

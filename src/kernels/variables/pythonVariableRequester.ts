@@ -59,6 +59,9 @@ async function safeExecuteSilently(
     }
 }
 
+/**
+ * When a kernel is a python kernel, the KernelVariables class will use this object to request variables.
+ */
 @injectable()
 export class PythonVariablesRequester implements IKernelVariableRequester {
     constructor(

@@ -11,6 +11,9 @@ import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from 
 import { noop } from '../platform/common/utils/misc';
 import { IKernel, IKernelProvider, KernelOptions } from './types';
 
+/**
+ * Provides kernels to the system. Generally backed by a URI or a notebook object.
+ */
 export abstract class BaseKernelProvider implements IKernelProvider {
     /**
      * Use a separate dictionary to track kernels by Notebook, so that

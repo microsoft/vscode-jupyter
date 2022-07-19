@@ -36,6 +36,9 @@ import { Signal } from '@lumino/signaling';
 import { Disposable } from 'vscode';
 import { IDisposable } from '../../platform/common/types';
 
+/**
+ * Wrapper around a Kernel.IKernelConnection.
+ */
 export abstract class BaseKernelConnectionWrapper implements Kernel.IKernelConnection {
     public readonly statusChanged = new Signal<this, Kernel.Status>(this);
     public readonly connectionStatusChanged = new Signal<this, Kernel.ConnectionStatus>(this);

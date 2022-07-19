@@ -34,6 +34,9 @@ import { getAssociatedNotebookDocument } from '../helpers';
 const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);
 const MaximumRowChunkSizeForDebugger = 100;
 
+/**
+ * Class responsible for computing variables while debugging.
+ */
 @injectable()
 export class DebuggerVariables
     extends DebugLocationTracker

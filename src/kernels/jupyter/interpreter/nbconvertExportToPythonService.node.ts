@@ -12,6 +12,9 @@ import { ReportableAction } from '../../../platform/progress/types';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
 import { JupyterDaemonModule } from '../../../platform/common/constants';
 
+/**
+ * Implements exporting using nbconvert
+ */
 @injectable()
 export class NbConvertExportToPythonService {
     constructor(@inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory) {}

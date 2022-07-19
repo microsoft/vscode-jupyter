@@ -30,6 +30,9 @@ import {
 export const LocalKernelSpecsCacheKey = 'JUPYTER_LOCAL_KERNELSPECS_V3';
 export const RemoteKernelSpecsCacheKey = 'JUPYTER_REMOTE_KERNELSPECS_V3';
 
+/**
+ * Generic class for finding kernels (both remote and local). Handles all of the caching of the results.
+ */
 export abstract class BaseKernelFinder implements IKernelFinder {
     private startTimeForFetching?: StopWatch;
     private fetchingTelemetrySent = new Set<string>();

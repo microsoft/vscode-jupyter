@@ -31,6 +31,10 @@ import { JupyterSelfCertsExpiredError } from '../../../platform/errors/jupyterSe
 
 const LocalHosts = ['localhost', '127.0.0.1', '::1'];
 
+/**
+ * Responsible for starting a Jupyter server. It's a base class because we used
+ * to have a host and a guest version. Host version could be consolidated into this class now.
+ */
 export class JupyterExecutionBase implements IJupyterExecution {
     private usablePythonInterpreter: PythonEnvironment | undefined;
     private disposed: boolean = false;

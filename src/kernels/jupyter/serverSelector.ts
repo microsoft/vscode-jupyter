@@ -63,6 +63,10 @@ export type SelectJupyterUriCommandSource =
     | 'nativeNotebookToolbar'
     | 'errorHandler'
     | 'prompt';
+
+/**
+ * Provides the UI for picking a remote server. Multiplexes to one of two implementations based on the 'showOnlyOneTypeOfKernel' experiment.
+ */
 @injectable()
 export class JupyterServerSelector {
     private impl: IJupyterServerSelector;

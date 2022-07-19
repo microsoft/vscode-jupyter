@@ -12,6 +12,9 @@ import { EnvironmentType, PythonEnvironment } from '../../platform/pythonEnviron
 import { IServiceContainer } from '../../platform/ioc/types';
 import { translateProductToModule } from './utils';
 
+/**
+ * Installer for pip. Default installer for most everything.
+ */
 @injectable()
 export class PipInstaller extends ModuleInstaller {
     // eslint-disable-next-line @typescript-eslint/no-useless-constructor

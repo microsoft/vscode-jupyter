@@ -9,6 +9,9 @@ import { IKernel } from '../types';
 import { RemoteIPyWidgetScriptManager } from './remoteIPyWidgetScriptManager';
 import { IIPyWidgetScriptManager, IIPyWidgetScriptManagerFactory } from './types';
 
+/**
+ * Determines the IPyWidgetScriptManager for use in a web environment
+ */
 @injectable()
 export class IPyWidgetScriptManagerFactory implements IIPyWidgetScriptManagerFactory {
     private readonly managers = new WeakMap<IKernel, IIPyWidgetScriptManager>();

@@ -16,6 +16,9 @@ import {
     IJupyterServerUriStorage
 } from '../types';
 
+/**
+ * Responsible for intercepting connections to a remote server and asking for a password if necessary
+ */
 @injectable()
 export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     private savedConnectInfo = new Map<string, Promise<IJupyterPasswordConnectInfo | undefined>>();

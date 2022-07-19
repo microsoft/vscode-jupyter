@@ -13,7 +13,7 @@ import { Resource } from '../../../platform/common/types';
 import { captureTelemetry, Telemetry } from '../../../telemetry';
 import { ILocalKernelFinder } from '../types';
 
-// This class searches for a kernel that matches the given kernel name.
+// This class searches for local kernels.
 // First it searches on a global persistent state, then on the installed python interpreters,
 // and finally on the default locations that jupyter installs kernels on.
 @injectable()

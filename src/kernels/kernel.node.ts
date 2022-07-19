@@ -26,6 +26,9 @@ import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
 import { getFilePath } from '../platform/common/platform/fs-paths';
 import { IFileSystem } from '../platform/common/platform/types';
 
+/**
+ * Node specific changes for a BaseKernel.
+ */
 export class Kernel extends BaseKernel {
     constructor(
         uri: Uri,

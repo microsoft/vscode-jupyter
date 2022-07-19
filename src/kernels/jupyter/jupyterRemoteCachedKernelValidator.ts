@@ -12,6 +12,9 @@ import {
     ILiveRemoteKernelConnectionUsageTracker
 } from './types';
 
+/**
+ * Used to verify remote jupyter connections from 3rd party URIs are still valid.
+ */
 @injectable()
 export class JupyterRemoteCachedKernelValidator implements IJupyterRemoteCachedKernelValidator {
     constructor(

@@ -15,6 +15,9 @@ import { sleep } from '../../platform/common/utils/async';
 import { noop } from '../../platform/common/utils/misc';
 import { IFileSystem } from '../../platform/common/platform/types';
 
+/**
+ * IPyWidgetScriptManager for remote kernels
+ */
 export class RemoteIPyWidgetScriptManager extends BaseIPyWidgetScriptManager implements IIPyWidgetScriptManager {
     private readonly kernelConnection: RemoteKernelConnectionMetadata;
     private code?: Promise<string>;

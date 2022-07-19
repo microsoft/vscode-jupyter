@@ -5,6 +5,9 @@ import type { KernelSpec } from '@jupyterlab/services';
 import { PythonEnvironment_PythonApi } from '../../platform/api/types';
 import { IJupyterKernelSpec } from '../types';
 
+/**
+ * Concrete implementation of a Jupyter kernel spec.
+ */
 export class JupyterKernelSpec implements IJupyterKernelSpec {
     public name: string;
     public originalName?: string;

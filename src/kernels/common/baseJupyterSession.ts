@@ -70,6 +70,9 @@ export class JupyterSessionStartError extends WrappedError {
     }
 }
 
+/**
+ * Common code for a Jupyterlabs IKernelConnection. Raw and Jupyter both inherit from this.
+ */
 export abstract class BaseJupyterSession implements IBaseKernelConnectionSession {
     /**
      * Keep a single instance of KernelConnectionWrapper.
