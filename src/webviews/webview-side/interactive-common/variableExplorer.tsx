@@ -122,7 +122,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                     <VariableExplorerButtonCellFormatter
                         showDataExplorer={this.props.showDataExplorer}
                         baseTheme={this.props.baseTheme}
-                        isWeb={() => this.props.isWeb}
                     />
                 )
             },

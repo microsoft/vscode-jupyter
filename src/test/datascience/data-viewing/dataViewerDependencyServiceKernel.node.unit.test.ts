@@ -7,23 +7,41 @@ import { assert } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { ApplicationShell } from '../../../platform/common/application/applicationShell';
 import { IApplicationShell } from '../../../platform/common/application/types';
-import { DataViewerDependencyService } from '../../../webviews/extension-side/dataviewer/dataViewerDependencyService';
+import { DataViewerDependencyService } from '../../../webviews/extension-side/dataviewer/dataViewerDependencyService.node';
 import { IKernel } from '../../../kernels/types';
 import { Common, DataScience } from '../../../platform/common/utils/localize';
 import * as helpers from '../../../kernels/helpers';
 import * as sinon from 'sinon';
 import { kernelGetPandasVersion } from '../../../webviews/extension-side/dataviewer/kernelDataViewerDependencyImplementation';
+import { IPythonExecutionFactory } from '../../../platform/common/process/types.node';
+import { IInstaller } from '../../../kernels/installer/types';
+import { IInterpreterService } from '../../../platform/interpreter/contracts';
+import { ProductInstaller } from '../../../kernels/installer/productInstaller.node';
+import { PythonExecutionFactory } from '../../../platform/common/process/pythonExecutionFactory.node';
 import { pandasMinimumVersionSupportedByVariableViewer } from '../../../webviews/extension-side/dataviewer/constants';
 
-suite('DataScience - DataViewerDependencyService (IKernel, Web)', () => {
+suite('DataScience - DataViewerDependencyService (IKernel, Node)', () => {
     let dependencyService: DataViewerDependencyService;
     let appShell: IApplicationShell;
+    let pythonExecFactory: IPythonExecutionFactory;
+    let installer: IInstaller;
+    let interpreterService: IInterpreterService;
     let kernel: IKernel;
 
     setup(async () => {
+        installer = mock(ProductInstaller);
         appShell = mock(ApplicationShell);
+        pythonExecFactory = mock(PythonExecutionFactory);
+        interpreterService = mock<IInterpreterService>();
         kernel = instance(mock<IKernel>());
-        dependencyService = new DataViewerDependencyService(instance(appShell), false);
+
+        dependencyService = new DataViewerDependencyService(
+            instance(installer),
+            instance(pythonExecFactory),
+            instance(interpreterService),
+            instance(appShell),
+            false
+        );
     });
 
     teardown(() => {
