@@ -10,7 +10,15 @@ suite('DataScience CellMatcher', () => {
     const settings: IJupyterSettings = defaultDataScienceSettings();
     const defaultMatcher = new CellMatcher(settings);
 
-    const codeCellMarkers = ['# %%', '#%%', '#   %%', '# %% extra stuff', '   # %%     '];
+    const codeCellMarkers = [
+        '# %%',
+        '#%%',
+        '#   %%',
+        '# %% extra stuff',
+        '   # %%     ',
+        '   # %% extra stuff',
+        '  #%%'
+    ];
     codeCellMarkers.forEach((cellMarker) => {
         test('CellMatcher for valid code cell', () => {
             assert.ok(defaultMatcher.isCell(cellMarker), `${cellMarker} should match as a cell marker`);
