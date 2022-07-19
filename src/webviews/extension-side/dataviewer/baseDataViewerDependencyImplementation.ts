@@ -48,7 +48,6 @@ export abstract class BaseDataViewerDependencyImplementation<TExecuter> implemen
         tokenSource: CancellationTokenSource,
         version?: string
     ): Promise<void> {
-        console.log({ version });
         let message = version
             ? DataScience.pandasTooOldForViewingFormat().format(version, pandasMinimumVersionSupportedByVariableViewer)
             : DataScience.pandasRequiredForViewing().format(pandasMinimumVersionSupportedByVariableViewer);
@@ -60,7 +59,6 @@ export abstract class BaseDataViewerDependencyImplementation<TExecuter> implemen
         if (selection === Common.install()) {
             await this._doInstall(executer, tokenSource);
         } else {
-            console.log('User cancelled');
             sendTelemetryEvent(Telemetry.UserDidNotInstallPandas);
             throw new Error(message);
         }
@@ -77,7 +75,6 @@ export abstract class BaseDataViewerDependencyImplementation<TExecuter> implemen
                 return;
             }
 
-            console.log({ pandasVersion });
             if (pandasVersion) {
                 if (pandasVersion.compare(pandasMinimumVersionSupportedByVariableViewer) > 0) {
                     sendTelemetryEvent(Telemetry.PandasOK);
