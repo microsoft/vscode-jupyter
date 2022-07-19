@@ -29,7 +29,7 @@ import { IInteractiveWindowDebugger, IInteractiveWindowDebuggingManager, IIntera
 import { InteractiveWindowDebugger } from './debugger/interactiveWindowDebugger.node';
 import { InteractiveWindowDebuggingManager } from './debugger/jupyter/debuggingManager';
 import { BANNER_NAME_INTERACTIVE_SHIFTENTER, InteractiveShiftEnterBanner } from './shiftEnterBanner';
-import { InteractiveWindowDebuggingStartupCodeProvider } from './debugger/startupCodeProvider.node';
+import { InteractiveWindowDebuggingStartupCodeProvider } from './debugger/startupCodeProvider';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);

@@ -26,7 +26,7 @@ import { IGeneratedCodeStorageFactory } from './editor-integration/types';
 import { GeneratedCodeStorageManager } from './generatedCodeStoreManager';
 import { InteractiveWindowTracebackFormatter } from './outputs/tracebackFormatter';
 import { InteractiveWindowDebuggingManager } from './debugger/jupyter/debuggingManager';
-import { InteractiveWindowDebuggingStartupCodeProvider } from './debugger/startupCodeProvider.web';
+import { InteractiveWindowDebuggingStartupCodeProvider } from './debugger/startupCodeProvider';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
