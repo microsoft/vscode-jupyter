@@ -55,7 +55,7 @@ function getIndex(index: number, length: number): number {
 
 /**
  * CodeWatchers watch source files, provide code lenses in them, and handle the execution of
- * the code lenses.
+ * the code lenses. Code lenses are provided by a CodeLensFactory.
  */
 @injectable()
 export class CodeWatcher implements ICodeWatcher {
