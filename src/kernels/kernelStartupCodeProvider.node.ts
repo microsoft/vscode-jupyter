@@ -37,7 +37,6 @@ export class KernelStartupCodeProvider implements IStartupCodeProvider {
         if (
             isLocalConnection(kernel.kernelConnectionMetadata) ||
             isLocalHostConnection(kernel.kernelConnectionMetadata)
-            // && kernel.kernelConnectionMetadata.kind !== 'connectToLiveRemoteKernel' // Skip for live kernel. Don't change current directory on a kernel that's already running
         ) {
             let suggestedDir = await calculateWorkingDirectory(
                 this.configService,
