@@ -8,7 +8,7 @@ import { disposeAllDisposables } from '../../../platform/common/helpers';
 import { IDisposable } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
 import { PlotSaveHandler } from './plotSaveHandler.node';
-import { PlotViewHandler } from './plotViewHandler.node';
+import { PlotViewHandler } from './plotViewHandler';
 
 export type OpenImageInPlotViewer = {
     type: 'openImageInPlotViewer';

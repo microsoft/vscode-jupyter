@@ -18,10 +18,10 @@ import {
     IJupyterVariableDataProviderFactory
 } from './dataviewer/types';
 import { PlotViewer } from './plotting/plotViewer.node';
-import { PlotViewerProvider } from './plotting/plotViewerProvider.node';
+import { PlotViewerProvider } from './plotting/plotViewerProvider';
 import { IPlotViewer, IPlotViewerProvider } from './plotting/types';
 import { PlotSaveHandler } from './plotView/plotSaveHandler.node';
-import { PlotViewHandler } from './plotView/plotViewHandler.node';
+import { PlotViewHandler } from './plotView/plotViewHandler';
 import { RendererCommunication } from './plotView/rendererCommunication.node';
 import { NotebookWatcher } from './variablesView/notebookWatcher';
 import { INotebookWatcher, IVariableViewProvider } from './variablesView/types';

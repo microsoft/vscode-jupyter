@@ -18,10 +18,10 @@ import { IServiceManager } from '../../platform/ioc/types';
 import { IExtensionSingleActivationService } from '../../platform/activation/types';
 import { DataViewerDependencyService } from './dataviewer/dataViewerDependencyService';
 import { IPlotViewer, IPlotViewerProvider } from './plotting/types';
-import { PlotViewer } from './plotting/plotViewer.node';
-import { PlotViewerProvider } from './plotting/plotViewerProvider.node';
-import { PlotSaveHandler } from './plotView/plotSaveHandler.node';
-import { PlotViewHandler } from './plotView/plotViewHandler.node';
+import { PlotViewer } from './plotting/plotViewer';
+import { PlotViewerProvider } from './plotting/plotViewerProvider';
+import { PlotSaveHandler } from './plotView/plotSaveHandler';
+import { PlotViewHandler } from './plotView/plotViewHandler';
 
 export function registerTypes(serviceManager: IServiceManager) {
     // Data viewer
