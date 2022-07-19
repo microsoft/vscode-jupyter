@@ -43,9 +43,11 @@ import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFact
 import { Activation } from './activation.node';
 import { PortAttributesProviders } from './port/portAttributeProvider.node';
 import { IServerConnectionType } from './jupyter/types';
+import { ServerPreload } from './jupyter/launcher/serverPreload.node';
 
 export function registerTypes(serviceManager: IServiceManager, isDevMode: boolean) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Activation);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
     serviceManager.addSingleton<IExtensionSyncActivationService>(
         IExtensionSyncActivationService,
         PortAttributesProviders
