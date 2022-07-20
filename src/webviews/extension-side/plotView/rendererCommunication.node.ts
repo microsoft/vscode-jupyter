@@ -2,13 +2,9 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Event, extensions, NotebookEditor, window } from 'vscode';
-import { IExtensionSingleActivationService } from '../../../platform/activation/types';
-import { disposeAllDisposables } from '../../../platform/common/helpers';
-import { IDisposable } from '../../../platform/common/types';
-import { noop } from '../../../platform/common/utils/misc';
 import { PlotSaveHandler } from './plotSaveHandler.node';
 import { PlotViewHandler } from './plotViewHandler';
+import { RendererCommunication as RendererCommunicationBase } from './rendererCommunication';
 
 export type OpenImageInPlotViewer = {
     type: 'openImageInPlotViewer';
@@ -22,41 +18,11 @@ export type SaveImageAs = {
 };
 
 @injectable()
-export class RendererCommunication implements IExtensionSingleActivationService, IDisposable {
-    private readonly disposables: IDisposable[] = [];
+export class RendererCommunication extends RendererCommunicationBase {
     constructor(
-        @inject(PlotSaveHandler) private readonly plotSaveHandler: PlotSaveHandler,
-        @inject(PlotViewHandler) private readonly plotViewHandler: PlotViewHandler
-    ) {}
-
-    public dispose() {
-        disposeAllDisposables(this.disposables);
-    }
-    public async activate() {
-        const ext = extensions.getExtension('ms-toolsai.jupyter-renderers');
-        if (!ext) {
-            return;
-        }
-        if (!ext.isActive) {
-            await ext.activate();
-        }
-        const api = ext.exports as {
-            onDidReceiveMessage: Event<{ editor: NotebookEditor; message: OpenImageInPlotViewer | SaveImageAs }>;
-        };
-        api.onDidReceiveMessage(
-            ({ editor, message }) => {
-                const document = editor.notebook || window.activeNotebookEditor?.notebook;
-                if (!document) {
-                    return;
-                }
-                if (message.type === 'saveImageAs') {
-                    this.plotSaveHandler.savePlot(document, message.outputId, message.mimeType).catch(noop);
-                } else if (message.type === 'openImageInPlotViewer') {
-                    this.plotViewHandler.openPlot(document, message.outputId).catch(noop);
-                }
-            },
-            this,
-            this.disposables
-        );
+        @inject(PlotSaveHandler) plotSaveHandler: PlotSaveHandler,
+        @inject(PlotViewHandler) plotViewHandler: PlotViewHandler
+    ) {
+        super(plotSaveHandler, plotViewHandler);
     }
 }

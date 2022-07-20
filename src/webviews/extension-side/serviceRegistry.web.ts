@@ -15,15 +15,21 @@ import { NotebookWatcher } from './variablesView/notebookWatcher';
 import { DataViewerFactory } from './dataviewer/dataViewerFactory';
 import { DataViewer } from './dataviewer/dataViewer';
 import { IServiceManager } from '../../platform/ioc/types';
-import { IExtensionSingleActivationService } from '../../platform/activation/types';
+import { IExtensionSingleActivationService, IExtensionSyncActivationService } from '../../platform/activation/types';
 import { DataViewerDependencyService } from './dataviewer/dataViewerDependencyService';
 import { IPlotViewer, IPlotViewerProvider } from './plotting/types';
 import { PlotViewer } from './plotting/plotViewer';
 import { PlotViewerProvider } from './plotting/plotViewerProvider';
 import { PlotSaveHandler } from './plotView/plotSaveHandler';
 import { PlotViewHandler } from './plotView/plotViewHandler';
+import { RendererCommunication } from './plotView/rendererCommunication';
 
 export function registerTypes(serviceManager: IServiceManager) {
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSyncActivationService,
+        RendererCommunication
+    );
+
     // Data viewer
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
