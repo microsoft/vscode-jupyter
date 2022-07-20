@@ -10,7 +10,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as path from '../../../platform/vscode-path/path';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
 import { EnvironmentVariablesService } from '../../../platform/common/variables/environment.node';
-import { IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
+import { ICustomEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
 import { IEnvironmentActivationService } from '../../../platform/interpreter/activation/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvironments/info';
@@ -26,7 +26,7 @@ use(chaiAsPromised);
 suite('Kernel Environment Variables Service', () => {
     let fs: IFileSystemNode;
     let envActivation: IEnvironmentActivationService;
-    let customVariablesService: IEnvironmentVariablesProvider;
+    let customVariablesService: ICustomEnvironmentVariablesProvider;
     let variablesService: EnvironmentVariablesService;
     let kernelVariablesService: KernelEnvironmentVariablesService;
     let interpreterService: IInterpreterService;
@@ -51,7 +51,7 @@ suite('Kernel Environment Variables Service', () => {
         };
         fs = mock<IFileSystemNode>();
         envActivation = mock<IEnvironmentActivationService>();
-        customVariablesService = mock<IEnvironmentVariablesProvider>();
+        customVariablesService = mock<ICustomEnvironmentVariablesProvider>();
         interpreterService = mock<IInterpreterService>();
         variablesService = new EnvironmentVariablesService(instance(fs));
         configService = mock<IConfigurationService>();

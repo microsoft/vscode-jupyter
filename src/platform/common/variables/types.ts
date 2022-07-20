@@ -49,9 +49,12 @@ export interface ISystemVariables {
 
 export type ISystemVariablesConstructor = ClassType<ISystemVariables>;
 
-export const IEnvironmentVariablesProvider = Symbol('IEnvironmentVariablesProvider');
+export const ICustomEnvironmentVariablesProvider = Symbol('ICustomEnvironmentVariablesProvider');
 
-export interface IEnvironmentVariablesProvider {
+export interface ICustomEnvironmentVariablesProvider {
+    /**
+     * Triggered when the .env file changes.
+     */
     onDidEnvironmentVariablesChange: Event<Uri | undefined>;
     /**
      * Gets merged result of process.env and env variables defined in the .env file.

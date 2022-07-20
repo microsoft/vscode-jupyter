@@ -12,7 +12,7 @@ import { anything, instance, mock, when, verify } from 'ts-mockito';
 import { IPlatformService } from '../../../platform/common/platform/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { WorkspaceService } from '../../../platform/common/application/workspace.node';
-import { EnvironmentVariablesProvider } from '../../../platform/common/variables/environmentVariablesProvider.node';
+import { CustomEnvironmentVariablesProvider } from '../../../platform/common/variables/customEnvironmentVariablesProvider.node';
 import { InterpreterService } from '../../../platform/api/pythonApi';
 import {
     createInterpreterKernelSpec,
@@ -143,7 +143,7 @@ import { IApplicationEnvironment } from '../../../platform/common/application/ty
                 return Promise.resolve(b);
             });
             when(workspaceService.rootFolder).thenReturn(testWorkspaceFolder);
-            const envVarsProvider = mock(EnvironmentVariablesProvider);
+            const envVarsProvider = mock(CustomEnvironmentVariablesProvider);
             when(envVarsProvider.getEnvironmentVariables()).thenResolve({});
             const event = new EventEmitter<Uri | undefined>();
             disposables.push(event);

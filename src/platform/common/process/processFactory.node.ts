@@ -9,14 +9,15 @@ import { traceDecoratorVerbose } from '../../logging';
 import { TraceOptions } from '../../logging/types';
 import { IWorkspaceService } from '../application/types';
 import { IDisposableRegistry } from '../types';
-import { IEnvironmentVariablesProvider } from '../variables/types';
+import { ICustomEnvironmentVariablesProvider } from '../variables/types';
 import { ProcessService } from './proc.node';
 import { IBufferDecoder, IProcessLogger, IProcessService, IProcessServiceFactory } from './types.node';
 
 @injectable()
 export class ProcessServiceFactory implements IProcessServiceFactory {
     constructor(
-        @inject(IEnvironmentVariablesProvider) private readonly envVarsService: IEnvironmentVariablesProvider,
+        @inject(ICustomEnvironmentVariablesProvider)
+        private readonly envVarsService: ICustomEnvironmentVariablesProvider,
         @inject(IProcessLogger) private readonly processLogger: IProcessLogger,
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,

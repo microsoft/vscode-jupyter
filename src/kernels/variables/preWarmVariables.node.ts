@@ -10,7 +10,7 @@ import { IWorkspaceService } from '../../platform/common/application/types';
 import { CondaService } from '../../platform/common/process/condaService.node';
 import { IDisposableRegistry } from '../../platform/common/types';
 import { noop } from '../../platform/common/utils/misc';
-import { IEnvironmentVariablesProvider } from '../../platform/common/variables/types';
+import { ICustomEnvironmentVariablesProvider } from '../../platform/common/variables/types';
 import { IEnvironmentActivationService } from '../../platform/interpreter/activation/types';
 import { JupyterInterpreterService } from '../jupyter/interpreter/jupyterInterpreterService.node';
 import { IRawNotebookSupportedService } from '../raw/types';
@@ -27,7 +27,8 @@ export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSi
         @inject(IPythonExtensionChecker) private readonly extensionChecker: IPythonExtensionChecker,
         @inject(IPythonApiProvider) private readonly apiProvider: IPythonApiProvider,
         @inject(IRawNotebookSupportedService) private readonly rawNotebookSupported: IRawNotebookSupportedService,
-        @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
+        @inject(ICustomEnvironmentVariablesProvider)
+        private readonly envVarsProvider: ICustomEnvironmentVariablesProvider,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(CondaService) private readonly condaService: CondaService,
         @inject(IPythonExtensionChecker) private readonly pythonChecker: IPythonExtensionChecker
