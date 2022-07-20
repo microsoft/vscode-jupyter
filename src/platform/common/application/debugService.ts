@@ -26,7 +26,7 @@ export class DebugService implements IDebugService {
         return debug.activeDebugConsole;
     }
     public get activeDebugSession(): DebugSession | undefined {
-        traceInfoIfCI(`Getting active debug session`);
+        traceInfoIfCI(`Getting active debug session, ${debug.activeDebugSession?.name}`);
         return debug.activeDebugSession;
     }
     public get breakpoints(): readonly Breakpoint[] {
