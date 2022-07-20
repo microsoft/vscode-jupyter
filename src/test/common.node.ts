@@ -5,7 +5,6 @@
 /* eslint-disable no-console, @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires */
 
 import * as assert from 'assert';
-import * as hashjs from 'hash.js';
 import * as fs from 'fs-extra';
 import * as path from '../platform/vscode-path/path';
 import * as tmp from 'tmp';
@@ -21,7 +20,7 @@ import {
 import { noop } from './core';
 import { isCI } from '../platform/common/constants';
 import { IWorkspaceService } from '../platform/common/application/types';
-import { initializeCommonApi } from './common';
+import { generateScreenShotFileName, initializeCommonApi } from './common';
 import { IDisposable } from '../platform/common/types';
 import { swallowExceptions } from '../platform/common/utils/misc';
 import { JupyterServer } from './datascience/jupyterServer.node';
@@ -313,7 +312,6 @@ export async function openFile(file: string): Promise<TextDocument> {
     assert(vscode.window.activeTextEditor, 'No active editor');
     return textDocument;
 }
-const screenShotCount = new Map<string, number>();
 /**
  * Captures screenshots (png format) & dumpts into root directory (only on CI).
  * If there's a failure, it will be logged (errors are swallowed).
@@ -322,21 +320,7 @@ export async function captureScreenShot(contextOrFileName: string | Mocha.Contex
     if (!isCI) {
         return;
     }
-    const fullTestNameHash =
-        typeof contextOrFileName === 'string'
-            ? ''
-            : hashjs
-                  .sha256()
-                  .update(contextOrFileName.currentTest?.fullTitle() || '')
-                  .digest('hex')
-                  .substring(0, 10); // Ensure file names are short enough for windows.
-    const testTitle = typeof contextOrFileName === 'string' ? '' : contextOrFileName.currentTest?.title || '';
-    const counter = (screenShotCount.get(fullTestNameHash) || 0) + 1;
-    screenShotCount.set(fullTestNameHash, counter);
-    const fileNamePrefix =
-        typeof contextOrFileName === 'string' ? contextOrFileName : `${testTitle}_${fullTestNameHash}`;
-    const name = `${fileNamePrefix}_${counter}`.replace(/[\W]+/g, '_');
-    const filename = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, `${name}-screenshot.png`);
+    const filename = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, generateScreenShotFileName(contextOrFileName));
     try {
         const screenshot = require('screenshot-desktop');
         await screenshot({ filename });
