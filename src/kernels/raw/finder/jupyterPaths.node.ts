@@ -8,7 +8,7 @@ import * as uriPath from '../../../platform/vscode-path/resources';
 import { CancellationToken, Memento, Uri } from 'vscode';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { IFileSystemNode } from '../../../platform/common/platform/types.node';
-import { traceError, traceWarning } from '../../../platform/logging';
+import { ignoreLogging, traceError, traceWarning } from '../../../platform/logging';
 import {
     IDisposableRegistry,
     IMemento,
@@ -317,7 +317,7 @@ export class JupyterPaths {
     }
 
     @traceDecoratorVerbose('Get Jupyter Kernel Paths')
-    private async getJupyterPathKernelPaths(cancelToken?: CancellationToken): Promise<Uri[]> {
+    private async getJupyterPathKernelPaths(@ignoreLogging() cancelToken?: CancellationToken): Promise<Uri[]> {
         this.cachedJupyterKernelPaths =
             this.cachedJupyterKernelPaths || this.getJupyterPathSubPaths(cancelToken, 'kernels');
         this.cachedJupyterKernelPaths.then((value) => {
@@ -343,7 +343,10 @@ export class JupyterPaths {
      * https://jupyter.readthedocs.io/en/latest/projects/jupyter-directories.html#envvar-JUPYTER_PATH
      */
     @traceDecoratorVerbose('Get Jupyter Sub Paths')
-    private async getJupyterPathSubPaths(cancelToken?: CancellationToken, subDir?: string): Promise<Uri[]> {
+    private async getJupyterPathSubPaths(
+        @ignoreLogging() cancelToken?: CancellationToken,
+        subDir?: string
+    ): Promise<Uri[]> {
         const paths = new ResourceSet();
         const vars = await this.envVarsProvider.getEnvironmentVariables();
         if (cancelToken?.isCancellationRequested) {

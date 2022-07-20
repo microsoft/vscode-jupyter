@@ -4,7 +4,7 @@ import { exec, execSync, spawn } from 'child_process';
 import { EventEmitter } from 'events';
 import { Observable } from 'rxjs/Observable';
 import { CancellationError, Disposable } from 'vscode';
-import { traceDecoratorVerbose, traceInfoIfCI } from '../../logging';
+import { ignoreLogging, traceDecoratorVerbose, traceInfoIfCI } from '../../logging';
 import { TraceOptions } from '../../logging/types';
 
 import { IDisposable } from '../types';
@@ -195,7 +195,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
     }
 
     @traceDecoratorVerbose('Execing shell command', TraceOptions.BeforeCall | TraceOptions.Arguments)
-    public shellExec(command: string, options: ShellOptions = {}): Promise<ExecutionResult<string>> {
+    public shellExec(command: string, @ignoreLogging() options: ShellOptions = {}): Promise<ExecutionResult<string>> {
         const shellOptions = this.getDefaultOptions(options);
         return new Promise((resolve, reject) => {
             let cancelDisposable: Disposable | undefined;

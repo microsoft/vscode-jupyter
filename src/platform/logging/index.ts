@@ -102,7 +102,7 @@ export function traceDecoratorWarn(message: string): TraceDecoratorType {
 type ParameterLogInformation =
     | {
           parameterIndex: number;
-          propertyOfParaemterToLog: string;
+          propertyOfParameterToLog: string;
       }
     | { parameterIndex: number; ignore: true };
 type MethodName = string | symbol;
@@ -128,7 +128,7 @@ export function logValue<T>(property: keyof T) {
         const params = parameterInfos.get(methodName)!;
         params.push({
             parameterIndex,
-            propertyOfParaemterToLog: property as string
+            propertyOfParameterToLog: property as string
         });
     };
 }
@@ -221,8 +221,8 @@ function formatArgument(target: Object, method: MethodName, arg: any, parameterI
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let valueToLog: any = arg;
-    if ('propertyOfParaemterToLog' in info && info.propertyOfParaemterToLog) {
-        valueToLog = arg[info.propertyOfParaemterToLog];
+    if ('propertyOfParameterToLog' in info && info.propertyOfParameterToLog) {
+        valueToLog = arg[info.propertyOfParameterToLog];
     }
     return typeof valueToLog === 'string' ? removeUserPaths(valueToLog) : valueToLog;
 }
@@ -300,6 +300,9 @@ export function logTo(logLevel: LogLevel, message: string, ...args: Arguments): 
             traceInfo(message, ...args);
             break;
         case LogLevel.Debug:
+            traceVerbose(message, ...args);
+            break;
+        case LogLevel.Trace:
             traceVerbose(message, ...args);
             break;
         default:
