@@ -92,13 +92,13 @@ suite('KernelProvider Node', () => {
             instance(notebookProvider),
             instance(configService),
             instance(appShell),
-            instance(fs),
             instance(outputTracker),
             instance(workspaceService),
             instance(vscNotebook),
             instance(pythonExecFactory),
             instance(statusProvider),
             instance(context),
+            [],
             []
         );
         thirdPartyKernelProvider = new ThirdPartyKernelProvider(
