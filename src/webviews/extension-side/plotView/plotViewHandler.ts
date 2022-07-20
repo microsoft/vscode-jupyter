@@ -56,11 +56,21 @@ function convertPngToSvg(pngOutput: NotebookCellOutputItem): string {
     const imageBuffer = Buffer.from(pngOutput.data);
     const imageData = imageBuffer.toString('base64');
 
+    let height = imageBuffer.readUInt32BE(20);
+    let width = imageBuffer.readUInt32BE(16);
+
+    // http://www.jongware.com/pngdefry.html
+    const fried = 'CgBI';
+    if (imageBuffer.toString('ascii', 12, 16) === fried) {
+        height = imageBuffer.readUInt32BE(36);
+        width = imageBuffer.readUInt32BE(32);
+    }
+
     // Of note here, we want the dims on the SVG element, and the image at 100% this is due to how the SVG control
     // in the plot viewer works. The injected svg is sized down to 100px x 100px on the plot selection list so if
     // dims are set on the image then it scales out of bounds
     return `<?xml version="1.0" encoding="utf-8" standalone="no"?>
-<svg height="auto" width="auto" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg height="${height}" width="${width}" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <g>
         <image xmlns="http://www.w3.org/2000/svg" x="0" y="0" height="100%" width="100%" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="data:image/png;base64,${imageData}"/>
     </g>
