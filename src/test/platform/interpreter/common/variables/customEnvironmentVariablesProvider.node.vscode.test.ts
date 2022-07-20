@@ -107,7 +107,7 @@ suite('Custom Environment Variables Provider', () => {
         console.error('RegEx Pattern', pattern);
         console.error('RegEx Pattern', pattern.baseUri);
         console.error('RegEx Pattern', pattern.pattern);
-        const envFileWatcher = workspace.createFileSystemWatcher(pattern);
+        const envFileWatcher = workspace.createFileSystemWatcher(pattern, false, false, false);
         envFileWatcher.onDidChange(
             (e) => {
                 console.error(`Change detected in ${e.fsPath}`);
