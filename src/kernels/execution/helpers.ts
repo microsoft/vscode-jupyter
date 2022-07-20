@@ -269,6 +269,7 @@ function translateDisplayDataOutput(
     if ('image/svg+xml' in output.data || 'image/png' in output.data) {
         metadata.__displayOpenPlotIcon = true;
     }
+    console.log('AAAAAAAAAA', metadata.__displayOpenPlotIcon);
     const items: NotebookCellOutputItem[] = [];
     if (output.data) {
         // eslint-disable-next-line no-restricted-syntax
