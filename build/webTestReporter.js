@@ -13,6 +13,7 @@ const core = require('@actions/core');
 const hashjs = require('hash.js');
 const glob = require('glob');
 const { ExtensionRootDir } = require('./constants');
+const { reporter } = require('gulp-typescript');
 
 const settingsFile = path.join(__dirname, '..', 'src', 'test', 'datascience', '.vscode', 'settings.json');
 const webTestSummaryJsonFile = path.join(__dirname, '..', 'testresults.json');
@@ -86,6 +87,7 @@ exports.dumpTestSummary = () => {
         let indent = 0;
         let executionCount = 0;
         const skippedTests = [];
+        const passedCount = 0;
         mocha.reporters.Base.useColors = true;
         colors.enable();
         summary.forEach((output) => {
@@ -110,6 +112,9 @@ exports.dumpTestSummary = () => {
             runner.emit(output.event, output, output.err);
 
             switch (output.event) {
+                case 'pass': {
+                    passedCount++;
+                }
                 case 'suite': {
                     indent += 1;
                     const indentString = '#'.repeat(indent);
@@ -199,7 +204,10 @@ exports.dumpTestSummary = () => {
 
         if (reportWriter.failures.length) {
             core.setFailed(`${reportWriter.failures.length} tests failed.`);
+        } else if (passedCount < skippedTests) {
+            core.setFailed('Failing check, not enough passing tests or too many skipped');
         }
+
         // Write output into an ipynb file with the failures & corresponding console output & screenshot.
         if (cells.length) {
             fs.writeFileSync(webTestSummaryNb, JSON.stringify({ cells: cells }));
