@@ -17,7 +17,7 @@ import { IWorkspaceService } from '../application/types';
 import { IDisposableRegistry, Resource } from '../types';
 import { InMemoryCache } from '../utils/cacheUtils';
 import { EnvironmentVariables, ICustomEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
-import { traceDecoratorVerbose, traceInfoIfCI, traceVerbose } from '../../logging';
+import { traceDecoratorVerbose, traceError, traceInfoIfCI, traceVerbose } from '../../logging';
 import { SystemVariables } from './systemVariables.node';
 import { disposeAllDisposables } from '../helpers';
 import { IPythonExtensionChecker } from '../../api/types';
@@ -29,7 +29,7 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         return this.changeEventEmitter.event;
     }
     public trackedWorkspaceFolders = new Set<string>();
-    private fileWatchers = new Map<string, FileSystemWatcher>();
+    private fileWatchers = new Set<string>();
     private disposables: Disposable[] = [];
     private changeEventEmitter = new EventEmitter<Uri | undefined>();
     constructor(
@@ -44,13 +44,9 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
     }
 
     public dispose() {
+        console.error('Disposing CustomEnvironmentVariablesProvider');
         this.changeEventEmitter.dispose();
         disposeAllDisposables(this.disposables);
-        this.fileWatchers.forEach((watcher) => {
-            if (watcher) {
-                watcher.dispose();
-            }
-        });
     }
 
     @traceDecoratorVerbose('Get Custom Env Variables', TraceOptions.BeforeCall | TraceOptions.Arguments)
@@ -102,8 +98,10 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
         console.error('RegEx Pattern in code', pattern.baseUri.fsPath);
         console.error('RegEx Pattern in code', pattern.pattern);
         const envFileWatcher = this.workspaceService.createFileSystemWatcher(pattern, false, false, false);
-        this.fileWatchers.set(key, envFileWatcher);
         if (envFileWatcher) {
+            console.error('createFileWatcher created', pattern.pattern);
+            this.disposables.push(envFileWatcher);
+            this.fileWatchers.add(key);
             envFileWatcher.onDidChange(
                 (e) => {
                     traceVerbose('Environment file changed', e.fsPath);
@@ -114,6 +112,8 @@ export class CustomEnvironmentVariablesProvider implements ICustomEnvironmentVar
             );
             envFileWatcher.onDidCreate(() => this.onEnvironmentFileCreated(workspaceFolderUri), this, this.disposables);
             envFileWatcher.onDidDelete(() => this.onEnvironmentFileChanged(workspaceFolderUri), this, this.disposables);
+        } else {
+            traceError('Failed to create file watcher for environment file');
         }
     }
     private getEnvFile(workspaceFolderUri: Uri, purpose: 'RunPythonCode' | 'RunNonPythonCode') {
