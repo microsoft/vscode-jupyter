@@ -37,7 +37,7 @@ async function go() {
         await test_web.runTests({
             browserType: 'chromium',
             verbose: true,
-            headless: isCI ? false : true, // Set this to false to debug failures (true on CI to support capturing screenshots when tests fail).
+            headless: isCI ? false : true, // Set this to false to debug failures (false on CI to support capturing screenshots when tests fail).
             extensionDevelopmentPath,
             folderPath: path.resolve(__dirname, '..', 'src', 'test', 'datascience'),
             extensionTestsPath: bundlePath
