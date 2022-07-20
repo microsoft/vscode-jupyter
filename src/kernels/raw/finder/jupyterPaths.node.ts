@@ -17,7 +17,7 @@ import {
     Resource
 } from '../../../platform/common/types';
 import { tryGetRealPath } from '../../../platform/common/utils.node';
-import { IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
+import { ICustomEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
 import { traceDecoratorVerbose } from '../../../platform/logging';
 import { OSType } from '../../../platform/common/utils/platform.node';
 import { ResourceMap, ResourceSet } from '../../../platform/vscode-path/map';
@@ -46,7 +46,8 @@ export class JupyterPaths {
     private cachedDataDirs = new Map<string, Promise<Uri[]>>();
     constructor(
         @inject(IPlatformService) private platformService: IPlatformService,
-        @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
+        @inject(ICustomEnvironmentVariablesProvider)
+        private readonly envVarsProvider: ICustomEnvironmentVariablesProvider,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private readonly globalState: Memento,
         @inject(IFileSystemNode) private readonly fs: IFileSystem,

@@ -13,11 +13,11 @@ import { ProcessServiceFactory } from '../../../platform/common/process/processF
 import { IBufferDecoder, IProcessLogger } from '../../../platform/common/process/types.node';
 import { IDisposableRegistry } from '../../../platform/common/types';
 import { EnvironmentVariablesProvider } from '../../../platform/common/variables/environmentVariablesProvider.node';
-import { IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
+import { ICustomEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
 
 suite('Process - ProcessServiceFactory', () => {
     let factory: ProcessServiceFactory;
-    let envVariablesProvider: IEnvironmentVariablesProvider;
+    let envVariablesProvider: ICustomEnvironmentVariablesProvider;
     let bufferDecoder: IBufferDecoder;
     let processLogger: IProcessLogger;
     let processService: ProcessService;

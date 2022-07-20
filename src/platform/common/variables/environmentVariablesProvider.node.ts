@@ -8,12 +8,12 @@ import { sendFileCreationTelemetry } from '../../telemetry/envFileTelemetry.node
 import { IWorkspaceService } from '../application/types';
 import { IDisposableRegistry } from '../types';
 import { InMemoryCache } from '../utils/cacheUtils';
-import { EnvironmentVariables, IEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
+import { EnvironmentVariables, ICustomEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
 import { traceDecoratorVerbose, traceInfoIfCI, traceVerbose } from '../../logging';
 
 const CACHE_DURATION = 60 * 60 * 1000;
 @injectable()
-export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvider, Disposable {
+export class EnvironmentVariablesProvider implements ICustomEnvironmentVariablesProvider, Disposable {
     public get onDidEnvironmentVariablesChange(): Event<Uri | undefined> {
         return this.changeEventEmitter.event;
     }

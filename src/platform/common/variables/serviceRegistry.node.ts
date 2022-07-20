@@ -4,15 +4,15 @@
 import { IServiceManager } from '../../ioc/types';
 import { EnvironmentVariablesService } from './environment.node';
 import { EnvironmentVariablesProvider } from './environmentVariablesProvider.node';
-import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
+import { ICustomEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IEnvironmentVariablesService>(
         IEnvironmentVariablesService,
         EnvironmentVariablesService
     );
-    serviceManager.addSingleton<IEnvironmentVariablesProvider>(
-        IEnvironmentVariablesProvider,
+    serviceManager.addSingleton<ICustomEnvironmentVariablesProvider>(
+        ICustomEnvironmentVariablesProvider,
         EnvironmentVariablesProvider
     );
 }

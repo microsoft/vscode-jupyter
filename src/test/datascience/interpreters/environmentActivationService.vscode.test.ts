@@ -27,7 +27,7 @@ import { IPlatformService } from '../../../platform/common/platform/types';
 import { CondaService } from '../../../platform/common/process/condaService.node';
 import { IWorkspaceService } from '../../../platform/common/application/types';
 import { CurrentProcess } from '../../../platform/common/process/currentProcess.node';
-import { IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
+import { ICustomEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
 import { IS_CONDA_TEST, IS_REMOTE_NATIVE_TEST } from '../../constants.node';
 import { Disposable, Memento } from 'vscode';
 import { instance, mock, verify } from 'ts-mockito';
@@ -86,7 +86,7 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
             serviceContainer.get(CurrentProcess),
             serviceContainer.get(IWorkspaceService),
             serviceContainer.get(IInterpreterService),
-            serviceContainer.get(IEnvironmentVariablesProvider),
+            serviceContainer.get(ICustomEnvironmentVariablesProvider),
             serviceContainer.get(IPythonApiProvider),
             serviceContainer.get(IMemento, GLOBAL_MEMENTO),
             serviceContainer.get(CondaService),
@@ -188,7 +188,7 @@ suite('DataScience - VSCode Notebook - (Conda Execution) (slow)', function () {
             api.serviceContainer.get(CurrentProcess),
             api.serviceContainer.get(IWorkspaceService),
             api.serviceContainer.get(IInterpreterService),
-            api.serviceContainer.get(IEnvironmentVariablesProvider),
+            api.serviceContainer.get(ICustomEnvironmentVariablesProvider),
             api.serviceContainer.get(IPythonApiProvider),
             api.serviceContainer.get(IMemento, GLOBAL_MEMENTO),
             instance(mockConda),

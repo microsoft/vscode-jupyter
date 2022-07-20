@@ -7,7 +7,10 @@ import { traceInfo, traceError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IConfigurationService, Resource } from '../../../platform/common/types';
 import { noop } from '../../../platform/common/utils/misc';
-import { IEnvironmentVariablesService, IEnvironmentVariablesProvider } from '../../../platform/common/variables/types';
+import {
+    IEnvironmentVariablesService,
+    ICustomEnvironmentVariablesProvider
+} from '../../../platform/common/variables/types';
 import { IEnvironmentActivationService } from '../../../platform/interpreter/activation/types';
 import { IInterpreterService } from '../../../platform/interpreter/contracts';
 import { PythonEnvironment } from '../../../platform/pythonEnvironments/info';
@@ -23,7 +26,8 @@ export class KernelEnvironmentVariablesService {
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IEnvironmentActivationService) private readonly envActivation: IEnvironmentActivationService,
         @inject(IEnvironmentVariablesService) private readonly envVarsService: IEnvironmentVariablesService,
-        @inject(IEnvironmentVariablesProvider) private readonly customEnvVars: IEnvironmentVariablesProvider,
+        @inject(ICustomEnvironmentVariablesProvider)
+        private readonly customEnvVars: ICustomEnvironmentVariablesProvider,
         @inject(IConfigurationService) private readonly configService: IConfigurationService
     ) {}
     /**

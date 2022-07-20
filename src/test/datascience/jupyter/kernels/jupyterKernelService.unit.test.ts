@@ -23,7 +23,7 @@ import { uriEquals } from '../../helpers';
 import { KernelEnvironmentVariablesService } from '../../../../kernels/raw/launcher/kernelEnvVarsService.node';
 import { IInterpreterService } from '../../../../platform/interpreter/contracts';
 import { IEnvironmentActivationService } from '../../../../platform/interpreter/activation/types';
-import { IEnvironmentVariablesProvider } from '../../../../platform/common/variables/types';
+import { ICustomEnvironmentVariablesProvider } from '../../../../platform/common/variables/types';
 import { EnvironmentVariablesService } from '../../../../platform/common/variables/environment.node';
 import { isWeb } from '../../../../platform/common/utils/misc';
 
@@ -391,7 +391,7 @@ suite('DataScience - JupyterKernelService', () => {
         appEnv = mock<IEnvironmentActivationService>();
         when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({});
         const variablesService = new EnvironmentVariablesService(instance(fs));
-        const customEnvVars = mock<IEnvironmentVariablesProvider>();
+        const customEnvVars = mock<ICustomEnvironmentVariablesProvider>();
         when(customEnvVars.getCustomEnvironmentVariables(anything())).thenResolve();
         settings = mock(JupyterSettings);
         const configService = mock(ConfigurationService);
