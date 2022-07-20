@@ -18,6 +18,9 @@ import { ExportFileOpener } from './exportFileOpener';
 import { ExportUtilBase } from './exportUtil';
 import { ExportFormat, IExport, IExportDialog, IFileConverter, INbConvertExport } from './types';
 
+/**
+ * Converts different file formats to others. Used in export.
+ */
 @injectable()
 export class FileConverter implements IFileConverter {
     constructor(

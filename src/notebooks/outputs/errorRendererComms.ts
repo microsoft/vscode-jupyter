@@ -26,6 +26,9 @@ import { IDisposableRegistry } from '../../platform/common/types';
 import { InteractiveWindowMessages } from '../../messageTypes';
 import { linkCommandAllowList, LineQueryRegex } from './linkProvider';
 
+/**
+ * Registers comm channel to the error renderer to handle link clicking
+ */
 @injectable()
 export class ErrorRendererCommunicationHandler implements IExtensionSyncActivationService {
     constructor(

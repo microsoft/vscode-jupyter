@@ -20,6 +20,9 @@ import { isJupyterNotebook } from '../../platform/common/utils';
 import { noop } from '../../platform/common/utils/misc';
 import { IControllerSelection } from './types';
 
+/**
+ * Implements the UI for the status bar that says 'Jupyter:Local' or 'Jupyter:Remote'
+ */
 @injectable()
 export class RemoteSwitcher implements IExtensionSingleActivationService {
     private readonly disposables: IDisposable[] = [];

@@ -3,6 +3,9 @@ import { CancellationToken, NotebookDocument, Uri } from 'vscode';
 import { PythonEnvironment } from '../../platform/pythonEnvironments/info';
 import { ExportFormat, IExportBase, INbConvertExport } from './types';
 
+/**
+ * Specific implementation of INbConvertExport for exporting to PDF
+ */
 @injectable()
 export class ExportToPDF implements INbConvertExport {
     constructor(@inject(IExportBase) protected readonly exportBase: IExportBase) {}

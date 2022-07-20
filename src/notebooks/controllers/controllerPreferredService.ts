@@ -47,7 +47,8 @@ import {
 } from './types';
 
 /**
- * This class keeps track of selected controllers
+ * Computes and tracks the preferred kernel for a notebook.
+ * Preferred is determined from the metadata in the notebook. If no metadata is found, the default kernel is used.
  */
 @injectable()
 export class ControllerPreferredService implements IControllerPreferredService, IExtensionSingleActivationService {

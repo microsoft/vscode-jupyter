@@ -32,7 +32,8 @@ import { IControllerRegistration, InteractiveControllerIdSuffix, IVSCodeNotebook
 import { VSCodeNotebookController } from './vscodeNotebookController';
 
 /**
- * This class keeps track of registered controllers
+ * Keeps track of registered controllers and available KernelConnectionMetadatas.
+ * Filtering is applied to the KernelConnectionMetadatas to limit the list of available controllers.
  */
 @injectable()
 export class ControllerRegistration implements IControllerRegistration {

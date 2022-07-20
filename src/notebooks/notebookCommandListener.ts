@@ -35,6 +35,9 @@ import { getNotebookMetadata } from '../platform/common/utils';
 import { KernelConnector } from './controllers/kernelConnector';
 import { IControllerSelection } from './controllers/types';
 
+/**
+ * Registers commands specific to the notebook UI
+ */
 @injectable()
 export class NotebookCommandListener implements IDataScienceCommandListener {
     private kernelInterruptedDontAskToRestart: boolean = false;

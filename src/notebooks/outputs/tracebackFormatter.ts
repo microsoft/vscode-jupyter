@@ -10,6 +10,9 @@ import { DataScience } from '../../platform/common/utils/localize';
 import { traceInfoIfCI } from '../../platform/logging';
 const LineNumberMatchRegex = /(;32m[ ->]*?)(\d+)(.*)/g;
 
+/**
+ * Used to format the traceback of an error in a notebook
+ */
 @injectable()
 export class NotebookTracebackFormatter implements ITracebackFormatter {
     public format(cell: NotebookCell, traceback: string[]): string[] {

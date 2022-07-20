@@ -23,6 +23,9 @@ import { IExtensionSyncActivationService } from '../../platform/activation/types
 import { IWebviewCommunication } from '../../platform/webviews/types';
 import { CommonMessageCoordinator } from '../../kernels/ipywidgets/commonMessageCoordinator';
 
+/**
+ * Posts/Receives messages from the renderer in order to have kernel messages available in the webview
+ */
 class NotebookCommunication implements IWebviewCommunication, IDisposable {
     private eventHandlerListening?: boolean;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

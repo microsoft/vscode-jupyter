@@ -13,6 +13,10 @@ import { IControllerSelection, IVSCodeNotebookController } from '../controllers/
 import { trackKernelResourceInformation } from '../../kernels/telemetry/helper';
 import { IInterpreterPackages } from '../../platform/interpreter/types';
 
+/**
+ * Watches interpreter and notebook selection events in order to ask the IInterpreterPackages service to track
+ * the packages in an interpreter.
+ */
 @injectable()
 export class InterpreterPackageTracker implements IExtensionSingleActivationService {
     private activeInterpreterTrackedUponActivation?: boolean;

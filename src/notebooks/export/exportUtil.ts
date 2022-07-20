@@ -3,6 +3,9 @@ import { NotebookCellData, NotebookData, NotebookDocument, Uri } from 'vscode';
 import { IExtensions } from '../../platform/common/types';
 import { ExportFormat, IExportDialog } from './types';
 
+/**
+ * Export utilities that are common to node/web
+ */
 @injectable()
 export class ExportUtilBase {
     constructor(

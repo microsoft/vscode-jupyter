@@ -13,6 +13,9 @@ import { JupyterServerSelector, SelectJupyterUriCommandSource } from '../kernels
 import { IJupyterServerUriStorage } from '../kernels/jupyter/types';
 import { IExtensionSyncActivationService } from '../platform/activation/types';
 
+/**
+ * Registers commands to allow the user to set the remote server URI.
+ */
 @injectable()
 export class JupyterServerSelectorCommand implements IExtensionSyncActivationService {
     private readonly disposables: IDisposable[] = [];
