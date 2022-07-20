@@ -30,8 +30,7 @@ export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSi
         @inject(ICustomEnvironmentVariablesProvider)
         private readonly envVarsProvider: ICustomEnvironmentVariablesProvider,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(CondaService) private readonly condaService: CondaService,
-        @inject(IPythonExtensionChecker) private readonly pythonChecker: IPythonExtensionChecker
+        @inject(CondaService) private readonly condaService: CondaService
     ) {}
     public async activate(): Promise<void> {
         // Don't prewarm global interpreter if running with ZMQ
@@ -44,7 +43,7 @@ export class PreWarmActivatedJupyterEnvironmentVariables implements IExtensionSi
             this.preWarmInterpreterVariables().ignoreErrors();
             this.apiProvider.onDidActivatePythonExtension(this.preWarmInterpreterVariables, this, this.disposables);
         }
-        if (this.pythonChecker.isPythonExtensionInstalled) {
+        if (this.extensionChecker.isPythonExtensionInstalled) {
             // Don't try to pre-warm variables if user has too many workspace folders opened.
             const workspaceFolderCount = this.workspace.workspaceFolders?.length ?? 0;
             if (workspaceFolderCount <= 5) {
