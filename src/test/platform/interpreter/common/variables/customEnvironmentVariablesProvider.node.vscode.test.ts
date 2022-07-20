@@ -47,7 +47,7 @@ suite.only('Custom Environment Variables Provider', () => {
     });
     suiteTeardown(async function () {
         if (IS_REMOTE_NATIVE_TEST() || isWeb()) {
-            return this.skip();
+            return;
         }
         fs.writeFileSync(envFile.fsPath, contentsOfOldEnvFile);
         await workspace.getConfiguration('python').update('envFile', undefined);
