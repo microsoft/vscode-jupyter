@@ -71,7 +71,7 @@ suite('Kernel Environment Variables Service', () => {
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             PATH: 'foobar'
         });
-        when(customVariablesService.getCustomEnvironmentVariables(anything())).thenResolve();
+        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything())).thenResolve();
 
         const vars = await kernelVariablesService.getEnvironmentVariables(undefined, interpreter, kernelSpec);
 
@@ -83,7 +83,7 @@ suite('Kernel Environment Variables Service', () => {
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             HELLO_VAR: 'new'
         });
-        when(customVariablesService.getCustomEnvironmentVariables(anything())).thenResolve();
+        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything())).thenResolve();
 
         const vars = await kernelVariablesService.getEnvironmentVariables(undefined, interpreter, kernelSpec);
 
@@ -100,7 +100,9 @@ suite('Kernel Environment Variables Service', () => {
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             HELLO_VAR: 'interpreter'
         });
-        when(customVariablesService.getCustomEnvironmentVariables(anything())).thenResolve({ HELLO_VAR: 'new' });
+        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything())).thenResolve({
+            HELLO_VAR: 'new'
+        });
 
         const vars = await kernelVariablesService.getEnvironmentVariables(undefined, interpreter, kernelSpec);
 
@@ -116,7 +118,9 @@ suite('Kernel Environment Variables Service', () => {
         process.env['HELLO_VAR'] = 'very old';
         delete kernelSpec.interpreterPath;
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({});
-        when(customVariablesService.getCustomEnvironmentVariables(anything())).thenResolve({ HELLO_VAR: 'new' });
+        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything())).thenResolve({
+            HELLO_VAR: 'new'
+        });
 
         const vars = await kernelVariablesService.getEnvironmentVariables(undefined, undefined, kernelSpec);
 
@@ -130,7 +134,7 @@ suite('Kernel Environment Variables Service', () => {
 
     test('Returns process.env vars if no interpreter and no kernelspec.env', async () => {
         delete kernelSpec.interpreterPath;
-        when(customVariablesService.getCustomEnvironmentVariables(anything())).thenResolve();
+        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything())).thenResolve();
 
         const vars = await kernelVariablesService.getEnvironmentVariables(undefined, undefined, kernelSpec);
 
@@ -139,7 +143,7 @@ suite('Kernel Environment Variables Service', () => {
 
     test('Returns process.env vars if unable to get activated vars for interpreter and no kernelspec.env', async () => {
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve();
-        when(customVariablesService.getCustomEnvironmentVariables(anything())).thenResolve();
+        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything())).thenResolve();
 
         const vars = await kernelVariablesService.getEnvironmentVariables(undefined, interpreter, kernelSpec);
 
@@ -158,7 +162,9 @@ suite('Kernel Environment Variables Service', () => {
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             PATH: 'foobar'
         });
-        when(customVariablesService.getCustomEnvironmentVariables(anything())).thenResolve({ PATH: 'foobaz' });
+        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything())).thenResolve({
+            PATH: 'foobaz'
+        });
 
         const vars = await kernelVariablesService.getEnvironmentVariables(undefined, interpreter, kernelSpec);
         assert.isOk(processPath);
@@ -177,7 +183,9 @@ suite('Kernel Environment Variables Service', () => {
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             PATH: 'pathInInterpreterEnv'
         });
-        when(customVariablesService.getCustomEnvironmentVariables(anything())).thenResolve({ PATH: 'foobaz' });
+        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything())).thenResolve({
+            PATH: 'foobaz'
+        });
 
         // undefined for interpreter here, interpreterPath from the spec should be used
         const vars = await kernelVariablesService.getEnvironmentVariables(undefined, undefined, kernelSpec);
@@ -199,7 +207,9 @@ suite('Kernel Environment Variables Service', () => {
         when(envActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({
             PATH: 'foobar'
         });
-        when(customVariablesService.getCustomEnvironmentVariables(anything())).thenResolve({ PATH: 'foobaz' });
+        when(customVariablesService.getCustomEnvironmentVariables(anything(), anything())).thenResolve({
+            PATH: 'foobaz'
+        });
         when(settings.excludeUserSitePackages).thenReturn(shouldBeSet);
 
         // undefined for interpreter here, interpreterPath from the spec should be used

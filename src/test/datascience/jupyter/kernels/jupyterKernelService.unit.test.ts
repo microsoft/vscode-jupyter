@@ -392,7 +392,7 @@ suite('DataScience - JupyterKernelService', () => {
         when(appEnv.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({});
         const variablesService = new EnvironmentVariablesService(instance(fs));
         const customEnvVars = mock<ICustomEnvironmentVariablesProvider>();
-        when(customEnvVars.getCustomEnvironmentVariables(anything())).thenResolve();
+        when(customEnvVars.getCustomEnvironmentVariables(anything(), anything())).thenResolve();
         settings = mock(JupyterSettings);
         const configService = mock(ConfigurationService);
         settings = mock(JupyterSettings);

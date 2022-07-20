@@ -59,9 +59,9 @@ export interface ICustomEnvironmentVariablesProvider {
     /**
      * Gets merged result of process.env and env variables defined in the .env file.
      */
-    getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables>;
+    getEnvironmentVariables(resource?: Uri, purpose?: 'RunPythonCode'): Promise<EnvironmentVariables>;
     /**
      * Gets the env variables defined in the .env file.
      */
-    getCustomEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables | undefined>;
+    getCustomEnvironmentVariables(resource?: Uri, purpose?: 'RunPythonCode'): Promise<EnvironmentVariables | undefined>;
 }
