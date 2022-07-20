@@ -1,3 +1,7 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+'use strict';
+
 import { inject, injectable } from 'inversify';
 import { NotebookCellOutput, NotebookDocument, Uri } from 'vscode';
 import * as path from '../../../platform/vscode-path/path';
@@ -6,6 +10,7 @@ import { traceError } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IFileSystem } from '../../../platform/common/platform/types';
 import { DataScience } from '../../../platform/common/utils/localize';
+import { IPlotSaveHandler } from './types';
 
 export const svgMimeType = 'image/svg+xml';
 export const imageExtensionForMimeType: Record<string, string> = {
@@ -16,7 +21,7 @@ export const imageExtensionForMimeType: Record<string, string> = {
 };
 
 @injectable()
-export class PlotSaveHandler {
+export class PlotSaveHandler implements IPlotSaveHandler {
     constructor(
         @inject(IApplicationShell) private readonly shell: IApplicationShell,
         @inject(IFileSystem) private readonly fs: IFileSystem,

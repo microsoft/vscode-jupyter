@@ -1,3 +1,7 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+'use strict';
+
 import { inject, injectable } from 'inversify';
 import { NotebookCellOutputItem, NotebookDocument } from 'vscode';
 import { traceError } from '../../../platform/logging';
