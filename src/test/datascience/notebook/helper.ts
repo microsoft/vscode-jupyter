@@ -76,7 +76,7 @@ import * as uuid from 'uuid/v4';
 import { IFileSystem, IPlatformService } from '../../../platform/common/platform/types';
 import { initialize, waitForCondition } from '../../common';
 import { VSCodeNotebook } from '../../../platform/common/application/notebook';
-import { IDebuggingManager, IKernelDebugAdapter } from '../../../kernels/debugger/types';
+import { IDebuggingManager, IKernelDebugAdapter } from '../../../notebooks/debugger/debuggingTypes';
 import { PythonKernelCompletionProvider } from '../../../standalone/intellisense/pythonKernelCompletionProvider';
 import { verifySelectedControllerIsRemoteForRemoteTests } from '../helpers';
 import {

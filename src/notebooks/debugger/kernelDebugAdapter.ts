@@ -4,9 +4,9 @@
 'use strict';
 
 import * as path from '../../platform/vscode-path/path';
-import { IDumpCellResponse } from '../../kernels/debugger/types';
+import { IDumpCellResponse } from './debuggingTypes';
 import { traceError } from '../../platform/logging';
-import { KernelDebugAdapterBase } from '../../kernels/debugger/kernelDebugAdapterBase';
+import { KernelDebugAdapterBase } from './kernelDebugAdapterBase';
 import { DebugProtocol } from 'vscode-debugprotocol';
 
 export class KernelDebugAdapter extends KernelDebugAdapterBase {

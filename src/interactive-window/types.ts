@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Disposable, Event, NotebookCell, NotebookDocument, NotebookEditor, Tab, Uri } from 'vscode';
-import { IDebuggingManager } from '../kernels/debugger/types';
+import { IDebuggingManager } from '../notebooks/debugger/debuggingTypes';
 import { IKernel, KernelConnectionMetadata } from '../kernels/types';
 import { IVSCodeNotebookController } from '../notebooks/controllers/types';
 import { Resource, InteractiveWindowMode, ICell } from '../platform/common/types';

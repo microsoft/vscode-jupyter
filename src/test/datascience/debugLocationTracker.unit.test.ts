@@ -4,8 +4,8 @@
 /* eslint-disable , , @typescript-eslint/no-explicit-any, no-multi-str, no-trailing-spaces */
 import { expect } from 'chai';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { DebugLocationTracker } from '../../kernels/debugger/debugLocationTracker';
-import { IDebugLocation } from '../../kernels/debugger/types';
+import { DebugLocationTracker } from '../../notebooks/debugger/debugLocationTracker';
+import { IDebugLocation } from '../../notebooks/debugger/debuggingTypes';
 
 suite('Debug Location Tracker', () => {
     let debugTracker: DebugLocationTracker;

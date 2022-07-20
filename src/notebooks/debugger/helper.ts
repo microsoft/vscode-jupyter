@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { IKernelDebugAdapter, IKernelDebugAdapterConfig, KernelDebugMode } from './types';
-import { IKernel } from '../types';
+import { IKernelDebugAdapter, IKernelDebugAdapterConfig, KernelDebugMode } from './debuggingTypes';
+import { IKernel } from '../../kernels/types';
 
 export enum IpykernelCheckResult {
     Unknown,

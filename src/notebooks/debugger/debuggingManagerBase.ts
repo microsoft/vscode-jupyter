@@ -17,14 +17,14 @@ import {
 import { IKernel, IKernelProvider } from '../../kernels/types';
 import { IDisposable } from '../../platform/common/types';
 import { IApplicationShell, ICommandManager, IVSCodeNotebook } from '../../platform/common/application/types';
-import { DebuggingTelemetry } from '../../kernels/debugger/constants';
+import { DebuggingTelemetry } from './constants';
 import { sendTelemetryEvent } from '../../telemetry';
 import { traceError, traceInfoIfCI } from '../../platform/logging';
 import { DataScience } from '../../platform/common/utils/localize';
-import { IKernelDebugAdapterConfig } from '../../kernels/debugger/types';
+import { IKernelDebugAdapterConfig } from './debuggingTypes';
 import { Debugger } from '../../platform/debugger/debugger';
-import { KernelDebugAdapterBase } from '../../kernels/debugger/kernelDebugAdapterBase';
-import { IpykernelCheckResult, isUsingIpykernel6OrLater } from '../../kernels/debugger/helper';
+import { KernelDebugAdapterBase } from './kernelDebugAdapterBase';
+import { IpykernelCheckResult, isUsingIpykernel6OrLater } from './helper';
 import { noop } from '../../platform/common/utils/misc';
 import { IControllerLoader, IControllerSelection } from '../controllers/types';
 

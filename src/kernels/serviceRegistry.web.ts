@@ -18,15 +18,11 @@ import { IKernelFinder, IKernelProvider, IThirdPartyKernelProvider } from './typ
 import { KernelProvider, ThirdPartyKernelProvider } from './kernelProvider.web';
 import { KernelFinder } from './kernelFinder.web';
 import { PreferredRemoteKernelIdProvider } from './jupyter/preferredRemoteKernelIdProvider';
-import { MultiplexingDebugService } from './debugger/multiplexingDebugService';
-import { IDebugLocationTracker, IDebugLocationTrackerFactory, IJupyterDebugService } from './debugger/types';
-import { DebuggerVariables } from './variables/debuggerVariables';
 import { IJupyterVariables, IKernelVariableRequester } from './variables/types';
 import { KernelVariables } from './variables/kernelVariables';
 import { JupyterVariables } from './variables/jupyterVariables';
 import { PythonVariablesRequester } from './variables/pythonVariableRequester';
 import { CellOutputDisplayIdTracker } from './execution/cellDisplayIdTracker';
-import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFactory';
 
 @injectable()
 class RawNotebookSupportedService implements IRawNotebookSupportedService {
@@ -61,18 +57,8 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
         PythonVariablesRequester,
         Identifiers.PYTHON_VARIABLES_REQUESTER
     );
-    serviceManager.addSingleton<IJupyterDebugService>(
-        IJupyterDebugService,
-        MultiplexingDebugService,
-        Identifiers.MULTIPLEXING_DEBUGSERVICE
-    );
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables, Identifiers.ALL_VARIABLES);
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, KernelVariables, Identifiers.KERNEL_VARIABLES);
-    serviceManager.addSingleton<IJupyterVariables>(
-        IJupyterVariables,
-        DebuggerVariables,
-        Identifiers.DEBUGGER_VARIABLES
-    );
 
     serviceManager.addSingleton<IExtensionSyncActivationService>(IExtensionSyncActivationService, KernelCrashMonitor);
     serviceManager.addSingleton<IKernelProvider>(IKernelProvider, KernelProvider);
@@ -88,9 +74,4 @@ export function registerTypes(serviceManager: IServiceManager, isDevMode: boolea
     registerJupyterTypes(serviceManager, isDevMode);
 
     serviceManager.addSingleton<CellOutputDisplayIdTracker>(CellOutputDisplayIdTracker, CellOutputDisplayIdTracker);
-
-    // debugging
-    serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory, undefined, [
-        IDebugLocationTrackerFactory
-    ]);
 }

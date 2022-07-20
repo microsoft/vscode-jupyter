@@ -24,7 +24,7 @@ import { ITestVariableViewProvider } from './variableView/variableViewTestInterf
 import { IInteractiveWindowProvider } from '../../interactive-window/types';
 import { Commands } from '../../platform/common/constants';
 import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
-import { pythonIWKernelDebugAdapter } from '../../kernels/debugger/constants';
+import { pythonIWKernelDebugAdapter } from '../../notebooks/debugger/constants';
 import { isWeb, noop } from '../../platform/common/utils/misc';
 
 export type DebuggerType = 'VSCodePythonDebugger' | 'JupyterProtocolDebugger';

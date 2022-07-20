@@ -7,9 +7,9 @@ import { IExtensionSingleActivationService } from '../../platform/activation/typ
 import { IDebugService } from '../../platform/common/application/types';
 import { Identifiers, PYTHON_LANGUAGE } from '../../platform/common/constants';
 import { IDisposableRegistry } from '../../platform/common/types';
-import { pythonIWKernelDebugAdapter, pythonKernelDebugAdapter } from '../debugger/constants';
-import { IJupyterDebugService } from '../debugger/types';
-import { IJupyterVariables } from './types';
+import { pythonIWKernelDebugAdapter, pythonKernelDebugAdapter } from './constants';
+import { IJupyterDebugService } from './debuggingTypes';
+import { IJupyterVariables } from '../../kernels/variables/types';
 
 /**
  * Registes a DebugAdapter for handling variable values when debugging.

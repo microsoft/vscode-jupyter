@@ -16,18 +16,18 @@ import {
     IVariableScriptGenerator,
     Resource
 } from '../../platform/common/types';
-import { DebugLocationTracker } from '../debugger/debugLocationTracker';
+import { DebugLocationTracker } from './debugLocationTracker';
 import { sendTelemetryEvent, Telemetry } from '../../telemetry';
-import { IDebuggingManager, IJupyterDebugService, KernelDebugMode } from '../debugger/types';
-import { IKernel } from '../types';
-import { parseDataFrame } from './pythonVariableRequester';
+import { IDebuggingManager, IJupyterDebugService, KernelDebugMode } from './debuggingTypes';
+import { IKernel } from '../../kernels/types';
+import { parseDataFrame } from '../../kernels/variables/pythonVariableRequester';
 import {
     IConditionalJupyterVariables,
     IJupyterVariable,
     IJupyterVariablesRequest,
     IJupyterVariablesResponse
-} from './types';
-import { convertDebugProtocolVariableToIJupyterVariable, DataViewableTypes } from './helpers';
+} from '../../kernels/variables/types';
+import { convertDebugProtocolVariableToIJupyterVariable, DataViewableTypes } from '../../kernels/variables/helpers';
 import { noop } from '../../platform/common/utils/misc';
 
 const KnownExcludedVariables = new Set<string>(['In', 'Out', 'exit', 'quit']);

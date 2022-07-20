@@ -6,9 +6,9 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { ICommandManager } from '../../platform/common/application/types';
 import { IKernel } from '../../kernels/types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { DebuggingTelemetry } from '../../kernels/debugger/constants';
-import { cellDebugSetup } from '../../kernels/debugger/helper';
-import { IDebuggingDelegate, IKernelDebugAdapter } from '../../kernels/debugger/types';
+import { DebuggingTelemetry } from './constants';
+import { cellDebugSetup } from './helper';
+import { IDebuggingDelegate, IKernelDebugAdapter } from './debuggingTypes';
 import { noop } from '../../platform/common/utils/misc';
 
 export class DebugCellController implements IDebuggingDelegate {
