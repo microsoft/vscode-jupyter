@@ -3,7 +3,6 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { getAssociatedNotebookDocument } from '../../kernels/helpers';
 import { IKernel, isLocalConnection, IStartupCodeProvider, StartupCodePriority } from '../../kernels/types';
 import { InteractiveWindowView } from '../../platform/common/constants';
 import { IFileSystem } from '../../platform/common/platform/types';
@@ -32,7 +31,7 @@ export class InteractiveWindowDebuggingStartupCodeProvider implements IStartupCo
             }
         }
 
-        if (getAssociatedNotebookDocument(kernel)?.notebookType === InteractiveWindowView) {
+        if (kernel.notebook?.notebookType === InteractiveWindowView) {
             // If using ipykernel 6, we need to set the IPYKERNEL_CELL_NAME so that
             // debugging can work. However this code is harmless for IPYKERNEL 5 so just always do it
             if (!this.addRunCellHookContents) {
