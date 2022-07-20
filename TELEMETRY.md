@@ -532,7 +532,7 @@ No description provided
 
 ## Locations Used
 
-[src/kernels/debugger/kernelDebugAdapterBase.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/debugger/kernelDebugAdapterBase.ts)
+[src/notebooks/debugger/kernelDebugAdapterBase.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/debugger/kernelDebugAdapterBase.ts)
 ```typescript
                     if (!this.disconnected) {
                         debug.stopDebugging(this.session).then(noop, noop);
@@ -544,7 +544,7 @@ No description provided
 ```
 
 
-[src/kernels/debugger/kernelDebugAdapterBase.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/debugger/kernelDebugAdapterBase.ts)
+[src/notebooks/debugger/kernelDebugAdapterBase.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/debugger/kernelDebugAdapterBase.ts)
 ```typescript
                         cellStateChange.state === NotebookCellExecutionState.Idle &&
                         !this.disconnected
@@ -3390,7 +3390,7 @@ No properties for event
 
 ## Locations Used
 
-[src/kernels/variables/debuggerVariables.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/kernels/variables/debuggerVariables.ts)
+[src/notebooks/debugger/debuggerVariables.ts](https://github.com/microsoft/vscode-jupyter/tree/main/src/notebooks/debugger/debuggerVariables.ts)
 ```typescript
             // Note, full variable results isn't necessary for this call. It only really needs the variable value.
             const result = this.lastKnownVariables.find((v) => v.name === name);

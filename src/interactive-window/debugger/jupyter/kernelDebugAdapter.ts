@@ -9,10 +9,10 @@ import { DebugAdapterTracker, DebugSession, NotebookDocument, Uri } from 'vscode
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IKernel, IKernelConnectionSession } from '../../../kernels/types';
 import { IPlatformService } from '../../../platform/common/platform/types';
-import { IDumpCellResponse, IDebugLocationTrackerFactory } from '../../../kernels/debugger/types';
+import { IDumpCellResponse, IDebugLocationTrackerFactory } from '../../../notebooks/debugger/debuggingTypes';
 import { traceError, traceInfo, traceInfoIfCI } from '../../../platform/logging';
 import { getInteractiveCellMetadata } from '../../../interactive-window/helpers';
-import { KernelDebugAdapterBase } from '../../../kernels/debugger/kernelDebugAdapterBase';
+import { KernelDebugAdapterBase } from '../../../notebooks/debugger/kernelDebugAdapterBase';
 import { InteractiveCellMetadata } from '../../editor-integration/types';
 import { IDebugService } from '../../../platform/common/application/types';
 /**

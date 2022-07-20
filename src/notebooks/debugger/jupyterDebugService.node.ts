@@ -28,7 +28,7 @@ import { createDeferred } from '../../platform/common/utils/async';
 import { noop } from '../../platform/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../platform/constants.node';
 import { IProtocolParser } from '../../platform/debugger/extension/types.node';
-import { IJupyterDebugService } from '../../kernels/debugger/types';
+import { IJupyterDebugService } from './debuggingTypes';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 

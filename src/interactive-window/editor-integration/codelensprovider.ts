@@ -28,7 +28,7 @@ import {
 } from '../../platform/common/constants';
 import { IDataScienceCodeLensProvider, ICodeWatcher } from './types';
 import * as urlPath from '../../platform/vscode-path/resources';
-import { IDebugLocationTracker } from '../../kernels/debugger/types';
+import { IDebugLocationTracker } from '../../notebooks/debugger/debuggingTypes';
 
 /**
  * Implementation of the VS code CodeLensProvider that provides code lenses for the Interactive Window.

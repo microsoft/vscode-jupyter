@@ -31,7 +31,7 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { waitForVariablesToMatch } from './variableView/variableViewHelpers';
 import { Commands } from '../../platform/common/constants';
 import { IVariableViewProvider } from '../../webviews/extension-side/variablesView/types';
-import { IDebuggingManager } from '../../kernels/debugger/types';
+import { IDebuggingManager } from '../../notebooks/debugger/debuggingTypes';
 
 suite('VSCode Notebook - Run By Line', function () {
     let api: IExtensionTestApi;

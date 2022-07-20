@@ -8,12 +8,12 @@ import { ICommandManager } from '../../platform/common/application/types';
 import { IKernel } from '../../kernels/types';
 import { IConfigurationService } from '../../platform/common/types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { DebuggingTelemetry } from '../../kernels/debugger/constants';
+import { DebuggingTelemetry } from './constants';
 import { traceInfoIfCI, traceVerbose } from '../../platform/logging';
 import { noop } from '../../platform/common/utils/misc';
 import { Commands } from '../../platform/common/constants';
-import { cellDebugSetup } from '../../kernels/debugger/helper';
-import { IDebuggingDelegate, IKernelDebugAdapter, KernelDebugMode } from '../../kernels/debugger/types';
+import { cellDebugSetup } from './helper';
+import { IDebuggingDelegate, IKernelDebugAdapter, KernelDebugMode } from './debuggingTypes';
 import { parseForComments } from '../../platform/common/utils';
 
 export class RunByLineController implements IDebuggingDelegate {

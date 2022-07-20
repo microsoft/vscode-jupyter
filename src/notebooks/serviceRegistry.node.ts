@@ -19,7 +19,12 @@ import { CondaControllerRefresher } from './controllers/condaControllerRefresher
 import { RemoteKernelControllerWatcher } from './controllers/remoteKernelControllerWatcher';
 import { ITracebackFormatter } from '../kernels/types';
 import { NotebookTracebackFormatter } from './outputs/tracebackFormatter';
-import { IDebuggingManager, IJupyterDebugService } from '../kernels/debugger/types';
+import {
+    IDebuggingManager,
+    IDebugLocationTracker,
+    IDebugLocationTrackerFactory,
+    IJupyterDebugService
+} from './debugger/debuggingTypes';
 import { Identifiers } from '../platform/common/constants';
 import { JupyterDebugService } from './debugger/jupyterDebugService.node';
 import { NotebookIPyWidgetCoordinator } from './controllers/notebookIPyWidgetCoordinator';
@@ -44,6 +49,11 @@ import { IFileConverter, INbConvertExport, ExportFormat, IExport, IExportDialog,
 import { ExportUtilBase } from './export/exportUtil';
 import { registerTypes as registerControllerTypes } from './controllers/serviceRegistry.node';
 import { ServerConnectionControllerCommands } from './controllers/commands/serverConnectionControllerCommands';
+import { DebuggerVariableRegistration } from './debugger/debuggerVariableRegistration.node';
+import { IJupyterVariables } from '../kernels/variables/types';
+import { DebuggerVariables } from './debugger/debuggerVariables';
+import { MultiplexingDebugService } from './debugger/multiplexingDebugService';
+import { DebugLocationTrackerFactory } from './debugger/debugLocationTrackerFactory';
 
 export function registerTypes(serviceManager: IServiceManager) {
     registerControllerTypes(serviceManager);
@@ -113,8 +123,26 @@ export function registerTypes(serviceManager: IServiceManager) {
         EmptyNotebookCellLanguageService
     );
 
+    // Debugging
     serviceManager.addSingleton<IDebuggingManager>(IDebuggingManager, DebuggingManager, undefined, [
         IExtensionSingleActivationService
+    ]);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        DebuggerVariableRegistration
+    );
+    serviceManager.addSingleton<IJupyterVariables>(
+        IJupyterVariables,
+        DebuggerVariables,
+        Identifiers.DEBUGGER_VARIABLES
+    );
+    serviceManager.addSingleton<IJupyterDebugService>(
+        IJupyterDebugService,
+        MultiplexingDebugService,
+        Identifiers.MULTIPLEXING_DEBUGSERVICE
+    );
+    serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory, undefined, [
+        IDebugLocationTrackerFactory
     ]);
 
     // File export/import
